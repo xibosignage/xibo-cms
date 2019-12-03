@@ -112,6 +112,16 @@ class ReportService implements ReportServiceInterface
 
         $this->log->debug('Reports found in total: '.count($reports));
 
+        // Sort list of reports by their order
+        usort($reports, function ($a, $b) {
+
+            if (empty($a->sort_order) || empty($b->sort_order)) {
+                return 0;
+            }
+
+            return $a->sort_order - $b->sort_order;
+        });
+
         return $reports;
     }
 
@@ -281,5 +291,33 @@ class ReportService implements ReportServiceInterface
 
         // Retrieve the result array
         return $object->getResults($filterCriteria);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getReportEmailTemplate($reportName)
+    {
+        $className = $this->getReportClass($reportName);
+
+        $object = $this->createReportObject($className);
+
+        // Set Report Schedule form data
+        return $object->getReportEmailTemplate();
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getReportChartScript($savedreportId, $reportName)
+    {
+        $results = $this->getSavedReportResults($savedreportId, $reportName);
+
+        $className = $this->getReportClass($reportName);
+
+        $object = $this->createReportObject($className);
+
+        // Set Report Schedule form data
+        return $object->getReportChartScript($results);
     }
 }

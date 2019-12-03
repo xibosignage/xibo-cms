@@ -75,6 +75,12 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
     this.DATE_MIN = 0;
     this.DATE_MAX = 2147483647;
 
+    // Auto transitions
+    this.transitionIn = data.transitionIn;
+    this.transitionOut = data.transitionOut;
+    this.transitionDurationIn = data.transitionDurationIn;
+    this.transitionDurationOut = data.transitionDurationOut;
+
     /**
      * Get transitions from options
      */
@@ -83,22 +89,22 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
         let trans = {};
         let widgetDurationInMs = this.getDuration() * 1000;
 
-        if(this.getOptions().transIn) {
+        if (this.transitionIn != null && this.transitionIn != undefined) {
             trans.in = {
                 name: 'transitionIn',
-                type: this.getOptions().transIn,
-                duration: this.getOptions().transInDuration,
-                percDuration: (this.getOptions().transInDuration != undefined) ? (parseFloat(this.getOptions().transInDuration) / widgetDurationInMs * 100) : 0,
+                type: this.transitionIn,
+                duration: this.transitionDurationIn,
+                percDuration: (this.transitionDurationIn != undefined) ? (parseFloat(this.transitionDurationIn) / widgetDurationInMs * 100) : 0,
                 direction: this.getOptions().transInDirection
             };
         }
 
-        if(this.getOptions().transOut) {
+        if (this.transitionOut != null && this.transitionOut != undefined) {
             trans.out = {
-                name: 'transitionIn',
-                type: this.getOptions().transOut,
-                duration: this.getOptions().transOutDuration,
-                percDuration: (this.getOptions().transOutDuration != undefined) ? (parseFloat(this.getOptions().transOutDuration) / widgetDurationInMs * 100) : 0,
+                name: 'transitionOut',
+                type: this.transitionOut,
+                duration: this.transitionDurationOut,
+                percDuration: (this.transitionDurationOut != undefined) ? (parseFloat(this.transitionDurationOut) / widgetDurationInMs * 100) : 0,
                 direction: this.getOptions().transOutDirection
             };
         }
@@ -199,8 +205,8 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
         let totalDuration = this.getDuration();
 
             // Extend with transition out duration if exists
-        if(this.getOptions().transOutDuration != undefined) {
-            totalDuration += parseFloat(this.getOptions().transOutDuration) / 1000;
+        if(this.transitionDurationOut != undefined) {
+            totalDuration += parseFloat(this.transitionDurationOut) / 1000;
         }
 
         return totalDuration;
@@ -237,7 +243,7 @@ Widget.prototype.editPropertyForm = function(property, type) {
 
     const self = this;
 
-    const app = getXiboApp();
+    const app = this.designerObject;
 
     // Load form the API
     const linkToAPI = urlsForApi.widget['get' + property];
@@ -425,7 +431,7 @@ Widget.prototype.editPermissions = function() {
  */
 Widget.prototype.getNextWidget = function(reverse = false) {
     // Get main app
-    const app = getXiboApp();
+    const app = this.designerObject;
     
     // Get region widgets
     let region = app.getElementByTypeAndId('region', this.regionId);

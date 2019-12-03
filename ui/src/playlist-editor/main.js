@@ -36,8 +36,8 @@ const PropertiesPanel = require('../designer/properties-panel.js');
 const Manager = require('../core/manager.js');
 
 // Include CSS
-require('../css/designer.less');
-require('../css/playlist-editor.less');
+require('../style/designer.scss');
+require('../style/playlist-editor.scss');
 
 // Common funtions/tools
 const Common = require('../core/common.js');
@@ -56,7 +56,7 @@ window.pE = {
     playlist: {},
 
     // Editor DOM div
-    editorDiv: {},
+    editorContainer: {},
 
     // Timeline
     timeline: {},
@@ -76,45 +76,48 @@ window.pE = {
 
 // Load Playlist and build app structure
 pE.loadEditor = function() {
+    // If the editor is being loaded from within the layout designer, change the region specific flag
+    pE.regionSpecific = (typeof lD != 'undefined') ? '&regionSpecific=1' : '';
 
     pE.common.showLoadingScreen();
 
     // Save and change toastr positioning
     pE.toastrPosition = toastr.options.positionClass;
-    toastr.options.positionClass = 'toast-top-right';
+    toastr.options.positionClass = 'toast-top-center';
 
     // Get DOM main object
-    pE.editorDiv = $('#playlist-editor');
+    pE.editorContainer = $('#playlist-editor');
 
     // Get playlist id
-    const playlistId = pE.editorDiv.attr("playlist-id");
-
+    const playlistId = pE.editorContainer.attr("playlist-id");
+    
     // Update main object id
     pE.mainObjectId = playlistId;
 
     // Show loading template
-    pE.editorDiv.html(loadingTemplate());
+    pE.editorContainer.html(loadingTemplate());
 
     // Load playlist through an ajax request
-    $.get(urlsForApi.playlist.get.url + '?playlistId=' + playlistId + '&embed=widgets,widget_validity,tags,permissions')
+    $.get(urlsForApi.playlist.get.url + '?playlistId=' + playlistId + '&embed=widgets,widget_validity,tags,permissions' + pE.regionSpecific)
         .done(function(res) {
 
             if(res.data != null && res.data.length > 0) {
 
                 // Append layout html to the main div
-                pE.editorDiv.html(playlistEditorTemplate());
+                pE.editorContainer.html(playlistEditorTemplate());
 
                 // Initialize timeline and create data structure
                 pE.playlist = new Playlist(playlistId, res.data[0]);
 
                 // Initialize properties panel
                 pE.propertiesPanel = new PropertiesPanel(
-                    pE.editorDiv.find('#playlist-properties-panel')
+                    pE,
+                    pE.editorContainer.find('#playlist-properties-panel')
                 );
 
                 // Initialize timeline
                 pE.timeline = new PlaylistTimeline(
-                    pE.editorDiv.find('#playlist-timeline')
+                    pE.editorContainer.find('#playlist-timeline')
                 );
 
                 // Append manager to the modal container
@@ -122,6 +125,7 @@ pE.loadEditor = function() {
 
                 // Initialize manager
                 pE.manager = new Manager(
+                    pE,
                     $('#playlist-editor').find('#layout-manager'),
                     false //(serverMode == 'Test') Turn of manager visibility for now
                 );
@@ -131,13 +135,14 @@ pE.loadEditor = function() {
 
                 // Initialize bottom toolbar
                 pE.toolbar = new Toolbar(
+                    pE,
                     $('#playlist-editor').find('#playlist-editor-toolbar'),
-                    null, // Custom main buttons
-                    null, // Custom dropdown buttons
                     {
                         deleteSelectedObjectAction: pE.deleteSelectedObject
-                    }
+                    },
+                    true
                 );
+                pE.toolbar.parent = pE;
 
                 // Default selected 
                 pE.selectObject();
@@ -146,7 +151,7 @@ pE.loadEditor = function() {
                 formHelpers.setup(pE, pE.playlist);
 
                 // Add widget to editor div
-                pE.editorDiv.find('#playlist-editor-container').droppable({
+                pE.editorContainer.find('#playlist-editor-container').droppable({
                     accept: '[drop-to="region"]',
                     drop: function(event, ui) {
                         pE.playlist.addElement(event.target, ui.draggable[0]);
@@ -154,7 +159,7 @@ pE.loadEditor = function() {
                 }).attr('data-type', 'region');
 
                 // Editor container select ( faking drag and drop ) to add a element to the playlist
-                pE.editorDiv.find('#playlist-editor-container').click(function(e) {
+                pE.editorContainer.find('#playlist-editor-container').click(function(e) {
                     if(!$.isEmptyObject(pE.toolbar.selectedCard)) {
                         e.stopPropagation();
                         pE.selectObject($(this));
@@ -445,7 +450,7 @@ pE.refreshDesigner = function() {
 
     // If there was a opened menu in the toolbar, open that tab
     if(this.toolbar.openedMenu != -1) {
-        this.toolbar.openTab(this.toolbar.openedMenu, true);
+        this.toolbar.openMenu(this.toolbar.openedMenu, true);
     }
 
     // Render widgets container only if there are widgets on the playlist, if not draw drop area
@@ -465,22 +470,22 @@ pE.refreshDesigner = function() {
             this.renderContainer(this.propertiesPanel, this.selectedObject);
         }
 
-        this.editorDiv.find('#editing-container').show();
-        this.editorDiv.find('#dropzone-container').hide();
+        this.editorContainer.find('#editing-container').show();
+        this.editorContainer.find('#dropzone-container').hide();
     } else {
-        this.editorDiv.find('#dropzone-container').html(dropZoneTemplate());
+        this.editorContainer.find('#dropzone-container').html(dropZoneTemplate());
 
-        this.editorDiv.find('#editing-container').hide();
-        this.editorDiv.find('#dropzone-container').show();
+        this.editorContainer.find('#editing-container').hide();
+        this.editorContainer.find('#dropzone-container').show();
         
         // If playlist is empty, open the widget tab
         if(this.toolbar.openedMenu == -1) {
-            this.toolbar.openTab(1, true);
+            this.toolbar.openMenu(2, true);
         }
     }
 
     // Reload tooltips
-    this.common.reloadTooltips(this.editorDiv);
+    this.common.reloadTooltips(this.editorContainer);
 };
 
 /**
@@ -508,7 +513,7 @@ pE.reloadData = function() {
 
     pE.common.showLoadingScreen();
 
-    $.get(urlsForApi.playlist.get.url + '?playlistId=' + pE.playlist.playlistId + '&embed=widgets,widget_validity,tags,permissions')
+    $.get(urlsForApi.playlist.get.url + '?playlistId=' + pE.playlist.playlistId + '&embed=widgets,widget_validity,tags,permissions' + pE.regionSpecific)
         .done(function(res) {
             pE.common.hideLoadingScreen();
 
@@ -549,7 +554,7 @@ pE.showErrorMessage = function() {
         messageDescription: errorMessagesTrans.loadingPlaylist
     });
 
-    pE.editorDiv.html(htmlError);
+    pE.editorContainer.html(htmlError);
 };
 
 /**
@@ -561,7 +566,7 @@ pE.saveOrder = function() {
 
     pE.common.showLoadingScreen('saveOrder');
 
-    this.playlist.saveOrder($('#timeline-container').find('.playlist-widget')).then((res) => { // Success
+    this.playlist.saveOrder(this.editorContainer.find('#timeline-container').find('.playlist-widget')).then((res) => { // Success
 
         pE.common.hideLoadingScreen('saveOrder');
 
@@ -603,7 +608,7 @@ pE.close = function() {
     // Clear loaded vars
     this.mainObjectId = '';
     deleteObjectProperties(this.playlist);
-    deleteObjectProperties(this.editorDiv);
+    deleteObjectProperties(this.editorContainer);
     deleteObjectProperties(this.timeline);
     deleteObjectProperties(this.propertiesPanel);
     deleteObjectProperties(this.manager);
@@ -622,9 +627,9 @@ pE.close = function() {
 pE.showLocalLoadingScreen = function() {
     // If there are no widgets, render the loading template in the drop zone
     if($.isEmptyObject(pE.playlist.widgets)) {
-        pE.editorDiv.find('#dropzone-container').html(loadingTemplate());
+        pE.editorContainer.find('#dropzone-container').html(loadingTemplate());
     } else {
-        pE.editorDiv.find('#playlist-timeline').html(loadingTemplate());
+        pE.editorContainer.find('#playlist-timeline').html(loadingTemplate());
     }
 };
 
@@ -634,10 +639,10 @@ pE.showLocalLoadingScreen = function() {
 pE.clearTemporaryData = function() {
 
     // Fix for remaining ckeditor elements or colorpickers
-    pE.editorDiv.find('.colorpicker-element').colorpicker('destroy');
+    pE.editorContainer.find('.colorpicker-element').colorpicker('destroy');
 
     // Hide open tooltips
-    pE.editorDiv.find('[data-toggle="tooltip"]').tooltip('hide');
+    pE.editorContainer.find('[data-toggle="tooltip"]').tooltip('hide');
 
     // Remove text callback editor structure variables
     formHelpers.destroyCKEditor();
@@ -767,30 +772,30 @@ pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     let playlistObject = pE.getElementByTypeAndId(objType, objId);
 
     // Create menu and append to the designer div ( using the object extended with translations )
-    pE.editorDiv.append(contextMenuTemplate(Object.assign(playlistObject, {trans: contextMenuTrans})));
+    pE.editorContainer.append(contextMenuTemplate(Object.assign(playlistObject, {trans: contextMenuTrans})));
 
     // Set menu position ( and fix page limits )
-    let contextMenuWidth = pE.editorDiv.find('.context-menu').outerWidth();
-    let contextMenuHeight = pE.editorDiv.find('.context-menu').outerHeight();
+    let contextMenuWidth = pE.editorContainer.find('.context-menu').outerWidth();
+    let contextMenuHeight = pE.editorContainer.find('.context-menu').outerHeight();
 
     let positionLeft = ((position.x + contextMenuWidth) > $(window).width()) ? (position.x - contextMenuWidth) : position.x;
     let positionTop = ((position.y + contextMenuHeight) > $(window).height()) ? (position.y - contextMenuHeight) : position.y;
 
-    pE.editorDiv.find('.context-menu').offset({top: positionTop, left: positionLeft});
+    pE.editorContainer.find('.context-menu').offset({top: positionTop, left: positionLeft});
 
     // Initialize tooltips
-    pE.common.reloadTooltips(pE.editorDiv.find('.context-menu'));
+    pE.common.reloadTooltips(pE.editorContainer.find('.context-menu'));
 
     // Click overlay to close menu
-    pE.editorDiv.find('.context-menu-overlay').click((ev) => {
+    pE.editorContainer.find('.context-menu-overlay').click((ev) => {
 
         if($(ev.target).hasClass('context-menu-overlay')) {
-            pE.editorDiv.find('.context-menu-overlay').remove();
+            pE.editorContainer.find('.context-menu-overlay').remove();
         }
     });
 
     // Handle buttons
-    pE.editorDiv.find('.context-menu .context-menu-btn').click((ev) => {
+    pE.editorContainer.find('.context-menu .context-menu-btn').click((ev) => {
         let target = $(ev.currentTarget);
 
         if(target.data('action') == 'Delete') {
@@ -800,7 +805,7 @@ pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         }
 
         // Remove context menu
-        pE.editorDiv.find('.context-menu-overlay').remove();
+        pE.editorContainer.find('.context-menu-overlay').remove();
     });
 };
 

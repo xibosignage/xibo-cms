@@ -555,8 +555,13 @@ class Library extends Base
             $media->mediaExpiryFailed = __('Expired ');
             $media->mediaNoExpiryDate = __('Never');
 
-            if ($this->isApi())
-                break;
+            if ($this->isApi()) {
+                $media->excludeProperty('mediaExpiresIn');
+                $media->excludeProperty('mediaExpiryFailed');
+                $media->excludeProperty('mediaNoExpiryDate');
+                $media->expires = ($media->expires == 0) ? 0 : $this->getDate()->getLocalDate($media->expires);
+                continue;
+            }
 
             $media->includeProperty('buttons');
 
@@ -898,7 +903,6 @@ class Library extends Base
 
     /**
      * Edit Media
-     * @param int $mediaId
      *
      * @SWG\Put(
      *  path="/library/{mediaId}",
@@ -954,7 +958,14 @@ class Library extends Base
      *      @SWG\Schema(ref="#/definitions/Media")
      *  )
      * )
+     *
+     * @param int $mediaId
+     *
+     * @throws ConfigurationException
      * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Xibo\Exception\DuplicateEntityException
      */
     public function edit($mediaId)
     {
@@ -979,6 +990,8 @@ class Library extends Base
             } else {
                 throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');
             }
+        } else {
+            $media->expires = 0;
         }
 
         // Should we update the media in all layouts?
@@ -1662,6 +1675,13 @@ class Library extends Base
      *  tags={"library"},
      *  summary="Get Library Item Usage Report",
      *  description="Get the records for the library item usage report",
+     * @SWG\Parameter(
+     *      name="mediaId",
+     *      in="path",
+     *      description="The Media Id",
+     *      type="integer",
+     *      required=true
+     *   ),
      *  @SWG\Response(
      *     response=200,
      *     description="successful operation"
@@ -1669,6 +1689,7 @@ class Library extends Base
      * )
      *
      * @param int $mediaId
+     * @throws NotFoundException
      */
     public function usage($mediaId)
     {
@@ -1743,6 +1764,11 @@ class Library extends Base
             }
         }
 
+        if ($this->isApi() && $displays == []) {
+            $displays = [
+                'data' =>__('Specified Media item is not in use.')];
+        }
+
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $totalRecords;
         $this->getState()->setData($displays);
@@ -1755,6 +1781,13 @@ class Library extends Base
      *  tags={"library"},
      *  summary="Get Library Item Usage Report for Layouts",
      *  description="Get the records for the library item usage report for Layouts",
+     * @SWG\Parameter(
+     *      name="mediaId",
+     *      in="path",
+     *      description="The Media Id",
+     *      type="integer",
+     *      required=true
+     *   ),
      *  @SWG\Response(
      *     response=200,
      *     description="successful operation"
@@ -1762,6 +1795,7 @@ class Library extends Base
      * )
      *
      * @param int $mediaId
+     * @throws NotFoundException
      */
     public function usageLayouts($mediaId)
     {
@@ -1796,6 +1830,12 @@ class Library extends Base
                     'text' => __('Preview Layout')
                 );
             }
+        }
+
+        if ($this->isApi() && $layouts == []) {
+            $layouts = [
+                'data' =>__('Specified Media item is not in use.')
+            ];
         }
 
         $this->getState()->template = 'grid';
@@ -1930,6 +1970,13 @@ class Library extends Base
      *  tags={"library"},
      *  summary="Media usage check",
      *  description="Checks if a Media is being used",
+     * @SWG\Parameter(
+     *      name="mediaId",
+     *      in="path",
+     *      description="The Media Id",
+     *      type="integer",
+     *      required=true
+     *   ),
      *  @SWG\Response(
      *     response=200,
      *     description="successful operation"
@@ -1937,6 +1984,7 @@ class Library extends Base
      * )
      *
      * @param int $mediaId
+     * @throws NotFoundException
      */
     public function isUsed($mediaId)
     {

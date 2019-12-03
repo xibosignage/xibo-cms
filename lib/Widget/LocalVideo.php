@@ -37,12 +37,12 @@ class LocalVideo extends ModuleWidget
     /**
      * Edit Widget
      *
-     * @SWG\Post(
-     *  path="/playlist/widget/{widgetId}?htmlPackage",
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}?localVideo",
      *  operationId="WidgetLocalVideoEdit",
      *  tags={"widget"},
      *  summary="Edit a Local Video Widget",
-     *  description="Edit a Local Video Widget",
+     *  description="Edit a Local Video Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",

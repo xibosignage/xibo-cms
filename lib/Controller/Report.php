@@ -130,7 +130,13 @@ class Report extends Base
             $reportSchedule->includeProperty('buttons');
 
             $cron = \Cron\CronExpression::factory($reportSchedule->schedule);
-            $nextRunDt = $cron->getNextRunDate(\DateTime::createFromFormat('U', $reportSchedule->lastRunDt))->format('U');
+
+            if ($reportSchedule->lastRunDt == 0) {
+                $nextRunDt = $this->getDate()->parse()->format('U');
+            } else {
+                $nextRunDt = $cron->getNextRunDate(\DateTime::createFromFormat('U', $reportSchedule->lastRunDt))->format('U');
+            }
+
             $reportSchedule->nextRunDt = $nextRunDt;
 
             // Ad hoc report name
@@ -571,6 +577,20 @@ class Report extends Base
 
             $savedReport->buttons[] = ['divider' => true];
 
+            // Get report email template
+            $emailTemplate = $this->reportService->getReportEmailTemplate($savedReport->reportName);
+
+            if (!empty($emailTemplate)) {
+
+                // Export Button
+                $savedReport->buttons[] = [
+                    'id' => 'button_export_report',
+                    'linkType' => '_self', 'external' => true,
+                    'url' => $this->urlFor('savedreport.export', ['id' => $savedReport->savedReportId, 'name' => $savedReport->reportName] ),
+                    'text' => __('Export as PDF')
+                ];
+            }
+
             // Delete
             if ($this->getUser()->checkDeleteable($savedReport)) {
                 // Show the delete button
@@ -657,7 +677,7 @@ class Report extends Base
     /**
      * Returns a Saved Report's preview
      * @param int $savedreportId
-     * @throws XiboException
+     * @param string $reportName
      */
     public function savedReportOpen($savedreportId, $reportName)
     {
@@ -666,6 +686,97 @@ class Report extends Base
 
         $this->getState()->template = $results['template'];
         $this->getState()->setData($results['chartData']);
+    }
+
+    /**
+     * Exports saved report as a PDF file
+     * @param int $savedreportId
+     * @param string $reportName
+     * @throws XiboException
+     */
+    public function savedReportExport($savedreportId, $reportName)
+    {
+        $savedReport = $this->savedReportFactory->getById($savedreportId);
+
+        // Retrieve the saved report result in array
+        $savedReportData = $this->reportService->getSavedReportResults($savedreportId, $reportName);
+
+        // Get the report config
+        $report = $this->reportService->getReportByName($reportName);
+        if ($report->output_type == 'chart') {
+
+            $quickChartUrl = $this->getConfig()->getSetting('QUICK_CHART_URL');
+            if (!empty($quickChartUrl)) {
+                $script = $this->reportService->getReportChartScript($savedreportId, $reportName);
+                $src = $quickChartUrl. "/chart?width=1000&height=300&c=".$script;
+            } else {
+                $placeholder = __('Chart could not be drawn because the CMS has not been configured with a Quick Chart URL.');
+            }
+
+        } else { // only for tablebased report
+
+            $result = $savedReportData['chartData']['result'];
+            $tableData =json_decode($result, true);
+        }
+
+        // Get report email template
+        $emailTemplate = $this->reportService->getReportEmailTemplate($reportName);
+        if (!empty($emailTemplate)) {
+
+            // Save PDF attachment
+            ob_start();
+            // Render the template
+            $this->app->render($emailTemplate,
+                [
+                    'header' => $report->description,
+                    'logo' => $this->getConfig()->uri('img/xibologo.png', true),
+                    'title' => $savedReport->saveAs,
+                    'periodStart' => $savedReportData['chartData']['periodStart'],
+                    'periodEnd' => $savedReportData['chartData']['periodEnd'],
+                    'generatedOn' => $this->getDate()->parse($savedReport->generatedOn, 'U')->format('Y-m-d H:i:s'),
+                    'tableData' => isset($tableData) ? $tableData : null,
+                    'src' => isset($src) ? $src : null,
+                    'placeholder' => isset($placeholder) ? $placeholder : null
+                ]);
+            $body = ob_get_contents();
+            ob_end_clean();
+
+            $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION'). 'temp/saved_report_'.$savedreportId.'.pdf';
+
+            try {
+                $mpdf = new \Mpdf\Mpdf([
+                    'orientation' => 'L',
+                    'mode' => 'c',
+                    'margin_left' => 20,
+                    'margin_right' => 20,
+                    'margin_top' => 20,
+                    'margin_bottom' => 20,
+                    'margin_header' => 5,
+                    'margin_footer' => 15
+                ]);
+                $mpdf->setFooter('Page {PAGENO}') ;
+                $mpdf->SetDisplayMode('fullpage');
+                $stylesheet =  file_get_contents($this->getConfig()->uri('css/email-report.css', true));
+                $mpdf->WriteHTML($stylesheet, 1);
+                $mpdf->WriteHTML($body);
+                $mpdf->Output($fileName, \Mpdf\Output\Destination::FILE);
+            } catch (\Exception $error) {
+                $this->getLog()->error('Report PDF could not be created and notification is not saved.');
+            }
+
+        }
+
+        // Return the file with PHP
+        $this->setNoOutput(true);
+        header('Content-Type: application/octet-stream');
+        header("Content-Transfer-Encoding: Binary");
+        header("Content-disposition: attachment; filename=\"" . basename($fileName) . "\"");
+        header('Content-Length: ' . filesize($fileName));
+
+        // Disable any buffering to prevent OOM errors.
+        ob_end_flush();
+        readfile($fileName);
+        exit;
     }
 
     //</editor-fold>

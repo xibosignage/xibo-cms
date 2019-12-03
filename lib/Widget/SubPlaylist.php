@@ -121,7 +121,7 @@ class SubPlaylist extends ModuleWidget
      *  operationId="WidgetSubPlaylistEdit",
      *  tags={"widget"},
      *  summary="Edit a Sub-Playlist Widget",
-     *  description="Edit a new Sub-Playlist Widget",
+     *  description="Edit a new Sub-Playlist Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",
@@ -131,11 +131,58 @@ class SubPlaylist extends ModuleWidget
      *   ),
      *  @SWG\Parameter(
      *      name="subPlaylistId",
+     *      type="array",
      *      in="formData",
-     *      description="The sub-playlist to embed",
-     *      type="integer",
+     *      description="The Playlist Ids to assign",
+     *      required=true,
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *  @SWG\Parameter(
+     *      name="arrangement",
+     *      in="formData",
+     *      description="Arrangement type - even, roundrobin, none",
+     *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="remainder",
+     *      in="formData",
+     *      description="Reminder - drop, repeat, none",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="subPlaylistIdSpots",
+     *      type="array",
+     *      in="formData",
+     *      description="An array with number of spots for each Playlist",
+     *      required=true,
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *  @SWG\Parameter(
+     *      name="subPlaylistIdSpotLength",
+     *      type="array",
+     *      in="formData",
+     *      description="An array with spot length for each Playlist",
+     *      required=true,
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *  @SWG\Parameter(
+     *      name="subPlaylistIdSpotFill",
+     *      type="array",
+     *      in="formData",
+     *      description="An array of spot fill type for each Playlist - fill, repeat, pad",
+     *      required=true,
+     *      @SWG\Items(
+     *          type="string"
+     *      )
+     *  ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -310,6 +357,7 @@ class SubPlaylist extends ModuleWidget
      * @param int $parentWidgetId this tracks the top level widgetId
      * @return Widget[] $widgets
      * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Exception\InvalidArgumentException
      */
     public function getSubPlaylistResolvedWidgets($parentWidgetId = 0)
     {
@@ -340,21 +388,25 @@ class SubPlaylist extends ModuleWidget
             $playlist = $this->playlistFactory->getById($playlistId)->setModuleFactory($this->moduleFactory);
             $expanded = $playlist->expandWidgets($parentWidgetId);
             $countExpanded = count($expanded);
-            $playlistEnableStat = $playlist->enableStat;
 
-            if (($playlistEnableStat === null) || ($playlistEnableStat === "")) {
-                $playlistEnableStat = $this->getConfig()->getSetting('PLAYLIST_STATS_ENABLED_DEFAULT');
-            }
+            // Handle proof of play settings
+            // -----------------------------
+            // Go through widgets assigned to this Playlist, if their enableStat is set to Inherit alter that option
+            // in memory for this widget.
+            // this is not a saved change, we assess this every time
+            $playlistEnableStat = empty($playlist->enableStat)
+                ? $this->getConfig()->getSetting('PLAYLIST_STATS_ENABLED_DEFAULT')
+                : $playlist->enableStat;
 
-            // Go through widgets assigned to this Playlist, if their enableStat is set to Inherit, then change that option according to the Playlist enableStat value.
             foreach ($expanded as $subPlaylistWidget) {
 
-                $subPlaylistWidgetEnableStat = $subPlaylistWidget->getOptionValue('enableStat', $this->getConfig()->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
+                $subPlaylistWidgetEnableStat = $subPlaylistWidget->getOptionValue('enableStat',
+                    $this->getConfig()->getSetting('WIDGET_STATS_ENABLED_DEFAULT')
+                );
 
                 if ($subPlaylistWidgetEnableStat == 'Inherit') {
-                    $subPlaylistWidget->setOptionValue('enableStat', 'attrib', $playlistEnableStat);
-                    $subPlaylistWidget->save();
                     $this->getLog()->debug('For widget ID ' . $subPlaylistWidget->widgetId . ' enableStat was Inherit, changed to Playlist enableStat value - ' . $playlistEnableStat);
+                    $subPlaylistWidget->setOptionValue('enableStat', 'attrib', $playlistEnableStat);
                 }
             }
 

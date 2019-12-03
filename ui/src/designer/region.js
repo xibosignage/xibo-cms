@@ -122,7 +122,7 @@ Region.prototype.editPropertyForm = function(property) {
 
     const self = this;
 
-    const app = getXiboApp();
+    const app = lD;
 
     // Load form the API
     const linkToAPI = urlsForApi.region['get' + property];

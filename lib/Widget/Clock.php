@@ -54,7 +54,7 @@ class Clock extends ModuleWidget
      *  operationId="widgetClockEdit",
      *  tags={"widget"},
      *  summary="Clock Widget",
-     *  description="Edit Clock Widget",
+     *  description="Edit Clock Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",

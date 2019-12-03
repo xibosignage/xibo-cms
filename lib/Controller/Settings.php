@@ -27,6 +27,7 @@ use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\SettingsFactory;
+use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -45,6 +46,9 @@ class Settings extends Base
     /** @var UserGroupFactory */
     private $userGroupFactory;
 
+    /** @var TransitionFactory */
+    private $transitionfactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -56,13 +60,15 @@ class Settings extends Base
      * @param ConfigServiceInterface $config
      * @param LayoutFactory $layoutFactory
      * @param UserGroupFactory $userGroupFactory
+     * @param TransitionFactory $transitionfactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $layoutFactory, $userGroupFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $layoutFactory, $userGroupFactory, $transitionfactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
         $this->layoutFactory = $layoutFactory;
         $this->userGroupFactory = $userGroupFactory;
+        $this->transitionfactory = $transitionfactory;
 
         // Initialise extra validation rules
         v::with('Xibo\\Validation\\Rules\\');
@@ -133,6 +139,20 @@ class Settings extends Base
             $defaultUserGroup = null;
         }
 
+        // The default Transition In
+        try {
+            $defaultTransitionIn = $this->transitionfactory->getByCode($this->getConfig()->getSetting('DEFAULT_TRANSITION_IN'));
+        } catch (NotFoundException $notFoundException) {
+            $defaultTransitionIn = null;
+        }
+
+        // The default Transition Out
+        try {
+            $defaultTransitionOut = $this->transitionfactory->getByCode($this->getConfig()->getSetting('DEFAULT_TRANSITION_OUT'));
+        } catch (NotFoundException $notFoundException) {
+            $defaultTransitionOut = null;
+        }
+
         // Work out whether we're in a valid elevate log period
         $elevateLogUntil = $this->getConfig()->getSetting('ELEVATE_LOG_UNTIL');
 
@@ -155,7 +175,9 @@ class Settings extends Base
             'timeZones' => $timeZones,
             'defaultLayout' => $defaultLayout,
             'defaultUserGroup' => $defaultUserGroup,
-            'elevateLogUntil' => $elevateLogUntil
+            'elevateLogUntil' => $elevateLogUntil,
+            'defaultTransitionIn' => $defaultTransitionIn,
+            'defaultTransitionOut' => $defaultTransitionOut
         ]);
     }
 
@@ -213,8 +235,28 @@ class Settings extends Base
             $this->getConfig()->changeSetting('LIBRARY_MEDIA_DELETEOLDVER_CHECKB', $this->getSanitizer()->getCheckbox('LIBRARY_MEDIA_DELETEOLDVER_CHECKB'));
         }
 
+        if ($this->getConfig()->isSettingEditable('DEFAULT_CASCADE_PERMISSION_CHECKB')) {
+            $this->getConfig()->changeSetting('DEFAULT_CASCADE_PERMISSION_CHECKB', $this->getSanitizer()->getCheckbox('DEFAULT_CASCADE_PERMISSION_CHECKB'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB')) {
+            $this->getConfig()->changeSetting('DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB', $this->getSanitizer()->getCheckbox('DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DEFAULT_TRANSITION_IN')) {
+            $this->getConfig()->changeSetting('DEFAULT_TRANSITION_IN', $this->getSanitizer()->getString('DEFAULT_TRANSITION_IN'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DEFAULT_TRANSITION_OUT')) {
+            $this->getConfig()->changeSetting('DEFAULT_TRANSITION_OUT', $this->getSanitizer()->getString('DEFAULT_TRANSITION_OUT'));
+        }
+
         if ($this->getConfig()->isSettingEditable('DEFAULT_TRANSITION_DURATION')) {
             $this->getConfig()->changeSetting('DEFAULT_TRANSITION_DURATION', $this->getSanitizer()->getInt('DEFAULT_TRANSITION_DURATION'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DEFAULT_TRANSITION_AUTO_APPLY')) {
+            $this->getConfig()->changeSetting('DEFAULT_TRANSITION_AUTO_APPLY', $this->getSanitizer()->getCheckbox('DEFAULT_TRANSITION_AUTO_APPLY'));
         }
 
         if ($this->getConfig()->isSettingEditable('DEFAULT_RESIZE_THRESHOLD')) {
@@ -313,6 +355,10 @@ class Settings extends Base
 
         if ($this->getConfig()->isSettingEditable('HELP_BASE')) {
             $this->getConfig()->changeSetting('HELP_BASE', $this->getSanitizer()->getString('HELP_BASE'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('QUICK_CHART_URL')) {
+            $this->getConfig()->changeSetting('QUICK_CHART_URL', $this->getSanitizer()->getString('QUICK_CHART_URL'));
         }
 
         if ($this->getConfig()->isSettingEditable('PHONE_HOME')) {

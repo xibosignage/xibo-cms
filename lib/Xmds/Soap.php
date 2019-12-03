@@ -290,18 +290,21 @@ class Soap
         $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
-
-        // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth($this->display->displayId))
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+        }
 
         $libraryLocation = $this->getConfig()->getSetting("LIBRARY_LOCATION");
 
         // auth this request...
-        if (!$this->authDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey)) {
             throw new \SoapFault('Sender', 'This display is not licensed.');
+        }
+
+        // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
+        if (!$this->checkBandwidth($this->display->displayId)) {
+            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+        }
 
         // Check the cache
         $cache = $this->getPool()->getItem($this->display->getCacheKey() . '/requiredFiles');
@@ -420,7 +423,8 @@ class Soap
                 $this->getLog()->debug(count($scheduleEvents) . ' events for eventId ' . $schedule->eventId);
 
                 $layoutId = $this->getSanitizer()->int($row['layoutId']);
-                if ($layoutId != null && ($schedule->eventTypeId == Schedule::$LAYOUT_EVENT || $schedule->eventTypeId == Schedule::$OVERLAY_EVENT)) {
+
+                if ($layoutId != null && ($schedule->eventTypeId == Schedule::$LAYOUT_EVENT || $schedule->eventTypeId == Schedule::$OVERLAY_EVENT || $schedule->eventTypeId == Schedule::$INTERRUPT_EVENT || $schedule->eventTypeId == Schedule::$CAMPAIGN_EVENT)) {
                     $layouts[] = $layoutId;
                 }
             }
@@ -635,12 +639,13 @@ class Soap
                     $file->setAttribute("path", $layoutId);
                 }
 
-                $fileElements->appendChild($file);
-
                 // Get the Layout Modified Date
                 $layoutModifiedDt = $this->getDate()->parse($layout->modifiedDt, 'Y-m-d H:i:s');
 
                 // Load the layout XML and work out if we have any ticker / text / dataset media items
+                // Append layout resources before layout so they are downloaded first. 
+                // If layouts are set to expire immediately, the new layout will use the old resources if 
+                // the layout is downloaded first.
                 foreach ($layout->regions as $region) {
                     $playlist = $region->getPlaylist();
                     $playlist->setModuleFactory($this->moduleFactory);
@@ -689,18 +694,21 @@ class Soap
                             $updatedDt = ($updatedDt->greaterThan($cachedDt)) ? $updatedDt : $cachedDt;
 
                             // Append this item to required files
-                            $file = $requiredFilesXml->createElement("file");
-                            $file->setAttribute('type', 'resource');
-                            $file->setAttribute('id', $widget->widgetId);
-                            $file->setAttribute('layoutid', $layoutId);
-                            $file->setAttribute('regionid', $region->regionId);
-                            $file->setAttribute('mediaid', $widget->widgetId);
-                            $file->setAttribute('updated', $updatedDt->format('U'));
-                            $fileElements->appendChild($file);
+                            $resourceFile = $requiredFilesXml->createElement("file");
+                            $resourceFile->setAttribute('type', 'resource');
+                            $resourceFile->setAttribute('id', $widget->widgetId);
+                            $resourceFile->setAttribute('layoutid', $layoutId);
+                            $resourceFile->setAttribute('regionid', $region->regionId);
+                            $resourceFile->setAttribute('mediaid', $widget->widgetId);
+                            $resourceFile->setAttribute('updated', $updatedDt->format('U'));
+                            $fileElements->appendChild($resourceFile);
                         }
                     }
                 }
 
+                // Append Layout
+                $fileElements->appendChild($file);
+                
                 // Add to paths added
                 $pathsAdded[] = $layoutId;
 
@@ -795,16 +803,19 @@ class Soap
         $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
-
-        // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth($this->display->displayId))
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+        }
 
         // auth this request...
-        if (!$this->authDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey)) {
             throw new \SoapFault('Sender', "This display client is not licensed");
+        }
+
+        // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
+        if (!$this->checkBandwidth($this->display->displayId)) {
+            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+        }
 
         // Check the cache
         $cache = $this->getPool()->getItem($this->display->getCacheKey() . '/schedule');
@@ -949,8 +960,8 @@ class Soap
                     $scheduleId = $row['eventId'];
                     $is_priority = $this->getSanitizer()->int($row['isPriority']);
 
-                    if ($eventTypeId == Schedule::$LAYOUT_EVENT) {
-                        // Ensure we have a layoutId (we may not if an empty campaign is assigned)
+                     if ($eventTypeId == Schedule::$LAYOUT_EVENT || $eventTypeId == Schedule::$INTERRUPT_EVENT || $eventTypeId == Schedule::$CAMPAIGN_EVENT) {
+                         // Ensure we have a layoutId (we may not if an empty campaign is assigned)
                         // https://github.com/xibosignage/xibo/issues/894
                         if ($layoutId == 0 || empty($layoutId)) {
                             $this->getLog()->info('Player has empty event scheduled. Display = %s, EventId = %d', $this->display->display, $scheduleId);
@@ -972,6 +983,9 @@ class Soap
                         $layout->setAttribute("scheduleid", $scheduleId);
                         $layout->setAttribute("priority", $is_priority);
                         $layout->setAttribute("syncEvent", $syncKey);
+                        $layout->setAttribute("shareOfVoice", $row['shareOfVoice'] ?? 0);
+                        $layout->setAttribute("isGeoAware", $row['isGeoAware'] ?? 0);
+                        $layout->setAttribute("geoLocation", $row['geoLocation'] ?? null);
 
                         // Handle dependents
                         if (array_key_exists($layoutId, $layoutDependents)) {
@@ -1026,6 +1040,8 @@ class Soap
                         $overlay->setAttribute("todt", $toDt);
                         $overlay->setAttribute("scheduleid", $scheduleId);
                         $overlay->setAttribute("priority", $is_priority);
+                        $overlay->setAttribute("isGeoAware", $row['isGeoAware'] ?? 0);
+                        $overlay->setAttribute("geoLocation", $row['geoLocation'] ?? null);
 
                         // Add to the overlays node list
                         $overlayNodes->appendChild($overlay);
@@ -1034,8 +1050,9 @@ class Soap
             }
 
             // Add the overlay nodes if we had any
-            if ($overlayNodes != null)
+            if ($overlayNodes != null) {
                 $layoutElements->appendChild($overlayNodes);
+            }
 
         } catch (\Exception $e) {
             $this->getLog()->error('Error getting the schedule. ' . $e->getMessage());
@@ -1135,16 +1152,19 @@ class Soap
         $reason = $this->getSanitizer()->string($reason);
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
-
-        // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth($this->display->displayId))
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+        }
 
         // Authenticate this request...
-        if (!$this->authDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey)) {
             throw new \SoapFault('Receiver', "This display client is not licensed", $hardwareKey);
+        }
+
+        // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
+        if (!$this->checkBandwidth($this->display->displayId)) {
+            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+        }
 
         if ($this->display->isAuditing())
             $this->getLog()->debug('Blacklisting ' . $mediaId . ' for ' . $reason);
@@ -1220,16 +1240,19 @@ class Soap
         $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
-
-        // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth($this->display->displayId))
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+        }
 
         // Auth this request...
-        if (!$this->authDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey)) {
             throw new \SoapFault('Sender', 'This display client is not licensed.');
+        }
+
+        // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
+        if (!$this->checkBandwidth($this->display->displayId)) {
+            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+        }
 
         // Load the XML into a DOMDocument
         $document = new \DOMDocument("1.0");
@@ -1407,22 +1430,27 @@ class Soap
         $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
-
-        // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth($this->display->displayId))
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+        }
 
         // Auth this request...
-        if (!$this->authDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey)) {
             throw new \SoapFault('Receiver', "This display client is not licensed");
+        }
 
-        if ($this->display->isAuditing())
+        // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
+        if (!$this->checkBandwidth($this->display->displayId)) {
+            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+        }
+
+        if ($this->display->isAuditing()) {
             $this->getLog()->debug('Received XML. ' . $statXml);
+        }
 
-        if ($statXml == "")
+        if ($statXml == "") {
             throw new \SoapFault('Receiver', "Stat XML is empty.");
+        }
 
         // Store an array of parsed stat data for insert
         $now = $this->getDate()->parse();
@@ -1436,6 +1464,8 @@ class Soap
         // Load the XML into a DOMDocument
         $document = new \DOMDocument("1.0");
         $document->loadXML($statXml);
+
+        $layoutIdsNotFound = [];
 
         foreach ($document->documentElement->childNodes as $node) {
             /* @var \DOMElement $node */
@@ -1476,7 +1506,11 @@ class Soap
                 try {
                     // Handle the splash screen
                     if ($layoutId == 'splash') {
-                        $this->getLog()->error('Splash Screen Statistic Ignored');
+                        if (!in_array($layoutId, $layoutIdsNotFound)) {
+                            $layoutIdsNotFound[] = $layoutId;
+                            $this->getLog()->info('Splash Screen Statistic Ignored');
+                        }
+
                         continue;
                     }
 
@@ -1484,7 +1518,12 @@ class Soap
                     $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
 
                 } catch (XiboException $error) {
-                    $this->getLog()->error('Layout not found. Layout Id: '. $layoutId .', FromDT: '.$fromdt.', ToDt: '.$todt.', Type: '.$type.', Duration: '.$duration.', Count '.$count);
+
+                    if (!in_array($layoutId, $layoutIdsNotFound)) {
+                        $layoutIdsNotFound[] = $layoutId;
+                        $this->getLog()->error('Layout not found. Layout Id: '. $layoutId);
+                    }
+
                     continue;
                 }
             }
@@ -1602,23 +1641,28 @@ class Soap
         $hardwareKey = $this->getSanitizer()->string($hardwareKey);
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
-
-        // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth($this->display->displayId))
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+        }
 
         // Auth this request...
-        if (!$this->authDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey)) {
             throw new \SoapFault('Receiver', 'This display client is not licensed');
+        }
 
-        if ($this->display->isAuditing())
+        // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
+        if (!$this->checkBandwidth($this->display->displayId)) {
+            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+        }
+
+        if ($this->display->isAuditing()) {
             $this->getLog()->debug($inventory);
+        }
 
         // Check that the $inventory contains something
-        if ($inventory == '')
+        if ($inventory == '') {
             throw new \SoapFault('Receiver', 'Inventory Cannot be Empty');
+        }
 
         // Load the XML into a DOMDocument
         $document = new \DOMDocument("1.0");
@@ -1710,16 +1754,19 @@ class Soap
         $mediaId = $this->getSanitizer()->string($mediaId);
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
-
-        // Make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth($this->display->displayId))
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+        }
 
         // Auth this request...
-        if (!$this->authDisplay($hardwareKey))
+        if (!$this->authDisplay($hardwareKey)) {
             throw new \SoapFault('Receiver', "This display client is not licensed");
+        }
+
+        // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
+        if (!$this->checkBandwidth($this->display->displayId)) {
+            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+        }
 
         // The MediaId is actually the widgetId
         try {
@@ -1977,10 +2024,10 @@ class Soap
 
                 return false;
 
-            } elseif ($this->bandwidthFactory->isBandwidthExceeded($displayBandwidthLimit, $bandwidthUsage)) {
+            } elseif ($this->bandwidthFactory->isBandwidthExceeded($displayBandwidthLimit, $bandwidthUsage, $displayId)) {
                 // Bandwidth Exceeded
                 // Create a notification if we don't already have one today for this display.
-                $subject = __(sprintf('Display ID %d exceeded the bandwidth limit ', $this->display->displayId));
+                $subject = __(sprintf('Display ID %d exceeded the bandwidth limit', $this->display->displayId));
                 $date = $this->dateService->parse();
 
                 if (count($this->notificationFactory->getBySubjectAndDate($subject, $this->dateService->getLocalDate($date->startOfDay(), 'U'), $this->dateService->getLocalDate($date->addDay(1)->startOfDay(), 'U'))) <= 0) {

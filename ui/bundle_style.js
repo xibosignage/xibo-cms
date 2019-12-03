@@ -1,6 +1,12 @@
 //--- NPM packages style ---
 import './public_path';
 
+// Material icons
+require('material-design-icons/iconfont/material-icons.css');
+
+// font-awesome
+require('@fortawesome/fontawesome-free/css/all.min.css');
+
 // bootstrap
 require('bootstrap/dist/css/bootstrap.min.css');
 
@@ -52,4 +58,9 @@ require('./src/vendor/jquery-file-upload/css/jquery.fileupload.css');
 require('./src/vendor/jquery-file-upload/css/jquery.fileupload-ui.css');
 require('./src/vendor/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css');
 require('./src/vendor/jquery-ui/css/ui-lightness/jquery-ui-1.10.2.custom.min.css');
+
+// leaflet
+require('leaflet/dist/leaflet.css');
+require('leaflet-draw/dist/leaflet.draw-src.css');
+require('leaflet-search/dist/leaflet-search.src.css');
 

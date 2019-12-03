@@ -939,11 +939,11 @@ let formHelpers = function() {
 
             // find the gylph
             if($(this).find("i").hasClass("fa-plus")) {
-                var context = {columns: dialog.data().extra.columns, title: orderClauseFields.find('.form-group').length + 1, orderClause: "", orderClauseAsc: "", orderClauseDesc: "", buttonGlyph: "fa-minus", ascTitle: ascTitle, descTitle: descTitle};
+                var context = {columns: dialog.data().extra.columns, title: orderClauseFields.find('.form-inline').length + 1, orderClause: "", orderClauseAsc: "", orderClauseDesc: "", buttonGlyph: "fa-minus", ascTitle: ascTitle, descTitle: descTitle};
                 orderClauseFields.append(orderClauseTemplate(context));
             } else {
                 // Remove this row
-                $(this).closest(".form-group").remove();
+                $(this).closest(".form-inline").remove();
             }
         });
 
@@ -1001,7 +1001,7 @@ let formHelpers = function() {
                     columns: dialog.data().extra.columns,
                     filterOptions: filterOptions,
                     filterOperatorOptions: filterOperatorOptions,
-                    title: filterClauseFields.find('.form-group').length + 1,
+                    title: filterClauseFields.find('.form-inline').length + 1,
                     filterClause: "",
                     filterClauseOperator: "AND",
                     filterClauseCriteria: "",
@@ -1011,7 +1011,7 @@ let formHelpers = function() {
                 filterClauseFields.append(filterClauseTemplate(context));
             } else {
                 // Remove this row
-                $(this).closest(".form-group").remove();
+                $(this).closest(".form-inline").remove();
             }
         });
     };

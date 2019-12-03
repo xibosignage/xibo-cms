@@ -30,6 +30,7 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -185,22 +186,30 @@ class Playlist implements \JsonSerializable
 
     /** @var ModuleFactory */
     private $moduleFactory;
+
+    /**
+     * @var ConfigServiceInterface
+     */
+    private $config;
     //</editor-fold>
 
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param ConfigServiceInterface $config
      * @param DateServiceInterface $date
      * @param PermissionFactory $permissionFactory
      * @param PlaylistFactory $playlistFactory
      * @param WidgetFactory $widgetFactory
      * @param TagFactory $tagFactory
+
      */
-    public function __construct($store, $log, $date, $permissionFactory, $playlistFactory, $widgetFactory, $tagFactory)
+    public function __construct($store, $log, $config, $date, $permissionFactory, $playlistFactory, $widgetFactory, $tagFactory)
     {
         $this->setCommonDependencies($store, $log);
 
+        $this->config = $config;
         $this->dateService = $date;
         $this->permissionFactory = $permissionFactory;
         $this->playlistFactory = $playlistFactory;
@@ -536,9 +545,10 @@ class Playlist implements \JsonSerializable
         }
 
         // if we are auditing and editing a regionPlaylist then get layout specific campaignId
+        $campaignId = 0;
+        $layoutId = 0;
+
         if ($options['auditPlaylist'] && $this->regionId != null) {
-            $campaignId = 0;
-            $layoutId = 0;
             $sql = 'SELECT campaign.campaignId, layout.layoutId FROM region INNER JOIN layout ON region.layoutId = layout.layoutId INNER JOIN lkcampaignlayout on layout.layoutId = lkcampaignlayout.layoutId INNER JOIN campaign ON campaign.campaignId = lkcampaignlayout.campaignId WHERE campaign.isLayoutSpecific = 1 AND region.regionId = :regionId ;';
             $params = ['regionId' => $this->regionId];
             $results = $this->store->select($sql, $params);
@@ -862,6 +872,7 @@ class Playlist implements \JsonSerializable
      *  a sub-playlist and update their durations also (cascade upward)
      * @return $this
      * @throws NotFoundException
+     * @throws \Xibo\Exception\DuplicateEntityException
      */
     public function updateDuration()
     {
@@ -873,6 +884,7 @@ class Playlist implements \JsonSerializable
         ]);
 
         $duration = 0;
+        $removedWidget = false;
 
         // What is the next time we need to update this Playlist (0 is never)
         $nextUpdate = 0;
@@ -890,6 +902,8 @@ class Playlist implements \JsonSerializable
                         'forceNotifyPlaylists' => false,
                         'notifyDisplays' => false
                     ]);
+
+                    $removedWidget = true;
                 }
 
                 // Do not assess it
@@ -922,6 +936,10 @@ class Playlist implements \JsonSerializable
         $this->requiresDurationUpdate = $nextUpdate;
 
         $this->save(['saveTags' => false, 'saveWidgets' => false]);
+
+        if ($removedWidget) {
+            $this->notifyLayouts();
+        }
 
         if ($delta !== 0) {
             // Use the closure table to update all parent playlists (including this one).

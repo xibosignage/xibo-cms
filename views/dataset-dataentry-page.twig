@@ -67,7 +67,14 @@
                 </div>
             </div>
         </div>
+        <ul class="nav nav-pills pull-left" style="margin-left: 5px;">
+            <li class="btn btn-success btn-xs"><a class="btns toggleMultiSelectMode" id="toggleMultiSelectMode" style="padding: 7px 7px;" title="{% trans "Click to toggle between Data Edit and Multi Select modes" %}" > <i class="" aria-hidden="true"></i> {% trans "Edit Mode" %}</a></li>
+        </ul>
+        <ul class="nav nav-pills pull-right deleteRowsControl" style="margin-left: 5px;">
+            <li class="btn btn-danger btn-xs"><a class="btns deleteSelectedRows" id="deleteSelectedRows" style="padding: 7px 7px;" title="{% trans "Click to delete selected rows" %}" > <i class="" aria-hidden="true"></i> {% trans "Delete Selected Rows" %}</a></li>
+        </ul>
     </div>
+
 {% endblock %}
 
 {% block javaScript %}
@@ -75,6 +82,8 @@
 
         var imageUrl = $("#datasets").data("imageUrl");
         var cols = [];
+        let editMode = 'Edit';
+
         cols.push({ "name": "id", "data": "id" });
         {% for col in dataSet.getColumn() %}
             {% if col.dataTypeId == 3 %}
@@ -133,6 +142,13 @@
 
                     $.extend(data, $("#datasets").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     return data;
+                },
+                complete: function (response) {
+
+                    if (response.responseJSON.data.exception != '' && response.responseJSON.data.exception != undefined) {
+                        let error = response.responseJSON.data.exception;
+                        $("#datasets tbody").html(error)
+                    }
                 }
             },
             "columns": cols
@@ -149,7 +165,70 @@
             var editUrl = "{{ urlFor("dataSet.data.edit.form", {"id": dataSet.dataSetId}) }}".replace(":rowId", data.id);
             XiboFormRender(editUrl);
         }, 500, true);
-        
+
+        // default is Edit mode, hence this should be our onclick event and deleteRows button should be hidden.
         $("#datasets tbody").on('click', 'tr', dataSetEditFormOpen);
+        $(".deleteRowsControl").hide();
+
+        // Toggle between Edit and Multi Select modes
+        // we also switch between two different onclick events depending on the mode and show/hide deleteRows button.
+        $('#toggleMultiSelectMode').on("click", function(e) {
+            e.preventDefault();
+
+            if (editMode === 'Edit') {
+
+                editMode = 'multiSelect';
+                $(this).text('Multi Select Mode');
+                $("#datasets tbody").off('click', 'tr');
+                $(".deleteRowsControl").show();
+                $('#datasets tbody').on('click', 'tr', (ev) => {
+
+                    // See if element has class already
+                    let hasClass = $(ev.currentTarget).hasClass('selected')
+
+                    // Add class to the clicked one ( or remove it if there was already there )
+                    $(ev.currentTarget).toggleClass('selected', !hasClass);
+                });
+
+            } else if (editMode === 'multiSelect') {
+
+                editMode = 'Edit';
+                $(this).text('Edit Mode');
+                $(".deleteRowsControl").hide();
+                $("#datasets tbody").off('click', 'tr');
+                $('#datasets tbody tr[role="row"].selected').removeClass('selected');
+                $("#datasets tbody").on('click', 'tr', dataSetEditFormOpen);
+            }
+        });
+
+        // get selected rows and their ids then pass it to dataSet data delete ajax call and reload the grid when done.
+        $('#deleteSelectedRows').on("click", function(e) {
+            e.preventDefault();
+
+            let rows = [];
+            let rowIds = [];
+            let processedRows = 0;
+
+            $('#datasets tbody tr[role="row"].selected').each((idx, ele) => {
+                rows.push(table.row(ele).data());
+            });
+
+            for (let i = 0; i < rows.length; i++) {
+                rowIds.push(rows[i].id);
+            }
+
+            rowIds.forEach(function(id) {
+                $.ajax({
+                    url: "{{ urlFor("dataSet.data.delete", {"id": dataSet.dataSetId}) }}".replace(":rowId", id),
+                    type: "DELETE",
+                    success: function (data) {
+                        processedRows++;
+                        if (processedRows === rowIds.length) {
+                            table.ajax.reload();
+                        }
+                    }
+                });
+            });
+        });
     </script>
 {% endblock %}

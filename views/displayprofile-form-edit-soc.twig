@@ -132,6 +132,10 @@
                     {% set helpText = "The end of the time window to connect to the CMS and download updates."|trans %}
                     {{ forms.time("downloadEndWindow", title, displayProfile.getSetting("downloadEndWindow"), helpText) }}
 
+                    {% set title = "Force HTTPS?"|trans %}
+                    {% set helpText = "Should Displays be forced to use HTTPS connection to the CMS?"|trans %}
+                    {{ forms.checkbox("forceHttps", title, displayProfile.getSetting("forceHttps"), helpText) }}
+
                     {% set title = "Operating Hours"|trans %}
                     {% set helpText = "Select a day part that should act as operating hours for this display - email alerts will not be sent outside of operating hours"|trans %}
                     {% set attributes = [
@@ -305,7 +309,7 @@
                             { val: 'true', text: trueText }
                         ] %}
 
-                        {% if lockOptions.usblock is defined and lockOptions.usblock is not null %}
+                        {% if lockOptions.usblock is defined and lockOptions.usblock is not null and displayProfile.type == "lg" %}
                             {% if lockOptions.usblock == true  %}
                                 {% set usblockValue = 'true' %}
                             {% else %}
@@ -325,7 +329,10 @@
                             {% set osdlockValue = 'empty' %}
                         {% endif %}
 
-                        {{ forms.dropdown("usblock", "single", usblockTitle, usblockValue, options, "val", "text", usblockHelp) }}
+                        {% if displayProfile.type == "lg" %}
+                            {{ forms.dropdown("usblock", "single", usblockTitle, usblockValue, options, "val", "text", usblockHelp) }}
+                        {% endif %}
+
                         {{ forms.dropdown("osdlock", "single", osdlockTitle, osdlockValue, options, "val", "text", osdlockHelp) }}
 
                         {# keylock (local and remote) #}

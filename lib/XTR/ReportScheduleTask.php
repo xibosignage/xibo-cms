@@ -22,11 +22,16 @@
 
 namespace Xibo\XTR;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Factory\UserGroupFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\ReportServiceInterface;
+use Slim\View;
+use Slim\Slim;
+
 
 /**
  * Class ReportScheduleTask
@@ -35,6 +40,9 @@ use Xibo\Service\ReportServiceInterface;
 class ReportScheduleTask implements TaskInterface
 {
     use TaskTrait;
+
+    /** @var View */
+    private $view;
 
     /** @var DateServiceInterface */
     private $date;
@@ -45,6 +53,9 @@ class ReportScheduleTask implements TaskInterface
     /** @var SavedReportFactory */
     private $savedReportFactory;
 
+    /** @var UserGroupFactory */
+    private $userGroupFactory;
+
     /** @var UserFactory */
     private $userFactory;
 
@@ -54,15 +65,22 @@ class ReportScheduleTask implements TaskInterface
     /** @var ReportServiceInterface */
     private $reportService;
 
+    /** @var NotificationFactory */
+    private $notificationFactory;
+
     /** @inheritdoc */
     public function setFactories($container)
     {
+        $this->view = $container->get('view');
         $this->date = $container->get('dateService');
         $this->userFactory = $container->get('userFactory');
         $this->mediaFactory = $container->get('mediaFactory');
         $this->savedReportFactory = $container->get('savedReportFactory');
+        $this->userGroupFactory = $container->get('userGroupFactory');
         $this->reportScheduleFactory = $container->get('reportScheduleFactory');
         $this->reportService = $container->get('reportService');
+        $this->notificationFactory = $container->get('notificationFactory');
+
         return $this;
     }
 
@@ -78,7 +96,7 @@ class ReportScheduleTask implements TaskInterface
     }
 
     /**
-     *
+     * Run report schedule
      */
     private function runReportSchedule()
     {
@@ -94,39 +112,10 @@ class ReportScheduleTask implements TaskInterface
 
             if ($nextRunDt <= $now) {
 
-                $fourHoursInSeconds = 4 * 3600;
-                $threeHoursInSeconds = 3 * 3600;
-                $twoHoursInSeconds = 2 * 3600;
-                $oneHourInSeconds = 1 * 3600;
-
-                $diffFromNow = $now - $nextRunDt;
-
-                $range = 100;
-                $random = rand(1, $range);
-                if ($diffFromNow < $oneHourInSeconds) {
-
-                    // don't run the report
-                    if ($random <= 70 ) { // 70% chance of skipping
-                        continue;
-                    }
-                } elseif ($diffFromNow < $twoHoursInSeconds) {
-
-                    // don't run the report
-                    if ($random <= 50 ) { // 50% chance of skipping
-                        continue;
-                    }
-                } elseif ($diffFromNow < $threeHoursInSeconds) {
-
-                    // don't run the report
-                    if ($random <= 40 ) { // 40% chance of skipping
-                        continue;
-                    }
-                } elseif ($diffFromNow < $fourHoursInSeconds) {
-
-                    // don't run the report
-                    if ($random <= 25 ) { // 25% chance of skipping
-                        continue;
-                    }
+                // random run of report schedules
+                $skip = $this->skipReportRun($now, $nextRunDt);
+                if ($skip == true) {
+                    continue;
                 }
 
                 // execute the report
@@ -173,11 +162,153 @@ class ReportScheduleTask implements TaskInterface
                 $savedReport = $this->savedReportFactory->create($saveAs, $reportSchedule->reportScheduleId, $media->mediaId, time(), $reportSchedule->userId);
                 $savedReport->save();
 
+                $this->createPdfAndNotification($reportSchedule, $savedReport, $media);
+
                 // Add the last savedreport in Report Schedule
                 $this->log->debug('Last savedReportId in Report Schedule: '. $savedReport->savedReportId);
                 $rs->lastSavedReportId = $savedReport->savedReportId;
                 $rs->save();
             }
         }
+    }
+
+    /**
+     * Create the PDF and save a notification
+     * @param $reportSchedule
+     * @param $savedReport
+     * @param $media
+     */
+    private function createPdfAndNotification($reportSchedule, $savedReport, $media)
+    {
+        $savedReportData = $this->reportService->getSavedReportResults($savedReport->savedReportId, $reportSchedule->reportName);
+
+        // Get the report config
+        $report = $this->reportService->getReportByName($reportSchedule->reportName);
+
+        if ($report->output_type == 'chart') {
+
+            $quickChartUrl = $this->config->getSetting('QUICK_CHART_URL');
+            if (!empty($quickChartUrl)) {
+                $script = $this->reportService->getReportChartScript($savedReport->savedReportId, $reportSchedule->reportName);
+                $src = $quickChartUrl. "/chart?width=1000&height=300&c=".$script;
+            } else {
+                $placeholder = __('Chart could not be drawn because the CMS has not been configured with a Quick Chart URL.');
+            }
+
+        } else { // only for tablebased report
+
+            $result = $savedReportData['chartData']['result'];
+            $tableData =json_decode($result, true);
+        }
+
+        // Get report email template
+        $emailTemplate = $this->reportService->getReportEmailTemplate($reportSchedule->reportName);
+
+        if(!empty($emailTemplate)) {
+
+            // Save PDF attachment
+            ob_start();
+            $this->view->display($emailTemplate,
+                [
+                    'header' => $report->description,
+                    'logo' => $this->config->uri('img/xibologo.png', true),
+                    'title' => $savedReport->saveAs,
+                    'periodStart' => $savedReportData['chartData']['periodStart'],
+                    'periodEnd' => $savedReportData['chartData']['periodEnd'],
+                    'generatedOn' => $this->date->parse($savedReport->generatedOn, 'U')->format('Y-m-d H:i:s'),
+                    'tableData' => isset($tableData) ? $tableData : null,
+                    'src' => isset($src) ? $src : null,
+                    'placeholder' => isset($placeholder) ? $placeholder : null
+                ]);
+            $body = ob_get_contents();
+            ob_end_clean();
+
+            try {
+                $mpdf = new \Mpdf\Mpdf([
+                    'orientation' => 'L',
+                    'mode' => 'c',
+                    'margin_left' => 20,
+                    'margin_right' => 20,
+                    'margin_top' => 20,
+                    'margin_bottom' => 20,
+                    'margin_header' => 5,
+                    'margin_footer' => 15
+                ]);
+                $mpdf->setFooter('Page {PAGENO}') ;
+                $mpdf->SetDisplayMode('fullpage');
+                $stylesheet =  file_get_contents($this->config->uri('css/email-report.css', true));
+                $mpdf->WriteHTML($stylesheet, 1);
+                $mpdf->WriteHTML($body);
+                $mpdf->Output($this->config->getSetting('LIBRARY_LOCATION'). 'attachment/filename-'.$media->mediaId.'.pdf', \Mpdf\Output\Destination::FILE);
+
+                // Create email notification with attachment
+                $filters = json_decode($reportSchedule->filterCriteria, true);
+                $sendEmail = isset($filters['sendEmail']) ? $filters['sendEmail'] : null;
+                $nonusers = isset($filters['nonusers']) ? $filters['nonusers'] : null;
+                if ($sendEmail) {
+                    $notification = $this->notificationFactory->createEmpty();
+                    $notification->subject = $report->description;
+                    $notification->body = __('Attached please find the report for %s', $savedReport->saveAs);
+                    $notification->createdDt = $this->date->getLocalDate(null, 'U');
+                    $notification->releaseDt = time() + 15 * 60 ; // 15 minutes after the notification is created so that the notification task can pick this
+                    $notification->isEmail = 1;
+                    $notification->isInterrupt = 0;
+                    $notification->userId = $savedReport->userId; // event owner
+                    $notification->filename = 'filename-'.$media->mediaId.'.pdf';
+                    $notification->originalFileName = 'saved_report.pdf';
+                    $notification->nonusers = $nonusers;
+
+                    // Get user group to create user notification
+                    $notificationUser = $this->userFactory->getById($savedReport->userId);
+                    $notification->assignUserGroup($this->userGroupFactory->getById($notificationUser->groupId));
+
+                    $notification->save();
+                }
+            } catch (\Exception $error) {
+                $this->log->error('Report PDF could not be created and notification is not saved.');
+                $this->runMessage .= ' - Report PDF could not be created and notification is not saved.' . PHP_EOL . PHP_EOL;
+            }
+        }
+
+    }
+
+    private function skipReportRun($now, $nextRunDt)
+    {
+        $fourHoursInSeconds = 4 * 3600;
+        $threeHoursInSeconds = 3 * 3600;
+        $twoHoursInSeconds = 2 * 3600;
+        $oneHourInSeconds = 1 * 3600;
+
+        $diffFromNow = $now - $nextRunDt;
+
+        $range = 100;
+        $random = rand(1, $range);
+        if ($diffFromNow < $oneHourInSeconds) {
+
+            // don't run the report
+            if ($random <= 70 ) { // 70% chance of skipping
+                return true;
+            }
+        } elseif ($diffFromNow < $twoHoursInSeconds) {
+
+            // don't run the report
+            if ($random <= 50 ) { // 50% chance of skipping
+                return true;
+            }
+        } elseif ($diffFromNow < $threeHoursInSeconds) {
+
+            // don't run the report
+            if ($random <= 40 ) { // 40% chance of skipping
+                return true;
+            }
+        } elseif ($diffFromNow < $fourHoursInSeconds) {
+
+            // don't run the report
+            if ($random <= 25 ) { // 25% chance of skipping
+                return true;
+            }
+        }
+
+        return false;
     }
 }

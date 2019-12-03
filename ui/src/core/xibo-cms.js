@@ -132,7 +132,18 @@ function XiboInitialise(scope) {
     // Search for any Buttons / Links on the page that are used to load forms
     $(scope + " .XiboFormButton").click(function() {
 
-        XiboFormRender($(this));
+        var eventStart = $(this).data("eventStart");
+        var eventEnd = $(this).data("eventEnd");
+        if (eventStart !== undefined && eventEnd !== undefined ) {
+            var data = {
+                eventStart: eventStart,
+                eventEnd: eventEnd,
+            };
+            XiboFormRender($(this), data);
+
+        } else {
+            XiboFormRender($(this));
+        }
 
         return false;
     });
@@ -400,7 +411,7 @@ function XiboInitialise(scope) {
 
     // make a vanilla layout, display and media selector for reuse
     $(scope + " .pagedSelect select.form-control").each(function() {
-        makePagedSelect($(this), ($(scope).hasClass("modal") ? $(scope) : $("body")));
+        makePagedSelect($(this), $("body"));
     });
 
     // make a local select that search for text or tags
@@ -586,7 +597,7 @@ function dataTableDateFromUnix(data, type, row) {
     if (data == null || data == 0)
         return "";
 
-    return moment(data, "X").tz(timezone).format(jsDateFormat);
+    return moment(data, "X").tz ? moment(data, "X").tz(timezone).format(jsDateFormat) : moment(data, "X").format(jsDateFormat);
 }
 
 function dataTableSpacingPreformatted(data, type, row) {
@@ -1593,9 +1604,9 @@ function XiboDialogApply(formId) {
     form.submit();
 }
 
-function XiboSwapDialog(formUrl) {
+function XiboSwapDialog(formUrl, data) {
     bootbox.hideAll();
-    XiboFormRender(formUrl);
+    XiboFormRender(formUrl, data);
 }
 
 function XiboRefreshAllGrids() {
@@ -1816,7 +1827,7 @@ function makePagedSelect(element, parent) {
  * @param parent
  */
 function makeLocalSelect(element, parent) {
-
+    
     element.select2({
         dropdownParent: ((parent == null) ? $("body") : $(parent)),
         matcher: function(params, data) {

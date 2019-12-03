@@ -29,10 +29,10 @@ use Phinx\Wrapper\TextWrapper;
  */
 class Environment
 {
-    public static $WEBSITE_VERSION_NAME = '2.2.0-alpha';
+    public static $WEBSITE_VERSION_NAME = '2.2.1';
     public static $XMDS_VERSION = '5';
     public static $XLF_VERSION = '2';
-    public static $VERSION_REQUIRED = '5.5';
+    public static $VERSION_REQUIRED = '7.0.8';
     public static $VERSION_UNSUPPORTED = '8.0';
 
     /** @var null cache migration status for the whole request */
@@ -55,10 +55,13 @@ class Environment
     {
         if (self::$_migration_status === null) {
             // Use a Phinx text wrapper to work out what the current status is
+            // make sure this does not output anything to our output buffer
+            ob_start();
             $phinx = new TextWrapper(new PhinxApplication(), ['configuration' => PROJECT_ROOT . '/phinx.php']);
             $phinx->getStatus();
 
             self::$_migration_status = $phinx->getExitCode();
+            ob_end_clean();
         }
 
         return self::$_migration_status;

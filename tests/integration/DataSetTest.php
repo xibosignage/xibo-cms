@@ -469,7 +469,8 @@ class DataSetTest extends LocalWebTestCase
             'uri' => 'http://localhost/resources/RemoteDataSet.json',
             'dataRoot' => 'data',
             'refreshRate' => 0,
-            'clearRate' => 1
+            'clearRate' => 1,
+            'sourceId' => 1
         ]);
         # Check if call was successful
         $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
@@ -484,6 +485,7 @@ class DataSetTest extends LocalWebTestCase
         $this->assertSame(1, $object->data->clearRate);
         $this->assertSame(0, $object->data->refreshRate);
         $this->assertSame(0, $object->data->lastClear);
+        $this->assertSame(1, $object->data->sourceId);
     }
 
     public function testEditRemoteDataSet()
@@ -503,7 +505,8 @@ class DataSetTest extends LocalWebTestCase
             'uri' => 'http://localhost/resources/RemoteDataSet.json',
             'dataRoot' => 'data',
             'clearRate' => 3600,
-            'refreshRate' => 1
+            'refreshRate' => 1,
+            'sourceId' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
         # Check if call was successful
@@ -518,6 +521,7 @@ class DataSetTest extends LocalWebTestCase
         $this->assertSame('http://localhost/resources/RemoteDataSet.json', $object->data->uri);
         $this->assertSame(3600, $object->data->clearRate);
         $this->assertSame(1, $object->data->refreshRate);
+        $this->assertSame(1, $object->data->sourceId);
     }
 
     public function testRemoteDataSetData()
@@ -538,7 +542,8 @@ class DataSetTest extends LocalWebTestCase
             'uri' => 'http://localhost/RemoteDataSet.json',
             'dataRoot' => 'data',
             'refreshRate' => 0,
-            'clearRate' => 1
+            'clearRate' => 1,
+            'sourceId' => 1
         ]);
 
         # Check if call was successful

@@ -2,8 +2,8 @@
 
 // Load templates
 const navigatorLayoutTemplate = require('../templates/navigator-layout.hbs');
-const navigatorLayoutNavbarTemplate = require('../templates/navigator-layout-edit-navbar.hbs');
-const PropertiesPanel = require('../designer/properties-panel.js');
+const navigatorLayoutNavbarTemplate = require('../templates/navigator-layout-navbar.hbs');
+const loadingTemplate = require('../templates/loading.hbs');
 
 const regionDefaultValues = {
     width: 250,
@@ -17,40 +17,32 @@ const regionDefaultValues = {
  * @param {bool} [options.edit = false] - Edit mode enable flag
  * @param {object} [options.editNavbar = null] - Container to render the navbar
  */
-let Navigator = function(container, {edit = false, editNavbar = null} = {}) {
-    this.editMode = edit;
+let Navigator = function(parent, container, {edit = false, editNavbar = null} = {}) {
+    this.parent = parent;
     this.DOMObject = container;
     this.navbarContainer = editNavbar;
-    this.regionPropertiesPanel = this.regionPropertiesPanel = new PropertiesPanel(
-        this.DOMObject.parent().find('#layout-navigator-properties-panel')
-    );
-
     this.layoutRenderScale = 1;
 };
 
 /**
  * Render Navigator and the layout
- * @param {Object} layout - the layout object to be rendered
  */
-Navigator.prototype.render = function(layout) {
-
+Navigator.prototype.render = function() {
     const self = this;
-    const app = getXiboApp();
+    const app = this.parent;
 
-    if(this.editMode) {
-        if(lD.selectedObject.type == 'region') {
-            this.openRegionPropertiesPanel();
-        } else {
-            this.closeRegionPropertiesPanel();
-        }
+    // Show loading template
+    this.DOMObject.html(loadingTemplate());
+
+    // Reset Navbar if exists
+    if(this.navbarContainer != null && this.navbarContainer != undefined) {
+        this.navbarContainer.removeClass();
+        this.navbarContainer.html('');
     }
-
+    
     // Apply navigator scale to the layout
-    const scaledLayout = layout.scale(this.DOMObject);
-
-    // Add edit flag
-    scaledLayout.edit = this.editMode;
-
+    const scaledLayout = app.layout.scale(this.DOMObject);
+    
     // Save render scale
     this.layoutRenderScale = scaledLayout.scaledDimensions.scale;
 
@@ -65,50 +57,48 @@ Navigator.prototype.render = function(layout) {
 
     // Make regions draggable and resizable if navigator's on edit mode
     // Get layout container
-    const layoutContainer = this.DOMObject.find('#' + layout.id);
+    const layoutContainer = this.DOMObject.find('#' + app.layout.id);
 
     // Find all the regions and enable drag and resize
-    if(this.editMode) {
-        this.DOMObject.find('#regions .designer-region.editable').each(function() {
+    this.DOMObject.find('#regions .designer-region.editable').each(function() {
 
-            let editDisabled = (lD.selectedObject.id != $(this).attr('id'));
+        let editDisabled = (lD.selectedObject.id != $(this).attr('id'));
 
-            $(this).resizable({
-                containment: layoutContainer,
-                disabled: editDisabled
-            }).draggable({
-                containment: layoutContainer,
-                disabled: editDisabled
-            }).on("resizestop dragstop",
-                function(event, ui) {
+        $(this).resizable({
+            containment: layoutContainer,
+            disabled: editDisabled
+        }).draggable({
+            containment: layoutContainer,
+            disabled: editDisabled
+        }).on("resizestop dragstop",
+            function(event, ui) {
 
-                    const scale = lD.navigatorEdit.layoutRenderScale;
-                    const transform = {
-                        'width': parseFloat(($(this).width() / scale).toFixed(2)),
-                        'height': parseFloat(($(this).height() / scale).toFixed(2)),
-                        'top': parseFloat(($(this).position().top / scale).toFixed(2)),
-                        'left': parseFloat(($(this).position().left / scale).toFixed(2))
-                    };
+                const scale = lD.navigator.layoutRenderScale;
+                const transform = {
+                    'width': parseFloat(($(this).width() / scale).toFixed(2)),
+                    'height': parseFloat(($(this).height() / scale).toFixed(2)),
+                    'top': parseFloat(($(this).position().top / scale).toFixed(2)),
+                    'left': parseFloat(($(this).position().left / scale).toFixed(2))
+                };
 
-                    if($(this).attr('id') == lD.selectedObject.id) {
+                if($(this).attr('id') == lD.selectedObject.id) {
 
-                        layout.regions[$(this).attr('id')].transform(transform, false);
+                    app.layout.regions[$(this).attr('id')].transform(transform, false);
 
-                        if(typeof window.regionChangesForm === 'function') {
-                            window.regionChangesForm.bind(self.DOMObject)(transform);
-                        }
+                    if(typeof window.regionChangesForm === 'function') {
+                        window.regionChangesForm.bind(self.DOMObject)(transform);
                     }
                 }
-            );
-        });
-    }
+            }
+        );
+    });
 
     // Enable select for each layout/region
     this.DOMObject.find('.selectable').click(function(e) {
         e.stopPropagation();
 
         // If there was a region select in edit mode, save properties panel
-        if(lD.selectedObject.type == 'region' && self.editMode) {
+        if(lD.selectedObject.type == 'region') {
             self.saveRegionPropertiesPanel();
         }
 
@@ -166,17 +156,7 @@ Navigator.prototype.render = function(layout) {
             }
         });
 
-        // Handle edit button
-        this.DOMObject.find('#edit-btn').click(function() {
-            lD.toggleNavigatorEditing(true);
-        }.bind(this));
-
-        this.DOMObject.find('#close-btn-top').click(function() {
-            lD.toggleNavigatorEditing(false);
-        }.bind(this));
-
         // Handle right click context menu
-        let editMode = this.editMode;
         this.DOMObject.find('.designer-region').contextmenu(function(ev) {
 
             if($(ev.currentTarget).is('.deletable, .permissionsModifiable')) {
@@ -198,8 +178,8 @@ Navigator.prototype.render = function(layout) {
 
     // Handle click on viewer to select layout
     this.DOMObject.off().click(function(e) {
-        if(lD.selectedObject.type != 'layout' && !this.editMode && !this.DOMObject.hasClass('selectable') && !['edit-btn'].includes(e.target.id)) {
-            if(lD.selectedObject.type == 'region' && self.editMode) {
+        if(lD.selectedObject.type != 'layout' && !this.DOMObject.hasClass('selectable') && !['edit-btn'].includes(e.target.id)) {
+            if(lD.selectedObject.type == 'region') {
                 self.saveRegionPropertiesPanel();
             }
 
@@ -220,99 +200,34 @@ Navigator.prototype.render = function(layout) {
 Navigator.prototype.renderNavbar = function() {
 
     const self = this;
-    const app = getXiboApp();
+    const app = this.parent;
 
     // Return if navbar does not exist
     if(this.navbarContainer === null) {
         return;
     }
 
-    // Get navigator trans
-    let newNavigatorEditTrans = navigatorTrans;
-
-    // Check if trash bin is active
-    let trashBinActive = lD.selectedObject.isDeletable && (lD.readOnlyMode === undefined || lD.readOnlyMode === false);
-
-    // Get text for bin tooltip
-    if(trashBinActive) {
-        newNavigatorEditTrans.trashBinActiveTitle = toolbarTrans.deleteObject.replace('%object%', lD.selectedObject.type);
-    }
-
-    // Check if there are some changes
-    let undoActive = lD.manager.changeHistory.length > 0;
-
-    // Get last action text for popup
-    if(undoActive) {
-        let lastAction = lD.manager.changeHistory[lD.manager.changeHistory.length - 1];
-        if(typeof historyManagerTrans != "undefined" && historyManagerTrans.revert[lastAction.type] != undefined) {
-            newNavigatorEditTrans.undoActiveTitle = historyManagerTrans.revert[lastAction.type].replace('%target%', lastAction.target.type);
-        } else {
-            newNavigatorEditTrans.undoActiveTitle = '[' + lastAction.target.type + '] ' + lastAction.type;
-        }
-    }
-
     this.navbarContainer.html(navigatorLayoutNavbarTemplate(
         {
-            selected: ((lD.selectedObject.isDeletable) ? '' : 'disabled'),
-            undo: ((lD.manager.changeHistory.length > 0) ? '' : 'disabled'),
-            trans: newNavigatorEditTrans,
-            regionSelected: (lD.selectedObject.type == 'region')
+            trans: navigatorTrans
         }
     ));
 
     // Navbar buttons
-    this.navbarContainer.find('#save-btn').click(function() {
-
-        // If form is opened, save it
-        if(lD.selectedObject.type == 'region') {
-            self.saveRegionPropertiesPanel();
-            self.closeRegionPropertiesPanel();
-            lD.selectObject();
-        }
-    });
-
     this.navbarContainer.find('#close-btn').click(function() {
         lD.toggleNavigatorEditing(false);
     });
 
-    this.navbarContainer.find('#undo-btn').click(function() {
-        lD.common.showLoadingScreen();
-
-        lD.manager.revertChange().then((res) => { // Success
-
-            lD.common.hideLoadingScreen();
-
-            toastr.success(res.message);
-
-            // Refresh designer according to local or API revert
-            if(res.localRevert) {
-                lD.refreshDesigner();
-            } else {
-                lD.reloadData(lD.layout);
-            }
-        }).catch((error) => { // Fail/error
-
-            lD.common.hideLoadingScreen();
-
-            // Show error returned or custom message to the user
-            let errorMessage = '';
-
-            if(typeof error == 'string') {
-                errorMessage = error;
-            } else {
-                errorMessage = error.errorThrown;
-            }
-
-            toastr.error(errorMessagesTrans.revertFailed.replace('%error%', errorMessage));
-        });
-    });
+    // Handle fullscreen button
+    this.navbarContainer.find('#fs-btn').click(function() {
+        this.toggleFullscreen();
+    }.bind(this));
 
     this.navbarContainer.find('#add-btn').click(function() {
         lD.common.showLoadingScreen();
 
         if(lD.selectedObject.type == 'region') {
             self.saveRegionPropertiesPanel();
-            self.closeRegionPropertiesPanel();
             lD.selectObject();
         }
 
@@ -342,75 +257,14 @@ Navigator.prototype.renderNavbar = function() {
         });
     });
 
-    this.navbarContainer.find('#delete-btn').click(function() {
-
-        if(lD.selectedObject.isDeletable) {
-
-            bootbox.confirm({
-                title: editorsTrans.deleteTitle.replace('%obj%', 'region'),
-                message: editorsTrans.deleteConfirm,
-                buttons: {
-                    confirm: {
-                        label: editorsTrans.yes,
-                        className: 'btn-danger'
-                    },
-                    cancel: {
-                        label: editorsTrans.no,
-                        className: 'btn-default'
-                    }
-                },
-                callback: function(result) {
-                    if(result) {
-
-                        lD.common.showLoadingScreen();
-
-                                // Delete element from the layout
-                                lD.layout.deleteElement(lD.selectedObject.type, lD.selectedObject.regionId).then((res) => { // Success
-                            
-                            lD.common.hideLoadingScreen();
-
-                                    // Behavior if successful 
-                                    toastr.success(res.message);
-                                    lD.reloadData(lD.layout);
-                                }).catch((error) => { // Fail/error
-
-                            lD.common.hideLoadingScreen();
-                            
-                                    // Show error returned or custom message to the user
-                                    let errorMessage = '';
-
-                                    if(typeof error == 'string') {
-                                        errorMessage = error;
-                                    } else {
-                                        errorMessage = error.errorThrown;
-                                    }
-
-                                    toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
-                                });
-                    }
-                }
-            }).attr('data-test', 'deleteRegionModal');
-        }
-    });
-
     // Initialize tooltips
     app.common.reloadTooltips(this.navbarContainer);
     
 };
 
-
-
-Navigator.prototype.openRegionPropertiesPanel = function() {
-    $('#layout-navigator-edit').addClass('region-selected');
-};
-
-Navigator.prototype.closeRegionPropertiesPanel = function() {
-    $('#layout-navigator-edit').removeClass('region-selected');
-};
-
 Navigator.prototype.saveRegionPropertiesPanel = function() {
-    const app = getXiboApp();
-    const form = $(this.regionPropertiesPanel.DOMObject).find('form');
+    const app = this.parent;
+    const form = $(app.propertiesPanel.DOMObject).find('form');
 
     // If form not loaded, prevent changes
     if(form.length == 0) {
@@ -421,7 +275,7 @@ Navigator.prototype.saveRegionPropertiesPanel = function() {
     const formNewData = form.serialize();
 
     // If form is valid, and it changed, submit it ( add change )
-    if(form.valid() && this.regionPropertiesPanel.formSerializedLoadData != formNewData) {
+    if(form.valid() && app.propertiesPanel.formSerializedLoadData != formNewData) {
 
         app.common.showLoadingScreen();
 
@@ -430,7 +284,7 @@ Navigator.prototype.saveRegionPropertiesPanel = function() {
             "saveForm",
             element.type, // targetType
             element[element.type + 'Id'], // targetId
-            this.regionPropertiesPanel.formSerializedLoadData, // oldValues
+            app.propertiesPanel.formSerializedLoadData, // oldValues
             formNewData, // newValues
             {
                 customRequestPath: {
@@ -464,6 +318,14 @@ Navigator.prototype.saveRegionPropertiesPanel = function() {
             toastr.error(errorMessage);
         });
     }
+};
+
+/**
+ * Toggle fullscreen
+ */
+Navigator.prototype.toggleFullscreen = function() {
+    this.DOMObject.parent().toggleClass('fullscreen');
+    this.render();
 };
 
 module.exports = Navigator;

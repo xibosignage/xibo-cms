@@ -81,6 +81,10 @@
                         {% set shuffle %}{% trans "Shuffle" %}{% endset %}
                         {% set tileSlide %}{% trans "Tile Slide" %}{% endset %}
                         {% set tileBlind %}{% trans "Tile Blind" %}{% endset %}
+                        {% set marqueeLeft %}{% trans "Marquee Left" %}{% endset %}
+                        {% set marqueeRight %}{% trans "Marquee Right" %}{% endset %}
+                        {% set marqueeUp %}{% trans "Marquee Up" %}{% endset %}
+                        {% set marqueeDown %}{% trans "Marquee Down" %}{% endset %}
                         {% set options = [
                         { effectid: "none", effect: noneOption },
                         { effectid: "fade", effect: fade },
@@ -91,12 +95,16 @@
                         { effectid: "flipVert", effect: flipVert},
                         { effectid: "shuffle", effect: shuffle},
                         { effectid: "tileSlide", effect: tileSlide},
-                        { effectid: "tileBlind", effect: tileBlind}
+                        { effectid: "tileBlind", effect: tileBlind},
+                        { effectid: "marqueeLeft", effect: marqueeLeft},
+                        { effectid: "marqueeRight", effect: marqueeRight},
+                        { effectid: "marqueeUp", effect: marqueeUp},
+                        { effectid: "marqueeDown", effect: marqueeDown}
                         ] %}
                         {{ forms.dropdown("effect", "single", title, module.getOption("effect"), options, "effectid", "effect", helpText) }}
 
                         {% set title %}{% trans "Speed" %}{% endset %}
-                        {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000)." %}{% endset %}
+                        {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)." %}{% endset %}
                         {{ forms.number("speed", title, module.getOption("speed"), helpText, "effect-controls") }}
                     </div>
 
@@ -141,7 +149,7 @@
                             {{ forms.message(playlistEditorMessage, 'playlist-editor-message template-advanced-editor-show') }}
                         </div>
 
-                        <div class="form-group ckeditor_controls inline-editor-hide" data-linked-to="template">
+                        <div class="form-group ckeditor_controls inline-editor-hide container-fluid" data-linked-to="template">
                             <div class="col-sm-6">
                                 <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
                                 <div class="col-sm-8 ckeditor_select_container">

@@ -774,8 +774,8 @@ if(!String.prototype.formatNum) {
 					layoutId: event.layoutId,
 					layoutName: layout.layout,
 					layoutStatus: layout.status,
-					eventFromDt: moment(event.fromDt, "X").tz(timezone).format(jsDateFormat),
-					eventToDt: moment(event.toDt, "X").tz(timezone).format(jsDateFormat),
+					eventFromDt: moment(event.fromDt, "X").tz ? moment(event.fromDt, "X").tz(timezone).format(jsDateFormat) : moment(event.fromDt, "X").format(jsDateFormat),
+					eventToDt: moment(event.toDt, "X").tz ? moment(event.toDt, "X").tz(timezone).format(jsDateFormat) : moment(event.toDt, "X").format(jsDateFormat),
 					eventDayPartId: event.dayPartId,
 					isAlways: event.isAlways,
 					isCustom: event.isCustom,
@@ -872,8 +872,8 @@ if(!String.prototype.formatNum) {
 	    }
 	    
 	    // Schedule
-		t.schedule = {link: targetEvent.link};
-		
+		t.schedule = {link: targetEvent.link, fromDt: targetEvent.fromDt * 1000, toDt: targetEvent.toDt * 1000};
+
 	    // Display groups
 		t.displayGroups = [];
 
@@ -1223,7 +1223,17 @@ if(!String.prototype.formatNum) {
 			event.preventDefault();
 			event.stopPropagation();
 
-			XiboFormRender($(this));
+            var eventStart = $(this).data("eventStart");
+            var eventEnd = $(this).data("eventEnd");
+            if (eventStart !== undefined && eventEnd !== undefined ) {
+                var data = {
+                    eventStart: eventStart,
+                    eventEnd: eventEnd,
+                };
+                XiboFormRender($(this), data);
+            } else {
+                XiboFormRender($(this));
+            }
 		});
 	};
 

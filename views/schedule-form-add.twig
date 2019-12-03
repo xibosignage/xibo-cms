@@ -44,24 +44,34 @@
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                 <li class="repeats"><a href="#repeats" role="tab" data-toggle="tab"><span>{% trans "Repeats" %}</span></a></li>
                 <li class="reminders"><a href="#reminders" role="tab" data-toggle="tab"><span>{% trans "Reminder" %}</span></a></li>
+                <li class="geoSchedule"><a href="#geoSchedule" role="tab" data-toggle="tab"><span>{% trans "Geo Location" %}</span></a></li>
             </ul>
             {% set dayPartMessage %}{% trans "Select the start time for this event" %}{% endset %}
             {% set notDayPartMessage %}{% trans "Start and end time will be defined by the daypart's configuration for this day of the week. Use a repeating schedule to apply this event over multiple days" %}{% endset %}
-            <form id="scheduleAddForm" autocomplete="off" class="form-horizontal" method="post" action="{{ urlFor("schedule.add") }}" data-daypart-message="{{ dayPartMessage }}" data-not-daypart-message="{{ notDayPartMessage }}">
+            <form id="scheduleAddForm" autocomplete="off" class="form-horizontal" method="post" action="{{ urlFor("schedule.add") }}" data-daypart-message="{{ dayPartMessage }}" data-not-daypart-message="{{ notDayPartMessage }}" data-default-lat="{{ defaultLat }}" data-default-long = "{{ defaultLong }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
 
                         {% set title %}{% trans "Event Type" %}{% endset %}
                         {% set helpText %}{% trans "Select the type of event to schedule" %}{% endset %}
-                        {% set layoutEventType %}{% trans "Campaign/Layout" %}{% endset %}
+                        {% set layoutEventType %}{% trans "Layout" %}{% endset %}
+                        {% set campaignEventType %}{% trans "Campaign" %}{% endset %}
                         {% set commandEventType %}{% trans "Command" %}{% endset %}
                         {% set overlayEventType %}{% trans "Overlay Layout" %}{% endset %}
+                        {% set interruptEventType %}{% trans "Interrupt Layout" %}{% endset %}
                         {% set eventTypes = [
                         {id: 1, label: layoutEventType},
+                        {id: 5, label: campaignEventType},
                         {id: 2, label: commandEventType},
-                        {id: 3, label: overlayEventType}
+                        {id: 3, label: overlayEventType},
+                        {id: 4, label: interruptEventType}
                         ] %}
                         {{ forms.dropdown("eventTypeId", "single", title, "", eventTypes, "id", "label", helpText) }}
+
+                        <div class="interrupt-control">
+                            {% set message = "Only one Interrupt Layout will show at the same time. If the Schedule for a Player resolves to more than one, then the Interrupt shown will depend on Priority and Display Order."|trans %}
+                            {{ forms.message(message, "alert alert-info") }}
+                        </div>
 
                         {% set title %}{% trans "Display" %}{% endset %}
                         {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
@@ -100,13 +110,15 @@
                         {# Campaign / Layout list. We want to build two arrays for us to use. #}
                         {% set attributes = [
                             { name: "data-search-url", value:  urlFor("schedule.campaign.search") },
-                            { name: "data-trans-campaigns", value:  "Campaigns"|trans },
-                            { name: "data-trans-layouts", value:  "Layouts"|trans }
                         ] %}
 
-                        {% set title %}{% trans "Layout / Campaign" %}{% endset %}
-                        {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
+                        {% set title %}{% trans "Layout" %}{% endset %}
+                        {% set helpText %}{% trans "Please select a Layout for this Event to show" %}{% endset %}
                         {{ forms.dropdown("campaignId", "single", title, "", null, "id", "value", helpText, "layout-control", "", "", "", attributes) }}
+
+                        {% set title %}{% trans "Share of Voice" %}{% endset %}
+                        {% set helpText %}{% trans "The percentage of time this Layout should be shown." %}{% endset %}
+                        {{ forms.number("shareOfVoice", title, 0, helpText, "interrupt-control") }}
 
                         <div class="form-group preview-button-container">
                             <div class="col-md-offset-2 col-md-10">
@@ -121,11 +133,11 @@
 
                         {% set title %}{% trans "Display Order" %}{% endset %}
                         {% set helpText %}{% trans "Please select the order this event should appear in relation to others when there is more than one event scheduled" %}{% endset %}
-                        {{ forms.number("displayOrder", title, "", helpText) }}
+                        {{ forms.number("displayOrder", title, "", helpText, 'displayOrder-control') }}
 
                         {% set title %}{% trans "Priority" %}{% endset %}
                         {% set helpText %}{% trans "Sets the event priority - events with the highest priority play in preference to lower priority events." %}{% endset %}
-                        {{ forms.number("isPriority", title, "", helpText) }}
+                        {{ forms.number("isPriority", title, "", helpText, 'priority-control') }}
 
                         {% set title %}{% trans "Run at CMS Time?" %}{% endset %}
                         {% set helpText %}{% trans "When selected, your event will run according to the timezone set on the CMS, otherwise the event will run at Display local time" %}{% endset %}
@@ -199,6 +211,16 @@
                         {% set message %}{% trans "Use the form fields below to create a set of reminders for this event. New fields can be added by clicking on the + icon at the end of the row. Use the tick box to receive a notification by email alternatively reminders will be shown in the message center." %}{% endset %}
                         {{ forms.message(message) }}
                         <div id="reminderFields" data-reminders="{{ reminders|json_encode }}"></div>
+                    </div>
+
+                    <div class="tab-pane" id="geoSchedule">
+                        {% set title %}{% trans "Geo Schedule?" %}{% endset %}
+                        {% set helpText %}{% trans "Should this event be location aware? Enable this checkbox and select an area on the map below" %}{% endset %}
+                        {{ forms.checkbox("isGeoAware", title, 0, helpText, "") }}
+
+                        <div id="geoScheduleMap" style="height: 500px; width: 100%" class="hidden"></div>
+
+                        {{ forms.hidden("geoLocation", "") }}
                     </div>
                 </div>
             </form>

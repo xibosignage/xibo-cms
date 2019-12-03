@@ -184,6 +184,10 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('installWithLoadedLinkLibraries', $this->getSanitizer()->getCheckbox('installWithLoadedLinkLibraries'), $ownConfig, $config);
                 }
 
+                if ($this->getSanitizer()->hasParam('forceHttps')) {
+                    $displayProfile->setSetting('forceHttps', $this->getSanitizer()->getCheckbox('forceHttps'), $ownConfig, $config);
+                }
+
                 break;
 
             case 'windows':
@@ -201,6 +205,10 @@ trait DisplayProfileConfigFields
 
                 if ($this->getSanitizer()->hasParam('xmrNetworkAddress')) {
                     $displayProfile->setSetting('xmrNetworkAddress', $this->getSanitizer()->getString('xmrNetworkAddress'), $ownConfig, $config);
+                }
+
+                if ($this->getSanitizer()->hasParam('dayPartId')) {
+                    $displayProfile->setSetting('dayPartId', $this->getSanitizer()->getInt('dayPartId'), $ownConfig, $config);
                 }
 
                 if ($this->getSanitizer()->hasParam('statsEnabled')) {
@@ -307,6 +315,10 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('preventSleep', $this->getSanitizer()->getCheckbox('preventSleep'), $ownConfig, $config);
                 }
 
+                if ($this->getSanitizer()->hasParam('forceHttps')) {
+                    $displayProfile->setSetting('forceHttps', $this->getSanitizer()->getCheckbox('forceHttps'), $ownConfig, $config);
+                }
+
                 break;
 
             case 'linux':
@@ -320,6 +332,10 @@ trait DisplayProfileConfigFields
 
                 if ($this->getSanitizer()->hasParam('downloadEndWindow')) {
                     $displayProfile->setSetting('downloadEndWindow', $this->getSanitizer()->getString('downloadEndWindow'), $ownConfig, $config);
+                }
+
+                if ($this->getSanitizer()->hasParam('dayPartId')) {
+                    $displayProfile->setSetting('dayPartId', $this->getSanitizer()->getInt('dayPartId'), $ownConfig, $config);
                 }
 
                 if ($this->getSanitizer()->hasParam('xmrNetworkAddress')) {
@@ -394,6 +410,10 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('preventSleep', $this->getSanitizer()->getCheckbox('preventSleep'), $ownConfig, $config);
                 }
 
+                if ($this->getSanitizer()->hasParam('forceHttps')) {
+                    $displayProfile->setSetting('forceHttps', $this->getSanitizer()->getCheckbox('forceHttps'), $ownConfig, $config);
+                }
+
                 break;
 
             case 'lg':
@@ -413,6 +433,10 @@ trait DisplayProfileConfigFields
 
                 if ($this->getSanitizer()->hasParam('downloadEndWindow')) {
                     $displayProfile->setSetting('downloadEndWindow', $this->getSanitizer()->getString('downloadEndWindow'), $ownConfig, $config);
+                }
+
+                if ($this->getSanitizer()->hasParam('dayPartId')) {
+                    $displayProfile->setSetting('dayPartId', $this->getSanitizer()->getInt('dayPartId'), $ownConfig, $config);
                 }
 
                 if ($this->getSanitizer()->hasParam('xmrNetworkAddress')) {
@@ -457,6 +481,10 @@ trait DisplayProfileConfigFields
 
                 if ($this->getSanitizer()->hasParam('mediaInventoryTimer')) {
                     $displayProfile->setSetting('mediaInventoryTimer', $this->getSanitizer()->getInt('mediaInventoryTimer'), $ownConfig, $config);
+                }
+
+                if ($this->getSanitizer()->hasParam('forceHttps')) {
+                    $displayProfile->setSetting('forceHttps', $this->getSanitizer()->getCheckbox('forceHttps'), $ownConfig, $config);
                 }
 
                 if ($this->getSanitizer()->hasParam('timers')) {
@@ -556,7 +584,7 @@ trait DisplayProfileConfigFields
                 // Options object to be converted to a JSON string
                 $lockOptions = (object)[];
 
-                if ($usblock != 'empty') {
+                if ($usblock != 'empty' && $displayProfile->type == 'lg') {
                     $lockOptions->usblock = $usblock === 'true' ? true : false;
                 }
 

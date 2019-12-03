@@ -123,6 +123,30 @@ class Widget implements \JsonSerializable
     public $toDt;
 
     /**
+     * @SWG\Property(description="Transition Type In")
+     * @var int
+     */
+    public $transitionIn;
+
+    /**
+     * @SWG\Property(description="Transition Type out")
+     * @var int
+     */
+    public $transitionOut;
+
+    /**
+     * @SWG\Property(description="Transition duration in")
+     * @var int
+     */
+    public $transitionDurationIn;
+
+    /**
+     * @SWG\Property(description="Transition duration out")
+     * @var int
+     */
+    public $transitionDurationOut;
+
+    /**
      * @SWG\Property(description="An array of Widget Options")
      * @var WidgetOption[]
      */
@@ -882,9 +906,9 @@ class Widget implements \JsonSerializable
             ]);
         }
 
-        // Should we notify the Layout
-        // TODO: question whether we will ever do this anymore? A draft layout wouldn't ever be built, and we'd mark the parent Layout
-        // as status = 3 when we checked it in
+        // Notify Layout
+        // We do this for draft and published versions of the Layout to keep the Layout Status fresh and the modified
+        // date updated.
         if ($options['notify']) {
             // Notify the Layout
             $this->getStore()->update('

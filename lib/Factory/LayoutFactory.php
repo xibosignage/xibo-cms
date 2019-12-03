@@ -517,9 +517,25 @@ class LayoutFactory extends BaseFactory
                 $widget->fromDt = ($mediaNode->getAttribute('fromDt') === '') ? Widget::$DATE_MIN : $mediaNode->getAttribute('fromDt');
                 $widget->toDt = ($mediaNode->getAttribute('toDt') === '') ? Widget::$DATE_MAX : $mediaNode->getAttribute('toDt');
 
+                $minSubYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MIN))->subYear()->format('U');
+                $minAddYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MIN))->addYear()->format('U');
+                $maxSubYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MAX))->subYear()->format('U');
+                $maxAddYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MAX))->addYear()->format('U');
+
                 // convert the date string to a unix timestamp, if the layout xlf does not contain dates, then set it to the $DATE_MIN / $DATE_MAX which are already unix timestamps, don't attempt to convert them
-                $widget->fromDt = ($widget->fromDt === Widget::$DATE_MIN) ? Widget::$DATE_MIN : $this->getDate()->parse($widget->fromDt)->format('U');
-                $widget->toDt = ($widget->toDt === Widget::$DATE_MAX) ? Widget::$DATE_MAX : $this->getDate()->parse($widget->toDt)->format('U');
+                // we need to check if provided from and to dates are within $DATE_MIN +- year to avoid issues with CMS Instances in different timezones https://github.com/xibosignage/xibo/issues/1934
+
+                if ($widget->fromDt === Widget::$DATE_MIN || ($this->getDate()->parse($widget->fromDt)->format('U') > $minSubYear && $this->getDate()->parse($widget->fromDt)->format('U') < $minAddYear) ) {
+                    $widget->fromDt = Widget::$DATE_MIN;
+                } else {
+                    $widget->fromDt = $this->getDate()->parse($widget->fromDt)->format('U');
+                }
+
+                if ($widget->toDt === Widget::$DATE_MAX || ($this->getDate()->parse($widget->toDt)->format('U') > $maxSubYear && $this->getDate()->parse($widget->toDt)->format('U') < $maxAddYear) ) {
+                    $widget->toDt = Widget::$DATE_MAX;
+                } else {
+                    $widget->toDt = $this->getDate()->parse($widget->toDt)->format('U');
+                }
 
                 $this->getLog()->debug('Adding Widget to object model. ' . $widget);
 
@@ -766,9 +782,25 @@ class LayoutFactory extends BaseFactory
                 $widget->fromDt = ($mediaNode['fromDt'] === '') ? Widget::$DATE_MIN : $mediaNode['fromDt'];
                 $widget->toDt = ($mediaNode['toDt'] === '') ? Widget::$DATE_MAX : $mediaNode['toDt'];
 
+                $minSubYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MIN))->subYear()->format('U');
+                $minAddYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MIN))->addYear()->format('U');
+                $maxSubYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MAX))->subYear()->format('U');
+                $maxAddYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MAX))->addYear()->format('U');
+
                 // convert the date string to a unix timestamp, if the layout xlf does not contain dates, then set it to the $DATE_MIN / $DATE_MAX which are already unix timestamps, don't attempt to convert them
-                $widget->fromDt = ($widget->fromDt === Widget::$DATE_MIN) ? Widget::$DATE_MIN : $this->getDate()->parse($widget->fromDt)->format('U');
-                $widget->toDt = ($widget->toDt === Widget::$DATE_MAX) ? Widget::$DATE_MAX : $this->getDate()->parse($widget->toDt)->format('U');
+                // we need to check if provided from and to dates are within $DATE_MIN +- year to avoid issues with CMS Instances in different timezones https://github.com/xibosignage/xibo/issues/1934
+
+                if ($widget->fromDt === Widget::$DATE_MIN || ($this->getDate()->parse($widget->fromDt)->format('U') > $minSubYear && $this->getDate()->parse($widget->fromDt)->format('U') < $minAddYear) ) {
+                    $widget->fromDt = Widget::$DATE_MIN;
+                } else {
+                    $widget->fromDt = $this->getDate()->parse($widget->fromDt)->format('U');
+                }
+
+                if ($widget->toDt === Widget::$DATE_MAX || ($this->getDate()->parse($widget->toDt)->format('U') > $maxSubYear && $this->getDate()->parse($widget->toDt)->format('U') < $maxAddYear) ) {
+                    $widget->toDt = Widget::$DATE_MAX;
+                } else {
+                    $widget->toDt = $this->getDate()->parse($widget->toDt)->format('U');
+                }
 
                 $this->getLog()->debug('Adding Widget to object model. ' . $widget);
 
@@ -1606,6 +1638,7 @@ class LayoutFactory extends BaseFactory
         $select .= "        layout.publishedStatusId, ";
         $select .= "        `status`.status AS publishedStatus, ";
         $select .= "        layout.publishedDate, ";
+        $select .= "        layout.autoApplyTransitions, ";
 
         if ($this->getSanitizer()->getInt('campaignId', $filterBy) !== null) {
             $select .= ' lkcl.displayOrder, ';
@@ -1652,6 +1685,40 @@ class LayoutFactory extends BaseFactory
             ';
 
             $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('activeDisplayGroupId', $filterBy) !== null) {
+            $displayGroupIds = [];
+            $displayId = null;
+
+            // get the displayId if we were provided with display specific displayGroup in the filter
+            $sql = 'SELECT display.displayId FROM display INNER JOIN lkdisplaydg ON lkdisplaydg.displayId = display.displayId INNER JOIN displaygroup ON displaygroup.displayGroupId = lkdisplaydg.displayGroupId WHERE displaygroup.displayGroupId = :displayGroupId AND displaygroup.isDisplaySpecific = 1';
+
+            foreach ($this->getStore()->select($sql, ['displayGroupId' => $this->getSanitizer()->getInt('activeDisplayGroupId', $filterBy)]) as $row) {
+                $displayId = $row['displayId'];
+            }
+
+            // if we have displayId, get all displayGroups to which the display is a member of
+            if ($displayId !== null) {
+                $sql = 'SELECT displayGroupId FROM lkdisplaydg WHERE displayId = :displayId';
+
+                foreach ($this->getStore()->select($sql, ['displayId' => $displayId]) as $row) {
+                    $displayGroupIds[] = $this->getSanitizer()->int($row['displayGroupId']);
+                }
+            }
+
+            // if we are filtering by actual displayGroup, use just the displayGroupId in the param
+            if ($displayGroupIds == []) {
+                $displayGroupIds[] = $this->getSanitizer()->getInt('activeDisplayGroupId', $filterBy);
+            }
+
+            // get events for the selected displayGroup / Display and all displayGroups the display is member of
+            $body .= '
+                      INNER JOIN `lkscheduledisplaygroup` 
+                        ON lkscheduledisplaygroup.displayGroupId IN ( ' . implode(',', $displayGroupIds) . ' )
+                      INNER JOIN schedule 
+                        ON schedule.eventId = lkscheduledisplaygroup.eventId
+             ';
         }
 
         // MediaID
@@ -1818,18 +1885,37 @@ class LayoutFactory extends BaseFactory
         }
 
         // Show All, Used or UnUsed
+        // Used - In active schedule, scheduled in the future, directly assigned to displayGroup, default Layout.
+        // Unused - Every layout NOT matching the Used ie not in active schedule, not scheduled in the future, not directly assigned to any displayGroup, not default layout.
         if ($this->getSanitizer()->getInt('filterLayoutStatusId', 1, $filterBy) != 1)  {
             if ($this->getSanitizer()->getInt('filterLayoutStatusId', $filterBy) == 2) {
+
                 // Only show used layouts
+                $now = $this->getDate()->parse()->format('U');
+                $sql = 'SELECT DISTINCT schedule.CampaignID FROM schedule WHERE ( ( schedule.fromDt < '. $now . ' OR schedule.fromDt = 0 ) ' . ' AND schedule.toDt > ' . $now . ') OR schedule.fromDt > ' . $now;
+                $campaignIds = [];
+                foreach ($this->getStore()->select($sql, []) as $row) {
+                    $campaignIds[] = $row['CampaignID'];
+                }
                 $body .= ' AND ('
-                    . '     campaign.CampaignID IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
-                    . '     OR layout.layoutID IN (SELECT DISTINCT defaultlayoutid FROM display) '
+                    . '      campaign.CampaignID IN ( ' . implode(',', array_filter($campaignIds)) . ' ) 
+                             OR layout.layoutID IN (SELECT DISTINCT defaultlayoutid FROM display) 
+                             OR layout.layoutID IN (SELECT DISTINCT layoutId FROM lklayoutdisplaygroup)'
                     . ' ) ';
             }
             else {
                 // Only show unused layouts
-                $body .= ' AND campaign.CampaignID NOT IN (SELECT DISTINCT schedule.CampaignID FROM schedule) '
-                    . ' AND layout.layoutID NOT IN (SELECT DISTINCT defaultlayoutid FROM display) ';
+                $now = $this->getDate()->parse()->format('U');
+                $sql = 'SELECT DISTINCT schedule.CampaignID FROM schedule WHERE ( ( schedule.fromDt < '. $now . ' OR schedule.fromDt = 0 ) ' . ' AND schedule.toDt > ' . $now . ') OR schedule.fromDt > ' . $now;
+                $campaignIds = [];
+                foreach ($this->getStore()->select($sql, []) as $row) {
+                    $campaignIds[] = $row['CampaignID'];
+                }
+
+                $body .= ' AND campaign.CampaignID NOT IN ( ' . implode(',', array_filter($campaignIds)) . ' )  
+                     AND layout.layoutID NOT IN (SELECT DISTINCT defaultlayoutid FROM display) 
+                     AND layout.layoutID NOT IN (SELECT DISTINCT layoutId FROM lklayoutdisplaygroup) 
+                     ';
             }
         }
 
@@ -1860,10 +1946,21 @@ class LayoutFactory extends BaseFactory
             $body .= ' AND user.userTypeId <> 4 ';
         }
 
+        if ($this->getSanitizer()->getInt('activeDisplayGroupId', $filterBy) !== null) {
+
+            $date = $this->getDate()->parse()->format('U');
+
+            // for filter by displayGroup, we need to add some additional filters in WHERE clause to show only relevant Layouts at the time the Layout grid is viewed
+            $body .= ' AND campaign.campaignId = schedule.campaignId 
+                       AND ( schedule.fromDt < '. $date . ' OR schedule.fromDt = 0 ) ' . ' AND schedule.toDt > ' . $date;
+        }
+
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        if (is_array($sortOrder)) {
+            $order .= ' ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
         // Paging
@@ -1904,6 +2001,7 @@ class LayoutFactory extends BaseFactory
             $layout->publishedStatusId = $this->getSanitizer()->int($row['publishedStatusId']);
             $layout->publishedStatus = $this->getSanitizer()->string($row['publishedStatus']);
             $layout->publishedDate = $this->getSanitizer()->string($row['publishedDate']);
+            $layout->autoApplyTransitions = $this->getSanitizer()->int($row['autoApplyTransitions']);
 
             $layout->groupsWithPermissions = $row['groupsWithPermissions'];
             $layout->setOriginals();

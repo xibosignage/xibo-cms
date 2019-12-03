@@ -233,6 +233,14 @@ class Layout implements \JsonSerializable
      */
     public $enableStat;
 
+    /**
+     * @var int
+     * @SWG\Property(
+     *  description="Flag indicating whether the default transitions should be applied to this Layout"
+     * )
+     */
+    public $autoApplyTransitions;
+
     // Child items
     /** @var Region[]  */
     public $regions = [];
@@ -731,7 +739,7 @@ class Layout implements \JsonSerializable
             foreach ($this->campaigns as $campaign) {
                 /* @var Campaign $campaign */
                 $campaign->setChildObjectDependencies($this->layoutFactory);
-                $campaign->unassignLayout($this);
+                $campaign->unassignLayout($this, true);
                 $campaign->save(['validate' => false]);
             }
 
@@ -790,15 +798,18 @@ class Layout implements \JsonSerializable
             'userId' => $this->ownerId,
             'layoutExact' => $this->layout,
             'notLayoutId' => ($this->parentId !== null) ? $this->parentId : $this->layoutId,
-            'disableUserCheck' => 1
+            'disableUserCheck' => 1,
+            'excludeTemplates' => -1
         ]);
 
-        if (count($duplicates) > 0)
-            throw new DuplicateEntityException(sprintf(__("You already own a layout called '%s'. Please choose another name."), $this->layout));
+        if (count($duplicates) > 0) {
+            throw new DuplicateEntityException(sprintf(__("You already own a Layout called '%s'. Please choose another name."), $this->layout));
+        }
 
         // Check zindex is positive
-        if ($this->backgroundzIndex < 0)
+        if ($this->backgroundzIndex < 0) {
             throw new InvalidArgumentException(__('Layer must be 0 or a positive number'), 'backgroundzIndex');
+        }
     }
 
     /**
@@ -963,6 +974,8 @@ class Layout implements \JsonSerializable
     /**
      * Export the Layout as its XLF
      * @return string
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      * @throws XiboException
      */
     public function toXlf()
@@ -973,7 +986,7 @@ class Layout implements \JsonSerializable
 
         // Keep track of whether this layout has an empty region
         $layoutHasEmptyRegion = false;
-        $layoutCountRegionsWithMinDuration = 0;
+        $layoutCountRegionsWithDuration = 0;
 
         $document = new \DOMDocument();
         $layoutNode = $document->createElement('layout');
@@ -1048,6 +1061,13 @@ class Layout implements \JsonSerializable
                 $layoutHasEmptyRegion = true;
             }
 
+            // Work out if we have any "lead regions", those are Widgets with a duration
+            foreach ($widgets as $widget) {
+                if ($widget->useDuration == 1 || $countWidgets > 1 || $regionLoop == 1 || $widget->type == 'video') {
+                    $layoutCountRegionsWithDuration++;
+                }
+            }
+
             foreach ($widgets as $widget) {
                 /* @var Widget $widget */
                 $module = $this->moduleFactory->createWithWidget($widget, $region);
@@ -1069,12 +1089,15 @@ class Layout implements \JsonSerializable
                 // the only time we want to override this, is if we want it set to the Minimum Duration for the XLF
                 $widgetDuration = $widget->calculatedDuration;
 
-                if ($widget->useDuration == 0 && $countWidgets <= 1 && $regionLoop == 0 && count($this->regions) > $layoutCountRegionsWithMinDuration + 1) {
-                    // We have a widget without a specified duration in a region on its own and the region isn't set to
-                    // loop.
-                    // Reset to the minimum duration
+                // Is this Widget one that does not have a duration of its own?
+                // Assuming we have at least 1 region with a set duration, then we ought to
+                // Reset to the minimum duration
+                if ($widget->useDuration == 0 && $countWidgets <= 1 && $regionLoop == 0 && $widget->type != 'video'
+                    && $layoutCountRegionsWithDuration >= 1
+                ) {
+                    // Make sure this Widget expires immediately so that the other Regions can be the leaders when
+                    // it comes to expiring the Layout
                     $widgetDuration = Widget::$widgetMinDuration;
-                    $layoutCountRegionsWithMinDuration++;
                 }
 
                 // Region duration
@@ -1104,7 +1127,7 @@ class Layout implements \JsonSerializable
                     $mediaNode->setAttribute('fromDt', $this->date->getLocalDate($this->date->parse($widget->fromDt, 'U')));
                 }
 
-                if ($widget->toDt != null || $widget->fromDt === Widget::$DATE_MAX) {
+                if ($widget->toDt != null || $widget->toDt === Widget::$DATE_MAX) {
                     $mediaNode->setAttribute('toDt', $this->date->getLocalDate($this->date->parse($widget->toDt, 'U')));
                 }
 
@@ -1190,6 +1213,19 @@ class Layout implements \JsonSerializable
 
                         $this->getLog()->debug('For '.$widget->widgetId.': Layout '. (($layoutEnableStat == 1) ? 'On': 'Off') . ' Widget '.$widgetEnableStat . '. Media node output '. $enableStat);
                     }
+                }
+
+                // automatically set the transitions on the layout xml, we are not saving widgets here to avoid deadlock issues.
+                if ($this->autoApplyTransitions == 1) {
+                    $widgetTransIn = $widget->getOptionValue('transIn', $this->config->getSetting('DEFAULT_TRANSITION_IN'));
+                    $widgetTransOut = $widget->getOptionValue('transOut', $this->config->getSetting('DEFAULT_TRANSITION_OUT'));
+                    $widgetTransInDuration = $widget->getOptionValue('transInDuration', $this->config->getSetting('DEFAULT_TRANSITION_DURATION'));
+                    $widgetTransOutDuration = $widget->getOptionValue('transOutDuration', $this->config->getSetting('DEFAULT_TRANSITION_DURATION'));
+
+                    $widget->setOptionValue('transIn', 'attrib', $widgetTransIn);
+                    $widget->setOptionValue('transInDuration', 'attrib', $widgetTransInDuration);
+                    $widget->setOptionValue('transOut', 'attrib', $widgetTransOut);
+                    $widget->setOptionValue('transOutDuration', 'attrib', $widgetTransOutDuration);
                 }
 
                 // Set enable stat collection flag
@@ -1490,6 +1526,8 @@ class Layout implements \JsonSerializable
      * Save the XLF to disk if necessary
      * @param array $options
      * @return string the path
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      * @throws XiboException
      */
     public function xlfToDisk($options = [])
@@ -1507,6 +1545,30 @@ class Layout implements \JsonSerializable
             $this->getLog()->debug('XLF needs building for Layout ' . $this->layoutId);
 
             $this->load(['loadPlaylists' => true]);
+
+            // Layout auto Publish
+            if ($this->config->getSetting('DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB') == 1 && $this->isChild()) {
+
+                // we are editing a draft layout, the published date is set on the original layout, therefore we need our parent.
+                $parent = $this->layoutFactory->loadById($this->parentId);
+
+                $layoutCurrentPublishedDate = $this->date->parse($parent->publishedDate);
+                $newPublishDateString = $this->date->getLocalDate($this->date->parse()->addMinutes(30), 'Y-m-d H:i:s');
+                $newPublishDate = $this->date->parse($newPublishDateString);
+
+                if ($layoutCurrentPublishedDate->format('U') > $newPublishDate->format('U')) {
+                    // Layout is set to Publish manually on a date further than 30 min from now, we don't touch it in this case.
+                    $this->getLog()->debug('Layout is set to Publish manually on a date further than 30 min from now, do not update');
+
+                }  elseif ($parent->publishedDate != null &&  $layoutCurrentPublishedDate->format('U') < $this->date->getLocalDate($this->date->parse()->subMinutes(5), 'U')) {
+                    // Layout is set to Publish manually at least 5 min in the past at the moment, we expect the Regular Maintenance to build it before that happens
+                    $this->getLog()->debug('Layout should be built by Regular Maintenance');
+
+                } else {
+                    $parent->setPublishedDate($newPublishDateString);
+                    $this->getLog()->debug('Layout set to automatically Publish on ' . $newPublishDateString);
+                }
+            }
 
             // Assume error
             $this->status = 4;
@@ -1711,8 +1773,8 @@ class Layout implements \JsonSerializable
     {
         $this->getLog()->debug('Adding Layout' . $this->layout);
 
-        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, enableStat, duration)
-                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat, 0)';
+        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, enableStat, duration, autoApplyTransitions)
+                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat, 0, :autoApplyTransitions)';
 
         $time = $this->date->getLocalDate();
 
@@ -1730,7 +1792,8 @@ class Layout implements \JsonSerializable
             'backgroundColor' => $this->backgroundColor,
             'backgroundzIndex' => $this->backgroundzIndex,
             'parentId' => ($this->parentId == null) ? null : $this->parentId,
-            'enableStat' => $this->enableStat
+            'enableStat' => $this->enableStat,
+            'autoApplyTransitions' => ($this->autoApplyTransitions == null) ? 0 : $this->autoApplyTransitions
         ));
 
         // Add a Campaign
@@ -1801,7 +1864,8 @@ class Layout implements \JsonSerializable
               `userId` = :userId,
               `schemaVersion` = :schemaVersion,
               `statusMessage` = :statusMessage,
-              enableStat = :enableStat
+              enableStat = :enableStat,
+              autoApplyTransitions = :autoApplyTransitions
          WHERE layoutID = :layoutid
         ';
 
@@ -1824,7 +1888,8 @@ class Layout implements \JsonSerializable
             'userId' => $this->ownerId,
             'schemaVersion' => $this->schemaVersion,
             'statusMessage' => (empty($this->statusMessage)) ? null : json_encode($this->statusMessage),
-            'enableStat' => $this->enableStat
+            'enableStat' => $this->enableStat,
+            'autoApplyTransitions' => $this->autoApplyTransitions
         ));
 
         // Update the Campaign

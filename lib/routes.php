@@ -37,8 +37,10 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
  *
  * @SWG\Info(
  *  title="Xibo API",
- *  description="Xibo CMS API",
- *  version="2.0",
+ *  description="Xibo CMS API.
+       Using HTTP formData requests.
+       All PUT requests require Content-Type:application/x-www-form-urlencoded header.",
+ *  version="2.2",
  *  termsOfService="http://xibo.org.uk/legal",
  *  @SWG\License(
  *      name="AGPLv3 or later",
@@ -85,6 +87,7 @@ $app->get('/schedule/:id/events', '\Xibo\Controller\Schedule:eventList')->name('
 $app->post('/schedule', '\Xibo\Controller\Schedule:add')->name('schedule.add');
 $app->put('/schedule/:id', '\Xibo\Controller\Schedule:edit')->name('schedule.edit');
 $app->delete('/schedule/:id', '\Xibo\Controller\Schedule:delete')->name('schedule.delete');
+$app->delete('/schedulerecurrence/:id', '\Xibo\Controller\Schedule:deleteRecurrence')->name('schedule.recurrence.delete');
 
 /**
  * Notification
@@ -95,6 +98,8 @@ $app->delete('/schedule/:id', '\Xibo\Controller\Schedule:delete')->name('schedul
  */
 $app->get('/notification', '\Xibo\Controller\Notification:grid')->name('notification.search');
 $app->post('/notification', '\Xibo\Controller\Notification:add')->name('notification.add');
+$app->map('/notification/attachment', '\Xibo\Controller\Notification:addAttachment')->via('HEAD');
+$app->post('/notification/attachment', '\Xibo\Controller\Notification:addAttachment')->name('notification.addattachment');
 $app->put('/notification/:id', '\Xibo\Controller\Notification:edit')->name('notification.edit');
 $app->delete('/notification/:id', '\Xibo\Controller\Notification:delete')->name('notification.delete');
 
@@ -178,6 +183,7 @@ $app->get('/campaign', '\Xibo\Controller\Campaign:grid')->name('campaign.search'
 $app->post('/campaign', '\Xibo\Controller\Campaign:add')->name('campaign.add');
 $app->put('/campaign/:id', '\Xibo\Controller\Campaign:edit')->name('campaign.edit');
 $app->delete('/campaign/:id', '\Xibo\Controller\Campaign:delete')->name('campaign.delete');
+$app->post('/campaign/:id/copy', '\Xibo\Controller\Campaign:copy')->name('campaign.copy');
 
 // We use POST requests so that we can support multiple records
 $app->post('/campaign/layout/assign/:id', '\Xibo\Controller\Campaign:assignLayout')->name('campaign.assign.layout');
@@ -245,6 +251,8 @@ $app->put('/display/defaultlayout/:id', '\Xibo\Controller\Display:setDefaultLayo
 $app->put('/display/requestscreenshot/:id', '\Xibo\Controller\Display:requestScreenShot')->name('display.requestscreenshot');
 $app->get('/display/screenshot/:id', '\Xibo\Controller\Display:screenShot')->name('display.screenShot');
 $app->post('/display/:id/displaygroup/assign', '\Xibo\Controller\Display:assignDisplayGroup')->name('display.assign.displayGroup');
+$app->put('/display/:id/moveCms', '\Xibo\Controller\Display:moveCms')->name('display.moveCms');
+$app->post('/display/addViaCode', '\Xibo\Controller\Display:addViaCode')->name('display.addViaCode');
 
 /**
  * Display Groups
@@ -522,8 +530,7 @@ $app->get('/report/data/:name', '\Xibo\Controller\Report:getReportData')->name('
 /**
  * Player Versions
  * @SWG\Tag(
- *  name="version",
- *  description="Player Versions"
+ *  name="Player Software",
  * )
  */
 $app->get('/playersoftware', '\Xibo\Controller\PlayerSoftware:grid')->name('playersoftware.search');

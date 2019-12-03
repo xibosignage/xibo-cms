@@ -31,3 +31,6 @@ services:
     environment:
       CMS_DEV_MODE: "true"
       MYSQL_DATABASE: "cms"
+
+  quickchart:
+    image: ianw/quickchart

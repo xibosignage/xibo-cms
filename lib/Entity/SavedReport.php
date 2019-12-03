@@ -75,7 +75,7 @@ class SavedReport implements \JsonSerializable
     public $mediaId;
 
     /**
-     * @SWG\Property(description="Original name of the uploaded installer file")
+     * @SWG\Property(description="Original name of the saved report media file")
      * @var string
      */
     public $originalFileName;

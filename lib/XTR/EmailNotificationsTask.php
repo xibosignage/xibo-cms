@@ -73,11 +73,21 @@ class EmailNotificationsTask implements TaskInterface
                 $mail->Encoding = 'base64';
                 $mail->From = $msgFrom;
 
+                // Add attachment
+                if ($notification->filename != null) {
+                    $mail->addAttachment($this->config->getSetting('LIBRARY_LOCATION'). 'attachment/' . $notification->filename, $notification->originalFileName);
+                }
+
                 if ($msgFromName != null)
                     $mail->FromName = $msgFromName;
 
                 $mail->Subject = $notification->subject;
                 $mail->addAddress($notification->email);
+
+                $addresses = explode(',', $notification->nonusers);
+                foreach ($addresses as $address) {
+                    $mail->AddAddress($address);
+                }
 
                 // Body
                 $mail->isHTML(true);

@@ -22,6 +22,7 @@ namespace Xibo\Controller;
 use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\UserFactory;
@@ -467,6 +468,10 @@ class Login extends Base
                 $issuer = $appName;
             }
 
+            if ($mailFrom == '') {
+                throw new InvalidArgumentException(__('Sending email address in CMS Settings is not configured'), 'mail_from');
+            }
+
             $tfa = new TwoFactorAuth($issuer);
 
             // Nonce parts (nonce isn't ever stored, only the hash of it is stored, it only exists in the email)
@@ -550,7 +555,11 @@ class Login extends Base
 
             $tfa = new TwoFactorAuth($issuer);
 
-            $result = $tfa->verifyCode($user->twoFactorSecret, $this->getSanitizer()->getString('code'));
+            if ($user->twoFactorTypeId === 1 && $user->email !== '') {
+                $result = $tfa->verifyCode($user->twoFactorSecret, $this->getSanitizer()->getString('code'), 8);
+            } else {
+                $result = $tfa->verifyCode($user->twoFactorSecret, $this->getSanitizer()->getString('code'), 2);
+            }
         } elseif (isset($_POST['recoveryCode'])) {
             // get the array of recovery codes, go through them and try to match provided code
             $codes = $user->twoFactorRecoveryCodes;

@@ -49,6 +49,10 @@
                                     {% set helpText %}{% trans "Show items owned by users in the selected User Group." %}{% endset %}
                                     {{ inline.dropdown("ownerUserGroupId", "single", title, "", [{groupId:null, group:""}]|merge(groups), "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
 
+                                    {% set title %}{% trans "Display Group" %}{% endset %}
+                                    {% set helpText %}{% trans "Show Layouts active on the selected Display / Display Group" %}{% endset %}
+                                    {{ inline.dropdown("activeDisplayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup", helpText, "selectPicker", "", "", "", attributes) }}
+
                                 </div>
                                 <div class="tab-pane" id="advanced-filter">
 

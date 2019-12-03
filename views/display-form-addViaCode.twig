@@ -1,0 +1,59 @@
+{#
+/**
+* Copyright (C) 2019 Xibo Signage Ltd
+*
+* Xibo - Digital Signage - http://www.xibo.org.uk
+*
+* This file is part of Xibo.
+*
+* Xibo is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Affero General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* any later version.
+*
+* Xibo is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Affero General Public License for more details.
+*
+* You should have received a copy of the GNU Affero General Public License
+* along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+*/
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Display via Code" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#displayAddViaCodeForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="displayAddViaCodeForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("display.addViaCode") }}">
+
+                <div class="alert alert-info">
+                    {% set message = "After submitting this form with valid code, your CMS Address and Key will be sent and stored in the temporary storage in our Authentication Service."|trans %}
+                    {{ forms.message(message) }}
+                    {% set message2 = "The Player linked to the submitted code, will make regular calls to our Authentication Service to retrive the CMS details and configure itself with them.
+                     Your details are removed from the temporary storage once the Player is configured"|trans %}
+                    {{ forms.message(message2) }}
+                    {% set message3 = "Please note that your CMS needs to make a successful call to our Authentication Service for this feature to work."|trans %}
+                    {{ forms.message(message3) }}
+                </div>
+
+                {% set title %}{% trans "Code" %}{% endset %}
+                {% set helpText %}{% trans "Please provide the code displayed on the Player screen" %}{% endset %}
+                {{ forms.input("user_code", title, "", helpText) }}
+
+            </form>
+        </div>
+    </div>
+{% endblock %}

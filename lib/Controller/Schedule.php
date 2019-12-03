@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 use Stash\Interfaces\PoolInterface;
+use Xibo\Entity\ScheduleExclusion;
 use Xibo\Entity\ScheduleReminder;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
@@ -32,6 +33,7 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ScheduleExclusionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\ScheduleReminderFactory;
 use Xibo\Helper\Session;
@@ -63,6 +65,11 @@ class Schedule extends Base
      * @var ScheduleReminderFactory
      */
     private $scheduleReminderFactory;
+
+    /**
+     * @var ScheduleExclusionFactory
+     */
+    private $scheduleExclusionFactory;
 
     /**
      * @var DisplayGroupFactory
@@ -111,8 +118,9 @@ class Schedule extends Base
      * @param MediaFactory $mediaFactory
      * @param DayPartFactory $dayPartFactory
      * @param ScheduleReminderFactory $scheduleReminderFactory
+     * @param ScheduleExclusionFactory $scheduleExclusionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $pool, $scheduleFactory, $displayGroupFactory, $campaignFactory, $commandFactory, $displayFactory, $layoutFactory, $mediaFactory, $dayPartFactory, $scheduleReminderFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $pool, $scheduleFactory, $displayGroupFactory, $campaignFactory, $commandFactory, $displayFactory, $layoutFactory, $mediaFactory, $dayPartFactory, $scheduleReminderFactory, $scheduleExclusionFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -127,28 +135,47 @@ class Schedule extends Base
         $this->mediaFactory = $mediaFactory;
         $this->dayPartFactory = $dayPartFactory;
         $this->scheduleReminderFactory = $scheduleReminderFactory;
+        $this->scheduleExclusionFactory = $scheduleExclusionFactory;
     }
 
     function displayPage()
     {
         // We need to provide a list of displays
         $displayGroupIds = $this->session->get('displayGroupIds');
-        $groups = array();
-        $displays = array();
 
-        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $display) {
-            /* @var \Xibo\Entity\DisplayGroup $display */
-            if ($display->isDisplaySpecific == 1) {
-                $displays[] = $display;
-            } else {
-                $groups[] = $display;
+        if (!is_array($displayGroupIds)) {
+            $displayGroupIds = [];
+        }
+
+        $displayGroups = [];
+
+        // Boolean to check if the option show all was saved in session
+        $displayGroupsShowAll = false;
+
+        if (count($displayGroupIds) > 0) {
+            foreach ($displayGroupIds as $displayGroupId) {
+                if ($displayGroupId == -1) {
+                    // If we have the show all option selected, go no further.
+                    $displayGroupsShowAll = true;
+                    break;
+                }
+
+                try {
+                    $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+                    if ($this->getUser()->checkViewable($displayGroup)) {
+                        $displayGroups[] = $displayGroup;
+                    }
+                } catch (NotFoundException $e) {
+                    $this->getLog()->debug('Saved filter option for displayGroupId that no longer exists.');
+                }
             }
         }
 
         $data = [
-            'selectedDisplayGroupIds' => $displayGroupIds,
-            'groups' => $groups,
-            'displays' => $displays
+            'displayGroupIds' => $displayGroupIds,
+            'displayGroups' => $displayGroups,
+            'displayGroupsShowAll' => $displayGroupsShowAll
         ];
 
         // Render the Theme and output
@@ -195,6 +222,8 @@ class Schedule extends Base
      *      )
      *  )
      * )
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\NotFoundException
      */
     function eventData()
     {
@@ -202,6 +231,7 @@ class Schedule extends Base
         $this->setNoOutput();
 
         $displayGroupIds = $this->getSanitizer()->getIntArray('displayGroupIds');
+        $campaignId = $this->getSanitizer()->getInt('campaignId');
         $originalDisplayGroupIds = $displayGroupIds;
         $start = $this->getDate()->parse($this->getSanitizer()->getString('from', 1000) / 1000, 'U');
         $end = $this->getDate()->parse($this->getSanitizer()->getString('to', 1000) / 1000, 'U');
@@ -248,6 +278,10 @@ class Schedule extends Base
             'futureSchedulesTo' => $end->format('U'),
             'displayGroupIds' => $displayGroupIds
         ];
+
+        if ($campaignId != null) {
+            $filter['campaignId'] = $campaignId;
+        }
 
         foreach ($this->scheduleFactory->query('FromDT', $filter) as $row) {
             /* @var \Xibo\Entity\Schedule $row */
@@ -353,7 +387,8 @@ class Schedule extends Base
                     'sameDay' => ($fromDt->day == $toDt->day && $fromDt->month == $toDt->month && $fromDt->year == $toDt->year),
                     'editable' => $editable,
                     'event' => $row,
-                    'scheduleEvent' => $scheduleEvent
+                    'scheduleEvent' => $scheduleEvent,
+                    'recurringEvent' => ($row->recurrenceType != '') ? true : false
                 );
             }
         }
@@ -367,7 +402,7 @@ class Schedule extends Base
      *
      * @SWG\Get(
      *  path="/schedule/{displayGroupId}/events",
-     *  operationId="scheduleCalendarData",
+     *  operationId="scheduleCalendarDataDisplayGroup",
      *  tags={"schedule"},
      *  @SWG\Parameter(
      *      name="displayGroupId",
@@ -651,6 +686,10 @@ class Schedule extends Base
             }
         }
 
+        // get the default longitude and latitude from CMS options
+        $defaultLat = (float)$this->getConfig()->getSetting('DEFAULT_LAT');
+        $defaultLong = (float)$this->getConfig()->getSetting('DEFAULT_LONG');
+
         $this->getState()->template = 'schedule-form-add';
         $this->getState()->setData([
             'commands' => $this->commandFactory->query(),
@@ -658,7 +697,9 @@ class Schedule extends Base
             'displayGroupIds' => $displayGroupIds,
             'displayGroups' => $displayGroups,
             'help' => $this->getHelp()->link('Schedule', 'Add'),
-            'reminders' => []
+            'reminders' => [],
+            'defaultLat' => $defaultLat,
+            'defaultLong' => $defaultLong
         ]);
     }
 
@@ -808,6 +849,20 @@ class Schedule extends Base
      *          ref="#/definitions/ScheduleReminderArray"
      *      )
      *   ),
+     *   @SWG\Parameter(
+     *      name="isGeoAware",
+     *      in="formData",
+     *      description="Flag (0-1), whether this event is using Geo Location",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="geoLocation",
+     *      in="formData",
+     *      description="Array of comma separated strings each with comma separated pair of coordinates",
+     *      type="array",
+     *      required=false
+     *   ),
      *   @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -839,10 +894,27 @@ class Schedule extends Base
         $schedule->displayOrder = $this->getSanitizer()->getInt('displayOrder', 0);
         $schedule->isPriority = $this->getSanitizer()->getInt('isPriority', 0);
         $schedule->dayPartId = $this->getSanitizer()->getInt('dayPartId', $customDayPart->dayPartId);
+        $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $this->getSanitizer()->getInt('shareOfVoice') : null;
+        $schedule->isGeoAware = $this->getSanitizer()->getCheckbox('isGeoAware');
+
+        if ($this->isApi()) {
+            if ($schedule->isGeoAware === 1) {
+                // get string array from API
+                $coordinates = $this->getSanitizer()->getStringArray('geoLocation');
+
+                // generate geo json and assign to Schedule
+                $schedule->geoLocation = $this->createGeoJson($coordinates);
+            }
+        } else {
+
+            // if we are not using API, then valid GeoJSON is created in the front end.
+            $schedule->geoLocation = $this->getSanitizer()->getString('geoLocation');
+        }
 
         // Workaround for cases where we're supplied 0 as the dayPartId (legacy custom dayPart)
-        if ($schedule->dayPartId === 0)
+        if ($schedule->dayPartId === 0) {
             $schedule->dayPartId = $customDayPart->dayPartId;
+        }
 
         $schedule->syncTimezone = $this->getSanitizer()->getCheckbox('syncTimezone', 0);
         $schedule->syncEvent = $this->getSanitizer()->getCheckbox('syncEvent', 0);
@@ -972,6 +1044,10 @@ class Schedule extends Base
      */
     function editForm($eventId)
     {
+        // Recurring event start/end
+        $eventStart = $this->getSanitizer()->getInt('eventStart', 1000) / 1000;
+        $eventEnd = $this->getSanitizer()->getInt('eventEnd', 1000) / 1000;
+
         $schedule = $this->scheduleFactory->getById($eventId);
         $schedule->load();
 
@@ -993,6 +1069,10 @@ class Schedule extends Base
         // Get all reminders
         $scheduleReminders = $this->scheduleReminderFactory->query(null, ['eventId' => $eventId]);
 
+        // get the default longitude and latitude from CMS options
+        $defaultLat = (float)$this->getConfig()->getSetting('DEFAULT_LAT');
+        $defaultLong = (float)$this->getConfig()->getSetting('DEFAULT_LONG');
+
         $this->getState()->template = 'schedule-form-edit';
         $this->getState()->setData([
             'event' => $schedule,
@@ -1005,7 +1085,84 @@ class Schedule extends Base
                 return $element->displayGroupId;
             }, $schedule->displayGroups),
             'help' => $this->getHelp()->link('Schedule', 'Edit'),
-            'reminders' => $scheduleReminders
+            'reminders' => $scheduleReminders,
+            'defaultLat' => $defaultLat,
+            'defaultLong' => $defaultLong,
+            'recurringEvent' => ($schedule->recurrenceType != '') ? true : false,
+            'eventStart' => $eventStart,
+            'eventEnd' => $eventEnd,
+        ]);
+    }
+
+    /**
+     * Shows the Delete a Recurring Event form
+     * @param int $eventId
+     */
+    function deleteRecurrenceForm($eventId)
+    {
+        // Recurring event start/end
+        $eventStart = $this->getSanitizer()->getInt('eventStart', 1000);
+        $eventEnd = $this->getSanitizer()->getInt('eventEnd', 1000);
+
+        $schedule = $this->scheduleFactory->getById($eventId);
+        $schedule->load();
+
+        if (!$this->isEventEditable($schedule->displayGroups)) {
+            throw new AccessDeniedException();
+        }
+
+        $this->getState()->template = 'schedule-recurrence-form-delete';
+        $this->getState()->setData([
+            'event' => $schedule,
+            'help' => $this->getHelp()->link('Schedule', 'Delete'),
+            'eventStart' => $eventStart,
+            'eventEnd' => $eventEnd,
+        ]);
+    }
+
+    /**
+     * Deletes a recurring Event from all displays
+     * @param int $eventId
+     *
+     * @SWG\Delete(
+     *  path="/schedulerecurrence/{eventId}",
+     *  operationId="schedulerecurrenceDelete",
+     *  tags={"schedule"},
+     *  summary="Delete a Recurring Event",
+     *  description="Delete a Recurring Event of a Scheduled Event",
+     *  @SWG\Parameter(
+     *      name="eventId",
+     *      in="path",
+     *      description="The Scheduled Event ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     */
+    public function deleteRecurrence($eventId)
+    {
+        $schedule = $this->scheduleFactory->getById($eventId);
+        $schedule->load();
+
+        if (!$this->isEventEditable($schedule->displayGroups))
+            throw new AccessDeniedException();
+
+        // Recurring event start/end
+        $eventStart = $this->getSanitizer()->getInt('eventStart', 1000);
+        $eventEnd = $this->getSanitizer()->getInt('eventEnd', 1000);
+        $scheduleExclusion = $this->scheduleExclusionFactory->create($schedule->eventId, $eventStart, $eventEnd);
+
+        $this->getLog()->debug('Create a schedule exclusion record');
+        $scheduleExclusion->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => __('Deleted Event')
         ]);
     }
 
@@ -1141,6 +1298,20 @@ class Schedule extends Base
      *          ref="#/definitions/ScheduleReminderArray"
      *      )
      *   ),
+     *   @SWG\Parameter(
+     *      name="isGeoAware",
+     *      in="formData",
+     *      description="Flag (0-1), whether this event is using Geo Location",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="geoLocation",
+     *      in="formData",
+     *      description="Array of comma separated strings each with comma separated pair of coordinates",
+     *      type="array",
+     *      required=false
+     *   ),
      *   @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1160,8 +1331,9 @@ class Schedule extends Base
         ]);
 
 
-        if (!$this->isEventEditable($schedule->displayGroups))
+        if (!$this->isEventEditable($schedule->displayGroups)) {
             throw new AccessDeniedException();
+        }
 
         $schedule->eventTypeId = $this->getSanitizer()->getInt('eventTypeId');
         $schedule->campaignId = $this->getSanitizer()->getInt('campaignId');
@@ -1177,6 +1349,29 @@ class Schedule extends Base
         $schedule->recurrenceRepeatsOn = (empty($recurrenceRepeatsOn)) ? null : implode(',', $recurrenceRepeatsOn);
         $schedule->recurrenceMonthlyRepeatsOn = $this->getSanitizer()->getInt('recurrenceMonthlyRepeatsOn');
         $schedule->displayGroups = [];
+        $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $this->getSanitizer()->getInt('shareOfVoice') : null;
+        $schedule->isGeoAware = $this->getSanitizer()->getCheckbox('isGeoAware');
+
+        if ($this->isApi()) {
+            if ($schedule->isGeoAware === 1) {
+                // get string array from API
+                $coordinates = $this->getSanitizer()->getStringArray('geoLocation');
+
+                // generate geo json and assign to Schedule
+                $schedule->geoLocation = $this->createGeoJson($coordinates);
+            }
+        } else {
+
+            // if we are not using API, then valid GeoJSON is created in the front end.
+            $schedule->geoLocation = $this->getSanitizer()->getString('geoLocation');
+        }
+
+        // if we are editing Layout/Campaign event that was set with Always daypart and change it to Command event type
+        // the daypartId will remain as always, which will then cause the event to "disappear" from calendar
+        // https://github.com/xibosignage/xibo/issues/1982
+        if ($schedule->eventTypeId == \Xibo\Entity\Schedule::$COMMAND_EVENT) {
+            $schedule->dayPartId = $this->dayPartFactory->getCustomDayPart()->dayPartId;
+        }
 
         foreach ($this->getSanitizer()->getIntArray('displayGroupIds') as $displayGroupId) {
             $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
@@ -1322,6 +1517,15 @@ class Schedule extends Base
             $scheduleReminder->isEmail = $reminder['reminder_isEmailHidden'];
 
             $this->saveReminder($schedule, $scheduleReminder);
+        }
+
+        // If this is a recurring event delete all schedule exclusions
+        if ($schedule->recurrenceType != '') {
+            // Delete schedule exclusions
+            $scheduleExclusions = $this->scheduleExclusionFactory->query(null, ['eventId' => $schedule->eventId]);
+            foreach ($scheduleExclusions as $exclusion) {
+                $exclusion->delete();
+            }
         }
 
         // Return
@@ -1548,5 +1752,47 @@ class Schedule extends Base
             $scheduleReminder->save();
 
         }
+    }
+
+    private function createGeoJson($coordinates)
+    {
+        $properties = new \StdClass();
+        $convertedCoordinates = [];
+
+
+        // coordinates come as array of strings, we need convert that to array of arrays with float values for the Geo JSON
+        foreach ($coordinates as $coordinate) {
+
+            // each $coordinate is a comma separated string with 2 coordinates
+            // make it into an array
+            $explodedCords = explode(',', $coordinate);
+
+            // prepare a new array, we will add float values to it, need to be cleared for each set of coordinates
+            $floatCords = [];
+
+            // iterate through the exploded array, change the type to float store in a new array
+            foreach ($explodedCords as $explodedCord) {
+                $explodedCord = (float)$explodedCord;
+                $floatCords[] = $explodedCord;
+            }
+
+            // each set of coordinates will be added to this new array, which we will use in the geo json
+            $convertedCoordinates[] = $floatCords;
+        }
+
+        $geometry = [
+            'type' => 'Polygon',
+            'coordinates' => [
+                $convertedCoordinates
+            ]
+        ];
+
+        $geoJson = [
+            'type'      => 'Feature',
+            'properties' => $properties,
+            'geometry'  => $geometry
+        ];
+
+        return json_encode($geoJson);
     }
 }

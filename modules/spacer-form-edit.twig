@@ -1,0 +1,63 @@
+{#
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Spacer" %}
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="spacerEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                {{ forms.input("name", title, module.getOption("name"), helpText) }}
+
+                {% set title %}{% trans "Set a duration?" %}{% endset %}
+                {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
+
+                {% set title %}{% trans "Duration" %}{% endset %}
+                {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+
+                {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
+                {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Widget. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
+
+                {% set offOption %}{% trans "Off" %}{% endset %}
+                {% set onOption %}{% trans "On" %}{% endset %}
+                {% set inheritOption %}{% trans "Inherit" %}{% endset %}
+                {% set options = [
+                    { id: "Off", value: offOption },
+                    { id: "On", value: onOption },
+                    { id: "Inherit", value: inheritOption }
+                ] %}
+                {{ forms.dropdown("enableStat", "single", title, module.getOption("enableStat", theme.getSetting("WIDGET_STATS_ENABLED_DEFAULT")), options, "id", "value", helpText) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

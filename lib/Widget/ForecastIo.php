@@ -146,7 +146,7 @@ class ForecastIo extends ModuleWidget
      *  operationId="WidgetWeatherEdit",
      *  tags={"widget"},
      *  summary="Edit Weather Widget",
-     *  description="Edit Weather Widget",
+     *  description="Edit Weather Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",

@@ -110,6 +110,18 @@ class ProofOfPlay implements ReportInterface
     }
 
     /** @inheritdoc */
+    public function getReportChartScript($results)
+    {
+        return null;
+    }
+
+    /** @inheritdoc */
+    public function getReportEmailTemplate()
+    {
+        return 'proofofplay-email-template.twig';
+    }
+
+    /** @inheritdoc */
     public function getReportForm()
     {
         return [
@@ -189,6 +201,9 @@ class ProofOfPlay implements ReportInterface
             $schedule = ReportSchedule::$SCHEDULE_YEARLY;
             $filterCriteria['reportFilter'] = 'lastyear';
         }
+
+        $filterCriteria['sendEmail'] = $this->getSanitizer()->getCheckbox('sendEmail');
+        $filterCriteria['nonusers'] = $this->getSanitizer()->getString('nonusers');
 
         // Return
         return [
@@ -541,7 +556,7 @@ class ProofOfPlay implements ReportInterface
     {
 
         $fromDt = $fromDt->format('U');
-        $toDt = $toDt->startOfDay()->addDay()->format('U'); // added a day
+        $toDt = $toDt->format('U');
 
         // Media on Layouts Ran
         $select = '
@@ -851,7 +866,7 @@ class ProofOfPlay implements ReportInterface
     {
 
         $fromDt = new UTCDateTime($fromDt->format('U')*1000);
-        $toDt = new UTCDateTime($toDt->addDay()->format('U')*1000);
+        $toDt = new UTCDateTime($toDt->format('U')*1000);
 
         // Filters the documents to pass only the documents that
         // match the specified condition(s) to the next pipeline stage.
@@ -1025,6 +1040,7 @@ class ProofOfPlay implements ReportInterface
             ],
         ];
 
+        // Task run
         if ($length == -1) {
             $query = [
                 $match,
@@ -1039,7 +1055,7 @@ class ProofOfPlay implements ReportInterface
 
             ];
 
-        } else {
+        } else { // Frontend
             $query = [
                 $match,
                 $project,
@@ -1071,8 +1087,12 @@ class ProofOfPlay implements ReportInterface
         $totalStats = 0;
         $rows = [];
         if (count($result) > 0) {
-            // Get total for pagination
-            $totalCount = $result[0]['totalCount'];
+            
+            if ($length == -1) { // Task run
+                $totalCount = [];
+            } else { // Get total for pagination in UI (grid)
+                $totalCount = $result[0]['totalCount'];
+            }
 
             if (count($totalCount) > 0) {
                 $totalStats = $totalCount[0]['totals'];

@@ -57,9 +57,15 @@ class PlaylistFactory extends BaseFactory
     private $tagFactory;
 
     /**
+     * @var ConfigServiceInterface
+     */
+    private $config;
+
+    /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param ConfigServiceInterface $config
      * @param SanitizerServiceInterface $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
@@ -68,11 +74,12 @@ class PlaylistFactory extends BaseFactory
      * @param WidgetFactory $widgetFactory
      * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $date, $permissionFactory, $widgetFactory, $tagFactory)
+    public function __construct($store, $log, $config, $sanitizerService, $user, $userFactory, $date, $permissionFactory, $widgetFactory, $tagFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
 
+        $this->config = $config;
         $this->dateService = $date;
         $this->permissionFactory = $permissionFactory;
         $this->widgetFactory = $widgetFactory;
@@ -87,6 +94,7 @@ class PlaylistFactory extends BaseFactory
         return new Playlist(
             $this->getStore(),
             $this->getLog(),
+            $this->config,
             $this->dateService,
             $this->permissionFactory,
             $this,
@@ -135,7 +143,7 @@ class PlaylistFactory extends BaseFactory
      */
     public function getByOwnerId($ownerId)
     {
-        return $this->query(null, array('userId' => $ownerId));
+        return $this->query(null, ['userId' => $ownerId, 'regionSpecific' => 0]);
     }
 
     /**
