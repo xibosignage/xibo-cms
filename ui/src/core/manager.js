@@ -32,8 +32,10 @@ const inverseChangeMap = {
 /**
  * History Manager
  */
-let Manager = function(container, visible) {
+let Manager = function(parent, container, visible) {
 
+    this.parent = parent;
+    
     this.DOMObject = container;
 
     this.extended = true;
@@ -123,7 +125,7 @@ Manager.prototype.addChange = function(changeType, targetType, targetId, oldValu
 Manager.prototype.uploadChange = function(change, updateId, updateType, customRequestPath, customRequestReplace) {
 
     const self = this;
-    const app = getXiboApp();
+    const app = this.parent;
 
     // Test for empty history array
     if(!change || change.uploaded ) {
@@ -225,7 +227,7 @@ Manager.prototype.revertChange = function() {
 
     const self = this;
 
-    const app = getXiboApp();
+    const app = this.parent;
 
     // Get the last change in the array
     const lastChange = this.changeHistory[this.changeHistory.length - 1];

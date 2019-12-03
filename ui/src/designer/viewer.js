@@ -11,7 +11,8 @@ const loadingTemplate = require('../templates/loading.hbs');
  * @param {object} container - the container to render the viewer to
  * @param {object} navbarContainer - the container to render the navbar to
  */
-let Viewer = function(container, navbarContainer) {
+let Viewer = function(parent, container, navbarContainer) {
+    this.parent = parent;
     this.DOMObject = container;
     this.navbarContainer = navbarContainer;
 
@@ -109,7 +110,7 @@ Viewer.prototype.render = function(element) {
  */
 Viewer.prototype.renderLayout = function(layout, container) {
 
-    const app = getXiboApp();
+    const app = this.parent;
 
     let requestPath = urlsForApi.layout.preview.url;
     requestPath = requestPath.replace(':id', layout[layout.type + 'Id']);
@@ -167,7 +168,7 @@ Viewer.prototype.renderLayout = function(layout, container) {
 Viewer.prototype.renderRegion = function(element, container, smallPreview = false, widgetIndex = 1) {
 
     const self = this;
-    const app = getXiboApp();
+    const app = this.parent;
     
     // If there was still a render request, abort it
     if(this.renderRequest != undefined && !smallPreview) {
@@ -300,7 +301,7 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
  */
 Viewer.prototype.renderNavbar = function(element, data) {
 
-    const app = getXiboApp();
+    const app = this.parent;
     
     // Stop if navbar container does not exist
     if(this.navbarContainer === null || this.navbarContainer === undefined || (element.type == 'widget' && data.extra.empty)) {
@@ -421,7 +422,7 @@ Viewer.prototype.toggleFullscreen = function() {
 Viewer.prototype.setupInlineEditor = function(textAreaId, show = true, customNoDataMessage = null) {
 
     // Prevent setup if user is in read only mode
-    const app = getXiboApp();
+    const app = this.parent;
     if(app.readOnlyMode != undefined && app.readOnlyMode === true) {
         return;
     }

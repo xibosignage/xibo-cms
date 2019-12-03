@@ -86,8 +86,10 @@ const defaultMenuItems = [
  * @param {object} [customActions] - customized actions
  * @param {boolean=} [showOptions] - show options menu
  */
-let Toolbar = function(container, customActions = {}, showOptions = false) {
+let Toolbar = function(parent, container, customActions = {}, showOptions = false) {
 
+    this.parent = parent;
+    
     this.DOMObject = container;
     this.openedMenu = -1;
 
@@ -145,7 +147,7 @@ Toolbar.prototype.loadPrefs = function() {
     // Load using the API
     const linkToAPI = urlsForApi.user.getPref;
 
-    const app = getXiboApp();
+    const app = this.parent;
 
     // Request elements based on filters
     let self = this;
@@ -209,7 +211,7 @@ Toolbar.prototype.loadPrefs = function() {
  * @param {bool=} [clearPrefs = false] - Force reseting user prefs
  */
 Toolbar.prototype.savePrefs = function(clearPrefs = false) {
-    const app = getXiboApp();
+    const app = this.parent;
 
     // Save only some of the tab menu data
     let libraryContent = [];
@@ -304,7 +306,7 @@ Toolbar.prototype.render = function() {
     }
 
     let self = this;
-    const app = getXiboApp();
+    const app = this.parent;
 
     // Deselect selected card on render
     this.selectedCard = {};
@@ -517,7 +519,7 @@ Toolbar.prototype.render = function() {
  * @param {number} menu - menu to load content for
  */
 Toolbar.prototype.loadContent = function(menu = -1) {
-    const app = getXiboApp();
+    const app = this.parent;
 
     // Make menu state to be active
     this.menuItems[menu].state = 'active';
@@ -613,7 +615,7 @@ Toolbar.prototype.openMenu = function(menu = -1, forceOpen = false) {
  */
 Toolbar.prototype.selectCard = function(card) {
 
-    const app = getXiboApp();
+    const app = this.parent;
 
     // Deselect previous selections
     this.deselectCardsAndDropZones();
@@ -844,7 +846,7 @@ Toolbar.prototype.openNewTabAndSearch = function(type) {
  */
 Toolbar.prototype.mediaContentCreateWindow = function(menu) {
     const self = this;
-    const app = getXiboApp();
+    const app = this.parent;
 
     // Get search window Jquery object
     const $libraryWindowContent = self.DOMObject.find('#content-' + menu + '.library-content');
@@ -1263,7 +1265,7 @@ Toolbar.prototype.createQueue = function(menu, target = null) {
 
 Toolbar.prototype.updateQueue = function(menu) {
     const $mediaQueue = this.DOMObject.find('#content-' + menu + ' .media-add-queue');
-    const app = getXiboApp();
+    const app = this.parent;
 
     // Position queue
     $mediaQueue.css('left', - $mediaQueue.outerWidth()).show();
@@ -1375,7 +1377,7 @@ Toolbar.prototype.queueEnableToAddMode = function(menu, enable = true) {
 };
 
 Toolbar.prototype.queueAddToRegionPlaylist = function(menu) {
-    const app = getXiboApp();
+    const app = this.parent;
 
     let mediaQueueArray = [];
 

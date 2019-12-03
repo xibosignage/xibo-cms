@@ -60,7 +60,8 @@ const timeLineLabelMap = [
  * Timeline contructor
  * @param {object} container - the container to render the timeline to
  */
-let Timeline = function(container) {
+let Timeline = function(parent, container) {
+    this.parent = parent;
     this.DOMObject = container;
 
     // Boolean to represent if a sort is happening
@@ -469,7 +470,7 @@ Timeline.prototype.moveWidgetInRegion = function(regionId, widgetId, moveType) {
  */
 Timeline.prototype.render = function(layout) {
 
-    const app = getXiboApp();
+    const app = this.parent;
 
     // If starting zoom is not defined, calculate its value based on minimum widget duration
     if(this.properties.zoom === -1) {
@@ -543,11 +544,12 @@ Timeline.prototype.render = function(layout) {
     });
 
     this.DOMObject.find('.open-playlist-editor').click(function() {
-        console.log('TODO: Open Playlist Editor');
+        const playlistId = $(this).parents('.designer-region-info').data('playlistId');
+        lD.openPlaylistEditor(playlistId);
     });
 
     // Select region to edit
-    this.DOMObject.find('.edit-region').click(function() {
+    this.DOMObject.find('.edit-region, .region-preview').click(function() {
         const regionId = $(this).parents('.designer-region-info').data('region');
         lD.toggleNavigatorEditing(true);
         lD.selectObject(self.DOMObject.find('#' + regionId), true);

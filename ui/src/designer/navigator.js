@@ -17,7 +17,8 @@ const regionDefaultValues = {
  * @param {bool} [options.edit = false] - Edit mode enable flag
  * @param {object} [options.editNavbar = null] - Container to render the navbar
  */
-let Navigator = function(container, {edit = false, editNavbar = null} = {}) {
+let Navigator = function(parent, container, {edit = false, editNavbar = null} = {}) {
+    this.parent = parent;
     this.DOMObject = container;
     this.navbarContainer = editNavbar;
     this.layoutRenderScale = 1;
@@ -28,7 +29,7 @@ let Navigator = function(container, {edit = false, editNavbar = null} = {}) {
  */
 Navigator.prototype.render = function() {
     const self = this;
-    const app = getXiboApp();
+    const app = this.parent;
 
     // Show loading template
     this.DOMObject.html(loadingTemplate());
@@ -199,7 +200,7 @@ Navigator.prototype.render = function() {
 Navigator.prototype.renderNavbar = function() {
 
     const self = this;
-    const app = getXiboApp();
+    const app = this.parent;
 
     // Return if navbar does not exist
     if(this.navbarContainer === null) {
@@ -262,7 +263,7 @@ Navigator.prototype.renderNavbar = function() {
 };
 
 Navigator.prototype.saveRegionPropertiesPanel = function() {
-    const app = getXiboApp();
+    const app = this.parent;
     const form = $(app.propertiesPanel.DOMObject).find('form');
 
     // If form not loaded, prevent changes

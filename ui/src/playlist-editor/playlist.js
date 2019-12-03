@@ -48,6 +48,9 @@ Playlist.prototype.createDataStructure = function(data) {
             newWidget.previewTemplate = '<div class="tooltip playlist-widget-preview" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner-image"><img src=' + imageDownloadUrl.replace(':id', widgets[widget].mediaIds[0]) + '></div></div>';
         }
 
+
+        newWidget.designerObject = pE;
+
         // Add newWidget to the playlist widget object
         this.widgets[newWidget.id] = newWidget;
 

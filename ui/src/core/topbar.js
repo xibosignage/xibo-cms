@@ -11,8 +11,10 @@ const TopbarLayoutJumpList = require('../templates/toolbar-layout-jump-list.hbs'
  * @param {object} [customActions] - customized actions
  * @param {boolean=} [showOptions] - show options menu
  */
-let Topbar = function(container, customDropdownOptions = null, customActions = {}, jumpList = {}, showOptions = false) {
+let Topbar = function(parent, container, customDropdownOptions = null, customActions = {}, jumpList = {}, showOptions = false) {
 
+    this.parent = parent;
+    
     this.DOMObject = container;
 
     // Layout jumplist
@@ -43,7 +45,7 @@ Topbar.prototype.render = function() {
     }
 
     let self = this;
-    const app = getXiboApp();
+    const app = this.parent;
 
     // Get main object 
     const mainObject = app.getElementByTypeAndId(app.mainObjectType, app.mainObjectId);
