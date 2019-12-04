@@ -151,7 +151,7 @@ pE.loadEditor = function() {
                 formHelpers.setup(pE, pE.playlist);
 
                 // Add widget to editor div
-                pE.editorContainer.find('#playlist-editor-container').droppable({
+                pE.editorContainer.find('#playlist-timeline, #dropzone-container').droppable({
                     accept: '[drop-to="region"]',
                     drop: function(event, ui) {
                         pE.playlist.addElement(event.target, ui.draggable[0]);
@@ -159,7 +159,7 @@ pE.loadEditor = function() {
                 }).attr('data-type', 'region');
 
                 // Editor container select ( faking drag and drop ) to add a element to the playlist
-                pE.editorContainer.find('#playlist-editor-container').click(function(e) {
+                pE.editorContainer.find('#playlist-timeline, #dropzone-container').click(function(e) {
                     if(!$.isEmptyObject(pE.toolbar.selectedCard)) {
                         e.stopPropagation();
                         pE.selectObject($(this));
