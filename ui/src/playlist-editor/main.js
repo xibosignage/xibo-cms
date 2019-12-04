@@ -160,7 +160,7 @@ pE.loadEditor = function() {
 
                 // Editor container select ( faking drag and drop ) to add a element to the playlist
                 pE.editorContainer.find('#playlist-timeline, #dropzone-container').click(function(e) {
-                    if(!$.isEmptyObject(pE.toolbar.selectedCard)) {
+                    if(!$.isEmptyObject(pE.toolbar.selectedCard) || !$.isEmptyObject(pE.toolbar.selectedQueue)) {
                         e.stopPropagation();
                         pE.selectObject($(this));
                     }
@@ -226,6 +226,24 @@ pE.selectObject = function(obj = null, forceUnselect = false) {
             this.dropItemAdd(obj, card);
         }
 
+    } else if(!$.isEmptyObject(this.toolbar.selectedQueue) && $(this.toolbar.selectedQueue).data('to-add')) { // If there's a selected queue, use the drag&drop simulate to add those items to a object
+        if(obj.data('type') == 'region') {
+            let mediaQueueArray = [];
+
+            // Get queue elements
+            this.toolbar.selectedQueue.find('.queue-element').each(function() {
+                mediaQueueArray.push($(this).attr('id'));
+            });
+
+            // Add media queue to playlist
+            this.playlist.addMedia(mediaQueueArray);
+
+            // Destroy queue
+            this.toolbar.destroyQueue(this.toolbar.openedMenu);
+        }
+
+        // Deselect cards and drop zones
+        this.toolbar.deselectCardsAndDropZones();
     } else {
         let newSelectedId = {};
         let newSelectedType = {};
