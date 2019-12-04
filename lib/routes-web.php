@@ -44,6 +44,9 @@ $app->get('/statusdashboard/displayGroups', '\Xibo\Controller\StatusDashboard:di
 $app->get('/icondashboard', '\Xibo\Controller\IconDashboard:displayPage')->name('icondashboard.view');
 $app->get('/mediamanager', '\Xibo\Controller\MediaManager:displayPage')->name('mediamanager.view');
 $app->get('/mediamanager/data', '\Xibo\Controller\MediaManager:grid')->name('mediamanager.search');
+$app->get('/playlistdashboard', '\Xibo\Controller\PlaylistDashboard:displayPage')->setName('playlistdashboard.view');
+$app->map('/playlistdashboard/library', '\Xibo\Controller\PlaylistDashboard:upload')->via('HEAD');
+$app->post('/playlistdashboard/library', '\Xibo\Controller\PlaylistDashboard:upload')->name('playlist.library.add');
 
 // Login Form
 $app->get('/login', '\Xibo\Controller\Login:loginForm')->name('login');

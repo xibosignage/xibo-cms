@@ -781,6 +781,20 @@ class State extends Middleware
             );
         });
 
+        $app->container->singleton('\Xibo\Controller\PlaylistDashboard', function($container) {
+            return new \Xibo\Controller\PlaylistDashboard(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->playlistFactory,
+                $container->moduleFactory
+            );
+        });
+
         $app->container->singleton('\Xibo\Controller\Module', function($container) {
             return new \Xibo\Controller\Module(
                 $container->logService,
