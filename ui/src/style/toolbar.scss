@@ -131,6 +131,15 @@ ul.sidebar {
     height: fit-content;
     opacity: 0.95;
 
+    &.hide-mode {
+        width: 0 !important;
+        height: 0 !important;
+
+        .media-search-container {
+            display: none;
+        }
+    }
+
     .media-search-container {
         background: $xibo-color-white;
         border: 2px solid $xibo-color-blue;
