@@ -96,7 +96,7 @@
                                         {% endif %}
                                     </div>
 
-                                    <div class="col-md-1 append-here">
+                                    <div class="col-md-1 delete-widget">
                                     </div>
                                 </div>
 
@@ -200,7 +200,7 @@
                         } else {
                             // update the container with a new mediaId
                             $container.data("mediaId", result.mediaId);
-
+                            $container.data("widgetId", result.widgetId);
                             $container.data("widgetName", result.name);
 
                             if ($container.data("buttonType") === "add") {
@@ -219,20 +219,23 @@
                         toastr.error(data.result);
                     }
 
-                    // TODO - if undefined show Add button
-                    // Switch back to a button
-                    let button = $("<button class=\"btn btn-block btn-warning spot-action-button\">" + $container.data("widgetName") + "</button>");
-                    button.on("click", function () {
-                        spotActionButtonClick($(this));
-                    });
-                    $container.append(button);
-
+                    var button;
                     if ($container.data("widgetName") !== undefined) {
-                        let delButton = $("<a class=\"XiboFormButton btns\" title=\"{% trans "Delete" %}\" href=\"" + $container.data("widgetDel").replace(":id", $container.data("widgetId")) + "\"><i class=\"fa fa-lg fa-trash\" aria-hidden=\"true\" style=\"padding:8px 0 8px; color:#d9534f;\"></i></a>");
+                        // Switch back to a button
+                        button = $("<button class=\"btn btn-block btn-warning spot-action-button\">" + $container.data("widgetName") + "</button>");
+                        $container.append(button);
+
+                        let delButton = $("<a class=\"XiboFormButton added btns\" title=\"{% trans "Delete" %}\" href=\"" + $container.data("widgetDel").replace(":id", $container.data("widgetId")) + "\"><i class=\"fa fa-lg fa-trash\" aria-hidden=\"true\" style=\"padding:8px 0 8px; color:#d9534f;\"></i></a>");
                         $delButtonDiv.append(delButton);
 
                         let thumbnail = $("<img src=\"" + $container.data("widgetPreview").replace(":id", $container.data("mediaId")) + "\" style=\"height: 50px; max-width: 50px;\"/>");
                         $imgDiv.append(thumbnail);
+                    } else {
+                        let button = $("<button class=\"btn btn-block btn-success spot-action-button\">Add</button>");
+                        $container.append(button);
+                        button.on("click", function () {
+                            spotActionButtonClick($(this));
+                        });
                     }
 
                     setTimeout(function() {
@@ -252,6 +255,14 @@
                 spotActionButtonClick($(this));
             });
         });
+
+        // Bind click event to delete a playlist widget
+        $(".delete-widget").click(function(e) {
+            let $anchor = $(this).children();
+            e.preventDefault();
+            XiboFormRender($anchor);
+        });
+
 
         // Callback
         function playlistModuleDeleteFormOpen() {
