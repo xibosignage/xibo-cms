@@ -137,6 +137,7 @@ $app->get('/playlist/form/library/assign/:id', '\Xibo\Controller\Playlist:librar
 $app->get('/playlist/widget/form/add/:type/:id', '\Xibo\Controller\Module:addWidgetForm')->name('module.widget.add.form');
 $app->get('/playlist/widget/form/edit/:id', '\Xibo\Controller\Module:editWidgetForm')->name('module.widget.edit.form');
 $app->get('/playlist/widget/form/delete/:id', '\Xibo\Controller\Module:deleteWidgetForm')->name('module.widget.delete.form');
+$app->get('/playlist/dashboard/widget/form/delete/:id', '\Xibo\Controller\Module:deletePlaylistWidgetForm')->name('playlist.module.widget.delete.form');
 $app->get('/playlist/widget/form/transition/edit/:type/:id', '\Xibo\Controller\Module:editWidgetTransitionForm')->name('module.widget.transition.edit.form');
 $app->get('/playlist/widget/form/audio/:id', '\Xibo\Controller\Module:widgetAudioForm')->name('module.widget.audio.form');
 $app->get('/playlist/widget/form/expiry/:id', '\Xibo\Controller\Module:widgetExpiryForm')->name('module.widget.expiry.form');

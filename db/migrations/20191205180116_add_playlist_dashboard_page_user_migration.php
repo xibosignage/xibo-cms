@@ -23,20 +23,33 @@
 use Phinx\Migration\AbstractMigration;
 
 /**
- * Class AddPlaylistDashboardPageMigration
+ * Class AddPlaylistDashboardPageUserMigration
  */
-class AddPlaylistDashboardPageMigration extends AbstractMigration
+class AddPlaylistDashboardPageUserMigration extends AbstractMigration
 {
     /** @inheritdoc */
     public function change()
     {
-        $table = $this->table('pages');
-        $table
+        $pagesTbl = $this->table('pages');
+        $pagesTbl
             ->insert([
                 'name' => 'playlistdashboard',
                 'title' => 'Playlist Dashboard',
                 'asHome' => 1
             ])->save();
 
+        $groupTbl = $this->table('group');
+        $groupTbl->insert([
+            ['group' => 'Playlist Dashboard User', 'isUserSpecific' => 0, 'isEveryone' => 0, 'isSystemNotification' => 0],
+        ])->save();
+
+        $this->execute(
+            'INSERT INTO `permission` (`entityId`, `groupId`, `objectId`, `view`) 
+                    SELECT  1, 
+                    (SELECT groupId FROM `group` WHERE `group`.group = \'Playlist Dashboard User\'), 
+                    (SELECT pageId FROM `pages` WHERE `pages`.name = \'playlistdashboard\'), 
+                    1
+                ');
     }
 }
+
