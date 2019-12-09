@@ -623,29 +623,6 @@ class Module extends Base
     }
 
     /**
-     * Delete Playlist Widget Form
-     * @param int $widgetId
-     * @throws XiboException
-     */
-    public function deletePlaylistWidgetForm($widgetId)
-    {
-        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId));
-
-        if (!$this->getUser()->checkDeleteable($module->widget))
-            throw new AccessDeniedException();
-
-        // Set some dependencies that are used in the delete
-        $module->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
-
-        // Pass to view
-        $this->getState()->template = 'playlist-module-form-delete';
-        $this->getState()->setData([
-            'module' => $module,
-            'help' => $this->getHelp()->link('Media', 'Delete')
-        ]);
-    }
-
-    /**
      * Delete a Widget
      * @SWG\Delete(
      *  path="/playlist/widget/{widgetId}",

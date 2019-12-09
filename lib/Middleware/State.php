@@ -791,7 +791,11 @@ class State extends Middleware
                 $container->dateService,
                 $container->configService,
                 $container->playlistFactory,
-                $container->moduleFactory
+                $container->moduleFactory,
+                $container->widgetFactory,
+                $container->layoutFactory,
+                $container->displayGroupFactory
+
             );
         });
 

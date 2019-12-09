@@ -30,26 +30,25 @@ class AddPlaylistDashboardPageUserMigration extends AbstractMigration
     /** @inheritdoc */
     public function change()
     {
-        $pagesTbl = $this->table('pages');
-        $pagesTbl
-            ->insert([
-                'name' => 'playlistdashboard',
-                'title' => 'Playlist Dashboard',
-                'asHome' => 1
-            ])->save();
 
-        $groupTbl = $this->table('group');
-        $groupTbl->insert([
-            ['group' => 'Playlist Dashboard User', 'isUserSpecific' => 0, 'isEveryone' => 0, 'isSystemNotification' => 0],
-        ])->save();
+        $page = $this->execute(
+            'INSERT INTO `pages` SET `name`=\'playlistdashboard\', `title`= \'Playlist Dashboard\', `asHome`=1;
+                   ');
+        $pageId = $this->getAdapter()->getConnection()->lastInsertId();
 
-        $this->execute(
-            'INSERT INTO `permission` (`entityId`, `groupId`, `objectId`, `view`) 
-                    SELECT  1, 
-                    (SELECT groupId FROM `group` WHERE `group`.group = \'Playlist Dashboard User\'), 
-                    (SELECT pageId FROM `pages` WHERE `pages`.name = \'playlistdashboard\'), 
-                    1
-                ');
+        $group = $this->execute(
+            'INSERT INTO `group` SET `group`=\'Playlist Dashboard User\', `isUserSpecific`= 0, `isEveryone`= 0, `isSystemNotification`= 0;
+                   ');
+        $groupId = $this->getAdapter()->getConnection()->lastInsertId();
+
+        // Set Playlist Dashboard Page Permission
+        $this->execute('INSERT INTO `permission` (`entityId`, `groupId`, `objectId`, `view`) SELECT  1, '.$groupId.', '.$pageId.', 1');
+
+        // Set Library Page  Permission - pageid = 5
+        $this->execute('INSERT INTO `permission` (`entityId`, `groupId`, `objectId`, `view`) SELECT  1, '.$groupId.', 5, 1');
+
+        // Set Users Page  Permission - pageid = 11
+        $this->execute('INSERT INTO `permission` (`entityId`, `groupId`, `objectId`, `view`) SELECT  1, '.$groupId.', 11, 1');
     }
 }
 

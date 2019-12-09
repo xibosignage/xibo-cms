@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2011-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -21,6 +22,8 @@
 namespace Xibo\Controller;
 
 use Xibo\Helper\XiboUploadHandler;
+use Xibo\Exception\XiboException;
+use Xibo\Exception\AccessDeniedException;
 
 /**
  * Class PlaylistDashboard
@@ -34,11 +37,46 @@ class PlaylistDashboard extends Base
     /** @var \Xibo\Factory\ModuleFactory */
     private $moduleFactory;
 
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playlistFactory, $moduleFactory)
+    /** @var \Xibo\Factory\WidgetFactory */
+    private $widgetFactory;
+
+    /** @var \Xibo\Factory\LayoutFactory */
+    private $layoutFactory;
+
+    /** @var \Xibo\Factory\DisplayGroupFactory */
+    private $displayGroupFactory;
+
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playlistFactory, $moduleFactory, $widgetFactory, $layoutFactory, $displayGroupFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
         $this->playlistFactory = $playlistFactory;
         $this->moduleFactory = $moduleFactory;
+        $this->widgetFactory = $widgetFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->displayGroupFactory = $displayGroupFactory;
+    }
+
+    /**
+     * Delete Playlist Widget Form
+     * @param int $widgetId
+     * @throws XiboException
+     */
+    public function deletePlaylistWidgetForm($widgetId)
+    {
+        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId));
+
+        if (!$this->getUser()->checkDeleteable($module->widget))
+            throw new AccessDeniedException();
+
+        // Set some dependencies that are used in the delete
+        $module->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
+
+        // Pass to view
+        $this->getState()->template = 'playlist-module-form-delete';
+        $this->getState()->setData([
+            'module' => $module,
+            'help' => $this->getHelp()->link('Media', 'Delete')
+        ]);
     }
 
     public function displayPage()
