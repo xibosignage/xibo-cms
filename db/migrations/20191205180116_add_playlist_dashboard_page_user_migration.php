@@ -31,24 +31,40 @@ class AddPlaylistDashboardPageUserMigration extends AbstractMigration
     public function change()
     {
 
-        $page = $this->execute(
+        $result = $this->fetchRow('SELECT entityId FROM `permissionentity` WHERE entity LIKE \'%Page\' LIMIT 1 ');
+        $pageEntityId = $result['entityId'];
+
+        $result = $this->fetchRow('SELECT pageId FROM `pages` WHERE `pages`.name = \'user\' LIMIT 1 ');
+        $userPageId = $result['pageId'];
+
+        $result = $this->fetchRow('SELECT pageId FROM `pages` WHERE `pages`.name = \'library\' LIMIT 1 ');
+        $libraryPageId = $result['pageId'];
+
+        // Create playlist dashboard page
+        $this->execute(
             'INSERT INTO `pages` SET `name`=\'playlistdashboard\', `title`= \'Playlist Dashboard\', `asHome`=1;
                    ');
-        $pageId = $this->getAdapter()->getConnection()->lastInsertId();
+        // Get playlist dashboard pageId
+        $playlistDashboardPageId = $this->getAdapter()->getConnection()->lastInsertId();
 
-        $group = $this->execute(
+        // Create playlist dashboard user group
+        $this->execute(
             'INSERT INTO `group` SET `group`=\'Playlist Dashboard User\', `isUserSpecific`= 0, `isEveryone`= 0, `isSystemNotification`= 0;
                    ');
+        // Get playlist dashboard user groupId
         $groupId = $this->getAdapter()->getConnection()->lastInsertId();
 
+        // Set Permission for playlist dashboard user group
         // Set Playlist Dashboard Page Permission
-        $this->execute('INSERT INTO `permission` (`entityId`, `groupId`, `objectId`, `view`) SELECT  1, '.$groupId.', '.$pageId.', 1');
+        $this->execute('INSERT INTO `permission` (`entityId`, `groupId`, `objectId`, `view`) SELECT  '.$pageEntityId.', '.$groupId.', '.$playlistDashboardPageId.', 1');
 
-        // Set Library Page  Permission - pageid = 5
-        $this->execute('INSERT INTO `permission` (`entityId`, `groupId`, `objectId`, `view`) SELECT  1, '.$groupId.', 5, 1');
+        // Set Library Page Permission
+        $this->execute('INSERT INTO `permission` (`entityId`, `groupId`, `objectId`, `view`) SELECT  '.$pageEntityId.', '.$groupId.', '.$libraryPageId.', 1');
 
-        // Set Users Page  Permission - pageid = 11
-        $this->execute('INSERT INTO `permission` (`entityId`, `groupId`, `objectId`, `view`) SELECT  1, '.$groupId.', 11, 1');
+        // Set Users Page Permission
+        $this->execute('INSERT INTO `permission` (`entityId`, `groupId`, `objectId`, `view`) SELECT  '.$pageEntityId.', '.$groupId.', '.$userPageId.', 1');
+
+
     }
 }
 
