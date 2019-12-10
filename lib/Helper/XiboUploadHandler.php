@@ -350,6 +350,9 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 // Save the playlist
                 $playlist->save();
 
+                // Configure widgetId is reponse
+                $file->widgetId = $widget->widgetId;
+
                 // Handle permissions
                 // https://github.com/xibosignage/xibo/issues/1274
                 if ($controller->getConfig()->getSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
