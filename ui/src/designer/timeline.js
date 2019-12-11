@@ -77,6 +77,7 @@ let Timeline = function(parent, container) {
         deltaTimeFormatted: lD.common.timeFormat(lD.layout.duration),
         zoomInDisable: '',
         zoomOutDisable: '',
+        zoomFindWidgetDisabled: '',
         scrollPosition: 0, // scroll position
         scrollVerticalPosition: 0, // scroll vertical position
         scrollWidth: 0, // To fix the double scroll reseting to 0 bug
@@ -497,6 +498,9 @@ Timeline.prototype.render = function(layout) {
     // Check widget repetition and create ghosts
     this.createGhostWidgetsDynamically(layout.regions);
 
+    // Check if we can find widget
+    this.properties.zoomFindWidgetDisabled = (app.selectedObject.type != 'widget') ? 'disabled' : '';
+
     // Render timeline template using layout object
     const html = timelineTemplate({
         layout: layout, 
@@ -672,7 +676,7 @@ Timeline.prototype.render = function(layout) {
     
     // When scroll is called ( by scrollbar or .scrollLeft() method calling ), use debounce and process the behaviour
     regionsContainer.scroll(_.debounce(function() {
-        
+
         // If regions are still not rendered, leave method
         if(self.properties.scrollWidth != $(this).find("#regions").width() || self.beingSorted == true) {
             return;
@@ -716,6 +720,33 @@ Timeline.prototype.scrollToWidget = function(targetWidget) {
     if($targetWidget.length > 0) {
         $regionsContainer.scrollLeft($regionsContainer.scrollLeft() - ($regionsContainer.offset().left - $targetWidget.offset().left));
     }
+};
+
+/**
+ * Scroll to first error widget
+ */
+Timeline.prototype.scrollToBrokenWidget = function() {
+    const regions = Object.values(lD.layout.regions);
+    const self = this;
+    const app = this.parent;
+    
+    $.each(regions, function(){
+        let breakFlag = true;
+        let widgets = Object.values(this.widgets);
+
+        $.each(widgets, function() {
+            if(this.isValid == 0) {
+                self.scrollOnLoad = this;
+                
+                app.selectObject($('#' + this.id), true);
+
+                breakFlag = false;
+                return false;
+            }
+        });
+
+        return breakFlag;
+    });
 };
 
 module.exports = Timeline;
