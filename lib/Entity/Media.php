@@ -901,28 +901,33 @@ class Media implements \JsonSerializable
             // Media released set to 0 for large size images
             // if image size is greater than 8000 X 8000 then we flag that image as too big
             if ($imgWidth > $resizeLimit || $imgHeight > $resizeLimit) {
-                $this->released = 2;
-                $this->getLog()->debug('Image size is too big. MediaId '. $this->mediaId);
-
+                if ($resizeLimit > 0) {
+                    $this->released = 2;
+                    $this->getLog()->debug('Image size is too big. MediaId '. $this->mediaId);
+                }
             } elseif ($imgWidth > $imgHeight) { // 'landscape';
 
                 if ($imgWidth <= $resizeThreshold) {
                     $this->released = 1;
                 } else {
-                    $this->released = 0;
-                    $this->getLog()->debug('Image exceeded threshold, released set to 0. MediaId '. $this->mediaId);
-
+                    if ($resizeThreshold > 0) {
+                        $this->released = 0;
+                        $this->getLog()->debug('Image exceeded threshold, released set to 0. MediaId '. $this->mediaId);
+                    }
                 }
             } else { // 'portrait';
 
                 if ($imgHeight <= $resizeThreshold) {
                     $this->released = 1;
                 } else {
-                    $this->released = 0;
-                    $this->getLog()->debug('Image exceeded threshold, released set to 0. MediaId '. $this->mediaId);
-
+                    if ($resizeThreshold > 0) {
+                        $this->released = 0;
+                        $this->getLog()->debug('Image exceeded threshold, released set to 0. MediaId '. $this->mediaId);
+                    }
                 }
             }
+
+
         }
     }
 
