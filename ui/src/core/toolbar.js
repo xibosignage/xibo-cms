@@ -8,14 +8,6 @@ const ToolbarMediaQueueElementTemplate = require('../templates/toolbar-media-que
 
 const toolsList = [
     {
-        name: toolbarTrans.tools.region.name,
-        type: 'region',
-        description: toolbarTrans.tools.region.description,
-        dropTo: 'layout',
-        hideOn: ['playlist'],
-        oneClickAdd: ['layout']
-    },
-    {
         name: toolbarTrans.tools.audio.name,
         type: 'audio',
         description: toolbarTrans.tools.audio.description,
@@ -919,6 +911,14 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
 
         if(position.top + position.height > $(window).height()) {
             position.top = $(window).height() - position.height;
+        }
+
+        if(position.left < 0) {
+            position.left = 0;
+        }
+
+        if(position.top < 0) {
+            position.top = 0;
         }
 
         $libraryWindowContent.width(position.width);
