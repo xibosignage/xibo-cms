@@ -1477,7 +1477,7 @@ class Soap
 
             // if fromdt and to dt are same then ignore them
             if ($fromdt == $todt) {
-                $this->getLog()->error('Fromdt (' . $fromdt. ') and ToDt (' . $todt. ') are same. ');
+                $this->getLog()->debug('Fromdt (' . $fromdt. ') and ToDt (' . $todt. ') are same. ');
                 continue;
             }
 
