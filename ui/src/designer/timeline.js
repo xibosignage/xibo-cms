@@ -84,6 +84,8 @@ let Timeline = function(parent, container) {
         widgetMinimumDurationOnStart: 15 // % of the shortest widget to be used to calculate the default zoom 
     };
 
+    this.scrollOnLoad = {};
+
     this.timeruler = {};
 };
 
@@ -525,7 +527,9 @@ Timeline.prototype.render = function(layout) {
     // Button actions
     const self = this;
     this.DOMObject.find('#findSelectedBtn').click(function() {
-        console.log('TODO: Find selected widget');
+        if(lD.selectedObject.type == 'widget') {
+            self.scrollToWidget(lD.selectedObject);
+        }
     });
 
     this.DOMObject.find('#zoomInBtn').click(function() {
@@ -690,8 +694,28 @@ Timeline.prototype.render = function(layout) {
         }
     }, 500));
 
+    // Scroll to widget on load
+    if(!$.isEmptyObject(this.scrollOnLoad)) {
+        this.scrollToWidget(this.scrollOnLoad);
+        this.scrollOnLoad = {};
+    }
+
     // Initialize tooltips
     app.common.reloadTooltips(this.DOMObject);
+};
+
+/**
+ * Scroll to widget
+ * @param {Object} targetWidget - the target widget object
+ */
+Timeline.prototype.scrollToWidget = function(targetWidget) {
+    // Get region container
+    const $regionsContainer = this.DOMObject.find('#regions-container');
+    const $targetWidget = $regionsContainer.find('#' + targetWidget.id);
+
+    if($targetWidget.length > 0) {
+        $regionsContainer.scrollLeft($regionsContainer.scrollLeft() - ($regionsContainer.offset().left - $targetWidget.offset().left));
+    }
 };
 
 module.exports = Timeline;
