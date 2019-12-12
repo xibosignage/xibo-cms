@@ -8,14 +8,6 @@ const ToolbarMediaQueueElementTemplate = require('../templates/toolbar-media-que
 
 const toolsList = [
     {
-        name: toolbarTrans.tools.region.name,
-        type: 'region',
-        description: toolbarTrans.tools.region.description,
-        dropTo: 'layout',
-        hideOn: ['playlist'],
-        oneClickAdd: ['layout']
-    },
-    {
         name: toolbarTrans.tools.audio.name,
         type: 'audio',
         description: toolbarTrans.tools.audio.description,
@@ -848,6 +840,9 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
     const self = this;
     const app = this.parent;
 
+    // Deselect previous selections
+    self.deselectCardsAndDropZones();
+
     // Get search window Jquery object
     const $libraryWindowContent = self.DOMObject.find('#content-' + menu + '.library-content');
 
@@ -889,17 +884,20 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
             }
         ).on('resizestop dragstop',
             function(event, ui) {
-                // Save window positioning
-                self.menuItems[menu].searchPosition = {
-                    width: $(this).width(),
-                    height: $(this).height(),
-                    top: $(this).position().top,
-                    left: $(this).position().left
-                };
+                // Save only if we're not in hide mode
+                if(!$(this).hasClass('hide-mode')) {
+                    // Save window positioning
+                    self.menuItems[menu].searchPosition = {
+                        width: $(this).width(),
+                        height: $(this).height(),
+                        top: $(this).position().top,
+                        left: $(this).position().left
+                    };
 
-                self.savePrefs();
+                    self.savePrefs();
 
-                self.tablePositionUpdate($libraryWindowContent);
+                    self.tablePositionUpdate($libraryWindowContent);
+                }
             }
         );
 
@@ -913,6 +911,14 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
 
         if(position.top + position.height > $(window).height()) {
             position.top = $(window).height() - position.height;
+        }
+
+        if(position.left < 0) {
+            position.left = 0;
+        }
+
+        if(position.top < 0) {
+            position.top = 0;
         }
 
         $libraryWindowContent.width(position.width);
@@ -985,9 +991,6 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
 
     // Initialize tooltips
     app.common.reloadTooltips(self.DOMObject);
-
-    // Deselect previous selections
-    self.deselectCardsAndDropZones();
 };
 
 /**
@@ -1088,9 +1091,6 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
         self.savePrefs();
 
         self.updateTabNames(menu);
-
-        // Deselect previous selections
-        self.deselectCardsAndDropZones();
 
         // Reload table
         mediaTable.ajax.reload();
@@ -1195,7 +1195,7 @@ Toolbar.prototype.toggleFavourite = function(target) {
     }
 
     // Show notification
-    toastr.info((markAsFav) ? toolbarTrans.addedToFavourites : toolbarTrans.removedFromFavourites);
+    toastr.success((markAsFav) ? toolbarTrans.addedToFavourites : toolbarTrans.removedFromFavourites, '', { positionClass: 'toast-bottom-right' });
 
     // Save user preferences
     this.savePrefs();
@@ -1251,9 +1251,9 @@ Toolbar.prototype.createQueue = function(menu, target = null) {
         if(buttonType == 'toRegion' || buttonType == 'toPlaylist') {
             self.queueAddToRegionPlaylist(menu);
         } else if(buttonType == 'selectRegion') {
-            self.queueEnableToAddMode(menu);
+            self.queueToggleToAddMode(menu);
         } else if(buttonType == 'cancel') {
-            self.queueEnableToAddMode(menu, false);
+            self.queueToggleToAddMode(menu, false);
         }
     });
 
@@ -1273,7 +1273,7 @@ Toolbar.prototype.updateQueue = function(menu) {
     // Update queue button status
     $mediaQueue.find('.media-add-queue-buttons .btn').removeClass('active'); // Remove active from all buttons
     
-    if($mediaQueue.data('toAdd')) {
+    if($mediaQueue.parent().hasClass('hide-mode')) {
         $mediaQueue.find('.btn-queue-close').hide();
         $mediaQueue.find('.media-add-queue-buttons button[data-type="cancel"]').addClass('active'); 
     } else {
@@ -1288,6 +1288,13 @@ Toolbar.prototype.updateQueue = function(menu) {
         }
     }
 
+    // Show drop overlay if queue has elements
+    if($mediaQueue.find('.queue-element').length > 0) {
+        this.queueToggleOverlays(menu);
+    } else {
+        this.queueToggleOverlays(menu, false);
+    }
+
     // Save backup
     this.selectedQueue = $mediaQueue;
 };
@@ -1295,6 +1302,9 @@ Toolbar.prototype.updateQueue = function(menu) {
 Toolbar.prototype.destroyQueue = function(menu) {
     // Destroy queue element
     $(this.DOMObject.find('.media-add-queue')).remove();
+
+    // Hide drop overlay
+    this.queueToggleOverlays(menu, false);
 
     // Clear media backup
     this.selectedQueue = {};
@@ -1340,36 +1350,39 @@ Toolbar.prototype.removeFromQueue = function(menu, target) {
     }
 };
 
-
-Toolbar.prototype.queueEnableToAddMode = function(menu, enable = true) {
+Toolbar.prototype.queueToggleOverlays = function(menu, enable = true) {
     const $mediaQueue = this.DOMObject.find('#content-' + menu + ' .media-add-queue');
-    const self = this;
 
     // Mark queue as add enabled/disabled
     $mediaQueue.data('toAdd', enable);
 
-    // Show/hide table container
-    $mediaQueue.parent().find('.media-search-container').toggle(!enable);
-
-    // Enable/disable drag
-    $mediaQueue.parent().draggable(enable ? 'disable' : 'enable');
-
     if(enable) {
         // Show designer overlay
-        $('.custom-overlay').show().unbind().click(() => {
-            self.queueEnableToAddMode(menu, false);
-        });
+        $('.custom-overlay').show();
 
         // Set droppable areas as active
         $('[data-type="region"].ui-droppable.editable').addClass('ui-droppable-active');
-
-        // Fix for overlay and select z-indexes
-        this.DOMObject.find('nav').css('z-index', $('.loading-overlay').css('z-index'));
     } else {
-        self.deselectCardsAndDropZones();
+        this.deselectCardsAndDropZones();
+    }
+};
 
-        // Fix for overlay and select z-indexes
-        this.DOMObject.find('nav').css('z-index', this.defaultZIndex);
+Toolbar.prototype.queueToggleToAddMode = function(menu, enable = true) {
+    const $mediaQueue = this.DOMObject.find('#content-' + menu + ' .media-add-queue');
+    const self = this;
+
+    // Show/hide table container
+    $mediaQueue.parent().toggleClass('hide-mode', enable);
+
+    // Enable/disable drag
+    $mediaQueue.parent().resizable(enable ? 'disable' : 'enable');
+
+    if(enable) {
+
+        // Click on overlay do toggle add mode
+        $('.custom-overlay').unbind().click(() => {
+            self.queueToggleToAddMode(menu, false);
+        });
     }
 
     // Update queue position

@@ -272,10 +272,12 @@
 
             // First time in there
             playlistFormPopulateMediaTable(dialog);
+
+            // Run function to set the form submit behaviour
+            playlistAddFormOpen();
         }
 
         function playlistFormPopulateMediaTable(dialog) {
-
             nameFilter = $(dialog).find("input[name=filterMediaName]").val();
             tagFilter = $(dialog).find("input[name=filterMediaTag]").val();
 
@@ -341,6 +343,68 @@
             }).trigger('change');
 
             $(dialog).find('.modal-body').append($select);
+        }
+
+        function playlistAddFormOpen() {
+            $("#playlistAddForm").submit(function(e) {
+                e.preventDefault();
+                var form = $(this);
+
+                $.ajax({
+                    type: $(this).attr("method"),
+                    url: $(this).attr("action"),
+                    data: $(this).serialize(),
+                    cache: false,
+                    dataType:"json",
+                    success: function(xhr, textStatus, error) {
+
+                        XiboSubmitResponse(xhr, form);
+
+                        if (xhr.success) {
+
+                            // Open the editor
+                            openPlaylistEditorForm(xhr.id);
+                        }
+                    }
+                });
+            });
+        }
+
+        function openPlaylistEditorForm (playlistId) {
+            let requestPath = playlistEditorUrl;
+
+            // replace id if necessary/exists
+            requestPath = requestPath.replace(':id', playlistId);
+
+            $.ajax({
+                url: requestPath,
+                type: 'GET'
+            }).done(function(res) {
+
+                if(!res.success) {
+                    // Login Form needed?
+                    if(res.login) {
+                        window.location.href = window.location.href;
+                        location.reload(false);
+                    } else {
+                        // Just an error we dont know about
+                        if(res.message == undefined) {
+                            console.error(res);
+                        } else {
+                            console.error(res.message);
+                        }
+                    }
+                } else {
+                    // Clear container
+                    $('#editor-container').empty();
+
+                    // Append form
+                    $('#editor-container').append(res.html);
+                }
+            }).fail(function(jqXHR, textStatus, errorThrown) {
+                // Output error to console
+                console.error(jqXHR, textStatus, errorThrown);
+            });
         }
     </script>
 

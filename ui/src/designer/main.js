@@ -451,6 +451,9 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
                 // To select an object that still doesn't exist
                 if(refreshBeforeSelect) {
                     lD.refreshDesigner();
+                    
+                    // Make the timeline scroll to the new widget on load
+                    lD.timeline.scrollOnLoad = lD.selectedObject;
                 }
                 
                 // Select the same object ( that will refresh the layout too )

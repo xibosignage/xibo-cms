@@ -676,7 +676,7 @@ class Module extends Base
         $module->widget->delete();
 
          // Delete Media?
-        if ($this->getSanitizer()->getInt('deleteMedia', 0) == 1) {
+        if ($this->getSanitizer()->getCheckbox('deleteMedia', 0) == 1) {
             foreach ($widgetMedia as $mediaId) {
                 $media = $this->mediaFactory->getById($mediaId);
 

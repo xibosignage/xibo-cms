@@ -55,6 +55,7 @@ ul.sidebar {
     margin-left: 0;
     min-height: $toolbar-height;
     border: none;
+    padding: 0 !important;
 }
 
 #page-wrapper .editor-toolbar nav {
@@ -130,6 +131,15 @@ ul.sidebar {
     right: 0px;
     height: fit-content;
     opacity: 0.95;
+
+    &.hide-mode {
+        width: 0 !important;
+        height: 0 !important;
+
+        .media-search-container {
+            display: none;
+        }
+    }
 
     .media-search-container {
         background: $xibo-color-white;

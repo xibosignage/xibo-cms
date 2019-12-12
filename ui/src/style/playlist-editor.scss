@@ -141,7 +141,25 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
         width: 100%;
     }
 
-    #playlist-editor-container {
+    #dropzone-container {
+        padding: 10px;
+
+        .loading-container {
+            padding: 200px;
+            font-size: 100px;
+        }
+
+        .dropzone  {
+            font-size: 30px;
+            border: 2px dashed $xibo-color-secondary;
+            @include border-radius(4px);
+            min-height: 590px;
+            background: $xibo-color-white;
+            padding: 270px 0;
+        }
+    }
+
+    #playlist-timeline, #dropzone-container {
         &.ui-droppable-active {
             @include z-index-set($playlist-editor-z-index-select);
             @include background-stripes(45deg, darken($playlist-editor-main-background-color, 10%), darken($playlist-editor-main-background-color, 20%), 10px, 4px);
@@ -155,24 +173,6 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
         &.ui-droppable-active * {
             visibility: hidden;
         }
-    }
-
-    #dropzone-container {
-        padding: 10px;
-    }
-
-    #dropzone-container .loading-container {
-        padding: 200px;
-        font-size: 100px;
-    }
-
-    #dropzone-container .dropzone  {
-        font-size: 30px;
-        border: 2px dashed $xibo-color-secondary;
-        @include border-radius(4px);
-        min-height: 590px;
-        background: $xibo-color-white;
-        padding: 270px 0;
     }
 
     .custom-overlay {

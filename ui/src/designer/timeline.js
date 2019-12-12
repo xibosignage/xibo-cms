@@ -77,12 +77,15 @@ let Timeline = function(parent, container) {
         deltaTimeFormatted: lD.common.timeFormat(lD.layout.duration),
         zoomInDisable: '',
         zoomOutDisable: '',
+        zoomFindWidgetDisabled: '',
         scrollPosition: 0, // scroll position
         scrollVerticalPosition: 0, // scroll vertical position
         scrollWidth: 0, // To fix the double scroll reseting to 0 bug
         widgetMinimumVisibleRatio: 10, // Minimum % value so that the region details are shown
         widgetMinimumDurationOnStart: 15 // % of the shortest widget to be used to calculate the default zoom 
     };
+
+    this.scrollOnLoad = {};
 
     this.timeruler = {};
 };
@@ -495,6 +498,9 @@ Timeline.prototype.render = function(layout) {
     // Check widget repetition and create ghosts
     this.createGhostWidgetsDynamically(layout.regions);
 
+    // Check if we can find widget
+    this.properties.zoomFindWidgetDisabled = (app.selectedObject.type != 'widget') ? 'disabled' : '';
+
     // Render timeline template using layout object
     const html = timelineTemplate({
         layout: layout, 
@@ -525,7 +531,9 @@ Timeline.prototype.render = function(layout) {
     // Button actions
     const self = this;
     this.DOMObject.find('#findSelectedBtn').click(function() {
-        console.log('TODO: Find selected widget');
+        if(lD.selectedObject.type == 'widget') {
+            self.scrollToWidget(lD.selectedObject);
+        }
     });
 
     this.DOMObject.find('#zoomInBtn').click(function() {
@@ -668,7 +676,7 @@ Timeline.prototype.render = function(layout) {
     
     // When scroll is called ( by scrollbar or .scrollLeft() method calling ), use debounce and process the behaviour
     regionsContainer.scroll(_.debounce(function() {
-        
+
         // If regions are still not rendered, leave method
         if(self.properties.scrollWidth != $(this).find("#regions").width() || self.beingSorted == true) {
             return;
@@ -690,8 +698,55 @@ Timeline.prototype.render = function(layout) {
         }
     }, 500));
 
+    // Scroll to widget on load
+    if(!$.isEmptyObject(this.scrollOnLoad)) {
+        this.scrollToWidget(this.scrollOnLoad);
+        this.scrollOnLoad = {};
+    }
+
     // Initialize tooltips
     app.common.reloadTooltips(this.DOMObject);
+};
+
+/**
+ * Scroll to widget
+ * @param {Object} targetWidget - the target widget object
+ */
+Timeline.prototype.scrollToWidget = function(targetWidget) {
+    // Get region container
+    const $regionsContainer = this.DOMObject.find('#regions-container');
+    const $targetWidget = $regionsContainer.find('#' + targetWidget.id);
+
+    if($targetWidget.length > 0) {
+        $regionsContainer.scrollLeft($regionsContainer.scrollLeft() - ($regionsContainer.offset().left - $targetWidget.offset().left));
+    }
+};
+
+/**
+ * Scroll to first error widget
+ */
+Timeline.prototype.scrollToBrokenWidget = function() {
+    const regions = Object.values(lD.layout.regions);
+    const self = this;
+    const app = this.parent;
+    
+    $.each(regions, function(){
+        let breakFlag = true;
+        let widgets = Object.values(this.widgets);
+
+        $.each(widgets, function() {
+            if(this.isValid == 0) {
+                self.scrollOnLoad = this;
+                
+                app.selectObject($('#' + this.id), true);
+
+                breakFlag = false;
+                return false;
+            }
+        });
+
+        return breakFlag;
+    });
 };
 
 module.exports = Timeline;
