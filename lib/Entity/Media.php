@@ -904,7 +904,7 @@ class Media implements \JsonSerializable
                 $this->released = 2;
                 $this->getLog()->debug('Image size is too big. MediaId '. $this->mediaId);
 
-            } elseif ($resizeLimit <= 0) {
+            } elseif ($resizeThreshold > 0) {
                 if ($imgWidth > $imgHeight) { // 'landscape';
 
                     if ($imgWidth <= $resizeThreshold) {
