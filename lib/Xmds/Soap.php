@@ -63,6 +63,7 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Widget\ModuleWidget;
 
 /**
  * Class Soap
@@ -599,7 +600,7 @@ class Soap
                 $path = $layout->xlfToDisk(['notify' => false]);
 
                 // If the status is *still* 4, then we skip this layout as it cannot build
-                if ($layout->status === 4) {
+                if ($layout->status === ModuleWidget::$STATUS_INVALID) {
                     $this->getLog()->debug('Skipping layoutId ' . $layout->layoutId . ' which wont build');
                     continue;
                 }
