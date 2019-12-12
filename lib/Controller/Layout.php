@@ -48,6 +48,7 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Widget\ModuleWidget;
 
 /**
  * Class Layout
@@ -1138,11 +1139,11 @@ class Layout extends Base
 
             switch ($layout->status) {
 
-                case 1:
+                case ModuleWidget::$STATUS_VALID:
                     $layout->statusDescription = __('This Layout is ready to play');
                     break;
 
-                case 2:
+                case ModuleWidget::$STATUS_PLAYER:
                     $layout->statusDescription = __('There are items on this Layout that can only be assessed by the Display');
                     break;
 
@@ -1787,11 +1788,11 @@ class Layout extends Base
 
         switch ($layout->status) {
 
-            case 1:
+            case ModuleWidget::$STATUS_VALID:
                 $status = __('This Layout is ready to play');
                 break;
 
-            case 2:
+            case ModuleWidget::$STATUS_PLAYER:
                 $status = __('There are items on this Layout that can only be assessed by the client');
                 break;
 
