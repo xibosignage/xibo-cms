@@ -411,7 +411,13 @@ function XiboInitialise(scope) {
 
     // make a vanilla layout, display and media selector for reuse
     $(scope + " .pagedSelect select.form-control").each(function() {
-        makePagedSelect($(this), $("body"));
+        let $this = $(this);
+        let anchor = $this.data("anchorElement");
+        if (anchor !== undefined && anchor !== "") {
+            makePagedSelect($(this), $(anchor));
+        } else {
+            makePagedSelect($(this), $("body"));
+        }
     });
 
     // make a local select that search for text or tags
