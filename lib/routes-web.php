@@ -45,8 +45,11 @@ $app->get('/icondashboard', '\Xibo\Controller\IconDashboard:displayPage')->name(
 $app->get('/mediamanager', '\Xibo\Controller\MediaManager:displayPage')->name('mediamanager.view');
 $app->get('/mediamanager/data', '\Xibo\Controller\MediaManager:grid')->name('mediamanager.search');
 $app->get('/playlistdashboard', '\Xibo\Controller\PlaylistDashboard:displayPage')->setName('playlistdashboard.view');
+$app->get('/playlistdashboard/data', '\Xibo\Controller\PlaylistDashboard:grid')->name('playlistdashboard.search');
+$app->get('/playlistdashboard/:id', '\Xibo\Controller\PlaylistDashboard:show')->setName('playlistdashboard.show');
+$app->get('/playlistdashboard/widget/form/delete/:id', '\Xibo\Controller\PlaylistDashboard:deletePlaylistWidgetForm')->name('playlist.module.widget.delete.form');
 $app->map('/playlistdashboard/library', '\Xibo\Controller\PlaylistDashboard:upload')->via('HEAD');
-$app->post('/playlistdashboard/library', '\Xibo\Controller\PlaylistDashboard:upload')->name('playlist.library.add');
+$app->post('/playlistdashboard/library', '\Xibo\Controller\PlaylistDashboard:upload')->name('playlistdashboard.library.add');
 
 // Login Form
 $app->get('/login', '\Xibo\Controller\Login:loginForm')->name('login');
@@ -145,11 +148,6 @@ $app->get('/playlist/widget/dataset', '\Xibo\Controller\Module:getDataSets')->na
 $app->get('/playlist/widget/tab/:tab/:id', '\Xibo\Controller\Module:getTab')->name('module.widget.tab.form');
 $app->get('/playlist/widget/resource/:regionId/:id', '\Xibo\Controller\Module:getResource')->name('module.getResource');
 $app->get('/playlist/widget/form/templateimage/:type/:templateId', '\Xibo\Controller\Module:getTemplateImage')->name('module.getTemplateImage');
-
-//
-// playlistdashboard
-//
-$app->get('/playlistdashboard/widget/form/delete/:id', '\Xibo\Controller\PlaylistDashboard:deletePlaylistWidgetForm')->name('playlist.module.widget.delete.form');
 
 //
 // library
