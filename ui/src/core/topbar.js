@@ -248,6 +248,7 @@ Topbar.prototype.setupJumpList = function(jumpListContainer) {
 Topbar.prototype.updateLayoutStatus = function() {
 
     const statusContainer = this.DOMObject.find('#layout-info-status');
+    const app = this.parent;
 
     // Use status loader icon
     statusContainer.find('i').removeClass().addClass('fa fa-spinner fa-spin');
@@ -272,7 +273,7 @@ Topbar.prototype.updateLayoutStatus = function() {
         '1': 'check',
         '2': 'question',
         '3': 'cogs',
-        '': 'times'
+        '': 'exclamation'
     };
 
     // Create title and description
@@ -306,6 +307,13 @@ Topbar.prototype.updateLayoutStatus = function() {
         statusContainer.data('bs.popover').options.title = title;
         statusContainer.data('bs.popover').options.content = content;
     }
+
+    // Click status to scroll timeline to first broken widget
+    statusContainer.toggleClass('clickable', (iconCodes[lD.layout.status.code] == undefined)).on('click', function(){
+        if(iconCodes[lD.layout.status.code] == undefined) {
+            app.timeline.scrollToBrokenWidget();
+        }
+    });
 
     // Change Icon
     let iconType = (iconCodes[lD.layout.status.code] != undefined) ? iconCodes[lD.layout.status.code] : iconCodes[''];

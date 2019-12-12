@@ -30,15 +30,18 @@
                     <div id="content-{{@index}}" class="toolbar-pane toolbar-{{name}}-pane {{state}} {{#if search}}library-content{{/if}}">
                         {{#if search}}
                             {{!-- Show search container --}}
-                            <div id="media-search-container-{{@index}}" class="media-search-container"></div>
+                            <div id="media-search-container-{{@index}}" class="media-search-container drag-handle"></div>
                         {{else if content}}
                             {{!-- Paging button --}}
                             {{#if paging}}
                                 <a id="pag-btn-top-left-{{@index}}" {{pagBtnStepTopLeftDisabled}}
-                                    class="btn btn-primary navbar-nav pagination-btn pag-btn-top-left">
+                                    class="btn btn-primary navbar-nav pagination-btn pag-btn-top-left"
+                                    data-toggle="tooltip" data-placement="top" title="{{../trans.moduleNavStart}}">
                                     <i class="fa fa-step-backward"></i>
                                 </a>
-                                <a id="pag-btn-left-{{@index}}" {{pagBtnStepLeftDisabled}} class="btn btn-primary navbar-nav pagination-btn pag-btn-left">
+                                <a id="pag-btn-left-{{@index}}" {{pagBtnStepLeftDisabled}} 
+                                    class="btn btn-primary navbar-nav pagination-btn pag-btn-left"
+                                    data-toggle="tooltip" data-placement="top" title="{{../trans.moduleNavLeft}}">
                                     <i class="fa fa-caret-left"></i>
                                 </a>
                             {{/if}}
@@ -61,11 +64,13 @@
 
                             {{#if paging}}
                                 <a id="pag-btn-right-{{@index}}" {{pagBtnStepRightDisabled}} 
-                                    class="btn btn-primary navbar-nav pagination-btn pag-btn-right">
+                                    class="btn btn-primary navbar-nav pagination-btn pag-btn-right"
+                                    data-toggle="tooltip" data-placement="top" title="{{../trans.moduleNavRight}}">
                                     <i class="fa fa-caret-right"></i>
                                 </a>
                                 <a id="pag-btn-top-right-{{@index}}" {{pagBtnStepTopRightDisabled}}
-                                    class="btn btn-primary navbar-nav pagination-btn pag-btn-top-right">
+                                    class="btn btn-primary navbar-nav pagination-btn pag-btn-top-right"
+                                    data-toggle="tooltip" data-placement="top" title="{{../trans.moduleNavEnd}}">
                                     <i class="fa fa-step-forward"></i>
                                 </a>
                             {{/if}}
