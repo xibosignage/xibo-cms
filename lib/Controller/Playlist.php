@@ -919,26 +919,6 @@ class Playlist extends Base
     }
 
     /**
-     * Form for assigning Library Items to a Playlist
-     * @param int $playlistId
-     * @throws \Xibo\Exception\NotFoundException
-     */
-    public function libraryAssignForm($playlistId)
-    {
-        $playlist = $this->playlistFactory->getById($playlistId);
-
-        if (!$this->getUser()->checkEditable($playlist))
-            throw new AccessDeniedException();
-
-        $this->getState()->template = 'playlist-form-library-assign';
-        $this->getState()->setData([
-            'playlist' => $playlist,
-            'modules' => $this->moduleFactory->query(null, ['regionSpecific' => 0, 'enabled' => 1, 'assignable' => 1]),
-            'help' => $this->getHelp()->link('Library', 'Assign')
-        ]);
-    }
-
-    /**
      * Add Library items to a Playlist
      * @param int $playlistId
      *
@@ -977,6 +957,13 @@ class Playlist extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="displayOrder",
+     *      in="formData",
+     *      description="Optional integer to say which position this assignment should occupy in the list. If more than one media item is being added, this will be the position of the first one.",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1004,10 +991,13 @@ class Playlist extends Base
         $media = $this->getSanitizer()->getIntArray('media');
 
         if (count($media) <= 0)
-            throw new \InvalidArgumentException(__('Please provide Media to Assign'));
+            throw new InvalidArgumentException(__('Please provide Media to Assign'), 'media');
 
         // Optional Duration
         $duration = ($this->getSanitizer()->getInt('duration'));
+
+        // Optional displayOrder
+        $displayOrder = $this->getSanitizer()->getInt('displayOrder');
 
         $newWidgets = [];
 
@@ -1054,7 +1044,13 @@ class Playlist extends Base
             $widget->calculateDuration($module);
 
             // Assign the widget to the playlist
-            $playlist->assignWidget($widget);
+            $playlist->assignWidget($widget, $displayOrder);
+
+            // If we have one provided we should bump the display order by 1 so that if we have more than one
+            // media to assign, we don't put the second one in the same place as the first one.
+            if ($displayOrder !== null) {
+                $displayOrder++;
+            }
 
             // Add to a list of new widgets
             $newWidgets[] = $widget;
