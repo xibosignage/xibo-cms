@@ -1,6 +1,7 @@
 // Import
 @import "mixins";
 @import "common";
+@import "toolbar";
 @import "topbar";
 
 // Colours
@@ -110,7 +111,17 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     }
 
     #layout-editor  {
-        margin-top: 40px;
+        margin-top: 0;
+    }
+}
+
+@media (max-width: 1200px) {
+    #layout-editor  {
+        margin-top: 0;
+    }
+
+    #page-wrapper #layout-editor  {
+        margin-top: 25px;
     }
 }
 
@@ -364,6 +375,10 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
         .widgetProperties {
             float: right;
+            position: absolute;
+            z-index: 2;
+            right: 4px;
+            top: 4px;
         }
 
         .widget-transition-container {
