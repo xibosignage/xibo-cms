@@ -745,7 +745,7 @@ class Report extends Base
 
             try {
                 $mpdf = new \Mpdf\Mpdf([
-                    'tempDir' => realpath(__DIR__ . '/../../library/temp'),
+                    'tempDir' => $this->getConfig()->getSetting('LIBRARY_LOCATION') . '/temp',
                     'orientation' => 'L',
                     'mode' => 'c',
                     'margin_left' => 20,
