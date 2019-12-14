@@ -1128,6 +1128,9 @@ class Library extends Base
         if (!file_exists($libraryFolder . '/screenshots'))
             mkdir($libraryFolder . '/screenshots', 0777, true);
 
+        if (!file_exists($libraryFolder . '/attachment'))
+            mkdir($libraryFolder . '/attachment', 0777, true);
+
         // Check that we are now writable - if not then error
         if (!is_writable($libraryFolder))
             throw new ConfigurationException(__('Library not writable'));

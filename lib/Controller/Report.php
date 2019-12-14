@@ -745,6 +745,7 @@ class Report extends Base
 
             try {
                 $mpdf = new \Mpdf\Mpdf([
+                    'tempDir' => $this->getConfig()->getSetting('LIBRARY_LOCATION') . '/temp',
                     'orientation' => 'L',
                     'mode' => 'c',
                     'margin_left' => 20,
@@ -761,7 +762,7 @@ class Report extends Base
                 $mpdf->WriteHTML($body);
                 $mpdf->Output($fileName, \Mpdf\Output\Destination::FILE);
             } catch (\Exception $error) {
-                $this->getLog()->error('Report PDF could not be created and notification is not saved.');
+                $this->getLog()->error($error->getMessage());
             }
 
         }
