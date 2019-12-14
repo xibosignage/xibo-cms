@@ -29,12 +29,11 @@ width: {{ durationPercentage }}%;">
             <i class="fa fa-volume-up editProperty" data-property="Audio"></i>
         {{/if}}
     
-        {{#gt fromDt DATE_MIN}}
-            <i class="fa fa fa-clock-o editProperty" data-property="Expiry"></i>
-        {{else}}
-            {{#gt DATE_MAX toDt}}
-                <i class="fa fa fa-clock-o editProperty" data-property="Expiry"></i>
-            {{/gt}}
+        {{#gt expireStatus 0}}
+            <i class="fa {{expireStatusIcon}} editProperty" 
+            data-toggle="tooltip" data-container="body" 
+            title="{{expireStatusTitle}}"
+            data-property="Expiry"></i>
         {{/gt}}
     </div>
 </div>

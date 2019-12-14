@@ -207,9 +207,14 @@ Navigator.prototype.renderNavbar = function() {
         return;
     }
 
+    // Check if trash bin is active
+    let trashBinActive = lD.selectedObject.isDeletable && lD.selectedObject.type == 'region' && (lD.readOnlyMode === undefined || lD.readOnlyMode === false);
+
+
     this.navbarContainer.html(navigatorLayoutNavbarTemplate(
         {
-            trans: navigatorTrans
+            trans: navigatorTrans,
+            trashBinActive: trashBinActive
         }
     ));
 
@@ -255,6 +260,58 @@ Navigator.prototype.renderNavbar = function() {
 
             toastr.error(errorMessagesTrans.createRegionFailed.replace('%error%', errorMessage));
         });
+    });
+
+
+    this.navbarContainer.find('#delete-btn').click(function() {
+
+        if(lD.selectedObject.isDeletable) {
+
+            bootbox.confirm({
+                title: editorsTrans.deleteTitle.replace('%obj%', 'region'),
+                message: editorsTrans.deleteConfirm,
+                buttons: {
+                    confirm: {
+                        label: editorsTrans.yes,
+                        className: 'btn-danger'
+                    },
+                    cancel: {
+                        label: editorsTrans.no,
+                        className: 'btn-default'
+                    }
+                },
+                callback: function(result) {
+                    if(result) {
+
+                        lD.common.showLoadingScreen();
+
+                        // Delete element from the layout
+                        lD.layout.deleteElement(lD.selectedObject.type, lD.selectedObject.regionId).then((res) => { // Success
+
+                            lD.common.hideLoadingScreen();
+
+                            // Behavior if successful 
+                            toastr.success(res.message);
+                            lD.reloadData(lD.layout);
+                        }).catch((error) => { // Fail/error
+
+                            lD.common.hideLoadingScreen();
+
+                            // Show error returned or custom message to the user
+                            let errorMessage = '';
+
+                            if(typeof error == 'string') {
+                                errorMessage = error;
+                            } else {
+                                errorMessage = error.errorThrown;
+                            }
+
+                            toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
+                        });
+                    }
+                }
+            }).attr('data-test', 'deleteRegionModal');
+        }
     });
 
     // Initialize tooltips
