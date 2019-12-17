@@ -76,8 +76,6 @@ window.pE = {
 
 // Load Playlist and build app structure
 pE.loadEditor = function() {
-    // If the editor is being loaded from within the layout designer, change the region specific flag
-    pE.regionSpecific = (typeof lD != 'undefined') ? '&regionSpecific=1' : '';
 
     pE.common.showLoadingScreen();
 
@@ -87,6 +85,14 @@ pE.loadEditor = function() {
 
     // Get DOM main object
     pE.editorContainer = $('#playlist-editor');
+
+    // If the editor is being loaded from within the layout designer, change the region specific flag
+    pE.regionSpecificQuery = '';
+
+    if(typeof lD != 'undefined') {
+        pE.regionSpecificQuery = '&regionSpecific=1';
+        pE.mainRegion = pE.editorContainer.parents('#editor-container').data('regionObj');
+    }
 
     // Get playlist id
     const playlistId = pE.editorContainer.attr("playlist-id");
@@ -98,7 +104,7 @@ pE.loadEditor = function() {
     pE.editorContainer.html(loadingTemplate());
 
     // Load playlist through an ajax request
-    $.get(urlsForApi.playlist.get.url + '?playlistId=' + playlistId + '&embed=widgets,widget_validity,tags,permissions' + pE.regionSpecific)
+    $.get(urlsForApi.playlist.get.url + '?playlistId=' + playlistId + '&embed=widgets,widget_validity,tags,permissions' + pE.regionSpecificQuery)
         .done(function(res) {
 
             if(res.data != null && res.data.length > 0) {
@@ -531,7 +537,7 @@ pE.reloadData = function() {
 
     pE.common.showLoadingScreen();
 
-    $.get(urlsForApi.playlist.get.url + '?playlistId=' + pE.playlist.playlistId + '&embed=widgets,widget_validity,tags,permissions' + pE.regionSpecific)
+    $.get(urlsForApi.playlist.get.url + '?playlistId=' + pE.playlist.playlistId + '&embed=widgets,widget_validity,tags,permissions' + pE.regionSpecificQuery)
         .done(function(res) {
             pE.common.hideLoadingScreen();
 

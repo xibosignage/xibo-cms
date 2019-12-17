@@ -553,7 +553,10 @@ Timeline.prototype.render = function(layout) {
 
     this.DOMObject.find('.open-playlist-editor').click(function() {
         const playlistId = $(this).parents('.designer-region-info').data('playlistId');
-        lD.openPlaylistEditor(playlistId);
+        const regionId = $(this).parents('.designer-region-info').data('region');
+        const region = lD.getElementByTypeAndId('region', regionId);
+        
+        lD.openPlaylistEditor(playlistId, region);
     });
 
     // Select region to edit

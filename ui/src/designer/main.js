@@ -1531,12 +1531,15 @@ lD.checkLayoutStatus = function() {
 /**
  * Call layout status
  */
-lD.openPlaylistEditor = function(playlistId) {
+lD.openPlaylistEditor = function(playlistId, region) {
 
     let requestPath = playlistEditorUrl;
 
     // replace id if necessary/exists
     requestPath = requestPath.replace(':id', playlistId);
+
+    // Deselect previous selected object
+    lD.selectObject();
 
     $.ajax({
         url: requestPath,
@@ -1566,11 +1569,17 @@ lD.openPlaylistEditor = function(playlistId) {
             // Hide layout designer toolbar
             lD.toolbar.DOMObject.hide();
 
+            // Attach region id to editor data
+            $editor.data('regionObj', region);
+
             // On close, remove container and refresh designer
             $editor.find('.editor-modal-close').attr('onclick', '').on('click', function() {
 
                 // Close playlist editor
                 pE.close();
+                
+                // Remove region id from data
+                $editor.removeData('regionObj');
                 
                 // Show layout designer toolbar
                 lD.toolbar.DOMObject.show();
