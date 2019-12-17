@@ -126,9 +126,16 @@ class PlaylistDashboard extends Base
             $widget->module = $this->moduleFactory->createWithWidget($widget);
 
             // Check my permissions
-            $widget->viewble = $this->getUser()->checkViewable($widget->module->getMedia());
-            $widget->editable = $this->getUser()->checkEditable($widget->module->getMedia());
-            $widget->deletable = $this->getUser()->checkDeleteable($widget->module->getMedia());
+            if ($widget->module->getModule()->regionSpecific == 0) {
+                $widget->viewble = $this->getUser()->checkViewable($widget->module->getMedia());
+                $widget->editable = $this->getUser()->checkEditable($widget->module->getMedia());
+                $widget->deletable = $this->getUser()->checkDeleteable($widget->module->getMedia());
+            } else {
+                $widget->viewble = $this->getUser()->checkViewable($widget);
+                $widget->editable = $this->getUser()->checkEditable($widget);
+                $widget->deletable = $this->getUser()->checkDeleteable($widget);
+            }
+
         }
 
         // Work out the slot size of the first sub-playlist we are in.
