@@ -36,10 +36,10 @@ class LayoutConvertTask implements TaskInterface
     public function run()
     {
         // lklayoutmedia is removed at the end of this task
-        if (!$this->store->exists('SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = :name', [
-            'schema' => $_SERVER['MYSQL_DATABASE'],
+        if (!$this->store->exists('SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :name', [
             'name' => 'lklayoutmedia'
         ])) {
+            $this->appendRunMessage('Already converted');
             return;
         }
 
@@ -135,10 +135,13 @@ class LayoutConvertTask implements TaskInterface
                     }
                 }
             } catch (\Exception $e) {
+                $this->appendRunMessage('Error upgrading Layout, this should be checked post-upgrade. ID: ' . $oldLayoutId);
                 $this->log->critical('Error upgrading Layout, this should be checked post-upgrade. ID: ' . $oldLayoutId);
                 $this->log->error($e->getMessage() . ' - ' . $e->getTraceAsString());
             }
         }
+
+        $this->appendRunMessage('Finished converting, dropping unnecessary tables.');
 
         // Drop the permissions
         $this->store->update('DROP TABLE `lklayoutmediagroup`;', []);
