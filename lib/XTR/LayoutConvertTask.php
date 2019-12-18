@@ -76,7 +76,10 @@ class LayoutConvertTask implements TaskInterface
         $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
 
         // We need to go through each layout, save the XLF as a backup in the library and then upgrade it.
-        foreach ($this->store->select('SELECT layoutId, xml FROM `layout`', []) as $oldLayout) {
+        // This task applies to Layouts which are schemaVersion 1 or lower. xibosignage/xibo#2056
+        foreach ($this->store->select('SELECT layoutId, xml FROM `layout` WHERE schemaVersion < :schemaVersion', [
+            'schemaVersion' => 2
+        ]) as $oldLayout) {
 
             $oldLayoutId = intval($oldLayout['layoutId']);
 
