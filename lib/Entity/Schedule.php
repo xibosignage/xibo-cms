@@ -565,37 +565,6 @@ class Schedule implements \JsonSerializable
         // Check recurrenceDetail every is positive
         if ($this->recurrenceType != '' && ($this->recurrenceDetail === null || $this->recurrenceDetail <= 0))
             throw new InvalidArgumentException(__('Repeat every must be a positive number'), 'recurrenceDetail');
-        
-        // Check and disallow Minute/Hourly repeats to be indefinite (or too long)
-        /*$twelveHoursInSeconds = 12 * 60 * 60;
-        $oneWeekInSeconds = 24 * 7 * 60 * 60;
-        if($this->recurrenceType == 'Minute') {
-
-            if (empty($this->recurrenceRange)) {
-                throw new InvalidArgumentException(__(' An end time is needed for an event that has its repeating interval set to Minute.'), 'recurrenceRange');
-            }
-
-            $distance = ($this->getDate()->parse($this->recurrenceRange, 'U')->diffInSeconds($this->getDate()->parse($this->fromDt, 'U'))) / $this->recurrenceDetail;
-
-            if ($distance > $twelveHoursInSeconds) {
-                // Recurrence range cannot be more than 12 hours
-                $exceedLimit = $this->getDate()->parse($this->fromDt, 'U')->addSeconds($twelveHoursInSeconds * $this->recurrenceDetail );
-                throw new InvalidArgumentException(sprintf(__('The end time for this event can only be %s in the future because of the repeating interval being Minute.', $exceedLimit->format('Y-m-d H:i:s'))), 'recurrenceRange');
-            }
-
-        } elseif ($this->recurrenceType == 'Hour') {
-
-            if (empty($this->recurrenceRange)) {
-                throw new InvalidArgumentException(__(' An end time is needed for an event that has its repeating interval set to Hour'), 'recurrenceRange');
-            }
-            $distance = ($this->getDate()->parse($this->recurrenceRange, 'U')->diffInSeconds($this->getDate()->parse($this->fromDt, 'U'))) / $this->recurrenceDetail;
-
-            if ($distance > $oneWeekInSeconds) {
-                // Recurrence range cannot be more than 1 week
-                $exceedLimit = $this->getDate()->parse($this->fromDt, 'U')->addSeconds($oneWeekInSeconds * $this->recurrenceDetail );
-                throw new InvalidArgumentException(sprintf(__('The end time for this event can only be %s in the future because of the repeating interval being Hour.', $exceedLimit->format('Y-m-d H:i:s'))), 'recurrenceRange');
-            }
-        }*/
     }
 
     /**

@@ -332,7 +332,7 @@ class Schedule extends Base
             }
 
             if ($row->recurrenceType == 'Minute' || $row->recurrenceType == 'Hour') {
-                $title .= ', Repeats every ' . $row->recurrenceDetail . ' ' . $row->recurrenceType;
+                $title .= __(', Repeats every %s %s', $row->recurrenceDetail, $row->recurrenceType);
             }
 
             // Event URL
