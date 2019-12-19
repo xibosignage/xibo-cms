@@ -230,7 +230,8 @@
                     var delTempl = Handlebars.compile($("#delete-template").html());
                     $delButtonDiv.append(delTempl({
                         href: $container.data("widgetDel").replace(":id", $container.data("widgetId")),
-                        routeViewable: $container.data("routeViewable")
+                        routeViewable: $container.data("routeViewable"),
+                        transDelete: "{% trans "Delete" %}"
                     }));
 
                     if ($container.data("mediaType") === "image") {
@@ -327,7 +328,7 @@
     <!-- The template to display delete button -->
     <script type="text/x-handlebars-template" id="delete-template">
         {{#if routeViewable}}
-            <a class="XiboFormButton added btns" title="Delete" href="{{ href }}">
+            <a class="XiboFormButton added btns" title="{{ transDelete }}" href="{{ href }}">
                 <i class="fa fa-lg fa-trash" aria-hidden="true" style="padding:8px 0 8px; color:#d9534f;"></i>
             </a>
         {{/if}}
