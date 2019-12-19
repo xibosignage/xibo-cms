@@ -547,7 +547,7 @@ class Schedule implements \JsonSerializable
             throw new InvalidArgumentException(__('Repeat every must be a positive number'), 'recurrenceDetail');
         
         // Check and disallow Minute/Hourly repeats to be indefinite (or too long)
-        $twelveHoursInSeconds = 12 * 60 * 60;
+        /*$twelveHoursInSeconds = 12 * 60 * 60;
         $oneWeekInSeconds = 24 * 7 * 60 * 60;
         if($this->recurrenceType == 'Minute') {
 
@@ -575,7 +575,7 @@ class Schedule implements \JsonSerializable
                 $exceedLimit = $this->getDate()->parse($this->fromDt, 'U')->addSeconds($oneWeekInSeconds * $this->recurrenceDetail );
                 throw new InvalidArgumentException(sprintf(__('The end time for this event can only be %s in the future because of the repeating interval being Hour.', $exceedLimit->format('Y-m-d H:i:s'))), 'recurrenceRange');
             }
-        }
+        }*/
     }
 
     /**
