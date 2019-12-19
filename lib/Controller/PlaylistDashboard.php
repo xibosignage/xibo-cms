@@ -129,9 +129,11 @@ class PlaylistDashboard extends Base
             if ($widget->module->getModule()->regionSpecific == 0) {
                 $widget->viewble = $this->getUser()->checkViewable($widget->module->getMedia());
                 $widget->editable = $this->getUser()->checkEditable($widget->module->getMedia());
+                $widget->deletable = $this->getUser()->checkDeleteable($widget->module->getMedia());
             } else {
                 $widget->viewble = $this->getUser()->checkViewable($widget);
                 $widget->editable = $this->getUser()->checkEditable($widget);
+                $widget->deletable = $this->getUser()->checkDeleteable($widget);
             }
 
         }

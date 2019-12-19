@@ -227,8 +227,11 @@
                     button = $("<button class=\"btn btn-block btn-warning spot-action-button\">" + $container.data("widgetName") + "</button>");
                     $container.append(button);
 
-                    let delButton = $("<a class=\"XiboFormButton added btns\" title=\"{% trans "Delete" %}\" href=\"" + $container.data("widgetDel").replace(":id", $container.data("widgetId")) + "\"><i class=\"fa fa-lg fa-trash\" aria-hidden=\"true\" style=\"padding:8px 0 8px; color:#d9534f;\"></i></a>");
-                    $delButtonDiv.append(delButton);
+                    var delTempl = Handlebars.compile($("#delete-template").html());
+                    $delButtonDiv.append(delTempl({
+                        href: $container.data("widgetDel").replace(":id", $container.data("widgetId")),
+                        routeViewable: $container.data("routeViewable")
+                    }));
 
                     if ($container.data("mediaType") === "image") {
                         let previewUrl = $container.data("widgetPreview").replace(":id", $container.data("mediaId"));
@@ -240,6 +243,11 @@
                     } else {
                         $imgDiv.append($("<i class=\"fa fa-2x module-icon-" + $container.data("mediaType") + "\" style=\"height: 50px; max-width: 50px;\"></i>"));
                     }
+
+                } else {
+                    button = $("<button class=\"btn btn-block btn-success spot-action-button\">Add</button>");
+                    $container.append(button);
+
                 }
 
                 // Bind to the button.
@@ -315,5 +323,15 @@
             </div>
         </form>
     </script>
+
+    <!-- The template to display delete button -->
+    <script type="text/x-handlebars-template" id="delete-template">
+        {{#if routeViewable}}
+            <a class="XiboFormButton added btns" title="Delete" href="{{ href }}">
+                <i class="fa fa-lg fa-trash" aria-hidden="true" style="padding:8px 0 8px; color:#d9534f;"></i>
+            </a>
+        {{/if}}
+    </script>
+
     {% endraw %}
 {% endblock %}
