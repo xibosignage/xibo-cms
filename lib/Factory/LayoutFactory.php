@@ -636,9 +636,6 @@ class LayoutFactory extends BaseFactory
                     }
                 }
 
-                // Calculate the duration
-                $widget->calculateDuration($module, true);
-
                 // Add the widget to the playlist
                 $playlist->assignWidget($widget);
             }
