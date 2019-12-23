@@ -2103,14 +2103,14 @@ class Library extends Base
         $this->getUser()->isQuotaFullByUser();
 
         // check if we have extension provided in the request (available via API), if not get it from the headers
-        if (isset($extension)) {
+        if (!empty($extension)) {
             $ext = $extension;
         } else {
             $ext = $this->getRemoteFileExtension($url);
         }
 
         // check if we have type provided in the request (available via API), if not get the module type from the extension
-        if (isset($type)) {
+        if (!empty($type)) {
             $module = $this->getModuleFactory()->create($type);
         } else {
             $module = $this->getModuleFactory()->getByExtension($ext);
@@ -2196,11 +2196,11 @@ class Library extends Base
              $guzzle = new Client($this->getConfig()->getGuzzleProxy());
              $head = $guzzle->head($url);
              $contentType = $head->getHeaderLine('Content-Type');
-             $amazonContentType = $head->getHeaderLine('x-amz-meta-filetype');
 
              $extension = $contentType;
 
              if ($contentType === 'binary/octet-stream' && $head->hasHeader('x-amz-meta-filetype')) {
+                 $amazonContentType = $head->getHeaderLine('x-amz-meta-filetype');
                  $extension = $amazonContentType;
              }
 
