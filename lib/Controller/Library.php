@@ -2042,6 +2042,13 @@ class Library extends Base
      *      required=true
      *   ),
      *  @SWG\Parameter(
+     *      name="extension",
+     *      in="formData",
+     *      description="Optional extension of the media, jpg, png etc. If not set in the request it will be retrieved from the headers",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="optionalName",
      *      in="formData",
      *      description="An optional name for this media file, if left empty it will default to the file name",
@@ -2075,6 +2082,7 @@ class Library extends Base
         $url = $this->getSanitizer()->getString('url');
         $type = $this->getSanitizer()->getString('type');
         $optionalName = $this->getSanitizer()->getString('optionalName');
+        $extension = $this->getSanitizer()->getString('extension');
 
         // Validate the URL
         if (!v::url()->notEmpty()->validate(urldecode($url)) || !filter_var($url, FILTER_VALIDATE_URL)) {
@@ -2097,16 +2105,19 @@ class Library extends Base
 
         $this->getUser()->isQuotaFullByUser();
 
-        // if the type is not provided (web ui), get the extension from pathinfo/Guzzle and try to find correct module for the media
-        if (!isset($type)) {
+        // check if we have extension provided in the request (available via API), if not get it from the headers
+        if (isset($extension)) {
+            $ext = $extension;
+        } else {
             $ext = $this->getRemoteFileExtension($url);
+        }
+
+        // check if we have type provided in the request (available via API), if not get the module type from the extension
+        if (isset($type)) {
+            $module = $this->getModuleFactory()->create($type);
+        } else {
             $module = $this->getModuleFactory()->getByExtension($ext);
             $module = $this->getModuleFactory()->create($module->type);
-        } else {
-            // we have the type in request (API) double check that the module type exists
-            // we are also getting extension here from pathinfo / the Content-Type header via Guzzle, depending on the URL we may need it in saveFile in Media entity
-            $ext = $this->getRemoteFileExtension($url);
-            $module = $this->getModuleFactory()->create($type);
         }
 
         // if we were provided with optional Media name set it here, otherwise get it from pathinfo
@@ -2187,10 +2198,13 @@ class Library extends Base
          if ($extension == '') {
              $guzzle = new Client($this->getConfig()->getGuzzleProxy());
              $head = $guzzle->head($url);
-             $contentType = $head->getHeader('Content-Type');
+             $contentType = $head->getHeaderLine('Content-Type');
+             $amazonContentType = $head->getHeaderLine('x-amz-meta-filetype');
 
-             foreach ($contentType as $value) {
-                 $extension = $value;
+             $extension = $contentType;
+
+             if ($contentType === 'binary/octet-stream' && $head->hasHeader('x-amz-meta-filetype')) {
+                 $extension = $amazonContentType;
              }
 
              // get the extension corresponding to the mime type
