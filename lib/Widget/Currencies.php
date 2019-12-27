@@ -844,7 +844,7 @@ class Currencies extends AlphaVantageBase
     public function getCacheDuration()
     {
         $cachePeriod = $this->getSetting('cachePeriod', 3600);
-        $updateInterval = $this->getSetting('updateInterval', 3600);
+        $updateInterval = $this->getSetting('updateInterval', 60) * 60;
 
         return max($cachePeriod, $updateInterval);
     }
