@@ -46,7 +46,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
             // Check for a user quota
             // this method has the ability to reconnect to MySQL in the event that the upload has taken a long time.
             // OSX-381
-            $controller->getUser()->isQuotaFullByUser(true);
+            $controller->getUser($this->options['request'])->isQuotaFullByUser(true);
 
             // Get some parameters
             if ($index === null) {
@@ -209,7 +209,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     if ($media->mediaType == 'image') {
                         $controller->getLog()->debug('Updating layouts with the old media %d as the background image.', $oldMedia->mediaId);
                         // Get all Layouts with this as the background image
-                        foreach ($controller->getLayoutFactory()->query(null, ['disableUserCheck' => 1, 'backgroundImageId' => $oldMedia->mediaId]) as $layout) {
+                        foreach ($controller->getLayoutFactory()->query(null, ['disableUserCheck' => 1, 'backgroundImageId' => $oldMedia->mediaId], $this->options['request']) as $layout) {
                             /* @var Layout $layout */
 
                             if (!$controller->getUser()->checkEditable($layout)) {
