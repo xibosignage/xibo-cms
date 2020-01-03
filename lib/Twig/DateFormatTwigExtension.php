@@ -9,7 +9,9 @@
 namespace Xibo\Twig;
 
 
-class DateFormatTwigExtension extends \Twig_Extension
+use Twig\Extension\AbstractExtension;
+
+class DateFormatTwigExtension extends AbstractExtension
 {
     /**
      * {@inheritdoc}
@@ -17,7 +19,7 @@ class DateFormatTwigExtension extends \Twig_Extension
     public function getFilters()
     {
         return array(
-            'datehms' => new \Twig_Filter_Method($this, 'dateFormat')
+            'datehms' => new \Twig\TwigFilter('dateFormat', $this)
         );
     }
 

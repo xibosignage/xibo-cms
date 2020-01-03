@@ -9,7 +9,9 @@
 namespace Xibo\Twig;
 
 
-class UrlDecodeTwigExtension extends \Twig_Extension
+use Twig\Extension\AbstractExtension;
+
+class UrlDecodeTwigExtension extends AbstractExtension
 {
     /**
      * {@inheritdoc}
@@ -17,7 +19,7 @@ class UrlDecodeTwigExtension extends \Twig_Extension
     public function getFilters()
     {
         return array(
-            'url_decode' => new \Twig_Filter_Method($this, 'urlDecode')
+            'url_decode' => new \Twig\TwigFilter('urlDecode', $this)
         );
     }
 
