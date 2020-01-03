@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
- * This file (WebAuthentication.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,112 +23,140 @@
 
 namespace Xibo\Middleware;
 
-
-use Slim\Middleware;
+use Nyholm\Psr7\Factory\Psr17Factory;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\StreamInterface;
+use Psr\Http\Server\MiddlewareInterface as Middleware;
+use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Slim\App;
+use Slim\Http\Factory\DecoratedResponseFactory;
+use Slim\Routing\RouteContext;
+use Xibo\Entity\User;
 use Xibo\Helper\ApplicationState;
 
 /**
  * Class WebAuthentication
  * @package Xibo\Middleware
  */
-class WebAuthentication extends Middleware
+class WebAuthentication implements Middleware
 {
+    /* @var App $app */
+    private $app;
+
+    public function __construct($app)
+    {
+        $this->app = $app;
+    }
+
     /**
      * Uses a Hook to check every call for authorization
      * Will redirect to the login route if the user is unauthorized
      *
-     * @throws \RuntimeException if there isn't a login route
+     * @param Request $request
+     * @param RequestHandler $handler
+     * @return Response
      */
-    public function call()
+    public function process(Request $request, RequestHandler $handler): Response
     {
         $app = $this->app;
+        $container = $app->getContainer();
 
-        // Create a user
-        $app->user = $app->userFactory->create();
+        /** @var User $user */
+        $user = $container->get('userFactory')->create();
 
-        // Create a function which we will call should the request be for a protected page
-        // and the user not yet be logged in.
-        $redirectToLogin = function () use ($app) {
+        // Get the current route pattern
+        $routeContext = RouteContext::fromRequest($request);
+        $route = $routeContext->getRoute();
+        $resource = $route->getPattern();
+        $routeParser = $app->getRouteCollector()->getRouteParser();
+        // Pass the page factory into the user object, so that it can check its page permissions
+        $user->setChildAclDependencies($container->get('userGroupFactory'), $container->get('pageFactory'));
 
-            if ($app->request->isAjax()) {
-                $state = $app->state;
-                /* @var ApplicationState $state */
-                // Return a JSON response which tells the App to redirect to the login page
-                $app->response()->header('Content-Type', 'application/json');
-                $state->Login();
-                echo $state->asJson();
-                $app->stop();
-            }
-            else {
-                // Redirect to login
-                $app->redirect($app->urlFor('login'));
-            }
-        };
+        // Check to see if this is a public resource (there are only a few, so we have them in an array)
+        if (!in_array($resource, $app->publicRoutes)) {
+            $app->public = false;
 
-        // Define a callable to check the route requested in before.dispatch
-        $isAuthorised = function () use ($app, $redirectToLogin) {
-            /** @var \Xibo\Entity\User $user */
-            $user = $app->user;
+            // Need to check
+            if ($user->hasIdentity() &&  $container->get('session')->isExpired() == 0) {
 
-            // Get the current route pattern
-            $resource = $app->router->getCurrentRoute()->getPattern();
+                // Replace our user with a fully loaded one
+                $user = $container->get('userFactory')->getById($user->userId);
 
-            // Pass the page factory into the user object, so that it can check its page permissions
-            $user->setChildAclDependencies($app->userGroupFactory, $app->pageFactory);
+                // Pass the page factory into the user object, so that it can check its page permissions
+                $user->setChildAclDependencies($container->get('userGroupFactory'), $container->get('pageFactory'));
 
-            // Check to see if this is a public resource (there are only a few, so we have them in an array)
-            if (!in_array($resource, $app->publicRoutes)) {
-                $app->public = false;
+                // Load the user
+                $user->load(false, $request);
 
-                // Need to check
-                if ($user->hasIdentity() && !$app->session->isExpired()) {
+                // Configure the log service with the logged in user id
+                $container->get('logService')->setUserId($user->userId);
 
-                    // Replace our user with a fully loaded one
-                    $user = $app->userFactory->getById($user->userId);
+                // Do they have permission?
+                $user->routeAuthentication($resource);
 
-                    // Pass the page factory into the user object, so that it can check its page permissions
-                    $user->setChildAclDependencies($app->userGroupFactory, $app->pageFactory);
+                // We are authenticated, override with the populated user object
+                 // $app->user = $user;
+                $newRequest = $request->withAttribute('currentUser', $user);
 
-                    // Load the user
-                    $user->load();
-
-                    // Configure the log service with the logged in user id
-                    $app->logService->setUserId($user->userId);
-
-                    // Do they have permission?
-                    $user->routeAuthentication($resource);
-
-                    // We are authenticated, override with the populated user object
-                    $app->user = $user;
+                return $handler->handle($newRequest);
+            } else {
+                // TODO Store the current route so we can come back to it after login
+                //  $app->flash('priorRoute', $request->getUri());
+                $request->withAttribute('currentUser', $user);
+                $app->getContainer()->get('logger')->debug('not in public routes, expired, should redirect to login ');
+                if ($user->hasIdentity()) {
+                    $user->touch();
                 }
-                else {
-                    // Store the current route so we can come back to it after login
-                    $app->flash('priorRoute', $app->request()->getRootUri() . $app->request()->getResourceUri());
 
-                    if ($user->hasIdentity()) {
-                        $user->touch();
-                    }
+                if ($this->isAjax($request)) {
 
-                    $redirectToLogin();
+                    $state = $app->getContainer()->get('state');
+                    /* @var ApplicationState $state */
+                    // Return a JSON response which tells the App to redirect to the login page
+                    $nyholmFactory = new Psr17Factory();
+                    $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
+                    $response = $decoratedResponseFactory->createResponse();
+                    $state->Login();
+
+                    return $response->withJson($state->asJson());
+                } else {
+                    return $handler->handle($request)->withStatus(302)->withHeader('Location', $routeParser->urlFor('login'));
                 }
             }
-            else {
-                $app->public = true;
+        } else {
+            $app->public = true;
+            $app->getContainer()->get('logger')->debug('PUBLIC ROUTE');
 
-                // If we are expired and come from ping/clock, then we redirect
-                if ($app->session->isExpired() && ($resource == '/login/ping' || $resource == 'clock')) {
+            // If we are expired and come from ping/clock, then we redirect
+            if ($container->get('session')->isExpired() && ($resource == '/login/ping' || $resource == 'clock')) {
+                $app->getContainer()->get('logger')->debug('should redirect to login , resource is ' . $resource);
+                if ($user->hasIdentity()) {
+                    $user->touch();
+                }
+                if ($this->isAjax($request)) {
 
-                    if ($user->hasIdentity()) {
-                        $user->touch();
-                    }
+                    $state = $app->getContainer()->get('state');
+                    /* @var ApplicationState $state */
+                    // Return a JSON response which tells the App to redirect to the login page
 
-                    $redirectToLogin();
+                    $nyholmFactory = new Psr17Factory();
+                    $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
+                    $response = $decoratedResponseFactory->createResponse();
+                    $state->Login();
+
+                    return $response->withJson($state->asJson());
+                } else {
+                    return $handler->handle($request)->withStatus(302)->withHeader('Location', $routeParser->urlFor('login'));
                 }
             }
-        };
+        }
 
-        $app->hook('slim.before.dispatch', $isAuthorised);
+        return $handler->handle($request->withAttribute('currentUser', $user));
+    }
 
-        $this->next->call();
+    private function isAjax(Request $request)
+    {
+        return strtolower($request->getHeaderLine('X-Requested-With')) === 'xmlhttprequest';
     }
 }

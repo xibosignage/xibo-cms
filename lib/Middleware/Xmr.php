@@ -8,8 +8,11 @@
 
 namespace Xibo\Middleware;
 
-use Slim\Middleware;
-use Slim\Slim;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\MiddlewareInterface as Middleware;
+use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Slim\App as App;
 use Xibo\Exception\XiboException;
 use Xibo\Service\DisplayNotifyService;
 use Xibo\Service\PlayerActionService;
@@ -18,76 +21,83 @@ use Xibo\Service\PlayerActionService;
  * Class Xmr
  * @package Xibo\Middleware
  */
-class Xmr extends Middleware
+class Xmr implements Middleware
 {
+    /* @var App $app */
+    private $app;
+
+    public function __construct($app)
+    {
+        $this->app = $app;
+    }
+
     /**
      * Call
+     * @param Request $request
+     * @param RequestHandler $handler
+     * @return Response
      */
-    public function call()
+    public function process(Request $request, RequestHandler $handler): Response
     {
-        $app = $this->getApplication();
+        $app = $this->app;
 
-        $app->hook('slim.before', function() {
-
-            $app = $this->app;
-
-            self::setXmr($app);
-        });
-
-        $this->next->call();
+        self::setXmr($app);
 
         // Finish
         self::finish($app);
+
+        return $handler->handle($request);
     }
 
     /**
      * Finish XMR
-     * @param Slim $app
+     * @param App $app
      */
     public static function finish($app)
     {
+        $container = $app->getContainer();
         // Handle display notifications
-        if ($app->displayNotifyService != null) {
+        if ($container->get('displayNotifyService') != null) {
             try {
-                $app->displayNotifyService->processQueue();
+                $container->get('displayNotifyService')->processQueue();
             } catch (XiboException $e) {
-                $app->logService->error('Unable to Process Queue of Display Notifications due to %s', $e->getMessage());
+                $container->get('logService')->error('Unable to Process Queue of Display Notifications due to %s', $e->getMessage());
             }
         }
 
         // Handle player actions
-        if ($app->playerActionService != null) {
+        if ($container->get('playerActionService') != null) {
             try {
-                $app->playerActionService->processQueue();
+                $container->get('playerActionService')->processQueue();
             } catch (\Exception $e) {
-                $app->logService->error('Unable to Process Queue of Player actions due to %s', $e->getMessage());
+                $container->get('logService')->error('Unable to Process Queue of Player actions due to %s', $e->getMessage());
             }
         }
     }
 
     /**
      * Set XMR
-     * @param \Slim\Slim $app
+     * @param App $app
      * @param bool $triggerPlayerActions
      */
     public static function setXmr($app, $triggerPlayerActions = true)
     {
         // Player Action Helper
-        $app->container->singleton('playerActionService', function() use ($app, $triggerPlayerActions) {
-            return new PlayerActionService($app->configService, $app->logService, $triggerPlayerActions);
+        $app->getContainer()->set('playerActionService', function() use ($app, $triggerPlayerActions) {
+            return new PlayerActionService($app->getContainer()->get('configService'), $app->getContainer()->get('logService'), $triggerPlayerActions);
         });
 
         // Register the display notify service
-        $app->container->singleton('displayNotifyService', function () use ($app) {
+        $app->getContainer()->set('displayNotifyService', function () use ($app) {
             return new DisplayNotifyService(
-                $app->configService,
-                $app->logService,
-                $app->store,
-                $app->pool,
-                $app->playerActionService,
-                $app->dateService,
-                $app->scheduleFactory,
-                $app->dayPartFactory
+                $app->getContainer()->get('configService'),
+                $app->getContainer()->get('logService'),
+                $app->getContainer()->get('store'),
+                $app->getContainer()->get('pool'),
+                $app->getContainer()->get('playerActionService'),
+                $app->getContainer()->get('dateService'),
+                $app->getContainer()->get('scheduleFactory'),
+                $app->getContainer()->get('dayPartFactory')
             );
         });
     }

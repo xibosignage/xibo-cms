@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
- * This file (ApiStorage.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -23,8 +24,12 @@
 namespace Xibo\Middleware;
 
 
-use Slim\Helper\Set;
-use Slim\Middleware;
+use Psr\Container\ContainerInterface;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\MiddlewareInterface as Middleware;
+use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Slim\App;
 use Xibo\Service\LogService;
 use Xibo\Storage\PdoStorageService;
 use Xibo\Storage\MySqlTimeSeriesStore;
@@ -33,82 +38,89 @@ use Xibo\Storage\MySqlTimeSeriesStore;
  * Class Storage
  * @package Xibo\Middleware
  */
-class Storage extends Middleware
+class Storage implements Middleware
 {
-    public function call()
+    /* @var App $app */
+    private $app;
+
+    public function __construct($app)
+    {
+        $this->app = $app;
+    }
+
+    public function process(Request $request, RequestHandler $handler): Response
     {
         $app = $this->app;
+        $container = $app->getContainer();
 
         $app->startTime = microtime(true);
         $app->commit = true;
 
         // Configure storage
-        self::setStorage($app->container);
+      //  self::setStorage($container);
 
-        $this->next->call();
+       // $this->next->call();
+        $handler->handle($request);
 
         // Are we in a transaction coming out of the stack?
-        if ($app->store->getConnection()->inTransaction()) {
+        if ($container->get('store')->getConnection()->inTransaction()) {
             // We need to commit or rollback? Default is commit
             if ($app->commit) {
-                $app->store->commitIfNecessary();
+                $container->get('store')->commitIfNecessary();
             } else {
 
-                $app->logService->debug('Storage rollback.');
+                $container->get('logService')->debug('Storage rollback.');
 
-                $app->store->getConnection()->rollBack();
+                $container->get('store')->getConnection()->rollBack();
             }
         }
 
         // Get the stats for this connection
-        $stats = $app->store->stats();
+        $stats = $container->get('store')->stats();
         $stats['length'] = microtime(true) - $app->startTime;
         $stats['memoryUsage'] = memory_get_usage();
         $stats['peakMemoryUsage'] = memory_get_peak_usage();
 
-        $app->logService->info('Request stats: %s.', json_encode($stats, JSON_PRETTY_PRINT));
+        $container->get('logService')->info('Request stats: %s.', json_encode($stats, JSON_PRETTY_PRINT));
 
-        $app->store->close();
+        $container->get('store')->close();
+
+        return $handler->handle($request);
     }
 
     /**
      * Set Storage
-     * @param Set $container
+     * @param ContainerInterface $container
      */
     public static function setStorage($container)
     {
-        // Register the log service
-        $container->singleton('logService', function($container) {
-            return new LogService($container->log, $container->mode);
-        });
-
         // Register the database service
-        $container->singleton('store', function($container) {
-            return (new PdoStorageService($container->logService))->setConnection();
+        $container->set('store', function(ContainerInterface $container) {
+            return (new PdoStorageService($container->get('logService')))->setConnection();
         });
 
-        // Register the statistics database service
-        $container->singleton('timeSeriesStore', function($container) {
-            if ($container->configService->timeSeriesStore == null) {
+         //Register the statistics database service
+        $container->set('timeSeriesStore', function(ContainerInterface $c) {
+            if ($c->get('configService')->timeSeriesStore == null) {
                 return (new MySqlTimeSeriesStore())
-                    ->setDependencies($container->logService,
-                        $container->dateService,
-                        $container->layoutFactory,
-                        $container->campaignFactory)
-                    ->setStore($container->store);
+                    ->setDependencies($c->get('logService'),
+                        $c->get('dateService'),
+                        $c->get('layoutFactory'),
+                        $c->get('campaignFactory'))
+                    ->setStore($c->get('store'));
             } else {
-                $timeSeriesStore = $container->configService->timeSeriesStore;
+                $timeSeriesStore = $c->get('configService')->timeSeriesStore;
                 $timeSeriesStore = $timeSeriesStore();
 
                 return $timeSeriesStore->setDependencies(
-                    $container->logService,
-                    $container->dateService,
-                    $container->layoutFactory,
-                    $container->campaignFactory,
-                    $container->mediaFactory,
-                    $container->widgetFactory,
-                    $container->displayFactory,
-                    $container->displayGroupFactory
+                    $c->get('logService'),
+                    $c->get('dateService'),
+                    $c->get('layoutFactory'),
+                    $c->get('campaignFactory'),
+                    $c->get('mediaFactory'),
+                    $c->get('widgetFactory'),
+                    $c->get('displayFactory'),
+                    $c->get('displayGroupFactory')
                 );
             }
         });
