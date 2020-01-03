@@ -19,6 +19,11 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Flash\Messages;
+use Slim\Views\Twig;
+use Slim\Routing\RouteContext;
 use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
@@ -29,13 +34,14 @@ use Xibo\Factory\UserFactory;
 use Xibo\Helper\Environment;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\Random;
+use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use RobThree\Auth\TwoFactorAuth;
+
 
 /**
  * Class Login
@@ -59,10 +65,13 @@ class Login extends Base
     /** @var \Stash\Interfaces\PoolInterface */
     private $pool;
 
+    /** @var Messages */
+    private $flash;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -71,25 +80,39 @@ class Login extends Base
      * @param Session $session
      * @param UserFactory $userFactory
      * @param \Stash\Interfaces\PoolInterface $pool
+     * @param StorageServiceInterface $store
+     * @param Twig $view
+     * @param Messages $flash
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $pool, $store)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $pool, $store, $view, $flash)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->session = $session;
         $this->userFactory = $userFactory;
         $this->pool = $pool;
         $this->store = $store;
+        $this->flash = $flash;
     }
 
     /**
      * Output a login form
-     * @throws \Xibo\Exception\ConfigurationException
+     * @param Request $request
+     * @param Response $response
+     * @param null $args
+     * @return \Psr\Http\Message\ResponseInterface
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      */
-    public function loginForm()
+    public function loginForm(Request $request, Response $response, $args = null)
     {
+        // Sanitize the body
+        $sanitizedRequestBody = $this->getSanitizer($request->getParsedBody());
+
         // Check to see if the user has provided a special token
-        $nonce = $this->getSanitizer()->getString('nonce');
+        $nonce = $sanitizedRequestBody->getString('nonce');
 
         if ($nonce != '') {
             // We have a nonce provided, so validate that in preference to showing the form.
@@ -102,10 +125,10 @@ class Login extends Base
 
             if ($cache->isMiss()) {
                 $this->getLog()->error('Expired nonce used.');
-                $this->getApp()->flashNow('login_message', __('This link has expired.'));
+                $this->flash->addMessageNow('login_message', __('This link has expired.'));
             } else if (!password_verify($nonce[1], $validated['hash'])) {
                 $this->getLog()->error('Invalid nonce used.');
-                $this->getApp()->flashNow('login_message', __('This link has expired.'));
+                $this->flash->addMessageNow('login_message', __('This link has expired.'));
             } else {
                 // We're valid.
                 $this->pool->deleteItem('/nonce/' . $nonce[0]);
@@ -116,7 +139,7 @@ class Login extends Base
                     // Dooh user
                     if ($user->userTypeId === 4) {
                         $this->getLog()->error('Cannot log in as this User type');
-                        $this->getApp()->flashNow('login_message', __('Invalid User Type'));
+                        $this->flash->addMessageNow('login_message', __('Invalid User Type'));
                     }
 
                     // Log in this user
@@ -126,9 +149,6 @@ class Login extends Base
 
                     // Set the userId on the log object
                     $this->getLog()->setUserId($user->userId);
-
-                    // Overwrite our stored user with this new object.
-                    $this->getApp()->user = $user;
 
                     // Expire all sessions
                     $session = $this->session;
@@ -144,18 +164,14 @@ class Login extends Base
 
                     // Audit Log
                     $this->getLog()->audit('User', $user->userId, 'Login Granted via token', [
-                        'IPAddress' => $this->getApp()->request()->getIp(),
-                        'UserAgent' => $this->getApp()->request()->getUserAgent()
+                        'IPAddress' => $request->getAttribute('ip_address'),
+                        'UserAgent' => $request->getHeader('User-Agent')
                     ]);
 
-                    $this->getApp()->redirectTo('home');
-
-                    // We're done here
-                    return;
-
+                    $response->withRedirect('home');
                 } catch (NotFoundException $notFoundException) {
                     $this->getLog()->error('Valid nonce for non-existing user');
-                    $this->getApp()->flashNow('login_message', __('This link has expired.'));
+                    $this->flash->addMessageNow('login_message', __('This link has expired.'));
                 }
             }
         }
@@ -163,7 +179,7 @@ class Login extends Base
         // Check to see if the password reminder functionality is enabled.
         $passwordReminderEnabled = $this->getConfig()->getSetting('PASSWORD_REMINDER_ENABLED');
         $mailFrom = $this->getConfig()->getSetting('mail_from');
-        $authCASEnabled = isset($this->app->configService->casSettings);
+        $authCASEnabled = isset($this->getConfig()->casSettings);
 
         // Template
         $this->getState()->template = 'login';
@@ -172,22 +188,29 @@ class Login extends Base
             'authCASEnabled' => $authCASEnabled,
             'version' => Environment::$WEBSITE_VERSION_NAME
         ]);
+       return $this->render($request, $response);
     }
 
     /**
      * Login
-     * @throws \Xibo\Exception\ConfigurationException
+     * @param Request $request
+     * @param Response $response
+     * @param null $args
+     * @throws ConfigurationException
      */
-    public function login()
+    public function login(Request $request, Response $response)
     {
+        $parsedRequest = $this->getSanitizer($request->getParsedBody());
+        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+        // $this->urlFor($request, 'login')
         // Capture the prior route (if there is one)
         $redirect = 'login';
-        $priorRoute = ($this->getSanitizer()->getString('priorRoute'));
+        $priorRoute = ($parsedRequest->getString('priorRoute'));
 
         try {
             // Get our username and password
-            $username = $this->getSanitizer()->getUserName('username');
-            $password = $this->getSanitizer()->getPassword('password');
+            $username = $parsedRequest->getString('username');
+            $password = $parsedRequest->getString('password');
 
             $this->getLog()->debug('Login with username %s', $username);
 
@@ -217,9 +240,6 @@ class Login extends Base
                 // Set the userId on the log object
                 $this->getLog()->setUserId($user->userId);
 
-                // Overwrite our stored user with this new object.
-                $this->getApp()->user = $user;
-
                 // Switch Session ID's
                 $session = $this->session;
                 $session->setIsExpired(0);
@@ -228,32 +248,31 @@ class Login extends Base
 
                 // Audit Log
                 $this->getLog()->audit('User', $user->userId, 'Login Granted', [
-                    'IPAddress' => $this->getApp()->request()->getIp(),
-                    'UserAgent' => $this->getApp()->request()->getUserAgent()
+                    'IPAddress' => $request->getAttribute('ip_address'),
+                    'UserAgent' => $request->getHeader('User-Agent')
                 ]);
             }
             catch (NotFoundException $e) {
                 throw new AccessDeniedException('User not found');
             }
 
-            $redirect = ($priorRoute == '' || $priorRoute == '/' || stripos($priorRoute, $this->getApp()->urlFor('login'))) ? $this->getApp()->urlFor('home') : $priorRoute;
+            $redirect = ($priorRoute == '' || $priorRoute == '/' || stripos($priorRoute, $routeParser->urlFor('login'))) ? $routeParser->urlFor('home') : $priorRoute;
         }
-        catch (\Xibo\Exception\AccessDeniedException $e) {
+        catch (AccessDeniedException $e) {
             $this->getLog()->warning($e->getMessage());
             if ($user->userTypeId != 4) {
-                $this->getApp()->flash('login_message', __('Username or Password incorrect'));
+                $this->flash->addMessage('login_message', __('Username or Password incorrect'));
             } else {
-                $this->getApp()->flash('login_message', __($e->getMessage()));
+                $this->flash->addMessage('login_message', __($e->getMessage()));
             }
-            $this->getApp()->flash('priorRoute', $priorRoute);
+            $this->flash->addMessage('priorRoute', $priorRoute);
         }
         catch (\Xibo\Exception\FormExpiredException $e) {
-            $this->getApp()->flash('priorRoute', $priorRoute);
+            $this->flash->addMessage('priorRoute', $priorRoute);
         }
-
         $this->setNoOutput(true);
         $this->getLog()->debug('Redirect to %s', $redirect);
-        $this->getApp()->redirect($redirect);
+        return $response->withRedirect($redirect);
     }
 
     /**
@@ -353,9 +372,16 @@ class Login extends Base
      * @param bool $redirect
      * @throws \Xibo\Exception\ConfigurationException
      */
-    public function logout($redirect = true)
+    public function logout(Request $request, Response $response)
     {
-        $this->getUser()->touch();
+        $parsedRequestParams = $this->getSanitizer($request->getQueryParams());
+        $redirect = true;
+
+        if ($request->getQueryParam('redirect') != null) {
+            $redirect = $request->getQueryParam('redirect');
+        }
+
+        $this->getUser($request)->touch();
 
         // to log out a user we need only to clear out some session vars
         unset($_SESSION['userid']);
@@ -365,17 +391,23 @@ class Login extends Base
         $session = $this->session;
         $session->setIsExpired(1);
 
-        if ($redirect)
-            $this->getApp()->redirectTo('login');
+        if ($redirect) {
+            return $response->withRedirect('login');
+        }
+
+        return $response->withStatus(200);
     }
 
     /**
      * Ping Pong
      */
-    public function PingPong()
+    public function PingPong(Request $request, Response $response)
     {
-        $this->session->refreshExpiry = ($this->getSanitizer()->getCheckbox('refreshSession') == 1);
+        $parseRequest = $this->getSanitizer($request->getQueryParams());
+        $this->session->refreshExpiry = ($parseRequest->getCheckbox('refreshSession') == 1);
         $this->getState()->success = true;
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -399,19 +431,29 @@ class Login extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function about()
+    function about(Request $request, Response $response)
     {
-        $response = $this->getState();
+        $state = $this->getState();
 
-        if ($this->getApp()->request()->isAjax()) {
-            $response->template = 'about-text';
+        if ($request->isXhr()) {
+            $state->template = 'about-text';
         }
         else {
-            $response->template = 'about-page';
+            $state->template = 'about-page';
         }
 
-        $response->setData(['version' => Environment::$WEBSITE_VERSION_NAME, 'sourceUrl' => $this->getConfig()->getThemeConfig('cms_source_url')]);
+        $state->setData(['version' => Environment::$WEBSITE_VERSION_NAME, 'sourceUrl' => $this->getConfig()->getThemeConfig('cms_source_url')]);
+
+        return $this->render($request, $response);
     }
 
     /**

@@ -20,9 +20,13 @@
  */
 namespace Xibo\Controller;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Mimey\MimeTypes;
+use Slim\Routing\RouteContext;
+use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
 use Respect\Validation\Validator as v;
@@ -53,6 +57,7 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Environment;
+use Xibo\Helper\SanitizerService;
 use Xibo\Helper\XiboUploadHandler;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -146,7 +151,7 @@ class Library extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -171,10 +176,11 @@ class Library extends Base
      * @param ScheduleFactory $scheduleFactory
      * @param DayPartFactory $dayPartFactory
      * @param PlayerVersionFactory $playerVersionFactory
+     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $dispatcher, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $dispatcher, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory, $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->store = $store;
         $this->moduleFactory = $moduleFactory;
@@ -331,7 +337,7 @@ class Library extends Base
     /**
      * Displays the page logic
      */
-    function displayPage()
+    function displayPage(Request $request, Response $response)
     {
         // Users we have permission to see
         $this->getState()->template = 'library-page';
@@ -341,6 +347,8 @@ class Library extends Base
             'groups' => $this->userGroupFactory->query(),
             'validExt' => implode('|', $this->moduleFactory->getValidExtensions(['notPlayerSoftware' => 1, 'notSavedReport' => 1]))
         ]);
+
+        return $this->render($request,$response);
     }
 
     /**
@@ -509,27 +517,29 @@ class Library extends Base
      *  )
      * )
      */
-    function grid()
+    function grid(Request $request, Response $response)
     {
         $user = $this->getUser();
 
+        $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
+
         // Construct the SQL
-        $mediaList = $this->mediaFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
-            'mediaId' => $this->getSanitizer()->getInt('mediaId'),
-            'name' => $this->getSanitizer()->getString('media'),
-            'nameExact' => $this->getSanitizer()->getString('nameExact'),
-            'type' => $this->getSanitizer()->getString('type'),
-            'tags' => $this->getSanitizer()->getString('tags'),
-            'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
-            'ownerId' => $this->getSanitizer()->getInt('ownerId'),
-            'retired' => $this->getSanitizer()->getInt('retired'),
-            'duration' => $this->getSanitizer()->getString('duration'),
-            'fileSize' => $this->getSanitizer()->getString('fileSize'),
-            'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
-            'assignable' => $this->getSanitizer()->getInt('assignable'),
+        $mediaList = $this->mediaFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+            'mediaId' => $parsedQueryParams->getInt('mediaId'),
+            'name' => $parsedQueryParams->getString('media'),
+            'nameExact' => $parsedQueryParams->getString('nameExact'),
+            'type' => $parsedQueryParams->getString('type'),
+            'tags' => $parsedQueryParams->getString('tags'),
+            'exactTags' => $parsedQueryParams->getCheckbox('exactTags'),
+            'ownerId' => $parsedQueryParams->getInt('ownerId'),
+            'retired' => $parsedQueryParams->getInt('retired'),
+            'duration' => $parsedQueryParams->getString('duration'),
+            'fileSize' => $parsedQueryParams->getString('fileSize'),
+            'ownerUserGroupId' => $parsedQueryParams->getInt('ownerUserGroupId'),
+            'assignable' => $parsedQueryParams->getInt('assignable'),
             'notPlayerSoftware' => 1,
             'notSavedReport' => 1
-        ]));
+        ], $request), $request);
 
         // Add some additional row content
         foreach ($mediaList as $media) {
@@ -542,7 +552,7 @@ class Library extends Base
             $media->downloadUrl = '';
 
             if ($media->mediaType == 'image') {
-                $download = $this->urlFor('library.download', ['id' => $media->mediaId]) . '?preview=1';
+                $download = $this->urlFor($request,'library.download', ['id' => $media->mediaId], ['preview' => 1]);
                 $media->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56&cache=1" /></i></a>';
                 $media->thumbnailUrl = $download . '&width=100&height=56&cache=1';
                 $media->downloadUrl = $download;
@@ -555,7 +565,7 @@ class Library extends Base
             $media->mediaExpiryFailed = __('Expired ');
             $media->mediaNoExpiryDate = __('Never');
 
-            if ($this->isApi()) {
+            if ($this->isApi($request)) {
                 $media->excludeProperty('mediaExpiresIn');
                 $media->excludeProperty('mediaExpiryFailed');
                 $media->excludeProperty('mediaNoExpiryDate');
@@ -600,14 +610,14 @@ class Library extends Base
                 // Edit
                 $media->buttons[] = array(
                     'id' => 'content_button_edit',
-                    'url' => $this->urlFor('library.edit.form', ['id' => $media->mediaId]),
+                    'url' => $this->urlFor($request,'library.edit.form', ['id' => $media->mediaId]),
                     'text' => __('Edit')
                 );
 
                 // Copy Button
                 $media->buttons[] = array(
                     'id' => 'media_button_copy',
-                    'url' => $this->urlFor('library.copy.form', ['id' => $media->mediaId]),
+                    'url' => $this->urlFor($request,'library.copy.form', ['id' => $media->mediaId]),
                     'text' => __('Copy')
                 );
             }
@@ -616,11 +626,11 @@ class Library extends Base
                 // Delete Button
                 $media->buttons[] = array(
                     'id' => 'content_button_delete',
-                    'url' => $this->urlFor('library.delete.form', ['id' => $media->mediaId]),
+                    'url' => $this->urlFor($request,'library.delete.form', ['id' => $media->mediaId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor('library.delete', ['id' => $media->mediaId])),
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'library.delete', ['id' => $media->mediaId])),
                         array('name' => 'commit-method', 'value' => 'delete'),
                         array('name' => 'id', 'value' => 'content_button_delete'),
                         array('name' => 'text', 'value' => __('Delete')),
@@ -634,7 +644,7 @@ class Library extends Base
                 // Permissions
                 $media->buttons[] = array(
                     'id' => 'content_button_permissions',
-                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'Media', 'id' => $media->mediaId]),
+                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Media', 'id' => $media->mediaId]),
                     'text' => __('Permissions')
                 );
             }
@@ -643,18 +653,18 @@ class Library extends Base
             $media->buttons[] = array(
                 'id' => 'content_button_download',
                 'linkType' => '_self', 'external' => true,
-                'url' => $this->urlFor('library.download', ['id' => $media->mediaId]) . '?attachment=' . $media->fileName,
+                'url' => $this->urlFor($request,'library.download', ['id' => $media->mediaId]) . '?attachment=' . $media->fileName,
                 'text' => __('Download')
             );
 
             // Set Enable Stat
             $media->buttons[] = array(
                 'id' => 'library_button_setenablestat',
-                'url' => $this->urlFor('library.setenablestat.form', ['id' => $media->mediaId]),
+                'url' => $this->urlFor($request,'library.setenablestat.form', ['id' => $media->mediaId]),
                 'text' => __('Enable stats collection?'),
                 'multi-select' => true,
                 'dataAttributes' => array(
-                    array('name' => 'commit-url', 'value' => $this->urlFor('library.setenablestat', ['id' => $media->mediaId])),
+                    array('name' => 'commit-url', 'value' => $this->urlFor($request,'library.setenablestat', ['id' => $media->mediaId])),
                     array('name' => 'commit-method', 'value' => 'put'),
                     array('name' => 'id', 'value' => 'library_button_setenablestat'),
                     array('name' => 'text', 'value' => __('Enable stats collection?')),
@@ -667,7 +677,7 @@ class Library extends Base
 
             $media->buttons[] = array(
                 'id' => 'usage_report_button',
-                'url' => $this->urlFor('library.usage.form', ['id' => $media->mediaId]),
+                'url' => $this->urlFor($request,'library.usage.form', ['id' => $media->mediaId]),
                 'text' => __('Usage Report')
             );
         }
@@ -675,6 +685,8 @@ class Library extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->mediaFactory->countLast();
         $this->getState()->setData($mediaList);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -811,8 +823,11 @@ class Library extends Base
      *
      * @param array $options
      */
-    public function add($options = [])
+    public function add(Request $request, Response $response)
     {
+        $parsedBody = $this->getSanitizer($request->getParsedBody());
+        $options = $parsedBody->getArray('options');
+
         $options = array_merge([
             'oldMediaId' => null,
             'updateInLayouts' => 0,
@@ -826,33 +841,35 @@ class Library extends Base
         self::ensureLibraryExists($libraryFolder);
 
         // Get Valid Extensions
-        if ($this->getSanitizer()->getInt('oldMediaId') !== null) {
-            $media = $this->mediaFactory->getById($this->getSanitizer()->getInt('oldMediaId'));
+        if ($parsedBody->getInt('oldMediaId') !== null) {
+            $media = $this->mediaFactory->getById($parsedBody->getInt('oldMediaId'));
             $validExt = $this->moduleFactory->getValidExtensions(['type' => $media->mediaType]);
         }
-        else
+        else {
             $validExt = $this->moduleFactory->getValidExtensions();
+        }
 
         // Make sure there is room in the library
         $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
 
         $options = array(
-            'userId' => $this->getUser()->userId,
+            'userId' => $this->getUser($request)->userId,
             'controller' => $this,
-            'oldMediaId' => $this->getSanitizer()->getInt('oldMediaId', $options['oldMediaId']),
-            'widgetId' => $this->getSanitizer()->getInt('widgetId'),
-            'updateInLayouts' => $this->getSanitizer()->getCheckbox('updateInLayouts', $options['updateInLayouts']),
-            'deleteOldRevisions' => $this->getSanitizer()->getCheckbox('deleteOldRevisions', $options['deleteOldRevisions']),
+            'oldMediaId' => $parsedBody->getInt('oldMediaId', ['default' => $options['oldMediaId']]),
+            'widgetId' => $parsedBody->getInt('widgetId'),
+            'updateInLayouts' => $parsedBody->getCheckbox('updateInLayouts'),
+            'deleteOldRevisions' => $parsedBody->getCheckbox('deleteOldRevisions'),
             'allowMediaTypeChange' => $options['allowMediaTypeChange'],
-            'playlistId' => $this->getSanitizer()->getInt('playlistId'),
+            'playlistId' => $parsedBody->getInt('playlistId'),
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
-            'script_url' => $this->urlFor('library.add'),
-            'upload_url' => $this->urlFor('library.add'),
+            'script_url' => $this->urlFor($request,'library.add'),
+            'upload_url' => $this->urlFor($request,'library.add'),
             'image_versions' => array(),
             'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i',
             'libraryLimit' => $libraryLimit,
-            'libraryQuotaFull' => ($libraryLimit > 0 && $this->libraryUsage() > $libraryLimit)
+            'libraryQuotaFull' => ($libraryLimit > 0 && $this->libraryUsage() > $libraryLimit),
+            'request' => $request
         );
 
         // Output handled by UploadHandler
@@ -862,6 +879,8 @@ class Library extends Base
 
         // Hand off to the Upload Handler provided by jquery-file-upload
         new XiboUploadHandler($options);
+
+        return $response;
     }
 
     /**
@@ -1149,7 +1168,7 @@ class Library extends Base
     {
         $results = $this->store->select('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', array());
 
-        return $this->getSanitizer()->int($results[0]['SumSize']);
+        return $this->getSanitizer($results)->getInt([0]['SumSize']);
     }
 
     /**
@@ -1197,8 +1216,13 @@ class Library extends Base
      *
      * @throws XiboException
      */
-    public function download($mediaId, $type = '')
+    public function download(Request $request, Response $response)
     {
+        $routeContext = RouteContext::fromRequest($request);
+        $route = $routeContext->getRoute();
+        $mediaId = $route->getArgument('id');
+        $type = $route->getArgument('type');
+
         // We can download by mediaId or by mediaName.
         if (is_numeric($mediaId)) {
             $media = $this->mediaFactory->getById($mediaId);
@@ -1218,7 +1242,7 @@ class Library extends Base
             if (count($this->widgetFactory->query(null, ['mediaId' => $mediaId])) <= 0) {
                 throw new AccessDeniedException();
             }
-        } else if (!$this->getUser()->checkViewable($media)) {
+        } else if (!$this->getUser($request)->checkViewable($media)) {
             throw new AccessDeniedException();
         }
 
@@ -1239,7 +1263,7 @@ class Library extends Base
         if ($widget->getModule()->regionSpecific == 1)
             throw new NotFoundException('Cannot download region specific module');
 
-        $widget->getResource(0);
+        $widget->getResource($request, $response);
 
         $this->setNoOutput(true);
     }
@@ -1247,15 +1271,13 @@ class Library extends Base
     /**
      * Return the CMS flavored font css
      */
-    public function fontCss()
+    public function fontCss(Request $request, Response $response)
     {
         // Regenerate the CSS for fonts
-        $css = $this->installFonts(['invalidateCache' => false]);
+        $css = $this->installFonts(['invalidateCache' => false], $request);
 
-        // Work out the etag
-        $app = $this->getApp();
-        $app->response()->header('Content-Type', 'text/css');
-        $app->etag(md5($css['css']));
+        // Work out the etag TODO slim/httpCache most likely needed
+       // $response->etag(md5($css['css']));
 
         // Return the CSS to the browser as a file
         $out = fopen('php://output', 'w');
@@ -1263,15 +1285,17 @@ class Library extends Base
         fclose($out);
 
         $this->setNoOutput(true);
+
+        return $response->withStatus(200)->withHeader('Content-Type', 'text/css');
     }
 
     /**
      * Return the CMS flavored font css
      */
-    public function fontList()
+    public function fontList(Request $request = null)
     {
         // Regenerate the CSS for fonts
-        $css = $this->installFonts(['invalidateCache' => false]);
+        $css = $this->installFonts(['invalidateCache' => false], $request);
 
         // Return
         $this->getState()->hydrate([
@@ -1283,10 +1307,10 @@ class Library extends Base
      * Get font CKEditor config
      * @return string
      */
-    public function fontCKEditorConfig()
+    public function fontCKEditorConfig(Request $request = null)
     {
         // Regenerate the CSS for fonts
-        $css = $this->installFonts(['invalidateCache' => false]);
+        $css = $this->installFonts(['invalidateCache' => false], $request);
 
         return $css['ckeditor'];
     }
@@ -1297,7 +1321,7 @@ class Library extends Base
      * @return array
      * @throws XiboException
      */
-    public function installFonts($options = [])
+    public function installFonts($options = [], Request $request = null)
     {
         $options = array_merge([
             'invalidateCache' => true
@@ -1317,7 +1341,7 @@ class Library extends Base
 
         // Each user has their own font cache (due to permissions) and the displays have their own font cache too
         // Get the item from the cache
-        $cssItem = $this->pool->getItem('fontCss/' . $this->getUser()->userId);
+        $cssItem = $this->pool->getItem('fontCss/' . $this->getUser($request)->userId);
         $cssItem->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
 
         // Get the CSS
@@ -1362,11 +1386,10 @@ class Library extends Base
 
                     // Css for the player contains the actual stored as location of the font.
                     $css .= str_replace('[url]', $font->storedAs, str_replace('[family]', $familyName, $fontTemplate));
-
                     // Test to see if this user should have access to this font
-                    if ($this->getUser()->checkViewable($font)) {
+                    if ($this->getUser($request)->checkViewable($font)) {
                         // Css for the local CMS contains the full download path to the font
-                        $url = $this->urlFor('library.download', ['type' => 'font', 'id' => $font->mediaId]) . '?download=1&downloadFromLibrary=1';
+                        $url = $this->urlFor($request,'library.download', ['type' => 'font', 'id' => $font->mediaId]) . '?download=1&downloadFromLibrary=1';
                         $localCss .= str_replace('[url]', $url, str_replace('[family]', $familyName, $fontTemplate));
 
                         // CKEditor string

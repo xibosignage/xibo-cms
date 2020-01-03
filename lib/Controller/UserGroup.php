@@ -19,6 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Entity\Page;
 use Xibo\Entity\Permission;
 use Xibo\Entity\User;
@@ -28,6 +31,7 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -62,7 +66,7 @@ class UserGroup extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -73,9 +77,9 @@ class UserGroup extends Base
      * @param PermissionFactory $permissionFactory
      * @param UserFactory $userFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userGroupFactory, $pageFactory, $permissionFactory, $userFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userGroupFactory, $pageFactory, $permissionFactory, $userFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->userGroupFactory = $userGroupFactory;
         $this->pageFactory = $pageFactory;
@@ -86,9 +90,11 @@ class UserGroup extends Base
     /**
      * Display page logic
      */
-    function displayPage()
+    function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'usergroup-page';
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -123,37 +129,37 @@ class UserGroup extends Base
      *  )
      * )
      */
-    function grid()
+    function grid(Request $request, Response $response)
     {
+        $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
         $filterBy = [
-            'groupId' => $this->getSanitizer()->getInt('userGroupId'),
-            'group' => $this->getSanitizer()->getString('userGroup')
+            'groupId' => $sanitizedQueryParams->getInt('userGroupId'),
+            'group' => $sanitizedQueryParams->getString('userGroup')
         ];
 
-        $groups = $this->userGroupFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filterBy));
-
+        $groups = $this->userGroupFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filterBy, $request), $request);
         foreach ($groups as $group) {
             /* @var \Xibo\Entity\UserGroup $group */
 
             $group->libraryQuotaFormatted = ByteFormatter::format($group->libraryQuota * 1024);
 
-            if ($this->isApi())
+            if ($this->isApi($request))
                 continue;
 
             // we only want to show certain buttons, depending on the user logged in
-            if ($this->isEditable($group)) {
+            if ($this->isEditable($group, $request)) {
                 // Edit
                 $group->buttons[] = array(
                     'id' => 'usergroup_button_edit',
-                    'url' => $this->urlFor('group.edit.form', ['id' => $group->groupId]),
+                    'url' => $this->urlFor($request,'group.edit.form', ['id' => $group->groupId]),
                     'text' => __('Edit')
                 );
 
-                if ($this->getUser()->isSuperAdmin()) {
+                if ($this->getUser($request)->isSuperAdmin()) {
                     // Delete
                     $group->buttons[] = array(
                         'id' => 'usergroup_button_delete',
-                        'url' => $this->urlFor('group.delete.form', ['id' => $group->groupId]),
+                        'url' => $this->urlFor($request,'group.delete.form', ['id' => $group->groupId]),
                         'text' => __('Delete')
                     );
 
@@ -162,7 +168,7 @@ class UserGroup extends Base
                     // Copy
                     $group->buttons[] = array(
                         'id' => 'usergroup_button_copy',
-                        'url' => $this->urlFor('group.copy.form', ['id' => $group->groupId]),
+                        'url' => $this->urlFor($request,'group.copy.form', ['id' => $group->groupId]),
                         'text' => __('Copy')
                     );
 
@@ -172,15 +178,15 @@ class UserGroup extends Base
                 // Members
                 $group->buttons[] = array(
                     'id' => 'usergroup_button_members',
-                    'url' => $this->urlFor('group.members.form', ['id' => $group->groupId]),
+                    'url' => $this->urlFor($request,'group.members.form', ['id' => $group->groupId]),
                     'text' => __('Members')
                 );
 
-                if ($this->getUser()->isSuperAdmin()) {
+                if ($this->getUser($request)->isSuperAdmin()) {
                     // Page Security
                     $group->buttons[] = array(
                         'id' => 'usergroup_button_page_security',
-                        'url' => $this->urlFor('group.acl.form', ['id' => $group->groupId]),
+                        'url' => $this->urlFor($request,'group.acl.form', ['id' => $group->groupId]),
                         'text' => __('Page Security')
                     );
                 }
@@ -190,12 +196,14 @@ class UserGroup extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->userGroupFactory->countLast();
         $this->getState()->setData($groups);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Form to Add a Group
      */
-    function addForm()
+    function addForm(Request $request, Response $response)
     {
         $this->getState()->template = 'usergroup-form-add';
         $this->getState()->setData([
@@ -203,6 +211,8 @@ class UserGroup extends Base
                 'add' => $this->getHelp()->link('UserGroup', 'Add')
             ]
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -210,12 +220,13 @@ class UserGroup extends Base
      * @param int $groupId
      * @throws \Xibo\Exception\NotFoundException
      */
-    function editForm($groupId)
+    function editForm(Request $request, Response $response, $id)
     {
-        $group = $this->userGroupFactory->getById($groupId);
+        $group = $this->userGroupFactory->getById($id);
 
-        if (!$this->isEditable($group))
+        if (!$this->isEditable($group, $request)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'usergroup-form-edit';
         $this->getState()->setData([
@@ -224,6 +235,8 @@ class UserGroup extends Base
                 'add' => $this->getHelp()->link('UserGroup', 'Edit')
             ]
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -231,12 +244,13 @@ class UserGroup extends Base
      * @param int $groupId
      * @throws \Xibo\Exception\NotFoundException
      */
-    function deleteForm($groupId)
+    function deleteForm(Request $request, Response $response, $id)
     {
-        $group = $this->userGroupFactory->getById($groupId);
+        $group = $this->userGroupFactory->getById($id);
 
-        if (!$this->isEditable($group))
+        if (!$this->isEditable($group, $request)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'usergroup-form-delete';
         $this->getState()->setData([
@@ -245,6 +259,8 @@ class UserGroup extends Base
                 'delete' => $this->getHelp()->link('UserGroup', 'Delete')
             ]
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -293,20 +309,23 @@ class UserGroup extends Base
      *  )
      * )
      */
-    function add()
+    function add(Request $request, Response $response)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
         // Check permissions
-        if (!$this->getUser()->isSuperAdmin())
+        if (!$this->getUser($request)->isSuperAdmin()) {
             throw new AccessDeniedException();
+        }
 
         // Build a user entity and save it
         $group = $this->userGroupFactory->createEmpty();
-        $group->group = $this->getSanitizer()->getString('group');
-        $group->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
+        $group->group = $sanitizedParams->getString('group');
+        $group->libraryQuota = $sanitizedParams->getInt('libraryQuota');
 
-        if ($this->getUser()->userTypeId == 1) {
-            $group->isSystemNotification = $this->getSanitizer()->getCheckbox('isSystemNotification');
-            $group->isDisplayNotification = $this->getSanitizer()->getCheckbox('isDisplayNotification');
+        if ($this->getUser($request)->userTypeId == 1) {
+            $group->isSystemNotification = $sanitizedParams->getCheckbox('isSystemNotification');
+            $group->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
         }
 
         // Save
@@ -318,6 +337,8 @@ class UserGroup extends Base
             'id' => $group->groupId,
             'data' => $group
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -375,25 +396,29 @@ class UserGroup extends Base
      * @param $groupId
      * @throws \Xibo\Exception\NotFoundException
      */
-    function edit($groupId)
+    function edit(Request $request, Response $response, $id)
     {
         // Check permissions
-        if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin())
+        if (!$this->getUser($request)->isSuperAdmin() && !$this->getUser($request)->isGroupAdmin()) {
             throw new AccessDeniedException();
+        }
 
-        $group = $this->userGroupFactory->getById($groupId);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->isEditable($group))
+        $group = $this->userGroupFactory->getById($id);
+
+        if (!$this->isEditable($group, $request)) {
             throw new AccessDeniedException();
+        }
 
         $group->load();
 
-        $group->group = $this->getSanitizer()->getString('group');
-        $group->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
+        $group->group = $sanitizedParams->getString('group');
+        $group->libraryQuota = $sanitizedParams->getInt('libraryQuota');
 
         if ($this->getUser()->userTypeId == 1) {
-            $group->isSystemNotification = $this->getSanitizer()->getCheckbox('isSystemNotification');
-            $group->isDisplayNotification = $this->getSanitizer()->getCheckbox('isDisplayNotification');
+            $group->isSystemNotification = $sanitizedParams->getCheckbox('isSystemNotification');
+            $group->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
         }
 
         // Save
@@ -405,6 +430,8 @@ class UserGroup extends Base
             'id' => $group->groupId,
             'data' => $group
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -430,16 +457,18 @@ class UserGroup extends Base
      *  )
      * )
      */
-    function delete($groupId)
+    function delete(Request $request, Response $response, $id)
     {
         // Check permissions
-        if (!$this->getUser()->isSuperAdmin())
+        if (!$this->getUser($request)->isSuperAdmin()) {
             throw new AccessDeniedException();
+        }
 
-        $group = $this->userGroupFactory->getById($groupId);
+        $group = $this->userGroupFactory->getById($id);
 
-        if (!$this->isEditable($group))
+        if (!$this->isEditable($group, $request)) {
             throw new AccessDeniedException();
+        }
 
         $group->delete();
 
@@ -448,6 +477,8 @@ class UserGroup extends Base
             'message' => sprintf(__('Deleted %s'), $group->group),
             'id' => $group->groupId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -455,26 +486,28 @@ class UserGroup extends Base
      * @param int $groupId
      * @throws \Xibo\Exception\NotFoundException
      */
-    public function aclForm($groupId)
+    public function aclForm(Request $request, Response $response, $id)
     {
         // Check permissions to this function
-        if (!$this->getUser()->isSuperAdmin())
+        if (!$this->getUser($request)->isSuperAdmin()) {
             throw new AccessDeniedException();
+        }
 
         // Use the factory to get all the entities
         $entities = $this->pageFactory->query();
 
         // Load the Group we are working on
         // Get the object
-        if ($groupId == 0)
+        if ($id == 0) {
             throw new \InvalidArgumentException(__('ACL form requested without a User Group'));
+        }
 
-        $group = $this->userGroupFactory->getById($groupId);
+        $group = $this->userGroupFactory->getById($id);
 
         // Get all permissions for this user and this object
-        $permissions = $this->permissionFactory->getByGroupId('Page', $groupId);
+        $permissions = $this->permissionFactory->getByGroupId('Page', $id);
 
-        $checkboxes = array();
+        $checkboxes = [];
 
         foreach ($entities as $entity) {
             /* @var Page $entity */
@@ -491,19 +524,19 @@ class UserGroup extends Base
             }
 
             // Store this checkbox
-            $checkbox = array(
+            $checkbox = [
                 'id' => $entityId,
                 'name' => $entity->title,
                 'value_view' => $entityId . '_view',
                 'value_view_checked' => (($viewChecked == 1) ? 'checked' : '')
-            );
+            ];
 
             $checkboxes[] = $checkbox;
         }
 
         $data = [
             'title' => sprintf(__('ACL for %s'), $group->group),
-            'groupId' => $groupId,
+            'groupId' => $id,
             'group' => $group->group,
             'permissions' => $checkboxes,
             'help' => $this->getHelp()->link('User', 'Acl')
@@ -511,37 +544,42 @@ class UserGroup extends Base
 
         $this->getState()->template = 'usergroup-form-acl';
         $this->getState()->setData($data);
+
+        return $this->render($request, $response);
     }
 
     /**
      * ACL update
-     * @param int $groupId
+     * @param int $id
      * @throws \Xibo\Exception\NotFoundException
      */
-    public function acl($groupId)
+    public function acl(Request $request, Response $response, $id)
     {
         // Check permissions to this function
-        if (!$this->getUser()->isSuperAdmin())
+        if (!$this->getUser($request)->isSuperAdmin()) {
             throw new AccessDeniedException();
+        }
 
         // Load the Group we are working on
         // Get the object
-        if ($groupId == 0)
+        if ($id == 0) {
             throw new \InvalidArgumentException(__('ACL form requested without a User Group'));
+        }
 
-        $group = $this->userGroupFactory->getById($groupId);
+        $group = $this->userGroupFactory->getById($id);
 
         // Use the factory to get all the entities
         $entities = $this->pageFactory->query();
 
         // Get all permissions for this user and this object
-        $permissions = $this->permissionFactory->getByGroupId('Page', $groupId);
-        $objectIds = $this->getSanitizer()->getParam('objectId', null);
+        $permissions = $this->permissionFactory->getByGroupId('Page', $id);
+        $objectIds = $request->getParam('objectId', null);
 
-        if (!is_array($objectIds))
+        if (!is_array($objectIds)) {
             $objectIds = [];
+        }
 
-        $newAcl = array();
+        $newAcl = [];
         array_map(function ($string) use (&$newAcl) {
             $array = explode('_', $string);
             return $newAcl[$array[0]][$array[1]] = 1;
@@ -568,7 +606,7 @@ class UserGroup extends Base
             if ($permission == null) {
                 if ($view) {
                     // Not currently assigned and needs to be
-                    $permission = $this->permissionFactory->create($groupId, get_class($page), $objectId, 1, 0, 0);
+                    $permission = $this->permissionFactory->create($id, get_class($page), $objectId, 1, 0, 0);
                     $permission->save();
                 }
             }
@@ -590,6 +628,8 @@ class UserGroup extends Base
             'message' => sprintf(__('ACL set for %s'), $group->group),
             'id' => $group->groupId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -881,9 +921,9 @@ class UserGroup extends Base
      * @param \Xibo\Entity\UserGroup $group
      * @return bool
      */
-    private function isEditable($group)
+    private function isEditable($group, Request $request)
     {
-        return $this->getUser()->isSuperAdmin()
-            || ($this->getUser()->isGroupAdmin() && count(array_intersect($this->getUser()->groups, [$group])));
+        return $this->getUser($request)->isSuperAdmin()
+            || ($this->getUser($request)->isGroupAdmin() && count(array_intersect($this->getUser($request)->groups, [$group])));
     }
 }

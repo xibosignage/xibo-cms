@@ -8,7 +8,8 @@
 
 namespace Xibo\Controller;
 
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
@@ -22,6 +23,7 @@ use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -75,7 +77,7 @@ class Region extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -110,16 +112,17 @@ class Region extends Base
      * @param int $regionId
      * @throws XiboException
      */
-    public function timelineForm($regionId)
+    public function timelineForm(Request $request, Response $response, $id)
     {
         // Get a complex object of playlists and widgets
-        $region = $this->regionFactory->getById($regionId);
+        $region = $this->regionFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($region))
+        if (!$this->getUser($request)->checkEditable($region))
             throw new AccessDeniedException();
 
         // Set the view we have requested
-        $this->session->set('timeLineView', $this->getSanitizer()->getString('view', $this->session->get('timeLineView')));
+        $this->session->set('timeLineView', $sanitizedParams->getString('view', $this->session->get('timeLineView')));
 
         // Load the region
         $region->load();
@@ -143,6 +146,8 @@ class Region extends Base
             'transitions' => $this->transitionData(),
             'help' => $this->getHelp()->link('Layout', 'RegionOptions')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -150,11 +155,11 @@ class Region extends Base
      * @param int $regionId
      * @throws XiboException
      */
-    public function editForm($regionId)
+    public function editForm(Request $request, Response $response, $id)
     {
-        $region = $this->regionFactory->getById($regionId);
+        $region = $this->regionFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($region))
+        if (!$this->getUser($request)->checkEditable($region))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'region-form-edit';
@@ -164,6 +169,8 @@ class Region extends Base
             'transitions' => $this->transitionData(),
             'help' => $this->getHelp()->link('Region', 'Edit')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -171,11 +178,11 @@ class Region extends Base
      * @param int $regionId
      * @throws XiboException
      */
-    public function deleteForm($regionId)
+    public function deleteForm(Request $request, Response $response, $id)
     {
-        $region = $this->regionFactory->getById($regionId);
+        $region = $this->regionFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($region))
+        if (!$this->getUser($request)->checkDeleteable($region))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'region-form-delete';
@@ -184,6 +191,8 @@ class Region extends Base
             'layout' => $this->layoutFactory->getById($region->layoutId),
             'help' => $this->getHelp()->link('Region', 'Delete')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -245,11 +254,12 @@ class Region extends Base
      *
      * @throws XiboException
      */
-    public function add($layoutId)
+    public function add(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout))
             throw new AccessDeniedException();
 
         if (!$layout->isChild())
@@ -265,10 +275,10 @@ class Region extends Base
         // Add a new region
         $region = $this->regionFactory->create(
             $this->getUser()->userId, $layout->layout . '-' . (count($layout->regions) + 1),
-            $this->getSanitizer()->getInt('width', 250),
-            $this->getSanitizer()->getInt('height', 250),
-            $this->getSanitizer()->getInt('top', 50),
-            $this->getSanitizer()->getInt('left', 50)
+            $sanitizedParams->getInt('width', 250),
+            $sanitizedParams->getInt('height', 250),
+            $sanitizedParams->getInt('top', 50),
+            $sanitizedParams->getInt('left', 50)
         );
 
         $layout->regions[] = $region;
@@ -305,6 +315,8 @@ class Region extends Base
             'id' => $region->regionId,
             'data' => $region
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -395,11 +407,12 @@ class Region extends Base
      *
      * @throws XiboException
      */
-    public function edit($regionId)
+    public function edit(Request $request, Response $response, $id)
     {
-        $region = $this->regionFactory->getById($regionId);
+        $region = $this->regionFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($region))
+        if (!$this->getUser($request)->checkEditable($region))
             throw new AccessDeniedException();
 
         // Check that this Regions Layout is in an editable state
@@ -411,20 +424,20 @@ class Region extends Base
         // Load before we save
         $region->load();
 
-        $region->name = $this->getSanitizer()->getString('name');
-        $region->width = $this->getSanitizer()->getDouble('width');
-        $region->height = $this->getSanitizer()->getDouble('height');
-        $region->top = $this->getSanitizer()->getDouble('top');
-        $region->left = $this->getSanitizer()->getDouble('left');
-        $region->zIndex = $this->getSanitizer()->getInt('zIndex');
+        $region->name = $sanitizedParams->getString('name');
+        $region->width = $sanitizedParams->getDouble('width');
+        $region->height = $sanitizedParams->getDouble('height');
+        $region->top = $sanitizedParams->getDouble('top');
+        $region->left = $sanitizedParams->getDouble('left');
+        $region->zIndex = $sanitizedParams->getInt('zIndex');
 
         // Loop
-        $region->setOptionValue('loop', $this->getSanitizer()->getCheckbox('loop'));
+        $region->setOptionValue('loop', $sanitizedParams->getCheckbox('loop'));
 
         // Transitions
-        $region->setOptionValue('transitionType', $this->getSanitizer()->getString('transitionType'));
-        $region->setOptionValue('transitionDuration', $this->getSanitizer()->getInt('transitionDuration'));
-        $region->setOptionValue('transitionDirection', $this->getSanitizer()->getString('transitionDirection'));
+        $region->setOptionValue('transitionType', $sanitizedParams->getString('transitionType'));
+        $region->setOptionValue('transitionDuration', $sanitizedParams->getInt('transitionDuration'));
+        $region->setOptionValue('transitionDirection', $sanitizedParams->getString('transitionDirection'));
 
         // Save
         $region->save();
@@ -443,6 +456,8 @@ class Region extends Base
             'id' => $region->regionId,
             'data' => $region
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -470,11 +485,11 @@ class Region extends Base
      *
      * @throws XiboException
      */
-    public function delete($regionId)
+    public function delete(Request $request, Response $response, $id)
     {
-        $region = $this->regionFactory->getById($regionId);
+        $region = $this->regionFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($region))
+        if (!$this->getUser($request)->checkDeleteable($region))
             throw new AccessDeniedException();
 
         // Check that this Regions Layout is in an editable state
@@ -490,6 +505,8 @@ class Region extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $region->name)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -602,18 +619,20 @@ class Region extends Base
      * @param int $regionId
      * @throws XiboException
      */
-    public function preview($regionId)
+    public function preview(Request $request, Response $response, $id)
     {
-        $widgetId = $this->getSanitizer()->getInt('widgetId', null);
-        $seqGiven = $this->getSanitizer()->getInt('seq', 1);
-        $seq = $this->getSanitizer()->getInt('seq', 1);
-        $width = $this->getSanitizer()->getDouble('width', 0);
-        $height = $this->getSanitizer()->getDouble('height', 0);
-        $scaleOverride = $this->getSanitizer()->getDouble('scale_override', 0);
+        $sanitizedQuery = $this->getSanitizer($request->getParams());
+
+        $widgetId = $sanitizedQuery->getInt('widgetId', ['default' => null]);
+        $seqGiven = $sanitizedQuery->getInt('seq', ['default' => 1]);
+        $seq = $sanitizedQuery->getInt('seq', ['default' => 1]);
+        $width = $sanitizedQuery->getDouble('width', ['default' => 0]);
+        $height = $sanitizedQuery->getDouble('height', ['default' => 0]);
+        $scaleOverride = $sanitizedQuery->getDouble('scale_override', ['default' => 0]);
 
         // Load our region
         try {
-            $region = $this->regionFactory->getById($regionId);
+            $region = $this->regionFactory->getById($id);
             $region->load();
 
             if ($widgetId !== null) {
@@ -651,7 +670,7 @@ class Region extends Base
             $module = $this->moduleFactory->createWithWidget($widget, $region);
 
             $this->getState()->extra['empty'] = false;
-            $this->getState()->html = $module->preview($width, $height, $scaleOverride);
+            $this->getState()->html = $module->preview($width, $height, $scaleOverride, $request);
             $this->getState()->extra['type'] = $widget->type;
             $this->getState()->extra['duration'] = $widget->calculatedDuration;
             $this->getState()->extra['number_items'] = $countWidgets;
@@ -667,6 +686,8 @@ class Region extends Base
             $this->getState()->extra['empty'] = true;
             $this->getState()->extra['text'] = __('Empty Region');
         }
+
+        return $this->render($request, $response);
     }
 
     /**

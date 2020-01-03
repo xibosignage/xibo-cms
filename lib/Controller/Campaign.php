@@ -20,6 +20,9 @@
  */
 namespace Xibo\Controller;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Entity\Permission;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\InvalidArgumentException;
@@ -29,6 +32,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserGroupFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -68,7 +72,7 @@ class Campaign extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -80,9 +84,9 @@ class Campaign extends Base
      * @param UserGroupFactory $userGroupFactory
      * @param TagFactory $tagFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $campaignFactory, $layoutFactory, $permissionFactory, $userGroupFactory, $tagFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $campaignFactory, $layoutFactory, $permissionFactory, $userGroupFactory, $tagFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->campaignFactory = $campaignFactory;
         $this->layoutFactory = $layoutFactory;
@@ -91,9 +95,11 @@ class Campaign extends Base
         $this->tagFactory = $tagFactory;
     }
 
-    public function displayPage()
+    public function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'campaign-page';
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -164,27 +170,28 @@ class Campaign extends Base
      *  )
      * )
      */
-    public function grid()
+    public function grid(Request $request, Response $response)
     {
+        $parsedParams = $this->getSanitizer($request->getQueryParams());
         $filter = [
-            'campaignId' => $this->getSanitizer()->getInt('campaignId'),
-            'name' => $this->getSanitizer()->getString('name'),
-            'tags' => $this->getSanitizer()->getString('tags'),
-            'hasLayouts' => $this->getSanitizer()->getInt('hasLayouts'),
-            'isLayoutSpecific' => $this->getSanitizer()->getInt('isLayoutSpecific'),
-            'retired' => $this->getSanitizer()->getInt('retired')
+            'campaignId' => $parsedParams->getInt('campaignId'),
+            'name' => $parsedParams->getString('name'),
+            'tags' => $parsedParams->getString('tags'),
+            'hasLayouts' => $parsedParams->getInt('hasLayouts'),
+            'isLayoutSpecific' => $parsedParams->getInt('isLayoutSpecific'),
+            'retired' => $parsedParams->getInt('retired')
         ];
 
         $options = [
-            'totalDuration' => $this->getSanitizer()->getInt('totalDuration', 1),
+            'totalDuration' => $parsedParams->getInt('totalDuration', ['default' => 1]),
         ];
 
-        $campaigns = $this->campaignFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter), $options);
+        $campaigns = $this->campaignFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request), $options, $request);
 
         foreach ($campaigns as $campaign) {
             /* @var \Xibo\Entity\Campaign $campaign */
 
-            if ($this->isApi())
+            if ($this->isApi($request))
                 break;
 
             $campaign->includeProperty('buttons');
@@ -193,7 +200,7 @@ class Campaign extends Base
             // Schedule Now
             $campaign->buttons[] = array(
                 'id' => 'campaign_button_schedulenow',
-                'url' => $this->urlFor('schedule.now.form', ['id' => $campaign->campaignId, 'from' => 'Campaign']),
+                'url' => $this->urlFor($request,'schedule.now.form', ['id' => $campaign->campaignId, 'from' => 'Campaign']),
                 'text' => __('Schedule Now')
             );
 
@@ -202,34 +209,34 @@ class Campaign extends Base
                 'id' => 'campaign_button_preview',
                 'linkType' => '_blank',
                 'external' => true,
-                'url' => $this->urlFor('campaign.preview', ['id' => $campaign->campaignId]),
+                'url' => $this->urlFor($request,'campaign.preview', ['id' => $campaign->campaignId]),
                 'text' => __('Preview Campaign')
             );
 
             // Buttons based on permissions
-            if ($this->getUser()->checkEditable($campaign)) {
+            if ($this->getUser($request)->checkEditable($campaign)) {
 
                 $campaign->buttons[] = ['divider' => true];
 
                 // Edit the Campaign
                 $campaign->buttons[] = array(
                     'id' => 'campaign_button_edit',
-                    'url' => $this->urlFor('campaign.edit.form', ['id' => $campaign->campaignId]),
+                    'url' => $this->urlFor($request,'campaign.edit.form', ['id' => $campaign->campaignId]),
                     'text' => __('Edit')
                 );
             } else {
                 $campaign->buttons[] = ['divider' => true];
             }
 
-            if ($this->getUser()->checkDeleteable($campaign)) {
+            if ($this->getUser($request)->checkDeleteable($campaign)) {
                 // Delete Campaign
                 $campaign->buttons[] = array(
                     'id' => 'campaign_button_delete',
-                    'url' => $this->urlFor('campaign.delete.form', ['id' => $campaign->campaignId]),
+                    'url' => $this->urlFor($request,'campaign.delete.form', ['id' => $campaign->campaignId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor('campaign.delete', ['id' => $campaign->campaignId])),
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'campaign.delete', ['id' => $campaign->campaignId])),
                         array('name' => 'commit-method', 'value' => 'delete'),
                         array('name' => 'id', 'value' => 'campaign_button_delete'),
                         array('name' => 'text', 'value' => __('Delete')),
@@ -238,14 +245,14 @@ class Campaign extends Base
                 );
             }
 
-            if ($this->getUser()->checkPermissionsModifyable($campaign)) {
+            if ($this->getUser($request)->checkPermissionsModifyable($campaign)) {
 
                 $campaign->buttons[] = ['divider' => true];
 
                 // Permissions for Campaign
                 $campaign->buttons[] = array(
                     'id' => 'campaign_button_permissions',
-                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'Campaign', 'id' => $campaign->campaignId]),
+                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Campaign', 'id' => $campaign->campaignId]),
                     'text' => __('Permissions')
                 );
             }
@@ -254,12 +261,14 @@ class Campaign extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->campaignFactory->countLast();
         $this->getState()->setData($campaigns);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Campaign Add Form
      */
-    public function addForm()
+    public function addForm(Request $request, Response $response)
     {
         // Load layouts
         $layouts = [];
@@ -269,6 +278,8 @@ class Campaign extends Base
             'layouts' => $layouts,
             'help' => $this->getHelp()->link('Campaign', 'Add')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -299,19 +310,21 @@ class Campaign extends Base
      *  )
      * )
      */
-    public function add()
+    public function add(Request $request, Response $response)
     {
-        $campaign = $this->campaignFactory->create($this->getSanitizer()->getString('name'), $this->getUser()->userId, $this->getSanitizer()->getString('tags'));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $campaign = $this->campaignFactory->create($sanitizedParams->getString('name'), $this->getUser($request)->userId, $sanitizedParams->getString('tags'));
         $campaign->save();
 
         // Permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($campaign), $campaign->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+        foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($campaign), $campaign->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
             /* @var Permission $permission */
             $permission->save();
         }
 
         // Assign layouts
-        $this->assignLayout($campaign->campaignId);
+        $this->assignLayout($request, $response, $campaign->campaignId);
 
         // Return
         $this->getState()->hydrate([
@@ -320,15 +333,17 @@ class Campaign extends Base
             'id' => $campaign->campaignId,
             'data' => $campaign
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Campaign Edit Form
      * @param int $campaignId
      */
-    public function editForm($campaignId)
+    public function editForm(Request $request, Response $response, $id)
     {
-        $campaign = $this->campaignFactory->getById($campaignId);
+        $campaign = $this->campaignFactory->getById($id);
 
         $tags = '';
 
@@ -344,12 +359,13 @@ class Campaign extends Base
             }
         }
 
-        if (!$this->getUser()->checkEditable($campaign))
+        if (!$this->getUser($request)->checkEditable($campaign)) {
             throw new AccessDeniedException();
+        }
 
         // Load layouts
         $layouts = [];
-        foreach ($this->layoutFactory->getByCampaignId($campaignId, false) as $layout) {
+        foreach ($this->layoutFactory->getByCampaignId($id, false) as $layout) {
             if (!$this->getUser()->checkViewable($layout)) {
                 // Hide all layout details from the user
                 $emptyLayout = $this->layoutFactory->createEmpty();
@@ -370,6 +386,8 @@ class Campaign extends Base
             'help' => $this->getHelp()->link('Campaign', 'Edit'),
             'tags' => $tags
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -402,22 +420,25 @@ class Campaign extends Base
      *      @SWG\Schema(ref="#/definitions/Campaign")
      *  )
      * )
+     * @throws XiboException
      */
-    public function edit($campaignId)
+    public function edit(Request $request, Response $response, $id)
     {
-        $campaign = $this->campaignFactory->getById($campaignId);
+        $campaign = $this->campaignFactory->getById($id);
+        $parsedRequestParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($campaign))
+        if (!$this->getUser($request)->checkEditable($campaign)) {
             throw new AccessDeniedException();
+        }
 
-        $campaign->campaign = $this->getSanitizer()->getString('name');
-        $campaign->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
+        $campaign->campaign = $parsedRequestParams->getString('name');
+        $campaign->replaceTags($this->tagFactory->tagsFromString($parsedRequestParams->getString('tags')));
         $campaign->save([
             'saveTags' => true
         ]);
 
         // Assign layouts
-        $this->assignLayout($campaign->campaignId);
+        $this->assignLayout($request, $response, $campaign->campaignId);
 
         // Return
         $this->getState()->hydrate([
@@ -425,17 +446,19 @@ class Campaign extends Base
             'id' => $campaign->campaignId,
             'data' => $campaign
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Shows the Delete Group Form
      * @param int $campaignId
      */
-    function deleteForm($campaignId)
+    function deleteForm(Request $request, Response $response, $id)
     {
-        $campaign = $this->campaignFactory->getById($campaignId);
+        $campaign = $this->campaignFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($campaign))
+        if (!$this->getUser($request)->checkDeleteable($campaign))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'campaign-form-delete';
@@ -443,6 +466,8 @@ class Campaign extends Base
             'campaign' => $campaign,
             'help' => $this->getHelp()->link('Campaign', 'Delete')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -470,11 +495,11 @@ class Campaign extends Base
      *
      * @throws XiboException
      */
-    public function delete($campaignId)
+    public function delete(Request $request, Response $response, $id)
     {
-        $campaign = $this->campaignFactory->getById($campaignId);
+        $campaign = $this->campaignFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($campaign))
+        if (!$this->getUser($request)->checkDeleteable($campaign))
             throw new AccessDeniedException();
 
         $campaign->setChildObjectDependencies($this->layoutFactory);
@@ -486,6 +511,8 @@ class Campaign extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $campaign->campaign)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -493,15 +520,15 @@ class Campaign extends Base
      * @param int $campaignId
      * @throws XiboException
      */
-    public function layoutsForm($campaignId)
+    public function layoutsForm(Request $request, Response $response, $id)
     {
-        $campaign = $this->campaignFactory->getById($campaignId);
+        $campaign = $this->campaignFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($campaign))
+        if (!$this->getUser($request)->checkEditable($campaign))
             throw new AccessDeniedException();
 
         $layouts = [];
-        foreach ($this->layoutFactory->getByCampaignId($campaignId, false) as $layout) {
+        foreach ($this->layoutFactory->getByCampaignId($id, false) as $layout) {
             if (!$this->getUser()->checkViewable($layout)) {
                 // Hide all layout details from the user
                 $emptyLayout = $this->layoutFactory->createEmpty();
@@ -521,6 +548,8 @@ class Campaign extends Base
             'layouts' => $layouts,
             'help' => $this->getHelp()->link('Campaign', 'Layouts')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -540,8 +569,19 @@ class Campaign extends Base
 
     /**
      * Assigns a layout to a Campaign
+     * @param Request $request
+     * @param Response $response
      * @param int $campaignId
      *
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      * @SWG\Post(
      *  path="/campaign/layout/assign/{campaignId}",
      *  operationId="campaignAssignLayout",
@@ -581,15 +621,14 @@ class Campaign extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function assignLayout($campaignId)
+    public function assignLayout( Request $request, Response $response, $campaignId)
     {
         $this->getLog()->debug('assignLayout with campaignId ' . $campaignId);
 
         $campaign = $this->campaignFactory->getById($campaignId);
 
-        if (!$this->getUser()->checkEditable($campaign))
+        if (!$this->getUser($request)->checkEditable($campaign))
             throw new AccessDeniedException();
 
         // Make sure this is a non-layout specific campaign
@@ -602,18 +641,18 @@ class Campaign extends Base
         $changesMade = false;
 
         // Check our permissions to see each one
-        $layouts = $this->getSanitizer()->getParam('layoutId', null);
+        $layouts = $request->getParam('layoutId', null);
         $layouts = is_array($layouts) ? $layouts : [];
 
-        $this->getLog()->debug('There are %d Layouts to assign', count($layouts));
+        $this->getLog()->debug(sprintf('There are %d Layouts to assign', count($layouts)));
 
         foreach ($layouts as $object) {
-
-            $layout = $this->layoutFactory->getById($this->getSanitizer()->getInt('layoutId', $object));
+            $sanitizedObject = $this->getSanitizer($object);
+            $layout = $this->layoutFactory->getById($sanitizedObject->getInt('layoutId'));
 
             // Check to see if this layout is already assigned
             // if it is, then we have permission to move it around
-            if (!$this->getUser()->checkViewable($layout) && !$campaign->isLayoutAssigned($layout))
+            if (!$this->getUser($request)->checkViewable($layout) && !$campaign->isLayoutAssigned($layout))
                 throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
 
             // Make sure we're not a draft
@@ -631,7 +670,7 @@ class Campaign extends Base
             }
 
             // Set the Display Order
-            $layout->displayOrder = $this->getSanitizer()->getInt('displayOrder', $object);
+            $layout->displayOrder = $sanitizedObject->getInt('displayOrder');
 
             // Assign it
             $campaign->assignLayout($layout);
@@ -640,20 +679,20 @@ class Campaign extends Base
         }
 
         // Run through the layouts to unassign
-        $layouts = $this->getSanitizer()->getParam('unassignLayoutId', null);
+        $layouts = $request->getParam('unassignLayoutId', null);
         $layouts = is_array($layouts) ? $layouts : [];
         
         $this->getLog()->debug('There are %d Layouts to unassign', count($layouts));
         
         foreach ($layouts as $object) {
-
-            $layout = $this->layoutFactory->getById($this->getSanitizer()->getInt('layoutId', $object));
+            $sanitizedObject = $this->getSanitizer($object);
+            $layout = $this->layoutFactory->getById($sanitizedObject->getInt('layoutId'));
 
             if (!$this->getUser()->checkViewable($layout) && !$campaign->isLayoutAssigned($layout))
                 throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
 
             // Set the Display Order
-            $layout->displayOrder = $this->getSanitizer()->getInt('displayOrder', $object);
+            $layout->displayOrder = $sanitizedObject->getInt('displayOrder');
 
             // Unassign it
             $campaign->unassignLayout($layout);
@@ -671,6 +710,8 @@ class Campaign extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Assigned Layouts to %s'), $campaign->campaign)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**

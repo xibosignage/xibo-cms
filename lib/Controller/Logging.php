@@ -21,10 +21,14 @@
 namespace Xibo\Controller;
 
 use Jenssegers\Date\Date;
+use Slim\Views\Twig;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LogFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -56,7 +60,7 @@ class Logging extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -66,10 +70,11 @@ class Logging extends Base
      * @param LogFactory $logFactory
      * @param DisplayFactory $displayFactory
      * @param UserFactory $userFactory
+     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $logFactory, $displayFactory, $userFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $logFactory, $displayFactory, $userFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->store = $store;
         $this->logFactory = $logFactory;
@@ -77,36 +82,41 @@ class Logging extends Base
         $this->userFactory = $userFactory;
     }
 
-    public function displayPage()
+    public function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'log-page';
         $this->getState()->setData([
             'users' => $this->userFactory->query()
         ]);
+
+        return $this->render($request, $response);
     }
 
-    function grid()
+    function grid(Request $request, Response $response)
     {
-        // Date time criteria
-        $seconds = $this->getSanitizer()->getInt('seconds', 120);
-        $intervalType = $this->getSanitizer()->getInt('intervalType', 1);
-        $fromDt = $this->getSanitizer()->getDate('fromDt', $this->getDate()->getLocalDate());
+        $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
 
-        $logs = $this->logFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
-            'fromDt' => $fromDt->format('U') - ($seconds * $intervalType),
-            'toDt' => $fromDt->format('U'),
-            'type' => $this->getSanitizer()->getString('level'),
-            'page' => $this->getSanitizer()->getString('page'),
-            'channel' => $this->getSanitizer()->getString('channel'),
-            'function' => $this->getSanitizer()->getString('function'),
-            'displayId' => $this->getSanitizer()->getInt('displayId'),
-            'userId' => $this->getSanitizer()->getInt('userId'),
-            'excludeLog' => $this->getSanitizer()->getCheckbox('excludeLog'),
-            'runNo' => $this->getSanitizer()->getString('runNo'),
-            'message' => $this->getSanitizer()->getString('message'),
-            'display' => $this->getSanitizer()->getString('display'),
-            'displayGroupId' => $this->getSanitizer()->getInt('displayGroupId'),
-        ]));
+        // Date time criteria
+        $seconds = $parsedQueryParams->getInt('seconds', ['default' => 120]);
+        $intervalType = $parsedQueryParams->getInt('intervalType', ['default' => 1]);
+        // TODO dates...
+        //$fromDt = $parsedQueryParams->getDate('fromDt', ['default' => $this->getDate()->getLocalDate()]);
+
+        $logs = $this->logFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+          //  'fromDt' => $fromDt->format('U') - ($seconds * $intervalType),
+          //  'toDt' => $fromDt->format('U'),
+            'type' => $parsedQueryParams->getString('level'),
+            'page' => $parsedQueryParams->getString('page'),
+            'channel' => $parsedQueryParams->getString('channel'),
+            'function' => $parsedQueryParams->getString('function'),
+            'displayId' => $parsedQueryParams->getInt('displayId'),
+            'userId' => $parsedQueryParams->getInt('userId'),
+            'excludeLog' => $parsedQueryParams->getCheckbox('excludeLog'),
+            'runNo' => $parsedQueryParams->getString('runNo'),
+            'message' => $parsedQueryParams->getString('message'),
+            'display' => $parsedQueryParams->getString('display'),
+            'displayGroupId' => $parsedQueryParams->getInt('displayGroupId'),
+        ], $request));
 
         foreach ($logs as $log) {
             // Normalise the date
@@ -116,28 +126,32 @@ class Logging extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->logFactory->countLast();
         $this->getState()->setData($logs);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Truncate Log Form
      */
-    public function truncateForm()
+    public function truncateForm(Request $request, Response $response)
     {
-        if ($this->getUser()->userTypeId != 1)
+        if ($this->getUser($request)->userTypeId != 1)
             throw new AccessDeniedException(__('Only Administrator Users can truncate the log'));
 
         $this->getState()->template = 'log-form-truncate';
         $this->getState()->setData([
             'help' => $this->getHelp()->link('Log', 'Truncate')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Truncate the Log
      */
-    public function truncate()
+    public function truncate(Request $request, Response $response)
     {
-        if ($this->getUser()->userTypeId != 1)
+        if ($this->getUser($request)->userTypeId != 1)
             throw new AccessDeniedException(__('Only Administrator Users can truncate the log'));
 
         $this->store->update('TRUNCATE TABLE log', array());
@@ -146,5 +160,7 @@ class Logging extends Base
         $this->getState()->hydrate([
             'message' => __('Log Truncated')
         ]);
+
+        return $this->render($request, $response);
     }
 }

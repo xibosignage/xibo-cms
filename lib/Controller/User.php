@@ -21,6 +21,8 @@
  */
 namespace Xibo\Controller;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use RobThree\Auth\TwoFactorAuth;
 use Xibo\Entity\Campaign;
 use Xibo\Entity\Layout;
@@ -159,9 +161,9 @@ class User extends Base
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userFactory,
                                 $userTypeFactory, $userGroupFactory, $pageFactory, $permissionFactory,
-                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory)
+                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory, $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->userFactory = $userFactory;
         $this->userTypeFactory = $userTypeFactory;
@@ -264,18 +266,19 @@ class User extends Base
      *  )
      * )
      */
-    function grid()
+    function grid(Request $request, Response $response)
     {
+        $sanitizedPrams = $this->getSanitizer($request->getParams());
         // Filter our users?
         $filterBy = [
-            'userId' => $this->getSanitizer()->getInt('userId'),
-            'userTypeId' => $this->getSanitizer()->getInt('userTypeId'),
-            'userName' => $this->getSanitizer()->getString('userName'),
-            'retired' => $this->getSanitizer()->getInt('retired')
+            'userId' => $sanitizedPrams->getInt('userId'),
+            'userTypeId' => $sanitizedPrams->getInt('userTypeId'),
+            'userName' => $sanitizedPrams->getString('userName'),
+            'retired' => $sanitizedPrams->getInt('retired')
         ];
 
         // Load results into an array
-        $users = $this->userFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filterBy));
+        $users = $this->userFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filterBy, $request), $request);
 
         foreach ($users as $user) {
             /* @var \Xibo\Entity\User $user */
@@ -299,7 +302,7 @@ class User extends Base
                     $user->twoFactorDescription = __('Disabled');
             }
 
-            if ($this->isApi()) {
+            if ($this->isApi($request)) {
                 continue;
             }
 
@@ -307,31 +310,31 @@ class User extends Base
             $user->homePage = __($user->homePage);
 
             // Super admins have some buttons
-            if ($this->getUser()->checkEditable($user)) {
+            if ($this->getUser($request)->checkEditable($user)) {
                 // Edit
                 $user->buttons[] = [
                     'id' => 'user_button_edit',
-                    'url' => $this->getApp()->urlFor('user.edit.form', ['id' => $user->userId]),
+                    'url' => $this->urlFor($request,'user.edit.form', ['id' => $user->userId]),
                     'text' => __('Edit')
                 ];
             }
 
-            if ($this->getUser()->isSuperAdmin()) {
+            if ($this->getUser($request)->isSuperAdmin()) {
                 // Delete
                 $user->buttons[] = [
                     'id' => 'user_button_delete',
-                    'url' => $this->getApp()->urlFor('user.delete.form', ['id' => $user->userId]),
+                    'url' => $this->urlFor($request,'user.delete.form', ['id' => $user->userId]),
                     'text' => __('Delete')
                 ];
             }
 
-            if ($this->getUser()->checkPermissionsModifyable($user)) {
+            if ($this->getUser($request)->checkPermissionsModifyable($user)) {
                 $user->buttons[] = ['divider' => true];
 
                 // User Groups
                 $user->buttons[] = array(
                     'id' => 'user_button_group_membership',
-                    'url' => $this->urlFor('user.membership.form', ['id' => $user->userId]),
+                    'url' => $this->urlFor($request,'user.membership.form', ['id' => $user->userId]),
                     'text' => __('User Groups')
                 );
             }
@@ -342,7 +345,7 @@ class User extends Base
                 // Page Security
                 $user->buttons[] = [
                     'id' => 'user_button_page_security',
-                    'url' => $this->urlFor('group.acl.form', ['id' => $user->groupId]),
+                    'url' => $this->urlFor($request,'group.acl.form', ['id' => $user->groupId]),
                     'text' => __('Page Security')
                 ];
             }
@@ -351,6 +354,8 @@ class User extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->userFactory->countLast();
         $this->getState()->setData($users);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1544,13 +1549,15 @@ class User extends Base
     /**
      * User Applications
      */
-    public function myApplications()
+    public function myApplications(Request $request, Response $response)
     {
         $this->getState()->template = 'user-applications-form';
         $this->getState()->setData([
             'applications' => $this->applicationFactory->getByUserId($this->getUser()->userId),
             'help' => $this->getHelp()->link('User', 'Applications')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1576,17 +1583,28 @@ class User extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function pref()
+    public function pref(Request $request, Response $response)
     {
-        $requestedPreference = $this->getSanitizer()->getString('preference');
+        $requestedPreference =  $request->getQueryParam('preference');
 
         if ($requestedPreference != '') {
-            $this->getState()->setData($this->getUser()->getOption($requestedPreference));
+            $this->getState()->setData($this->getUser($request)->getOption($requestedPreference));
         }
         else {
-            $this->getState()->setData($this->getUser()->getUserOptions());
+            $this->getState()->setData($this->getUser($request)->getUserOptions());
         }
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1610,38 +1628,49 @@ class User extends Base
      *      description="successful operation"
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return Response
+     * @throws XiboException
      */
-    public function prefEdit()
+    public function prefEdit(Request $request, Response $response)
     {
+        $parsedRequest = $this->getSanitizer($request->getParsedBody());
+
         // Update this user preference with the preference array
         $i = 0;
-        foreach ($this->getSanitizer()->getStringArray('preference') as $pref) {
+        foreach ($parsedRequest->getArray('preference') as $pref) {
             $i++;
 
-            $option = $this->getSanitizer()->string($pref['option']);
-            $value = $this->getSanitizer()->string($pref['value']);
+            $sanitizedPref = $this->getSanitizer($pref);
 
-            $this->getUser()->setOptionValue($option, $value);
+            $option = $sanitizedPref->getString('option');
+            $value = $sanitizedPref->getString('value');
+
+            $this->getUser($request)->setOptionValue($option, $value);
         }
 
-        if ($i > 0)
-            $this->getUser()->save();
+        if ($i > 0) {
+            $this->getUser($request)->save();
+        }
 
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => ($i == 1) ? __('Updated Preference') : __('Updated Preferences')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * @param $userId
      */
-    public function membershipForm($userId)
+    public function membershipForm(Request $request, Response $response, $id)
     {
-        $user = $this->userFactory->getById($userId);
+        $user = $this->userFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($user))
+        if (!$this->getUser($request)->checkEditable($user))
             throw new AccessDeniedException();
 
         // Groups we are assigned to
@@ -1681,6 +1710,8 @@ class User extends Base
             'checkboxes' => $checkboxes,
             'help' =>  $this->getHelp()->link('User', 'Members')
         ]);
+
+        $this->render($request, $response);
     }
 
     /**
@@ -1756,9 +1787,11 @@ class User extends Base
     /**
      * Preferences Form
      */
-    public function preferencesForm()
+    public function preferencesForm(Request $request, Response $response)
     {
         $this->getState()->template = 'user-form-preferences';
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1792,17 +1825,21 @@ class User extends Base
      *  )
      * )
      */
-    public function prefEditFromForm()
+    public function prefEditFromForm(Request $request, Response $response)
     {
-        $this->getUser()->setOptionValue('navigationMenuPosition', $this->getSanitizer()->getString('navigationMenuPosition'));
-        $this->getUser()->setOptionValue('useLibraryDuration', $this->getSanitizer()->getCheckbox('useLibraryDuration'));
-        $this->getUser()->setOptionValue('showThumbnailColumn', $this->getSanitizer()->getCheckbox('showThumbnailColumn'));
-        $this->getUser()->save();
+        $parsedParams = $this->getSanitizer($request->getParams());
+
+        $this->getUser($request)->setOptionValue('navigationMenuPosition', $parsedParams->getString('navigationMenuPosition'));
+        $this->getUser($request)->setOptionValue('useLibraryDuration', $parsedParams->getCheckbox('useLibraryDuration'));
+        $this->getUser($request)->setOptionValue('showThumbnailColumn', $parsedParams->getCheckbox('showThumbnailColumn'));
+        $this->getUser($request)->save();
 
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => __('Updated Preferences')
         ]);
+
+        return $this->render($request, $response);
     }
 }

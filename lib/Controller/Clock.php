@@ -26,6 +26,8 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 
 /**
  * Class Clock
@@ -77,20 +79,22 @@ class Clock extends Base
      *
      * @throws \Exception
      */
-    public function clock()
+    public function clock(Request $request, Response $response)
     {
         $this->session->refreshExpiry = false;
 
-        if ($this->getApp()->request()->isAjax() || $this->isApi()) {
+        if ($request->isXhr() || $this->isApi($request)) {
             $output = $this->getDate()->getLocalDate(null, 'H:i T');
 
             $this->getState()->setData(array('time' => $output));
             $this->getState()->html = $output;
             $this->getState()->clockUpdate = true;
             $this->getState()->success = true;
+            return $this->render($request, $response);
         } else {
             $this->setNoOutput(true);
-            echo $this->getDate()->getLocalDate(null, 'c');
+            $this->getDate()->getLocalDate(null, 'c');
+            return $response;
         }
     }
 }

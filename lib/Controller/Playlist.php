@@ -9,6 +9,8 @@
 namespace Xibo\Controller;
 
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
@@ -920,14 +922,20 @@ class Playlist extends Base
 
     /**
      * Form for assigning Library Items to a Playlist
-     * @param int $playlistId
-     * @throws \Xibo\Exception\NotFoundException
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|\Slim\Http\Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function libraryAssignForm($playlistId)
+    public function libraryAssignForm(Request $request, Response $response, $id)
     {
-        $playlist = $this->playlistFactory->getById($playlistId);
+        $playlist = $this->playlistFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($playlist))
+        if (!$this->getUser($request)->checkEditable($playlist))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'playlist-form-library-assign';
@@ -936,6 +944,8 @@ class Playlist extends Base
             'modules' => $this->moduleFactory->query(null, ['regionSpecific' => 0, 'enabled' => 1, 'assignable' => 1]),
             'help' => $this->getHelp()->link('Library', 'Assign')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -986,11 +996,12 @@ class Playlist extends Base
      *
      * @throws XiboException
      */
-    public function libraryAssign($playlistId)
+    public function libraryAssign(Request $request, Response $response, $id)
     {
-        $playlist = $this->playlistFactory->getById($playlistId);
+        $playlist = $this->playlistFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($playlist))
+        if (!$this->getUser($request)->checkEditable($playlist))
             throw new AccessDeniedException();
 
         // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
@@ -1001,13 +1012,13 @@ class Playlist extends Base
             throw new InvalidArgumentException(__('This Playlist is dynamically managed so cannot accept manual assignments.'), 'isDynamic');
 
         // Expect a list of mediaIds
-        $media = $this->getSanitizer()->getIntArray('media');
+        $media = $sanitizedParams->getIntArray('media');
 
         if (count($media) <= 0)
             throw new \InvalidArgumentException(__('Please provide Media to Assign'));
 
         // Optional Duration
-        $duration = ($this->getSanitizer()->getInt('duration'));
+        $duration = ($sanitizedParams->getInt('duration'));
 
         $newWidgets = [];
 
@@ -1035,7 +1046,7 @@ class Playlist extends Base
             $itemDuration = ($itemDuration == 0) ? $module->determineDuration() : $itemDuration;
 
             // Create a widget
-            $widget = $this->widgetFactory->create($this->getUser()->userId, $playlistId, $item->mediaType, $itemDuration);
+            $widget = $this->widgetFactory->create($this->getUser($request)->userId, $id, $item->mediaType, $itemDuration);
             $widget->assignMedia($item->mediaId);
 
             // Assign the widget to the module
@@ -1045,7 +1056,7 @@ class Playlist extends Base
             $module->setDefaultWidgetOptions();
 
             // If a duration has been provided, then we want to use it, so set useDuration to 1.
-            if ($duration !== null || $this->getSanitizer()->getCheckbox('useDuration') == 1) {
+            if ($duration !== null || $sanitizedParams->getCheckbox('useDuration') == 1) {
                 $widget->useDuration = 1;
                 $widget->duration = $itemDuration;
             }
@@ -1089,6 +1100,8 @@ class Playlist extends Base
             'message' => __('Media Assigned'),
             'data' => $playlist
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**

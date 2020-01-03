@@ -26,6 +26,9 @@ use Intervention\Image\ImageManagerStatic as Img;
 use Jenssegers\Date\Date;
 use Respect\Validation\Validator as v;
 use RobThree\Auth\TwoFactorAuth;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\RequiredFile;
 use Xibo\Exception\AccessDeniedException;
@@ -50,6 +53,7 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\Random;
+use Xibo\Helper\SanitizerService;
 use Xibo\Helper\WakeOnLan;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -144,7 +148,7 @@ class Display extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -168,9 +172,9 @@ class Display extends Base
      * @param PlayerVersionFactory $playerVersionFactory
      * @param DayPartFactory $dayPartFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory, $dayPartFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory, $dayPartFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->store = $store;
         $this->pool = $pool;
@@ -195,7 +199,7 @@ class Display extends Base
      * Include display page template page based on sub page selected
      * @throws NotFoundException
      */
-    function displayPage()
+    function displayPage(Request $request, Response $response)
     {
         // Build a list of display profiles
         $displayProfiles = $this->displayProfileFactory->query();
@@ -204,9 +208,11 @@ class Display extends Base
         // Call to render the template
         $this->getState()->template = 'display-page';
         $this->getState()->setData([
-            'displayGroups' => $this->displayGroupFactory->query(),
+            'displayGroups' => $this->displayGroupFactory->query(null, [], $request),
             'displayProfiles' => $displayProfiles
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -482,36 +488,48 @@ class Display extends Base
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function grid()
+    function grid(Request $request, Response $response)
     {
+        $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
         // Embed?
-        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+        $embed = ($parsedQueryParams->getString('embed') != null) ? explode(',', $parsedQueryParams->getString('embed')) : [];
 
         $filter = [
-            'displayId' => $this->getSanitizer()->getInt('displayId'),
-            'display' => $this->getSanitizer()->getString('display'),
-            'macAddress' => $this->getSanitizer()->getString('macAddress'),
-            'license' => $this->getSanitizer()->getString('hardwareKey'),
-            'displayGroupId' => $this->getSanitizer()->getInt('displayGroupId'),
-            'clientVersion' => $this->getSanitizer()->getString('clientVersion'),
-            'clientType' => $this->getSanitizer()->getString('clientType'),
-            'clientCode' => $this->getSanitizer()->getString('clientCode'),
-            'authorised' => $this->getSanitizer()->getInt('authorised'),
-            'displayProfileId' => $this->getSanitizer()->getInt('displayProfileId'),
-            'tags' => $this->getSanitizer()->getString('tags'),
-            'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
+            'displayId' => $parsedQueryParams->getInt('displayId'),
+            'display' => $parsedQueryParams->getString('display'),
+            'macAddress' => $parsedQueryParams->getString('macAddress'),
+            'license' => $parsedQueryParams->getString('hardwareKey'),
+            'displayGroupId' => $parsedQueryParams->getInt('displayGroupId'),
+            'clientVersion' => $parsedQueryParams->getString('clientVersion'),
+            'clientType' => $parsedQueryParams->getString('clientType'),
+            'clientCode' => $parsedQueryParams->getString('clientCode'),
+            'authorised' => $parsedQueryParams->getInt('authorised'),
+            'displayProfileId' => $parsedQueryParams->getInt('displayProfileId'),
+            'tags' => $parsedQueryParams->getString('tags'),
+            'exactTags' => $parsedQueryParams->getCheckbox('exactTags'),
             'showTags' => true,
-            'clientAddress' => $this->getSanitizer()->getString('clientAddress'),
-            'mediaInventoryStatus' => $this->getSanitizer()->getInt('mediaInventoryStatus'),
-            'loggedIn' => $this->getSanitizer()->getInt('loggedIn'),
-            'lastAccessed' => ($this->getSanitizer()->getDate('lastAccessed') != null) ? $this->getSanitizer()->getDate('lastAccessed')->format('U') : null,
-            'displayGroupIdMembers' => $this->getSanitizer()->getInt('displayGroupIdMembers')
+            'clientAddress' => $parsedQueryParams->getString('clientAddress'),
+            'mediaInventoryStatus' => $parsedQueryParams->getInt('mediaInventoryStatus'),
+            'loggedIn' => $parsedQueryParams->getInt('loggedIn'),
+            // TODO Sanitizer does not like it as is
+            //'lastAccessed' => ($parsedQueryParams->getDate('lastAccessed', ['default' => 0, 'dateFormat' => 'U']) != null) ? $parsedQueryParams->getDate('lastAccessed', ['default' => 0, 'dateFormat' => 'U']) : null,
+            'displayGroupIdMembers' => $parsedQueryParams->getInt('displayGroupIdMembers')
         ];
 
         // Get a list of displays
-        $displays = $this->displayFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request), $request);
+
 
         // Get all Display Profiles
         $displayProfiles = [];
@@ -540,7 +558,7 @@ class Display extends Base
             $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
             $display->getCurrentLayoutId($this->pool);
 
-            if ($this->isApi()) {
+            if ($this->isApi($request)) {
                 $display->lastAccessed = $this->getDate()->getLocalDate($display->lastAccessed);
                 $display->auditingUntil = ($display->auditingUntil == 0) ? 0 : $this->getDate()->getLocalDate($display->auditingUntil);
                 $display->storageAvailableSpace = ByteFormatter::format($display->storageAvailableSpace);
@@ -589,16 +607,16 @@ class Display extends Base
             $display->thumbnail = '';
             // If we aren't logged in, and we are showThumbnail == 2, then show a circle
             if (file_exists($this->getConfig()->getSetting('LIBRARY_LOCATION') . 'screenshots/' . $display->displayId . '_screenshot.jpg')) {
-                $display->thumbnail = $this->urlFor('display.screenShot', ['id' => $display->displayId]) . '?' . Random::generateString();
+                $display->thumbnail = $this->urlFor($request,'display.screenShot', ['id' => $display->displayId]) . '?' . Random::generateString();
             }
 
             // Edit and Delete buttons first
-            if ($this->getUser()->checkEditable($display)) {
+            if ($this->getUser($request)->checkEditable($display)) {
 
                 // Manage
                 $display->buttons[] = array(
                     'id' => 'display_button_manage',
-                    'url' => $this->urlFor('display.manage', ['id' => $display->displayId]),
+                    'url' => $this->urlFor($request,'display.manage', ['id' => $display->displayId]),
                     'text' => __('Manage'),
                     'external' => true
                 );
@@ -608,16 +626,16 @@ class Display extends Base
                 // Edit
                 $display->buttons[] = array(
                     'id' => 'display_button_edit',
-                    'url' => $this->urlFor('display.edit.form', ['id' => $display->displayId]),
+                    'url' => $this->urlFor($request,'display.edit.form', ['id' => $display->displayId]),
                     'text' => __('Edit')
                 );
             }
 
             // Delete
-            if ($this->getUser()->checkDeleteable($display)) {
+            if ($this->getUser($request)->checkDeleteable($display)) {
                 $display->buttons[] = array(
                     'id' => 'display_button_delete',
-                    'url' => $this->urlFor('display.delete.form', ['id' => $display->displayId]),
+                    'url' => $this->urlFor($request,'display.delete.form', ['id' => $display->displayId]),
                     'text' => __('Delete'),
                     /*'multi-select' => true,
                     'dataAttributes' => array(
@@ -630,20 +648,20 @@ class Display extends Base
                 );
             }
 
-            if ($this->getUser()->checkEditable($display) || $this->getUser()->checkDeleteable($display)) {
+            if ($this->getUser($request)->checkEditable($display) || $this->getUser()->checkDeleteable($display)) {
                 $display->buttons[] = ['divider' => true];
             }
 
-            if ($this->getUser()->checkEditable($display)) {
+            if ($this->getUser($request)->checkEditable($display)) {
 
                 // Authorise
                 $display->buttons[] = array(
                     'id' => 'display_button_authorise',
-                    'url' => $this->urlFor('display.authorise.form', ['id' => $display->displayId]),
+                    'url' => $this->urlFor($request,'display.authorise.form', ['id' => $display->displayId]),
                     'text' => __('Authorise'),
                     'multi-select' => true,
                     'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor('display.authorise', ['id' => $display->displayId])),
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'display.authorise', ['id' => $display->displayId])),
                         array('name' => 'commit-method', 'value' => 'put'),
                         array('name' => 'id', 'value' => 'display_button_authorise'),
                         array('name' => 'text', 'value' => __('Toggle Authorise')),
@@ -654,11 +672,11 @@ class Display extends Base
                 // Default Layout
                 $display->buttons[] = array(
                     'id' => 'display_button_defaultlayout',
-                    'url' => $this->urlFor('display.defaultlayout.form', ['id' => $display->displayId]),
+                    'url' => $this->urlFor($request,'display.defaultlayout.form', ['id' => $display->displayId]),
                     'text' => __('Default Layout'),
                     'multi-select' => true,
                     'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor('display.defaultlayout', ['id' => $display->displayId])),
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'display.defaultlayout', ['id' => $display->displayId])),
                         array('name' => 'commit-method', 'value' => 'put'),
                         array('name' => 'id', 'value' => 'display_button_defaultlayout'),
                         array('name' => 'text', 'value' => __('Set Default Layout')),
@@ -671,38 +689,38 @@ class Display extends Base
             }
 
             // Schedule Now
-            if (($this->getUser()->checkEditable($display) || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1) && $this->getUser()->routeViewable('/schedulenow/form/now/:from/:id') === true ) {
+            if (($this->getUser($request)->checkEditable($display) || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1) && $this->getUser($request)->routeViewable('/schedulenow/form/now/:from/:id') === true ) {
                 $display->buttons[] = array(
                     'id' => 'display_button_schedulenow',
-                    'url' => $this->urlFor('schedulenow.now.form', ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']),
+                    'url' => $this->urlFor($request,'schedulenow.now.form', ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']),
                     'text' => __('Schedule Now')
                 );
             }
 
-            if ($this->getUser()->checkEditable($display)) {
+            if ($this->getUser($request)->checkEditable($display)) {
 
                 // File Associations
                 $display->buttons[] = array(
                     'id' => 'displaygroup_button_fileassociations',
-                    'url' => $this->urlFor('displayGroup.media.form', ['id' => $display->displayGroupId]),
+                    'url' => $this->urlFor($request,'displayGroup.media.form', ['id' => $display->displayGroupId]),
                     'text' => __('Assign Files')
                 );
 
                 // Layout Assignments
                 $display->buttons[] = array(
                     'id' => 'displaygroup_button_layout_associations',
-                    'url' => $this->urlFor('displayGroup.layout.form', ['id' => $display->displayGroupId]),
+                    'url' => $this->urlFor($request,'displayGroup.layout.form', ['id' => $display->displayGroupId]),
                     'text' => __('Assign Layouts')
                 );
 
                 // Screen Shot
                 $display->buttons[] = array(
                     'id' => 'display_button_requestScreenShot',
-                    'url' => $this->urlFor('display.screenshot.form', ['id' => $display->displayId]),
+                    'url' => $this->urlFor($request,'display.screenshot.form', ['id' => $display->displayId]),
                     'text' => __('Request Screen Shot'),
                     'multi-select' => true,
                     'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor('display.requestscreenshot', ['id' => $display->displayId])),
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'display.requestscreenshot', ['id' => $display->displayId])),
                         array('name' => 'commit-method', 'value' => 'put'),
                         array('name' => 'id', 'value' => 'display_button_requestScreenShot'),
                         array('name' => 'text', 'value' => __('Request Screen Shot')),
@@ -713,11 +731,11 @@ class Display extends Base
                 // Collect Now
                 $display->buttons[] = array(
                     'id' => 'display_button_collectNow',
-                    'url' => $this->urlFor('displayGroup.collectNow.form', ['id' => $display->displayGroupId]),
+                    'url' => $this->urlFor($request,'displayGroup.collectNow.form', ['id' => $display->displayGroupId]),
                     'text' => __('Collect Now'),
                     'multi-select' => true,
                     'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor('displayGroup.action.collectNow', ['id' => $display->displayGroupId])),
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.action.collectNow', ['id' => $display->displayGroupId])),
                         array('name' => 'commit-method', 'value' => 'post'),
                         array('name' => 'id', 'value' => 'display_button_collectNow'),
                         array('name' => 'text', 'value' => __('Collect Now')),
@@ -728,39 +746,39 @@ class Display extends Base
                 $display->buttons[] = ['divider' => true];
             }
 
-            if ($this->getUser()->checkPermissionsModifyable($display)) {
+            if ($this->getUser($request)->checkPermissionsModifyable($display)) {
 
                 // Display Groups
                 $display->buttons[] = array(
                     'id' => 'display_button_group_membership',
-                    'url' => $this->urlFor('display.membership.form', ['id' => $display->displayId]),
+                    'url' => $this->urlFor($request,'display.membership.form', ['id' => $display->displayId]),
                     'text' => __('Display Groups')
                 );
 
                 // Permissions
                 $display->buttons[] = array(
                     'id' => 'display_button_group_permissions',
-                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId]),
+                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId]),
                     'text' => __('Permissions')
                 );
             }
 
-            if ($this->getUser()->checkEditable($display)) {
+            if ($this->getUser($request)->checkEditable($display)) {
 
-                if ($this->getUser()->checkPermissionsModifyable($display)) {
+                if ($this->getUser($request)->checkPermissionsModifyable($display)) {
                     $display->buttons[] = ['divider' => true];
                 }
 
                 // Wake On LAN
                 $display->buttons[] = array(
                     'id' => 'display_button_wol',
-                    'url' => $this->urlFor('display.wol.form', ['id' => $display->displayId]),
+                    'url' => $this->urlFor($request,'display.wol.form', ['id' => $display->displayId]),
                     'text' => __('Wake on LAN')
                 );
 
                 $display->buttons[] = array(
                     'id' => 'displaygroup_button_command',
-                    'url' => $this->urlFor('displayGroup.command.form', ['id' => $display->displayGroupId]),
+                    'url' => $this->urlFor($request,'displayGroup.command.form', ['id' => $display->displayGroupId]),
                     'text' => __('Send Command')
                 );
 
@@ -768,11 +786,11 @@ class Display extends Base
 
                 $display->buttons[] = [
                     'id' => 'display_button_move_cms',
-                    'url' => $this->urlFor('display.moveCms.form', ['id' => $display->displayId]),
+                    'url' => $this->urlFor($request,'display.moveCms.form', ['id' => $display->displayId]),
                     'text' => __('Transfer to another CMS'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor('display.moveCms', ['id' => $display->displayId])],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'display.moveCms', ['id' => $display->displayId])],
                         ['name' => 'commit-method', 'value' => 'put'],
                         ['name' => 'id', 'value' => 'display_button_move_cms'],
                         ['name' => 'text', 'value' => __('Transfer to another CMS')],
@@ -786,6 +804,10 @@ class Display extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->displayFactory->countLast();
         $this->getState()->setData($displays);
+
+        $this->getLog()->debug('DISPLAYS BEFORE RENDER GET DATA ' . json_encode($this->getState()->getData()));
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -793,11 +815,11 @@ class Display extends Base
      * @param int $displayId
      * @throws \Xibo\Exception\XiboException
      */
-    function editForm($displayId)
+    function editForm(Request $request, Response $response, $id)
     {
-        $display = $this->displayFactory->getById($displayId, true);
+        $display = $this->displayFactory->getById($id, true);
 
-        if (!$this->getUser()->checkEditable($display))
+        if (!$this->getUser($request)->checkEditable($display))
             throw new AccessDeniedException();
 
         // We have permission - load
@@ -894,17 +916,19 @@ class Display extends Base
             'tags' => $tags,
             'dayParts' => $dayparts
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Delete form
      * @param int $displayId
      */
-    function deleteForm($displayId)
+    function deleteForm(Request $request, Response $response, $id)
     {
-        $display = $this->displayFactory->getById($displayId);
+        $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($display))
+        if (!$this->getUser($request)->checkDeleteable($display))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'display-form-delete';
@@ -912,6 +936,8 @@ class Display extends Base
             'display' => $display,
             'help' => $this->getHelp()->link('Display', 'Delete')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1088,37 +1114,38 @@ class Display extends Base
      *
      * @throws \Xibo\Exception\XiboException
      */
-    function edit($displayId)
+    function edit(Request $request, Response $response, $id)
     {
-        $display = $this->displayFactory->getById($displayId, true);
+        $display = $this->displayFactory->getById($id, true);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
 
         // Update properties
         if ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 0)
-            $display->display = $this->getSanitizer()->getString('display');
+            $display->display = $sanitizedParams->getString('display');
 
         $display->load();
 
-        $display->description = $this->getSanitizer()->getString('description');
-        $display->auditingUntil = $this->getSanitizer()->getDate('auditingUntil');
-        $display->defaultLayoutId = $this->getSanitizer()->getInt('defaultLayoutId');
-        $display->licensed = $this->getSanitizer()->getInt('licensed');
-        $display->license = $this->getSanitizer()->getString('license');
-        $display->incSchedule = $this->getSanitizer()->getInt('incSchedule');
-        $display->emailAlert = $this->getSanitizer()->getInt('emailAlert');
-        $display->alertTimeout = $this->getSanitizer()->getCheckbox('alertTimeout');
-        $display->wakeOnLanEnabled = $this->getSanitizer()->getCheckbox('wakeOnLanEnabled');
-        $display->wakeOnLanTime = $this->getSanitizer()->getString('wakeOnLanTime');
-        $display->broadCastAddress = $this->getSanitizer()->getString('broadCastAddress');
-        $display->secureOn = $this->getSanitizer()->getString('secureOn');
-        $display->cidr = $this->getSanitizer()->getString('cidr');
-        $display->latitude = $this->getSanitizer()->getDouble('latitude');
-        $display->longitude = $this->getSanitizer()->getDouble('longitude');
-        $display->timeZone = $this->getSanitizer()->getString('timeZone');
-        $display->displayProfileId = $this->getSanitizer()->getInt('displayProfileId');
-        $display->bandwidthLimit = $this->getSanitizer()->getInt('bandwidthLimit');
+        $display->description = $sanitizedParams->getString('description');
+        $display->auditingUntil = $sanitizedParams->getDate('auditingUntil');
+        $display->defaultLayoutId = $sanitizedParams->getInt('defaultLayoutId');
+        $display->licensed = $sanitizedParams->getInt('licensed');
+        $display->license = $sanitizedParams->getString('license');
+        $display->incSchedule = $sanitizedParams->getInt('incSchedule');
+        $display->emailAlert = $sanitizedParams->getInt('emailAlert');
+        $display->alertTimeout = $sanitizedParams->getCheckbox('alertTimeout');
+        $display->wakeOnLanEnabled = $sanitizedParams->getCheckbox('wakeOnLanEnabled');
+        $display->wakeOnLanTime = $sanitizedParams->getString('wakeOnLanTime');
+        $display->broadCastAddress = $sanitizedParams->getString('broadCastAddress');
+        $display->secureOn = $sanitizedParams->getString('secureOn');
+        $display->cidr = $sanitizedParams->getString('cidr');
+        $display->latitude = $sanitizedParams->getDouble('latitude');
+        $display->longitude = $sanitizedParams->getDouble('longitude');
+        $display->timeZone = $sanitizedParams->getString('timeZone');
+        $display->displayProfileId = $sanitizedParams->getInt('displayProfileId');
+        $display->bandwidthLimit = $sanitizedParams->getInt('bandwidthLimit');
 
 
         // Get the display profile and use that to pull in any overrides
@@ -1126,7 +1153,7 @@ class Display extends Base
         $display->overrideConfig = $this->editConfigFields($display->getDisplayProfile(), []);
 
         // Tags are stored on the displaygroup, we're just passing through here
-        $display->tags = $this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags'));
+        $display->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
 
         if ($display->auditingUntil !== null)
             $display->auditingUntil = $display->auditingUntil->format('U');
@@ -1134,13 +1161,13 @@ class Display extends Base
         // Should we invalidate this display?
         if ($display->hasPropertyChanged('defaultLayoutId')) {
             $display->notify();
-        } else if ($this->getSanitizer()->getCheckbox('clearCachedData', 1) == 1) {
+        } else if ($sanitizedParams->getCheckbox('clearCachedData',['default' => 1]) == 1) {
             // Remove the cache if the display licenced state has changed
             $this->pool->deleteItem($display->getCacheKey());
         }
 
         // Should we rekey?
-        if ($this->getSanitizer()->getCheckbox('rekeyXmr', 0) == 1) {
+        if ($sanitizedParams->getCheckbox('rekeyXmr', ['default' => 0]) == 1) {
             // Queue the rekey action first (before we clear the channel and key)
             $this->playerAction->sendAction($display, new RekeyAction());
 
@@ -1152,7 +1179,7 @@ class Display extends Base
         $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $display->save();
 
-        if ($this->isApi()) {
+        if ($this->isApi($request)) {
             $display->lastAccessed = $this->getDate()->getLocalDate($display->lastAccessed);
             $display->auditingUntil = ($display->auditingUntil == 0) ? 0 : $this->getDate()->getLocalDate($display->auditingUntil);
         }
@@ -1163,6 +1190,8 @@ class Display extends Base
             'id' => $display->displayId,
             'data' => $display
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1188,11 +1217,11 @@ class Display extends Base
      *  )
      * )
      */
-    function delete($displayId)
+    function delete(Request $request, Response $response, $id)
     {
-        $display = $this->displayFactory->getById($displayId);
+        $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($display))
+        if (!$this->getUser($request)->checkDeleteable($display))
             throw new AccessDeniedException();
 
         $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
@@ -1205,6 +1234,8 @@ class Display extends Base
             'id' => $display->displayId,
             'data' => $display
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1619,17 +1650,19 @@ class Display extends Base
      * @param $displayId
      * @throws NotFoundException
      */
-    public function authoriseForm($displayId)
+    public function authoriseForm(Request $request, Response $response, $id)
     {
-        $display = $this->displayFactory->getById($displayId);
+        $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($display))
+        if (!$this->getUser($request)->checkEditable($display))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'display-form-authorise';
         $this->getState()->setData([
             'display' => $display
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1656,11 +1689,11 @@ class Display extends Base
      * )
      * @throws XiboException
      */
-    public function toggleAuthorise($displayId)
+    public function toggleAuthorise(Request $request, Response $response, $id)
     {
-        $display = $this->displayFactory->getById($displayId);
+        $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($display))
+        if (!$this->getUser($request)->checkEditable($display))
             throw new AccessDeniedException();
 
         $display->licensed = ($display->licensed == 1) ? 0 : 1;
@@ -1671,17 +1704,19 @@ class Display extends Base
             'message' => sprintf(__('Authorised set to %d for %s'), $display->licensed, $display->display),
             'id' => $display->displayId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * @param $displayId
      * @throws NotFoundException
      */
-    public function defaultLayoutForm($displayId)
+    public function defaultLayoutForm(Request $request, Response $response, $id)
     {
-        $display = $this->displayFactory->getById($displayId);
+        $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($display))
+        if (!$this->getUser($request)->checkEditable($display))
             throw new AccessDeniedException();
 
         // Get the currently assigned default layout
@@ -1696,6 +1731,8 @@ class Display extends Base
             'display' => $display,
             'layouts' => $layouts
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1729,18 +1766,18 @@ class Display extends Base
      * )
      * @throws XiboException
      */
-    public function setDefaultLayout($displayId)
+    public function setDefaultLayout(Request $request, Response $response, $id)
     {
-        $display = $this->displayFactory->getById($displayId);
+        $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($display))
+        if (!$this->getUser($request)->checkEditable($display))
             throw new AccessDeniedException();
 
-        $layoutId = $this->getSanitizer()->getInt('layoutId');
+        $layoutId = $this->getSanitizer($request->getParams())->getInt('layoutId');
 
         $layout = $this->layoutFactory->getById($layoutId);
 
-        if (!$this->getUser()->checkViewable($layout))
+        if (!$this->getUser($request)->checkViewable($layout))
             throw new AccessDeniedException();
 
         $display->defaultLayoutId = $layoutId;
@@ -1753,6 +1790,8 @@ class Display extends Base
             'message' => sprintf(__('Default Layout with name %s set for %s'), $layout->layout, $display->display),
             'id' => $display->displayId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**

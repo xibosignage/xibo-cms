@@ -21,11 +21,16 @@
 
 
 namespace Xibo\Controller;
-use Slim\Slim;
+use Slim\App;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 use Xibo\Entity\User;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
+use Xibo\Helper\HttpsDetect;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\FactoryServiceInterface;
@@ -45,7 +50,7 @@ use Xibo\Service\SanitizerServiceInterface;
 class Base
 {
     /**
-     * @var Slim
+     * @var App
      */
     protected $app;
 
@@ -54,9 +59,7 @@ class Base
      */
     private $log;
 
-    /**
-     * @var SanitizerServiceInterface
-     */
+    /** @var  \Xibo\Helper\SanitizerService */
     private $sanitizerService;
 
     /**
@@ -102,12 +105,15 @@ class Base
      */
     private $noOutput = false;
 
+    /** @var Twig */
+    private $view;
+
     /**
      * Called by Slim when the Controller is instantiated from a route definition
-     * @param Slim $app
+     * @param \Slim\App $app
      * @param bool $setController
      * @return $this
-     */
+
     public function setApp($app, $setController = true)
     {
         $this->app = $app;
@@ -119,10 +125,10 @@ class Base
 
         return $this;
     }
-
+     */
     /**
      * Get the App
-     * @return Slim
+     * @return \Slim\App
      * @throws ConfigurationException
      */
     public function getApp()
@@ -136,15 +142,16 @@ class Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param \Xibo\Helper\SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
+     * @param Twig $view
      * @return $this
      */
-    protected function setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config)
+    protected function setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, Twig $view = null)
     {
         $this->log = $log;
         $this->sanitizerService = $sanitizerService;
@@ -153,6 +160,7 @@ class Base
         $this->helpService = $help;
         $this->dateService = $date;
         $this->configService = $config;
+        $this->view = $view;
 
         return $this;
     }
@@ -161,8 +169,12 @@ class Base
      * Get the Current User
      * @return \Xibo\Entity\User
      */
-    public function getUser()
+    public function getUser(Request $request = null)
     {
+        if (isset($request)) {
+            $this->user = $request->getAttribute('currentUser');
+        }
+
         return $this->user;
     }
 
@@ -185,12 +197,12 @@ class Base
     }
 
     /**
-     * Get Sanitizer
-     * @return SanitizerServiceInterface
+     * @param $array
+     * @return \Xibo\Support\Sanitizer\SanitizerInterface
      */
-    protected function getSanitizer()
+    protected function getSanitizer($array)
     {
-        return $this->sanitizerService;
+        return $this->sanitizerService->getSanitizer($array);
     }
 
     /**
@@ -222,22 +234,27 @@ class Base
 
     /**
      * Is this the Api?
+     * @param Request $request
      * @return bool
+     * @throws ConfigurationException
      */
-    protected function isApi()
+    protected function isApi(Request $request)
     {
-        return ($this->getApp()->getName() != 'web');
+        return ($request->getAttribute('name') == 'API');
     }
 
     /**
      * Get Url For Route
+     * @param Request $request
      * @param string $route
-     * @param array[mixed] $params
+     * @param array $data
+     * @param array $params
      * @return string
      */
-    protected function urlFor($route, $params = array())
+    protected function urlFor(Request $request, $route, $data = [], $params = [])
     {
-        return $this->getApp()->urlFor($route, $params);
+        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+        return $routeParser->urlFor($route, $data, $params);
     }
 
     /**
@@ -270,14 +287,26 @@ class Base
 
     /**
      * End the controller execution, calling render
+     * @param Request $request
+     * @param Response $response
+     * @param Twig $twig
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
      * @throws ControllerNotImplemented if the controller is not implemented correctly
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      */
-    public function render()
+    public function render(Request $request, Response $response)
     {
-        if ($this->rendered || $this->noOutput)
-            return;
+        $parsedBody = $this->getSanitizer($request->getParsedBody());
 
-        $app = $this->getApp();
+        // TODO not sure what to do with it yet  $this->rendered:o
+        if ($this->noOutput) {
+            return $response->withStatus(200);
+        }
+
+       // $app = $this->getApp();
 
         // State will contain the current ApplicationState, including a success flag that can be used to determine
         // if we are in error or not.
@@ -287,12 +316,13 @@ class Base
         // Grid requests require some extra info appended.
         // they can come from any application, hence being dealt with first
         $grid = ($state->template === 'grid');
+
         if ($grid) {
             $recordsTotal = ($state->recordsTotal == null) ? count($data) : $state->recordsTotal;
             $recordsFiltered = ($state->recordsFiltered == null) ? $recordsTotal : $state->recordsFiltered;
 
             $data = [
-                'draw' => intval($this->getSanitizer()->getInt('draw')),
+                'draw' => intval($parsedBody->getInt('draw')),
                 'recordsTotal' => $recordsTotal,
                 'recordsFiltered' => $recordsFiltered,
                 'data' => $data
@@ -300,35 +330,40 @@ class Base
         }
 
         // API Request
-        if ($this->isApi()) {
+        if ($this->isApi($request)) {
 
             // Envelope by default - the APIView will un-pack if necessary
-            $data = [
+            $this->getState()->setData( [
                 'grid' => $grid,
                 'success' => $state->success,
                 'status' => $state->httpStatus,
                 'message' => $state->message,
                 'id' => $state->id,
                 'data' => $data
-            ];
+            ]);
 
-            $this->getApp()->render('', $data, $state->httpStatus);
-        }
-        else if ($this->getApp()->request->isAjax()) {
+           // $this->getApp()->render('', $data, $state->httpStatus);
+            return $this->renderApiResponse($request, $response);
+        } else if ($request->isXhr()) {
             // WEB Ajax
-            $app->response()->header('Content-Type', 'application/json');
 
             // Are we a template that should be rendered to HTML
             // and then returned?
             if ($state->template != '' && $state->template != 'grid') {
-                $this->renderTwigAjaxReturn($data, $app, $state);
+                return $this->renderTwigAjaxReturn($request, $response);
             }
 
             // We always return 200's
             // TODO: we might want to change this (we'd need to change the javascript to suit)
-            $app->status(200);
+          //  $response->withStatus(200);
+            if ($grid) {
+                $json = $data;
+            } else {
+                // TODO might be better to remove json_encode in application state
+                $json = json_decode($state->asJson());
+            }
 
-            $app->response()->body(($grid) ? json_encode($data) : $state->asJson());
+           return $response->withJson($json, 200);
         }
         else {
             // WEB Normal
@@ -339,30 +374,33 @@ class Base
 
             // Append the side bar content
             $data['clock'] = $this->getDate()->getLocalDate(null, 'H:i T');
-            $data['currentUser'] = $this->getUser();
+            $data['currentUser'] = $this->getUser($request);
 
-            $app->render($state->template . '.twig', $data, $state->httpStatus);
+            $response = $this->view->render($response, $state->template . '.twig', $data);
         }
-
         $this->rendered = true;
+        return $response;
+
     }
 
     /**
      * Set the filter
      * @param array[Optional] $extraFilter
+     * @param Request $request
      * @return array
      */
-    protected function gridRenderFilter($extraFilter = [])
+    protected function gridRenderFilter($extraFilter = [], Request $request)
     {
         $app = $this->getApp();
 
+        $parsedFilter = $this->getSanitizer($request->getParams());
         // Handle filtering
         $filter = [
-            'start' => $this->getSanitizer()->getInt('start', 0),
-            'length' => $this->getSanitizer()->getInt('length', 10)
+            'start' => $parsedFilter->getInt('start', ['default' => 0]),
+            'length' => $parsedFilter->getInt('length', ['default' => 10])
         ];
 
-        $search = $app->request->get('search', array());
+        $search = $request->getParam('search', array());
         if (is_array($search) && isset($search['value'])) {
             $filter['search'] = $search['value'];
         }
@@ -378,40 +416,47 @@ class Base
 
     /**
      * Set the sort order
+     * @param Request $request
      * @return array
      */
-    protected function gridRenderSort()
+    protected function gridRenderSort(Request $request)
     {
         $app = $this->getApp();
 
         $columns = $app->request()->get('columns');
+        $columns = $request->getParam('columns');
 
         if ($columns == null || !is_array($columns))
             return null;
 
         $order = array_map(function ($element) use ($columns) {
             return ((isset($columns[$element['column']]['name']) && $columns[$element['column']]['name'] != '') ? '`' . $columns[$element['column']]['name'] . '`' : '`' . $columns[$element['column']]['data'] . '`') . (($element['dir'] == 'desc') ? ' DESC' : '');
-        }, $app->request()->get('order', array()));
+        },  $request->getParam('order', array()));
 
         return $order;
     }
 
     /**
-     * @param $data
-     * @param $app
-     * @param $state
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ControllerNotImplemented
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      */
-    public function renderTwigAjaxReturn($data, $app, $state)
+    public function renderTwigAjaxReturn(Request $request, Response $response)
     {
+        $data = $this->getState()->getData();
+        $state = $this->getState();
         // Supply the current user to the view
         $data['currentUser'] = $this->getUser();
 
         // Render the view manually with Twig, parse it and pull out various bits
-        $view = $app->view()->render($state->template . '.twig', $data);
-
+        $view = $this->view->render($response,$state->template . '.twig', $data);
+        $view = $view->getBody();
         // Log Rendered View
-        // $this->getLog()->debug('%s View: %s', $state->template, $view);
+         $this->getLog()->debug('%s View: %s', $state->template, $view);
 
         if (!$view = json_decode($view, true)) {
             $this->getLog()->error('Problem with Template: View = %s ', $state->template);
@@ -456,19 +501,127 @@ class Base
             // Convert to an array
             $state->fieldActions = json_decode($view['fieldActions']);
         }
+
+        $json = json_decode($state->asJson());
+        return $response->withJson($json, 200);
     }
 
     /**
      * Render a template to string
      * @param string $template
      * @param array $data
+     * @param Response $response
      * @return string
-     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      */
-    public function renderTemplateToString($template, $data)
+    public function renderTemplateToString($template, $data, Response $response)
     {
-        /** @var Twig $view */
-        $view = $this->getApp()->view();
-        return $view->render($template . '.twig', $data);
+        return $this->view->render($response, $template . '.twig', $data);
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     */
+    public function renderApiResponse(Request $request, Response $response)
+    {
+        // JSONP Callback?
+        $jsonPCallback = $request->getParam('callback', null);
+        $data = $this->getState()->getData();
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        // Don't envelope unless requested
+        if ($jsonPCallback != null ||  $request->getParam('envelope', 0) == 1) {
+            // Envelope
+
+            // append error bool
+            if (!$data['success']) {
+                $data['success'] = false;
+            }
+
+            // append status code
+            $data['status'] = $response->getStatusCode();
+/* TODO
+            // add flash messages
+            if (isset($this->data->flash) && is_object($this->data->flash)){
+                $flash = $this->data->flash->getMessages();
+                if (count($flash)) {
+                    $response['flash'] = $flash;
+                } else {
+                    unset($response['flash']);
+                }
+            }
+*/
+            // Enveloped responses always return 200
+           $response->withStatus(200);
+        } else {
+            // Don't envelope
+            // Set status
+            $response->withStatus($data['status']);
+
+            // Are we successful?
+            if (!$data['success']) {
+                // Error condition
+                $data = [
+                    'error' => [
+                        'message' => $data['message'],
+                        'code' => $data['status'],
+                        'data' => $data['data']
+                    ]
+                ];
+            }
+            else {
+                // Are we a grid?
+                if ($data['grid'] == true) {
+                    // Set the response to our data['data'] object
+                    $grid = $data['data'];
+                    $data = $grid['data'];
+
+                    // Total Number of Rows
+                    $totalRows = $grid['recordsTotal'];
+
+                    // Set some headers indicating our next/previous pages
+                    $start = $sanitizedParams->getInt('start', ['default' => 0]);
+                    $size = $sanitizedParams->getInt('length', ['default' => 10]);
+
+                    $linkHeader = '';
+                    $url = (new HttpsDetect())->getUrl() . $request->getUri()->getPath();
+
+                    // Is there a next page?
+                    if ($start + $size < $totalRows) {
+                        $linkHeader .= '<' . $url . '?start=' . ($start + $size) . '&length=' . $size . '>; rel="next", ';
+                    }
+
+                    // Is there a previous page?
+                    if ($start > 0) {
+                        $linkHeader .= '<' . $url . '?start=' . ($start - $size) . '&length=' . $size . '>; rel="prev", ';
+                    }
+
+                    // The first page
+                    $linkHeader .= '<' . $url . '?start=0&length=' . $size . '>; rel="first"';
+
+                    $response->withHeader('X-Total-Count', $totalRows);
+                    $response->withHeader('Link', $linkHeader);
+                } else {
+                    // Set the response to our data object
+                    $data = $data['data'];
+                }
+            }
+        }
+
+        // JSON header
+        /**
+        if ($jsonPCallback !== null) {
+            $app->response()->body($jsonPCallback.'('.json_encode($response).')');
+        } else {
+            $app->response()->body(json_encode($response, JSON_PRETTY_PRINT));
+        }
+        */
+
+        return $response->withJson($data);
+
     }
 }

@@ -20,6 +20,9 @@
  */
 namespace Xibo\Controller;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Entity\Display;
 use Xibo\Entity\Media;
 use Xibo\Exception\AccessDeniedException;
@@ -36,6 +39,7 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -106,7 +110,7 @@ class DisplayGroup extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -123,9 +127,9 @@ class DisplayGroup extends Base
      * @param TagFactory $tagFactory
      * @param CampaignFactory $campaignFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $moduleFactory, $mediaFactory, $commandFactory, $scheduleFactory, $tagFactory, $campaignFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $moduleFactory, $mediaFactory, $commandFactory, $scheduleFactory, $tagFactory, $campaignFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->playerAction = $playerAction;
         $this->displayFactory = $displayFactory;
@@ -142,9 +146,11 @@ class DisplayGroup extends Base
     /**
      * Display Group Page Render
      */
-    public function displayPage()
+    public function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'displaygroup-page';
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -217,48 +223,50 @@ class DisplayGroup extends Base
      *  )
      * )
      */
-    public function grid()
+    public function grid(Request $request, Response $response)
     {
+        $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
+
         $filter = [
-            'displayGroupId' => $this->getSanitizer()->getInt('displayGroupId'),
-            'displayGroup' => $this->getSanitizer()->getString('displayGroup'),
-            'displayId' => $this->getSanitizer()->getInt('displayId'),
-            'nestedDisplayId' => $this->getSanitizer()->getInt('nestedDisplayId'),
-            'dynamicCriteria' => $this->getSanitizer()->getString('dynamicCriteria'),
-            'tags' => $this->getSanitizer()->getString('tags'),
-            'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
-            'isDisplaySpecific' => $this->getSanitizer()->getInt('isDisplaySpecific'),
-            'displayGroupIdMembers' => $this->getSanitizer()->getInt('displayGroupIdMembers'),
-            'userId' => $this->getSanitizer()->getInt('userId')
+            'displayGroupId' => $parsedQueryParams->getInt('displayGroupId'),
+            'displayGroup' => $parsedQueryParams->getString('displayGroup'),
+            'displayId' => $parsedQueryParams->getInt('displayId'),
+            'nestedDisplayId' => $parsedQueryParams->getInt('nestedDisplayId'),
+            'dynamicCriteria' => $parsedQueryParams->getString('dynamicCriteria'),
+            'tags' => $parsedQueryParams->getString('tags'),
+            'exactTags' => $parsedQueryParams->getCheckbox('exactTags'),
+            'isDisplaySpecific' => $parsedQueryParams->getInt('isDisplaySpecific'),
+            'displayGroupIdMembers' => $parsedQueryParams->getInt('displayGroupIdMembers'),
+            'userId' => $parsedQueryParams->getInt('userId')
         ];
 
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
 
-        $displayGroups = $this->displayGroupFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $displayGroups = $this->displayGroupFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request), $request);
 
         foreach ($displayGroups as $group) {
             /* @var \Xibo\Entity\DisplayGroup $group */
 
             // Check to see if we're getting this data for a Schedule attempt, or for a general list
-            if ($this->getSanitizer()->getCheckbox('forSchedule') == 1) {
+            if ($parsedQueryParams->getCheckbox('forSchedule') == 1) {
                 // Can't schedule with view, but no edit permissions
                 if (!$scheduleWithView && !$this->getUser()->checkEditable($group))
                     continue;
             }
 
-            if ($this->isApi())
+            if ($this->isApi($request))
                 continue;
 
             $group->includeProperty('buttons');
 
-            if ($this->getUser()->checkEditable($group)) {
+            if ($this->getUser($request)->checkEditable($group)) {
                 // Show the edit button, members button
 
                 if ($group->isDynamic == 0) {
                     // Group Members
                     $group->buttons[] = array(
                         'id' => 'displaygroup_button_group_members',
-                        'url' => $this->urlFor('displayGroup.members.form', ['id' => $group->displayGroupId]),
+                        'url' => $this->urlFor($request,'displayGroup.members.form', ['id' => $group->displayGroupId]),
                         'text' => __('Members')
                     );
 
@@ -268,26 +276,26 @@ class DisplayGroup extends Base
                 // Edit
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_edit',
-                    'url' => $this->urlFor('displayGroup.edit.form', ['id' => $group->displayGroupId]),
+                    'url' => $this->urlFor($request,'displayGroup.edit.form', ['id' => $group->displayGroupId]),
                     'text' => __('Edit')
                 );
 
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_copy',
-                    'url' => $this->urlFor('displayGroup.copy.form', ['id' => $group->displayGroupId]),
+                    'url' => $this->urlFor($request,'displayGroup.copy.form', ['id' => $group->displayGroupId]),
                     'text' => __('Copy')
                 );
             }
 
-            if ($this->getUser()->checkDeleteable($group)) {
+            if ($this->getUser($request)->checkDeleteable($group)) {
                 // Show the delete button
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_delete',
-                    'url' => $this->urlFor('displayGroup.delete.form', ['id' => $group->displayGroupId]),
+                    'url' => $this->urlFor($request,'displayGroup.delete.form', ['id' => $group->displayGroupId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor('displayGroup.delete', ['id' => $group->displayGroupId])),
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.delete', ['id' => $group->displayGroupId])),
                         array('name' => 'commit-method', 'value' => 'delete'),
                         array('name' => 'id', 'value' => 'displaygroup_button_delete'),
                         array('name' => 'text', 'value' => __('Delete')),
@@ -300,43 +308,43 @@ class DisplayGroup extends Base
 
             $group->buttons[] = ['divider' => true];
 
-            if ($this->getUser()->checkEditable($group)) {
+            if ($this->getUser($request)->checkEditable($group)) {
                 // File Associations
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_fileassociations',
-                    'url' => $this->urlFor('displayGroup.media.form', ['id' => $group->displayGroupId]),
+                    'url' => $this->urlFor($request,'displayGroup.media.form', ['id' => $group->displayGroupId]),
                     'text' => __('Assign Files')
                 );
 
                 // Layout Assignments
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_layout_associations',
-                    'url' => $this->urlFor('displayGroup.layout.form', ['id' => $group->displayGroupId]),
+                    'url' => $this->urlFor($request,'displayGroup.layout.form', ['id' => $group->displayGroupId]),
                     'text' => __('Assign Layouts')
                 );
             }
 
-            if ($this->getUser()->checkPermissionsModifyable($group)) {
+            if ($this->getUser($request)->checkPermissionsModifyable($group)) {
                 // Show the modify permissions button
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_permissions',
-                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId]),
+                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId]),
                     'text' => __('Permissions')
                 );
             }
 
-            if ($this->getUser()->checkEditable($group)) {
+            if ($this->getUser($request)->checkEditable($group)) {
                 $group->buttons[] = ['divider' => true];
 
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_command',
-                    'url' => $this->urlFor('displayGroup.command.form', ['id' => $group->displayGroupId]),
+                    'url' => $this->urlFor($request,'displayGroup.command.form', ['id' => $group->displayGroupId]),
                     'text' => __('Send Command')
                 );
 
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_collectNow',
-                    'url' => $this->urlFor('displayGroup.collectNow.form', ['id' => $group->displayGroupId]),
+                    'url' => $this->urlFor($request,'displayGroup.collectNow.form', ['id' => $group->displayGroupId]),
                     'text' => __('Collect Now')
                 );
             }
@@ -345,28 +353,32 @@ class DisplayGroup extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->displayGroupFactory->countLast();
         $this->getState()->setData($displayGroups);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Shows an add form for a display group
      */
-    public function addForm()
+    public function addForm(Request $request, Response $response)
     {
         $this->getState()->template = 'displaygroup-form-add';
         $this->getState()->setData([
             'help' => $this->getHelp()->link('DisplayGroup', 'Add')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Shows an edit form for a display group
      * @param int $displayGroupId
      */
-    public function editForm($displayGroupId)
+    public function editForm(Request $request, Response $response, $id)
     {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser($request)->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
         $tags = '';
@@ -389,17 +401,19 @@ class DisplayGroup extends Base
             'help' => $this->getHelp()->link('DisplayGroup', 'Edit'),
             'tags' => $tags
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Shows the Delete Group Form
      * @param int $displayGroupId
      */
-    function deleteForm($displayGroupId)
+    function deleteForm(Request $request, Response $response, $id)
     {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($displayGroup))
+        if (!$this->getUser($request)->checkDeleteable($displayGroup))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'displaygroup-form-delete';
@@ -407,15 +421,17 @@ class DisplayGroup extends Base
             'displayGroup' => $displayGroup,
             'help' => $this->getHelp()->link('DisplayGroup', 'Delete')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Display Group Members form
      * @param int $displayGroupId
      */
-    public function membersForm($displayGroupId)
+    public function membersForm(Request $request, Response $response, $args)
     {
-        
+        $displayGroupId = $args['displayGroupId'];
         $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
         if (!$this->getUser()->checkEditable($displayGroup))
@@ -436,6 +452,8 @@ class DisplayGroup extends Base
             'tree' => $this->displayGroupFactory->getRelationShipTree($displayGroupId),
             'help' => $this->getHelp()->link('DisplayGroup', 'Members')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -493,19 +511,20 @@ class DisplayGroup extends Base
      *  )
      * )
      */
-    public function add()
+    public function add(Request $request, Response $response)
     {
         $displayGroup = $this->displayGroupFactory->createEmpty();
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $displayGroup->displayGroup = $this->getSanitizer()->getString('displayGroup');
-        $displayGroup->description = $this->getSanitizer()->getString('description');
-        $displayGroup->tags = $this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags'));
-        $displayGroup->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');
-        $displayGroup->dynamicCriteria = $this->getSanitizer()->getString('dynamicCriteria');
-        $displayGroup->dynamicCriteriaTags = $this->getSanitizer()->getString('dynamicCriteriaTags');
+        $displayGroup->displayGroup = $sanitizedParams->getString('displayGroup');
+        $displayGroup->description = $sanitizedParams->getString('description');
+        $displayGroup->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+        $displayGroup->isDynamic = $sanitizedParams->getCheckbox('isDynamic');
+        $displayGroup->dynamicCriteria = $sanitizedParams->getString('dynamicCriteria');
+        $displayGroup->dynamicCriteriaTags = $sanitizedParams->getString('dynamicCriteriaTags');
 
-        $displayGroup->userId = $this->getUser()->userId;
+        $displayGroup->userId = $this->getUser($request)->userId;
         $displayGroup->save();
 
         // Return
@@ -515,6 +534,8 @@ class DisplayGroup extends Base
             'id' => $displayGroup->displayGroupId,
             'data' => $displayGroup
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -579,20 +600,21 @@ class DisplayGroup extends Base
      *  )
      * )
      */
-    public function edit($displayGroupId)
+    public function edit(Request $request,Response $response, $id)
     {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
+        $parsedRequestParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser($request)->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-        $displayGroup->displayGroup = $this->getSanitizer()->getString('displayGroup');
-        $displayGroup->description = $this->getSanitizer()->getString('description');
-        $displayGroup->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
-        $displayGroup->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');
-        $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1) ? $this->getSanitizer()->getString('dynamicCriteria') : null;
-        $displayGroup->dynamicCriteriaTags = ($displayGroup->isDynamic == 1) ? $this->getSanitizer()->getString('dynamicCriteriaTags') : null;
+        $displayGroup->displayGroup = $parsedRequestParams->getString('displayGroup');
+        $displayGroup->description = $parsedRequestParams->getString('description');
+        $displayGroup->replaceTags($this->tagFactory->tagsFromString($parsedRequestParams->getString('tags')));
+        $displayGroup->isDynamic = $parsedRequestParams->getCheckbox('isDynamic');
+        $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteria') : null;
+        $displayGroup->dynamicCriteriaTags = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteriaTags') : null;
 
         $displayGroup->save();
 
@@ -602,6 +624,8 @@ class DisplayGroup extends Base
             'id' => $displayGroup->displayGroupId,
             'data' => $displayGroup
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -629,12 +653,12 @@ class DisplayGroup extends Base
      *  )
      * )
      */
-    function delete($displayGroupId)
+    function delete(Request $request, Response $response, $id)
     {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
-        if (!$this->getUser()->checkDeleteable($displayGroup))
+        if (!$this->getUser($request)->checkDeleteable($displayGroup))
             throw new AccessDeniedException();
 
         $displayGroup->delete();
@@ -644,6 +668,8 @@ class DisplayGroup extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $displayGroup->displayGroup)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**

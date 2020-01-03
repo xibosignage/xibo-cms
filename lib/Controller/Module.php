@@ -21,6 +21,9 @@
  */
 namespace Xibo\Controller;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Event\WidgetAddEvent;
@@ -45,6 +48,7 @@ use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetAudioFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -126,7 +130,7 @@ class Module extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -147,9 +151,9 @@ class Module extends Base
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $moduleFactory, $playlistFactory, $mediaFactory, $permissionFactory, $userGroupFactory, $widgetFactory, $transitionFactory, $regionFactory, $layoutFactory, $displayGroupFactory, $widgetAudioFactory, $displayFactory, $scheduleFactory, $dataSetFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $moduleFactory, $playlistFactory, $mediaFactory, $permissionFactory, $userGroupFactory, $widgetFactory, $transitionFactory, $regionFactory, $layoutFactory, $displayGroupFactory, $widgetAudioFactory, $displayFactory, $scheduleFactory, $dataSetFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->store = $store;
         $this->moduleFactory = $moduleFactory;
@@ -171,32 +175,36 @@ class Module extends Base
     /**
      * Display the module page
      */
-    function displayPage()
+    function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'module-page';
         $this->getState()->setData([
             'modulesToInstall' => $this->getInstallableModules()
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * A grid of modules
      * @throws XiboException
      */
-    public function grid()
+    public function grid(Request $request, Response $response)
     {
+        $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
+
         $filter = [
-            'name' => $this->getSanitizer()->getString('name'),
-            'extension' => $this->getSanitizer()->getString('extension'),
-            'moduleId' => $this->getSanitizer()->getInt('moduleId')
+            'name' => $parsedQueryParams->getString('name'),
+            'extension' => $parsedQueryParams->getString('extension'),
+            'moduleId' => $parsedQueryParams->getInt('moduleId')
         ];
 
-        $modules = $this->moduleFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $modules = $this->moduleFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
 
         foreach ($modules as $module) {
             /* @var \Xibo\Entity\Module $module */
 
-            if ($this->isApi())
+            if ($this->isApi($request))
                 break;
 
             $module->includeProperty('buttons');
@@ -204,7 +212,7 @@ class Module extends Base
             // Edit button
             $module->buttons[] = array(
                 'id' => 'module_button_edit',
-                'url' => $this->urlFor('module.settings.form', ['id' => $module->moduleId]),
+                'url' => $this->urlFor($request,'module.settings.form', ['id' => $module->moduleId]),
                 'text' => __('Edit')
             );
 
@@ -212,7 +220,7 @@ class Module extends Base
             if ($module->regionSpecific == 1) {
                 $module->buttons[] = array(
                     'id' => 'module_button_clear_cache',
-                    'url' => $this->urlFor('module.clear.cache.form', ['id' => $module->moduleId]),
+                    'url' => $this->urlFor($request,'module.clear.cache.form', ['id' => $module->moduleId]),
                     'text' => __('Clear Cache')
                 );
             }
@@ -230,6 +238,8 @@ class Module extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->moduleFactory->countLast();
         $this->getState()->setData($modules);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -237,15 +247,15 @@ class Module extends Base
      * @param int $moduleId
      * @throws XiboException
      */
-    public function settingsForm($moduleId)
+    public function settingsForm(Request $request, Response $response, $id)
     {
         // Can we edit?
         $moduleConfigLocked = ($this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 1 || $this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked');
 
-        if (!$this->getUser()->userTypeId == 1)
+        if (!$this->getUser($request)->userTypeId == 1)
             throw new AccessDeniedException();
 
-        $module = $this->moduleFactory->createById($moduleId);
+        $module = $this->moduleFactory->createById($id);
 
         $moduleFields = $module->settingsForm();
 
@@ -256,6 +266,8 @@ class Module extends Base
             'module' => $module,
             'help' => $this->getHelp()->link('Module', 'Edit')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -263,19 +275,22 @@ class Module extends Base
      * @param int $moduleId
      * @throws XiboException
      */
-    public function settings($moduleId)
+    public function settings(Request $request, Response $response, $id)
     {
         // Can we edit?
         $moduleConfigLocked = ($this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 1 || $this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked');
 
-        if (!$this->getUser()->userTypeId == 1)
+
+        $sanitizedPrams = $this->getSanitizer($request->getParams());
+
+        if (!$this->getUser($request)->userTypeId == 1)
             throw new AccessDeniedException();
 
-        $module = $this->moduleFactory->createById($moduleId);
-        $module->getModule()->defaultDuration = $this->getSanitizer()->getInt('defaultDuration');
-        $module->getModule()->validExtensions = $this->getSanitizer()->getString('validExtensions');
-        $module->getModule()->enabled = $this->getSanitizer()->getCheckbox('enabled');
-        $module->getModule()->previewEnabled = $this->getSanitizer()->getCheckbox('previewEnabled');
+        $module = $this->moduleFactory->createById($id);
+        $module->getModule()->defaultDuration = $sanitizedPrams->getInt('defaultDuration');
+        $module->getModule()->validExtensions = $sanitizedPrams->getString('validExtensions');
+        $module->getModule()->enabled = $sanitizedPrams->getCheckbox('enabled');
+        $module->getModule()->previewEnabled = $sanitizedPrams->getCheckbox('previewEnabled');
 
         // Install Files for this module
         $module->installFiles();
@@ -292,43 +307,50 @@ class Module extends Base
             'id' => $module->getModule()->moduleId,
             'data' => $module->getModule()
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Verify
      */
-    public function verifyForm()
+    public function verifyForm(Request $request, Response $response)
     {
         // Pass to view
         $this->getState()->template = 'module-form-verify';
         $this->getState()->setData([
             'help' => $this->getHelp()->link('Module', 'Edit')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Verify Module
      * @throws \Exception
      */
-    public function verify()
+    public function verify(Request $request, Response $response)
     {
         // Set all files to valid = 0
         $this->store->update('UPDATE `media` SET valid = 0 WHERE moduleSystemFile = 1', []);
 
         // Install all files
-        $this->getApp()->container->get('\Xibo\Controller\Library')->installAllModuleFiles();
+        /** @var Library $library */
+        $library->installAllModuleFiles();
 
         // Successful
         $this->getState()->hydrate([
             'message' => __('Verified')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Form for the install list
      * @throws XiboException
      */
-    public function installListForm()
+    public function installListForm(Request $request, Response $response)
     {
         // Use the name to get details about this module.
         $modules = $this->getInstallableModules();
@@ -341,13 +363,15 @@ class Module extends Base
             'modulesToInstall' => $modules,
             'help' => $this->getHelp()->link('Module', 'Install')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * @param string $name
      * @throws InvalidArgumentException
      */
-    public function installForm($name)
+    public function installForm(Request $request,Response $response, $name)
     {
         // Check the module hasn't already been installed
         if ($this->checkModuleInstalled($name))
@@ -367,6 +391,8 @@ class Module extends Base
             'module' => $module,
             'help' => $this->getHelp()->link('Module', 'Install')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -374,7 +400,7 @@ class Module extends Base
      * @param string $name
      * @throws XiboException
      */
-    public function install($name)
+    public function install(Request $request,Response $response, $name)
     {
         $this->getLog()->notice('Request to install Module: ' . $name);
 
@@ -401,6 +427,8 @@ class Module extends Base
             'message' => sprintf(__('Installed %s'), $module->getModuleType()),
             'data' => $module
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -409,24 +437,26 @@ class Module extends Base
      * @param int $playlistId
      * @throws XiboException
      */
-    public function addWidgetForm($type, $playlistId)
+    public function addWidgetForm(Request $request, Response $response, $type, $id)
     {
-        $playlist = $this->playlistFactory->getById($playlistId);
+        $playlist = $this->playlistFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($playlist))
+        if (!$this->getUser($request)->checkEditable($playlist))
             throw new AccessDeniedException();
 
         // Create a module to use
-        $module = $this->moduleFactory->createForWidget($type, null, $this->getUser()->userId, $playlistId);
+        $module = $this->moduleFactory->createForWidget($type, null, $this->getUser($request)->userId, $id);
 
         $this->getLog()->debug('Module created, passing back to Twig');
 
         // Pass to view
-        $this->getState()->template = $module->addForm();
+        $this->getState()->template = $module->addForm($request, $response);
         $this->getState()->setData($module->setTemplateData([
             'playlist' => $playlist,
             'module' => $module
         ]));
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -468,11 +498,11 @@ class Module extends Base
      * @param int $playlistId
      * @throws XiboException
      */
-    public function addWidget($type, $playlistId)
+    public function addWidget(Request $request, Response $response,$type, $id)
     {
-        $playlist = $this->playlistFactory->getById($playlistId);
+        $playlist = $this->playlistFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($playlist))
+        if (!$this->getUser($request)->checkEditable($playlist))
             throw new AccessDeniedException();
 
         // Check we have a permission factory
@@ -491,10 +521,10 @@ class Module extends Base
         ]);
 
         // Create a module to use
-        $module = $this->moduleFactory->createForWidget($type, null, $this->getUser()->userId, $playlistId);
+        $module = $this->moduleFactory->createForWidget($type, null, $this->getUser($request)->userId, $id);
 
         // Inject the Current User
-        $module->setUser($this->getUser());
+        $module->setUser($this->getUser($request));
 
         // Check that we can call `add()` directly on this module
         if ($module->getModule()->regionSpecific != 1) {
@@ -529,6 +559,8 @@ class Module extends Base
             'id' => $module->widget->widgetId,
             'data' => $module->widget
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -536,11 +568,11 @@ class Module extends Base
      * @param int $widgetId
      * @throws XiboException
      */
-    public function editWidgetForm($widgetId)
+    public function editWidgetForm(Request $request, Response $response, $id)
     {
-        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId));
+        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
-        if (!$this->getUser()->checkEditable($module->widget))
+        if (!$this->getUser($request)->checkEditable($module->widget))
             throw new AccessDeniedException();
 
         // Media file?
@@ -554,12 +586,14 @@ class Module extends Base
         }
 
         // Pass to view
-        $this->getState()->template = $module->editForm();
+        $this->getState()->template = $module->editForm($request, $response);
         $this->getState()->setData($module->setTemplateData([
             'module' => $module,
             'media' => $media,
             'validExtensions' => str_replace(',', '|', $module->getModule()->validExtensions)
         ]));
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -568,11 +602,11 @@ class Module extends Base
      * @param int $widgetId
      * @throws XiboException
      */
-    public function editWidget($widgetId)
+    public function editWidget(Request $request, Response $response, $id)
     {
-        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId));
+        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
-        if (!$this->getUser()->checkEditable($module->widget))
+        if (!$this->getUser($request)->checkEditable($module->widget))
             throw new AccessDeniedException();
 
         // Test to see if we are on a Region Specific Playlist or a standalone
@@ -583,13 +617,13 @@ class Module extends Base
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
 
         // Inject the Current User
-        $module->setUser($this->getUser());
+        $module->setUser($this->getUser($request));
 
         // Set an event to be called when we save this module
         $module->setSaveEvent(new WidgetEditEvent($module));
 
         // Call Module Edit
-        $module->edit();
+        $module->edit($request, $response, $id);
 
         // Successful
         $this->getState()->hydrate([
@@ -597,6 +631,8 @@ class Module extends Base
             'id' => $module->widget->widgetId,
             'data' => $module->widget
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -604,11 +640,11 @@ class Module extends Base
      * @param int $widgetId
      * @throws XiboException
      */
-    public function deleteWidgetForm($widgetId)
+    public function deleteWidgetForm(Request $request, Response $response, $id)
     {
-        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId));
+        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
-        if (!$this->getUser()->checkDeleteable($module->widget))
+        if (!$this->getUser($request)->checkDeleteable($module->widget))
             throw new AccessDeniedException();
 
         // Set some dependencies that are used in the delete
@@ -620,6 +656,8 @@ class Module extends Base
             'module' => $module,
             'help' => $this->getHelp()->link('Media', 'Delete')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -646,11 +684,11 @@ class Module extends Base
      * @param int $widgetId
      * @throws XiboException
      */
-    public function deleteWidget($widgetId)
+    public function deleteWidget(Request $request, Response $response, $id)
     {
-        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId));
+        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
-        if (!$this->getUser()->checkDeleteable($module->widget))
+        if (!$this->getUser($request)->checkDeleteable($module->widget))
             throw new AccessDeniedException();
 
         // Test to see if we are on a Region Specific Playlist or a standalone
@@ -667,16 +705,16 @@ class Module extends Base
         $widgetMedia = $module->widget->mediaIds;
 
         // Inject the Current User
-        $module->setUser($this->getUser());
+        $module->setUser($this->getUser($request));
 
         // Call Module Delete
-        $module->delete();
+        $module->delete($request, $response, $id);
 
         // Call Widget Delete
         $module->widget->delete();
 
          // Delete Media?
-        if ($this->getSanitizer()->getInt('deleteMedia', 0) == 1) {
+        if ($request->getParam('deleteMedia', 0) == 1) {
             foreach ($widgetMedia as $mediaId) {
                 $media = $this->mediaFactory->getById($mediaId);
 
@@ -693,6 +731,8 @@ class Module extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Deleted %s'), $moduleName)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1062,25 +1102,28 @@ class Module extends Base
      * @param $widgetId
      * @throws XiboException
      */
-    public function getResource($regionId, $widgetId)
+    public function getResource(Request $request, Response $response)
     {
+        $widgetId = $request->getAttribute('widgetId');
+        $regionId = $request->getAttribute('regionId');
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId), $this->regionFactory->getById($regionId));
 
-        if (!$this->getUser()->checkViewable($module->widget))
+        if (!$this->getUser($request)->checkViewable($module->widget))
             throw new AccessDeniedException();
 
         // Call module GetResource
-        $module->setUser($this->getUser());
+        $module->setUser($this->getUser($request));
 
         if ($module->getModule()->regionSpecific == 0) {
             // Non region specific module - no caching required as this is only ever called via preview.
-            echo $module->getResource(0);
+            echo $module->getResource($request, $response);
         } else {
             // Region-specific module, need to handle caching and locking.
-            echo $module->getResourceOrCache(0);
+            echo $module->getResourceOrCache($request, $response);
         }
 
         $this->setNoOutput(true);
+        return $this->render($request, $response);
     }
 
     /**
