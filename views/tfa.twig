@@ -52,7 +52,7 @@
 </head>
 <body>
 <div class="container">
-        <form id="login-form" class="form-signin text-center" action="{{ urlFor("tfa.auth.validate") }}" method="post">
+        <form id="login-form" class="form-signin text-center" action="{{ url_for("tfa.auth.validate") }}" method="post">
             <input name="priorRoute" type="hidden" value="{{ flash.priorRoute }}" />
             <input type="hidden" name="{{ csrfKey }}" value="{{ csrfToken }}" />
             <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ theme.uri("img/xibologo.png") }}"></a></p>
@@ -69,7 +69,7 @@
             <p><a href="#" id="recovery-form-toggle">{% trans "Use Recovery Code instead?" %}</a></p>
         </form>
 
-    <form id="recovery-form" class="form-signin text-center hidden" action="{{ urlFor("tfa.auth.validate") }}" method="post">
+    <form id="recovery-form" class="form-signin text-center hidden" action="{{ url_for("tfa.auth.validate") }}" method="post">
         <input type="hidden" name="{{ csrfKey }}" value="{{ csrfToken }}" />
         <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ theme.uri("img/xibologo.png") }}"></a></p>
 

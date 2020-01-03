@@ -12,9 +12,9 @@
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         {% if modulesToInstall|length > 0 %}
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Modules available to Install" %}" href="{{ urlFor("module.install.list.form") }}"><i class="fa fa-upload" aria-hidden="true"></i> {% trans "Install Module" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Modules available to Install" %}" href="{{ url_for("module.install.list.form") }}"><i class="fa fa-upload" aria-hidden="true"></i> {% trans "Install Module" %}</a></li>
         {% endif %}
-        <li class="btn btn-info btn-xs"><a class="XiboFormButton btns" title="{% trans "Verify all modules have been installed correctly." %}" href="{{ urlFor("module.verify.form") }}"><i class="fa fa-check-circle" aria-hidden="true"></i> {% trans "Verify All" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="XiboFormButton btns" title="{% trans "Verify all modules have been installed correctly." %}" href="{{ url_for("module.verify.form") }}"><i class="fa fa-check-circle" aria-hidden="true"></i> {% trans "Verify All" %}</a></li>
         <li class="btn btn-warning btn-xs"><a class="btns" id="refreshGrid" title="{% trans "Refresh" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
     </ul>
 {% endblock %}
@@ -65,7 +65,7 @@
                 $.ajax({
                     type: "GET",
                     async: false,
-                    url: "{{ urlFor("user.pref") }}?preference=moduleGrid",
+                    url: "{{ url_for("user.pref") }}?preference=moduleGrid",
                     dataType: 'json',
                     success: function (json) {
                         try {
@@ -82,7 +82,7 @@
             stateSaveCallback: function (settings, data) {
                 $.ajax({
                     type: "POST",
-                    url: "{{ urlFor("user.pref") }}",
+                    url: "{{ url_for("user.pref") }}",
                     data: {
                         preference: [{
                             option: "moduleGrid",
@@ -95,7 +95,7 @@
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
             ajax: {
-                "url": "{{ urlFor("module.search") }}",
+                "url": "{{ url_for("module.search") }}",
                 "data": function(d) {
                     $.extend(d, $("#modules").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                 }

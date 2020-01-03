@@ -123,7 +123,7 @@
                 <li><a href="#orderCriteria" role="tab" data-toggle="tab"><span>{% trans "Order" %}</span></a></li>
                 <li><a href="#filterCriteria" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
             </ul>
-            <form id="dataSetRssEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("dataSet.rss.edit", {id: dataSet.dataSetId, rssId: feed.id}) }}">
+            <form id="dataSetRssEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("dataSet.rss.edit", {id: dataSet.dataSetId, rssId: feed.id}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Title" %}{% endset %}

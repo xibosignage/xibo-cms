@@ -37,7 +37,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="mediaSetEnableStatForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("library.setenablestat", {input: "enableStat", id: media.mediaId}) }}">
+            <form id="mediaSetEnableStatForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("library.setenablestat", {input: "enableStat", id: media.mediaId}) }}">
                 {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
                 {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Media Item." %}{% endset %}
 

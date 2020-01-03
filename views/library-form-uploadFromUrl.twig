@@ -31,13 +31,13 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#libraryUploadFromUrlForm").submit()
+    {% trans "Save" %}, $("#libraryUploadFromurl_form").submit()
 {% endblock %}
 
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="libraryUploadFromUrlForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("library.uploadFromUrl") }}">
+            <form id="libraryUploadFromurl_form" class="XiboForm form-horizontal" method="post" action="{{ url_for("library.uploadFromUrl") }}">
                 <div class="well">
                     {{ uploadSizeMessage }}
                 </div>

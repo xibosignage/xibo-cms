@@ -22,7 +22,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="playlistCopyForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("playlist.copy", {id: playlist.playlistId}) }}")>
+            <form id="playlistCopyForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("playlist.copy", {id: playlist.playlistId}) }}")>
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name of the Playlist - (1 - 50 characters)" %}{% endset %}
                 {% set playlistName %}{{ playlist.name }} 2{% endset %}

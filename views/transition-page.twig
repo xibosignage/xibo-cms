@@ -52,7 +52,7 @@
                 $.ajax({
                     type: "GET",
                     async: false,
-                    url: "{{ urlFor("user.pref") }}?preference=transitionGrid",
+                    url: "{{ url_for("user.pref") }}?preference=transitionGrid",
                     dataType: 'json',
                     success: function (json) {
                         try {
@@ -69,7 +69,7 @@
             stateSaveCallback: function (settings, data) {
                 $.ajax({
                     type: "POST",
-                    url: "{{ urlFor("user.pref") }}",
+                    url: "{{ url_for("user.pref") }}",
                     data: {
                         preference: [{
                             option: "transitionGrid",
@@ -82,7 +82,7 @@
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
             ajax: {
-                "url": "{{ urlFor("transition.search") }}",
+                "url": "{{ url_for("transition.search") }}",
                 "data": function(d) {
                     $.extend(d, $("#transitions").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                 }

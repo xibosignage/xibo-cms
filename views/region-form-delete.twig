@@ -23,7 +23,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="regionFormDelete" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("region.delete", {id: region.regionId}) }}">
+            <form id="regionFormDelete" class="XiboForm form-horizontal" method="delete" action="{{ url_for("region.delete", {id: region.regionId}) }}">
                 {% set message %}{% trans "Are you sure you want to remove this region? All media files will be unassigned and any context saved to the region itself (such as Text, Tickers) will be lost permanently." %}{% endset %}
                 {{ forms.message(message) }}
             </form>

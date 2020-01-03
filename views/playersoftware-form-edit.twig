@@ -36,7 +36,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="playersoftwareEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("playersoftware.edit", {"id": version.versionId}) }}" data-media-id="{{ version.versionId }}" data-valid-extensions="{{ validExtensions }}">
+            <form id="playersoftwareEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("playersoftware.edit", {"id": version.versionId}) }}" data-media-id="{{ version.versionId }}" data-valid-extensions="{{ validExtensions }}">
                 {% set title %}{% trans "Player Version Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name of the player version application, this will be displayed in Version dropdowns in Display Profile and Display" %}{% endset %}
                 {{ forms.input("playerShowVersion", title, version.playerShowVersion, helpText) }}

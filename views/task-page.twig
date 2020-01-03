@@ -27,7 +27,7 @@
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         {% if settings.TASK_CONFIG_LOCKED_CHECKB == 0 or settings.TASK_CONFIG_LOCKED_CHECKB == "Unchecked" %}
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ urlFor("task.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Task" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ url_for("task.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Task" %}</a></li>
         {% endif %}
         <li class="btn btn-success btn-xs"><a class="btns" id="refreshLog" title="{% trans "Refresh the Log" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
     </ul>
@@ -80,7 +80,7 @@
                 $.ajax({
                     type: "GET",
                     async: false,
-                    url: "{{ urlFor("user.pref") }}?preference=taskGrid",
+                    url: "{{ url_for("user.pref") }}?preference=taskGrid",
                     dataType: 'json',
                     success: function (json) {
                         if (json.success)
@@ -92,7 +92,7 @@
             stateSaveCallback: function (settings, data) {
                 $.ajax({
                     type: "POST",
-                    url: "{{ urlFor("user.pref") }}",
+                    url: "{{ url_for("user.pref") }}",
                     data: {
                         preference: [{
                             option: "taskGrid",
@@ -105,7 +105,7 @@
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
             ajax: {
-                "url": "{{ urlFor("task.search") }}",
+                "url": "{{ url_for("task.search") }}",
                 "data": function(d) {
                     $.extend(d, $("#tasks").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                 }

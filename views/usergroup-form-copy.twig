@@ -22,7 +22,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="userGroupCopyForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("group.copy", {id: group.groupId}) }}">
+            <form id="userGroupCopyForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("group.copy", {id: group.groupId}) }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this User Group" %}{% endset %}
                 {{ forms.input("group", title, "", helpText, "", "required maxlength='50'") }}

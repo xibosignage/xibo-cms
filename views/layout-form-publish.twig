@@ -72,7 +72,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="layoutPublishForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("layout.publish", {id: layout.layoutId}) }}">
+            <form id="layoutPublishForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("layout.publish", {id: layout.layoutId}) }}">
 				{{ forms.message("Are you sure you want to publish this Layout? If it is already in use the update will automatically get pushed.") }}
 
                 {% set title %}{% trans "Publish Now?" %}{% endset %}

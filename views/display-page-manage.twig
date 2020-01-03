@@ -203,7 +203,7 @@
                 searchDelay: 3000,
                 "order": [[0, "desc"]],
                 ajax: {
-                    url: "{{ urlFor("log.search") }}?{{ errorSearch|raw }}",
+                    url: "{{ url_for("log.search") }}?{{ errorSearch|raw }}",
                 },
                 "columns": [
                     {"data": "logId"},
@@ -225,7 +225,7 @@
         function setBandwidthChart() {
             $.ajax({
                 type: "get",
-                url: "{{ urlFor("stats.bandwidth.data") }}",
+                url: "{{ url_for("stats.bandwidth.data") }}",
                 cache: false,
                 dataType: "json",
                 data: $("#bandwidthFilter").find("form").serialize(),

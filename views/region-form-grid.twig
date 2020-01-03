@@ -20,7 +20,7 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Close" %}, XiboDialogClose()
-    {% trans "Switch to Timeline" %}, XiboSwapDialog("{{ urlFor("region.timeline.form", {id: region.regionId}) }}?view=timeline")
+    {% trans "Switch to Timeline" %}, XiboSwapDialog("{{ url_for("region.timeline.form", {id: region.regionId}) }}?view=timeline")
 {% endblock %}
 
 {% block callBack %}timelineGridCallback{% endblock %}
@@ -32,10 +32,10 @@
                 <div class="well">
                     <ul class="nav nav-list">
                         <li class="nav-header">{% trans "Add Media" %}</li>
-                        <li class="XiboFormButton" href="{{ urlFor("playlist.library.assign.form", {id: playlist.playlistId}) }}"><a tabindex="-1" href="#">{% trans "Library" %}</a></li>
+                        <li class="XiboFormButton" href="{{ url_for("playlist.library.assign.form", {id: playlist.playlistId}) }}"><a tabindex="-1" href="#">{% trans "Library" %}</a></li>
                         {% for module in modules %}
                             {% if module.regionSpecific %}
-                                <li class="XiboFormButton" href="{{ urlFor("module.widget.add.form", {type: module.type, id: playlist.playlistId}) }}"><a tabindex="-1" href="#">{{ module.name }}</a></li>
+                                <li class="XiboFormButton" href="{{ url_for("module.widget.add.form", {type: module.type, id: playlist.playlistId}) }}"><a tabindex="-1" href="#">{{ module.name }}</a></li>
                             {% else %}
                                 <li class="libraryUploadForm" href="#" data-playlist-id="{{ playlist.playlistId }}" data-valid-ext="{{ module.validExtensions }}"><a tabindex="-1" href="#">{{ module.name }}</a></li>
                             {% endif %}

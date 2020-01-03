@@ -30,7 +30,7 @@
                                 { name: "data-allow-clear", value: "true" },
                                 { name: "data-placeholder--id", value: null },
                                 { name: "data-placeholder--value", value: "" },
-                                { name: "data-search-url", value: urlFor("display.search") },
+                                { name: "data-search-url", value: url_for("display.search") },
                                 { name: "data-search-term", value: "display" },
                                 { name: "data-search-term-tags", value: "tags" },
                                 { name: "data-id-property", value: "displayId" },
@@ -69,7 +69,7 @@
                                 { name: "data-allow-clear", value: "true" },
                                 { name: "data-placeholder--id", value: null },
                                 { name: "data-placeholder--value", value: "" },
-                                { name: "data-search-url", value: urlFor("display.search") },
+                                { name: "data-search-url", value: url_for("display.search") },
                                 { name: "data-search-term", value: "display" },
                                 { name: "data-search-term-tags", value: "tags" },
                                 { name: "data-id-property", value: "displayId" },
@@ -83,7 +83,7 @@
                                 { name: "data-allow-clear", value: "true" },
                                 { name: "data-placeholder--id", value: null },
                                 { name: "data-placeholder--value", value: "" },
-                                { name: "data-search-url", value:  urlFor("displayGroup.search") },
+                                { name: "data-search-url", value:  url_for("displayGroup.search") },
                                 { name: "data-search-term", value: "displayGroup" },
                                 { name: "data-search-term-tags", value: "tags" },
                                 { name: "data-id-property", value: "displayGroupId" },
@@ -145,7 +145,7 @@
         function setBandwidthChart() {
             $.ajax({
                 type: "get",
-                url: "{{ urlFor("stats.bandwidth.data") }}",
+                url: "{{ url_for("stats.bandwidth.data") }}",
                 cache: false,
                 dataType: "json",
                 data: $("#bandwidthFilter").find("form").serialize(),
@@ -210,7 +210,7 @@
                 searchDelay: 3000,
                 "order": [[0, "asc"]],
                 ajax: {
-                    "url": "{{ urlFor("stats.timeDisconnected.search") }}",
+                    "url": "{{ url_for("stats.timeDisconnected.search") }}",
                     "data": function (d) {
                         $.extend(d, $("#stats").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }

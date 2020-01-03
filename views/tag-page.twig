@@ -26,7 +26,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Tag" %}" href="{{ urlFor("tag.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i>  {% trans "Add Tag" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Tag" %}" href="{{ url_for("tag.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i>  {% trans "Add Tag" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -82,7 +82,7 @@
                 $.ajax({
                     type: "GET",
                     async: false,
-                    url: "{{ urlFor("user.pref") }}?preference=tagsGrid",
+                    url: "{{ url_for("user.pref") }}?preference=tagsGrid",
                     dataType: 'json',
                     success: function (json) {
                         if (json.success)
@@ -94,7 +94,7 @@
             stateSaveCallback: function (settings, data) {
                 $.ajax({
                     type: "POST",
-                    url: "{{ urlFor("user.pref") }}",
+                    url: "{{ url_for("user.pref") }}",
                     data: {
                         preference: [{
                             option: "tagsGrid",
@@ -107,7 +107,7 @@
             searchDelay: 3000,
             "order": [[ 1, "desc"]],
             ajax: {
-                "url": "{{ urlFor("tag.search") }}",
+                "url": "{{ url_for("tag.search") }}",
                 "data": function(d) {
                     $.extend(d, $("#tags").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                 }

@@ -34,10 +34,10 @@
             <div id="{{ randomId }}" class="div-horizontal controlDiv"
                  data-param="displayId"
                  data-param-unassign="unassignDisplayId"
-                 data-url="{{ urlFor("displayGroup.assign.display", {id: displayGroup.displayGroupId}) }}"
+                 data-url="{{ url_for("displayGroup.assign.display", {id: displayGroup.displayGroupId}) }}"
                  data-groups-param="displayGroupId"
                  data-groups-param-unassign="unassignDisplayGroupId"
-                 data-groups-url="{{ urlFor("displayGroup.assign.displayGroup", {id: displayGroup.displayGroupId}) }}"
+                 data-groups-url="{{ url_for("displayGroup.assign.displayGroup", {id: displayGroup.displayGroupId}) }}"
             >
                 <ul class="nav nav-tabs" role="tablist">
                     <li class="active"><a href="#displayTab" role="tab" data-toggle="tab"><span>{% trans "Displays" %}</span></a></li>
@@ -117,7 +117,7 @@
                                 {% if group.displayGroup == displayGroup.displayGroup %}
                                     <li><strong>{{ group.displayGroup }}</strong></li>
                                 {% else %}
-                                    <li><a class="XiboFormButton" href="{{ urlFor("displayGroup.members.form", {"id": group.displayGroupId}) }}">{{ group.displayGroup }}</a></li>
+                                    <li><a class="XiboFormButton" href="{{ url_for("displayGroup.members.form", {"id": group.displayGroupId}) }}">{{ group.displayGroup }}</a></li>
                                 {% endif %}
                             {% endfor %}
                         </ul>

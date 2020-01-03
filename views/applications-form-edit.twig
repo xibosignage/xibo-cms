@@ -29,7 +29,7 @@
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                 <li><a href="#scopes" role="tab" data-toggle="tab"><span>{% trans "Permissions" %}</span></a></li>
             </ul>
-            <form id="applicationFormSubmit" class="XiboForm form-horizontal" method="put" action="{{ urlFor("application.edit", {id: client.key}) }}">
+            <form id="applicationFormSubmit" class="XiboForm form-horizontal" method="put" action="{{ url_for("application.edit", {id: client.key}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Application Name" %}{% endset %}

@@ -22,7 +22,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="commandEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("command.edit", {id: command.commandId}) }}">
+            <form id="commandEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("command.edit", {id: command.commandId}) }}">
 
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Command" %}{% endset %}

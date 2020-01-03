@@ -22,7 +22,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="helpAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("help.add") }}">
+            <form id="helpAddForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("help.add") }}">
                     {% set title %}{% trans "Topic" %}{% endset %}
                     {% set helpText %}{% trans "The Topic for this Help Link" %}{% endset %}
                     {{ forms.input("topic", title, "", helpText) }}

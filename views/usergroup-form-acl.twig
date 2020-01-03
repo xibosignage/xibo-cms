@@ -23,7 +23,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="AclForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("group.acl", {id: groupId}) }}">
+            <form id="AclForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("group.acl", {id: groupId}) }}">
                 {% set helpText %}{% trans %}Check or un-check the options against each item to control whether access is allowed or not.{% endtrans %}{% endset %}
                 {{ forms.message(helpText) }}
                 <table class="table table-bordered">

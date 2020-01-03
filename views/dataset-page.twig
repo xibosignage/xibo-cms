@@ -12,7 +12,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new DataSet" %}" href="{{ urlFor("dataSet.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add DataSet" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new DataSet" %}" href="{{ url_for("dataSet.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add DataSet" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -63,7 +63,7 @@
                 $.ajax({
                     type: "GET",
                     async: false,
-                    url: "{{ urlFor("user.pref") }}?preference=dataSetGrid",
+                    url: "{{ url_for("user.pref") }}?preference=dataSetGrid",
                     dataType: 'json',
                     success: function (json) {
                         try {
@@ -80,7 +80,7 @@
             stateSaveCallback: function (settings, data) {
                 $.ajax({
                     type: "POST",
-                    url: "{{ urlFor("user.pref") }}",
+                    url: "{{ url_for("user.pref") }}",
                     data: {
                         preference: [{
                             option: "dataSetGrid",
@@ -93,7 +93,7 @@
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
             ajax: {
-                "url": "{{ urlFor("dataSet.search") }}",
+                "url": "{{ url_for("dataSet.search") }}",
                 "data": function(d) {
                     $.extend(d, $("#datasets").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                 }
@@ -179,7 +179,7 @@
                     }
                 }).on('shown.bs.modal', function() {
                     // Configure the upload form
-                    var url = "{{ urlFor("dataSet.import") }}".replace(":id", data.dataSetId);
+                    var url = "{{ url_for("dataSet.import") }}".replace(":id", data.dataSetId);
                     var form = $(this).find("form");
                     var refreshSessionInterval;
 
@@ -259,7 +259,7 @@
             // Bind the test button
             $(dialog).find("#dataSetRemoteTestButton").on('click', function() {
                 var $form = $(dialog).find("form");
-                XiboRemoteRequest("{{ urlFor("dataSet.test.remote") }}", $form.serializeObject(), function(response) {
+                XiboRemoteRequest("{{ url_for("dataSet.test.remote") }}", $form.serializeObject(), function(response) {
                     if (!$.trim(response.data.entries)) {
                         response.data = response.message;
                     }

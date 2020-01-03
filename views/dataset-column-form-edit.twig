@@ -54,7 +54,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="dataSetColumnEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("dataSet.column.edit", {id: dataSet.dataSetId, colId: dataSetColumn.dataSetColumnId}) }}">
+            <form id="dataSetColumnEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("dataSet.column.edit", {id: dataSet.dataSetId, colId: dataSetColumn.dataSetColumnId}) }}">
                 {% set title %}{% trans "Heading" %}{% endset %}
                 {% set helpText %}{% trans "The heading for this Column" %}{% endset %}
                 {{ forms.input("heading", title, dataSetColumn.heading, helpText, "", "required") }}

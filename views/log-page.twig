@@ -11,7 +11,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-warning btn-xs"><a class="XiboFormButton btns" title="{% trans "Truncate the Log" %}" href="{{ urlFor("log.truncate.form") }}"> <i class="fa fa-scissors" aria-hidden="true"></i> {% trans "Truncate" %}</a></li>
+        <li class="btn btn-warning btn-xs"><a class="XiboFormButton btns" title="{% trans "Truncate the Log" %}" href="{{ url_for("log.truncate.form") }}"> <i class="fa fa-scissors" aria-hidden="true"></i> {% trans "Truncate" %}</a></li>
         <li class="btn btn-success btn-xs"><a class="btns" id="refreshLog" title="{% trans "Refresh the Log" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
     </ul>
 {% endblock %}
@@ -99,7 +99,7 @@
                                         { name: "data-allow-clear", value: "true" },
                                         { name: "data-placeholder--id", value: null },
                                         { name: "data-placeholder--value", value: "" },
-                                        { name: "data-search-url", value: urlFor("display.search") },
+                                        { name: "data-search-url", value: url_for("display.search") },
                                         { name: "data-search-term", value: "display" },
                                         { name: "data-search-term-tags", value: "tags" },
                                         { name: "data-id-property", value: "displayId" },
@@ -117,7 +117,7 @@
                                         { name: "data-allow-clear", value: "true" },
                                         { name: "data-placeholder--id", value: null },
                                         { name: "data-placeholder--value", value: "" },
-                                        { name: "data-search-url", value: urlFor("displayGroup.search") },
+                                        { name: "data-search-url", value: url_for("displayGroup.search") },
                                         { name: "data-search-term", value: "displayGroup" },
                                         { name: "data-id-property", value: "displayGroupId" },
                                         { name: "data-text-property", value: "displayGroup" }
@@ -170,7 +170,7 @@
                     $.ajax({
                         type: "GET",
                         async: false,
-                        url: "{{ urlFor("user.pref") }}?preference=logGrid",
+                        url: "{{ url_for("user.pref") }}?preference=logGrid",
                         dataType: 'json',
                         success: function (json) {
                             try {
@@ -187,7 +187,7 @@
                 stateSaveCallback: function (settings, data) {
                     $.ajax({
                         type: "POST",
-                        url: "{{ urlFor("user.pref") }}",
+                        url: "{{ url_for("user.pref") }}",
                         data: {
                             preference: [{
                                 option: "logGrid",
@@ -200,7 +200,7 @@
                 searchDelay: 3000,
                 "order": [[0, "desc"]],
                 ajax: {
-                    url: "{{ urlFor("log.search") }}",
+                    url: "{{ url_for("log.search") }}",
                     "data": function (d) {
                         $.extend(d, $("#logs").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }

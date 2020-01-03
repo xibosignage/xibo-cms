@@ -74,7 +74,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="moduleTransitionEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.transition.edit", {type: type, id: module.widget.widgetId}) }}">
+            <form id="moduleTransitionEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.transition.edit", {type: type, id: module.widget.widgetId}) }}">
                 {% if type == "in" %}
                     {% set transitionsWithEmpty = [{code: "", transition: ""}]|merge(transitions.in) %}
                     {% set trans = module.getOption("transIn", null) %}

@@ -24,7 +24,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="displayRequestScreenshotForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("display.requestscreenshot", {id: display.displayId}) }}">
+            <form id="displayRequestScreenshotForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("display.requestscreenshot", {id: display.displayId}) }}">
                 {% set message %}{% trans "Are you sure you want to request a screenshot?" %}{% endset %}
                 {{ forms.message(message) }}
 

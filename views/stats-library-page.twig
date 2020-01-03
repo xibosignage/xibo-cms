@@ -99,7 +99,7 @@
             filter: false,
             searchDelay: 3000,
             ajax: {
-                url: "{{ urlFor("stats.library.grid") }}",
+                url: "{{ url_for("stats.library.grid") }}",
                 data: function (d) {
                     $.extend(d, $("#libraryUsage").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                 }

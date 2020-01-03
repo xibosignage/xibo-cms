@@ -41,7 +41,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="reportScheduleToggleActiveForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("reportschedule.toggleactive", {"id": reportSchedule.reportScheduleId}) }}">
+            <form id="reportScheduleToggleActiveForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("reportschedule.toggleactive", {"id": reportSchedule.reportScheduleId}) }}">
                 {% if reportSchedule.isActive == 1 %}
                     {% set message %}{% trans "Are you sure you want to pause this report schedule?" %}{% endset %}
                 {% else %}

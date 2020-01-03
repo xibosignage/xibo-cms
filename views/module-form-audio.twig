@@ -35,7 +35,7 @@
 
     <div class="row">
         <div class="col-md-12">
-            <form id="widgetAudioForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.audio", {id: module.widget.widgetId}) }}">
+            <form id="widgetAudioForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.audio", {id: module.widget.widgetId}) }}">
 
                 {% set title %}{% trans "Audio Media" %}{% endset %}
                 {% set helpText %}{% trans "Select the audio file that should be played when this Widget starts." %}{% endset %}

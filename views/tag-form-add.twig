@@ -37,7 +37,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="tagAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("tag.add") }}">
+            <form id="tagAddForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("tag.add") }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Tag" %}{% endset %}
                 {{ forms.input("name", title, "", helpText) }}

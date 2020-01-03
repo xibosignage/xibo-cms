@@ -31,7 +31,7 @@
     </div>
     <div class="row">
         <div class="col-md-12">
-            <form id="moduleInstallForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("module.install", {name: module.name}) }}">
+            <form id="moduleInstallForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("module.install", {name: module.name}) }}">
                 {% set message %}{% trans "Are you sure you want to install this module?" %}{% endset %}
                 {{ forms.message(message) }}
             </form>

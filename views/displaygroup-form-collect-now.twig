@@ -23,7 +23,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="displayGroupCollectNow" class="XiboForm form-horizontal" method="post" action="{{ urlFor("displayGroup.action.collectNow", {id: displayGroup.displayGroupId}) }}">
+            <form id="displayGroupCollectNow" class="XiboForm form-horizontal" method="post" action="{{ url_for("displayGroup.action.collectNow", {id: displayGroup.displayGroupId}) }}">
                 {% set message %}{% trans "Are you sure you want to request a collection to occur?" %}{% endset %}
                 {{ forms.message(message) }}
             </form>

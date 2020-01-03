@@ -23,7 +23,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ urlFor("playlist.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Playlist" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ url_for("playlist.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Playlist" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -143,7 +143,7 @@
                     $.ajax({
                         type: "GET",
                         async: false,
-                        url: "{{ urlFor("user.pref") }}?preference=playlistGrid",
+                        url: "{{ url_for("user.pref") }}?preference=playlistGrid",
                         dataType: 'json',
                         success: function (json) {
                             if (json.success)
@@ -155,7 +155,7 @@
                 stateSaveCallback: function (settings, data) {
                     $.ajax({
                         type: "POST",
-                        url: "{{ urlFor("user.pref") }}",
+                        url: "{{ url_for("user.pref") }}",
                         data: {
                             preference: [{
                                 option: "playlistGrid",
@@ -168,7 +168,7 @@
                 searchDelay: 3000,
                 "order": [[1, "asc"]],
                 ajax: {
-                    url: "{{ urlFor("playlist.search") }}",
+                    url: "{{ url_for("playlist.search") }}",
                     "data": function (d) {
                         $.extend(d, $("#playlists").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }
@@ -301,7 +301,7 @@
                     searchDelay: 3000,
                     "order": [[1, "asc"]],
                     ajax: {
-                        "url": "{{ urlFor("library.search") }}",
+                        "url": "{{ url_for("library.search") }}",
                         "data": function (d) {
                             $.extend(d, {media: nameFilter, tags: tagFilter, assignable:1});
                         }

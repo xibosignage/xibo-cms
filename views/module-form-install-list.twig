@@ -25,7 +25,7 @@
             {% for module in modulesToInstall %}
                 <div class="row">
                     <div class="col-md-12">
-                        <a class="XiboFormButton" href="{{ urlFor("module.install.form", {name: module.name}) }}">{{ module.title }} - {{ module.author }}</a><br />
+                        <a class="XiboFormButton" href="{{ url_for("module.install.form", {name: module.name}) }}">{{ module.title }} - {{ module.author }}</a><br />
                     </div>
                 </div>
             {% endfor %}

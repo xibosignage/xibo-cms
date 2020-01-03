@@ -22,7 +22,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="templateAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("template.add.from.layout", {id: layout.layoutId}) }}" data-gettag="{{ urlFor("tag.getByName") }}">
+            <form id="templateAddForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("template.add.from.layout", {id: layout.layoutId}) }}" data-gettag="{{ url_for("tag.getByName") }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name of the Template - (1 - 50 characters)" %}{% endset %}
                 {% set templateName %}{{ layout.layout }} {% trans "Template" %}{% endset %}

@@ -31,7 +31,7 @@
                 <li><a href="#audience" role="tab" data-toggle="tab"><span>{% trans "Audience" %}</span></a></li>
                 <li><a href="#attachment" role="tab" data-toggle="tab"><span>{% trans "Attachment" %}</span></a></li>
             </ul>
-            <form id="notificationForm" class="form-horizontal" method="post" action="{{ urlFor("notification.add") }}">
+            <form id="notificationForm" class="form-horizontal" method="post" action="{{ url_for("notification.add") }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Subject" %}{% endset %}

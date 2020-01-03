@@ -29,7 +29,7 @@
             <div class="alert alert-warning">
                 {% trans "Assigning a Layout to a Display/DisplayGroup does NOT schedule that Layout to be shown. Please use the Schedule to show Layouts." %}
             </div>
-            <div id="FileAssociationsAssign" class="well" data-url="{{ urlFor("displayGroup.assign.layout", {id: displayGroup.displayGroupId}) }}">
+            <div id="FileAssociationsAssign" class="well" data-url="{{ url_for("displayGroup.assign.layout", {id: displayGroup.displayGroupId}) }}">
                 <div>
                     <ul id="FileAssociationsSortable">
                         {% for item in layouts %}
@@ -49,7 +49,7 @@
                     </form>
                 </div>
                 <div class="XiboData">
-                    <table id="layoutAssignments" data-url="{{ urlFor("layout.search") }}" class="table table-striped">
+                    <table id="layoutAssignments" data-url="{{ url_for("layout.search") }}" class="table table-striped">
                         <thead>
                         <tr>
                             <th>{% trans "Name" %}</th>

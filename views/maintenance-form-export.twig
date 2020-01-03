@@ -21,7 +21,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="exportForm" class="form-horizontal" method="get" action="{{ urlFor("maintenance.export") }}">
+            <form id="exportForm" class="form-horizontal" method="get" action="{{ url_for("maintenance.export") }}">
                 {% set message %}{% trans "This will create a dump file of your database that you can restore later using the import functionality." %}{% endset %}
                 {{ forms.message(message) }}
                 

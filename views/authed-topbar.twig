@@ -21,7 +21,7 @@
  */
 #}
 <ul class="nav navbar-nav">
-    <li><a href="{{ urlFor("home") }}">{% trans "Dashboard" %}</a></li>
+    <li><a href="{{ url_for("home") }}">{% trans "Dashboard" %}</a></li>
 
     {% set countViewable = currentUser.countViewable(["/schedule", "/daypart"]) %}
     {% if countViewable > 0 %}
@@ -31,10 +31,10 @@
             <ul class="dropdown-menu">
         {% endif %}
                 {% if currentUser.routeViewable("/schedule") %}
-                    <li><a href="{{ urlFor("schedule.view") }}">{% if countViewable > 1 %}{% trans "Schedule" %}{% else %}{% trans "Schedule" %}{% endif %}</a></li>
+                    <li><a href="{{ url_for("schedule.view") }}">{% if countViewable > 1 %}{% trans "Schedule" %}{% else %}{% trans "Schedule" %}{% endif %}</a></li>
                 {% endif %}
                 {% if currentUser.routeViewable("/daypart") %}
-                    <li><a href="{{ urlFor("daypart.view") }}">{% trans "Dayparting" %}</a></li>
+                    <li><a href="{{ url_for("daypart.view") }}">{% trans "Dayparting" %}</a></li>
                 {% endif %}
         {% if countViewable > 1 %}
             </ul>
@@ -50,19 +50,19 @@
             <ul class="dropdown-menu">
         {% endif %}
             {% if currentUser.routeViewable("/campaign") %}
-                <li><a href="{{ urlFor("campaign.view") }}">{% trans "Campaigns" %}</a></li>
+                <li><a href="{{ url_for("campaign.view") }}">{% trans "Campaigns" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/layout") %}
-                <li><a href="{{ urlFor("layout.view") }}">{% trans "Layouts" %}</a></li>
+                <li><a href="{{ url_for("layout.view") }}">{% trans "Layouts" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/template") %}
-                <li><a href="{{ urlFor("template.view") }}">{% trans "Templates" %}</a></li>
+                <li><a href="{{ url_for("template.view") }}">{% trans "Templates" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/resolution") %}
-                <li><a href="{{ urlFor("resolution.view") }}">{% trans "Resolutions" %}</a></li>
+                <li><a href="{{ url_for("resolution.view") }}">{% trans "Resolutions" %}</a></li>
             {% endif %}
         {% if countViewable > 1 %}
             </ul>
@@ -78,15 +78,15 @@
             <ul class="dropdown-menu">
         {% endif %}
             {% if currentUser.routeViewable("/playlist") %}
-                <li><a href="{{ urlFor("playlist.view") }}">{% trans "Playlists" %}</a></li>
+                <li><a href="{{ url_for("playlist.view") }}">{% trans "Playlists" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/library") %}
-                <li><a href="{{ urlFor("library.view") }}">{% trans "Media" %}</a></li>
+                <li><a href="{{ url_for("library.view") }}">{% trans "Media" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/dataset") %}
-                <li><a href="{{ urlFor("dataset.view") }}">{% trans "DataSets" %}</a></li>
+                <li><a href="{{ url_for("dataset.view") }}">{% trans "DataSets" %}</a></li>
             {% endif %}
         {% if countViewable > 1 %}
             </ul>
@@ -102,23 +102,23 @@
             <ul class="dropdown-menu">
         {% endif %}
             {% if currentUser.routeViewable("/display") %}
-                <li><a href="{{ urlFor("display.view") }}">{% trans "Displays" %}</a></li>
+                <li><a href="{{ url_for("display.view") }}">{% trans "Displays" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/displaygroup") %}
-                <li><a href="{{ urlFor("displaygroup.view") }}">{% trans "Display Groups" %}</a></li>
+                <li><a href="{{ url_for("displaygroup.view") }}">{% trans "Display Groups" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/displayprofile") %}
-                <li><a href="{{ urlFor("displayprofile.view") }}">{% trans "Display Settings" %}</a></li>
+                <li><a href="{{ url_for("displayprofile.view") }}">{% trans "Display Settings" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/playersoftware") %}
-                <li><a href="{{ urlFor("playersoftware.view") }}">{% trans "Player Versions" %}</a></li>
+                <li><a href="{{ url_for("playersoftware.view") }}">{% trans "Player Versions" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/command") %}
-                <li><a href="{{ urlFor("command.view") }}">{% trans "Commands" %}</a></li>
+                <li><a href="{{ url_for("command.view") }}">{% trans "Commands" %}</a></li>
             {% endif %}
         {% if countViewable > 1 %}
             </ul>
@@ -140,35 +140,35 @@
             <ul class="dropdown-menu">
         {% endif %}
             {% if userMenuViewable %}
-                <li><a href="{{ urlFor("user.view") }}">{% trans "Users" %}</a></li>
+                <li><a href="{{ url_for("user.view") }}">{% trans "Users" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/group") %}
-                <li><a href="{{ urlFor("group.view") }}">{% trans "User Groups" %}</a></li>
+                <li><a href="{{ url_for("group.view") }}">{% trans "User Groups" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/admin") %}
-                <li><a href="{{ urlFor("admin.view") }}">{% trans "Settings" %}</a></li>
+                <li><a href="{{ url_for("admin.view") }}">{% trans "Settings" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/application") %}
-                <li><a href="{{ urlFor("application.view") }}">{% trans "Applications" %}</a></li>
+                <li><a href="{{ url_for("application.view") }}">{% trans "Applications" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/module") %}
-                <li><a href="{{ urlFor("module.view") }}">{% trans "Modules" %}</a></li>
+                <li><a href="{{ url_for("module.view") }}">{% trans "Modules" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/transition") %}
-                <li><a href="{{ urlFor("transition.view") }}">{% trans "Transitions" %}</a></li>
+                <li><a href="{{ url_for("transition.view") }}">{% trans "Transitions" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/task") %}
-                <li><a href="{{ urlFor("task.view") }}">{% trans "Tasks" %}</a></li>
+                <li><a href="{{ url_for("task.view") }}">{% trans "Tasks" %}</a></li>
             {% endif %}
 
             {% if currentUser.isSuperAdmin() %}
-                <li><a href="{{ urlFor("tag.view") }}">{% trans "Tags" %}</a></li>
+                <li><a href="{{ url_for("tag.view") }}">{% trans "Tags" %}</a></li>
             {% endif %}
         {% if countViewable > 1 or (countViewable == 1 and userMenuViewable) %}
             </ul>
@@ -181,23 +181,23 @@
         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Reporting" %} <span class="caret"></span></a>
         <ul class="dropdown-menu">
             {% if currentUser.routeViewable("/stats") %}
-                <li><a href="{{ urlFor("stats.view") }}">{% trans "Display Statistics" %}</a></li>
+                <li><a href="{{ url_for("stats.view") }}">{% trans "Display Statistics" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/stats") %}
-                <li><a href="{{ urlFor("stats.proofofplay.view") }}">{% trans "Proof of Play" %}</a></li>
+                <li><a href="{{ url_for("stats.proofofplay.view") }}">{% trans "Proof of Play" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/stats") %}
-                <li><a href="{{ urlFor("stats.library.view") }}">{% trans "Library Usage" %}</a></li>
+                <li><a href="{{ url_for("stats.library.view") }}">{% trans "Library Usage" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/report") %}
-                <li class="sidebar-list"><a href="{{ urlFor("reportschedule.view") }}">{% trans "Report Schedules" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("reportschedule.view") }}">{% trans "Report Schedules" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/report") %}
-                <li class="sidebar-list"><a href="{{ urlFor("savedreport.view") }}">{% trans "Saved Reports" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("savedreport.view") }}">{% trans "Saved Reports" %}</a></li>
             {% endif %}
         </ul>
     </li>
@@ -211,23 +211,23 @@
             <ul class="dropdown-menu">
         {% endif %}
             {% if currentUser.routeViewable("/log") %}
-                <li><a href="{{ urlFor("log.view") }}">{% trans "Log" %}</a></li>
+                <li><a href="{{ url_for("log.view") }}">{% trans "Log" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/sessions") %}
-                <li><a href="{{ urlFor("sessions.view") }}">{% trans "Sessions" %}</a></li>
+                <li><a href="{{ url_for("sessions.view") }}">{% trans "Sessions" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/auditlog") %}
-                <li><a href="{{ urlFor("auditlog.view") }}">{% trans "Audit Trail" %}</a></li>
+                <li><a href="{{ url_for("auditlog.view") }}">{% trans "Audit Trail" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/fault") %}
-                <li><a href="{{ urlFor("fault.view") }}">{% trans "Report Fault" %}</a></li>
+                <li><a href="{{ url_for("fault.view") }}">{% trans "Report Fault" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/help") %}
-                <li><a href="{{ urlFor("help.view") }}">{% trans "Help Links" %}</a></li>
+                <li><a href="{{ url_for("help.view") }}">{% trans "Help Links" %}</a></li>
             {% endif %}
         {% if countViewable > 1 %}
             </ul>

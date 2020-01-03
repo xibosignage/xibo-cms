@@ -37,7 +37,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="playlistSetEnableStatForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("playlist.setenablestat", {input: "enableStat", id: playlist.playlistId}) }}">
+            <form id="playlistSetEnableStatForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("playlist.setenablestat", {input: "enableStat", id: playlist.playlistId}) }}">
                 {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
                 {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Playlist." %}{% endset %}
 

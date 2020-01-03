@@ -11,7 +11,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a Display via user_code displayed on the Player screen" %}" href="{{ urlFor("display.addViaCode.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Display (Code)" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a Display via user_code displayed on the Player screen" %}" href="{{ url_for("display.addViaCode.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Display (Code)" %}</a></li>
         <li class="btn btn-success btn-xs"><a class="btns" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
     </ul>
 {% endblock %}
@@ -181,7 +181,7 @@
                     $.ajax({
                         type: "GET",
                         async: false,
-                        url: "{{ urlFor("user.pref") }}?preference=displayGrid",
+                        url: "{{ url_for("user.pref") }}?preference=displayGrid",
                         dataType: 'json',
                         success: function (json) {
                             try {
@@ -198,7 +198,7 @@
                 stateSaveCallback: function (settings, data) {
                     $.ajax({
                         type: "POST",
-                        url: "{{ urlFor("user.pref") }}",
+                        url: "{{ url_for("user.pref") }}",
                         data: {
                             preference: [{
                                 option: "displayGrid",
@@ -211,7 +211,7 @@
                 searchDelay: 3000,
                 order: [[1, "asc"]],
                 ajax: {
-                    "url": "{{ urlFor("display.search") }}",
+                    "url": "{{ url_for("display.search") }}",
                     "data": function (dataToSend) {
                         //make a new object so as not to destroy the input.
                         var data = {};
@@ -439,7 +439,7 @@
             console.log('Multi-select form opened for default layout');
 
             // Inject a list of layouts into the form, in a drop down.
-            var $select = $('<select name="layoutId" class="form-control" data-search-url="{{ urlFor("layout.search") }}" data-search-term="layout" data-search-term-tags="tags" data-id-property="layoutId" data-text-property="layout">');
+            var $select = $('<select name="layoutId" class="form-control" data-search-url="{{ url_for("layout.search") }}" data-search-term="layout" data-search-term-tags="tags" data-id-property="layoutId" data-text-property="layout">');
             $select.on('change', function() {
                 console.log('Setting commit data to ' + $(this).val());
                 dialog.data().commitData = {layoutId: $(this).val()};

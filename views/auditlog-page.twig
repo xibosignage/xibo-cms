@@ -10,7 +10,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Export raw data to CSV" %}" href="{{ urlFor("auditLog.export.form") }}"><i class="fa fa-cloud-upload" aria-hidden="true"></i> {% trans "Export" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Export raw data to CSV" %}" href="{{ url_for("auditLog.export.form") }}"><i class="fa fa-cloud-upload" aria-hidden="true"></i> {% trans "Export" %}</a></li>
         <li class="btn btn-info btn-xs"><a class="btns" id="refreshLog" title="{% trans "Refresh the Log" %}" href="#"> <i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
     </ul>
 {% endblock %}
@@ -124,7 +124,7 @@
                     $.ajax({
                         type: "GET",
                         async: false,
-                        url: "{{ urlFor("user.pref") }}?preference=auditlogGrid",
+                        url: "{{ url_for("user.pref") }}?preference=auditlogGrid",
                         dataType: 'json',
                         success: function (json) {
                             try {
@@ -141,7 +141,7 @@
                 stateSaveCallback: function (settings, data) {
                     $.ajax({
                         type: "POST",
-                        url: "{{ urlFor("user.pref") }}",
+                        url: "{{ url_for("user.pref") }}",
                         data: {
                             preference: [{
                                 option: "auditlogGrid",
@@ -154,7 +154,7 @@
                 searchDelay: 3000,
                 "order": [[0, "desc"]],
                 ajax: {
-                    url: "{{ urlFor("auditLog.search") }}",
+                    url: "{{ url_for("auditLog.search") }}",
                     "data": function (d) {
                         $.extend(d, $("#logs").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }

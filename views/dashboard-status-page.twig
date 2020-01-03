@@ -83,7 +83,7 @@
                         {% trans %}Bandwidth Usage ({{ bandwidthSuffix }}){% endtrans %}
                     {% endif %}
                     {% if currentUser.routeViewable("/stats") %}
-                    <a class="pull-right" href="{{ urlFor("stats.view") }}">{% trans "More Statistics" %}</a>
+                    <a class="pull-right" href="{{ url_for("stats.view") }}">{% trans "More Statistics" %}</a>
                     {% endif %}
                     <div class="clearfix"></div>
                 </div>
@@ -221,16 +221,9 @@
                         <form class="form-inline">
                             <div class="tab-content">
                                 <div class="tab-pane active" id="filter-general">
-
-                                    {% set title %}{% trans "Display Group" %}{% endset %}
-                                    {{ inline.hidden("displayGroupId", title) }}
-
-                                    {% set title %}{% trans "Content Status" %}{% endset %}
-                                    {{ inline.hidden("mediaInventoryStatus", title) }}
-
-                                    {% set title %}{% trans "Online Status" %}{% endset %}
-                                    {{ inline.hidden("loggedIn", title) }}
-
+                                    {{ inline.hidden("displayGroupId") }}
+                                    {{ inline.hidden("mediaInventoryStatus") }}
+                                    {{ inline.hidden("loggedIn") }}
                                 </div>
                             </div>
                         </form>
@@ -351,7 +344,7 @@
                 $.ajax({
                     type: "GET",
                     async: false,
-                    url: "{{ urlFor("user.pref") }}?preference=statusDashboardDisplays",
+                    url: "{{ url_for("user.pref") }}?preference=statusDashboardDisplays",
                     dataType: 'json',
                     success: function (json) {
                         try {
@@ -368,7 +361,7 @@
             stateSaveCallback: function (settings, data) {
                 $.ajax({
                     type: "POST",
-                    url: "{{ urlFor("user.pref") }}",
+                    url: "{{ url_for("user.pref") }}",
                     data: {
                         preference: [{
                             option: "statusDashboardDisplays",
@@ -381,7 +374,7 @@
             searchDelay: 3000,
             order: [[0, "asc"]],
             ajax: {
-                "url": "{{ urlFor("statusdashboard.displays") }}",
+                "url": "{{ url_for("statusdashboard.displays") }}",
                 "data": function (dataToSend) {
                     //make a new object so as not to destroy the input.
                     var data = {};
@@ -430,7 +423,7 @@
         });
 
         var displayData = {{ displayStatus|raw }};
-
+console.log(displayData);
         var displayStatusChart = new Chart($("#displayStatusChart"), {
             type: 'doughnut',
             data: {
@@ -482,7 +475,7 @@
 
                     $.ajax({
                         type: "get",
-                        url: "{{ urlFor("statusdashboard.displayGroups") }}",
+                        url: "{{ url_for("statusdashboard.displayGroups") }}",
                         data: {
                             status: label
                         },
@@ -546,7 +539,7 @@
 
                     $.ajax({
                         type: "get",
-                        url: "{{ urlFor("statusdashboard.displayGroups") }}",
+                        url: "{{ url_for("statusdashboard.displayGroups") }}",
                         data: {
                             inventoryStatus: label
                         },
@@ -641,7 +634,7 @@
                 $.ajax({
                     type: "GET",
                     async: false,
-                    url: "{{ urlFor("user.pref") }}?preference=displaysGrid",
+                    url: "{{ url_for("user.pref") }}?preference=displaysGrid",
                     dataType: 'json',
                     success: function (json) {
                         try {
@@ -658,7 +651,7 @@
             stateSaveCallback: function (settings, data) {
                 $.ajax({
                     type: "POST",
-                    url: "{{ urlFor("user.pref") }}",
+                    url: "{{ url_for("user.pref") }}",
                     data: {
                         preference: [{
                             option: "displaysGrid",
@@ -671,7 +664,7 @@
             searchDelay: 3000,
             order: [[1, "asc"]],
             ajax: {
-                "url": "{{ urlFor("display.search") }}",
+                "url": "{{ url_for("display.search") }}",
                 "data": function (dataToSend) {
                     //make a new object so as not to destroy the input.
                     var data = {};
@@ -680,7 +673,7 @@
                     data.start = dataToSend.start;
                     data.order = dataToSend.order;
                     data.columns = [];
-
+console.log(dataToSend);
                     $.each(dataToSend.columns, function (index, e) {
                         var col = {};
                         col.data = e.data;
@@ -690,7 +683,7 @@
                     });
 
                     $.extend(data, $("#displaysGrid").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
-
+console.log($("#displaysGrid").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     return data;
                 }
             },

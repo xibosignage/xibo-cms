@@ -22,7 +22,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="moduleEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.settings", {id: module.module.moduleId}) }}">
+            <form id="moduleEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.settings", {id: module.module.moduleId}) }}">
 
                 {% set title %}{% trans "Default Duration" %}{% endset %}
                 {% set helpText %}{% trans "The default duration for Widgets of this Module when the user has elected to not set a specific duration." %}{% endset %}

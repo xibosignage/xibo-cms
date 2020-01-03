@@ -23,7 +23,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="groupDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("group.delete", {id: group.groupId}) }}">
+            <form id="groupDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ url_for("group.delete", {id: group.groupId}) }}">
                 {% set groupName = group.group %}
                 {% set deleteMessage %}{% trans %}Are you sure you want to delete {{ groupName }}?{% endtrans %}{% endset %}
                 {{ forms.message(deleteMessage) }}

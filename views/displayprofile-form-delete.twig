@@ -22,7 +22,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="displayProfileDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("displayProfile.delete", {id: displayProfile.displayProfileId}) }}">
+            <form id="displayProfileDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ url_for("displayProfile.delete", {id: displayProfile.displayProfileId}) }}">
                 {% set message %}{% trans "Are you sure you want to delete this display profile?" %}{% endset %}
                 {{ forms.message(message) }}              
             </form>

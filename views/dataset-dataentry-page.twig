@@ -25,8 +25,8 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a row to the end of this DataSet" %}" href="{{ urlFor("dataSet.data.add.form", {"id": dataSet.dataSetId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Row" %}</a></li>
-        <li class="btn btn-info btn-xs"><a class="btns" href="{{ urlFor("dataSet.column.view", {"id": dataSet.dataSetId}) }}"><i class="fa fa-columns" aria-hidden="true"></i> {% trans "View Columns" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a row to the end of this DataSet" %}" href="{{ url_for("dataSet.data.add.form", {"id": dataSet.dataSetId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Row" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("dataSet.column.view", {"id": dataSet.dataSetId}) }}"><i class="fa fa-columns" aria-hidden="true"></i> {% trans "View Columns" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -50,7 +50,7 @@
                     </div>
                 </div>
                 <div class="XiboData">
-                    <table id="datasets" class="table table-striped" data-image-url="{{ urlFor("library.download") }}?preview=1&width=150&height=150">
+                    <table id="datasets" class="table table-striped" data-image-url="{{ url_for("library.download") }}?preview=1&width=150&height=150">
                         <thead>
                         <tr>
                             <th>{% trans "ID" %}</th>
@@ -101,7 +101,7 @@
                 if (type != "display")
                     return "";
 
-                var url = "{{ urlFor("dataSet.data.delete.form", {"id": dataSet.dataSetId}) }}".replace(":rowId", data.id);
+                var url = "{{ url_for("dataSet.data.delete.form", {"id": dataSet.dataSetId}) }}".replace(":rowId", data.id);
 
                 return "<a href=\"" + url + "\" class=\"XiboFormButton\"><span class=\"fa fa-times\"></span></a>";
             }
@@ -113,7 +113,7 @@
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
             ajax: {
-                "url": "{{ urlFor("dataSet.data.search", {id: dataSet.dataSetId}) }}",
+                "url": "{{ url_for("dataSet.data.search", {id: dataSet.dataSetId}) }}",
                 "data": function(dataToSend) {
                     var data = {};
                     data.draw = dataToSend.draw;
@@ -153,7 +153,7 @@
             var data = table.row($(this)).data();
 
             // Load the edit form.
-            var editUrl = "{{ urlFor("dataSet.data.edit.form", {"id": dataSet.dataSetId}) }}".replace(":rowId", data.id);
+            var editUrl = "{{ url_for("dataSet.data.edit.form", {"id": dataSet.dataSetId}) }}".replace(":rowId", data.id);
             XiboFormRender(editUrl);
         }, 500, true);
         

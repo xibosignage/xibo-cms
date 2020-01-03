@@ -22,7 +22,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="applicationDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("application.delete", {"id": client.key}) }}">
+            <form id="applicationDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ url_for("application.delete", {"id": client.key}) }}">
                 {% set message %}{% trans "Are you sure you want to delete this application? This cannot be undone" %}{% endset %}
                 {{ forms.message(message) }}
             </form>

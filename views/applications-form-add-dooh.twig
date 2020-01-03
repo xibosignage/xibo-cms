@@ -37,14 +37,14 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="applicationAddFormSubmit" class="XiboForm form-horizontal" method="post" action="{{ urlFor("application.addDooh") }}">
+            <form id="applicationAddFormSubmit" class="XiboForm form-horizontal" method="post" action="{{ url_for("application.addDooh") }}">
                 {% set title %}{% trans "Application Name" %}{% endset %}
                 {{ forms.input("name", title) }}
 
                 {% set title %}{% trans "User" %}{% endset %}
                 {% set helpText %}{% trans "Please select your DOOH user" %}{% endset %}
                 {% set attributes = [
-                    { name: "data-search-url", value: urlFor("user.search") },
+                    { name: "data-search-url", value: url_for("user.search") },
                     { name: "data-search-term", value: "userName" },
                     { name: "data-id-property", value: "userId" },
                     { name: "data-text-property", value: "userName" },

@@ -24,7 +24,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="scheduleNowForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("schedule.add") }}">
+            <form id="scheduleNowForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("schedule.add") }}">
                 {{ forms.hidden("eventTypeId", "1") }}
                 {{ forms.hidden("dayPartId", customDayPart.dayPartId) }}
                 {{ forms.hidden("alwaysDayPartId", alwaysDayPart.dayPartId) }}

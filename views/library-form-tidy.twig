@@ -25,7 +25,7 @@ Good in theory, but it is giving back 0 and 0 at the moment
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="libraryTidyForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("library.tidy") }}">
+            <form id="libraryTidyForm" class="XiboForm form-horizontal" method="delete" action="{{ url_for("library.tidy") }}">
                 {% set message %}{% trans "Tidying your Library will delete any media that is not currently in use." %}{% endset %}
                 {{ forms.message(message) }}              
 

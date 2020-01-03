@@ -22,7 +22,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="notificationDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("notification.delete", {"id": notification.notificationId}) }}">
+            <form id="notificationDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ url_for("notification.delete", {"id": notification.notificationId}) }}">
                 {% set message %}{% trans "Are you sure you want to delete this notification? This cannot be undone" %}{% endset %}
                 {{ forms.message(message) }}
             </form>

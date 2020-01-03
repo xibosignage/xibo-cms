@@ -24,7 +24,7 @@
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                 <li><a href="#options" role="tab" data-toggle="tab"><span>{% trans "Options" %}</span></a></li>
             </ul>
-            <form id="taskEdit" class="XiboForm form-horizontal" method="put" action="{{ urlFor("task.edit", {id: task.taskId}) }}">
+            <form id="taskEdit" class="XiboForm form-horizontal" method="put" action="{{ url_for("task.edit", {id: task.taskId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}

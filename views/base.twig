@@ -8,7 +8,7 @@
         <meta name="token" content="{{ csrfToken }}"/>
         <meta name="public-path" content="{{ theme.rootUri() }}"/>
         <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
-        <link href="{{ urlFor("library.font.css") }}" rel="stylesheet">
+        <link href="{{ url_for("library.font.css") }}" rel="stylesheet">
         
         {# Import CSS bundle from dist #}
         <script src="{{ theme.rootUri() }}dist/style.bundle.min.js"></script>
@@ -19,7 +19,7 @@
         <link href="{{ theme.uri("css/xibo.css") }}?{{ version }}" rel="stylesheet" media="screen">
         <link href="{{ theme.uri("css/calendar.css") }}?{{ version }}" rel="stylesheet" media="screen">
         <link href="{{ theme.uri("css/override.css") }}?{{ version }}" rel="stylesheet" media="screen">
-        <link href="{{ urlFor("library.font.css") }}" rel="stylesheet">
+        <link href="{{ url_for("library.font.css") }}" rel="stylesheet">
         <!-- Copyright 2006-2019 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
         <!-- Please be sure you read this before removing the Source/About links from your theme: http://bit.ly/agplv3 -->
         {% block headContent %}{% endblock %}
@@ -122,9 +122,9 @@
             var bootstrapDateFormat = "{{ settings.DATE_FORMAT_BOOTSTRAP }}";
             var bootstrapDateFormatDateOnly = "{{ settings.DATE_FORMAT_BOOTSTRAP_DATEONLY }}";
             var calendarType = "{{ settings.CALENDAR_TYPE }}";
-            var clockUrl = "{{ urlFor("clock") }}";
+            var clockUrl = "{{ url_for("clock") }}";
             var calendarLanguage = "{{ translate.jsShortLocale }}";
-            var pingUrl = "{{ urlFor("ping") }}";
+            var pingUrl = "{{ url_for("ping") }}";
 
             {% autoescape "js" %}
             var dataTablesLanguage = {
@@ -172,9 +172,10 @@
 
             // CKEditor default config
             var CKEDITOR_DEFAULT_CONFIG = {
-                contentsCss: [ CKEDITOR.getUrl('contents.css'), "{{ urlFor("library.font.css") }}" ],
+                contentsCss: [ CKEDITOR.getUrl('contents.css'), "{{ url_for("library.font.css") }}" ],
                 font_names: '{{ ckeditorConfig }}' + CKEDITOR.config.font_names,
-                imageDownloadUrl: "{{ urlFor("library.download") }}?preview=1"
+                // TODO throws an error missing {id} :(
+               // imageDownloadUrl: "{{ url_for("library.download") }}?preview=1"
             }
 
         </script>

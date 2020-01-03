@@ -36,7 +36,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="layoutCheckoutForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("layout.checkout", {id: layout.layoutId}) }}">
+            <form id="layoutCheckoutForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("layout.checkout", {id: layout.layoutId}) }}">
 				{{ forms.message("Are you sure you want to checkout this Layout? It will be put in a Draft state so you can make edits.") }}
             </form>
         </div>

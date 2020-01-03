@@ -22,7 +22,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="tidyLibraryForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("maintenance.tidy") }}">
+            <form id="tidyLibraryForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("maintenance.tidy") }}">
                 {% set message %}{% trans "Tidying the Library will delete any temporary files. Are you sure you want to proceed?" %}{% endset %}
                 {{ forms.message(message) }}
 

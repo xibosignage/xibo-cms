@@ -25,7 +25,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="campaignEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("campaign.edit", {"id": campaign.campaignId}) }}" data-gettag="{{ urlFor("tag.getByName") }}">
+            <form id="campaignEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("campaign.edit", {"id": campaign.campaignId}) }}" data-gettag="{{ url_for("tag.getByName") }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Campaign" %}{% endset %}
                 {{ forms.input("name", title, campaign.campaign, helpText) }}
@@ -52,7 +52,7 @@
         <div class="col-md-12 well">
             {% set campaignName = campaign.campaign %}
             <h4>{% trans %}Layouts on {{campaignName}}{% endtrans %}</h4>
-            <div id="LayoutAssign" class="well" data-url="{{ urlFor("campaign.assign.layout", {id: campaign.campaignId}) }}">
+            <div id="LayoutAssign" class="well" data-url="{{ url_for("campaign.assign.layout", {id: campaign.campaignId}) }}">
                 <div>
                     <ul id="LayoutAssignSortable">
                         {% for item in layouts %}

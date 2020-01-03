@@ -25,7 +25,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="displayWakeOnLanForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("display.wol", {id: display.displayId}) }}">
+            <form id="displayWakeOnLanForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("display.wol", {id: display.displayId}) }}">
                 {% set message %}{% trans "Are you sure you want to send a Wake On Lan message to this display?" %}{% endset %}
                 {{ forms.message(message) }}
             </form>

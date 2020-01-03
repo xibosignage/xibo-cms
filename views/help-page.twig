@@ -11,7 +11,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-info btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Help page" %}" href="{{ urlFor("help.add.form") }}"><i class="fa fa-question-circle" aria-hidden="true"></i> {% trans "Add Help Link" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Help page" %}" href="{{ url_for("help.add.form") }}"><i class="fa fa-question-circle" aria-hidden="true"></i> {% trans "Add Help Link" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -57,7 +57,7 @@
                 $.ajax({
                     type: "GET",
                     async: false,
-                    url: "{{ urlFor("user.pref") }}?preference=helpGrid",
+                    url: "{{ url_for("user.pref") }}?preference=helpGrid",
                     dataType: 'json',
                     success: function (json) {
                         try {
@@ -74,7 +74,7 @@
             stateSaveCallback: function (settings, data) {
                 $.ajax({
                     type: "POST",
-                    url: "{{ urlFor("user.pref") }}",
+                    url: "{{ url_for("user.pref") }}",
                     data: {
                         preference: [{
                             option: "helpGrid",
@@ -87,7 +87,7 @@
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
             ajax: {
-                "url": "{{ urlFor("help.search") }}",
+                "url": "{{ url_for("help.search") }}",
                 "data": function(d) {
                     $.extend(d, $("#helpLinks").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                 }

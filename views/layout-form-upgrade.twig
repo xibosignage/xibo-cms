@@ -40,7 +40,7 @@ $formFields = array();
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="layoutUpgradeForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("layout.upgrade", {id: layout.layoutId}) }}">
+            <form id="layoutUpgradeForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("layout.upgrade", {id: layout.layoutId}) }}">
                 {% set message %}{% trans "Are you sure you want to upgrade this layout?" %}{% endset %}
                 {{ forms.message(message) }}
 

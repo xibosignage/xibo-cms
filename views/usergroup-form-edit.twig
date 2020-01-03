@@ -25,7 +25,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="userGroupEditForm" class="UserGroupForm form-horizontal" method="put" action="{{ urlFor("group.edit", {"id": group.groupId}) }}">
+            <form id="userGroupEditForm" class="UserGroupForm form-horizontal" method="put" action="{{ url_for("group.edit", {"id": group.groupId}) }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this User Group" %}{% endset %}
                 {{ forms.input("group", title, group.group, helpText, "", "required maxlength='50'") }}

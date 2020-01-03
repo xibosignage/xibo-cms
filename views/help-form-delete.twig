@@ -22,7 +22,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="helpDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("help.delete", {id: help.helpId}) }}">        
+            <form id="helpDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ url_for("help.delete", {id: help.helpId}) }}">
                 {% set message %}{% trans "Are you sure you want to delete this Help page? This cannot be undone" %}{% endset %}
                 {{ forms.message(message) }}
             </form>

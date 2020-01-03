@@ -23,7 +23,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="displayGroupCommandForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("displayGroup.action.command", {"id": displayGroup.displayGroupId}) }}">
+            <form id="displayGroupCommandForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("displayGroup.action.command", {"id": displayGroup.displayGroupId}) }}">
                 {% set title %}{% trans "Command" %}{% endset %}
                 {% set helpText %}{% trans "Pick a command to send to the Player. If the CMS has XMR enabled this will be sent immediately, otherwise it will show an error." %}{% endset %}
                 {{ forms.dropdown("commandId", "single", title, "", commands, "commandId", "command", helpText) }}

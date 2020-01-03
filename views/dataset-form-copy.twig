@@ -22,7 +22,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="dataSetCopyForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("dataSet.copy", {"id": dataSet.dataSetId}) }}">
+            <form id="dataSetCopyForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("dataSet.copy", {"id": dataSet.dataSetId}) }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "A name for this DataSet" %}{% endset %}
                 {% set dataSetName %}{{ dataSet.dataSet }} 2{% endset %}

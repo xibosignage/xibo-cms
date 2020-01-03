@@ -23,7 +23,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="dataSetDataDelete" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("dataSet.data.delete", {id: dataSet.dataSetId, rowId: row.id}) }}">
+            <form id="dataSetDataDelete" class="XiboForm form-horizontal" method="delete" action="{{ url_for("dataSet.data.delete", {id: dataSet.dataSetId, rowId: row.id}) }}">
                 {% set message %}{% trans "Are you sure you want to delete this row?" %}{% endset %}
                 {{ forms.message(message) }}
             </form>

@@ -26,7 +26,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ urlFor("daypart.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Daypart" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ url_for("daypart.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Daypart" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -73,7 +73,7 @@
                 $.ajax({
                     type: "GET",
                     async: false,
-                    url: "{{ urlFor("user.pref") }}?preference=daypartGrid",
+                    url: "{{ url_for("user.pref") }}?preference=daypartGrid",
                     dataType: 'json',
                     success: function (json) {
                         try {
@@ -90,7 +90,7 @@
             stateSaveCallback: function (settings, data) {
                 $.ajax({
                     type: "POST",
-                    url: "{{ urlFor("user.pref") }}",
+                    url: "{{ url_for("user.pref") }}",
                     data: {
                         preference: [{
                             option: "daypartGrid",
@@ -103,7 +103,7 @@
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
             ajax: {
-                "url": "{{ urlFor("daypart.search") }}",
+                "url": "{{ url_for("daypart.search") }}",
                 "data": function(d) {
                     $.extend(d, $("#dayparts").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                 }

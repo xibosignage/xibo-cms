@@ -23,7 +23,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="truncateForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("log.truncate") }}">
+            <form id="truncateForm" class="XiboForm form-horizontal" method="delete" action="{{ url_for("log.truncate") }}">
                 {% set helpText %}{% trans %}Are you sure you want to truncate?{% endtrans %}{% endset %}
                 {{ forms.message(helpText) }}
             </form>

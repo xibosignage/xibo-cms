@@ -53,7 +53,7 @@
 </head>
 <body>
 <div class="container">
-    <div class="form-signin text-center" action="{{ urlFor("login") }}">
+    <div class="form-signin text-center" action="{{ url_for("login") }}">
         <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img src="{{ theme.uri("img/xibologo.png") }}"></a></p>
 
         <p>{% trans "Sorry we could not find that page. Please check your URL or press back in your browser" %}</p>
@@ -61,7 +61,7 @@
 
     <p class="text-center">{% trans %}Version {{ version }}{% endtrans %}
         | <a id="source-link" href="{{ theme.getThemeConfig("cms_source_url") }}">{% trans "Source" %}</a>
-        | <a id="about-link" class="XiboFormButton" href="{{ urlFor("about") }}" title="{% trans "About" %}">{% trans "About" %}</a>
+        | <a id="about-link" class="XiboFormButton" href="{{ url_for("about") }}" title="{% trans "About" %}">{% trans "About" %}</a>
     </p>
 </div> <!-- /container -->
     <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js"></script>

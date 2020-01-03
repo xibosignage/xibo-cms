@@ -69,7 +69,7 @@
                     $.ajax({
                         type: "GET",
                         async: false,
-                        url: "{{ urlFor("user.pref") }}?preference=sessionsGrid",
+                        url: "{{ url_for("user.pref") }}?preference=sessionsGrid",
                         dataType: 'json',
                         success: function (json) {
                             try {
@@ -86,7 +86,7 @@
                 stateSaveCallback: function (settings, data) {
                     $.ajax({
                         type: "POST",
-                        url: "{{ urlFor("user.pref") }}",
+                        url: "{{ url_for("user.pref") }}",
                         data: {
                             preference: [{
                                 option: "sessionsGrid",
@@ -99,7 +99,7 @@
                 searchDelay: 3000,
                 "order": [[1, "asc"]],
                 ajax: {
-                    "url": "{{ urlFor("sessions.search") }}",
+                    "url": "{{ url_for("sessions.search") }}",
                     "data": function (d) {
                         $.extend(d, $("#sessions").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }

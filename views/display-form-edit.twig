@@ -48,7 +48,7 @@
                 <li><a href="#settings" role="tab" data-toggle="tab"><span>{% trans "Profile Settings" %}</span></a></li>
                 <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
-            <form id="displayEditForm" class="DisplayForm XiboForm form-horizontal" method="put" action="{{ urlFor("display.edit", {id: display.displayId}) }}" data-gettag="{{ urlFor("tag.getByName") }}">
+            <form id="displayEditForm" class="DisplayForm XiboForm form-horizontal" method="put" action="{{ url_for("display.edit", {id: display.displayId}) }}" data-gettag="{{ url_for("tag.getByName") }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
 
@@ -95,7 +95,7 @@
                         {% set title %}{% trans "Default Layout" %}{% endset %}
                         {% set helpText %}{% trans "The Default Layout to display where there is no other content scheduled. If left empty with no other content scheduled the splash screen will be displayed" %}{% endset %}
                         {% set attributes = [
-                            { name: "data-search-url", value: urlFor("layout.search") },
+                            { name: "data-search-url", value: url_for("layout.search") },
                             { name: "data-search-term", value: "layout" },
                             { name: "data-search-term-tags", value: "tags" },
                             { name: "data-id-property", value: "layoutId" },

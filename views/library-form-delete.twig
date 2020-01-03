@@ -23,7 +23,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="libraryDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("library.delete", {"id": media.mediaId}) }}">
+            <form id="libraryDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ url_for("library.delete", {"id": media.mediaId}) }}">
                 {% set message %}{% trans "Are you sure you want to delete this file?" %}{% endset %}
                 {{ forms.message(message) }}
 

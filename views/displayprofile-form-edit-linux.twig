@@ -32,7 +32,7 @@
                 <li><a href="#commands" role="tab" data-toggle="tab">{% trans "Commands" %}</a></li>
             {% endif %}
         </ul>
-        <form id="displayProfileForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("displayProfile.edit", {id: displayProfile.displayProfileId}) }}">
+        <form id="displayProfileForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("displayProfile.edit", {id: displayProfile.displayProfileId}) }}">
             <div class="tab-content">
                 <div class="tab-pane active" id="general">
                     {% include "displayprofile-form-edit-common-fields.twig" %}
@@ -102,7 +102,7 @@
                         { name: "data-allow-clear", value: "true" },
                         { name: "data-placeholder--id", value: null },
                         { name: "data-placeholder--value", value: "" },
-                        { name: "data-search-url", value: urlFor("daypart.search") },
+                        { name: "data-search-url", value: url_for("daypart.search") },
                         { name: "data-search-term", value: "name" },
                         { name: "data-id-property", value: "dayPartId" },
                         { name: "data-text-property", value: "name" },

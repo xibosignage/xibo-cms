@@ -30,7 +30,7 @@
             <div id="{{ randomId }}" class="div-horizontal"
                      data-param="displayGroupId"
                      data-param-unassign="unassignDisplayGroupId"
-                     data-url="{{ urlFor("display.assign.displayGroup", {id: display.displayId}) }}"
+                     data-url="{{ url_for("display.assign.displayGroup", {id: display.displayId}) }}"
                     >
                 {% set helpText %}{% trans %}Check or un-check the options against each display to control whether they are a member or not.{% endtrans %}{% endset %}
                 {{ forms.message(helpText) }}

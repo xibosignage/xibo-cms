@@ -59,7 +59,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="userDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("user.delete", {id: user.userId}) }}">
+            <form id="userDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ url_for("user.delete", {id: user.userId}) }}">
                 {% set message %}{% trans "Are you sure you want to delete? You may not be able to delete this user if they have associated content. You can retire users by using the Edit Button." %}{% endset %}
                 {{ forms.message(message) }}
 

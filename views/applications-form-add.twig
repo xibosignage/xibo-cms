@@ -23,7 +23,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="applicationFormSubmit" class="XiboForm form-horizontal" method="post" action="{{ urlFor("application.add") }}">
+            <form id="applicationFormSubmit" class="XiboForm form-horizontal" method="post" action="{{ url_for("application.add") }}">
                 {% set title %}{% trans "Application Name" %}{% endset %}
                 {{ forms.input("name", title) }}
             </form>

@@ -23,7 +23,7 @@
         </ul>
 
         <div class="col-md-12">
-            <form id="regionEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("region.edit", {id: region.regionId}) }}">
+            <form id="regionEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("region.edit", {id: region.regionId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="generalTab">
                         {% set title %}{% trans "Name" %}{% endset %}

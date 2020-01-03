@@ -29,7 +29,7 @@ This is the template for the campaign page
                             <div class="col-sm-12">
                                 <div class="embed-responsive embed-responsive-4by3">
                                     <div class="embed-responsive-item preview-container"
-                                         data-url="{{ urlFor('layout.preview', { "id": extendedLayout.layout.layoutId }) }}'">
+                                         data-url="{{ url_for('layout.preview', { "id": extendedLayout.layout.layoutId }) }}'">
                                         {% include 'layout-preview-partial.twig' with {'layout': extendedLayout.layout, 'previewOptions': extendedLayout.previewOptions } %}
                                     </div>
                                 </div>
@@ -42,7 +42,7 @@ This is the template for the campaign page
                                 <small>{% trans "duration" %}:</small> {{ extendedLayout.duration|datehms }}<br/>
                             </div>
                             <div class="col-sm-4">
-                                <a class="btn btn-default btn-sm" href="{{ urlFor("layout.preview", {id: extendedLayout.layout.layoutId}) }}" target="_blank">
+                                <a class="btn btn-default btn-sm" href="{{ url_for("layout.preview", {id: extendedLayout.layout.layoutId}) }}" target="_blank">
                                     {% trans "Open full screen" %}
                                     <span class="fa fa-tablet"></span>
                                 </a>

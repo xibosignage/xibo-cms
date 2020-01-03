@@ -168,7 +168,7 @@
                         <div class="tab-pane fade" id="turnons">
 
                             <p class="narrow text-center">{% trans "Turn ON full auditing and debugging." %}</p>
-                            <form id="1" class="XiboAutoForm text-center " action="{{ urlFor("fault.debug.on") }}" method="put" onsubmit="return checkFormOn(this);">
+                            <form id="1" class="XiboAutoForm text-center " action="{{ url_for("fault.debug.on") }}" method="put" onsubmit="return checkFormOn(this);">
                                 <input class="btn btn-success" type="submit" name="onDeb" value="{% trans " Turn ON Debugging" %}"></input>
                             </form>
                             <br/>
@@ -190,7 +190,7 @@
                             <p class="narrow">{% trans "Recreate the Problem in a new window." %}</p>
                             <p class="narrow">{% trans "Please open a new window and recreate the problem. While you do that we are going to log all of the actions taken in a text based log. We won't capture screenshots or videos, so if you feel that this would be useful please capture those manually and add them to the zip file you will download in the next step." %}</p>
                             <br/>
-                            <a href="{{ urlFor("home") }}" target="_blank" class="btn btn-success"><i class="fa fa-external-link"></i> {% trans "Open a new window" %}</a>
+                            <a href="{{ url_for("home") }}" target="_blank" class="btn btn-success"><i class="fa fa-external-link"></i> {% trans "Open a new window" %}</a>
                             <br/>
                             <br/>
                             <form class="form-horizontal text-center" id="replicate_form" name="replicate_form" role="form">
@@ -243,7 +243,7 @@
                             </div>
 
                             <div class="col-md-12 text-center">
-                                <a id="dldata" class="btn btn-success text-center" type="submit" href="#" data-base-href="{{ urlFor("fault.collect") }}">
+                                <a id="dldata" class="btn btn-success text-center" type="submit" href="#" data-base-href="{{ url_for("fault.collect") }}">
                                     <i class="fa fa-floppy-o" aria-hidden="true"></i> {% trans "Collect and Save Data" %}
                                 </a> <br/><br/>
                                 <form class="form-horizontal text-center" id="collect_form" name="collect_form" role="form">
@@ -262,7 +262,7 @@
                         <div class="tab-pane fade text-center" id="turnoff">
                             <p class="narrow">{% trans "Turn full auditing and debugging OFF." %}</p>
 
-                            <form id="2" class="XiboAutoForm text-center " action="{{ urlFor("fault.debug.off") }}" method="put" onsubmit="return checkFormOff(this);">
+                            <form id="2" class="XiboAutoForm text-center " action="{{ url_for("fault.debug.off") }}" method="put" onsubmit="return checkFormOff(this);">
                                 <input class="btn btn-danger" type="submit" name="offDeb" value="{% trans " Turn OFF Debugging" %}"></input>
                             </form>
                             <br/>

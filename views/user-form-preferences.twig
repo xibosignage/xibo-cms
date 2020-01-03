@@ -35,7 +35,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="userPreferences" class="XiboForm form-horizontal" method="put" action="{{ urlFor("user.pref") }}">
+            <form id="userPreferences" class="XiboForm form-horizontal" method="put" action="{{ url_for("user.pref") }}">
                 {% if theme.isSettingVisible("NAVIGATION_MENU_POSITION") and theme.isSettingEditable("NAVIGATION_MENU_POSITION") %}
                     {% set title %}{% trans "Navigation Menu" %}{% endset %}
                     {% set helpText %}{% trans "Select where the Navigation Menu should be positioned. Once selected please refresh your browser window to apply changes." %}{% endset %}

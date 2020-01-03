@@ -26,7 +26,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <div id="FileAssociationsAssign" class="well" data-url="{{ urlFor("displayGroup.assign.media", {id: displayGroup.displayGroupId}) }}">
+            <div id="FileAssociationsAssign" class="well" data-url="{{ url_for("displayGroup.assign.media", {id: displayGroup.displayGroupId}) }}">
                 <div>
                     <ul id="FileAssociationsSortable">
                         {% for item in media %}
@@ -46,7 +46,7 @@
                     </form>
                 </div>
                 <div class="XiboData">
-                    <table id="mediaAssignments" data-url="{{ urlFor("library.search") }}" class="table table-striped">
+                    <table id="mediaAssignments" data-url="{{ url_for("library.search") }}" class="table table-striped">
                         <thead>
                         <tr>
                             <th>{% trans "Name" %}</th>

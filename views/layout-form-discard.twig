@@ -36,7 +36,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="layoutDiscardForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("layout.discard", {id: layout.layoutId}) }}">
+            <form id="layoutDiscardForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("layout.discard", {id: layout.layoutId}) }}">
 				{{ forms.message("Are you sure you want to discard the changes to this Layout and revert to the previous Published version.") }}
             </form>
         </div>

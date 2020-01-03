@@ -33,7 +33,7 @@
                 {% endif %}
                 <li><a href="#optionsTab" role="tab" data-toggle="tab"><span>{% trans "Options" %}</span></a></li>
             </ul>
-            <form id="userEditForm" class="UserForm form-horizontal" method="put" action="{{ urlFor("user.edit", {id: user.userId}) }}">
+            <form id="userEditForm" class="UserForm form-horizontal" method="put" action="{{ url_for("user.edit", {id: user.userId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "User Name" %}{% endset %}

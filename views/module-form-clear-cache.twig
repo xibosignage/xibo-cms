@@ -23,7 +23,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="clearCache" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.clear.cache",  {id: module.moduleId}) }}">
+            <form id="clearCache" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.clear.cache",  {id: module.moduleId}) }}">
                 {% set message %}{% trans "Clear the cache for this Module. This proces is not reversable." %}{% endset %}
                 {{ forms.message(message) }}
             </form>

@@ -24,7 +24,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="scheduleDeleteForm" class="form-horizontal" method="delete" action="{{ urlFor("schedule.delete", {"id": event.eventId}) }}">
+            <form id="scheduleDeleteForm" class="form-horizontal" method="delete" action="{{ url_for("schedule.delete", {"id": event.eventId}) }}">
                 {% set message %}{% trans "Are you sure you want to delete this event from <b>all</b> displays? If you only want to delete this item from certain displays, please deselect the displays in the edit dialogue and click Save." %}{% endset %}
                 {{ forms.message(message) }}
             </form>

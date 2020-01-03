@@ -39,7 +39,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="userEditProfileForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("user.edit.profile", {id: user.userId}) }}" data-setup="{{ data.setup }}" data-generate="{{ data.generate }}" data-show="{{ data.show }}" data-currentuser="{{  currentUser.twoFactorTypeId }}">
+            <form id="userEditProfileForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("user.edit.profile", {id: user.userId}) }}" data-setup="{{ data.setup }}" data-generate="{{ data.generate }}" data-show="{{ data.show }}" data-currentuser="{{  currentUser.twoFactorTypeId }}">
                 {% set title %}{% trans "User Name" %}{% endset %}
                 {{ forms.disabled("userName", title, currentUser.userName) }}
 

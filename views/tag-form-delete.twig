@@ -38,7 +38,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="tagDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("tag.delete", {"id": tag.tagId}) }}">
+            <form id="tagDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ url_for("tag.delete", {"id": tag.tagId}) }}">
                 {% set message %}{% trans "Are you sure you want to delete this tag? This cannot be undone" %}{% endset %}
                 {{ forms.message(message) }}
             </form>

@@ -33,7 +33,7 @@
                 <button type="button" class="btn btn-primary" data-calendar-nav="next">{% trans "Next" %} <span class="glyphicon glyphicon-forward"></span></button>
             </div>
             <div class="btn-group pull-right xibo-calendar-controls">
-                <button class="btn btn-success XiboFormButton" href="{{ urlFor("schedule.add.form") }}">
+                <button class="btn btn-success XiboFormButton" href="{{ url_for("schedule.add.form") }}">
                     {% trans "Add Event" %}
                 </button>
             </div>
@@ -42,7 +42,7 @@
 
                 {# Campaign / Layout list. We want to build two arrays for us to use. #}
                 {% set attributes = [
-                    { name: "data-search-url", value:  urlFor("schedule.campaign.search") },
+                    { name: "data-search-url", value:  url_for("schedule.campaign.search") },
                     { name: "data-trans-campaigns", value:  "Campaigns"|trans },
                     { name: "data-trans-layouts", value:  "Layouts"|trans }
                 ] %}
@@ -51,7 +51,7 @@
                 {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
                         
                 <select name="campaignId" id="campaignId" class="form-control"
-                    data-search-url= "{{ urlFor("schedule.campaign.search") }}"
+                    data-search-url= "{{ url_for("schedule.campaign.search") }}"
                     data-trans-campaigns= "{% trans "Campaigns" %}"
                     data-trans-layouts= "{% trans "Layouts" %}"
                     data-allow-clear="true"
@@ -101,7 +101,7 @@
         </div> 
     </div> 
     <div class="row">
-        <div id="CalendarContainer" data-event-source="{{ urlFor("schedule.calendar.data") }}" data-agenda-link="{{ urlFor("schedule.events") }}" data-calendar-type="{{ settings.CALENDAR_TYPE }}" class="col-sm-12">
+        <div id="CalendarContainer" data-event-source="{{ url_for("schedule.calendar.data") }}" data-agenda-link="{{ url_for("schedule.events") }}" data-calendar-type="{{ settings.CALENDAR_TYPE }}" class="col-sm-12">
             <div id="Calendar"></div>
         </div>
     </div>

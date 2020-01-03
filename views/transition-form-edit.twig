@@ -23,7 +23,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="transitionEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("transition.edit", {id: transition.transitionId}) }}">
+            <form id="transitionEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("transition.edit", {id: transition.transitionId}) }}">
                 {% set title %}{% trans "Available for In Transitions?" %}{% endset %}
                 {% set helpText %}{% trans "Can this transition be used for media start?" %}{% endset %}
                 {{ forms.checkbox("availableAsIn", title, transition.availableAsIn, helpText) }}

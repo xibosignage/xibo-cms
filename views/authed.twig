@@ -110,10 +110,10 @@
     <script type="text/javascript">
         {% set userPreferences = currentUser.getUserOptions() %}
         var userPreferences = {{ userPreferences|json_encode|raw }};
-        var userPreferencesUrl = "{{ urlFor("user.pref") }}";
+        var userPreferencesUrl = "{{ url_for("user.pref") }}";
     </script>
 
-    {% raw %}
+    {% verbatim %}
     <script type="text/x-handlebars-template" id="buttons-template">
         <div class="btn-group pull-right">
             <button class="btn dropdown-toggle" data-toggle="dropdown">
@@ -175,7 +175,7 @@
                         <p>{{ upload.maxSizeMessage }}</p>
                         {{#if upload.validExtensionsMessage}}
                             <p><strong>{{ upload.validExtensionsMessage }}</strong></p>
-                        {{/if}}                            
+                        {{/if}}
                     </div>
                     <!-- The fileinput-button span is used to style the file input field as button -->
                     <span class="btn btn-success fileinput-button">
@@ -325,10 +325,10 @@
         </tr>
     {% } %}
     </script>
-    {% endraw %}
+    {% endverbatim %}
 
     <script type="text/x-handlebars-template" id="layout-background-image-upload-template">
-        <form method="post" action="{{ urlFor("library.add") }}" enctype="multipart/form-data" data-max-file-size="{{ libraryUpload.maxSize }}" data-accept-file-types="/(\.|\/){{ libraryUpload.validImageExt }}$/i">
+        <form method="post" action="{{ url_for("library.add") }}" enctype="multipart/form-data" data-max-file-size="{{ libraryUpload.maxSize }}" data-accept-file-types="/(\.|\/){{ libraryUpload.validImageExt }}$/i">
             <div class="row">
                 <div class="text-center">
                     <span class="btn btn-success fileinput-button">
@@ -366,7 +366,7 @@
     </script>
 
     <script type="text/x-handlebars-template" id="attachment-upload-template">
-        <form method="post" action="{{ urlFor("notification.addattachment") }}" enctype="multipart/form-data" data-max-file-size="{{ libraryUpload.maxSize }}" data-accept-file-types="/(\.|\/)jpg|jpeg|png|bmp|gif|zip|pdf$/i">
+        <form method="post" action="{{ url_for("notification.addattachment") }}" enctype="multipart/form-data" data-max-file-size="{{ libraryUpload.maxSize }}" data-accept-file-types="/(\.|\/)jpg|jpeg|png|bmp|gif|zip|pdf$/i">
             <div class="row">
                 <div class="text-center">
                     <span class="btn btn-success fileinput-button">

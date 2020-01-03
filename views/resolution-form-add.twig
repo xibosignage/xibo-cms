@@ -23,7 +23,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="resolutionAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("resolution.add") }}">
+            <form id="resolutionAddForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("resolution.add") }}">
                         {% set title %}{% trans "Resolution" %}{% endset %}
                         {% set helpText %}{% trans "A name for this Resolution" %}{% endset %}
                         {{ forms.input("resolution", title, "", helpText) }}

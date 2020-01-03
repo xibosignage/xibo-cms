@@ -28,7 +28,7 @@
             <div id="{{ randomId }}" class="div-horizontal"
                      data-param="userGroupId"
                      data-param-unassign="unassignUserGroupId"
-                     data-url="{{ urlFor("user.assign.userGroup", {id: user.userId}) }}"
+                     data-url="{{ url_for("user.assign.userGroup", {id: user.userId}) }}"
                     >
                 {% set helpText %}{% trans %}Check or un-check the options against each user to control whether they are a member or not.{% endtrans %}{% endset %}
                 {{ forms.message(helpText) }}

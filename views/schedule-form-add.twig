@@ -47,7 +47,7 @@
             </ul>
             {% set dayPartMessage %}{% trans "Select the start time for this event" %}{% endset %}
             {% set notDayPartMessage %}{% trans "Start and end time will be defined by the daypart's configuration for this day of the week. Use a repeating schedule to apply this event over multiple days" %}{% endset %}
-            <form id="scheduleAddForm" autocomplete="off" class="form-horizontal" method="post" action="{{ urlFor("schedule.add") }}" data-daypart-message="{{ dayPartMessage }}" data-not-daypart-message="{{ notDayPartMessage }}">
+            <form id="scheduleAddForm" autocomplete="off" class="form-horizontal" method="post" action="{{ url_for("schedule.add") }}" data-daypart-message="{{ dayPartMessage }}" data-not-daypart-message="{{ notDayPartMessage }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
 
@@ -73,7 +73,7 @@
                         {% set title %}{% trans "Display" %}{% endset %}
                         {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
                         {% set attributes = [
-                            { name: "data-search-url", value:  urlFor("schedule.displayGroup.search") },
+                            { name: "data-search-url", value:  url_for("schedule.displayGroup.search") },
                             { name: "data-trans-groups", value:  "Groups"|trans },
                             { name: "data-trans-display", value:  "Display"|trans }
                         ] %}
@@ -106,7 +106,7 @@
 
                         {# Campaign / Layout list. We want to build two arrays for us to use. #}
                         {% set attributes = [
-                            { name: "data-search-url", value:  urlFor("schedule.campaign.search") },
+                            { name: "data-search-url", value:  url_for("schedule.campaign.search") },
                             { name: "data-trans-campaigns", value:  "Campaigns"|trans },
                             { name: "data-trans-layouts", value:  "Layouts"|trans }
                         ] %}
@@ -121,7 +121,7 @@
 
                         <div class="form-group preview-button-container">
                             <div class="col-md-offset-2 col-md-10">
-                                <a id="previewButton" class="btn btn-success" target="_blank" data-url="{{ urlFor("campaign.preview") }}">{% trans "Preview" %} <span class="fa fa-tablet"></span></a>
+                                <a id="previewButton" class="btn btn-success" target="_blank" data-url="{{ url_for("campaign.preview") }}">{% trans "Preview" %} <span class="fa fa-tablet"></span></a>
                                 <span class="help-block">{% trans "Preview your selection in a new tab" %}</span>
                             </div>
                         </div>

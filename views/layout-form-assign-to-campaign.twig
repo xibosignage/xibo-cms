@@ -24,7 +24,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="layoutAssignCampaignForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("campaign.assign.layout") }}" data-layout-id="{{ layout.layoutId }}">
+            <form id="layoutAssignCampaignForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("campaign.assign.layout") }}" data-layout-id="{{ layout.layoutId }}">
                 {% set title %}{% trans "Campaign" %}{% endset %}
                 {% set helpText %}{% trans "Please select the Campaign you would like to assign this Layout to. It will be assigned to the end of the Campaign." %}{% endset %}
                 {{ forms.dropdown("campaignId", "single", title, null, campaigns, "campaignId", "campaign", helpText, "selectPicker", "", "b", "", [{name:"data-live-search", value:"true"}]) }}

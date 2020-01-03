@@ -23,7 +23,7 @@
                 {% endfor %}
             </ul>
 
-            <form method="post" action="{{ urlFor("application.authorize") }}">
+            <form method="post" action="{{ url_for("application.authorize") }}">
                 <input type="hidden" name="{{ csrfKey }}" value="{{ csrfToken }}" />
                 <input type="submit" value="Approve" name="authorization">
                 <input type="submit" value="Deny" name="authorization">

@@ -16,7 +16,7 @@
 
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help.retire }}")
-    {% trans "Delete" %}, XiboSwapDialog("{{ urlFor("layout.delete.form", {id: layout.layoutId}) }}")
+    {% trans "Delete" %}, XiboSwapDialog("{{ url_for("layout.delete.form", {id: layout.layoutId}) }}")
     {% trans "No" %}, XiboDialogClose()
     {% trans "Yes" %}, $("#layoutRetireForm").submit()
 {% endblock %}
@@ -24,7 +24,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="layoutRetireForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("layout.retire", {id: layout.layoutId}) }}">
+            <form id="layoutRetireForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("layout.retire", {id: layout.layoutId}) }}">
                 {% set title %}{% trans "Are you sure you want to retire this layout?" %}{% endset %}
                 {{ forms.message(title) }}
             </form>

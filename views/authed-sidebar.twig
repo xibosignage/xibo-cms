@@ -1,69 +1,69 @@
 <div id="sidebar-wrapper">
     <ul class="sidebar">
-        <li class="sidebar-main"><a href="{{ urlFor("home") }}">{% trans "Dashboard" %}</a></li>
+        <li class="sidebar-main"><a href="{{ url_for("home") }}">{% trans "Dashboard" %}</a></li>
 
         {% if currentUser.routeViewable("/schedule") %}
-            <li class="sidebar-list"><a href="{{ urlFor("schedule.view") }}">{% trans "Schedule" %}</a></li>
+            <li class="sidebar-list"><a href="{{ url_for("schedule.view") }}">{% trans "Schedule" %}</a></li>
         {% endif %}
 
         {% if currentUser.routeViewable("/daypart") %}
-            <li class="sidebar-list"><a href="{{ urlFor("daypart.view") }}">{% trans "Dayparting" %}</a></li>
+            <li class="sidebar-list"><a href="{{ url_for("daypart.view") }}">{% trans "Dayparting" %}</a></li>
         {% endif %}
 
         {% if currentUser.routeViewable("/campaign") or currentUser.routeViewable("/layout") or currentUser.routeViewable("/template") or currentUser.routeViewable("/resolution") %}
             <li class="sidebar-title"><a>{% trans "Design" %}</a></li>
             {% if currentUser.routeViewable("/campaign") %}
-                <li class="sidebar-list"><a href="{{ urlFor("campaign.view") }}">{% trans "Campaigns" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("campaign.view") }}">{% trans "Campaigns" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/layout") %}
-                <li class="sidebar-list"><a href="{{ urlFor("layout.view") }}">{% trans "Layouts" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("layout.view") }}">{% trans "Layouts" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/template") %}
-                <li class="sidebar-list"><a href="{{ urlFor("template.view") }}">{% trans "Templates" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("template.view") }}">{% trans "Templates" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/resolution") %}
-                <li class="sidebar-list"><a href="{{ urlFor("resolution.view") }}">{% trans "Resolutions" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("resolution.view") }}">{% trans "Resolutions" %}</a></li>
             {% endif %}
         {% endif %}
 
         {% if currentUser.routeViewable("/library") or currentUser.routeViewable("/playlist")  or currentUser.routeViewable("/dataset") %}
             <li class="sidebar-title"><a>{% trans "Library" %}</a></li>
             {% if currentUser.routeViewable("/playlist") %}
-                <li class="sidebar-list"><a href="{{ urlFor("playlist.view") }}">{% trans "Playlists" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("playlist.view") }}">{% trans "Playlists" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/library") %}
-                <li class="sidebar-list"><a href="{{ urlFor("library.view") }}">{% trans "Media" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("library.view") }}">{% trans "Media" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/dataset") %}
-                <li class="sidebar-list"><a href="{{ urlFor("dataset.view") }}">{% trans "DataSets" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("dataset.view") }}">{% trans "DataSets" %}</a></li>
             {% endif %}
         {% endif %}
 
         {% if currentUser.routeViewable("/display") or currentUser.routeViewable("/displaygroup") or currentUser.routeViewable("/stats") or currentUser.routeViewable("/displayprofile") %}
             <li class="sidebar-title"><a>{% trans "Displays" %}</a></li>
             {% if currentUser.routeViewable("/display") %}
-                <li class="sidebar-list"><a href="{{ urlFor("display.view") }}">{% trans "Displays" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("display.view") }}">{% trans "Displays" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/displaygroup") %}
-                <li class="sidebar-list"><a href="{{ urlFor("displaygroup.view") }}">{% trans "Display Groups" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("displaygroup.view") }}">{% trans "Display Groups" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/displayprofile") %}
-                <li class="sidebar-list"><a href="{{ urlFor("displayprofile.view") }}">{% trans "Display Settings" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("displayprofile.view") }}">{% trans "Display Settings" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/playersoftware") %}
-                <li class="sidebar-list"><a href="{{ urlFor("playersoftware.view") }}">{% trans "Player Versions" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("playersoftware.view") }}">{% trans "Player Versions" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/command") %}
-                <li class="sidebar-list"><a href="{{ urlFor("command.view") }}">{% trans "Commands" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("command.view") }}">{% trans "Commands" %}</a></li>
             {% endif %}
         {% endif %}
 
@@ -77,35 +77,35 @@
             <li class="sidebar-title"><a>{% trans "Administration" %}</a></li>
 
             {% if userMenuViewable %}
-                <li class="sidebar-list"><a href="{{ urlFor("user.view") }}">{% trans "Users" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("user.view") }}">{% trans "Users" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/group") %}
-                <li class="sidebar-list"><a href="{{ urlFor("group.view") }}">{% trans "User Groups" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("group.view") }}">{% trans "User Groups" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/admin") %}
-                <li class="sidebar-list"><a href="{{ urlFor("admin.view") }}">{% trans "Settings" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("admin.view") }}">{% trans "Settings" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/application") %}
-                <li class="sidebar-list"><a href="{{ urlFor("application.view") }}">{% trans "Applications" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("application.view") }}">{% trans "Applications" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/module") %}
-                <li class="sidebar-list"><a href="{{ urlFor("module.view") }}">{% trans "Modules" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("module.view") }}">{% trans "Modules" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/transition") %}
-                <li class="sidebar-list"><a href="{{ urlFor("transition.view") }}">{% trans "Transitions" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("transition.view") }}">{% trans "Transitions" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/task") %}
-                <li class="sidebar-list"><a href="{{ urlFor("task.view") }}">{% trans "Tasks" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("task.view") }}">{% trans "Tasks" %}</a></li>
             {% endif %}
 
             {% if currentUser.isSuperAdmin() %}
-                <li class="sidebar-list"><a href="{{ urlFor("tag.view") }}">{% trans "Tags" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("tag.view") }}">{% trans "Tags" %}</a></li>
             {% endif %}
         {% endif %}
 
@@ -115,56 +115,56 @@
             <li class="sidebar-title"><a>{% trans "Reporting" %}</a></li>
 
             {% if currentUser.routeViewable("/stats") %}
-                <li class="sidebar-list"><a href="{{ urlFor("stats.view") }}">{% trans "Display Statistics" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("stats.view") }}">{% trans "Display Statistics" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/stats") %}
-                <li class="sidebar-list"><a href="{{ urlFor("stats.proofofplay.view") }}">{% trans "Proof of Play" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("stats.proofofplay.view") }}">{% trans "Proof of Play" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/stats") %}
-                <li class="sidebar-list"><a href="{{ urlFor("stats.library.view") }}">{% trans "Library Usage" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("stats.library.view") }}">{% trans "Library Usage" %}</a></li>
             {% endif %}
         {% endif %}
 
 
         {% if currentUser.routeViewable("/report") %}
             {% if currentUser.routeViewable("/report") %}
-                <li class="sidebar-list"><a href="{{ urlFor("reportschedule.view") }}">{% trans "Report Schedules" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("reportschedule.view") }}">{% trans "Report Schedules" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/report") %}
-                <li class="sidebar-list"><a href="{{ urlFor("savedreport.view") }}">{% trans "Saved Reports" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("savedreport.view") }}">{% trans "Saved Reports" %}</a></li>
             {% endif %}
         {% endif %}
 
         {% if currentUser.routeViewable("/log") or currentUser.routeViewable("/sessions") or currentUser.routeViewable("/auditlog") or currentUser.routeViewable("/fault") or currentUser.routeViewable("/help") %}
             <li class="sidebar-title"><a>{% trans "Advanced" %}</a></li>
             {% if currentUser.routeViewable("/log") %}
-                <li class="sidebar-list"><a href="{{ urlFor("log.view") }}">{% trans "Log" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("log.view") }}">{% trans "Log" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/sessions") %}
-                <li class="sidebar-list"><a href="{{ urlFor("sessions.view") }}">{% trans "Sessions" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("sessions.view") }}">{% trans "Sessions" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/auditlog") %}
-                <li class="sidebar-list"><a href="{{ urlFor("auditlog.view") }}">{% trans "Audit Trail" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("auditlog.view") }}">{% trans "Audit Trail" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/fault") %}
-                <li class="sidebar-list"><a href="{{ urlFor("fault.view") }}">{% trans "Report Fault" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("fault.view") }}">{% trans "Report Fault" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/help") %}
-                <li class="sidebar-list"><a href="{{ urlFor("help.view") }}">{% trans "Help Links" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("help.view") }}">{% trans "Help Links" %}</a></li>
             {% endif %}
         {% endif %}
     </ul>
 
     <div class="sidebar-footer">
         <div class="col-sm-6">
-            <a class="XiboFormButton" href="{{ urlFor("about") }}" title="{% trans "About the CMS" %}">{% trans "About" %}</a>
+            <a class="XiboFormButton" href="{{ url_for("about") }}" title="{% trans "About the CMS" %}">{% trans "About" %}</a>
         </div>
         <div class="col-sm-6">
             <a href="{{ helpService.address() }}" target="_blank" title="{% trans "Open the Manual in a new Window" %}">{% trans "Manual" %}</a>
