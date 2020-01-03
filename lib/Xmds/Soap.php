@@ -25,6 +25,7 @@ define('BLACKLIST_ALL', "All");
 define('BLACKLIST_SINGLE', "Single");
 
 use Jenssegers\Date\Date;
+use Monolog\Logger;
 use Slim\Log;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
@@ -57,6 +58,7 @@ use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Environment;
 use Xibo\Helper\Random;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -104,7 +106,7 @@ class Soap
     /** @var  DateServiceInterface */
     private $dateService;
 
-    /** @var  SanitizerServiceInterface */
+    /** @var  SanitizerService */
     private $sanitizerService;
 
     /** @var  ConfigServiceInterface */
@@ -182,10 +184,9 @@ class Soap
      * @param PlayerVersionFactory $playerVersionFactory
      */
 
-    public function __construct($logProcessor, $pool, $store, $timeSeriesStore, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory, $displayEventFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory)
+    public function __construct($pool, $store, $timeSeriesStore, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory, $displayEventFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory)
 
     {
-        $this->logProcessor = $logProcessor;
         $this->pool = $pool;
         $this->store = $store;
         $this->timeSeriesStore = $timeSeriesStore;
@@ -256,12 +257,12 @@ class Soap
     }
 
     /**
-     * Get Sanitizer
-     * @return SanitizerServiceInterface
+     * @param $array
+     * @return \Xibo\Support\Sanitizer\SanitizerInterface
      */
-    protected function getSanitizer()
+    protected function getSanitizer($array)
     {
-        return $this->sanitizerService;
+        return $this->sanitizerService->getSanitizer($array);
     }
 
     /**
@@ -283,11 +284,15 @@ class Soap
      */
     protected function doRequiredFiles($serverKey, $hardwareKey, $httpDownloads)
     {
-        $this->logProcessor->setRoute('RequiredFiles');
+       // $this->logProcessor->setRoute('RequiredFiles');
+        $sanitizer = $this->getSanitizer([
+            'serverKey' => $serverKey,
+            'hardwareKey' => $hardwareKey
+        ]);
 
         // Sanitize
-        $serverKey = $this->getSanitizer()->string($serverKey);
-        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $serverKey = $sanitizer->getString('serverKey');
+        $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
@@ -394,12 +399,13 @@ class Soap
 
             // Build up the other layouts into an array
             foreach ($sth->fetchAll() as $row) {
-                $layouts[] = $this->getSanitizer()->int($row['layoutId']);
+                $parsedRow = $this->getSanitizer($row);
+                $layouts[] = $parsedRow->getInt('layoutId');
             }
 
             // Also look at the schedule
             foreach ($this->scheduleFactory->getForXmds($this->display->displayId, $this->fromFilter, $this->toFilter) as $row) {
-
+                $parsedRow = $this->getSanitizer($row);
                 $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
 
                 // Is this scheduled event a synchronised timezone?
@@ -422,7 +428,7 @@ class Soap
 
                 $this->getLog()->debug(count($scheduleEvents) . ' events for eventId ' . $schedule->eventId);
 
-                $layoutId = $this->getSanitizer()->int($row['layoutId']);
+                $layoutId = $parsedRow->getInt('layoutId');
                 if ($layoutId != null && ($schedule->eventTypeId == Schedule::$LAYOUT_EVENT || $schedule->eventTypeId == Schedule::$OVERLAY_EVENT || $schedule->eventTypeId == Schedule::$INTERRUPT_EVENT)) {
                     $layouts[] = $layoutId;
                 }
@@ -523,11 +529,12 @@ class Soap
             $pathsAdded = array();
 
             foreach ($sth->fetchAll() as $row) {
+                $parsedRow = $this->getSanitizer($row);
                 // Media
-                $path = $this->getSanitizer()->string($row['path']);
-                $id = $this->getSanitizer()->string($row['id']);
+                $path = $parsedRow->getString('path');
+                $id = $parsedRow->getString('id');
                 $md5 = $row['MD5'];
-                $fileSize = $this->getSanitizer()->int($row['FileSize']);
+                $fileSize = $parsedRow->getInt('FileSize');
 
                 // Check we haven't added this before
                 if (in_array($path, $pathsAdded))
@@ -793,13 +800,16 @@ class Soap
      */
     protected function doSchedule($serverKey, $hardwareKey, $options = [])
     {
-        $this->logProcessor->setRoute('Schedule');
-
+        //$this->logProcessor->setRoute('Schedule');
+        $sanitizer = $this->getSanitizer([
+            'serverKey' => $serverKey,
+            'hardwareKey' => $hardwareKey
+        ]);
         $options = array_merge(['dependentsAsNodes' => false, 'includeOverlays' => false], $options);
 
         // Sanitize
-        $serverKey = $this->getSanitizer()->string($serverKey);
-        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $serverKey = $sanitizer->getString('serverKey');
+        $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
@@ -823,7 +833,7 @@ class Soap
         $output = $cache->get();
 
         if ($cache->isHit()) {
-            $this->getLog()->info('Returning Schedule from Cache for display %s. Options %s.', $this->display->display, json_encode($options));
+            $this->getLog()->info(sprintf('Returning Schedule from Cache for display %s. Options %s.', $this->display->display, json_encode($options)));
 
             // Log Bandwidth
             $this->logBandwidth($this->display->displayId, Bandwidth::$SCHEDULE, strlen($output));
@@ -913,13 +923,13 @@ class Soap
                 $layoutDependents[$row['layoutId']][] = $row['storedAs'];
             }
 
-            $this->getLog()->debug('Resolved dependents for Schedule: %s.', json_encode($layoutDependents, JSON_PRETTY_PRINT));
+            $this->getLog()->debug(sprintf('Resolved dependents for Schedule: %s.', json_encode($layoutDependents, JSON_PRETTY_PRINT)));
 
             $overlayNodes = null;
 
             // We must have some results in here by this point
             foreach ($events as $row) {
-
+                $parsedRow = $this->getSanitizer($row);
                 $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
 
                 // Is this scheduled event a synchronised timezone?
@@ -957,20 +967,20 @@ class Soap
                     }
 
                     $scheduleId = $row['eventId'];
-                    $is_priority = $this->getSanitizer()->int($row['isPriority']);
+                    $is_priority = $parsedRow->getInt('isPriority');
 
                     if ($eventTypeId == Schedule::$LAYOUT_EVENT || $eventTypeId == Schedule::$INTERRUPT_EVENT) {
                         // Ensure we have a layoutId (we may not if an empty campaign is assigned)
                         // https://github.com/xibosignage/xibo/issues/894
                         if ($layoutId == 0 || empty($layoutId)) {
-                            $this->getLog()->info('Player has empty event scheduled. Display = %s, EventId = %d', $this->display->display, $scheduleId);
+                            $this->getLog()->info(sprintf('Player has empty event scheduled. Display = %s, EventId = %d', $this->display->display, $scheduleId));
                             continue;
                         }
 
                         // Check the layout status
                         // https://github.com/xibosignage/xibo/issues/743
                         if (intval($row['status']) > 3) {
-                            $this->getLog()->info('Player has invalid layout scheduled. Display = %s, LayoutId = %d', $this->display->display, $layoutId);
+                            $this->getLog()->info(sprintf('Player has invalid layout scheduled. Display = %s, LayoutId = %d', $this->display->display, $layoutId));
                             continue;
                         }
 
@@ -1016,14 +1026,14 @@ class Soap
                         // Ensure we have a layoutId (we may not if an empty campaign is assigned)
                         // https://github.com/xibosignage/xibo/issues/894
                         if ($layoutId == 0 || empty($layoutId)) {
-                            $this->getLog()->error('Player has empty event scheduled. Display = %s, EventId = %d', $this->display->display, $scheduleId);
+                            $this->getLog()->error(sprintf('Player has empty event scheduled. Display = %s, EventId = %d', $this->display->display, $scheduleId));
                             continue;
                         }
 
                         // Check the layout status
                         // https://github.com/xibosignage/xibo/issues/743
                         if (intval($row['status']) > 3) {
-                            $this->getLog()->error('Player has invalid layout scheduled. Display = %s, LayoutId = %d', $this->display->display, $layoutId);
+                            $this->getLog()->error(sprintf('Player has invalid layout scheduled. Display = %s, LayoutId = %d', $this->display->display, $layoutId));
                             continue;
                         }
 
@@ -1137,7 +1147,7 @@ class Soap
      */
     protected function doBlackList($serverKey, $hardwareKey, $mediaId, $type, $reason)
     {
-        $this->logProcessor->setRoute('BlackList');
+       // $this->logProcessor->setRoute('BlackList');
 
         // Sanitize
         $serverKey = $this->getSanitizer()->string($serverKey);
@@ -1228,11 +1238,16 @@ class Soap
      */
     protected function doSubmitLog($serverKey, $hardwareKey, $logXml)
     {
-        $this->logProcessor->setRoute('SubmitLog');
+       // $this->logProcessor->setRoute('SubmitLog');
 
         // Sanitize
-        $serverKey = $this->getSanitizer()->string($serverKey);
-        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $sanitizer = $this->getSanitizer([
+            'serverKey' => $serverKey,
+            'hardwareKey' => $hardwareKey
+        ]);
+
+        $serverKey = $sanitizer->getString('serverKey');
+        $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
@@ -1259,7 +1274,8 @@ class Soap
         }
 
         // Current log level
-        $logLevel = $this->logProcessor->getLevel();
+        //$logLevel = $this->logProcessor->getLevel();
+        $logLevel = 'audit';
         $discardedLogs = 0;
 
         // Get the display timezone to use when adjusting log dates.
@@ -1296,16 +1312,16 @@ class Soap
 
             // Does this meet the current log level?
             if ($cat == 'error') {
-                $recordLogLevel = Log::ERROR;
+                $recordLogLevel = Logger::ERROR;
                 $levelName = 'ERROR';
             } else if ($cat == 'audit' || $cat == 'trace') {
-                $recordLogLevel = Log::DEBUG;
+                $recordLogLevel = Logger::DEBUG;
                 $levelName = 'DEBUG';
             } else if ($cat == 'debug') {
-                $recordLogLevel = Log::INFO;
+                $recordLogLevel = Logger::INFO;
                 $levelName = 'INFO';
             } else {
-                $recordLogLevel = Log::NOTICE;
+                $recordLogLevel = Logger::NOTICE;
                 $levelName = 'NOTICE';
             }
 
@@ -1418,11 +1434,14 @@ class Soap
      */
     protected function doSubmitStats($serverKey, $hardwareKey, $statXml)
     {
-        $this->logProcessor->setRoute('SubmitStats');
-
+       // $this->logProcessor->setRoute('SubmitStats');
+        $sanitizer = $this->getSanitizer([
+            'serverKey' => $serverKey,
+            'hardwareKey' => $hardwareKey
+        ]);
         // Sanitize
-        $serverKey = $this->getSanitizer()->string($serverKey);
-        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $serverKey = $sanitizer->getString('serverKey');
+        $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
@@ -1629,7 +1648,7 @@ class Soap
      */
     protected function doMediaInventory($serverKey, $hardwareKey, $inventory)
     {
-        $this->logProcessor->setRoute('MediaInventory');
+      //  $this->logProcessor->setRoute('MediaInventory');
 
         // Sanitize
         $serverKey = $this->getSanitizer()->string($serverKey);
@@ -1739,7 +1758,7 @@ class Soap
      */
     protected function doGetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId)
     {
-        $this->logProcessor->setRoute('GetResource');
+       // $this->logProcessor->setRoute('GetResource');
 
         // Sanitize
         $serverKey = $this->getSanitizer()->string($serverKey);
@@ -1854,7 +1873,7 @@ class Soap
                 return false;
 
             // Configure our log processor
-            $this->logProcessor->setDisplay($this->display->displayId, ($this->display->isAuditing()));
+           // $this->logProcessor->setDisplay($this->display->displayId, ($this->display->isAuditing()));
 
             return true;
 
@@ -1875,7 +1894,7 @@ class Soap
 
         if ($this->display->loggedIn == 0) {
 
-            $this->getLog()->info('Display %s was down, now its up.', $this->display->display);
+            $this->getLog()->info(sprintf('Display %s was down, now its up.', $this->display->display));
 
             // Log display up
             $this->displayEventFactory->createEmpty()->displayUp($this->display->displayId);
@@ -1944,8 +1963,8 @@ class Soap
                         $notification->save();
 
                     } catch (\Exception $e) {
-                        $this->getLog()->error('Unable to send email alert for display %s with subject %s and body %s',
-                            $this->display->display, $subject, $body);
+                        $this->getLog()->error(sprintf('Unable to send email alert for display %s with subject %s and body %s',
+                            $this->display->display, $subject, $body));
                     }
                 } else {
                     $this->getLog()->info('Not sending recovery email for Display - ' . $this->display->display . ' we are outside of its operating hours');
@@ -2105,7 +2124,9 @@ class Soap
             $fromFilter->setTimezone($this->display->timeZone);
         }
 
-        $rfLookAhead = $this->getSanitizer()->int($this->getConfig()->getSetting('REQUIRED_FILES_LOOKAHEAD'));
+        // TODO use new sanitizer here
+        //$rfLookAhead = $this->getSanitizer()->int($this->getConfig()->getSetting('REQUIRED_FILES_LOOKAHEAD'));
+        $rfLookAhead = $this->getConfig()->getSetting('REQUIRED_FILES_LOOKAHEAD');
         if ($rfLookAhead >= 3600) {
             // Go from the top of this hour
             $fromFilter

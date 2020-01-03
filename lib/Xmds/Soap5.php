@@ -35,19 +35,31 @@ class Soap5 extends Soap4
      */
     public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress, $xmrChannel = null, $xmrPubKey = null)
     {
-        $this->logProcessor->setRoute('RegisterDisplay');
+       // $this->logProcessor->setRoute('RegisterDisplay');
+        $sanitized = $this->getSanitizer([
+            'serverKey' => $serverKey,
+            'hardwareKey' => $hardwareKey,
+            'displayName' => $displayName,
+            'clientType' => $clientType,
+            'clientVersion' => $clientVersion,
+            'clientCode' => $clientCode,
+            'operatingSystem' => $operatingSystem,
+            'macAddress' => $macAddress,
+            'xmrChannel' => $xmrChannel,
+            'xmrPubKey' => $xmrPubKey
+        ]);
 
         // Sanitize
-        $serverKey = $this->getSanitizer()->string($serverKey);
-        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
-        $displayName = $this->getSanitizer()->string($displayName);
-        $clientType = $this->getSanitizer()->string($clientType);
-        $clientVersion = $this->getSanitizer()->string($clientVersion);
-        $clientCode = $this->getSanitizer()->int($clientCode);
-        $macAddress = $this->getSanitizer()->string($macAddress);
+        $serverKey = $sanitized->getString('serverKey');
+        $hardwareKey = $sanitized->getString('hardwareKey');
+        $displayName = $sanitized->getString('displayName');
+        $clientType = $sanitized->getString('clientType');
+        $clientVersion = $sanitized->getString('clientVersion');
+        $clientCode = $sanitized->getInt('clientCode');
+        $macAddress = $sanitized->getString('macAddress');
         $clientAddress = $this->getIp();
-        $xmrChannel = $this->getSanitizer()->string($xmrChannel);
-        $xmrPubKey = trim($this->getSanitizer()->string($xmrPubKey));
+        $xmrChannel = $sanitized->getString('xmrChannel');
+        $xmrPubKey = trim($sanitized->getString('xmrPubKey'));
 
         if ($xmrPubKey != '' && !str_contains($xmrPubKey, 'BEGIN PUBLIC KEY')) {
             $xmrPubKey = "-----BEGIN PUBLIC KEY-----\n" . $xmrPubKey . "\n-----END PUBLIC KEY-----\n";
@@ -74,7 +86,7 @@ class Soap5 extends Soap4
             $display = $this->displayFactory->getByLicence($hardwareKey);
             $this->display = $display;
 
-            $this->logProcessor->setDisplay($display->displayId, ($display->isAuditing()));
+            //$this->logProcessor->setDisplay($display->displayId, ($display->isAuditing()));
 
             // Audit in
             $this->getLog()->debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);
