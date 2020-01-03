@@ -34,7 +34,8 @@ use Stash\Invalidation;
 use Xibo\Controller\Library;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Helper\Environment;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 /**
  * Class Ticker
  * @package Xibo\Widget
@@ -326,7 +327,7 @@ class Ticker extends ModuleWidget
      *
      * @inheritdoc
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         // Other properties
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
@@ -377,7 +378,7 @@ class Ticker extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         // Load in the template
         $data = [];

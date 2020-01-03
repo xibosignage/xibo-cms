@@ -9,7 +9,8 @@ namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
 use Xibo\Exception\InvalidArgumentException;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 /**
  * Class Pdf
  * @package Xibo\Widget
@@ -88,7 +89,7 @@ class Pdf extends ModuleWidget
      *
      * @throws \Xibo\Exception\XiboException
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         // Set the properties specific to this module
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
@@ -110,7 +111,7 @@ class Pdf extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         $data = [];
         $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);

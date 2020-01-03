@@ -19,7 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Widget;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 /**
  * Class GenericFile
  * @package Xibo\Widget
@@ -27,7 +28,7 @@ namespace Xibo\Widget;
 class GenericFile extends ModuleWidget
 {
     /** @inheritdoc */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         // Non-editable
     }
@@ -50,7 +51,7 @@ class GenericFile extends ModuleWidget
      * @param int $displayId
      * @return mixed
      */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         if (ini_get('zlib.output_compression')) {
             ini_set('zlib.output_compression', 'Off');

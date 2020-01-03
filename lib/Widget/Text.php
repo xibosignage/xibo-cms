@@ -22,7 +22,8 @@ namespace Xibo\Widget;
 
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Helper\Translate;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 /**
  * Class Text
  * @package Xibo\Widget
@@ -152,20 +153,21 @@ class Text extends ModuleWidget
      *
      * @throws InvalidArgumentException
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
         $this->setOption('xmds', true);
-        $this->setOption('effect', $this->getSanitizer()->getString('effect'));
-        $this->setOption('speed', $this->getSanitizer()->getInt('speed'));
-        $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('marqueeInlineSelector', $this->getSanitizer()->getString('marqueeInlineSelector'));
-        $this->setRawNode('text', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('text', null)));
-        $this->setOption('ta_text_advanced', $this->getSanitizer()->getCheckbox('ta_text_advanced'));
-        $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
+        $this->setOption('effect', $sanitizedParams->getString('effect'));
+        $this->setOption('speed', $sanitizedParams->getInt('speed'));
+        $this->setOption('backgroundColor', $sanitizedParams->getString('backgroundColor'));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('marqueeInlineSelector', $sanitizedParams->getString('marqueeInlineSelector'));
+        $this->setRawNode('text', $request->getParam('ta_text', $request->getParam('text', null)));
+        $this->setOption('ta_text_advanced', $sanitizedParams->getCheckbox('ta_text_advanced'));
+        $this->setRawNode('javaScript', $request->getParam('javaScript', ''));
 
         // Save the widget
         $this->isValid();
@@ -173,17 +175,17 @@ class Text extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         // Start building the template
         $this
-            ->initialiseGetResource()
+            ->initialiseGetResource($request, $response)
             ->appendViewPortWidth($this->region->width)
-            ->appendJavaScriptFile('vendor/jquery-1.11.1.min.js')
-            ->appendJavaScriptFile('xibo-layout-scaler.js')
-            ->appendJavaScriptFile('xibo-text-render.js')
-            ->appendJavaScriptFile('xibo-image-render.js')
-            ->appendFontCss()
+            ->appendJavaScriptFile('vendor/jquery-1.11.1.min.js',  $request)
+            ->appendJavaScriptFile('xibo-layout-scaler.js', $request)
+            ->appendJavaScriptFile('xibo-text-render.js', $request)
+            ->appendJavaScriptFile('xibo-image-render.js', $request)
+            ->appendFontCss($request)
             ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
             ->appendJavaScript($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', '')))
         ;
@@ -254,15 +256,15 @@ class Text extends ModuleWidget
 
         // Need the marquee plugin?
         if (stripos($effect, 'marquee') !== false)
-            $this->appendJavaScriptFile('vendor/jquery.marquee.min.js');
+            $this->appendJavaScriptFile('vendor/jquery.marquee.min.js', $request);
 
         // Need the cycle plugin?
         if ($effect != 'none')
-            $this->appendJavaScriptFile('vendor/jquery-cycle-2.1.6.min.js');
+            $this->appendJavaScriptFile('vendor/jquery-cycle-2.1.6.min.js', $request);
 
         // Do we need to include moment?
         if ($clock)
-            $this->appendJavaScriptFile('vendor/moment.js');
+            $this->appendJavaScriptFile('vendor/moment.js', $request);
 
         // Finalise some JavaScript to run.
         $javaScriptContent = '$(document).ready(function() { ';
@@ -290,7 +292,7 @@ class Text extends ModuleWidget
             $this->appendCss('body { background-color: ' . $this->getOption('backgroundColor') . '; }');
         }
 
-        return $this->finaliseGetResource();
+        return $this->finaliseGetResource(null, $response);
     }
 
     /** @inheritdoc */

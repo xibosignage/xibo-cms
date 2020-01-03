@@ -19,7 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Widget;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 
 class Video extends ModuleWidget
 {
@@ -136,7 +137,7 @@ class Video extends ModuleWidget
      *
      * @inheritdoc
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         // Set the properties specific to this module
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
@@ -159,7 +160,7 @@ class Video extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function previewAsClient($width, $height, $scaleOverride = 0)
+    public function previewAsClient($width, $height, $scaleOverride = 0, Request $request)
     {
         return $this->previewIcon();
     }
@@ -185,7 +186,7 @@ class Video extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         $this->download();
     }

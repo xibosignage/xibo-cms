@@ -21,7 +21,8 @@
 namespace Xibo\Widget;
 
 use Xibo\Exception\InvalidArgumentException;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 /**
  * Class Embedded
  * @package Xibo\Widget
@@ -141,7 +142,7 @@ class Embedded extends ModuleWidget
      *
      * @throws \Xibo\Exception\XiboException
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
@@ -170,7 +171,7 @@ class Embedded extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         // Construct the response HTML
         $this->initialiseGetResource()->appendViewPortWidth($this->region->width);

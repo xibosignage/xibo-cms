@@ -22,6 +22,8 @@
  */
 namespace Xibo\Widget;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use ICal\ICal;
@@ -292,7 +294,7 @@ class Calendar extends ModuleWidget
      *
      * @inheritdoc
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
@@ -335,7 +337,7 @@ class Calendar extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource($displayId)
+    public function getResource(Request $request, Response $response)
     {
         // Construct the response HTML
         $this->initialiseGetResource()->appendViewPortWidth($this->region->width);

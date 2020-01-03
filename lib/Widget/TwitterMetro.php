@@ -28,7 +28,8 @@ use Stash\Invalidation;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 /**
  * Class TwitterMetro
  * @package Xibo\Widget
@@ -352,7 +353,7 @@ class TwitterMetro extends TwitterBase
      *
      * @throws \Xibo\Exception\XiboException
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
@@ -701,7 +702,7 @@ class TwitterMetro extends TwitterBase
     }
 
     /** @inheritdoc */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         // Make sure we are set up correctly
         if ($this->getSetting('apiKey') == '' || $this->getSetting('apiSecret') == '') {

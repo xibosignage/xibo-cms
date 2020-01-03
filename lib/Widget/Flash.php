@@ -19,7 +19,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Widget;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 /**
  * Class Flash
  * @package Xibo\Widget
@@ -35,13 +36,13 @@ class Flash extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function editForm()
+    public function editForm(Request $request, Response $response)
     {
         return 'generic-form-edit';
     }
 
     /** @inheritdoc */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
@@ -51,12 +52,12 @@ class Flash extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function preview($width, $height, $scaleOverride = 0)
+    public function preview($width, $height, $scaleOverride = 0, Request $request)
     {
         if ($this->module->previewEnabled == 0)
-            return parent::preview($width, $height, $scaleOverride);
+            return parent::preview($width, $height, $scaleOverride, $request);
 
-        $url = $this->getApp()->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]);
+        $url = $this->urlFor($request,'module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]);
 
         return '<object width="' . $width . '" height="' . $height . '">
             <param name="movie" value="' . $url . '"></param>
@@ -78,7 +79,7 @@ class Flash extends ModuleWidget
      * @param int $displayId
      * @return mixed
      */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         $this->download();
     }

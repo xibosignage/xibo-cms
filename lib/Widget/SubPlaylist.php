@@ -24,7 +24,8 @@ namespace Xibo\Widget;
 use Xibo\Entity\Widget;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 /**
  * Class Playlist
  * @package Xibo\Widget
@@ -191,7 +192,7 @@ class SubPlaylist extends ModuleWidget
      *
      * @throws InvalidArgumentException
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         // Set some dud durations
         $this->setDuration(10);
@@ -297,9 +298,9 @@ class SubPlaylist extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function delete()
+    public function delete(Request $request, Response $response, $id)
     {
-        parent::delete();
+        parent::delete($request, $response, $id);
 
         $subPlaylistIds = $this->getAssignedPlaylistIds();
 
@@ -320,7 +321,7 @@ class SubPlaylist extends ModuleWidget
     /**
      * @inheritdoc
      */
-    public function preview($width, $height, $scaleOverride = 0)
+    public function preview($width, $height, $scaleOverride = 0, Request $request)
     {
         // Output a summary
         $resolvedWidgets = $this->getSubPlaylistResolvedWidgets();
@@ -679,7 +680,7 @@ class SubPlaylist extends ModuleWidget
     /**
      * @inheritdoc
      */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         return '';
     }

@@ -8,6 +8,8 @@
 
 namespace Xibo\Widget;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 
 class Audio extends ModuleWidget
 {
@@ -90,7 +92,7 @@ class Audio extends ModuleWidget
      *  )
      * )
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         // Set the properties specific to this module
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
@@ -108,6 +110,8 @@ class Audio extends ModuleWidget
         }
 
         $this->saveWidget();
+
+        return $response;
     }
 
     /**
@@ -117,7 +121,7 @@ class Audio extends ModuleWidget
      * @param int $scaleOverride
      * @return string
      */
-    public function previewAsClient($width, $height, $scaleOverride = 0)
+    public function previewAsClient($width, $height, $scaleOverride = 0, Request $request)
     {
         return $this->previewIcon();
     }
@@ -153,7 +157,7 @@ class Audio extends ModuleWidget
      * @param int $displayId
      * @return mixed
      */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         $this->download();
     }

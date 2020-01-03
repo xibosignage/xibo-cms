@@ -21,6 +21,8 @@
 
 namespace Xibo\Widget;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Jenssegers\Date\Date;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
@@ -43,14 +45,14 @@ interface ModuleInterface
      * @return mixed
      * @throws XiboException
      */
-    public function edit();
+    public function edit(Request $request, Response $response, $id);
 
     /**
      * Delete Widget
      * @return mixed
      * @throws XiboException
      */
-    public function delete();
+    public function delete(Request $request, Response $response, $id);
 
     /**
      * Return the name of the media as input by the user
@@ -79,7 +81,7 @@ interface ModuleInterface
      * @param int $scaleOverride
      * @return mixed
      */
-    public function preview($width, $height, $scaleOverride = 0);
+    public function preview($width, $height, $scaleOverride = 0, Request $request);
 
     /**
      * Is the Module Valid?
@@ -162,12 +164,12 @@ interface ModuleInterface
      * @return string
      * @throws XiboException
      */
-    public function getResourceOrCache($displayId);
+    public function getResourceOrCache(Request $request, Response $response);
 
     /**
      * Get Resource
      * @param int $displayId The displayId we're requesting for, or 0 for preview
      * @return string
      */
-    public function getResource($displayId);
+    public function getResource(Request $request, Response $response);
 }

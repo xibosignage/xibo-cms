@@ -22,7 +22,8 @@ namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
 use Xibo\Exception\InvalidArgumentException;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 class LocalVideo extends ModuleWidget
 {
     
@@ -107,7 +108,7 @@ class LocalVideo extends ModuleWidget
      *
      * @throws \Xibo\Exception\XiboException
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         // Set some options
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
@@ -138,13 +139,13 @@ class LocalVideo extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function previewAsClient($width, $height, $scaleOverride = 0)
+    public function previewAsClient($width, $height, $scaleOverride = 0, Request $request)
     {
         return $this->previewIcon();
     }
 
     /** @inheritdoc */
-    public function getResource($displayId)
+    public function getResource(Request $request, Response $response)
     {
         // Get resource isn't required for this module.
         return null;

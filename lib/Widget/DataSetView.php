@@ -24,6 +24,8 @@ use Respect\Validation\Validator as v;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 
 /**
  * Class DataSetView
@@ -154,10 +156,11 @@ class DataSetView extends ModuleWidget
     }
 
     /** @inheritdoc @override */
-    public function editForm()
+    public function editForm(Request $request, Response $response)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Do we have a step provided?
-        $step = $this->getSanitizer()->getInt('step', 2);
+        $step = $sanitizedParams->getInt('step', 2);
 
         if ($step == 1 || !$this->hasDataSet()) {
             return 'datasetview-form-edit-step1';
@@ -329,7 +332,7 @@ class DataSetView extends ModuleWidget
      *
      * @inheritdoc
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         // Do we have a step provided?
         $step = $this->getSanitizer()->getInt('step', 2);
@@ -459,7 +462,7 @@ class DataSetView extends ModuleWidget
      * @param integer $displayId If this comes from a real client, this will be the display id.
      * @return mixed
      */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         // Load in the template
         $data = [];

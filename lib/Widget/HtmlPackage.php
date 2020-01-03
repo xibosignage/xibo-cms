@@ -26,7 +26,8 @@ use Respect\Validation\Validator as v;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 /**
  * Class HtmlPackage
  * @package Xibo\Widget
@@ -177,7 +178,7 @@ class HtmlPackage extends ModuleWidget
      *
      * @throws InvalidArgumentException
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         // Set the properties specific to this module
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
@@ -200,7 +201,7 @@ class HtmlPackage extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         $this->getLog()->debug('HTML Package Module: GetResource for ' . $this->getMediaId());
 

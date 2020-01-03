@@ -22,7 +22,11 @@ namespace Xibo\Widget;
 
 use Intervention\Image\ImageManagerStatic as Img;
 use Mimey\MimeTypes;
-use Slim\Slim;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\App;
+use Slim\Routing\RouteContext;
+use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
 use Stash\Item;
@@ -51,6 +55,7 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -70,7 +75,7 @@ abstract class ModuleWidget implements ModuleInterface
     protected static $STATUS_PLAYER = 2;
 
     /**
-     * @var Slim
+     * @var App
      */
     private $app;
 
@@ -139,7 +144,7 @@ abstract class ModuleWidget implements ModuleInterface
     private $dateService;
 
     /**
-     * @var SanitizerServiceInterface
+     * @var SanitizerService
      */
     private $sanitizerService;
 
@@ -203,11 +208,12 @@ abstract class ModuleWidget implements ModuleInterface
     /** @var PlaylistFactory */
     protected $playlistFactory;
 
+    /** @var Twig */
+    protected $view;
     // </editor-fold>
 
     /**
      * ModuleWidget constructor.
-     * @param Slim $app
      * @param StorageServiceInterface $store
      * @param PoolInterface $pool
      * @param LogServiceInterface $log
@@ -227,9 +233,8 @@ abstract class ModuleWidget implements ModuleInterface
      * @param UserGroupFactory $userGroupFactory
      * @param PlaylistFactory $playlistFactory
      */
-    public function __construct($app, $store, $pool, $log, $config, $date, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory)
+    public function __construct($store, $pool, $log, $config, $date, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, Twig $view)
     {
-        $this->app = $app;
         $this->store = $store;
         $this->pool = $pool;
         $this->logService = $log;
@@ -249,6 +254,7 @@ abstract class ModuleWidget implements ModuleInterface
         $this->permissionFactory = $permissionFactory;
         $this->userGroupFactory = $userGroupFactory;
         $this->playlistFactory = $playlistFactory;
+        $this->view = $view;
 
         $this->init();
     }
@@ -268,7 +274,7 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Get the App
-     * @return Slim
+     * @return App
      */
     protected function getApp()
     {
@@ -324,12 +330,12 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
-     * Get Sanitizer
-     * @return SanitizerServiceInterface
+     * @param $array
+     * @return \Xibo\Support\Sanitizer\SanitizerInterface
      */
-    protected function getSanitizer()
+    protected function getSanitizer($array)
     {
-        return $this->sanitizerService;
+        return $this->sanitizerService->getSanitizer($array);
     }
 
     /**
@@ -712,7 +718,7 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /** @inheritdoc */
-    public function delete()
+    public function delete(Request $request, Response $response, $id)
     {
         $cachePath = $this->getConfig()->getSetting('LIBRARY_LOCATION')
             . 'widget'
@@ -736,6 +742,8 @@ abstract class ModuleWidget implements ModuleInterface
         } catch (\UnexpectedValueException $unexpectedValueException) {
             $this->getLog()->debug('HTML cache doesn\'t exist yet or cannot be deleted. ' . $unexpectedValueException->getMessage());
         }
+
+        return $response;
     }
 
     /**
@@ -766,12 +774,12 @@ abstract class ModuleWidget implements ModuleInterface
      * @param int [Optional] $scaleOverride
      * @return string
      */
-    public function preview($width, $height, $scaleOverride = 0)
+    public function preview($width, $height, $scaleOverride = 0, Request $request)
     {
         if ($this->module->previewEnabled == 0)
             return $this->previewIcon();
 
-        return $this->previewAsClient($width, $height, $scaleOverride);
+        return $this->previewAsClient($width, $height, $scaleOverride, $request);
     }
 
     /**
@@ -790,12 +798,12 @@ abstract class ModuleWidget implements ModuleInterface
      * @param int [Optional] $scaleOverride
      * @return string
      */
-    public function previewAsClient($width, $height, $scaleOverride = 0)
+    public function previewAsClient($width, $height, $scaleOverride = 0, Request $request)
     {
         $widthPx = $width . 'px';
         $heightPx = $height . 'px';
 
-        $url = $this->getApp()->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]);
+        $url = $this->urlFor($request,'module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]);
 
         return '<iframe scrolling="no" src="' . $url . '?raw=true&preview=true" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
     }
@@ -841,9 +849,9 @@ abstract class ModuleWidget implements ModuleInterface
      * @param string|null $type
      * @return string
      */
-    protected function getResourceUrl($uri, $type = null)
+    protected function getResourceUrl($uri, $type = null, Request $request)
     {
-        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
+        $isPreview = ($request->getParam('preview') == 1);
 
         // Local clients store all files in the root of the library
         $uri = basename($uri);
@@ -858,7 +866,7 @@ abstract class ModuleWidget implements ModuleInterface
                     $params['type'] = $type;
                 }
 
-                return $this->getApp()->urlFor('library.download', $params) . '?preview=1';
+                return $this->urlFor($request,'library.download', $params) . '?preview=1';
 
             } catch (NotFoundException $notFoundException) {
                 $this->getLog()->info('Widget referencing a resource that doesnt exist: ' . $this->getModuleType() . ' for ' . $uri);
@@ -877,10 +885,10 @@ abstract class ModuleWidget implements ModuleInterface
      * @param string $template
      * @return mixed
      */
-    protected function renderTemplate($data, $template = 'get-resource')
+    protected function renderTemplate($data, $template = 'get-resource', Response $response)
     {
         // Get the Twig Engine
-        return $this->getApp()->view()->getInstance()->render($template . '.twig', $data);
+        return $this->view->render($response, $template . '.twig', $data);
     }
 
     /**
@@ -1003,7 +1011,7 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * Default view for edit form
      */
-    public function editForm()
+    public function editForm(Request $request, Response $response)
     {
         return $this->getModuleType() . '-form-edit';
     }
@@ -1364,8 +1372,9 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /** @inheritdoc */
-    public final function getResourceOrCache($displayId)
+    public final function getResourceOrCache(Request $request, Response $response)
     {
+        $displayId = $request->getParam('displayId');
         $this->getLog()->debug('getResourceOrCache for displayId ' . $displayId . ' and widgetId ' . $this->getWidgetId());
 
         // End game - we will return this.
@@ -1426,7 +1435,7 @@ abstract class ModuleWidget implements ModuleInterface
                     $this->clearMedia();
 
                     // Generate the resource
-                    $resource = $this->getResource($displayId);
+                    $resource = $this->getResource($request, $response);
 
                     // If the resource is false, then don't cache it for as long (most likely an error)
                     if ($resource === false)
@@ -1587,9 +1596,11 @@ abstract class ModuleWidget implements ModuleInterface
      * Initialise getResource
      * @return $this
      */
-    protected function initialiseGetResource()
+    protected function initialiseGetResource(Request $request, Response $response)
     {
-        $this->data['isPreview'] = ($this->getSanitizer()->getCheckbox('preview') == 1);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $this->data['isPreview'] = ($sanitizedParams->getCheckbox('preview') == 1);
         $this->data['javaScript'] = '';
         $this->data['styleSheet'] = '';
         $this->data['head'] = '';
@@ -1613,10 +1624,10 @@ abstract class ModuleWidget implements ModuleInterface
      * @param string $templateName an optional template name
      * @return string the rendered template
      */
-    protected function finaliseGetResource($templateName = 'get-resource')
+    protected function finaliseGetResource($templateName = 'get-resource', Response $response)
     {
         $this->data['javaScript'] = '<script type="text/javascript">var options = ' . $this->data['options'] . '; var items = ' . $this->data['items'] . ';</script>' . PHP_EOL . $this->data['javaScript'];
-        return $this->renderTemplate($this->data, $templateName);
+        return $this->renderTemplate($this->data, $templateName, $response);
     }
 
     /**
@@ -1634,9 +1645,9 @@ abstract class ModuleWidget implements ModuleInterface
      * Append Font CSS
      * @return $this
      */
-    protected function appendFontCss()
+    protected function appendFontCss(Request $request)
     {
-        $this->data['styleSheet'] .= '<link href="' . (($this->isPreview()) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen" />' . PHP_EOL;
+        $this->data['styleSheet'] .= '<link href="' . (($this->isPreview()) ? $this->urlFor($request,'library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen" />' . PHP_EOL;
         return $this;
     }
 
@@ -1645,9 +1656,9 @@ abstract class ModuleWidget implements ModuleInterface
      * @param string $uri The URI, according to whether this is a CMS preview or not
      * @return $this
      */
-    protected function appendCssFile($uri)
+    protected function appendCssFile($uri, Request $request)
     {
-        $this->data['styleSheet'] .= '<link href="' . $this->getResourceUrl($uri) . '" rel="stylesheet" media="screen" />' . PHP_EOL;
+        $this->data['styleSheet'] .= '<link href="' . $this->getResourceUrl($uri, null, $request) . '" rel="stylesheet" media="screen" />' . PHP_EOL;
         return $this;
     }
 
@@ -1673,9 +1684,9 @@ abstract class ModuleWidget implements ModuleInterface
      * @param string $uri
      * @return $this
      */
-    protected function appendJavaScriptFile($uri)
+    protected function appendJavaScriptFile($uri, Request $request)
     {
-        $this->data['javaScript'] .= '<script type="text/javascript" src="' . $this->getResourceUrl($uri) . '"></script>' . PHP_EOL;
+        $this->data['javaScript'] .= '<script type="text/javascript" src="' . $this->getResourceUrl($uri, null, $request) . '"></script>' . PHP_EOL;
         return $this;
     }
 
@@ -1737,6 +1748,21 @@ abstract class ModuleWidget implements ModuleInterface
     {
         $this->data[$key] .= $item . PHP_EOL;
         return $this;
+    }
+
+    /**
+     * Get Url For Route
+     * @param Request $request
+     * @param string $route
+     * @param array $data
+     * @param array $params
+     * @return string
+     */
+    protected function urlFor(Request $request, $route, $data = [], $params = [])
+    {
+        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
+        $this->getLog()->debug('ROUTE IS ' . $route . ' DATA is ' . json_encode($data) . ' THE PARMS ARE  ' . json_encode($params) . ' THE URL STREING IS ' . $routeParser->urlFor($route, $data, $params) ) ;
+        return $routeParser->urlFor($route, $data, $params);
     }
 
     //</editor-fold>

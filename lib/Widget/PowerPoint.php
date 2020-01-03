@@ -19,12 +19,13 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Widget;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 
 class PowerPoint extends ModuleWidget
 {
     /** @inheritdoc */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
@@ -50,7 +51,7 @@ class PowerPoint extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function editForm()
+    public function editForm(Request $request, Response $response)
     {
         return 'generic-form-edit';
     }
@@ -62,7 +63,7 @@ class PowerPoint extends ModuleWidget
      * @param int $scaleOverride
      * @return string
      */
-    public function previewAsClient($width, $height, $scaleOverride = 0)
+    public function previewAsClient($width, $height, $scaleOverride = 0, Request $request)
     {
         return $this->previewIcon();
     }
@@ -72,7 +73,7 @@ class PowerPoint extends ModuleWidget
      * @param int $displayId
      * @return mixed
      */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         $this->download();
     }

@@ -22,7 +22,8 @@
 namespace Xibo\Widget;
 
 use Xibo\Factory\ModuleFactory;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 /**
  * Class Spacer
  * @package Xibo\Widget
@@ -124,7 +125,7 @@ class Spacer extends ModuleWidget
      *
      * @throws \Xibo\Exception\InvalidArgumentException
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         // Set the properties specific to this module
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
@@ -145,7 +146,7 @@ class Spacer extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         // Construct the response HTML
         $this->initialiseGetResource()->appendViewPortWidth($this->region->width);

@@ -21,7 +21,8 @@
 namespace Xibo\Widget;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 /**
  * Class Font
  * @package Xibo\Widget
@@ -29,7 +30,7 @@ use Xibo\Exception\NotFoundException;
 class Font extends ModuleWidget
 {
     /** @inheritdoc */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         // Non-editable
     }
@@ -82,7 +83,7 @@ class Font extends ModuleWidget
     public function settings()
     {
         if ($this->getSanitizer()->getCheckbox('rebuildFonts', 0) == 1) {
-            $this->getApp()->container->get('\Xibo\Controller\Library')->setApp($this->getApp())->installFonts(['invalidateCache' => true]);
+            $this->getApp()->getContainer()->get('\Xibo\Controller\Library')->setApp($this->getApp())->installFonts(['invalidateCache' => true]);
         }
     }
 
@@ -140,7 +141,7 @@ class Font extends ModuleWidget
      * @param int $displayId
      * @return mixed
      */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         $this->download();
     }

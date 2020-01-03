@@ -22,7 +22,8 @@ namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
 use Xibo\Exception\InvalidArgumentException;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 /**
  * Class VideoIn
  * @package Xibo\Widget
@@ -125,7 +126,7 @@ class VideoIn extends ModuleWidget
      *
      * @throws \Xibo\Exception\XiboException
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         // Set some options
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
@@ -154,7 +155,7 @@ class VideoIn extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource($displayId)
+    public function getResource(Request $request, Response $response)
     {
         // Get resource isn't required for this module
         return null;

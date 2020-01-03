@@ -21,7 +21,8 @@
 namespace Xibo\Widget;
 
 use Xibo\Exception\InvalidArgumentException;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 class ShellCommand extends ModuleWidget
 {
 
@@ -127,7 +128,7 @@ class ShellCommand extends ModuleWidget
      *
      * @throws \Xibo\Exception\XiboException
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         // Any Options (we need to encode shell commands, as they sit on the options rather than the raw
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
@@ -156,10 +157,10 @@ class ShellCommand extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function preview($width, $height, $scaleOverride = 0)
+    public function preview($width, $height, $scaleOverride = 0, Request $request)
     {
         if ($this->module->previewEnabled == 0)
-            return parent::Preview($width, $height);
+            return parent::Preview($width, $height, $scaleOverride, $request);
 
         $windows = $this->getOption('windowsCommand');
         $linux = $this->getOption('linuxCommand');
@@ -195,7 +196,7 @@ class ShellCommand extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource($displayId)
+    public function getResource(Request $request, Response $response)
     {
         // Get resource isn't required for this module.
         return null;

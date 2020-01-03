@@ -32,7 +32,8 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Helper\Translate;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 /**
  * Class ForecastIo
  * Weather module powered by the DarkSky API
@@ -310,7 +311,7 @@ class ForecastIo extends ModuleWidget
      *
      * @throws \Xibo\Exception\XiboException
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
@@ -659,7 +660,7 @@ class ForecastIo extends ModuleWidget
      * @return mixed
      * @throws XiboException
      */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         // Behave exactly like the client.
         if (!$foreCast = $this->getForecastData($displayId))

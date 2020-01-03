@@ -22,7 +22,8 @@ namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
 use Xibo\Exception\InvalidArgumentException;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 /**
  * Class WebPage
  * @package Xibo\Widget
@@ -153,7 +154,7 @@ class WebPage extends ModuleWidget
      *
      * @throws \Xibo\Exception\XiboException
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         $this->setOption('xmds', true);
         $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
@@ -175,17 +176,17 @@ class WebPage extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function preview($width, $height, $scaleOverride = 0)
+    public function preview($width, $height, $scaleOverride = 0, Request $request)
     {
         // If we are opening the web page natively on the device, then we cannot offer a preview
         if ($this->getOption('modeid') == 1)
             return $this->previewIcon();
 
-        return parent::preview($width, $height, $scaleOverride);
+        return parent::preview($width, $height, $scaleOverride, $request);
     }
 
     /** @inheritdoc */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         // Load in the template
         $data = [];

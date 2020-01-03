@@ -25,6 +25,8 @@ use Respect\Validation\Validator as v;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 
 /**
  * Class DataSetTicker
@@ -115,10 +117,11 @@ class DataSetTicker extends ModuleWidget
     }
 
     /** @inheritdoc @override */
-    public function editForm()
+    public function editForm(Request $request, Response $response)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Do we have a step provided?
-        $step = $this->getSanitizer()->getInt('step', 2);
+        $step = $sanitizedParams->getInt('step', 2);
 
         if ($step == 1 || !$this->hasDataSet()) {
             return 'datasetticker-form-edit-step1';
@@ -342,7 +345,7 @@ class DataSetTicker extends ModuleWidget
      *
      * @inheritdoc
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         // Do we have a step provided?
         $step = $this->getSanitizer()->getInt('step', 2);
@@ -450,7 +453,7 @@ class DataSetTicker extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         // Load in the template
         $data = [];
