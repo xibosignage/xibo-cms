@@ -76,32 +76,35 @@ class ApplicationRedirectUriFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        $entries = array();
-        $params = array();
+        $entries = [];
+        $params = [];
+
+        $sanitizedFilter = $this->getSanitizer($filterBy);
 
         $select = 'SELECT id, client_id AS clientId, redirect_uri AS redirectUri ';
 
         $body = ' FROM `oauth_client_redirect_uris` WHERE 1 = 1 ';
 
-        if ($this->getSanitizer()->getString('clientId', $filterBy) != null) {
+        if ($sanitizedFilter->getString('clientId') != null) {
             $body .= ' AND `oauth_client_redirect_uris`.client_id = :clientId ';
-            $params['clientId'] = $this->getSanitizer()->getString('clientId', $filterBy);
+            $params['clientId'] = $sanitizedFilter->getString('clientId');
         }
 
-        if ($this->getSanitizer()->getString('id', $filterBy) != null) {
+        if ($sanitizedFilter->getString('id') != null) {
             $body .= ' AND `oauth_client_redirect_uris`.client_id = :id ';
-            $params['id'] = $this->getSanitizer()->getString('id', $filterBy);
+            $params['id'] = $sanitizedFilter->getString('id');
         }
 
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         // The final statements

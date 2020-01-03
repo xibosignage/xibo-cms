@@ -163,13 +163,14 @@ class TagFactory extends BaseFactory
         $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options, lktaglayout.value FROM `tag` INNER JOIN `lktaglayout` ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = :layoutId';
 
         foreach ($this->getStore()->select($sql, ['layoutId' => $layoutId]) as $row) {
+            $sanitizedRow = $this->getSanitizer($row);
             $tag = $this->createEmpty();
-            $tag->tagId = $this->getSanitizer()->int($row['tagId']);
-            $tag->tag = $this->getSanitizer()->string($row['tag']);
-            $tag->isSystem = $this->getSanitizer()->int($row['isSystem']);
-            $tag->isRequired = $this->getSanitizer()->int($row['isRequired']);
-            $tag->options = $this->getSanitizer()->string($row['options']);
-            $tag->value = $this->getSanitizer()->string($row['value']);
+            $tag->tagId = $sanitizedRow->getInt('tagId');
+            $tag->tag = $sanitizedRow->getString('tag');
+            $tag->isSystem = $sanitizedRow->getInt('isSystem');
+            $tag->isRequired = $sanitizedRow->getInt('isRequired');
+            $tag->options = $sanitizedRow->getString('options');
+            $tag->value = $sanitizedRow->getString('value');
 
             $tags[] = $tag;
         }

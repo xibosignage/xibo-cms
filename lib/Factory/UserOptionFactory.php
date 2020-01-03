@@ -75,11 +75,12 @@ class UserOptionFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
+        $parsedFilter = $this->getSanitizer($filterBy);
         $entries = array();
 
         $sql = 'SELECT * FROM `useroption` WHERE userId = :userId';
 
-        foreach ($this->getStore()->select($sql, array('userId' => $this->getSanitizer()->getInt('userId', $filterBy))) as $row) {
+        foreach ($this->getStore()->select($sql, array('userId' => $parsedFilter->getInt('userId'))) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row);
         }
 

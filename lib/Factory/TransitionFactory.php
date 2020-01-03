@@ -96,8 +96,10 @@ class TransitionFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        $entries = array();
-        $params = array();
+        $entries = [];
+        $params = [];
+
+        $sanitizedFilter = $this->getSanitizer($filterBy);
 
         $sql = '
         SELECT transitionId,
@@ -111,30 +113,30 @@ class TransitionFactory extends BaseFactory
          WHERE 1 = 1
         ';
 
-        if ($this->getSanitizer()->getInt('transitionId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('transitionId') !== null) {
             $sql .= ' AND transition.transitionId = :transitionId ';
-            $params['transitionId'] = $this->getSanitizer()->getInt('transitionId', $filterBy);
+            $params['transitionId'] = $sanitizedFilter->getInt('transitionId');
         }
 
-        if ($this->getSanitizer()->getInt('availableAsIn', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('availableAsIn') !== null) {
             $sql .= ' AND transition.availableAsIn = :availableAsIn ';
-            $params['availableAsIn'] = $this->getSanitizer()->getInt('availableAsIn', $filterBy);
+            $params['availableAsIn'] = $sanitizedFilter->getInt('availableAsIn');
         }
 
-        if ($this->getSanitizer()->getInt('availableAsOut', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('availableAsOut') !== null) {
             $sql .= ' AND transition.availableAsOut = :availableAsOut ';
-            $params['availableAsOut'] = $this->getSanitizer()->getInt('availableAsOut', $filterBy);
+            $params['availableAsOut'] = $sanitizedFilter->getInt('availableAsOut');
         }
 
-        if ($this->getSanitizer()->getString('code', $filterBy) != null) {
+        if ($sanitizedFilter->getString('code') != null) {
             $sql .= ' AND transition.code = :code ';
-            $params['code'] = $this->getSanitizer()->getString('code', $filterBy);
+            $params['code'] = $sanitizedFilter->getString('code');
         }
 
         // Sorting?
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
-
+        }
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {

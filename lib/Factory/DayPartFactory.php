@@ -22,6 +22,7 @@
 
 namespace Xibo\Factory;
 
+use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\DayPart;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
@@ -67,9 +68,9 @@ class DayPartFactory extends BaseFactory
      * @return DayPart
      * @throws NotFoundException
      */
-    public function getById($dayPartId)
+    public function getById($dayPartId, Request $request = null)
     {
-        $dayParts = $this->query(null, ['dayPartId' => $dayPartId, 'disableUserCheck' => 1]);
+        $dayParts = $this->query(null, ['dayPartId' => $dayPartId, 'disableUserCheck' => 1], $request);
 
         if (count($dayParts) <= 0)
             throw new NotFoundException();
@@ -123,9 +124,10 @@ class DayPartFactory extends BaseFactory
      * @param array $filterBy
      * @return array[Schedule]
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query($sortOrder = null, $filterBy = [], Request $request = null)
     {
-        $entries = array();
+        $entries = [];
+        $sanitizedFilter = $this->getSanitizer($filterBy);
 
         if ($sortOrder == null)
             $sortOrder = ['name'];
@@ -138,25 +140,25 @@ class DayPartFactory extends BaseFactory
         $body .= ' WHERE 1 = 1 ';
 
         // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\DayPart', $body, $params, '`daypart`.dayPartId', '`daypart`.userId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\DayPart', $body, $params, '`daypart`.dayPartId', '`daypart`.userId', $filterBy, $request);
 
-        if ($this->getSanitizer()->getInt('dayPartId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('dayPartId') !== null) {
             $body .= ' AND `daypart`.dayPartId = :dayPartId ';
-            $params['dayPartId'] = $this->getSanitizer()->getInt('dayPartId', $filterBy);
+            $params['dayPartId'] = $sanitizedFilter->getInt('dayPartId');
         }
 
-        if ($this->getSanitizer()->getInt('isAlways', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('isAlways') !== null) {
             $body .= ' AND `daypart`.isAlways = :isAlways ';
-            $params['isAlways'] = $this->getSanitizer()->getInt('isAlways', $filterBy);
+            $params['isAlways'] = $sanitizedFilter->getInt('isAlways');
         }
 
-        if ($this->getSanitizer()->getInt('isCustom', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('isCustom') !== null) {
             $body .= ' AND `daypart`.isCustom = :isCustom ';
-            $params['isCustom'] = $this->getSanitizer()->getInt('isCustom', $filterBy);
+            $params['isCustom'] = $sanitizedFilter->getInt('isCustom');
         }
 
-        if ($this->getSanitizer()->getString('name', $filterBy) != null) {
-            $terms = explode(',', $this->getSanitizer()->getString('name', $filterBy));
+        if ($sanitizedFilter->getString('name') != null) {
+            $terms = explode(',', $sanitizedFilter->getString('name'));
             $this->nameFilter('daypart', 'name', $terms, $body, $params);
         }
 
@@ -167,8 +169,8 @@ class DayPartFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

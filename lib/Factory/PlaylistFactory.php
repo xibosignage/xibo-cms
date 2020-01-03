@@ -170,8 +170,9 @@ class PlaylistFactory extends BaseFactory
      * @param array $filterBy
      * @return Playlist[]
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query($sortOrder = null, $filterBy = [], Request $request = null)
     {
+        $parsedFilter = $this->getSanitizer($filterBy);
         $entries = [];
 
         $params = [];
@@ -229,35 +230,35 @@ class PlaylistFactory extends BaseFactory
              WHERE 1 = 1 
         ';
 
-        if ($this->getSanitizer()->getInt('playlistId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('playlistId') !== null) {
             $body .= ' AND `playlist`.playlistId = :playlistId ';
-            $params['playlistId'] = $this->getSanitizer()->getInt('playlistId', $filterBy);
+            $params['playlistId'] = $parsedFilter->getInt('playlistId');
         }
 
-        if ($this->getSanitizer()->getInt('notPlaylistId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('notPlaylistId') !== null) {
             $body .= ' AND `playlist`.playlistId <> :notPlaylistId ';
-            $params['notPlaylistId'] = $this->getSanitizer()->getInt('notPlaylistId', $filterBy);
+            $params['notPlaylistId'] = $parsedFilter->getInt('notPlaylistId');
         }
 
-        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('userId') !== null) {
             $body .= ' AND `playlist`.ownerId = :ownerId ';
-            $params['ownerId'] = $this->getSanitizer()->getInt('userId', $filterBy);
+            $params['ownerId'] = $parsedFilter->getInt('userId');
         }
 
         // User Group filter
-        if ($this->getSanitizer()->getInt('ownerUserGroupId', 0, $filterBy) != 0) {
+        if ($parsedFilter->getInt('ownerUserGroupId',['default' => 0]) != 0) {
             $body .= ' AND `playlist`.ownerId IN (SELECT DISTINCT userId FROM `lkusergroup` WHERE groupId =  :ownerUserGroupId) ';
-            $params['ownerUserGroupId'] = $this->getSanitizer()->getInt('ownerUserGroupId', 0, $filterBy);
+            $params['ownerUserGroupId'] = $parsedFilter->getInt('ownerUserGroupId',['default' => 0]);
         }
 
-        if ($this->getSanitizer()->getInt('regionId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('regionId') !== null) {
             $body .= ' AND `playlist`.regionId = :regionId ';
-            $params['regionId'] = $this->getSanitizer()->getInt('regionId', $filterBy);
+            $params['regionId'] = $parsedFilter->getInt('regionId');
         }
 
-        if ($this->getSanitizer()->getInt('requiresDurationUpdate', $filterBy) !== null) {
+        if ($parsedFilter->getInt('requiresDurationUpdate') !== null) {
             // Either 1, or 0
-            if ($this->getSanitizer()->getInt('requiresDurationUpdate', $filterBy) == 1) {
+            if ($parsedFilter->getInt('requiresDurationUpdate') == 1) {
                 // Not 0 and behind now.
                 $body .= ' AND `playlist`.requiresDurationUpdate <= :requiresDurationUpdate ';
                 $body .= ' AND `playlist`.requiresDurationUpdate <> 0 ';
@@ -269,12 +270,12 @@ class PlaylistFactory extends BaseFactory
             }
         }
 
-        if ($this->getSanitizer()->getInt('isDynamic', $filterBy) !== null) {
+        if ($parsedFilter->getInt('isDynamic') !== null) {
             $body .= ' AND `playlist`.isDynamic = :isDynamic ';
-            $params['isDynamic'] = $this->getSanitizer()->getInt('isDynamic', $filterBy);
+            $params['isDynamic'] = $parsedFilter->getInt('isDynamic');
         }
 
-        if ($this->getSanitizer()->getInt('childId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('childId') !== null) {
             $body .= ' 
                 AND `playlist`.playlistId IN (
                     SELECT parentId 
@@ -282,49 +283,49 @@ class PlaylistFactory extends BaseFactory
                      WHERE childId = :childId
             ';
 
-            if ($this->getSanitizer()->getInt('depth', $filterBy) !== null) {
+            if ($parsedFilter->getInt('depth') !== null) {
                 $body .= ' AND depth = :depth ';
-                $params['depth'] = $this->getSanitizer()->getInt('depth', $filterBy);
+                $params['depth'] = $parsedFilter->getInt('depth');
             }
 
             $body .= '
                 ) 
             ';
-            $params['childId'] = $this->getSanitizer()->getInt('childId', $filterBy);
+            $params['childId'] = $parsedFilter->getInt('childId');
         }
 
-        if ($this->getSanitizer()->getInt('regionSpecific', $filterBy) !== null) {
-            if ($this->getSanitizer()->getInt('regionSpecific', $filterBy) === 1)
+        if ($parsedFilter->getInt('regionSpecific') !== null) {
+            if ($parsedFilter->getInt('regionSpecific') === 1)
                 $body .= ' AND `playlist`.regionId IS NOT NULL ';
             else
                 $body .= ' AND `playlist`.regionId IS NULL ';
         }
 
         // Logged in user view permissions
-        $this->viewPermissionSql('Xibo\Entity\Playlist', $body, $params, 'playlist.playlistId', 'playlist.ownerId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\Playlist', $body, $params, 'playlist.playlistId', 'playlist.ownerId', $filterBy, $request);
 
         // Playlist Like
-        if ($this->getSanitizer()->getString('name', $filterBy) != '') {
-            $terms = explode(',', $this->getSanitizer()->getString('name', $filterBy));
+        if ($parsedFilter->getString('name') != '') {
+            $terms = explode(',', $parsedFilter->getString('name', $filterBy));
             $this->nameFilter('playlist', 'name', $terms, $body, $params);
         }
 
         // Playlist exact name
-        if ($this->getSanitizer()->getString('playlistExact', $filterBy) != '') {
+        if ($parsedFilter->getString('playlistExact') != '') {
             $body.= " AND playlist.name = :exact ";
-            $params['exact'] = $this->getSanitizer()->getString('playlistExact', $filterBy);
+            $params['exact'] = $parsedFilter->getString('playlistExact');
         }
 
         // Not PlaylistId
-        if ($this->getSanitizer()->getInt('notPlaylistId', 0, $filterBy) != 0) {
+        if ($parsedFilter->getInt('notPlaylistId', ['default' => 0]) != 0) {
             $body .= " AND playlist.playlistId <> :notPlaylistId ";
-            $params['notPlaylistId'] = $this->getSanitizer()->getInt('notPlaylistId', 0, $filterBy);
+            $params['notPlaylistId'] = $parsedFilter->getInt('notPlaylistId',['default' => 0]);
         }
 
         // Tags
-        if ($this->getSanitizer()->getString('tags', $filterBy) != '') {
+        if ($parsedFilter->getString('tags') != '') {
 
-            $tagFilter = $this->getSanitizer()->getString('tags', $filterBy);
+            $tagFilter = $parsedFilter->getString('tags', $filterBy);
 
             if (trim($tagFilter) === '--no-tag') {
                 $body .= ' AND `playlist`.playlistID NOT IN (
@@ -335,7 +336,7 @@ class PlaylistFactory extends BaseFactory
                     )
                 ';
             } else {
-                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+                $operator = $parsedFilter->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
 
                 $body .= " AND `playlist`.playlistID IN (
                 SELECT lktagplaylist.playlistId
@@ -350,7 +351,7 @@ class PlaylistFactory extends BaseFactory
         }
 
         // MediaID
-        if ($this->getSanitizer()->getInt('mediaId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('mediaId') !== null) {
             // TODO: sub-playlists
             $body .= ' AND `playlist`.playlistId IN (
                 SELECT DISTINCT `widget`.playlistId
@@ -361,11 +362,11 @@ class PlaylistFactory extends BaseFactory
                 )
             ';
 
-            $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', 0, $filterBy);
+            $params['mediaId'] = $parsedFilter->getInt('mediaId',['default' => 0]);
         }
 
         // Media Like
-        if ($this->getSanitizer()->getString('mediaLike', $filterBy) !== null) {
+        if ($parsedFilter->getString('mediaLike') !== null) {
             // TODO: sub-playlists
             $body .= ' AND `playlist`.playlistId IN (
                 SELECT DISTINCT `widget`.playlistId
@@ -378,10 +379,10 @@ class PlaylistFactory extends BaseFactory
                 )
             ';
 
-            $params['mediaLike'] = '%' . $this->getSanitizer()->getString('mediaLike', $filterBy) . '%';
+            $params['mediaLike'] = '%' . $parsedFilter->getString('mediaLike') . '%';
         }
 
-        $user = $this->getUser();
+        $user = $this->getUser($request);
 
         if ( ($user->userTypeId == 1 && $user->showContentFrom == 2) || $user->userTypeId == 4 ) {
             $body .= ' AND user.userTypeId = 4 ';
@@ -399,8 +400,8 @@ class PlaylistFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $parsedFilter->getInt('start') !== null && $parsedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($parsedFilter->getInt('start'), 0) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

@@ -181,11 +181,12 @@ class RegionFactory extends BaseFactory
      * @param array $filterBy
      * @return array[Region]
      */
-    public function query($sortOrder = array(), $filterBy = array())
+    public function query($sortOrder = [], $filterBy = [])
     {
-        $entries = array();
+        $entries = [];
+        $sanitizedFilter = $this->getSanitizer($filterBy);
 
-        $params = array();
+        $params = [];
         $sql = '
           SELECT `region`.regionId,
               `region`.layoutId,
@@ -205,19 +206,19 @@ class RegionFactory extends BaseFactory
 
         $sql .= ' WHERE 1 = 1 ';
 
-        if ($this->getSanitizer()->getInt('regionId', $filterBy) != 0) {
+        if ($sanitizedFilter->getInt('regionId') != 0) {
             $sql .= ' AND regionId = :regionId ';
-            $params['regionId'] = $this->getSanitizer()->getInt('regionId', $filterBy);
+            $params['regionId'] = $sanitizedFilter->getInt('regionId');
         }
 
-        if ($this->getSanitizer()->getInt('layoutId', $filterBy) != 0) {
+        if ($sanitizedFilter->getInt('layoutId') != 0) {
             $sql .= ' AND layoutId = :layoutId ';
-            $params['layoutId'] = $this->getSanitizer()->getInt('layoutId', $filterBy);
+            $params['layoutId'] = $sanitizedFilter->getInt('layoutId');
         }
 
-        if ($this->getSanitizer()->getInt('playlistId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('playlistId') !== null) {
             $sql .= ' AND regionId IN (SELECT regionId FROM playlist WHERE playlistId = :playlistId) ';
-            $params['playlistId'] = $this->getSanitizer()->getInt('playlistId', $filterBy);
+            $params['playlistId'] = $sanitizedFilter->getInt('playlistId');
         }
 
         foreach ($this->getStore()->select($sql, $params) as $row) {

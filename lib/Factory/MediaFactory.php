@@ -22,7 +22,7 @@
 
 namespace Xibo\Factory;
 
-
+use Slim\Http\ServerRequest as Request;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Pool;
@@ -461,8 +461,10 @@ class MediaFactory extends BaseFactory
      * @param array $filterBy
      * @return Media[]
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query($sortOrder = null, $filterBy = [], Request $request = null)
     {
+        $sanitizedFilter = $this->getSanitizer($filterBy);
+
         if ($sortOrder === null)
             $sortOrder = ['name'];
 
@@ -481,9 +483,9 @@ class MediaFactory extends BaseFactory
         }
         $sortOrder = $newSortOrder;
 
-        $entries = array();
+        $entries = [];
 
-        $params = array();
+        $params = [];
         $select = '
             SELECT  media.mediaId,
                media.name,
@@ -530,34 +532,34 @@ class MediaFactory extends BaseFactory
         // Media might be linked to the system user (userId 0)
         $body .= "   LEFT OUTER JOIN `user` ON `user`.userId = `media`.userId ";
 
-        if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('displayGroupId') !== null) {
             $body .= '
                 INNER JOIN `lkmediadisplaygroup`
                 ON lkmediadisplaygroup.mediaid = media.mediaid
                     AND lkmediadisplaygroup.displayGroupId = :displayGroupId
             ';
 
-            $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
+            $params['displayGroupId'] = $sanitizedFilter->getInt('displayGroupId');
         }
 
         $body .= " WHERE 1 = 1 ";
 
-        if ($this->getSanitizer()->getInt('notPlayerSoftware', $filterBy) == 1) {
+        if ($sanitizedFilter->getInt('notPlayerSoftware') == 1) {
             $body .= ' AND media.type <> \'playersoftware\' ';
         }
 
-        if ($this->getSanitizer()->getInt('notSavedReport', $filterBy) == 1) {
+        if ($sanitizedFilter->getInt('notSavedReport') == 1) {
             $body .= ' AND media.type <> \'savedreport\' ';
         }
 
         // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy, $request);
 
-        if ($this->getSanitizer()->getInt('allModules', $filterBy) == 0) {
+        if ($sanitizedFilter->getInt('allModules') == 0) {
             $body .= ' AND media.type <> \'module\' ';
         }
 
-        if ($this->getSanitizer()->getInt('assignable', -1, $filterBy) == 1) {
+        if ($sanitizedFilter->getInt('assignable', ['default'=> -1]) == 1) {
             $body .= '
                 AND media.type <> \'genericfile\'
                 AND media.type <> \'playersoftware\'
@@ -566,7 +568,7 @@ class MediaFactory extends BaseFactory
             ';
         }
 
-        if ($this->getSanitizer()->getInt('assignable', -1, $filterBy) == 0) {
+        if ($sanitizedFilter->getInt('assignable', ['default'=> -1]) == 0) {
             $body .= '
                 AND (media.type = \'genericfile\'
                 OR media.type = \'playersoftware\'
@@ -576,7 +578,7 @@ class MediaFactory extends BaseFactory
         }
 
         // Unused only?
-        if ($this->getSanitizer()->getInt('unusedOnly', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('unusedOnly') !== null) {
 
             $body .= '
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkwidgetmedia`)
@@ -611,8 +613,8 @@ class MediaFactory extends BaseFactory
 
                     $first = false;
 
-                    $dataSetId = $this->getSanitizer()->getInt('dataSetId', $dataSet);
-                    $heading = $this->getSanitizer()->getString('heading', $dataSet);
+                    $dataSetId = $sanitizedFilter->getInt('dataSetId', $dataSet);
+                    $heading = $sanitizedFilter->getString('heading', $dataSet);
 
                     $body .= ' SELECT `' .  $heading . '` AS mediaId FROM `dataset_' . $dataSetId . '`';
                 }
@@ -621,75 +623,75 @@ class MediaFactory extends BaseFactory
             }
         }
 
-        if ($this->getSanitizer()->getString('name', $filterBy) != null) {
-            $terms = explode(',', $this->getSanitizer()->getString('name', $filterBy));
+        if ($sanitizedFilter->getString('name') != null) {
+            $terms = explode(',', $sanitizedFilter->getString('name'));
             $this->nameFilter('media', 'name', $terms, $body, $params);
         }
 
-        if ($this->getSanitizer()->getString('nameExact', $filterBy) != '') {
+        if ($sanitizedFilter->getString('nameExact') != '') {
             $body .= ' AND media.name = :exactName ';
-            $params['exactName'] = $this->getSanitizer()->getString('nameExact', $filterBy);
+            $params['exactName'] = $sanitizedFilter->getString('nameExact');
         }
 
-        if ($this->getSanitizer()->getInt('mediaId', -1, $filterBy) != -1) {
+        if ($sanitizedFilter->getInt('mediaId', ['default'=> -1]) != -1) {
             $body .= " AND media.mediaId = :mediaId ";
-            $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
-        } else if ($this->getSanitizer()->getInt('parentMediaId', $filterBy) !== null) {
+            $params['mediaId'] = $sanitizedFilter->getInt('mediaId');
+        } else if ($sanitizedFilter->getInt('parentMediaId') !== null) {
             $body .= ' AND media.editedMediaId = :mediaId ';
-            $params['mediaId'] = $this->getSanitizer()->getInt('parentMediaId', $filterBy);
-        } else if ($this->getSanitizer()->getInt('isEdited', -1, $filterBy) != -1) {
+            $params['mediaId'] = $sanitizedFilter->getInt('parentMediaId');
+        } else if ($sanitizedFilter->getInt('isEdited') != -1) {
             $body .= ' AND media.isEdited <> -1 ';
         } else {
             $body .= ' AND media.isEdited = 0 ';
         }
 
-        if ($this->getSanitizer()->getString('type', $filterBy) != '') {
+        if ($sanitizedFilter->getString('type') != '') {
             $body .= 'AND media.type = :type ';
-            $params['type'] = $this->getSanitizer()->getString('type', $filterBy);
+            $params['type'] = $sanitizedFilter->getString('type');
         }
 
-        if ($this->getSanitizer()->getInt('imageProcessing', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('imageProcessing') !== null) {
             $body .= 'AND ( media.type = \'image\' OR (media.type = \'module\' AND media.moduleSystemFile = 0) ) ';
         }
 
-        if ($this->getSanitizer()->getString('storedAs', $filterBy) != '') {
+        if ($sanitizedFilter->getString('storedAs') != '') {
             $body .= 'AND media.storedAs = :storedAs ';
-            $params['storedAs'] = $this->getSanitizer()->getString('storedAs', $filterBy);
+            $params['storedAs'] = $sanitizedFilter->getString('storedAs');
         }
 
-        if ($this->getSanitizer()->getInt('ownerId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('ownerId') !== null) {
             $body .= " AND media.userid = :ownerId ";
-            $params['ownerId'] = $this->getSanitizer()->getInt('ownerId', $filterBy);
+            $params['ownerId'] = $sanitizedFilter->getInt('ownerId');
         }
 
         // User Group filter
-        if ($this->getSanitizer()->getInt('ownerUserGroupId', 0, $filterBy) != 0) {
+        if ($sanitizedFilter->getInt('ownerUserGroupId', ['default'=> 0]) != 0) {
             $body .= ' AND media.userid IN (SELECT DISTINCT userId FROM `lkusergroup` WHERE groupId =  :ownerUserGroupId) ';
-            $params['ownerUserGroupId'] = $this->getSanitizer()->getInt('ownerUserGroupId', 0, $filterBy);
+            $params['ownerUserGroupId'] = $sanitizedFilter->getInt('ownerUserGroupId');
         }
 
-        if ($this->getSanitizer()->getInt('released', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('released') !== null) {
             $body .= " AND media.released = :released ";
-            $params['released'] = $this->getSanitizer()->getInt('released', $filterBy);
+            $params['released'] = $sanitizedFilter->getInt('released');
         }
 
-        if ($this->getSanitizer()->getInt('retired', -1, $filterBy) == 1)
+        if ($sanitizedFilter->getInt('retired', ['default'=> -1]) == 1)
             $body .= " AND media.retired = 1 ";
 
-        if ($this->getSanitizer()->getInt('retired', -1, $filterBy) == 0)
+        if ($sanitizedFilter->getInt('retired', ['default'=> -1]) == 0)
             $body .= " AND media.retired = 0 ";
 
         // Expired files?
-        if ($this->getSanitizer()->getInt('expires', $filterBy) != 0) {
+        if ($sanitizedFilter->getInt('expires') != 0) {
             $body .= ' 
                 AND media.expires < :expires 
                 AND IFNULL(media.expires, 0) <> 0 
                 AND ( media.mediaId NOT IN (SELECT mediaId FROM `lkwidgetmedia`) OR media.type <> \'module\')
             ';
-            $params['expires'] = $this->getSanitizer()->getInt('expires', $filterBy);
+            $params['expires'] = $sanitizedFilter->getInt('expires');
         }
 
-        if ($this->getSanitizer()->getInt('layoutId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('layoutId') !== null) {
             // handles the closure table link with sub-playlists
             $body .= '
                 AND media.mediaId IN (
@@ -705,21 +707,21 @@ class MediaFactory extends BaseFactory
                         ON widget.widgetId = lkwidgetmedia.widgetId
                      WHERE region.layoutId = :layoutId ';
 
-            if ($this->getSanitizer()->getInt('widgetId', $filterBy) !== null) {
+            if ($sanitizedFilter->getInt('widgetId') !== null) {
                 $body .= ' AND `widget`.widgetId = :widgetId ';
-                $params['widgetId'] = $this->getSanitizer()->getInt('widgetId', $filterBy);
+                $params['widgetId'] = $sanitizedFilter->getInt('widgetId');
             }
 
             $body .= '    )
                 AND media.type <> \'module\'
             ';
-            $params['layoutId'] = $this->getSanitizer()->getInt('layoutId', $filterBy);
+            $params['layoutId'] = $sanitizedFilter->getInt('layoutId');
         }
 
         // Tags
-        if ($this->getSanitizer()->getString('tags', $filterBy) != '') {
+        if ($sanitizedFilter->getString('tags') != '') {
 
-            $tagFilter = $this->getSanitizer()->getString('tags', $filterBy);
+            $tagFilter = $sanitizedFilter->getString('tags');
 
             if (trim($tagFilter) === '--no-tag') {
                 $body .= ' AND `media`.mediaId NOT IN (
@@ -730,7 +732,7 @@ class MediaFactory extends BaseFactory
                     )
                 ';
             } else {
-                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+                $operator = $sanitizedFilter->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
 
                 $body .= " AND `media`.mediaId IN (
                 SELECT `lktagmedia`.mediaId
@@ -745,16 +747,16 @@ class MediaFactory extends BaseFactory
         }
 
         // File size
-        if ($this->getSanitizer()->getString('fileSize', $filterBy) != null) {
-            $fileSize = $this->parseComparisonOperator($this->getSanitizer()->getString('fileSize', $filterBy));
+        if ($sanitizedFilter->getString('fileSize') != null) {
+            $fileSize = $this->parseComparisonOperator($sanitizedFilter->getString('fileSize'));
 
             $body .= ' AND `media`.fileSize ' . $fileSize['operator'] . ' :fileSize ';
             $params['fileSize'] = $fileSize['variable'];
         }
 
         // Duration
-        if ($this->getSanitizer()->getString('duration', $filterBy) != null) {
-            $duration = $this->parseComparisonOperator($this->getSanitizer()->getString('duration', $filterBy));
+        if ($sanitizedFilter->getString('duration') != null) {
+            $duration = $this->parseComparisonOperator($sanitizedFilter->getString('duration'));
 
             $body .= ' AND `media`.duration ' . $duration['operator'] . ' :duration ';
             $params['duration'] = $duration['variable'];
@@ -775,8 +777,8 @@ class MediaFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length', ['default'=> 10]) !== null) {
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default'=> 10]);
         }
 
         $sql = $select . $body . $order . $limit;

@@ -74,28 +74,29 @@ class ApplicationScopeFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        $entries = array();
-        $params = array();
+        $sanitizedFilter = $this->getSanitizer($filterBy);
+        $entries = [];
+        $params = [];
 
         $select = 'SELECT `oauth_scopes`.id, `oauth_scopes`.description';
 
         $body = '  FROM `oauth_scopes`';
 
-        if ($this->getSanitizer()->getString('clientId', $filterBy) != null) {
+        if ($sanitizedFilter->getString('clientId') != null) {
             $body .= ' INNER JOIN `oauth_client_scopes`
                 ON `oauth_client_scopes`.scopeId = `oauth_scopes`.id ';
         }
 
         $body .= ' WHERE 1 = 1 ';
 
-        if ($this->getSanitizer()->getString('clientId', $filterBy) != null) {
+        if ($sanitizedFilter->getString('clientId') != null) {
             $body .= ' AND `oauth_client_scopes`.clientId = :clientId  ';
-            $params['clientId'] = $this->getSanitizer()->getString('clientId', $filterBy);
+            $params['clientId'] = $sanitizedFilter->getString('clientId');
         }
 
-        if ($this->getSanitizer()->getString('id', $filterBy) != null) {
+        if ($sanitizedFilter->getString('id') != null) {
             $body .= ' AND `oauth_scopes`.id = :id ';
-            $params['id'] = $this->getSanitizer()->getString('id', $filterBy);
+            $params['id'] = $sanitizedFilter->getString('id');
         }
 
         // Sorting?
@@ -105,8 +106,8 @@ class ApplicationScopeFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         // The final statements

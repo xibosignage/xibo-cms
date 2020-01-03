@@ -23,6 +23,7 @@
 namespace Xibo\Factory;
 
 
+use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
@@ -205,9 +206,10 @@ class UserFactory extends BaseFactory
      * @param array[mixed] $filterBy
      * @return array[User]
      */
-    public function query($sortOrder = [], $filterBy = [])
+    public function query($sortOrder = [], $filterBy = [], Request $request = null)
     {
         $entries = [];
+        $parsedBody = $this->getSanitizer($filterBy);
 
         // Default sort order
         if ($sortOrder === null || count($sortOrder) <= 0)
@@ -258,13 +260,13 @@ class UserFactory extends BaseFactory
              WHERE 1 = 1
          ';
 
-        if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
+        if ($parsedBody->getCheckbox('disableUserCheck') == 0) {
             // Normal users can only see themselves
-            if ($this->getUser()->userTypeId == 3) {
-                $filterBy['userId'] = $this->getUser()->userId;
+            if ($this->getUser($request)->userTypeId == 3) {
+                $filterBy['userId'] = $this->getUser($request)->userId;
             }
             // Group admins can only see users from their groups.
-            else if ($this->getUser()->userTypeId == 2) {
+            else if ($this->getUser($request)->userTypeId == 2) {
                 $body .= '
                     AND user.userId IN (
                         SELECT `otherUserLinks`.userId
@@ -277,60 +279,60 @@ class UserFactory extends BaseFactory
                          WHERE `lkusergroup`.userId = :currentUserId
                     )
                 ';
-                $params['currentUserId'] = $this->getUser()->userId;
+                $params['currentUserId'] = $this->getUser($request)->userId;
             }
         }
 
-        if ($this->getSanitizer()->getInt('notUserId', $filterBy) !== null) {
+        if ($parsedBody->getInt('notUserId') !== null) {
             $body .= ' AND user.userId <> :notUserId ';
-            $params['notUserId'] = $this->getSanitizer()->getInt('notUserId', $filterBy);
+            $params['notUserId'] = $parsedBody->getInt('notUserId');
         }
 
         // User Id Provided?
-        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
+        if ($parsedBody->getInt('userId') !== null) {
             $body .= " AND user.userId = :userId ";
-            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
+            $params['userId'] = $parsedBody->getInt('userId');
         }
 
         // Groups Provided
-        $groups = $this->getSanitizer()->getParam('groupIds', $filterBy);
+        $groups = $parsedBody->getIntArray('groupIds');
 
         if ($groups !== null && count($groups) > 0) {
             $body .= ' AND user.userId IN (SELECT userId FROM `lkusergroup` WHERE groupId IN (' . implode($groups, ',') . ')) ';
         }
 
         // User Type Provided
-        if ($this->getSanitizer()->getInt('userTypeId', $filterBy) !== null) {
+        if ($parsedBody->getInt('userTypeId') !== null) {
             $body .= " AND user.userTypeId = :userTypeId ";
-            $params['userTypeId'] = $this->getSanitizer()->getInt('userTypeId', $filterBy);
+            $params['userTypeId'] = $parsedBody->getInt('userTypeId');
         }
 
         // User Name Provided
-        if ($this->getSanitizer()->getString('exactUserName', $filterBy) != null) {
+        if ($parsedBody->getString('exactUserName') != null) {
             $body .= " AND user.userName = :exactUserName ";
-            $params['exactUserName'] = $this->getSanitizer()->getString('exactUserName', $filterBy);
+            $params['exactUserName'] = $parsedBody->getString('exactUserName');
         }
 
-        if ($this->getSanitizer()->getString('userName', $filterBy) != null) {
-            $terms = explode(',', $this->getSanitizer()->getString('userName', $filterBy));
+        if ($parsedBody->getString('userName', $filterBy) != null) {
+            $terms = explode(',', $parsedBody->getString('userName'));
             $this->nameFilter('user', 'userName', $terms, $body, $params);
         }
 
         // Email Provided
-        if ($this->getSanitizer()->getString('email', $filterBy) != null) {
+        if ($parsedBody->getString('email') != null) {
             $body .= " AND user.email = :email ";
-            $params['email'] = $this->getSanitizer()->getString('email', $filterBy);
+            $params['email'] = $parsedBody->getString('email');
         }
 
         // Retired users?
-        if ($this->getSanitizer()->getInt('retired', $filterBy) !== null) {
+        if ($parsedBody->getInt('retired') !== null) {
             $body .= " AND user.retired = :retired ";
-            $params['retired'] = $this->getSanitizer()->getInt('retired', $filterBy);
+            $params['retired'] = $parsedBody->getInt('retired');
         }
 
-        if ($this->getSanitizer()->getString('clientId', $filterBy) != null) {
+        if ($parsedBody->getString('clientId') != null) {
             $body .= ' AND user.userId = (SELECT userId FROM `oauth_clients` WHERE id = :clientId) ';
-            $params['clientId'] = $this->getSanitizer()->getString('clientId', $filterBy);
+            $params['clientId'] = $parsedBody->getString('clientId');
         }
 
         // Sorting?
@@ -340,8 +342,8 @@ class UserFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $parsedBody->getInt('start') !== null && $parsedBody->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($parsedBody->getInt('start'), 0) . ', ' . $parsedBody->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

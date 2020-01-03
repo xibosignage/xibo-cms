@@ -82,7 +82,8 @@ class CommandFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        $entries = array();
+        $sanitizedFilter = $this->getSanitizer($filterBy);
+        $entries = [];
 
         if ($sortOrder == null)
             $sortOrder = ['command'];
@@ -90,37 +91,37 @@ class CommandFactory extends BaseFactory
         $params = array();
         $select = 'SELECT `command`.commandId, `command`.command, `command`.code, `command`.description, `command`.userId ';
 
-        if ($this->getSanitizer()->getInt('displayProfileId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('displayProfileId') !== null) {
             $select .= ', commandString, validationString ';
         }
 
         $body = ' FROM `command` ';
 
-        if ($this->getSanitizer()->getInt('displayProfileId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('displayProfileId') !== null) {
             $body .= '
                 INNER JOIN `lkcommanddisplayprofile`
                 ON `lkcommanddisplayprofile`.commandId = `command`.commandId
                     AND `lkcommanddisplayprofile`.displayProfileId = :displayProfileId
             ';
 
-            $params['displayProfileId'] = $this->getSanitizer()->getInt('displayProfileId', $filterBy);
+            $params['displayProfileId'] = $sanitizedFilter->getInt('displayProfileId');
         }
 
         $body .= ' WHERE 1 = 1 ';
 
-        if ($this->getSanitizer()->getInt('commandId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('commandId') !== null) {
             $body .= ' AND `command`.commandId = :commandId ';
-            $params['commandId'] = $this->getSanitizer()->getInt('commandId', $filterBy);
+            $params['commandId'] = $sanitizedFilter->getInt('commandId');
         }
 
-        if ($this->getSanitizer()->getString('command', $filterBy) != null) {
+        if ($sanitizedFilter->getString('command') != null) {
             $body .= ' AND `command`.command = :command ';
-            $params['command'] = $this->getSanitizer()->getString('command', $filterBy);
+            $params['command'] = $sanitizedFilter->getString('command');
         }
 
-        if ($this->getSanitizer()->getString('code', $filterBy) != null) {
+        if ($sanitizedFilter->getString('code') != null) {
             $body .= ' AND `code`.code = :code ';
-            $params['code'] = $this->getSanitizer()->getString('code', $filterBy);
+            $params['code'] = $sanitizedFilter->getString('code');
         }
 
         // Sorting?
@@ -130,8 +131,8 @@ class CommandFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start', $filterBy) !== null && $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
