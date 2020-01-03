@@ -1,14 +1,15 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
- * This file (index.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,13 +20,20 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+use Slim\Views\Twig;
+use Slim\Views\TwigMiddleware;
 use Xibo\Service\ConfigService;
+use Xibo\Factory\ContainerFactory;
+use Nyholm\Psr7\Factory\Psr17Factory;
+use Slim\Http\Factory\DecoratedResponseFactory;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 
-error_reporting(0);
-ini_set('display_errors', 0);
+error_reporting(1);
+ini_set('display_errors', 1);
 
 require PROJECT_ROOT . '/vendor/autoload.php';
 
@@ -41,7 +49,8 @@ if (!file_exists('settings.php')) {
     }
 }
 
-// Create a logger
+// TODO might be better to create logger like before and not in containerFactory
+/* Create a logger
 $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     'name' => 'WEB',
     'handlers' => [
@@ -52,71 +61,72 @@ $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
         new \Monolog\Processor\UidProcessor(7)
     )
 ), false);
+*/
 
-// Slim Application
-$app = new \RKA\Slim(array(
-    'debug' => false,
-    'log.writer' => $logger
-));
-$app->setName('web');
+// Create the container for dependency injection.
+try {
+    $container = ContainerFactory::create();
+} catch (Exception $e) {
+    die($e->getMessage());
+}
 
-// Twig templates
-$twig = new \Slim\Views\Twig();
-$twig->parserOptions = array(
-    'debug' => true,
-    'cache' => PROJECT_ROOT . '/cache'
-);
-$twig->parserExtensions = array(
-    new \Slim\Views\TwigExtension(),
-    new \Xibo\Twig\TransExtension(),
-    new \Xibo\Twig\ByteFormatterTwigExtension(),
-    new \Xibo\Twig\UrlDecodeTwigExtension(),
-    new \Xibo\Twig\DateFormatTwigExtension()
-);
+// Create a Slim application
+$app = \DI\Bridge\Slim\Bridge::create($container);
 
-// Configure the template folder
-$twig->twigTemplateDirs = [PROJECT_ROOT . '/views'];
-
-$app->view($twig);
 
 // Config
-$app->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
+$app->config = $container->get('configService');
+$app->router = $app->getRouteCollector()->getRouteParser();
 
 //
 // Middleware (onion, outside inwards and then out again - i.e. the last one is first and last);
 //
-$app->add(new \Xibo\Middleware\Actions());
+$twigMiddleware = TwigMiddleware::createFromContainer($app);
+$app->add(new RKA\Middleware\IpAddress(true, []));
+$app->add(new \Xibo\Middleware\Actions($app));
+$app->add(new \Xibo\Middleware\Theme($app));
+$app->add(new \Xibo\Middleware\WebAuthentication($app));
+$app->add(new \Xibo\Middleware\Storage($app));
+$app->add(new \Xibo\Middleware\State($app));
+$app->add($twigMiddleware);
+$app->add(new \Xibo\Middleware\Xmr($app));
 
-// Theme Middleware
-$app->add(new \Xibo\Middleware\Theme());
+$app->addRoutingMiddleware();
 
-// Authentication middleware
+
+/* TODO Authentication middleware
 if ($app->configService->authentication != null && $app->configService->authentication instanceof \Slim\Middleware)
     $app->add($app->configService->authentication);
 else
     $app->add(new \Xibo\Middleware\WebAuthentication());
-
+*/
 // Standard Xibo middleware
-$app->add(new \Xibo\Middleware\CsrfGuard());
-$app->add(new \Xibo\Middleware\State());
-$app->add(new \Xibo\Middleware\Storage());
-$app->add(new \Xibo\Middleware\Xmr());
+// TODO, investigate if we still want to use csrf
+//$app->add(new \Xibo\Middleware\CsrfGuard());
+
 
 // Handle additional Middleware
-\Xibo\Middleware\State::setMiddleWare($app);
+//\Xibo\Middleware\State::setMiddleWare($app);
 //
 // End Middleware
 //
 
-// Configure the Slim error handler
-$app->error(function (\Exception $e) use ($app) {
-    $app->container->get('\Xibo\Controller\Error')->handler($e);
-});
+// Define Custom Error Handler
+$customErrorHandler = function (Request $request, Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($app) {
+    $nyholmFactory = new Psr17Factory();
+    $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
+    /** @var Response $response */
+    $response = $decoratedResponseFactory->createResponse($exception->getCode());
 
-// Configure a not found handler
-$app->notFound(function () use ($app) {
-    $app->container->get('\Xibo\Controller\Error')->notFound();
-});
+    return $response->withJson([
+        'error' => $exception->getMessage(),
+        'code' => $exception->getCode()
+    ]);
+};
+
+// Add Error Middleware
+$errorMiddleware = $app->addErrorMiddleware(true, true, true);
+//$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
 
 // All application routes
 require PROJECT_ROOT . '/lib/routes-web.php';

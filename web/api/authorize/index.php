@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
- * This file (api.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,46 +20,44 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use Xibo\Service\ConfigService;
+use Xibo\Factory\ContainerFactory;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/../../..'));
 
-error_reporting(0);
-ini_set('display_errors', 0);
+error_reporting(1);
+ini_set('display_errors', 1);
 
 require PROJECT_ROOT . '/vendor/autoload.php';
 
 if (!file_exists(PROJECT_ROOT . '/web/settings.php'))
     die('Not configured');
 
-// Create a logger
-$logger = new \Xibo\Helper\AccessibleMonologWriter(array(
-    'name' => 'AUTH',
-    'handlers' => array(
-        new \Xibo\Helper\DatabaseLogHandler()
-    ),
-    'processors' => array(
-        new \Xibo\Helper\LogProcessor(),
-        new \Monolog\Processor\UidProcessor(7)
-    )
-), false);
+// Create the container for dependency injection.
+try {
+    $container = ContainerFactory::create();
+} catch (Exception $e) {
+    die($e->getMessage());
+}
 
-$app = new \RKA\Slim(array(
-    'debug' => false,
-    'log.writer' => $logger
-));
-$app->setName('auth');
+// Create a Slim application
+$app = \DI\Bridge\Slim\Bridge::create($container);
 
 // Config
-$app->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
+$app->config = $container->get('configService');
+$routeParser = $app->getRouteCollector()->getRouteParser();
+// Config
 
-$app->add(new \Xibo\Middleware\ApiAuthorizationOAuth());
-$app->add(new \Xibo\Middleware\State());
-$app->add(new \Xibo\Middleware\Storage());
-$app->view(new \Xibo\Middleware\ApiView());
-
-// Configure the Slim error handler
+$app->add(new \Xibo\Middleware\ApiAuthorizationOAuth($app));
+$app->add(new \Xibo\Middleware\Storage($app));
+$app->add(new \Xibo\Middleware\State($app));
+//$app->view(new \Xibo\Middleware\ApiView());
+$app->addRoutingMiddleware();
+$app->setBasePath('/api/authorize');
+$errorMiddleware = $app->addErrorMiddleware(true, true, true);
+/* Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
     $app->container->get('\Xibo\Controller\Error')->handler($e);
 });
@@ -68,31 +67,32 @@ $app->notFound(function () use ($app) {
     $app->container->get('\Xibo\Controller\Error')->notFound();
 });
 
-// Auth Routes
-$app->get('/', function() use ($app) {
+*/
 
-    $authParams = $app->server->getGrantType('authorization_code')->checkAuthorizeParams();
+// Auth Routes
+$app->get('/', function(Request $request, Response $response) use ($app) {
+
+    $authParams = $app->getContainer()->get('server')->getGrantType('authorization_code')->checkAuthorizeParams();
 
     // Redirect the user to the UI - save the auth params in the session.
-    $app->session->set('authParams', $authParams);
+    $app->getContainer()->get('session')->set('authParams', $authParams);
 
-    // We know we are at /api/authorize, so convert that to /application/authorise
-    $app->redirect(str_replace('/api/authorize/', '/application/authorize', $app->request()->getPath()));
+    // We know we are at /api/authorize, so convert that to /application/authorize
+    return $response->withRedirect('/application/authorize');
 
-})->name('home');
+})->setName('home');
 
 // Access Token
-$app->post('/access_token', function() use ($app) {
+$app->post('/access_token', function(Request $request, Response $response) use ($app) {
 
-    $app->logService->debug('Request for access token using grant_type: %s', $app->request()->post('grant_type'));
+    $app->getContainer()->get('logService')->debug('Request for access token using grant_type: %s', $request->getParam('grant_type'));
 
-    $token = json_encode($app->server->issueAccessToken());
+    $token = $app->getContainer()->get('server')->issueAccessToken();
 
-    $app->logService->debug('Issued token: %s', $token);
+    $app->getContainer()->get('logService')->debug('Issued token: %s', $token);
 
     // Issue an access token
-    $app->response->header('Content-Type', 'application/json');
-    $app->halt(200, $token);
+    return $response->withJson($token);
 
     // Exceptions are caught by our error controller automatically.
 });
