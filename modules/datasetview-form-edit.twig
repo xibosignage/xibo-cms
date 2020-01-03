@@ -51,7 +51,7 @@
             <li><a href="#cachingTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
         </ul>
         <div class="col-md-12">
-            <form id="dataSetViewEditForm2" class="XiboForm form-horizontal" data-form-step="2" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+            <form id="dataSetViewEditForm2" class="XiboForm form-horizontal" data-form-step="2" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}
@@ -155,7 +155,7 @@
 
                         {% set title %}{% trans "Font" %}{% endset %}
                         {% set attributes = [
-                            { name: "data-search-url", value: urlFor("library.font.list") },
+                            { name: "data-search-url", value: url_for("library.font.list") },
                             { name: "data-value", value: module.getOption("fontFamily") }
                         ] %}
                         {% set helpText %}{% trans "Select a custom font - leave empty to use the default font." %}{% endset %}

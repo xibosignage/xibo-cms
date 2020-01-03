@@ -58,7 +58,7 @@
         </ul>
 
         <div class="col-md-12">
-            <form id="graphEditFormStep2" class="XiboForm form-horizontal" data-form-step="2" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+            <form id="graphEditFormStep2" class="XiboForm form-horizontal" data-form-step="2" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}

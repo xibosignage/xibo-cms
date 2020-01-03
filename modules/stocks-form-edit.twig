@@ -14,7 +14,7 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Get Results" %}, formHelpers.requestTab("results"| "{{ urlFor("module.widget.tab.form", {tab: "results", id: module.widget.widgetId}) }}")
+    {% trans "Get Results" %}, formHelpers.requestTab("results"| "{{ url_for("module.widget.tab.form", {tab: "results", id: module.widget.widgetId}) }}")
 {% endblock %}
 
 {% block extra %}{{ module.templatesAvailable()|json_encode|raw }}{% endblock %}
@@ -42,7 +42,7 @@
             <li><a href="#results" role="tab" data-toggle="tab"><span>{% trans "Results" %}</span></a></li>
         </ul>
         <div class="col-md-12">
-            <form id="stocksEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+            <form id="stocksEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
                  <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}

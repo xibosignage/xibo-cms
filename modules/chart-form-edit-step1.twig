@@ -29,8 +29,8 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="graphEditFormStep1" class="XiboForm form-horizontal" data-form-step="1" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}?step=1"
-                  data-next-form-url="{{ urlFor("module.widget.edit.form", {type: module.widget.type}) }}">
+            <form id="graphEditFormStep1" class="XiboForm form-horizontal" data-form-step="1" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}?step=1"
+                  data-next-form-url="{{ url_for("module.widget.edit.form", {type: module.widget.type}) }}">
                 {% set title %}{% trans "DataSet" %}{% endset %}
                 {% set helpText %}{% trans "Please select the DataSet to use as a source of data for this view." %}{% endset %}
                 {% set attributes = [
@@ -38,7 +38,7 @@
                     { name: "data-allow-clear", value: "true" },
                     { name: "data-placeholder--id", value: null },
                     { name: "data-placeholder--value", value: "" },
-                    { name: "data-search-url", value: urlFor("module.widget.dataset.search") },
+                    { name: "data-search-url", value: url_for("module.widget.dataset.search") },
                     { name: "data-search-term", value: "dataSet" },
                     { name: "data-id-property", value: "dataSetId" },
                     { name: "data-text-property", value: "dataSet" }

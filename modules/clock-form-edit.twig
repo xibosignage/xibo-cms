@@ -35,7 +35,7 @@
             <li><a href="#editorTab" class="digital-control-group" role="tab" data-toggle="tab"><span>{% trans "Editor" %}</span></a></li>
         </ul>
         <div class="col-md-12">
-            <form id="clockFormEdit" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+            <form id="clockFormEdit" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="generalTab">
                         {% set title %}{% trans "Name" %}{% endset %}

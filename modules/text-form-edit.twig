@@ -29,7 +29,7 @@
             <li><a href="#effectTab" role="tab" data-toggle="tab"><span>{% trans "Effect" %}</span></a></li>
         </ul>
         <div class="col-md-12">
-            <form id="textEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+            <form id="textEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}
@@ -165,8 +165,8 @@
                                         <select id="ckeditor_library_select"
                                                 class="ckeditor_library_select form-control"
                                                 data-linked-to="ta_text"
-                                                data-search-url="{{ urlFor("library.search") }}"
-                                                data-image-url="{{ urlFor("library.download") }}?preview=1">
+                                                data-search-url="{{ url_for("library.search") }}"
+                                                data-image-url="{{ url_for("library.download") }}?preview=1">
                                         </select>
                                     </div>
                                 </div>
