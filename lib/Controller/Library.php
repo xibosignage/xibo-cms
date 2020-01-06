@@ -23,9 +23,9 @@ namespace Xibo\Controller;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Mimey\MimeTypes;
+use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
-use Respect\Validation\Validator as v;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\Widget;
@@ -844,6 +844,7 @@ class Library extends Base
             'updateInLayouts' => $this->getSanitizer()->getCheckbox('updateInLayouts', $options['updateInLayouts']),
             'deleteOldRevisions' => $this->getSanitizer()->getCheckbox('deleteOldRevisions', $options['deleteOldRevisions']),
             'allowMediaTypeChange' => $options['allowMediaTypeChange'],
+            'displayOrder' => $this->getSanitizer()->getInt('displayOrder'),
             'playlistId' => $this->getSanitizer()->getInt('playlistId'),
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,

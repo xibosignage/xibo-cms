@@ -339,13 +339,15 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Set default options (this sets options on the widget)
                 $module->setDefaultWidgetOptions();
+
                 // Assign media
                 $widget->assignMedia($media->mediaId);
+
                 // Calculate the widget duration for new uploaded media widgets
                 $widget->calculateDuration($module);
 
                 // Assign the new widget to the playlist
-                $playlist->assignWidget($widget);
+                $playlist->assignWidget($widget, $this->options['displayOrder'] ?? null);
 
                 // Save the playlist
                 $playlist->save();
