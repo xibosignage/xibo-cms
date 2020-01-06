@@ -292,9 +292,10 @@ $(document).ready(function() {
  * Select a layout object (layout/region/widget)
  * @param {object=} obj - Object to be selected
  * @param {bool=} forceSelect - Select object even if it was already selected
+ * @param {object =} [options] - selectObject options
+ * @param {number=} [options.positionToAdd = null] - Order position for widget
  */
-lD.selectObject = function(obj = null, forceSelect = false) {
-
+lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = null} = {}) {
     // If there is a selected card, use the drag&drop simulate to add that item to a object
     if(!$.isEmptyObject(this.toolbar.selectedCard)) {
 
@@ -308,7 +309,7 @@ lD.selectObject = function(obj = null, forceSelect = false) {
             this.toolbar.deselectCardsAndDropZones();
 
             // Simulate drop item add
-            this.dropItemAdd(obj, card);
+            this.dropItemAdd(obj, card, {positionToAdd: positionToAdd});
         }
 
     } else if(!$.isEmptyObject(this.toolbar.selectedQueue) && $(this.toolbar.selectedQueue).data('to-add')) { // If there's a selected queue, use the drag&drop simulate to add those items to a object
@@ -324,7 +325,7 @@ lD.selectObject = function(obj = null, forceSelect = false) {
             });
 
             // Add media queue to playlist
-            this.addMediaToPlaylist(playlistId, mediaQueueArray);
+            this.addMediaToPlaylist(playlistId, mediaQueueArray, positionToAdd);
 
             // Destroy queue
             this.toolbar.destroyQueue(this.toolbar.openedMenu);
@@ -1077,7 +1078,7 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
  * @param {object} droppable - Target drop object
  * @param {object} draggable - Dragged object
  * @param {object =} [options] - Options
- * @param {object} [options.positionToAdd = null] - Position object {top, left}
+ * @param {object/number=} [options.positionToAdd = null] - Position object {top, left} for region, and order position for widget
  */
 lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
     const droppableId = $(droppable).attr('id');
@@ -1091,7 +1092,7 @@ lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
         const playlistId = lD.layout.regions[droppableId].playlists.playlistId;
         const mediaId = $(draggable).data('mediaId');
 
-        lD.addMediaToPlaylist(playlistId, mediaId);
+        lD.addMediaToPlaylist(playlistId, mediaId, positionToAdd);
 
     } else if(draggableType == 'module') { // Add widget/module
 
@@ -1104,7 +1105,7 @@ lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
         // Select region ( and avoid deselect if region was already selected )
         lD.selectObject($(droppable), true);
 
-        lD.addModuleToPlaylist(playlistId, draggableSubType, moduleData);
+        lD.addModuleToPlaylist(playlistId, draggableSubType, moduleData, positionToAdd);
     } else if(draggableType == 'tool') { // Add tool
 
         if(droppableType == 'layout') { // Add to layout
@@ -1188,9 +1189,10 @@ lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
  * Add module to playlist
  * @param {number} playlistId 
  * @param {string} moduleType 
- * @param {object} moduleData 
+ * @param {object} moduleData
+ * @param {number=} addToPosition
  */
-lD.addModuleToPlaylist = function (playlistId, moduleType, moduleData) {
+lD.addModuleToPlaylist = function(playlistId, moduleType, moduleData, addToPosition = null) {
 
     if(moduleData.regionSpecific == 0) { // Upload form if not region specific
 
@@ -1204,7 +1206,8 @@ lD.addModuleToPlaylist = function (playlistId, moduleType, moduleData) {
                 validExtensionsMessage: translations.validExtensions + ': ' + moduleData.validExt,
                 validExt: validExt
             },
-            playlistId: playlistId
+            playlistId: playlistId,
+            displayOrder: addToPosition
         }, 
         {
             viewLibrary: {
@@ -1238,12 +1241,20 @@ lD.addModuleToPlaylist = function (playlistId, moduleType, moduleData) {
         // Replace playlist id
         requestPath = requestPath.replace(':id', playlistId);
 
+        // Set position to add if selected
+        let addOptions = null;
+        if(addToPosition != null) {
+            addOptions = {
+                displayOrder: addToPosition
+            };
+        }
+
         lD.manager.addChange(
             'addWidget',
             'playlist', // targetType 
             playlistId,  // targetId
             null,  // oldValues
-            null, // newValues
+            addOptions, // newValues
             {
                 updateTargetId: true,
                 updateTargetType: 'widget',
@@ -1291,8 +1302,9 @@ lD.addModuleToPlaylist = function (playlistId, moduleType, moduleData) {
  * Add media from library to a playlist
  * @param {number} playlistId 
  * @param {Array.<number>} media
+ * @param {number=} addToPosition
  */
-lD.addMediaToPlaylist = function(playlistId, media) {
+lD.addMediaToPlaylist = function(playlistId, media, addToPosition = null) {
     // Get media Id
     let mediaToAdd = {};
 
@@ -1314,6 +1326,11 @@ lD.addMediaToPlaylist = function(playlistId, media) {
     }
 
     lD.common.showLoadingScreen('addMediaToPlaylist');
+
+    // Set position to add if selected
+    if(addToPosition != null) {
+        mediaToAdd.displayOrder = addToPosition;
+    }
 
     // Create change to be uploaded
     lD.manager.addChange(
@@ -1378,7 +1395,7 @@ lD.openUploadForm = function(templateOptions, buttons) {
         deleteOldRevisionsChecked: uploadFormDeleteOldDefault
     }).attr('data-test', 'uploadFormModal');
 
-    lD.openUploadFormModelShown($(".modal-body").find("form"));
+    this.openUploadFormModelShown($(".modal-body").find("form"));
 };
 
 /**

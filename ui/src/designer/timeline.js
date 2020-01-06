@@ -528,6 +528,15 @@ Timeline.prototype.render = function(layout) {
         lD.selectObject($(this));
     });
 
+    this.DOMObject.find('.designer-region-overlay-step').click(function(e) {
+        e.stopPropagation();
+
+        const $parentRegion = $(this).parents('.designer-region');
+        const position = parseInt($(this).data('position')) + 1;
+
+        lD.selectObject($parentRegion, false, { positionToAdd: position});
+    });
+
     // Button actions
     const self = this;
     this.DOMObject.find('#findSelectedBtn').click(function() {
@@ -573,6 +582,22 @@ Timeline.prototype.render = function(layout) {
         },
         drop: function(event, ui) {
             lD.dropItemAdd(event.target, ui.draggable[0]);
+        }
+    });
+
+    this.DOMObject.find('.designer-region-overlay-step').droppable({
+        greedy: true,
+        accept: function(el) {
+            const $parentRegion = $(this).parents('.designer-region');
+
+            return ($parentRegion.hasClass('editable') && $(el).attr('drop-to') === 'region') ||
+                ($parentRegion.hasClass('permissionsModifiable') && $(el).attr('drop-to') === 'all' && $(el).data('subType') === 'permissions');
+        },
+        drop: function(event, ui) {
+            const $parentRegion = $(event.target).parents('.designer-region');
+            const position = parseInt($(event.target).data('position')) + 1;
+
+            lD.dropItemAdd($parentRegion, ui.draggable[0], { positionToAdd: position});
         }
     });
 

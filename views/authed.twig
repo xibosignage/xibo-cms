@@ -169,6 +169,9 @@
             {{#if oldMediaId}}
                 <input type="hidden" name="oldMediaId" value="{{ oldMediaId }}" />
             {{/if}}
+            {{#if displayOrder}}
+                <input type="hidden" name="displayOrder" value="{{ displayOrder }}" />
+            {{/if}}
             <div class="row fileupload-buttonbar">
                 <div class="col-md-7">
                     <div class="well">
