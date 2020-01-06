@@ -67,7 +67,7 @@ const defaultMenuItems = [
         content: [],
         paging: true,
         state: '',
-        oneClickAdd: ['playlist'],
+        oneClickAdd: [],
         favouriteModules: []
     }
 ];

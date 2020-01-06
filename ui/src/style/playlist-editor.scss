@@ -9,12 +9,13 @@ $playlist-editor-main-fb-color: $xibo-color-black;
 $playlist-editor-min-content-height: 40vh;
 $playlist-editor-max-content-height: 65vh;
 
-$playlist-editor-widget-bg-color: $xibo-color-green;
+$playlist-editor-widget-bg-color: $xibo-color-white;
 $playlist-editor-widget-fg-color:$xibo-color-black;
 $playlist-editor-widget-fg-color2: $xibo-color-gray;
-$playlist-editor-widget-selected-color: $xibo-color-secondary;
-$playlist-editor-widget-hover-bg-color:$xibo-color-light-blue;
+$playlist-editor-widget-selected-color: $xibo-color-green;
+$playlist-editor-widget-hover-bg-color: lighten($xibo-color-green, 20%);
 $playlist-editor-widget-border-color: $xibo-color-gray;
+$playlist-editor-playlist-hover-color-color: lighten($xibo-color-primary, 20%);
 
 $playlist-editor-z-index-background: 1011;
 $playlist-editor-z-index-overlay: 1012;
@@ -106,9 +107,62 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
             padding: 5px;
             height: $playlist-editor-max-content-height;
             overflow: auto;
+            position: relative;
 
             @media (max-width: 992px) {
                 height: auto;
+            }
+        }
+
+        #timeline-overlay-container {
+            display: none;
+            padding: 0;
+            position: absolute !important;
+            width: 100%;
+            min-height: 100%;
+            top: 0;
+            left: 0;
+            opacity: 0.6;
+
+            .timeline-overlay-step {
+                height: 14px;
+                background: darken($xibo-color-white, 10%);
+                margin-top: -5px;
+                margin-bottom: 5px;
+
+                &:hover, &.ui-droppable-hover {
+                    background: lighten($xibo-color-white, 10%);
+                    @include box-shadow(0px 0px 3px 1px $xibo-color-white);
+                }
+            }
+
+            .timeline-overlay-dummy {
+                height: 32px;
+            }
+
+            :nth-child(1) {
+                height: 12px;
+                margin: 0;
+            }
+
+            :nth-child(2) {
+                height: 35px;
+            }
+        }
+
+        &.ui-droppable-active {
+            #timeline-overlay-container {
+                display: block;
+                @include z-index-set($playlist-editor-z-index-select);
+                @include background-stripes(45deg, darken($playlist-editor-playlist-hover-color-color, 20%), $playlist-editor-playlist-hover-color-color, 10px, 4px);
+            }
+        }
+
+        &.ui-droppable-active.ui-droppable-hover,
+        &.ui-droppable-active:hover {
+            #timeline-overlay-container {
+                display: block;
+                @include background-stripes(45deg, darken($playlist-editor-playlist-hover-color-color, 10%), lighten($playlist-editor-playlist-hover-color-color, 20%), 10px, 4px);
             }
         }
     }
@@ -136,7 +190,6 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
 
     #properties-panel-container .button-container {
         padding: 5px;
-        position: absolute;
         bottom: 0;
         width: 100%;
     }
@@ -154,24 +207,19 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
             border: 2px dashed $xibo-color-secondary;
             @include border-radius(4px);
             min-height: 590px;
-            background: $xibo-color-white;
             padding: 270px 0;
         }
     }
 
-    #playlist-timeline, #dropzone-container {
+    #dropzone-container {
         &.ui-droppable-active {
             @include z-index-set($playlist-editor-z-index-select);
-            @include background-stripes(45deg, darken($playlist-editor-main-background-color, 10%), darken($playlist-editor-main-background-color, 20%), 10px, 4px);
+            @include background-stripes(45deg, darken($playlist-editor-main-background-color, 30%), darken($playlist-editor-main-background-color, 40%), 10px, 4px);
         }
 
         &.ui-droppable-active.ui-droppable-hover,
         &.ui-droppable-active:hover {
-            @include background-stripes(45deg, darken($playlist-editor-main-background-color, 30%), darken($playlist-editor-main-background-color, 40%), 10px, 4px);
-        }
-
-        &.ui-droppable-active * {
-            visibility: hidden;
+            @include background-stripes(45deg, darken($playlist-editor-main-background-color, 10%), darken($playlist-editor-main-background-color, 20%), 10px, 4px);
         }
     }
 

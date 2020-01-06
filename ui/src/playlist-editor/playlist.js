@@ -109,9 +109,9 @@ Playlist.prototype.calculateTimeValues = function() {
  * Add action to take after dropping a draggable item
  * @param {object} droppable - Target drop object
  * @param {object} draggable - Dragged object
+ * @param {number=} addToPosition - Add to specific position in the widget list
  */
-Playlist.prototype.addElement = function(droppable, draggable) {
-
+Playlist.prototype.addElement = function(droppable, draggable, addToPosition = null) {
     const draggableType = $(draggable).data('type');
     const draggableSubType = $(draggable).data('subType');
 
@@ -120,7 +120,7 @@ Playlist.prototype.addElement = function(droppable, draggable) {
 
     // Add dragged item to region
     if(draggableType == 'media') { // Adding media from search tab to a region
-        this.addMedia($(draggable).data('mediaId'));
+        this.addMedia($(draggable).data('mediaId'), addToPosition);
     } else if(draggableType == 'module') { // Add widget/module
 
         // Get regionSpecific property
@@ -138,7 +138,8 @@ Playlist.prototype.addElement = function(droppable, draggable) {
                     validExtensionsMessage: translations.validExtensions + ': ' + $(draggable).data('validExt'),
                     validExt: validExt
                 },
-                playlistId: playlistId
+                playlistId: playlistId,
+                displayOrder: addToPosition
             },
             {
                 viewLibrary: {
@@ -171,12 +172,20 @@ Playlist.prototype.addElement = function(droppable, draggable) {
             // Replace playlist id
             requestPath = requestPath.replace(':id', playlistId);
 
+            // Set position to add if selected
+            let addOptions = null;
+            if(addToPosition != null) {
+                addOptions = {
+                    displayOrder: addToPosition
+                };
+            }
+
             pE.manager.addChange(
                 'addWidget',
                 'playlist', // targetType 
                 playlistId,  // targetId
                 null,  // oldValues
-                null, // newValues
+                addOptions, // newValues
                 {
                     updateTargetId: true,
                     updateTargetType: 'widget',
@@ -245,8 +254,9 @@ Playlist.prototype.addElement = function(droppable, draggable) {
 /**
  * Add media to the playlist
  * @param {Array.<number>} media
+ * @param {number=} addToPosition
  */
-Playlist.prototype.addMedia = function(media) {
+Playlist.prototype.addMedia = function(media, addToPosition = null) {
     // Get playlist Id
     const playlistId = this.playlistId;
 
@@ -274,6 +284,11 @@ Playlist.prototype.addMedia = function(media) {
     pE.showLocalLoadingScreen();
 
     pE.common.showLoadingScreen();
+
+    // Set position to add if selected
+    if(addToPosition != null) {
+        mediaToAdd.displayOrder = addToPosition;
+    }
 
     // Create change to be uploaded
     pE.manager.addChange(

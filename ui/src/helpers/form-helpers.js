@@ -542,9 +542,11 @@ let formHelpers = function() {
                 // Empty region ( no dimensions set )
                 region = {};
             }
+        } else if(this.namespace.mainRegion != undefined) {
+            region = this.namespace.mainRegion;
         } else if(this.namespace.selectedObject.type == 'widget') {
             region = this.namespace.getElementByTypeAndId('region', this.namespace.selectedObject.regionId);
-        } else {
+        } else if(this.namespace.selectedObject.type == 'region') {
             region = this.namespace.getElementByTypeAndId('region', this.namespace.selectedObject.id);
         }
 
@@ -601,7 +603,7 @@ let formHelpers = function() {
             // If region dimensions are defined, use them as base for the editor
             regionDimensions = region.dimensions;
 
-            if(this.namespace != undefined) {
+            if(this.namespace != undefined && this.namespace.viewer != undefined) {
                 // Calculate scale based on the region previewed in the viewer
                 scale = this.namespace.viewer.DOMObject.find('.viewer-element').width() / regionDimensions.width;
             }

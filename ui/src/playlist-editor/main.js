@@ -76,8 +76,6 @@ window.pE = {
 
 // Load Playlist and build app structure
 pE.loadEditor = function() {
-    // If the editor is being loaded from within the layout designer, change the region specific flag
-    pE.regionSpecific = (typeof lD != 'undefined') ? '&regionSpecific=1' : '';
 
     pE.common.showLoadingScreen();
 
@@ -87,6 +85,14 @@ pE.loadEditor = function() {
 
     // Get DOM main object
     pE.editorContainer = $('#playlist-editor');
+
+    // If the editor is being loaded from within the layout designer, change the region specific flag
+    pE.regionSpecificQuery = '';
+
+    if(typeof lD != 'undefined') {
+        pE.regionSpecificQuery = '&regionSpecific=1';
+        pE.mainRegion = pE.editorContainer.parents('#editor-container').data('regionObj');
+    }
 
     // Get playlist id
     const playlistId = pE.editorContainer.attr("playlist-id");
@@ -98,13 +104,29 @@ pE.loadEditor = function() {
     pE.editorContainer.html(loadingTemplate());
 
     // Load playlist through an ajax request
-    $.get(urlsForApi.playlist.get.url + '?playlistId=' + playlistId + '&embed=widgets,widget_validity,tags,permissions' + pE.regionSpecific)
+    $.get(urlsForApi.playlist.get.url + '?playlistId=' + playlistId + '&embed=widgets,widget_validity,tags,permissions' + pE.regionSpecificQuery)
         .done(function(res) {
 
             if(res.data != null && res.data.length > 0) {
 
                 // Append layout html to the main div
                 pE.editorContainer.html(playlistEditorTemplate());
+
+                // Initialise dropabble containers
+                pE.editorContainer.find('#playlist-timeline, #dropzone-container').droppable({
+                    accept: '[drop-to="region"]',
+                    drop: function(event, ui) {
+                        pE.playlist.addElement(event.target, ui.draggable[0]);
+                    }
+                }).attr('data-type', 'region');
+
+                // Editor container select ( faking drag and drop ) to add a element to the playlist
+                pE.editorContainer.find('#playlist-timeline, #dropzone-container').click(function(e) {
+                    if(!$.isEmptyObject(pE.toolbar.selectedCard) || !$.isEmptyObject(pE.toolbar.selectedQueue)) {
+                        e.stopPropagation();
+                        pE.selectObject($(this));
+                    }
+                });
 
                 // Initialize timeline and create data structure
                 pE.playlist = new Playlist(playlistId, res.data[0]);
@@ -150,22 +172,6 @@ pE.loadEditor = function() {
                 // Setup helpers
                 formHelpers.setup(pE, pE.playlist);
 
-                // Add widget to editor div
-                pE.editorContainer.find('#playlist-timeline, #dropzone-container').droppable({
-                    accept: '[drop-to="region"]',
-                    drop: function(event, ui) {
-                        pE.playlist.addElement(event.target, ui.draggable[0]);
-                    }
-                }).attr('data-type', 'region');
-
-                // Editor container select ( faking drag and drop ) to add a element to the playlist
-                pE.editorContainer.find('#playlist-timeline, #dropzone-container').click(function(e) {
-                    if(!$.isEmptyObject(pE.toolbar.selectedCard) || !$.isEmptyObject(pE.toolbar.selectedQueue)) {
-                        e.stopPropagation();
-                        pE.selectObject($(this));
-                    }
-                });
-
                 // Handle keyboard keys
                 $('body').off('keydown').keydown(function(handler) {
                     if(!$(handler.target).is($('input'))) {
@@ -208,8 +214,10 @@ window.getXiboApp = function() {
  * Select a playlist object (playlist/widget)
  * @param {object=} obj - Object to be selected
  * @param {bool=} forceUnselect - Clean selected object
+ * @param {object =} [options] - selectObject options
+ * @param {number=} [options.positionToAdd = null] - Order position for widget
  */
-pE.selectObject = function(obj = null, forceUnselect = false) {
+pE.selectObject = function(obj = null, forceUnselect = false, {positionToAdd = null} = {}) {
 
     // If there is a selected card, use the drag&drop simulate to add that item to a object
     if(!$.isEmptyObject(this.toolbar.selectedCard)) {
@@ -223,7 +231,7 @@ pE.selectObject = function(obj = null, forceUnselect = false) {
             this.toolbar.deselectCardsAndDropZones();
 
             // Simulate drop item add
-            this.dropItemAdd(obj, card);
+            this.dropItemAdd(obj, card, {positionToAdd: positionToAdd});
         }
 
     } else if(!$.isEmptyObject(this.toolbar.selectedQueue) && $(this.toolbar.selectedQueue).data('to-add')) { // If there's a selected queue, use the drag&drop simulate to add those items to a object
@@ -236,7 +244,7 @@ pE.selectObject = function(obj = null, forceUnselect = false) {
             });
 
             // Add media queue to playlist
-            this.playlist.addMedia(mediaQueueArray);
+            this.playlist.addMedia(mediaQueueArray, positionToAdd);
 
             // Destroy queue
             this.toolbar.destroyQueue(this.toolbar.openedMenu);
@@ -295,9 +303,11 @@ pE.selectObject = function(obj = null, forceUnselect = false) {
  * Add action to take after dropping a draggable item
  * @param {object} droppable - Target drop object
  * @param {object} draggable - Target Card
+ * @param {object =} [options] - Options
+ * @param {object/number=} [options.positionToAdd = null] - order position for widget
  */
-pE.dropItemAdd = function(droppable, card) {
-    this.playlist.addElement(droppable, card);
+pE.dropItemAdd = function(droppable, card, {positionToAdd = null} = {}) {
+    this.playlist.addElement(droppable, card, positionToAdd);
 };
 
 /**
@@ -531,7 +541,7 @@ pE.reloadData = function() {
 
     pE.common.showLoadingScreen();
 
-    $.get(urlsForApi.playlist.get.url + '?playlistId=' + pE.playlist.playlistId + '&embed=widgets,widget_validity,tags,permissions' + pE.regionSpecific)
+    $.get(urlsForApi.playlist.get.url + '?playlistId=' + pE.playlist.playlistId + '&embed=widgets,widget_validity,tags,permissions' + pE.regionSpecificQuery)
         .done(function(res) {
             pE.common.hideLoadingScreen();
 
