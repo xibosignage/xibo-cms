@@ -1,0 +1,53 @@
+{#
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Check Commercial Licence" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#displayLicenceCheckForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="displayLicenceCheckForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("display.licencecheck", {id: display.displayId}) }}">
+                {% set message %}{% trans "Are you sure you want to ask this Player to check its Licence?" %}{% endset %}
+                {{ forms.message(message) }}
+
+                {% set message %}{% trans "The result of this check will be immediately actioned and the status reported in the debug logs." %}{% endset %}
+                {{ forms.message(message) }}
+
+                {% if display.xmrChannel is empty %}
+                    <div class="alert alert-info">
+                        {% set message %}{% trans %}XMR is not working on this Player yet and therefore the licence check may not occur.{% endtrans %}{% endset %}
+                        {{ forms.message(message) }}
+                    </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+{% endblock %}
