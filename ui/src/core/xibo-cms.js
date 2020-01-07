@@ -723,7 +723,10 @@ function dataTableConfigureRefresh(gridId, table, refresh) {
     });
 }
 
-function dataTableAddButtons(table, filter, allButtons = true) {
+function dataTableAddButtons(table, filter, allButtons) {
+
+    allButtons = (allButtons === undefined) ? true : allButtons;
+
     if (allButtons) {
         var colVis = new $.fn.dataTable.Buttons(table, {
             buttons: [
