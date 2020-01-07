@@ -1005,7 +1005,7 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
 
         const widgetToDelete = lD.getElementByTypeAndId('widget', 'widget_' + objectAuxId + '_' + objectId, 'region_' + objectAuxId);
 
-        if(widgetToDelete.mediaIds.length == 0) {
+        if(widgetToDelete.isRegionSpecific()) {
             createDeleteModal(objectType, objectId);
         } else {
             lD.common.showLoadingScreen('checkMediaIsUsed');
