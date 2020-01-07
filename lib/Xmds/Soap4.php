@@ -533,6 +533,16 @@ class Soap4 extends Soap
             $this->getLog()->alert($statusDialog);
         }
 
+        // Resolution
+        $width = $this->getSanitizer()->getInt('width', null, $status);
+        $height = $this->getSanitizer()->getInt('height', null, $status);
+
+        if ($width != null && $height != null) {
+            // Determine the orientation
+            $this->display->orientation = ($width >= $height) ? 'landscape' : 'portrait';
+            $this->display->resolution = $width . 'x' . $height;
+        }
+
         // Touch the display record
         try {
             if (count($this->display->getChangedProperties()) > 0)

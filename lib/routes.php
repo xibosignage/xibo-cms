@@ -249,6 +249,7 @@ $app->post('/display/wol/:id', '\Xibo\Controller\Display:wakeOnLan')->name('disp
 $app->put('/display/authorise/:id', '\Xibo\Controller\Display:toggleAuthorise')->name('display.authorise');
 $app->put('/display/defaultlayout/:id', '\Xibo\Controller\Display:setDefaultLayout')->name('display.defaultlayout');
 $app->put('/display/requestscreenshot/:id', '\Xibo\Controller\Display:requestScreenShot')->name('display.requestscreenshot');
+$app->put('/display/licenceCheck/:id', '\Xibo\Controller\Display:checkLicence')->name('display.licencecheck');
 $app->get('/display/screenshot/:id', '\Xibo\Controller\Display:screenShot')->name('display.screenShot');
 $app->post('/display/:id/displaygroup/assign', '\Xibo\Controller\Display:assignDisplayGroup')->name('display.assign.displayGroup');
 $app->put('/display/:id/moveCms', '\Xibo\Controller\Display:moveCms')->name('display.moveCms');

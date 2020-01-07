@@ -174,16 +174,19 @@ then
     /bin/sed -i "s/^MYSQL_DATABASE=.*$/MYSQL_DATABASE=$MYSQL_DATABASE/" /etc/periodic/15min/cms-db-backup
 
     # Update /var/www/maintenance with current environment (for cron)
-    echo "Configuring Maintenance"
-    echo "#!/bin/bash" > /var/www/maintenance.sh
-    echo "" >> /var/www/maintenance.sh
-    /usr/bin/env | sed 's/^\(.*\)$/export \1/g' | grep -E "^export MYSQL" >> /var/www/maintenance.sh
-    echo "cd /var/www/cms && /usr/bin/php bin/xtr.php" >> /var/www/maintenance.sh
-    chmod 755 /var/www/maintenance.sh
+    if [ "$XTR_ENABLED" == "true" ]
+    then
+        echo "Configuring Maintenance"
+        echo "#!/bin/bash" > /var/www/maintenance.sh
+        echo "" >> /var/www/maintenance.sh
+        /usr/bin/env | sed 's/^\(.*\)$/export \1/g' | grep -E "^export MYSQL" >> /var/www/maintenance.sh
+        echo "cd /var/www/cms && /usr/bin/php bin/xtr.php" >> /var/www/maintenance.sh
+        chmod 755 /var/www/maintenance.sh
 
-    echo "* * * * *     /var/www/maintenance.sh > /dev/null 2>&1 " > /etc/crontabs/apache
-    echo "" >> /etc/crontabs/apache
-    crontab -u apache /etc/crontabs/apache
+        echo "* * * * *     /var/www/maintenance.sh > /dev/null 2>&1 " > /etc/crontabs/apache
+        echo "" >> /etc/crontabs/apache
+        crontab -u apache /etc/crontabs/apache
+    fi
 
     # Configure SSMTP to send emails if required
     /bin/sed -i "s/mailhub=.*$/mailhub=$CMS_SMTP_SERVER/" /etc/ssmtp/ssmtp.conf
