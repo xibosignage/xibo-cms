@@ -508,7 +508,8 @@ class Display extends Base
             'mediaInventoryStatus' => $this->getSanitizer()->getInt('mediaInventoryStatus'),
             'loggedIn' => $this->getSanitizer()->getInt('loggedIn'),
             'lastAccessed' => ($this->getSanitizer()->getDate('lastAccessed') != null) ? $this->getSanitizer()->getDate('lastAccessed')->format('U') : null,
-            'displayGroupIdMembers' => $this->getSanitizer()->getInt('displayGroupIdMembers')
+            'displayGroupIdMembers' => $this->getSanitizer()->getInt('displayGroupIdMembers'),
+            'orientation' => $this->getSanitizer()->getString('orientation')
         ];
 
         // Get a list of displays
