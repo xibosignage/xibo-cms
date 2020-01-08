@@ -53,7 +53,7 @@ RUN apk update && apk upgrade && apk add tar \
     tzdata \
     && rm -rf /var/cache/apk/*
 
-RUN apk add --no-cache build-base php7-dev php7-pear \
+RUN apk add --no-cache build-base php7-dev php7-pear openssl-dev \
     && pecl install mongodb \
     && apk del build-base php7-dev \
     && echo extension=mongodb.so > /etc/php7/conf.d/51_mongodb.ini
