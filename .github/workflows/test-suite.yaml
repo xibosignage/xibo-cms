@@ -13,6 +13,7 @@ jobs:
           docker pull xibosignage/xibo-xmr:latest
       - name: Build
         run: |
+          ls -al
           docker build . -f Dockerfile.ci -t cms-web
           docker build . -f Dockerfile.cypress -t cms-cypress
       - name: Run
