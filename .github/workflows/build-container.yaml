@@ -42,7 +42,7 @@ jobs:
   deploy:
     name: Deploy Test Instances
     runs-on: ubuntu-18.04
-    if: github.event_name == 'push'
+    if: github.repository == 'xibosignage/xibo-cms' && github.event_name == 'push'
     steps:
       - name: Deploy to Develop
         uses: joelwmale/webhook-action@1.0.0
