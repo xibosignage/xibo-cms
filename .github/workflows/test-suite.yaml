@@ -3,8 +3,8 @@ name: Test Suite
 on: [push, pull_request]
 
 jobs:
-  build_containers:
-    name: Build Containers
+  test-suite:
+    name: Build Containers and Run Tests
     runs-on: ubuntu-18.04
     steps:
       - name: Checkout
@@ -22,11 +22,6 @@ jobs:
           docker run --name cms-db -e MYSQL_RANDOM_ROOT_PASSWORD=yes -e MYSQL_DATABASE=cms -e MYSQL_USER=cms -e MYSQL_PASSWORD=jenkins -d mysql:5.6
           docker run --name cms-xmr -d xibosignage/xibo-xmr:latest
           docker run --name cms-web -e MYSQL_USER=cms -e MYSQL_PASSWORD=jenkins -e XIBO_DEV_MODE=true -e XMR_HOST=cms-xmr --link cms-db:db --link cms-xmr:50001 -d cms-web
-  run_tests:
-    name: Run Tests
-    runs-on: ubuntu-18.04
-    needs: build_containers
-    steps:
       - name: Wait for CMS
         run: |
           docker exec -t cms-web /bin/bash -c "/usr/local/bin/wait-for-command.sh -q -t 300 -c \"nc -z localhost 80\""
