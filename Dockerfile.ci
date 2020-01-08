@@ -25,7 +25,7 @@ RUN composer install --no-interaction
 
 # Stage 2
 # Run webpack
-FROM node:latest AS webpack
+FROM node:12 AS webpack
 WORKDIR /app
 
 # Install webpack
