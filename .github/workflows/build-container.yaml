@@ -11,7 +11,7 @@ on:
 jobs:
   build:
     name: Build Containers
-    if: github.repository == "xibosignage/xibo-cms"
+    if: github.repository == 'xibosignage/xibo-cms'
     runs-on: ubuntu-18.04
     steps:
       - name: Checkout
@@ -27,11 +27,11 @@ jobs:
           docker push xibosignage/xibo-cms:${GITHUB_REF##*/}
       - name: Deploy to Develop
         uses: joelwmale/webhook-action@1.0.0
-        if: github.event == "push" && ${GITHUB_REF##*/} == "develop"
+        if: github.event_name == 'push' && ${GITHUB_REF##*/} == 'develop'
         env:
           WEBHOOK_URL: ${{ secrets.WEBHOOK_DEVELOP_URL }}
       - name: Deploy to Staging
         uses: joelwmale/webhook-action@1.0.0
-        if: github.event == "push" && ${GITHUB_REF##*/} == "release22"
+        if: github.event_name == 'push' && ${GITHUB_REF##*/} == 'release22'
         env:
           WEBHOOK_URL: ${{ secrets.WEBHOOK_STAGING_URL }}
