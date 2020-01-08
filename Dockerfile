@@ -38,7 +38,7 @@ RUN find -type d -name '.git' -exec rm -r {} + && \
 
 # Stage 2
 # Run webpack
-FROM node:latest AS webpack
+FROM node:12 AS webpack
 WORKDIR /app
 
 # Install webpack

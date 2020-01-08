@@ -1,0 +1,43 @@
+name: Test Suite
+
+on: [pull_request]
+
+jobs:
+  test-suite:
+    name: Build Containers and Run Tests
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - name: Pull
+        run: |
+          docker pull mysql:5.6
+          docker pull xibosignage/xibo-xmr:latest
+          docker pull xibosignage/xibo-cms:latest
+      - name: Build
+        run: |
+          docker build . -f Dockerfile.ci -t cms-web
+          docker build . -f Dockerfile.cypress -t cms-cypress
+      - name: Run
+        run: |
+          docker run --name cms-db -e MYSQL_RANDOM_ROOT_PASSWORD=yes -e MYSQL_DATABASE=cms -e MYSQL_USER=cms -e MYSQL_PASSWORD=jenkins -d mysql:5.6
+          docker run --name cms-xmr -d xibosignage/xibo-xmr:latest
+          docker run --name cms-web -e MYSQL_USER=cms -e MYSQL_PASSWORD=jenkins -e XIBO_DEV_MODE=true -e XMR_HOST=cms-xmr --link cms-db:db --link cms-xmr:50001 -d cms-web
+      - name: Wait for CMS
+        run: |
+          docker exec -t cms-web /bin/bash -c "/usr/local/bin/wait-for-command.sh -q -t 300 -c \"nc -z localhost 80\""
+          docker cp cms-web:/var/www/cms/web/settings.php web/settings.php
+          docker exec -t cms-web /bin/bash -c "chown -R apache.apache /var/www/cms"
+          docker exec --user apache -t cms-web /bin/bash -c "cd /var/www/cms/db/migrations; ls -al"
+          docker exec --user apache -t cms-web /bin/bash -c "cd /var/www/cms; /usr/bin/php bin/run.php 1"
+          sleep 5
+      - name: Run PHP Unit
+        run: |
+          docker exec --user apache -t cms-web /bin/bash -c "cd /var/www/cms; php vendor/bin/phpunit --verbose --tap --log-junit results.xml"
+      - name: Run Cypress
+        run: |
+          docker exec cms-db mysql -ucms -pjenkins cms -e "INSERT INTO oauth_clients (id, secret, name, userId, authCode, clientCredentials) VALUES ('MrGPc7e3IL1hA6w13l7Ru5giygxmNiafGNhFv89d', 'Pk6DdDgu2HzSoepcMHRabY60lDEvQ9ucTejYvc5dOgNVSNaOJirCUM83oAzlwe0KBiGR2Nhi6ltclyNC1rmcq0CiJZXzE42KfeatQ4j9npr6nMIQAzMal8O8RiYrIoono306CfyvSSJRfVfKExIjj0ZyE4TUrtPezJbKmvkVDzh8aj3kbanDKatirhwpfqfVdfgsqVNjzIM9ZgKHnbrTX7nNULL3BtxxNGgDMuCuvKiJFrLSyIIz1F4SNrHwHz', 'cypress', 1, 0, 1)"
+          docker exec cms-db mysql -ucms -pjenkins cms -e "INSERT INTO oauth_client_scopes (clientId, scopeId) VALUES ('MrGPc7e3IL1hA6w13l7Ru5giygxmNiafGNhFv89d', 'all') ON DUPLICATE KEY UPDATE scopeId = scopeId"
+          docker run --name cms-cypress --link=cms-web:web -v $WORKSPACE/cms-repo:/app/cms cms-cypress bash -c "CYPRESS_baseUrl=http://web /app/node_modules/.bin/cypress run --config screenshotsFolder=/app/cms/results,video=false --reporter junit --reporter-options 'mochaFile=/app/cms/results/results_cypress_[hash].xml,toConsole=true'"
