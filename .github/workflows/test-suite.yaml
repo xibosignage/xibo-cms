@@ -15,7 +15,8 @@ jobs:
         run: |
           docker pull mysql:5.6
           docker pull xibosignage/xibo-xmr:latest
-          docker pull xibosignage/xibo-cms:latest
+          docker pull xibosignage/xibo-cms:develop
+          docker pull xibosignage/xibo-cms:cypress
       - name: Build
         run: |
           docker build . -f Dockerfile.ci -t cms-web
