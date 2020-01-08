@@ -18,20 +18,39 @@ jobs:
         uses: actions/checkout@v1
         with:
           fetch-depth: 1
-      - name: Build
+
+      - name: Build Branch
+        if: github.event_name == 'push'
         run: |
           docker build . -t xibosignage/xibo-cms:${GITHUB_REF##*/}
-      - name: Push
+      - name: Push Branch
+        if: github.event_name == 'push'
         run: |
           docker login --username ${{ secrets.DOCKER_HUB_USERNAME }} --password ${{ secrets.DOCKER_HUB_TOKEN }}
           docker push xibosignage/xibo-cms:${GITHUB_REF##*/}
+
+      - name: Build Release
+        if: github.event_name == 'release'
+        run: |
+          docker build . -t xibosignage/xibo-cms:${GITHUB_REF##*/}
+      - name: Push Release
+        if: github.event_name == 'release'
+        run: |
+          docker login --username ${{ secrets.DOCKER_HUB_USERNAME }} --password ${{ secrets.DOCKER_HUB_TOKEN }}
+          docker push xibosignage/xibo-cms:${GITHUB_REF##*/}
+
+  deploy:
+    name: Deploy Test Instances
+    runs-on: ubuntu-18.04
+    if: github.event_name == 'push'
+    steps:
       - name: Deploy to Develop
         uses: joelwmale/webhook-action@1.0.0
-        if: github.event_name == 'push' && ${GITHUB_REF##*/} == 'develop'
+        if: github.ref == 'refs/heads/develop'
         env:
           WEBHOOK_URL: ${{ secrets.WEBHOOK_DEVELOP_URL }}
       - name: Deploy to Staging
         uses: joelwmale/webhook-action@1.0.0
-        if: github.event_name == 'push' && ${GITHUB_REF##*/} == 'release22'
+        if: github.ref == 'refs/heads/release22'
         env:
           WEBHOOK_URL: ${{ secrets.WEBHOOK_STAGING_URL }}
