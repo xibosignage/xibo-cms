@@ -20,12 +20,12 @@ jobs:
         with:
           fetch-depth: 1
       - name: Build
-          run: |
-            docker build . -t xibosignage/xibo-cms:${GITHUB_REF##*/}
+        run: |
+          docker build . -t xibosignage/xibo-cms:${GITHUB_REF##*/}
       - name: Push
-          run: |
-            docker login --username ${{ secrets.DOCKER_HUB_USERNAME }} --password ${{ secrets.DOCKER_HUB_TOKEN }}
-            docker push xibosignage/xibo-cms:${GITHUB_REF##*/}
+        run: |
+          docker login --username ${{ secrets.DOCKER_HUB_USERNAME }} --password ${{ secrets.DOCKER_HUB_TOKEN }}
+          docker push xibosignage/xibo-cms:${GITHUB_REF##*/}
       - name: Deploy to Develop
         uses: joelwmale/webhook-action@1.0.0
         if: github.event == "push" && ${GITHUB_REF##*/} == "develop"

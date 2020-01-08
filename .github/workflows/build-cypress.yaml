@@ -15,9 +15,9 @@ jobs:
         with:
           fetch-depth: 1
       - name: Build
-          run: |
-            docker build -f Dockerfile.cypress . -t xibosignage/xibo-cms:cypress
+        run: |
+          docker build -f Dockerfile.cypress . -t xibosignage/xibo-cms:cypress
       - name: Push
-          run: |
-            docker login --username ${{ secrets.DOCKER_HUB_USERNAME }} --password ${{ secrets.DOCKER_HUB_TOKEN }}
-            docker push xibosignage/xibo-cms:cypress
+        run: |
+          docker login --username ${{ secrets.DOCKER_HUB_USERNAME }} --password ${{ secrets.DOCKER_HUB_TOKEN }}
+          docker push xibosignage/xibo-cms:cypress
