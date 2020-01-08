@@ -28,4 +28,6 @@ jobs:
     runs-on: ubuntu-18.04
     if: github.repository != 'xibosignage/xibo-cms'
     steps:
-      run: echo 'Skipped while in a fork'
+      - name: Skip
+        run: |
+          echo 'Skipped while in a fork'
