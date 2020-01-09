@@ -37,7 +37,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="campaignCopyForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("campaign.copy", {id: campaign.campaignId}) }}">
+            <form id="campaignCopyForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("campaign.copy", {id: campaign.campaignId}) }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Campaign" %}{% endset %}
                 {% set name %}{{ campaign.campaign }} 2{% endset %}

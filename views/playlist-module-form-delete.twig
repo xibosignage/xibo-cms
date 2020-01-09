@@ -26,7 +26,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="playlistModuleDeleteForm" class="form-horizontal" method="delete" action="{{ urlFor("module.widget.delete", {id: module.widget.widgetId}) }}">
+            <form id="playlistModuleDeleteForm" class="form-horizontal" method="delete" action="{{ url_for("module.widget.delete", {id: module.widget.widgetId}) }}">
                 {% set message %}{% trans "Are you sure you want to remove this widget?" %} {% trans "This action cannot be undone." %}{% endset %}
                 {{ forms.message(message) }}
 

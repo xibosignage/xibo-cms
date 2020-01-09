@@ -925,6 +925,7 @@ class State implements Middleware
                     $c->get('mediaFactory'),
                     $c->get('dayPartFactory'),
                     $c->get('scheduleReminderFactory'),
+                    $c->get('scheduleExclusionFactory'),
                     $c->get('view')
                 );
             },
@@ -1462,7 +1463,8 @@ class State implements Middleware
                     $c->get('displayGroupFactory'),
                     $c->get('dayPartFactory'),
                     $c->get('userFactory'),
-                    $c->get('scheduleReminderFactory')
+                    $c->get('scheduleReminderFactory'),
+                    $c->get('scheduleExclusionFactory')
                 );
             },
             'scheduleReminderFactory' => function(ContainerInterface $c) {
@@ -1473,6 +1475,13 @@ class State implements Middleware
                     $c->get('user'),
                     $c->get('userFactory'),
                     $c->get('configService')
+                );
+            },
+            'scheduleExclusionFactory' => function(ContainerInterface $c) {
+                return new \Xibo\Factory\ScheduleExclusionFactory(
+                    $c->get('store'),
+                    $c->get('logService'),
+                    $c->get('sanitizerService')
                 );
             },
             'sessionFactory' => function(ContainerInterface $c) {

@@ -29,7 +29,7 @@
             {% set attributes = [
                 { name: "data-placeholder--id", value: null },
                 { name: "data-placeholder--value", value: "" },
-                { name: "data-search-url", value:  urlFor("playlistdashboard.search") },
+                { name: "data-search-url", value:  url_for("playlistdashboard.search") },
                 { name: "data-search-term", value: "name" },
                 { name: "data-id-property", value: "playlistId" },
                 { name: "data-text-property", value: "name" }
@@ -73,7 +73,7 @@
         $(document).ready(function() {
 
             // We need to have the URL of hte upload form available
-            uploadUrl = "{{ urlFor("playlistdashboard.library.add") }}";
+            uploadUrl = "{{ url_for("playlistdashboard.library.add") }}";
 
             // Bind our buttons on the dashboard
             // Listen to the playlist selector change
@@ -115,7 +115,7 @@
 
             $spotElement.html("<span class=\"fa fa-cogs fa-spin\"></span>");
 
-            $.ajax("{{ urlFor("playlistdashboard.show") }}".replace(":id", playlistId), {
+            $.ajax("{{ url_for("playlistdashboard.show") }}".replace(":id", playlistId), {
                 method: "GET",
                 success: function(response) {
                     if (response.success) {

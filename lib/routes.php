@@ -184,7 +184,7 @@ $app->get('/campaign', ['\Xibo\Controller\Campaign','grid'])->setName('campaign.
 $app->post('/campaign', ['\Xibo\Controller\Campaign','add'])->setName('campaign.add');
 $app->put('/campaign/{id}', ['\Xibo\Controller\Campaign','edit'])->setName('campaign.edit');
 $app->delete('/campaign/{id}', ['\Xibo\Controller\Campaign','delete'])->setName('campaign.delete');
-$app->post('/campaign/{id}/copy', ['\Xibo\Controller\Campaign','copy'])->name('campaign.copy');
+$app->post('/campaign/{id}/copy', ['\Xibo\Controller\Campaign','copy'])->setName('campaign.copy');
 
 // We use POST requests so that we can support multiple records
 $app->post('/campaign/layout/assign/{id}', ['\Xibo\Controller\Campaign','assignLayout'])->setName('campaign.assign.layout');

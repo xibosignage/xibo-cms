@@ -241,7 +241,7 @@ class Schedule extends Base
         $this->setNoOutput();
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $displayGroupIds = $sanitizedParams->getIntArray('displayGroupIds');
+        $displayGroupIds = $sanitizedParams->getIntArray('displayGroupIds', ['default' => []]);
         $campaignId = $sanitizedParams->getInt('campaignId');
         $originalDisplayGroupIds = $displayGroupIds;
         $start = $this->getDate()->parse($sanitizedParams->getString('from', ['default' => 1000]) / 1000, 'U');

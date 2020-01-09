@@ -35,7 +35,7 @@
             <form id="scheduleEditForm" autocomplete="off" class="form-horizontal" method="put" data-event-id="{{ event.eventId }}" data-event-start="{{ eventStart }}" data-event-end="{{ eventEnd }}" action="{{ url_for("schedule.edit", {id: event.eventId}) }}"
                   data-daypart-message="{{ dayPartMessage }}"
                   data-not-daypart-message="{{ notDayPartMessage }}"
-                  data-add-url="{{ urlFor("schedule.add") }}"
+                  data-add-url="{{ url_for("schedule.add") }}"
                   data-duplicated-message="{% trans "Duplicate form loaded, make adjustments and press save." %}"
                   data-default-lat="{{ defaultLat }}"
                   data-default-long="{{ defaultLong }}">
@@ -98,7 +98,7 @@
 
                         {# Campaign / Layout list. We want to build two arrays for us to use. #}
                         {% set attributes = [
-                            { name: "data-search-url", value:  urlFor("schedule.campaign.search") },
+                            { name: "data-search-url", value:  url_for("schedule.campaign.search") },
                         ] %}
 
                         {% set title %}{% trans "Layout" %}{% endset %}

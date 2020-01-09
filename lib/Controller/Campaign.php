@@ -228,7 +228,7 @@ class Campaign extends Base
                 // Copy the campaign
                 $campaign->buttons[] = [
                     'id' => 'campaign_button_copy',
-                    'url' => $this->urlFor('campaign.copy.form', ['id' => $campaign->campaignId]),
+                    'url' => $this->urlFor($request,'campaign.copy.form', ['id' => $campaign->campaignId]),
                     'text' => __('Copy')
                 ];
             } else {

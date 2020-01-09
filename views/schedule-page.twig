@@ -44,7 +44,7 @@
                 {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
 
                 <select name="campaignId" id="campaignId" class="hidden form-control"
-                    data-search-url= "{{ urlFor("schedule.campaign.search") }}"
+                    data-search-url= "{{ url_for("schedule.campaign.search") }}"
                     data-trans-campaigns= "{% trans "Campaigns" %}"
                     data-trans-layouts= "{% trans "Layouts" %}"
                     data-allow-clear="true"
@@ -59,7 +59,7 @@
                 <select id="DisplayList" class="form-control" name="displayGroupIds[]"
                         data-width="150px"
                         data-placeholder="{% trans "Displays" %}"
-                        data-search-url="{{ urlFor("schedule.displayGroup.search") }}"
+                        data-search-url="{{ url_for("schedule.displayGroup.search") }}"
                         data-trans-groups="{% trans "Groups" %}"
                         data-trans-display="{% trans "Display" %}"
                         data-allow-clear="true"
@@ -74,7 +74,7 @@
             </div>
 
             <div class="xibo-calendar-controls pull-right">
-                <input title="Show All" type="checkbox" id="showAll" name="showAll" data-search-url="{{ urlFor("schedule.displayGroup.search") }}"
+                <input title="Show All" type="checkbox" id="showAll" name="showAll" data-search-url="{{ url_for("schedule.displayGroup.search") }}"
                     {% if displayGroupsShowAll == -1 %}
                         checked
                     {% endif %}
@@ -824,7 +824,7 @@
 {% block javaScript %}
     <script type="text/javascript">
 		// We are using this variable in xibo-calendar.js
-        var scheduleRecurrenceDeleteUrl = "{{ urlFor("schedule.recurrence.delete.form") }}";
+        var scheduleRecurrenceDeleteUrl = "{{ url_for("schedule.recurrence.delete.form", {id:':id'}) }}";
 
         // Equals helper for the templates below
         Handlebars.registerHelper('eq', function(v1, v2, opts) {

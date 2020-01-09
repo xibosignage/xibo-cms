@@ -219,7 +219,7 @@
 
             rowIds.forEach(function(id) {
                 $.ajax({
-                    url: "{{ urlFor("dataSet.data.delete", {"id": dataSet.dataSetId}) }}".replace(":rowId", id),
+                    url: "{{ url_for("dataSet.data.delete", {"id": dataSet.dataSetId, rowId:'rowId'}) }}".replace(":rowId", id),
                     type: "DELETE",
                     success: function (data) {
                         processedRows++;

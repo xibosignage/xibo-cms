@@ -709,7 +709,7 @@ class Display extends Base
                 if (in_array($display->clientType, ['android', 'lg', 'sssp'])) {
                     $display->buttons[] = array(
                         'id' => 'display_button_checkLicence',
-                        'url' => $this->urlFor('display.licencecheck.form', ['id' => $display->displayId]),
+                        'url' => $this->urlFor($request,'display.licencecheck.form', ['id' => $display->displayId]),
                         'text' => __('Check Licence')
                     );
                 }

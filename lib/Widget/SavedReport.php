@@ -58,7 +58,7 @@ class SavedReport extends ModuleWidget
      * @param int $scaleOverride The Scale Override
      * @return string The Rendered Content
      */
-    public function preview($width, $height, $scaleOverride = 0)
+    public function preview($width, $height, $scaleOverride = 0, Request $request = null)
     {
         // Videos are never previewed in the browser.
         return $this->previewIcon();

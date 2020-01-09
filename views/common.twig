@@ -15,7 +15,7 @@
         var uploadFormUpdateAllDefault = {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %};
         var uploadFormDeleteOldDefault = {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %};
         var tooltipDelay = {'show': 250, 'hide': 0};
-        var playlistEditorUrl = "{{ urlFor("playlist.timeline.form") }}";
+        var playlistEditorUrl = "{{ url_for("playlist.timeline.form") }}";
         
         // Save navbar position
         var navbarPosition = 'vertical';
