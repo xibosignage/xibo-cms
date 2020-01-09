@@ -267,7 +267,7 @@ class Image extends ModuleWidget
             }
         } else {
             // Download the file
-            $this->download();
+            $this->download($request, $response);
         }
     }
 
