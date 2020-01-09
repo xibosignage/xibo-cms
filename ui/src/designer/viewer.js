@@ -11,7 +11,8 @@ const loadingTemplate = require('../templates/loading.hbs');
  * @param {object} container - the container to render the viewer to
  * @param {object} navbarContainer - the container to render the navbar to
  */
-let Viewer = function(container, navbarContainer) {
+let Viewer = function(parent, container, navbarContainer) {
+    this.parent = parent;
     this.DOMObject = container;
     this.navbarContainer = navbarContainer;
 
@@ -109,7 +110,7 @@ Viewer.prototype.render = function(element) {
  */
 Viewer.prototype.renderLayout = function(layout, container) {
 
-    const app = getXiboApp();
+    const app = this.parent;
 
     let requestPath = urlsForApi.layout.preview.url;
     requestPath = requestPath.replace(':id', layout[layout.type + 'Id']);
@@ -132,7 +133,9 @@ Viewer.prototype.renderLayout = function(layout, container) {
     container.html(html);
 
     // Render navbar
-    this.renderNavbar(layout);
+    this.renderNavbar(layout, {
+        requestPath: requestPath
+    });
 
     // Render background image or color to the preview
     if(layout.backgroundImage === null) {
@@ -155,22 +158,6 @@ Viewer.prototype.renderLayout = function(layout, container) {
         }
     }
 
-    // Handle play button ( play or pause )
-    container.find('#play-btn').click(function() {
-        if(this.previewPlaying) {
-            lD.renderContainer(lD.viewer, lD.layout);
-        } else {
-            this.playPreview(requestPath, this.containerElementDimensions);
-            container.find('#play-btn').removeClass('fa-play-circle').addClass('fa-stop-circle').attr('title', layoutDesignerTrans.stopPreviewLayout);
-            this.previewPlaying = true;
-        }
-    }.bind(this));
-
-    // Handle fullscreen button
-    container.find('#fs-btn').click(function() {
-        this.toggleFullscreen();
-    }.bind(this));
-
     // Initialize tooltips
     app.common.reloadTooltips(container);
 };
@@ -181,7 +168,7 @@ Viewer.prototype.renderLayout = function(layout, container) {
 Viewer.prototype.renderRegion = function(element, container, smallPreview = false, widgetIndex = 1) {
 
     const self = this;
-    const app = getXiboApp();
+    const app = this.parent;
     
     // If there was still a render request, abort it
     if(this.renderRequest != undefined && !smallPreview) {
@@ -292,16 +279,6 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
                 // Show inline editor controls
                 this.showInlineEditor();
             }
-
-            // Handle fullscreen button
-            container.find('#fs-btn').click(function() {
-                this.toggleFullscreen();
-            }.bind(this));
-
-            // Handle back button
-            container.find('#back-btn').click(function() {
-                lD.selectObject();
-            }.bind(this));
         }
 
         // Initialize tooltips
@@ -324,7 +301,7 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
  */
 Viewer.prototype.renderNavbar = function(element, data) {
 
-    const app = getXiboApp();
+    const app = this.parent;
     
     // Stop if navbar container does not exist
     if(this.navbarContainer === null || this.navbarContainer === undefined || (element.type == 'widget' && data.extra.empty)) {
@@ -359,8 +336,34 @@ Viewer.prototype.renderNavbar = function(element, data) {
                 lD.selectObject($('#' + element.getNextWidget().id));
             }.bind(this));
         }
-    } else {
-        // Render layout or region toolbar
+    } else if(element.type == 'layout') {
+        // Render layout  toolbar
+        this.navbarContainer.html(viewerNavbarTemplate(
+            {
+                type: element.type,
+                name: element.name,
+                trans: viewerTrans,
+                renderLayout: true
+            }
+        ));
+
+        // Handle play button ( play or pause )
+        this.navbarContainer.find('#play-btn').click(function() {
+            if(this.previewPlaying) {
+                app.renderContainer(app.viewer, app.layout);
+            } else {
+                this.playPreview(data.requestPath, this.containerElementDimensions);
+                this.navbarContainer.find('#play-btn i').removeClass('fa-play-circle').addClass('fa-stop-circle').attr('title', layoutDesignerTrans.stopPreviewLayout);
+                this.previewPlaying = true;
+            }
+        }.bind(this));
+
+        // Handle navigator toggle button
+        this.navbarContainer.find('#navigator-edit-btn').click(function() {
+            app.toggleNavigatorEditing(true);
+        }.bind(this));
+    } else if(element.type == 'region') {
+        // Render region toolbar
         this.navbarContainer.html(viewerNavbarTemplate(
             {
                 type: element.type,
@@ -369,6 +372,16 @@ Viewer.prototype.renderNavbar = function(element, data) {
             }
         ));
     }
+
+    // Handle fullscreen button
+    this.navbarContainer.find('#fs-btn').click(function() {
+        this.toggleFullscreen();
+    }.bind(this));
+
+    // Handle back button
+    this.navbarContainer.find('#back-btn').click(function() {
+        lD.selectObject();
+    }.bind(this));
 
     // Initialize tooltips
     app.common.reloadTooltips(this.navbarContainer);
@@ -409,7 +422,7 @@ Viewer.prototype.toggleFullscreen = function() {
 Viewer.prototype.setupInlineEditor = function(textAreaId, show = true, customNoDataMessage = null) {
 
     // Prevent setup if user is in read only mode
-    const app = getXiboApp();
+    const app = this.parent;
     if(app.readOnlyMode != undefined && app.readOnlyMode === true) {
         return;
     }

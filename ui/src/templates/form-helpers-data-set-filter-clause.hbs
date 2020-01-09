@@ -1,15 +1,13 @@
-<div class="form-group col-sm-12 row">
-    <label class="col-sm-1 control-label" for="filterClause[]">{{ title }}</label>
-    <div class="col-sm-2">
-        <label for="filterClauseOperator[]" {{#eq title "1"}}class="hidden"{{/eq}}>
-            <select class="form-control" name="filterClauseOperator[]">
-                {{#each filterOperatorOptions}}
-                    <option value="{{ id }}" {{#eq id ../filterClauseOperator}}selected{{/eq}}>{{ value }}</option>
-                {{/each}}
-            </select>
-        </label>
+<div class="form-inline text-center">
+    <label class="form-group">{{ title }}</label>
+    <div class="form-group" {{#eq title "1"}}class="hidden"{{/eq}}>
+        <select class="form-control" name="filterClauseOperator[]">
+            {{#each filterOperatorOptions}}
+                <option value="{{ id }}" {{#eq id ../filterClauseOperator}}selected{{/eq}}>{{ value }}</option>
+            {{/each}}
+        </select>
     </div>
-    <div class="col-sm-3">
+    <div class="form-group">
         <select class="form-control" name="filterClause[]">
             <option value=""></option>
             {{#each columns}}
@@ -17,21 +15,15 @@
             {{/each}}
         </select>
     </div>
-    <div class="col-sm-3">
-        <label for="filterClauseCriteria[]">
-            <select class="form-control" name="filterClauseCriteria[]">
-                {{#each filterOptions}}
-                <option value="{{ id }}" {{#eq id ../filterClauseCriteria}}selected{{/eq}}>{{ value }}</option>
-                {{/each}}
-            </select>
-        </label>
+    <div class="form-group">
+        <select class="form-control" name="filterClauseCriteria[]">
+            {{#each filterOptions}}
+            <option value="{{ id }}" {{#eq id ../filterClauseCriteria}}selected{{/eq}}>{{ value }}</option>
+            {{/each}}
+        </select>
     </div>
-    <div class="col-sm-2">
-        <label for="filterClauseValue[]">
-            <input class="form-control" name="filterClauseValue[]" type="text" value="{{ filterClauseValue }}" />
-        </label>
+    <div class="form-group">
+        <input class="form-control" name="filterClauseValue[]" type="text" value="{{ filterClauseValue }}" />
     </div>
-    <div class="col-sm-1">
-        <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
-    </div>
+    <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
 </div>

@@ -32,6 +32,7 @@ use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\ScheduleExclusionFactory;
 use Xibo\Factory\ScheduleReminderFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -53,6 +54,7 @@ class Schedule implements \JsonSerializable
     public static $COMMAND_EVENT = 2;
     public static $OVERLAY_EVENT = 3;
     public static $INTERRUPT_EVENT = 4;
+    public static $CAMPAIGN_EVENT = 5;
     public static $DATE_MIN = 0;
     public static $DATE_MAX = 2147483647;
 
@@ -248,6 +250,18 @@ class Schedule implements \JsonSerializable
     public $shareOfVoice;
 
     /**
+     * @SWG\Property(description="Flag (0-1), whether this event is using Geo Location")
+     * @var int
+     */
+    public $isGeoAware;
+
+    /**
+     * @SWG\Property(description="Geo JSON representing the area of this event")
+     * @var string
+     */
+    public $geoLocation;
+
+    /**
      * @var ScheduleEvent[]
      */
     private $scheduleEvents = [];
@@ -280,6 +294,9 @@ class Schedule implements \JsonSerializable
     /** @var  ScheduleReminderFactory */
     private $scheduleReminderFactory;
 
+    /** @var  ScheduleExclusionFactory */
+    private $scheduleExclusionFactory;
+
     /**
      * @var UserFactory
      */
@@ -296,8 +313,9 @@ class Schedule implements \JsonSerializable
      * @param DayPartFactory $dayPartFactory
      * @param UserFactory $userFactory
      * @param ScheduleReminderFactory $scheduleReminderFactory
+     * @param ScheduleExclusionFactory $scheduleExclusionFactory
      */
-    public function __construct($store, $log, $config, $pool, $date, $displayGroupFactory, $dayPartFactory, $userFactory, $scheduleReminderFactory)
+    public function __construct($store, $log, $config, $pool, $date, $displayGroupFactory, $dayPartFactory, $userFactory, $scheduleReminderFactory, $scheduleExclusionFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->config = $config;
@@ -307,6 +325,7 @@ class Schedule implements \JsonSerializable
         $this->dayPartFactory = $dayPartFactory;
         $this->userFactory = $userFactory;
         $this->scheduleReminderFactory = $scheduleReminderFactory;
+        $this->scheduleExclusionFactory = $scheduleExclusionFactory;
 
         $this->excludeProperty('lastRecurrenceWatermark');
     }
@@ -492,9 +511,10 @@ class Schedule implements \JsonSerializable
             . ', CampaignId: ' . $this->campaignId
             . ', CommandId: ' . $this->commandId);
 
-        if ($this->eventTypeId == Schedule::$LAYOUT_EVENT
-            || $this->eventTypeId == Schedule::$OVERLAY_EVENT
-            || $this->eventTypeId == Schedule::$INTERRUPT_EVENT
+        if ($this->eventTypeId == Schedule::$LAYOUT_EVENT ||
+            $this->eventTypeId == Schedule::$CAMPAIGN_EVENT ||
+            $this->eventTypeId == Schedule::$OVERLAY_EVENT ||
+            $this->eventTypeId == Schedule::$INTERRUPT_EVENT
         ) {
             // Validate layout
             if (!v::intType()->notEmpty()->validate($this->campaignId))
@@ -545,37 +565,6 @@ class Schedule implements \JsonSerializable
         // Check recurrenceDetail every is positive
         if ($this->recurrenceType != '' && ($this->recurrenceDetail === null || $this->recurrenceDetail <= 0))
             throw new InvalidArgumentException(__('Repeat every must be a positive number'), 'recurrenceDetail');
-        
-        // Check and disallow Minute/Hourly repeats to be indefinite (or too long)
-        $twelveHoursInSeconds = 12 * 60 * 60;
-        $oneWeekInSeconds = 24 * 7 * 60 * 60;
-        if($this->recurrenceType == 'Minute') {
-
-            if (empty($this->recurrenceRange)) {
-                throw new InvalidArgumentException(__(' An end time is needed for an event that has its repeating interval set to Minute.'), 'recurrenceRange');
-            }
-
-            $distance = ($this->getDate()->parse($this->recurrenceRange, 'U')->diffInSeconds($this->getDate()->parse($this->fromDt, 'U'))) / $this->recurrenceDetail;
-
-            if ($distance > $twelveHoursInSeconds) {
-                // Recurrence range cannot be more than 12 hours
-                $exceedLimit = $this->getDate()->parse($this->fromDt, 'U')->addSeconds($twelveHoursInSeconds * $this->recurrenceDetail );
-                throw new InvalidArgumentException(sprintf(__('The end time for this event can only be %d in the future because of the repeating interval being Minute.', $exceedLimit)), 'recurrenceRange');
-            }
-
-        } elseif ($this->recurrenceType == 'Hour') {
-
-            if (empty($this->recurrenceRange)) {
-                throw new InvalidArgumentException(__(' An end time is needed for an event that has its repeating interval set to Hour'), 'recurrenceRange');
-            }
-            $distance = ($this->getDate()->parse($this->recurrenceRange, 'U')->diffInSeconds($this->getDate()->parse($this->fromDt, 'U'))) / $this->recurrenceDetail;
-
-            if ($distance > $oneWeekInSeconds) {
-                // Recurrence range cannot be more than 1 week
-                $exceedLimit = $this->getDate()->parse($this->fromDt, 'U')->addSeconds($oneWeekInSeconds * $this->recurrenceDetail );
-                throw new InvalidArgumentException(sprintf(__('The end time for this event can only be %d in the future because of the repeating interval being Hour.', $exceedLimit)), 'recurrenceRange');
-            }
-        }
     }
 
     /**
@@ -659,6 +648,11 @@ class Schedule implements \JsonSerializable
         $this->displayGroups = [];
         $this->unlinkDisplayGroups();
 
+        // Delete schedule exclusions
+        $scheduleExclusions = $this->scheduleExclusionFactory->query(null, ['eventId' => $this->eventId]);
+        foreach ($scheduleExclusions as $exclusion) {
+            $exclusion->delete();
+        }
 
         // Delete schedule reminders
         if ($this->scheduleReminderFactory !== null) {
@@ -697,8 +691,8 @@ class Schedule implements \JsonSerializable
     private function add()
     {
         $this->eventId = $this->getStore()->insert('
-          INSERT INTO `schedule` (eventTypeId, CampaignId, commandId, userID, is_priority, FromDT, ToDT, DisplayOrder, recurrence_type, recurrence_detail, recurrence_range, `recurrenceRepeatsOn`, `recurrenceMonthlyRepeatsOn`, `dayPartId`, `syncTimezone`, `syncEvent`, `shareOfVoice`)
-            VALUES (:eventTypeId, :campaignId, :commandId, :userId, :isPriority, :fromDt, :toDt, :displayOrder, :recurrenceType, :recurrenceDetail, :recurrenceRange, :recurrenceRepeatsOn, :recurrenceMonthlyRepeatsOn, :dayPartId, :syncTimezone, :syncEvent, :shareOfVoice)
+          INSERT INTO `schedule` (eventTypeId, CampaignId, commandId, userID, is_priority, FromDT, ToDT, DisplayOrder, recurrence_type, recurrence_detail, recurrence_range, `recurrenceRepeatsOn`, `recurrenceMonthlyRepeatsOn`, `dayPartId`, `syncTimezone`, `syncEvent`, `shareOfVoice`, `isGeoAware`, `geoLocation`)
+            VALUES (:eventTypeId, :campaignId, :commandId, :userId, :isPriority, :fromDt, :toDt, :displayOrder, :recurrenceType, :recurrenceDetail, :recurrenceRange, :recurrenceRepeatsOn, :recurrenceMonthlyRepeatsOn, :dayPartId, :syncTimezone, :syncEvent, :shareOfVoice, :isGeoAware, :geoLocation)
         ', [
             'eventTypeId' => $this->eventTypeId,
             'campaignId' => $this->campaignId,
@@ -716,7 +710,9 @@ class Schedule implements \JsonSerializable
             'dayPartId' => $this->dayPartId,
             'syncTimezone' => $this->syncTimezone,
             'syncEvent' => $this->syncEvent,
-            'shareOfVoice' => $this->shareOfVoice
+            'shareOfVoice' => $this->shareOfVoice,
+            'isGeoAware' => $this->isGeoAware,
+            'geoLocation' => $this->geoLocation
         ]);
     }
 
@@ -743,7 +739,9 @@ class Schedule implements \JsonSerializable
             `dayPartId` = :dayPartId,
             `syncTimezone` = :syncTimezone,
             `syncEvent` = :syncEvent,
-            `shareOfVoice` = :shareOfVoice
+            `shareOfVoice` = :shareOfVoice,
+            `isGeoAware` = :isGeoAware,
+            `geoLocation` = :geoLocation
           WHERE eventId = :eventId
         ', [
             'eventTypeId' => $this->eventTypeId,
@@ -763,6 +761,8 @@ class Schedule implements \JsonSerializable
             'syncTimezone' => $this->syncTimezone,
             'syncEvent' => $this->syncEvent,
             'shareOfVoice' => $this->shareOfVoice,
+            'isGeoAware' => $this->isGeoAware,
+            'geoLocation' => $this->geoLocation,
             'eventId' => $this->eventId
         ]);
     }
@@ -838,6 +838,22 @@ class Schedule implements \JsonSerializable
             $this->getLog()->debug('Filtering Events: ' . json_encode($this->scheduleEvents, JSON_PRETTY_PRINT) . '. fromTimeStamp: ' . $fromTimeStamp . ', toTimeStamp: ' . $toTimeStamp);
 
             foreach ($this->scheduleEvents as $scheduleEvent) {
+
+                // Find the excluded recurring events
+                $scheduleExclusions = $this->scheduleExclusionFactory->query(null, ['eventId' => $this->eventId]);
+
+                $exclude = false;
+                foreach ($scheduleExclusions as $k => $exclusion) {
+                    if ($scheduleEvent->fromDt == $exclusion->fromDt &&
+                        $scheduleEvent->toDt == $exclusion->toDt) {
+                        $exclude = true;
+                        continue;
+                    }
+                }
+
+                if ($exclude) {
+                    continue;
+                }
 
                 if (in_array($scheduleEvent, $events))
                     continue;

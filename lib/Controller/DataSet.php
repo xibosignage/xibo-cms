@@ -239,11 +239,20 @@ class DataSet extends Base
 
             if ($user->checkDeleteable($dataSet) && $dataSet->isLookup == 0) {
                 // Delete DataSet
-                $dataSet->buttons[] = array(
+                $dataSet->buttons[] = [
                     'id' => 'dataset_button_delete',
                     'url' => $this->urlFor($request,'dataSet.delete.form', ['id' => $dataSet->dataSetId]),
-                    'text' => __('Delete')
-                );
+                    'text' => __('Delete'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'dataSet.delete', ['id' => $dataSet->dataSetId])],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'dataset_button_delete'],
+                        ['name' => 'text', 'value' => __('Delete')],
+                        ['name' => 'rowtitle', 'value' => $dataSet->dataSet],
+                        ['name' => 'form-callback', 'value' => 'deleteMultiSelectFormOpen']
+                    ]
+                ];
             }
 
             // Divider
@@ -465,6 +474,8 @@ class DataSet extends Base
             $dataSet->dataRoot = $sanitizedParams->getString('dataRoot');
             $dataSet->summarize = $sanitizedParams->getString('summarize');
             $dataSet->summarizeField = $sanitizedParams->getString('summarizeField');
+            $dataSet->sourceId = $sanitizedParams->getInt('sourceId');
+            $dataSet->ignoreFirstRow = $sanitizedParams->getCheckbox('ignoreFirstRow');
         }
 
         // Also add one column
@@ -708,6 +719,8 @@ class DataSet extends Base
             $dataSet->dataRoot = $sanitizedParams->getString('dataRoot');
             $dataSet->summarize = $sanitizedParams->getString('summarize');
             $dataSet->summarizeField = $sanitizedParams->getString('summarizeField');
+            $dataSet->sourceId = $sanitizedParams->getInt('sourceId');
+            $dataSet->ignoreFirstRow = $sanitizedParams->getCheckbox('ignoreFirstRow');
         }
 
         $dataSet->save();
@@ -1214,6 +1227,7 @@ class DataSet extends Base
         } else {
             $dataSet = $this->dataSetFactory->createEmpty();
         }
+
         $dataSet->dataSet = $sanitizedParams->getString('dataSet');
         $dataSet->method = $sanitizedParams->getString('method');
         $dataSet->uri = $sanitizedParams->getString('uri');
@@ -1222,6 +1236,8 @@ class DataSet extends Base
         $dataSet->username = $sanitizedParams->getString('username');
         $dataSet->password = $sanitizedParams->getString('password');
         $dataSet->dataRoot = $sanitizedParams->getString('dataRoot');
+        $dataSet->sourceId = $sanitizedParams->getInt('sourceId');
+        $dataSet->ignoreFirstRow = $sanitizedParams->getCheckbox('ignoreFirstRow');
 
         // Set this DataSet as active.
         $dataSet->setActive();
@@ -1231,7 +1247,11 @@ class DataSet extends Base
 
         if ($data->number > 0) {
             // Process the results, but don't record them
-            $this->dataSetFactory->processResults($dataSet, $data, false);
+            if ($dataSet->sourceId === 1) {
+                $this->dataSetFactory->processResults($dataSet, $data, false);
+            } else {
+                $this->dataSetFactory->processCsvEntries($dataSet, $data, false);
+            }
         }
 
         $this->getLog()->debug('Results: ' . var_export($data, true));

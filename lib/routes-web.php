@@ -46,6 +46,12 @@ $app->get('/statusdashboard/displayGroups', ['\Xibo\Controller\StatusDashboard' 
 $app->get('/icondashboard', ['\Xibo\Controller\IconDashboard', 'displayPage'])->setName('icondashboard.view');
 $app->get('/mediamanager', ['\Xibo\Controller\MediaManager' , 'displayPage'])->setName('mediamanager.view');
 $app->get('/mediamanager/data', ['\Xibo\Controller\MediaManager','grid'])->setName('mediamanager.search');
+$app->get('/playlistdashboard', ['\Xibo\Controller\PlaylistDashboard','displayPage'])->setName('playlistdashboard.view');
+$app->get('/playlistdashboard/data', ['\Xibo\Controller\PlaylistDashboard','grid'])->setName('playlistdashboard.search');
+$app->get('/playlistdashboard/{id}', ['\Xibo\Controller\PlaylistDashboard','show'])->setName('playlistdashboard.show');
+$app->get('/playlistdashboard/widget/form/delete/{id}', ['\Xibo\Controller\PlaylistDashboard','deletePlaylistWidgetForm'])->setName('playlist.module.widget.delete.form');
+//$app->map('/playlistdashboard/library', '\Xibo\Controller\PlaylistDashboard:upload')->via('HEAD');
+$app->post('/playlistdashboard/library', ['\Xibo\Controller\PlaylistDashboard','upload'])->setName('playlistdashboard.library.add');
 
 // Login Form
 $app->get('/login', ['\Xibo\Controller\Login', 'loginForm'])->setName('login');
@@ -68,6 +74,7 @@ $app->get('/schedule/view', ['\Xibo\Controller\Schedule','displayPage'])->setNam
 $app->get('/schedule/form/add', ['\Xibo\Controller\Schedule','addForm'])->setName('schedule.add.form');
 $app->get('/schedule/form/edit/{id}', ['\Xibo\Controller\Schedule','editForm'])->setName('schedule.edit.form');
 $app->get('/schedule/form/delete/{id}', ['\Xibo\Controller\Schedule','deleteForm'])->setName('schedule.delete.form');
+$app->get('/schedulerecurrence/form/delete/{id}', ['\Xibo\Controller\Schedule','deleteRecurrenceForm'])->setName('schedule.recurrence.delete.form');
 $app->get('/schedule/form/now/{from}/{id}', ['\Xibo\Controller\Schedule','scheduleNowForm'])->setName('schedule.now.form');
 $app->get('/schedulenow/form/now/{from}/{id}', ['\Xibo\Controller\Schedule','scheduleNowForm'])->setName('schedulenow.now.form');
 // Special routes for searching inside the schedule page
@@ -116,7 +123,6 @@ $app->get('/layout/form/campaign/assign/{id}', ['\Xibo\Controller\Layout','assig
 $app->get('/region/preview/{id}', ['\Xibo\Controller\Region','preview'])->setName('region.preview');
 $app->get('/region/form/edit/{id}', ['\Xibo\Controller\Region','editForm'])->setName('region.edit.form');
 $app->get('/region/form/delete/{id}', ['\Xibo\Controller\Region','deleteForm'])->setName('region.delete.form');
-$app->get('/region/form/timeline/{id}', ['\Xibo\Controller\Region','timelineForm'])->setName('region.timeline.form');
 
 //
 // playlists
@@ -132,7 +138,6 @@ $app->get('/playlist/form/setenablestat/{id}', ['\Xibo\Controller\Playlist','set
 // Designer
 $app->get('/playlist/form/library/assign/{id}', ['\Xibo\Controller\Playlist','libraryAssignForm'])->setName('playlist.library.assign.form');
 // Module functions
-$app->get('/playlist/widget/form/add/{type}/{id}', ['\Xibo\Controller\Module','addWidgetForm'])->setName('module.widget.add.form');
 $app->get('/playlist/widget/form/edit/{id}', ['\Xibo\Controller\Module','editWidgetForm'])->setName('module.widget.edit.form');
 $app->get('/playlist/widget/form/delete/{id}', ['\Xibo\Controller\Module','deleteWidgetForm'])->setName('module.widget.delete.form');
 $app->get('/playlist/widget/form/transition/edit/{type}/{id}', ['\Xibo\Controller\Module','editWidgetTransitionForm'])->setName('module.widget.transition.edit.form');
@@ -172,6 +177,7 @@ $app->get('/display/form/authorise/{id}', ['\Xibo\Controller\Display','authorise
 $app->get('/display/form/defaultlayout/{id}', ['\Xibo\Controller\Display','defaultLayoutForm'])->setName('display.defaultlayout.form');
 $app->get('/display/form/moveCms/{id}', ['\Xibo\Controller\Display','moveCmsForm'])->setName('display.moveCms.form');
 $app->get('/display/form/addViaCode', ['\Xibo\Controller\Display','addViaCodeForm'])->setName('display.addViaCode.form');
+$app->get('/display/form/licenceCheck/{id}', ['\Xibo\Controller\Display','checkLicenceForm'])->setName('display.licencecheck.form');
 
 //
 // user
@@ -188,7 +194,7 @@ $app->get('/user/form/delete/{id}', ['\Xibo\Controller\User','deleteForm'])->set
 $app->get('/user/form/membership/{id}', ['\Xibo\Controller\User','membershipForm'])->setName('user.membership.form');
 $app->get('/user/form/preferences', ['\Xibo\Controller\User', 'preferencesForm'])->setName('user.preferences.form');
 // permissions
-$app->get('/user/permissions/form/{entity}/{id}', '\Xibo\Controller\User','permissionsForm')->setName('user.permissions.form');
+$app->get('/user/permissions/form/{entity}/{id}', ['\Xibo\Controller\User','permissionsForm'])->setName('user.permissions.form');
 
 //
 // log

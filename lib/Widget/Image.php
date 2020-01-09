@@ -195,6 +195,7 @@ class Image extends ModuleWidget
         $cache = $sanitizedParams->getInt('cache', ['default' => 0]) == 1;
         $width = intval($sanitizedParams->getDouble('width'));
         $height = intval($sanitizedParams->getDouble('height'));
+        $extension = explode('.', $media->storedAs)[1];
 
         // Preview or download?
         if ($preview) {
@@ -243,11 +244,12 @@ class Image extends ModuleWidget
                     }
 
                     // Output the file
-                    echo $img->encode();
+                    echo $img->encode($extension);
 
                 } else if ($cache) {
                     // File exists, output it directly
-                    echo Img::make($libraryLocation . 'tn_' . $media->storedAs)->encode();
+                    $img = Img::make($libraryLocation . 'tn_' . $media->storedAs);
+                    echo $img->encode($extension);
                 }
             } catch (NotReadableException $notReadableException) {
                 $this->getLog()->debug($notReadableException->getTraceAsString());
@@ -263,7 +265,7 @@ class Image extends ModuleWidget
                     });
                 }
 
-                echo $img->response();
+                echo $img->encode();
             }
         } else {
             // Download the file

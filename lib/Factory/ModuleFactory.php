@@ -29,6 +29,7 @@ use Xibo\Entity\Module;
 use Xibo\Entity\Region;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ModuleServiceInterface;
@@ -317,9 +318,10 @@ class ModuleFactory extends BaseFactory
      * @param int $playlistId
      * @param int $regionId
      * @return \Xibo\Widget\ModuleWidget
-     * @throws NotFoundException
+     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Exception\InvalidArgumentException
      */
-    public function createForWidget($type, $widgetId = 0, $ownerId = 0, $playlistId = 0, $regionId = 0)
+    public function createForWidget($type, $widgetId = 0, $ownerId = 0, $playlistId = null, $regionId = 0)
     {
         $module = $this->create($type);
 
@@ -333,25 +335,13 @@ class ModuleFactory extends BaseFactory
         // Do we have a widgetId
         if ($widgetId == 0) {
             // If we don't have a widget we must have a playlist
-            if ($playlistId == 0) {
-                throw new \InvalidArgumentException(__('Neither Playlist or Widget provided'));
+            if ($playlistId == null) {
+                throw new InvalidArgumentException(__('Neither Playlist or Widget provided'), 'playlistId');
             }
-
-            $playlist = $this->playlistFactory->getById($playlistId);
-
-            // We load here only to ensure we aren't loading when we assign
-            // loadWidgets = true to keep the ordering correct
-            $playlist->load([
-                'loadPermissions' => false,
-                'loadWidgets' => true,
-                'loadTags' => false
-            ]);
 
             // Create a new widget to use
             $widget = $this->widgetFactory->create($ownerId, $playlistId, $module->getModuleType(), null);
             $module->setWidget($widget);
-
-            $playlist->assignWidget($widget);
         }
         else {
             // Load the widget

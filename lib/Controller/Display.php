@@ -61,6 +61,7 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\PlayerActionServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\XMR\LicenceCheckAction;
 use Xibo\XMR\RekeyAction;
 use Xibo\XMR\ScreenShotAction;
 
@@ -543,7 +544,8 @@ class Display extends Base
             'loggedIn' => $parsedQueryParams->getInt('loggedIn'),
             // TODO Sanitizer does not like it as is
             //'lastAccessed' => ($parsedQueryParams->getDate('lastAccessed', ['default' => 0, 'dateFormat' => 'U']) != null) ? $parsedQueryParams->getDate('lastAccessed', ['default' => 0, 'dateFormat' => 'U']) : null,
-            'displayGroupIdMembers' => $parsedQueryParams->getInt('displayGroupIdMembers')
+            'displayGroupIdMembers' => $parsedQueryParams->getInt('displayGroupIdMembers'),
+            'orientation' => $parsedQueryParams->getString('orientation')
         ];
 
         // Get a list of displays
@@ -704,6 +706,14 @@ class Display extends Base
                     )
                 );
 
+                if (in_array($display->clientType, ['android', 'lg', 'sssp'])) {
+                    $display->buttons[] = array(
+                        'id' => 'display_button_checkLicence',
+                        'url' => $this->urlFor('display.licencecheck.form', ['id' => $display->displayId]),
+                        'text' => __('Check Licence')
+                    );
+                }
+
                 $display->buttons[] = ['divider' => true];
             }
 
@@ -831,8 +841,17 @@ class Display extends Base
 
     /**
      * Edit Display Form
-     * @param int $displayId
-     * @throws \Xibo\Exception\XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     function editForm(Request $request, Response $response, $id)
     {
@@ -941,7 +960,16 @@ class Display extends Base
 
     /**
      * Delete form
-     * @param int $displayId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     function deleteForm(Request $request, Response $response, $id)
     {
@@ -961,8 +989,18 @@ class Display extends Base
 
     /**
      * Display Edit
-     * @param int $displayId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/display/{displayId}",
      *  operationId="displayEdit",
@@ -1131,7 +1169,6 @@ class Display extends Base
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
      */
     function edit(Request $request, Response $response, $id)
     {
@@ -1215,8 +1252,17 @@ class Display extends Base
 
     /**
      * Delete a display
-     * @param int $displayId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Delete(
      *  path="/display/{displayId}",
      *  operationId="displayDelete",
@@ -1240,8 +1286,9 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($display))
+        if (!$this->getUser($request)->checkDeleteable($display)) {
             throw new AccessDeniedException();
+        }
 
         $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $display->delete();
@@ -1400,7 +1447,7 @@ class Display extends Base
             ob_end_clean();
         }
 
-        echo $img->response();
+        echo $img->encode();
     }
 
     /**
@@ -1686,8 +1733,17 @@ class Display extends Base
 
     /**
      * Toggle Authorise on this Display
-     * @param int $displayId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/display/authorise/{displayId}",
      *  operationId="displayToggleAuthorise",
@@ -1706,7 +1762,6 @@ class Display extends Base
      *      description="successful operation"
      *  )
      * )
-     * @throws XiboException
      */
     public function toggleAuthorise(Request $request, Response $response, $id)
     {
@@ -1756,8 +1811,17 @@ class Display extends Base
 
     /**
      * Set the Default Layout for this Display
-     * @param int $displayId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/display/defaultlayout/{displayId}",
      *  operationId="displayDefaultLayout",
@@ -1783,7 +1847,6 @@ class Display extends Base
      *      description="successful operation"
      *  )
      * )
-     * @throws XiboException
      */
     public function setDefaultLayout(Request $request, Response $response, $id)
     {
@@ -1940,5 +2003,68 @@ class Display extends Base
             $this->getLog()->debug($e->getMessage());
             throw new InvalidArgumentException('Provided user_code does not exist', 'user_code');
         }
+    }
+
+    /**
+     * Request ScreenShot form
+     * @param int $displayId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function checkLicenceForm($displayId)
+    {
+        $display = $this->displayFactory->getById($displayId);
+
+        if (!$this->getUser()->checkViewable($display))
+            throw new AccessDeniedException();
+
+        $this->getState()->template = 'display-form-licence-check';
+        $this->getState()->setData([
+            'display' => $display
+        ]);
+    }
+
+    /**
+     * @SWG\Put(
+     *  summary="Licence Check",
+     *  path="/display/licenceCheck/{displayId}",
+     *  operationId="displayLicenceCheck",
+     *  tags={"display"},
+     *  description="Ask this Player to check its Commercial Licence",
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      in="path",
+     *      description="The Display ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @param int $displayId
+     * @throws \Xibo\Exception\ConfigurationException if XMR cannot be contacted
+     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Exception\XiboException
+     */
+    public function checkLicence($displayId)
+    {
+        $display = $this->displayFactory->getById($displayId);
+
+        if (!$this->getUser()->checkViewable($display))
+            throw new AccessDeniedException();
+
+        if (empty($display->xmrChannel)) {
+            throw new InvalidArgumentException('XMR is not configured for this Display', 'xmrChannel');
+        }
+
+        $this->playerAction->sendAction($display, new LicenceCheckAction());
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Request sent for %s'), $display->display),
+            'id' => $display->displayId
+        ]);
     }
 }

@@ -1,0 +1,1265 @@
+// Import
+@import "mixins";
+@import "common";
+@import "toolbar";
+@import "topbar";
+
+// Colours
+$designer-colour-layout: $xibo-color-light-blue;
+$designer-colour-region: $xibo-color-orange;
+$designer-colour-widget: $xibo-color-green; 
+
+// Variables
+$designer-module-bg-color: $xibo-color-white;
+$designer-module-border-color: $xibo-color-black;
+
+$designer-primary-color: $xibo-color-primary;
+$designer-secondary-color: $xibo-color-secondary;
+$designer-z-index-select: 10;
+
+$layout-main-bg-color: $xibo-color-light-blue;
+$layout-main-fg-color: $xibo-color-black;
+$layout-hover-color: lighten($layout-main-bg-color, 20%);
+$layout-selected-color: lighten($layout-main-bg-color, 10%);
+
+$region-main-bg-color: $xibo-color-orange;
+$region-main-fg-color: $xibo-color-black;
+$region-hover-color: lighten($region-main-bg-color, 5%);
+$region-selected-color: darken($region-main-bg-color, 10%);
+
+$widget-main-bg-color: $xibo-color-green;
+$widget-main-fg-color: $xibo-color-black;
+$widget-hover-color: lighten($widget-main-bg-color, 10%);
+$widget-selected-color: darken($widget-main-bg-color, 10%);
+
+$timeline-widget-bg-color: $xibo-color-white;
+$timeline-widget-fg-color: $xibo-color-black;
+$timeline-widget-fg-color2: darken($xibo-color-gray, 30%);
+$timeline-widget-border-color: $xibo-color-gray;
+$timeline-widget-to-sort-bg-color: $xibo-color-yellow;
+
+$timeline-ghost-bg-color: $xibo-color-gray;
+$timeline-ghost-fg-color: $xibo-color-white;
+
+$timeline-transition-in-bg-color: darken($xibo-color-green, 30%);
+$timeline-transition-out-bg-color: darken($xibo-color-red, 30%);
+$timeline-transition-in-fg-color: $xibo-color-green;
+$timeline-transition-out-fg-color: $xibo-color-red;
+
+$viewer-player-bg-colour: $xibo-color-black;
+$viewer-preview-text-colour: darken($xibo-color-white, 30%);
+$viewer-preview-text-shadow-colour: darken($xibo-color-white, 60%);
+
+$viewer-navbar-bg-colour: $xibo-color-dark-blue;
+$viewer-navbar-fg-colour: $xibo-color-white;
+$viewer-navbar-btn-bg-colour: $xibo-color-blue;
+$viewer-navbar-btn-fg-colour: $xibo-color-white;
+
+$viewer-inline-editor-shadow: $xibo-color-red;
+$viewer-inline-editor-overlay-fg-colour: $xibo-color-white;
+$viewer-inline-editor-overlay-bg-colour: $xibo-color-secondary;
+
+$navigator-shadow-colour: $xibo-color-white;
+$navigator-non-editable-shadow-colour: $xibo-color-gray;
+
+$navigator-navbar-bg-colour: $xibo-color-blue;
+$navigator-navbar-fg-colour: $xibo-color-white;
+$navigator-navbar-btn-bg-colour: $xibo-color-dark-blue;
+$navigator-navbar-btn-fg-colour: $xibo-color-white;
+
+$designer-overlay-z-index: 1050;
+
+$unsuccess-message-bg-color: darken($xibo-color-red, 30%);
+$layout-status-popover-message-bg-color: $xibo-color-red;
+
+#read-only-message {
+    margin: 5px 5%;
+    padding: 10px;
+    width: 90%;
+    line-height: 18px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// CSS
+#layout-editor  {
+    overflow: hidden;
+    margin: 25px -15px 0 -15px;
+}
+
+#layout-editor-main {
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-top: 8px;
+    height: calc(100vh - 100px - #{$toolbar-height});
+}
+
+#layout-editor .container-designer {
+    margin: 0 16px;
+}
+
+@media (min-width: 768px) {
+    .welcome-screen-modal .modal-dialog {
+        width: 600px;
+    }
+}
+
+@media (max-width: 768px) {
+    #layout-editor-main {
+        padding-top: 15px;
+    }
+
+    #layout-editor  {
+        margin-top: 0;
+    }
+}
+
+@media (max-width: 1200px) {
+    #layout-editor  {
+        margin-top: 0;
+    }
+
+    #page-wrapper #layout-editor  {
+        margin-top: 25px;
+    }
+}
+
+#layout-editor .layout-module {
+    padding-right: 2px;
+    padding-left: 2px;
+    margin-bottom: 8px;
+}
+
+#layout-editor .center-msg {
+    position: relative;
+    text-align: center;
+    font-size: 20px;
+    overflow: hidden;
+    font-weight: bold;
+    @include set-transparent-color(color, $xibo-color-white, 0.5);
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Layout timeline */
+#layout-editor #layout-timeline {
+    background: $designer-primary-color;
+    padding: 4px;
+    overflow-y: auto;
+    @include border-radius(4px);
+
+    /* Custom scrollbar */
+    /* width */
+    #regions-container::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    /* Track */
+    #regions-container::-webkit-scrollbar-track {
+        @include box-shadow(inset 0 0 5px $xibo-color-gray);
+    }
+    
+    /* Handle */
+    #regions-container::-webkit-scrollbar-thumb {
+        background: $designer-secondary-color;
+        @include border-radius(4px);
+    }
+
+    /* Handle on hover */
+    #regions-container::-webkit-scrollbar-thumb:hover {
+        background: lighten($designer-secondary-color, 20%);
+    }
+
+    #regions-container::-webkit-scrollbar-corner {
+        @include box-shadow(inset 0 0 5px $xibo-color-gray);
+    }
+
+    /* Region Container */
+    $timeline-region-info-width: 160px;
+    $timeline-region-preview-width: 60px;
+    $timeline-timeruler-height: 24px;
+    $timeline-region-height: 48px;
+
+    #regions-container {
+        overflow: auto;
+        display: inline-block;
+        min-height: 14vh;
+        width: calc(100% - #{$timeline-region-info-width});
+    }
+
+    #timeruler {
+        width: 100%;
+        height: $timeline-timeruler-height;
+        background-color: $xibo-color-black;
+        overflow: hidden;
+        white-space: nowrap;
+        font-size: 0;
+        opacity: 0.8;
+
+        .step-margin {
+            display: inline-block;
+            height: 10px;
+        }
+
+        .step {
+            display: inline-block;
+            border-left: $xibo-color-white 2px solid;
+            height: 10px;
+            vertical-align: top;
+
+            &.labelled {
+                color: $xibo-color-white;
+                font-size: 12px;
+                height: 18px;
+                padding-left: 2px;
+                line-height: 34px;
+            }
+        }
+    }
+
+    #regions-info {
+        float: left;
+        width: $timeline-region-info-width;
+        margin-top: $timeline-timeruler-height;
+
+        .designer-region-info {
+            background-color: $xibo-color-dark-blue;
+            color: $xibo-color-white;
+            height: $timeline-region-height;
+            margin: 4px 0;
+            font-size: 14px;
+            @include border-radius(0px 4px 4px 0px);
+
+            &.selected-region {
+                color: $designer-colour-region;
+                font-weight: bold;
+            }
+
+            .region-preview {
+                float: left;
+                width: $timeline-region-preview-width;
+                height: $timeline-region-height;
+                overflow: hidden;
+
+                .region-preview-background {
+                    position: relative;
+                    background-color: $xibo-color-really-black;
+                }
+
+                .region-preview-element {
+                    position: relative;
+                    background-color: $xibo-color-dark-orange;
+                }
+            }
+
+            .region-controls {
+                display: inline-block;
+                padding: 2px 4px;
+                line-height: 22px;
+                width: calc(#{$timeline-region-info-width} - #{$timeline-region-preview-width});
+
+                .region-label {
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    overflow: hidden;
+                }
+            }
+        }
+    }
+
+    /* Controls Container */
+    #timeline-controls {
+        position: absolute;
+        font-size: 16px;
+        line-height: 20px;
+        width: $timeline-region-info-width;
+        padding: 2px 4px;
+        background-color: $xibo-color-dark-blue;
+    }
+
+    /* Timeline buttons */
+    .designer-region-info, #timeline-controls {
+        a {
+            cursor: pointer;
+            text-decoration: none;
+            color: $xibo-color-white;
+
+            &:hover {
+                color: darken($color: $xibo-color-white, $amount: 20%);
+            }
+
+            &[disabled] {
+                color: darken($color: $xibo-color-white, $amount: 50%);
+            }
+        }
+
+        span {
+            color: $xibo-color-white;
+            font-size: 14px;
+            line-height: 17px;
+        }
+    }
+    
+    /* Designer Region */
+    .designer-region {
+        background: $region-main-bg-color;
+        height: 48px;
+        padding: 2px;
+        margin: 4px 0;
+        @include border-radius(4px);
+        display: flex;
+        display: -webkit-box;
+        display: -moz-box;
+
+        &:not(.editable) {
+            @include box-shadow(inset 0 0 6px 4px $xibo-color-gray);
+        }
+
+        .message {
+            color: $xibo-color-white;
+            font-weight: bold;
+            padding: 10px;
+        }
+    }
+
+    #timeline-container {
+        float: left;
+        width: 100%;
+    }
+
+    .label-region {
+        height: 40px;
+        padding: 10px 2px 0 0;
+        text-align: right;
+        font-weight: bold;
+        margin-bottom: 4px;
+        color: $region-main-fg-color;
+    }
+
+    /* Designer Widget */
+    .designer-widget {
+        position: relative;
+        background: $timeline-widget-bg-color;
+        color: $timeline-widget-fg-color;
+        font-weight: bold;
+        height: 100%;
+        border: 1px solid $timeline-widget-border-color;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        padding: 0 4px;
+        @include border-radius(4px);
+
+        .widgetLabel {
+            float: left;
+            height: inherit;
+            color: $designer-module-bg-color;
+            min-width: 20px;
+            height: 100%;
+            text-align: center;
+            opacity: 0.85;
+            padding: 0 4px;
+        }
+
+        .widgetName {
+            font-style: italic;
+            color: $timeline-widget-fg-color;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 90%;
+            padding-left: 4px;
+        }
+
+        .widgetProperties {
+            float: right;
+            position: absolute;
+            z-index: 2;
+            right: 4px;
+            top: 4px;
+        }
+
+        .widget-transition-container {
+            position: absolute;
+            height: 100%;
+            z-index: 1;
+            opacity: 0.8;
+        }
+
+        .widget-transition {
+            cursor: pointer;
+            position: absolute;
+            width: 100%;
+            top: 70%;
+            height: 30%;
+            opacity: 0.3;
+            font-size: 9px;
+            color: $xibo-color-white;
+        }
+
+        .widget-transition:hover {
+            top: 50%;
+            height: 50%;
+            opacity: 0.6;
+            font-size: 13px;
+        }
+
+        .widget-transition-container.transition-in {
+            left: 0;
+            border-right: $timeline-transition-in-fg-color solid 2px;
+        }
+
+        .widget-transition-container.transition-out {
+            right: 0;
+            border-left: $timeline-transition-out-fg-color solid 2px;
+        }
+
+        .widget-transition.transition-in {
+            background: $timeline-transition-in-bg-color;
+            border-radius: 80% 0 0 0;
+            text-align: right;
+            padding-right: 5px;
+        }
+
+        .widget-transition.transition-out {
+            background: $timeline-transition-out-bg-color;
+            border-radius: 0 80% 0 0;
+            text-align: left;
+            padding-left: 5px;
+        }
+
+        i.editProperty {
+            float: right;
+            cursor: pointer;
+            padding: 2px;
+            color: $widget-main-fg-color;
+        }
+
+        i.editProperty:hover {
+            color: lighten($widget-main-fg-color, 20%);
+        }
+    }
+
+
+    /* Designer Widget Ghost */
+    .designer-widget-ghost {
+        @include set-transparent-color(background, $timeline-ghost-bg-color, 0.6);
+        color: $timeline-ghost-fg-color;
+        font-weight: bold;
+        display: flex;
+        height: 100%;
+
+        .widgetName, .widgetSubType {
+            color: $timeline-ghost-fg-color;
+        }    
+    }
+
+    .designer-widget-sortable-highlight {
+        background: $xibo-color-yellow;
+        float: left;
+        width: 20px;
+        height: 100%;
+        border: none;
+    }
+
+    .ghost-padding {
+        @include set-transparent-color(background, $xibo-color-black, 0.2);
+        float: left;
+        height: 100%;
+    }
+
+    .widgetExtension {
+        color: $timeline-ghost-fg-color;
+        padding: 0 4px;
+        font-weight: bold;
+        @include set-transparent-color(background, $xibo-color-white, 0.5);
+        height: 80%;
+        margin-top: 0.25em;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+/* Layout Viewer */
+#layout-editor #layout-viewer-container {
+    @include border-radius(4px);
+    border: 2px solid $designer-module-border-color;
+    background: $xibo-color-black;
+    min-height: calc(45vh + 42px); /* Fix for the reload of a viewer element */
+}
+
+#layout-editor #layout-viewer {
+    min-height: 45vh;
+    background: $viewer-player-bg-colour;
+
+    .layout-viewer-border {
+        @include set-transparent-color(background, $xibo-color-black, 0.9);
+        position: absolute;
+    }
+
+    .viewer-element {
+        position:relative;
+        overflow: hidden;
+    }
+
+    .viewer-element .module-preview-icon {
+        font-size: 4em;
+        margin-top: 10px;
+    }
+
+    .cke_textarea_inline {
+        display: none;
+    }
+
+    #viewer-preview iframe {
+        @include user-select-none();
+    }
+
+    #viewer-preview {
+        color: $viewer-preview-text-colour;
+        text-shadow: 0px 0px 2px $viewer-preview-text-shadow-colour;
+    }
+
+    .layout-player {
+        background: $viewer-player-bg-colour;
+        @include box-shadow(0 0 4px 0px $xibo-color-gray);
+    }
+
+    .play-btn-container {
+        position: relative;
+        width: 100%;
+        display: table;
+        height: 100%;
+        text-align: center;
+        @include set-transparent-color(background, $viewer-player-bg-colour, 0.2);
+    }
+
+    .designer-region {
+
+        .module-preview-icon {
+            font-size: 2em;
+        }
+
+        @include set-transparent-color(background, $xibo-color-white, 0.3);
+        @include box-shadow(0 0 4px 0px $xibo-color-black);
+
+        .loading-icon {
+            font-size: inherit;
+        }
+
+        .center-msg {
+            font-size: 12px;
+            overflow: visible;
+            position: absolute;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .preview-select {
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            z-index: 1;
+        }
+
+        .preview-paging {
+            position: absolute;
+            color: $xibo-color-white;
+            display: none;
+            position: absolute;
+            min-width: 100%;
+            width: max-content;
+            height: 20px;
+            bottom: 0;
+            z-index: 2;
+            @include set-transparent-color(background, $xibo-color-black, 0.5);
+            opacity: 0.2;
+            padding: 0 4px;
+            white-space: nowrap;
+            left: 50%;
+            transform: translate(-50%, 0);
+        }
+
+        .preview-paging.active {
+            display: block;
+        }
+
+        .preview-paging-message {
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .preview-paging-name {
+            font-weight: bold;
+            font-style: italic;
+            max-width: 150px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .widget-arrow
+        {
+            display: none;
+            cursor: pointer;
+            padding: 2px 3px;
+        }
+        
+        &:hover {
+            @include set-transparent-color(background, $xibo-color-white, 0.5);
+            @include box-shadow(0 0 4px 2px $xibo-color-black);
+
+            .preview-paging.active {
+                opacity: 0.9;
+            }
+        }
+    }
+}
+
+/* Viewer navbar */
+#layout-editor #layout-viewer-navbar {
+    
+    .viewer-navbar {
+        background: $viewer-navbar-bg-colour;
+        color: $viewer-navbar-fg-colour;
+        min-height: 40px;
+        margin: 0;
+        padding: 4px;
+        border-width: 4px 0 0 0;
+        border-style: solid;
+        @include border-radius(0 0 2px 2px);
+
+        .btn {
+            background: $viewer-navbar-btn-bg-colour;
+            color: $viewer-navbar-btn-fg-colour;
+            font-size: 16px;
+            padding: 4px 8px;
+            line-height: 1.3;
+        }
+
+        .paging {
+            padding: 0 4px;
+            display: inline-block;
+
+            .btn {
+                background: $viewer-navbar-btn-fg-colour;
+                color: $viewer-navbar-btn-bg-colour;
+            }
+
+            .label {
+                padding: 4px 2px;
+                display: inline-block;
+                font-size: 14px;
+            }
+        }
+
+        .row > div {
+            margin: 0;
+            padding: 0;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+
+        /* CKEditor controls */
+        .ckeditor_controls {
+            padding: 0 8px;
+
+            > div {
+                padding: 0 5px;
+                min-width: 220px;
+                float: right;
+            }
+
+            .select2-container--bootstrap .select2-selection--single {
+                height: 26px;
+                padding: 2px 24px 2px 4px;
+            }
+        }
+
+        .inline-editor-templates {
+            float: left;
+            padding: 0 8px;
+
+            .control-label {
+                padding: 2px 4px;
+                text-align: right;
+            }
+
+            .ckeditor_select_container {
+                padding: 3px 0 0 0;
+            }
+        }
+
+        &.designer-layout {
+            border-color: $designer-colour-layout;
+        }
+
+        &.designer-region {
+            border-color: $designer-colour-region;
+        }
+
+        &.designer-widget {
+            border-color: $designer-colour-widget;
+        }
+
+        .info {
+            display: inline-block;
+
+            .label-name {
+                padding: 4px;
+                font-size: 14px;
+            }
+
+            .label-time {
+                background-color: $xibo-color-white;
+                color: $xibo-color-blue;
+                font-size: 14px;
+                padding: 4px;
+            }
+        }
+
+        #inline-editor-save {
+            display: none;
+        }
+
+        .hide-on-fs {
+            display: inline-block;
+        }
+
+        .show-on-fs {
+            display: none;
+        }
+    }
+}
+
+/* Viewer fullscreen */
+#layout-editor #layout-viewer-container.fullscreen {
+    @include set-transparent-color(background-color, $xibo-color-black, 0.9);
+    position: fixed;
+    z-index: 1050;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+ 
+    #layout-viewer {
+        position: fixed; /* Stay in place */
+        z-index: $designer-overlay-z-index; /* Sit on top */
+        left: 0;
+        top: 5%;
+        width: 100%;
+        height: 90%;
+        @include set-transparent-color(background-color, $xibo-color-black, 0.9);
+    }
+
+    #layout-viewer-navbar {
+        position: fixed;
+        z-index: 2000;
+        width: 100%;
+        left: 0;
+        bottom: 0;
+
+        .viewer-navbar {
+            height: 100%;
+
+            .hide-on-fs {
+                display: none;
+            }
+
+            .show-on-fs {
+                display: inline-block;
+            }
+        }
+    }
+}
+
+/* Viewer inline editor */
+#layout-editor #inline-editor {
+    height: inherit;
+    @include box-shadow(inset $viewer-inline-editor-shadow 0px 0px 10px 0px);
+}
+
+/* Inline Editor Overlay */
+#layout-editor #inline-editor-overlay {
+    position: absolute;
+    text-align: center;
+    cursor: pointer;
+    width: 100%;
+    height: 100%; 
+    @include set-transparent-color(background, $viewer-inline-editor-overlay-bg-colour, 0.2);
+    @include box-shadow(inset $viewer-inline-editor-overlay-bg-colour 0px 0px 10px 0px);
+
+    &:hover {
+        @include set-transparent-color(background, $viewer-inline-editor-overlay-bg-colour, 0.5);
+    }
+
+    .edit-btn-container {
+        display: table;
+        width: 100%;
+        height: 100%; 
+
+        #edit-btn {
+            font-size: 60px;
+            text-shadow: 0px 0px 5px $xibo-color-black;
+            @include set-transparent-color(color, $viewer-inline-editor-overlay-fg-colour, 0.8);
+            vertical-align: middle;
+            display: table-cell;
+            
+            &:hover {
+                @include set-transparent-color(color, $viewer-inline-editor-overlay-fg-colour, 0.9);
+            }
+        }
+    }
+}
+
+#layout-editor .inline-editor-opened,
+#layout-editor .inline-editor-closed,
+#layout-editor .inline-editor-closed#inline-editor-overlay {
+    display: none;
+}
+
+/* Properties Panel */
+#layout-editor #properties-panel {
+    padding: 0;
+
+    .form-title.unsuccessMessage {
+        text-align: center;
+        font-weight: bold;
+        font-size: 1.2em;
+        color: $xibo-color-white;
+        padding: 30px;
+        background-color: $unsuccess-message-bg-color;
+    }
+
+    #properties-panel-container {
+        background: $designer-module-bg-color;
+        height: calc(45vh + 46px);
+        position: relative;
+        border: 2px solid $xibo-color-dark-blue;
+        @include border-radius(4px);
+        /* Hide playlist editor only messages */
+        .playlist-editor-message {
+            display: none;
+        }
+
+        .form-title {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            color: $xibo-color-white;
+            background: $xibo-color-dark-blue;
+            border-width: 0 0 4px 0;
+            border-style: solid;
+
+            &.form-title-layout {
+                border-color: $layout-main-bg-color;
+            }
+
+            &.form-title-region {
+                border-color: $region-main-bg-color;
+            }
+
+            &.form-title-widget {
+                border-color: $widget-main-bg-color;
+            }
+        }
+
+        .form-container {
+            overflow-x: hidden;
+            overflow-y: auto;
+            height: calc(45vh - 28px);
+
+            .row > div {
+                padding: 6px;
+                margin: 0;
+            }
+
+            .row > div > form {
+                .row > div  {
+                    padding: 4px 8px;
+                }
+
+                .form-group {
+                    margin-right: -5px;
+                    margin-left: -5px;
+
+                    .col-sm-2 {
+                        width: 22%;
+                        padding-left: 5px;
+                        padding-right: 5px;
+                    }
+
+                    .col-sm-10 {
+                        width: 78%;
+                    }
+                    .col-sm-1, .col-sm-10, .col-sm-11, .col-sm-12, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9 {
+                        padding-left: 4px;
+                        padding-right: 4px;
+                    }
+                }
+
+                #orderClause {
+                    .form-group {
+                        padding: 0;
+                        margin-left: 4px;
+                        margin-right: 0;
+                        display: inline-block;
+                    }
+                }
+
+                #filterClause {
+                    .form-group {
+                        padding: 0;
+                        margin: 0;
+                        display: inline-block;
+                    }
+
+                    select, button, input {
+                        padding: 5px;
+                        max-width: 90px;
+                    }
+
+                    select {
+                        max-width: 120px;
+                    }
+                }
+
+                /* Layout background form special case */
+                #layoutEditFormBackgroundUpload {
+                    .upload-table-container {
+                        overflow-x: auto;
+
+                        table td {
+                            max-width: 100px;
+
+                            canvas {
+                                max-width: 60px;
+                                max-height: 60px;
+                            }
+
+                            input[type="text"] {
+                                max-width: 100px;
+                            }
+
+                            .progress {
+                                min-width: 80px;
+                            }
+                        }
+                    }
+                }
+
+                /* width */
+                &::-webkit-scrollbar {
+                    width: 10px;
+                    height: 10px;
+                }
+
+                /* Track */
+                &::-webkit-scrollbar-track {
+                    @include box-shadow(inset 0 0 5px $xibo-color-gray);
+                }
+                
+                /* Handle */
+                &::-webkit-scrollbar-thumb {
+                    background: $designer-secondary-color;
+                    @include border-radius(4px);
+                }
+
+                /* Handle on hover */
+                &::-webkit-scrollbar-thumb:hover {
+                    background: lighten($designer-secondary-color, 20%);
+                }
+
+                &::-webkit-scrollbar-corner {
+                    @include box-shadow(inset 0 0 5px $xibo-color-gray);
+                }
+
+            }
+
+            table td span.label {
+                white-space: inherit;
+            }
+        }
+
+        .button-container {
+            padding: 5px;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+        }
+    }
+}
+
+/* Layout Navigator */
+#layout-editor #layout-navigator {
+    display: none;
+    background: $designer-primary-color;
+    @include border-radius(4px);
+    border: 2px solid $designer-module-border-color;
+
+    .layout {
+        overflow: hidden;
+        @include box-shadow(inset 0 0 4px 0px $navigator-shadow-colour);
+    }
+
+    .designer-region {
+        @include box-shadow(inset 0 0 4px 1px $navigator-shadow-colour);
+    }
+
+    .designer-region:not(.editable) {
+        @include box-shadow(inset 0 0 4px 2px $navigator-non-editable-shadow-colour);
+    }
+
+    .layout {
+        @include box-shadow(inset 0 0 5px 0px $navigator-shadow-colour);
+    }
+
+    .designer-region {
+        @include box-shadow(inset 0 0 8px 1px $navigator-shadow-colour);
+    }
+
+    .designer-region:not(.editable) {
+        @include box-shadow(inset 0 0 8px 1px $navigator-non-editable-shadow-colour);
+    }
+
+    #layout-navigator-content {
+        background: $xibo-color-black;
+        min-height: 45vh;
+    }
+
+    #layout-navigator-navbar {
+        .navigator-navbar {
+            padding: 4px;
+            background: $navigator-navbar-bg-colour;
+            color: $navigator-navbar-fg-colour;
+            min-height: 40px;
+            margin: 0;
+            border-width: 4px 0 0 0;
+            border-style: solid;
+            border-color: darken($designer-secondary-color, 30%);
+            @include border-radius(0 0 2px 2px);
+
+            .btn {
+                background: $navigator-navbar-btn-bg-colour;
+                color: $navigator-navbar-btn-fg-colour;
+                font-size: 16px;
+                padding: 4px 8px;
+                line-height: 1.3;
+            }
+
+            .hide-on-fs {
+                display: inline-block;
+            }
+
+            .show-on-fs {
+                display: none;
+            }
+        }
+    }
+}
+
+/* Navigator fullscreen */
+#layout-editor #layout-navigator.fullscreen {
+    @include set-transparent-color(background-color, $xibo-color-black, 0.9);
+    position: fixed;
+    z-index: 1050;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+
+    #layout-navigator-content {
+        position: fixed; /* Stay in place */
+        z-index: $designer-overlay-z-index; /* Sit on top */
+        left: 0;
+        top: 5%;
+        width: 100%;
+        height: 90%;
+        @include set-transparent-color(background-color, $xibo-color-black, 0.9);
+    }
+
+    #layout-navigator-navbar {
+        position: fixed;
+        z-index: 2000;
+        width: 100%;
+        left: 0;
+        bottom: 0;
+
+        .navigator-navbar {
+            height: 100%;
+
+            .hide-on-fs {
+                display: none;
+            }
+
+            .show-on-fs {
+                display: inline-block;
+            }
+        }
+    }
+}
+
+/* Layout object selection */
+#layout-editor .selectable {
+    @include user-select-none();
+}
+
+#layout-editor .designer-region.selectable:hover {
+    background: $region-hover-color !important;
+}
+
+#layout-editor #layout-timeline .designer-region .designer-region-overlay {
+    display: none;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    position: absolute;
+    @include border-radius(4px);
+
+    div {
+        position: relative;
+        display: block;
+        float: left;
+        height: 100%;
+    }
+
+    margin-right: -6px;
+
+    .designer-region-overlay-step {
+        background: darken($xibo-color-white, 20%);
+        width: 14px;
+        margin: 0;
+
+        &:hover, &.ui-droppable-hover {
+            background: $xibo-color-white;
+            @include box-shadow(0px 0px 3px 1px $xibo-color-white);
+        }
+
+        &:not(:first-child) {
+            margin-left: -5px;
+            margin-right: 5px;
+        }
+    }
+}
+
+#layout-editor #layout-timeline .designer-widget.selectable:hover {
+    background: $widget-hover-color !important;
+}
+
+#layout-editor .selected-region:not(.designer-region-info) {
+    background: $region-selected-color !important;
+}
+
+#layout-editor #layout-navigator .designer-region.selected-widget,
+#layout-editor .designer-widget.selected-widget {
+    background: $widget-selected-color !important;
+}
+
+#layout-editor  #layout-timeline .designer-widget.ui-droppable-active {
+    @include z-index-set($designer-z-index-select);
+    @include background-stripes(45deg, $widget-hover-color, lighten($widget-hover-color, 10%), 10px, 4px);
+    visibility: visible;
+}
+
+#layout-editor #layout-timeline .designer-widget.ui-droppable-active.ui-droppable-hover,
+#layout-editor #layout-timeline .designer-widget.ui-droppable-active:hover {
+    @include background-stripes(45deg, darken($widget-hover-color, 10%), $widget-hover-color, 10px, 4px);
+}
+
+#layout-editor  #layout-timeline .designer-widget.ui-droppable-active * {
+    visibility: hidden;
+}
+
+#layout-editor  #layout-timeline .designer-widget.invalid-widget {
+    @include box-shadow(inset 0px 0px 10px 3px $xibo-color-red);
+}
+
+#layout-editor  #layout-timeline .designer-region.to-sort .designer-widget {
+    background: $timeline-widget-to-sort-bg-color !important;
+}
+
+#layout-editor #layout-timeline .designer-region.ui-droppable-active {
+    @include z-index-set($designer-z-index-select);
+
+    .designer-region-overlay {
+        @include background-stripes(45deg, $region-hover-color, lighten($region-hover-color, 20%), 10px, 4px);
+        display: block;
+        opacity: 0.75;
+    }
+
+    &.ui-droppable-hover, &:hover {
+        .designer-region-overlay {
+            @include background-stripes(45deg, darken($region-hover-color, 20%), lighten($region-hover-color, 10%), 10px, 4px);
+        }
+    }
+}
+
+#layout-editor #layout-navigator .designer-region.ui-droppable-active {
+    @include z-index-set($designer-z-index-select);
+    @include background-stripes(45deg, $region-hover-color, lighten($region-hover-color, 20%), 10px, 4px);
+
+    &.ui-droppable-hover,
+    &:hover {
+        @include background-stripes(45deg, darken($region-hover-color, 20%), lighten($region-hover-color, 10%), 10px, 4px);
+    }
+
+    * {
+        visibility: hidden;
+    }
+}
+
+#layout-editor  #layout-navigator .layout.ui-droppable-active {
+    @include z-index-set($designer-z-index-select);
+    @include background-stripes(45deg, $layout-hover-color, lighten($layout-hover-color, 10%), 10px, 4px);
+}
+
+#layout-editor  #layout-navigator .layout.ui-droppable-active.ui-droppable-hover,
+#layout-editor  #layout-navigator .layout.ui-droppable-active:hover {
+    @include background-stripes(45deg, darken($layout-hover-color, 10%), $layout-hover-color, 10px, 4px);
+}
+
+#layout-editor  #layout-navigator .layout.ui-droppable-active * {
+    visibility: hidden;
+}
+
+#layout-editor .ui-droppable-active {
+    @include box-shadow(inset 0 0 2px $xibo-color-white);
+}
+
+#layout-editor .ui-droppable-hover {
+    @include box-shadow(inset 0 0 4px #313131);
+}
+
+/* Loading Container */
+#layout-editor .loading-container {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+}
+
+#layout-editor .loading-container .loading-icon {
+    position: relative;
+    text-align: center;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 75px;
+    color: $xibo-color-white;
+    z-index: 0;
+}
+
+@media (max-width: 768px) {
+    #layout-editor #bottom-toolbar {
+        padding: 5px 0 0 5px;
+    }
+}
+
+/* Select2 width fix */
+#layout-editor .select2-container {
+    width: auto !important;
+}

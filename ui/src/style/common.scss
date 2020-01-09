@@ -1,31 +1,50 @@
 // Import
-@import "mixins.less";
-@import (less) "~font-awesome/css/font-awesome.min.css";
+@import "mixins";
+$fa-font-path: "~font-awesome/fonts";
+@import "~font-awesome/scss/font-awesome";
+@import "~@fortawesome/fontawesome-free/scss/fontawesome";
+
+// Colour palette
+$xibo-color-primary: #30426a;
+$xibo-color-secondary: #337ab7;
+$xibo-color-red: #e64c4c;
+$xibo-color-yellow: #e1e732;
+$xibo-color-purple: #8f2ac3;
+$xibo-color-blue: #337ab7;
+$xibo-color-dark-blue: #273759;
+$xibo-color-light-blue: #c1e1fd;
+$xibo-color-green: #9fda5d;
+$xibo-color-orange: #efa662;
+$xibo-color-dark-orange: #f55106;
+$xibo-color-white: #f3f3f3;
+$xibo-color-gray: #888;
+$xibo-color-black: #333;
+$xibo-color-really-black: #181818;
 
 // Variables
-@form-editor-controls-bg-color: #333;
-@form-editor-controls-fg-color: #f3f3f3;
+$form-editor-controls-bg-color: $xibo-color-black;
+$form-editor-controls-fg-color: $xibo-color-white;
 
-@properties-panel-nav-bg-color: #ddd;
-@properties-panel-nav-fg-color: #888;
-@properties-panel-nav-active-bg-color: #f3f3f3;
-@properties-panel-nav-active-fg-color: #337ab7;
+$properties-panel-nav-bg-color: $xibo-color-white;
+$properties-panel-nav-fg-color: $xibo-color-gray;
+$properties-panel-nav-active-bg-color: $xibo-color-white;
+$properties-panel-nav-active-fg-color: $xibo-color-secondary;
 
-@loading-overlay-z-index: 2000;
+$context-menu-bg-color: $xibo-color-primary;
+$context-menu-border-color: $xibo-color-secondary;
 
-@context-menu-bg-color: #30426a;
-@context-menu-border-color: #337ab7;
+$context-menu-btn-color: $xibo-color-white;
+$context-menu-btn-hover-color: $xibo-color-yellow;
 
-@context-menu-btn-color: #eee;
-@context-menu-btn-hover-color: #d2d82b;
+$context-menu-btn-move-color: $xibo-color-white;
+$context-menu-btn-move-hover-color: $xibo-color-yellow;
 
-@context-menu-btn-move-color: #eee;
-@context-menu-btn-move-hover-color: #d2d82b;
+$context-menu-bin-btn-color: $xibo-color-red;
+$context-menu-bin-btn-hover-color: lighten($xibo-color-red, 20%);
 
-@context-menu-bin-btn-color: #e64c4c;
-@context-menu-bin-btn-hover-color: #d18282;
+$context-menu-shadow: darken($xibo-color-primary, 20%);
 
-@context-menu-shadow: #1d2c4e;
+$loading-overlay-z-index: 2000;
 
 // CSS
 /* Properties Panel */
@@ -39,8 +58,8 @@
 .form-editor-controls {
     display: none;
     padding: 5px 10px;
-    background: @form-editor-controls-bg-color;
-    color: @form-editor-controls-fg-color;
+    background: $form-editor-controls-bg-color;
+    color: $form-editor-controls-fg-color;
 }
 
 .form-editor-controls .form-group {
@@ -57,21 +76,21 @@
 
 /* Tab System */
 .form-container .nav>li>a {
-    color: @properties-panel-nav-fg-color;
-    background-color: @properties-panel-nav-bg-color;
+    color: $properties-panel-nav-fg-color;
+    background-color: lighten($properties-panel-nav-fg-color, 30%);
     border-radius: 0;
     padding: 5px 7px;
 }
 
 .form-container .nav>li>a:hover {
-    color: @properties-panel-nav-active-bg-color;
-    background-color: @properties-panel-nav-active-fg-color !important;
+    color: $properties-panel-nav-active-bg-color;
+    background-color: $properties-panel-nav-active-fg-color !important;
 }
 
 .form-container .nav>li.active>a,
 .form-container .nav>li.active>a:hover {
-    background-color: @properties-panel-nav-active-bg-color !important;
-    color: @properties-panel-nav-active-fg-color;
+    background-color: $properties-panel-nav-active-bg-color !important;
+    color: $properties-panel-nav-active-fg-color;
 }
 
 .form-container .tab-pane {
@@ -80,7 +99,7 @@
 
 /* Form drag and drop list */
 .form-container .connectedlist .ui-sortable {
-    background-color: @properties-panel-nav-bg-color;
+    background-color: $properties-panel-nav-bg-color;
     min-height: 80px;
 }
 
@@ -129,7 +148,7 @@
     color: black;
     background-color: #c3c3c3;
     padding: 2px;
-    .border-radius(2px);
+    @include border-radius(2px);
 }
 
 #layout-manager .change.uploaded {
@@ -146,13 +165,13 @@
     top: 0;
     left: 0;
     background: black;
-    .transparent-object(50);
+    @include transparent-object(50);
     z-index: 2;
 }
 
 .loading-overlay.loading {
     display: block;
-    z-index: @loading-overlay-z-index;
+    z-index: $loading-overlay-z-index;
 }
 
 .loading-overlay.loading .loading-icon {
@@ -166,149 +185,149 @@
 
 /* Modules icons */
 .module-icon-audio {
-    &:extend(.fa-file-sound-o all);
+    @extend .fa-file-audio;
 }
 
 .module-icon-calendar {
-    &:extend(.fa-calendar all);
+    @extend .fa-calendar;
 }
 
 .module-icon-chart {
-    &:extend(.fa-pie-chart all);
+    @extend .fa-pie-chart;
 }
 
 .module-icon-clock {
-    &:extend(.fa-clock-o all);
+    @extend .fa-clock-o;
 }
 
 .module-icon-currencies {
-    &:extend(.fa-line-chart all);
+    @extend .fa-line-chart;
 }
 
 .module-icon-datasetticker {
-    &:extend(.fa-list all);
+    @extend .fa-list;
 }
 
 .module-icon-datasetview {
-    &:extend(.fa-table all);
+    @extend .fa-table;
 }
 
 .module-icon-embedded {
-    &:extend(.fa-code all);
+    @extend .fa-code;
 }
 
 .module-icon-flash {
-    &:extend(.fa-flash all);
+    @extend .fa-flash;
 }
 
 .module-icon-forecastio {
-    &:extend(.fa-cloud all);
+    @extend .fa-cloud;
 }
 
 .module-icon-googletraffic {
-    &:extend(.fa-car all);
+    @extend .fa-car;
 }
 
 .module-icon-hls {
-    &:extend(.fa-video-camera all);
+    @extend .fa-video-camera;
 }
 
 .module-icon-htmlpackage {
-    &:extend(.fa-file-code-o all);
+    @extend .fa-file-code-o;
 }
 
 .module-icon-image {
-    &:extend(.fa-file-image-o all);
+    @extend .fa-file-image-o;
 }
 
 .module-icon-localvideo {
-    &:extend(.fa-file-video-o all);
+    @extend .fa-file-video-o;
 }
 
 .module-icon-notificationview {
-    &:extend(.fa-bell-o all);
+    @extend .fa-bell-o;
 }
 
 .module-icon-pdf {
-    &:extend(.fa-file-pdf-o all);
+    @extend .fa-file-pdf-o;
 }
 
 .module-icon-powerpoint {
-    &:extend(.fa-file-powerpoint-o all);
+    @extend .fa-file-powerpoint-o;
 }
 
 .module-icon-shellcommand {
-    &:extend(.fa-terminal all);
+    @extend .fa-terminal;
 }
 
 .module-icon-spacer {
-    &:extend(.fa-hourglass-o all);
+    @extend .fa-hourglass-o;
 }
 
 .module-icon-stocks {
-    &:extend(.fa-bar-chart all);
+    @extend .fa-bar-chart;
 }
 
 .module-icon-subplaylist {
-    &:extend(.fa-play-circle-o all);
+    @extend .fa-play-circle-o;
 }
 
 .module-icon-text {
-    &:extend(.fa-font all);
+    @extend .fa-font;
 }
 
 .module-icon-ticker {
-    &:extend(.fa-rss all);
+    @extend .fa-rss;
 }
 
 .module-icon-twitter {
-    &:extend(.fa-twitter all);
+    @extend .fa-twitter;
 }
 
 .module-icon-twittermetro {
-    &:extend(.fa-twitter-square all);
+    @extend .fa-twitter-square;
 }
 
 .module-icon-video {
-    &:extend(.fa-file-video-o all);
+    @extend .fa-file-video-o;
 }
 
 .module-icon-videoin {
-    &:extend(.fa-video-camera all);
+    @extend .fa-video-camera;
 }
 
 .module-icon-webpage {
-    &:extend(.fa-sitemap all);
+    @extend .fa-sitemap;
 }
 
 /* Tools icons */
 .tool-icon-region {
-    &:extend(.fa-clone all);
+    @extend .fa-clone;
 }
 
 .tool-icon-audio {
-    &:extend(.fa-volume-up all);
+    @extend .fa-volume-up;
 }
 
 .tool-icon-expiry {
-    &:extend(.fa-calendar-times-o all);
+    @extend .fa-calendar-check-o;
 }
 
 .tool-icon-transitionIn {
-    &:extend(.fa-sign-in all);
+    @extend .fa-sign-in;
 }
 
 .tool-icon-transitionOut {
-    &:extend(.fa-sign-out all);
+    @extend .fa-sign-out;
 }
 
 .tool-icon-permissions {
-    &:extend(.fa-user-secret all);
+    @extend .fa-user-secret;
 }
 
 /* Form icons */
 .bg_not_found_icon {
-    &:extend(.fa-exclamation-triangle all);
+    @extend .fa-exclamation-triangle;
     padding: 0 5px;
 }
 
@@ -319,29 +338,29 @@
     height: 100%;
     top: 0;
     left: 0;
-    z-index: @loading-overlay-z-index;
+    z-index: $loading-overlay-z-index;
 }
 
 .context-menu {
     position: absolute;
-    z-index: (@loading-overlay-z-index + 1);
+    z-index: ($loading-overlay-z-index + 1);
     opacity: 0.9;
-    background: @context-menu-bg-color;
-    border: @context-menu-border-color solid 2px;
-    .box-shadow(2px 2px 5px @context-menu-shadow);
+    background: $context-menu-bg-color;
+    border: $context-menu-border-color solid 2px;
+    @include box-shadow(2px 2px 5px $context-menu-shadow);
 }
 
 .context-menu .sort-controls-container {
     text-align: center;
-    background: @properties-panel-nav-active-fg-color;
+    background: $properties-panel-nav-active-fg-color;
 }
 
 .context-menu .sort-controls-container .context-menu-btn {
-    color: @context-menu-btn-move-color;
+    color: $context-menu-btn-move-color;
 }
 
 .context-menu .sort-controls-container .context-menu-btn:hover {
-    color: @context-menu-btn-move-hover-color;
+    color: $context-menu-btn-move-hover-color;
 }
 
 .context-menu .main-button-container {
@@ -351,18 +370,18 @@
 .context-menu .context-menu-btn {
     display: inline-block;
     font-size: 18px;
-    color: @context-menu-btn-color;
+    color: $context-menu-btn-color;
     cursor: pointer;
 }
 
 .context-menu .context-menu-btn:hover {
-    color: @context-menu-btn-hover-color;
+    color: $context-menu-btn-hover-color;
 }
 
 .context-menu .deleteBtn {
-    color: @context-menu-bin-btn-color;
+    color: $context-menu-bin-btn-color;
 }
 
 .context-menu .deleteBtn:hover {
-    color: @context-menu-bin-btn-hover-color;
+    color: $context-menu-bin-btn-hover-color;
 }

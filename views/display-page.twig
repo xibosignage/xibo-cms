@@ -121,6 +121,16 @@
 
                                     {% set title %}{% trans "IP Address" %}{% endset %}
                                     {{ inline.input("clientAddress", title) }}
+
+                                    {% set title %}{% trans "Orientation" %}{% endset %}
+                                    {% set landscape %}{% trans "Landscape" %}{% endset %}
+                                    {% set portrait %}{% trans "Portrait" %}{% endset %}
+                                    {% set options = [
+                                        { optionid: "", option: "" },
+                                        { optionid: "landscape", option: landscape},
+                                        { optionid: "portrait", option: portrait}
+                                    ] %}
+                                    {{ inline.dropdown("orientation", "single", title, "", options, "optionid", "option") }}
                                 </div>
                             </div>
                         </form>
@@ -139,6 +149,8 @@
                                 <th>{% trans "Storage Total" %}</th>
                                 <th>{% trans "Storage Free %" %}</th>
                                 <th>{% trans "Description" %}</th>
+                                <th>{% trans "Orientation" %}</th>
+                                <th>{% trans "Resolution" %}</th>
                                 <th>{% trans "Tags" %}</th>
                                 <th>{% trans "Default Layout" %}</th>
                                 <th>{% trans "Interleave Default" %}</th>
@@ -301,6 +313,8 @@
                     },
                     {"data": "storagePercentage", "visible": false, "sortable": false},
                     {"data": "description", "visible": false},
+                    {"data": "orientation", "visible": false},
+                    {"data": "resolution", "visible": false},
                     {
                         "name": "tags",
                         "sortable": false,

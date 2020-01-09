@@ -36,12 +36,13 @@ const Viewer = require('../designer/viewer.js');
 const PropertiesPanel = require('../designer/properties-panel.js');
 const Manager = require('../core/manager.js');
 const Toolbar = require('../core/toolbar.js');
+const Topbar = require('../core/topbar.js');
 
 // Common funtions/tools
 const Common = require('../core/common.js');
 
 // Include CSS
-require('../css/designer.less');
+require('../style/designer.scss');
 
 // Create layout designer namespace (lD)
 window.lD = {
@@ -58,7 +59,6 @@ window.lD = {
 
     // Navigator
     navigator: {},
-    navigatorEdit: {},
 
     // Layout
     layout: {},
@@ -73,13 +73,16 @@ window.lD = {
     viewer: {},
 
     // Designer DOM div
-    designerDiv: $('#layout-editor'),
+    editorContainer: $('#layout-editor'),
 
     // Selected object
     selectedObject: {},
 
     // Bottom toolbar
     toolbar: {},
+
+    // Top toolbar
+    topbar: {},
 
     // Properties Panel
     propertiesPanel: {},
@@ -93,12 +96,12 @@ window.getXiboApp = function() {
 // Load Layout and build app structure
 $(document).ready(function() {
     // Get layout id
-    const layoutId = lD.designerDiv.attr("data-layout-id");
+    const layoutId = lD.editorContainer.attr("data-layout-id");
     
     lD.common.showLoadingScreen();
 
     // Append loading html to the main div
-    lD.designerDiv.html(loadingTemplate());
+    lD.editorContainer.html(loadingTemplate());
 
     // Change toastr positioning
     toastr.options.positionClass = 'toast-top-center';
@@ -112,7 +115,7 @@ $(document).ready(function() {
                 lD.common.hideLoadingScreen();
 
                 // Append layout html to the main div
-                lD.designerDiv.html(designerMainTemplate());
+                lD.editorContainer.html(designerMainTemplate());
 
                 // Create layout
                 lD.layout = new Layout(layoutId, res.data[0]);
@@ -120,38 +123,46 @@ $(document).ready(function() {
                 // Update main object id
                 lD.mainObjectId = lD.layout.layoutId;
 
-                // Initialize navigator
-                lD.navigator = new Navigator(
-                    // Small container
-                    lD.designerDiv.find('#layout-navigator')
-                );
-
                 // Initialize timeline
                 lD.timeline = new Timeline(
-                    lD.designerDiv.find('#layout-timeline')
+                    lD,
+                    lD.editorContainer.find('#layout-timeline')
                 );
 
                 // Initialize manager
                 lD.manager = new Manager(
-                    lD.designerDiv.find('#layout-manager'),
+                    lD,
+                    lD.editorContainer.find('#layout-manager'),
                     false // (serverMode == 'Test') Turn of manager visibility for now
                 );
 
                 // Initialize viewer
                 lD.viewer = new Viewer(
-                    lD.designerDiv.find('#layout-viewer'),
-                    lD.designerDiv.find('#layout-viewer-navbar')
+                    lD,
+                    lD.editorContainer.find('#layout-viewer'),
+                    lD.editorContainer.find('#layout-viewer-navbar')
                 );
 
                 // Initialize bottom toolbar ( with custom buttons )
                 lD.toolbar = new Toolbar(
-                    lD.designerDiv.find('#layout-editor-toolbar'),
-                    // Custom main buttons
+                    lD,
+                    lD.editorContainer.find('#layout-editor-toolbar'),
+                    // Custom actions
+                    {
+                        deleteSelectedObjectAction: lD.deleteSelectedObject,
+                        deleteDraggedObjectAction: lD.deleteDraggedObject
+                    }
+                );
+
+                // Initialize top topbar
+                lD.topbar = new Topbar(
+                    lD,
+                    lD.editorContainer.find('#layout-editor-topbar'),
+                    // Custom dropdown options
                     [
                         {
                             id: 'publishLayout',
-                            title: null,
-                            tooltip: layoutDesignerTrans.publishTitle,
+                            title: layoutDesignerTrans.publishTitle,
                             logo: 'fa-check-square-o',
                             class: 'btn-success',
                             action: lD.showPublishScreen,
@@ -159,10 +170,7 @@ $(document).ready(function() {
                                 return (lD.layout.editable == false);
                             },
                             inactiveCheckClass: 'hidden',
-                        }
-                    ],
-                    // Custom dropdown buttons
-                    [
+                        },
                         {
                             id: 'checkoutLayout',
                             title: layoutDesignerTrans.checkoutTitle,
@@ -178,7 +186,7 @@ $(document).ready(function() {
                             id: 'scheduleLayout',
                             title: layoutDesignerTrans.scheduleTitle,
                             logo: 'fa-clock-o',
-                            class: 'btn-info',
+                            class: 'btn-primary',
                             action: lD.showScheduleScreen,
                             inactiveCheck: function() {
                                 return (lD.layout.editable == true || lD.layout.scheduleNowPermission == false);
@@ -189,7 +197,7 @@ $(document).ready(function() {
                             id: 'saveTemplate',
                             title: layoutDesignerTrans.saveTemplateTitle,
                             logo: 'fa-floppy-o',
-                            class: 'btn-warning',
+                            class: 'btn-primary',
                             action: lD.showSaveTemplateScreen,
                             inactiveCheck: function() {
                                 return (lD.layout.editable == true);
@@ -198,10 +206,7 @@ $(document).ready(function() {
                         }
                     ],
                     // Custom actions
-                    {
-                        deleteSelectedObjectAction: lD.deleteSelectedObject,
-                        deleteDraggedObjectAction: lD.deleteDraggedObject
-                    },
+                    {},
                     // jumpList
                     {
                         searchLink: urlsForApi.layout.get.url,
@@ -209,12 +214,14 @@ $(document).ready(function() {
                         layoutId: lD.layout.layoutId,
                         layoutName: lD.layout.name,
                         callback: lD.reloadData
-                    }
+                    },
+                    true // Show Options
                 );
 
                 // Initialize properties panel
                 lD.propertiesPanel = new PropertiesPanel(
-                    lD.designerDiv.find('#properties-panel')
+                    lD,
+                    lD.editorContainer.find('#properties-panel')
                 );
 
                 if(res.data[0].publishedStatusId != 2) {
@@ -260,13 +267,6 @@ $(document).ready(function() {
         }
     );
 
-    // When in edit mode, enable click on background to close navigator
-    lD.designerDiv.find('#layout-navigator-edit').click(function(event) {
-        if(event.target.id === 'layout-navigator-edit') {
-            lD.toggleNavigatorEditing(false);
-        }
-    });
-
     // Handle keyboard keys
     $('body').off('keydown').keydown(function(handler) {
         if($(handler.target).is($('body'))) {
@@ -283,7 +283,6 @@ $(document).ready(function() {
 
             // Refresh navigators and viewer
             lD.renderContainer(lD.navigator);
-            lD.renderContainer(lD.navigatorEdit);
             lD.renderContainer(lD.viewer, lD.selectedObject);
         }
     }, 250));
@@ -293,9 +292,10 @@ $(document).ready(function() {
  * Select a layout object (layout/region/widget)
  * @param {object=} obj - Object to be selected
  * @param {bool=} forceSelect - Select object even if it was already selected
+ * @param {object =} [options] - selectObject options
+ * @param {number=} [options.positionToAdd = null] - Order position for widget
  */
-lD.selectObject = function(obj = null, forceSelect = false) {
-
+lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = null} = {}) {
     // If there is a selected card, use the drag&drop simulate to add that item to a object
     if(!$.isEmptyObject(this.toolbar.selectedCard)) {
 
@@ -309,9 +309,30 @@ lD.selectObject = function(obj = null, forceSelect = false) {
             this.toolbar.deselectCardsAndDropZones();
 
             // Simulate drop item add
-            this.dropItemAdd(obj, card);
+            this.dropItemAdd(obj, card, {positionToAdd: positionToAdd});
         }
 
+    } else if(!$.isEmptyObject(this.toolbar.selectedQueue) && $(this.toolbar.selectedQueue).data('to-add')) { // If there's a selected queue, use the drag&drop simulate to add those items to a object
+        if(obj.data('type') == 'region') {
+            const droppableId = $(obj).attr('id');
+            const playlistId = lD.layout.regions[droppableId].playlists.playlistId;
+
+            let mediaQueueArray = [];
+
+            // Get queue elements
+            this.toolbar.selectedQueue.find('.queue-element').each(function() {
+                mediaQueueArray.push($(this).attr('id'));
+            });
+
+            // Add media queue to playlist
+            this.addMediaToPlaylist(playlistId, mediaQueueArray, positionToAdd);
+
+            // Destroy queue
+            this.toolbar.destroyQueue(this.toolbar.openedMenu);
+        }
+
+        // Deselect cards and drop zones
+        this.toolbar.deselectCardsAndDropZones();
     } else {
         
         // Get object properties from the DOM ( or set to layout if not defined )
@@ -353,7 +374,7 @@ lD.selectObject = function(obj = null, forceSelect = false) {
             if(newSelectedType === 'region') {
 
                 // If we're not in the navigator edit and the region has widgets, select the first one
-                if(!forceSelect && $.isEmptyObject(this.navigatorEdit) && !$.isEmptyObject(this.layout.regions[newSelectedId].widgets)) {
+                if(!forceSelect && $.isEmptyObject(this.navigator) && !$.isEmptyObject(this.layout.regions[newSelectedId].widgets)) {
                     let widgets = this.layout.regions[newSelectedId].widgets;
 
                     // Select first widget
@@ -368,8 +389,8 @@ lD.selectObject = function(obj = null, forceSelect = false) {
                         }
                     }
                 } else {
-                this.layout.regions[newSelectedId].selected = true;
-                this.selectedObject = this.layout.regions[newSelectedId];
+                    this.layout.regions[newSelectedId].selected = true;
+                    this.selectedObject = this.layout.regions[newSelectedId];
                 }
             } else if(newSelectedType === 'widget') {
                 this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId].selected = true;
@@ -393,24 +414,17 @@ lD.refreshDesigner = function() {
     this.clearTemporaryData();
 
     // Render containers with layout ( default )
-    this.renderContainer(this.navigator);
-    this.renderContainer(this.navigatorEdit);
+    this.renderContainer(this.navigator, this.selectedObject);
     this.renderContainer(this.timeline);
     this.renderContainer(this.toolbar);
+    this.renderContainer(this.topbar);
     this.renderContainer(this.manager);
-
-    // Render selected object in the following containers
-    if(this.selectedObject.type == 'region') {
-        this.renderContainer(this.navigatorEdit.regionPropertiesPanel, this.selectedObject);
-        this.renderContainer(this.propertiesPanel, {});
-    } else {
-        this.renderContainer(this.propertiesPanel, this.selectedObject);
-    }
+    this.renderContainer(this.propertiesPanel, this.selectedObject);
     
     this.renderContainer(this.viewer, this.selectedObject);
 
     // Reload tooltips
-    this.common.reloadTooltips(this.designerDiv);
+    this.common.reloadTooltips(this.editorContainer);
 };
 
 
@@ -438,6 +452,9 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
                 // To select an object that still doesn't exist
                 if(refreshBeforeSelect) {
                     lD.refreshDesigner();
+                    
+                    // Make the timeline scroll to the new widget on load
+                    lD.timeline.scrollOnLoad = lD.selectedObject;
                 }
                 
                 // Select the same object ( that will refresh the layout too )
@@ -451,7 +468,7 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
 
                 // If there was a opened menu in the toolbar, open that tab
                 if(lD.toolbar.openedMenu != -1) {
-                    lD.toolbar.openTab(lD.toolbar.openedMenu, true);
+                    lD.toolbar.openMenu(lD.toolbar.openedMenu, true);
                 }
 
                 // Check layout status
@@ -504,7 +521,8 @@ lD.checkoutLayout = function() {
             lD.readOnlyMode = false;
 
             // Hide read only message
-            lD.designerDiv.find('#read-only-message').remove();
+            lD.editorContainer.removeClass('view-mode');
+            lD.editorContainer.find('#read-only-message').remove();
             
             // Reload layout
             lD.reloadData(res.data);
@@ -623,7 +641,7 @@ lD.welcomeScreen = function() {
  */
 lD.enterReadOnlyMode = function() {
     // Add alert message to the layout designer
-    lD.designerDiv.prepend('<div id="read-only-message" class="alert alert-info" role="alert"><strong>' + layoutDesignerTrans.readOnlyModeTitle + '</strong>&nbsp;' + layoutDesignerTrans.readOnlyModeMessage + '</div>');
+    lD.editorContainer.addClass('view-mode');
     
     // Turn on read only mode
     lD.readOnlyMode = true;
@@ -658,31 +676,36 @@ lD.toggleNavigatorEditing = function(enable) {
 
     if(enable) {
         // Create a new navigator instance
-        this.navigatorEdit = new Navigator(
-            this.designerDiv.find('#layout-navigator-edit-content'),
+        this.navigator = new Navigator(
+            lD,
+            this.editorContainer.find('#layout-navigator-content'),
             {
-                edit: true,
-                editNavbar: this.designerDiv.find('#layout-navigator-edit-navbar')
+                editNavbar: this.editorContainer.find('#layout-navigator-navbar')
             }
         );
 
         // Show navigator edit div
-        this.designerDiv.find('#layout-navigator-edit').css('display', 'block');
+        this.editorContainer.find('#layout-navigator').css('display', 'block');
+
+        // Hide viewer div
+        this.editorContainer.find('#layout-viewer-container').css('display', 'none');
 
         // Render navigator
-        this.renderContainer(this.navigatorEdit);
-
+        this.renderContainer(this.navigator, this.selectedObject);
     } else {
 
         // Refresh designer
         this.reloadData(lD.layout);
 
         // Clean variable
-        this.navigatorEdit = {};
+        this.navigator = {};
 
         // Clean object HTML and hide div
-        this.designerDiv.find('#layout-navigator-edit-content').empty();
-        this.designerDiv.find('#layout-navigator-edit').css('display', 'none');
+        this.editorContainer.find('#layout-navigator-content').empty();
+        this.editorContainer.find('#layout-navigator').css('display', 'none');
+
+        // Show viewer div
+        this.editorContainer.find('#layout-viewer-container').css('display', 'block');
 
     }
 };
@@ -698,7 +721,7 @@ lD.showErrorMessage = function() {
         messageDescription: errorMessagesTrans.loadingLayout,
     });
 
-    lD.designerDiv.html(htmlError);
+    lD.editorContainer.html(htmlError);
 };
 
 /**
@@ -789,7 +812,7 @@ lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActio
             // Get buttons from form
             for(var button in res.buttons) {
                 if(res.buttons.hasOwnProperty(button)) {
-                    if(button != 'Cancel') {
+                    if(button != translations.cancel) {
                         let buttonType = 'btn-default';
 
                         if(button === 'Save' || button === 'Publish') {
@@ -1055,22 +1078,21 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
  * @param {object} droppable - Target drop object
  * @param {object} draggable - Dragged object
  * @param {object =} [options] - Options
- * @param {object} [options.positionToAdd = null] - Position object {top, left}
+ * @param {object/number=} [options.positionToAdd = null] - Position object {top, left} for region, and order position for widget
  */
 lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
-
     const droppableId = $(droppable).attr('id');
     const droppableType = $(droppable).data('type');
     const draggableType = $(draggable).data('type');
     const draggableSubType = $(draggable).data('subType');
-    
+
     if(draggableType == 'media') { // Adding media from search tab to a region
 
         // Get playlist Id
         const playlistId = lD.layout.regions[droppableId].playlists.playlistId;
         const mediaId = $(draggable).data('mediaId');
 
-        lD.addMediaToPlaylist(playlistId, mediaId);
+        lD.addMediaToPlaylist(playlistId, mediaId, positionToAdd);
 
     } else if(draggableType == 'module') { // Add widget/module
 
@@ -1083,7 +1105,7 @@ lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
         // Select region ( and avoid deselect if region was already selected )
         lD.selectObject($(droppable), true);
 
-        lD.addModuleToPlaylist(playlistId, draggableSubType, moduleData);
+        lD.addModuleToPlaylist(playlistId, draggableSubType, moduleData, positionToAdd);
     } else if(draggableType == 'tool') { // Add tool
 
         if(droppableType == 'layout') { // Add to layout
@@ -1167,9 +1189,10 @@ lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
  * Add module to playlist
  * @param {number} playlistId 
  * @param {string} moduleType 
- * @param {object} moduleData 
+ * @param {object} moduleData
+ * @param {number=} addToPosition
  */
-lD.addModuleToPlaylist = function (playlistId, moduleType, moduleData) {
+lD.addModuleToPlaylist = function(playlistId, moduleType, moduleData, addToPosition = null) {
 
     if(moduleData.regionSpecific == 0) { // Upload form if not region specific
 
@@ -1183,7 +1206,8 @@ lD.addModuleToPlaylist = function (playlistId, moduleType, moduleData) {
                 validExtensionsMessage: translations.validExtensions + ': ' + moduleData.validExt,
                 validExt: validExt
             },
-            playlistId: playlistId
+            playlistId: playlistId,
+            displayOrder: addToPosition
         }, 
         {
             viewLibrary: {
@@ -1217,12 +1241,20 @@ lD.addModuleToPlaylist = function (playlistId, moduleType, moduleData) {
         // Replace playlist id
         requestPath = requestPath.replace(':id', playlistId);
 
+        // Set position to add if selected
+        let addOptions = null;
+        if(addToPosition != null) {
+            addOptions = {
+                displayOrder: addToPosition
+            };
+        }
+
         lD.manager.addChange(
             'addWidget',
             'playlist', // targetType 
             playlistId,  // targetId
             null,  // oldValues
-            null, // newValues
+            addOptions, // newValues
             {
                 updateTargetId: true,
                 updateTargetType: 'widget',
@@ -1265,19 +1297,28 @@ lD.addModuleToPlaylist = function (playlistId, moduleType, moduleData) {
         });
     }  
 };
+
 /**
  * Add media from library to a playlist
  * @param {number} playlistId 
- * @param {number} mediaId 
+ * @param {Array.<number>} media
+ * @param {number=} addToPosition
  */
-lD.addMediaToPlaylist = function(playlistId, mediaId) {
-
+lD.addMediaToPlaylist = function(playlistId, media, addToPosition = null) {
     // Get media Id
-    let mediaToAdd = {
-        media: [
-            mediaId
-        ]
-    };
+    let mediaToAdd = {};
+
+    if($.isArray(media)) {
+        mediaToAdd = {
+            media: media
+        };
+    } else {
+        mediaToAdd = {
+            media: [
+                media
+            ]
+        };
+    }
 
     // Check if library duration options exists and add it to the query
     if(lD.useLibraryDuration != undefined) {
@@ -1285,6 +1326,11 @@ lD.addMediaToPlaylist = function(playlistId, mediaId) {
     }
 
     lD.common.showLoadingScreen('addMediaToPlaylist');
+
+    // Set position to add if selected
+    if(addToPosition != null) {
+        mediaToAdd.displayOrder = addToPosition;
+    }
 
     // Create change to be uploaded
     lD.manager.addChange(
@@ -1349,7 +1395,7 @@ lD.openUploadForm = function(templateOptions, buttons) {
         deleteOldRevisionsChecked: uploadFormDeleteOldDefault
     }).attr('data-test', 'uploadFormModal');
 
-    lD.openUploadFormModelShown($(".modal-body").find("form"));
+    this.openUploadFormModelShown($(".modal-body").find("form"));
 };
 
 /**
@@ -1430,10 +1476,10 @@ lD.clearTemporaryData = function() {
     $('.cke').remove();
 
     // Fix for remaining ckeditor elements or colorpickers
-    lD.designerDiv.find('.colorpicker-element').colorpicker('destroy');
+    lD.editorContainer.find('.colorpicker-element').colorpicker('destroy');
 
     // Hide open tooltips
-    lD.designerDiv.find('[data-toggle="tooltip"]').tooltip('hide');
+    lD.editorContainer.find('[data-toggle="tooltip"]').tooltip('hide');
 
     // Remove text callback editor structure variables
     formHelpers.destroyCKEditor();
@@ -1500,6 +1546,75 @@ lD.checkLayoutStatus = function() {
 };
 
 /**
+ * Call layout status
+ */
+lD.openPlaylistEditor = function(playlistId, region) {
+
+    let requestPath = playlistEditorUrl;
+
+    // replace id if necessary/exists
+    requestPath = requestPath.replace(':id', playlistId);
+
+    // Deselect previous selected object
+    lD.selectObject();
+
+    $.ajax({
+        url: requestPath,
+        type: 'GET'
+    }).done(function(res) {
+
+        if(!res.success) {
+            // Login Form needed?
+            if(res.login) {
+                window.location.href = window.location.href;
+                location.reload(false);
+            } else {
+                // Just an error we dont know about
+                if(res.message == undefined) {
+                    console.error(res);
+                } else {
+                    console.error(res.message);
+                }
+            }
+        } else {
+            // Create or load container
+            let $editor = ($('#editor-container').length > 0) ? $('#editor-container') : $('<div/>').attr('id', 'editor-container').appendTo(lD.editorContainer.parent());
+            
+            // Populate container
+            $editor.html(res.html);
+
+            // Hide layout designer toolbar
+            lD.toolbar.DOMObject.hide();
+
+            // Attach region id to editor data
+            $editor.data('regionObj', region);
+
+            // On close, remove container and refresh designer
+            $editor.find('.editor-modal-close').attr('onclick', '').on('click', function() {
+
+                // Close playlist editor
+                pE.close();
+                
+                // Remove region id from data
+                $editor.removeData('regionObj');
+                
+                // Show layout designer toolbar
+                lD.toolbar.DOMObject.show();
+
+                // Set the first run flag of the toolbar as true to reload the changed from the playlistEditor toolbar
+                lD.toolbar.firstRun = true;
+
+                // Reload data
+                lD.reloadData(lD.layout);
+            });
+        }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        // Output error to console
+        console.error(jqXHR, textStatus, errorThrown);
+    });
+};
+
+/**
  * Open object context menu
  * @param {object} obj - Target object
  * @param {object=} position - Page menu position
@@ -1518,36 +1633,36 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     let layoutObject = lD.getElementByTypeAndId(objType, objId, objRegionId);
 
     // Create menu and append to the designer div ( using the object extended with translations )
-    lD.designerDiv.append(contextMenuTemplate(Object.assign(layoutObject, {trans: contextMenuTrans})));
+    lD.editorContainer.append(contextMenuTemplate(Object.assign(layoutObject, {trans: contextMenuTrans})));
     
     // Set menu position ( and fix page limits )
-    let contextMenuWidth = lD.designerDiv.find('.context-menu').outerWidth();
-    let contextMenuHeight = lD.designerDiv.find('.context-menu').outerHeight();
+    let contextMenuWidth = lD.editorContainer.find('.context-menu').outerWidth();
+    let contextMenuHeight = lD.editorContainer.find('.context-menu').outerHeight();
 
     let positionLeft = ((position.x + contextMenuWidth) > $(window).width()) ? (position.x - contextMenuWidth) : position.x;
     let positionTop = ((position.y + contextMenuHeight) > $(window).height()) ? (position.y - contextMenuHeight) : position.y;
 
-    lD.designerDiv.find('.context-menu').offset({top: positionTop, left: positionLeft});
+    lD.editorContainer.find('.context-menu').offset({top: positionTop, left: positionLeft});
 
     // Initialize tooltips
-    lD.common.reloadTooltips(lD.designerDiv.find('.context-menu'));
+    lD.common.reloadTooltips(lD.editorContainer.find('.context-menu'));
 
     // Click overlay to close menu
-    lD.designerDiv.find('.context-menu-overlay').click((ev)=> {
+    lD.editorContainer.find('.context-menu-overlay').click((ev)=> {
 
         if($(ev.target).hasClass('context-menu-overlay')) {
-            lD.designerDiv.find('.context-menu-overlay').remove();
+            lD.editorContainer.find('.context-menu-overlay').remove();
         }
     });
 
     // Handle buttons
-    lD.designerDiv.find('.context-menu .context-menu-btn').click((ev) => {
+    lD.editorContainer.find('.context-menu .context-menu-btn').click((ev) => {
         let target = $(ev.currentTarget);
 
         if(target.data('action') == 'Delete') {
             let regionIdAux = '';
             if(objRegionId != null) {
-                regionIdAux= objRegionId.split('region_')[1]
+                regionIdAux= objRegionId.split('region_')[1];
             }
 
             lD.deleteObject(objType, layoutObject[objType + 'Id'], regionIdAux);
@@ -1559,7 +1674,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         }
 
         // Remove context menu
-        lD.designerDiv.find('.context-menu-overlay').remove();
+        lD.editorContainer.find('.context-menu-overlay').remove();
     });
 };
 

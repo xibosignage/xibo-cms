@@ -432,34 +432,6 @@ class Module extends Base
     }
 
     /**
-     * Add Widget Form
-     * @param string $type
-     * @param int $playlistId
-     * @throws XiboException
-     */
-    public function addWidgetForm(Request $request, Response $response, $type, $id)
-    {
-        $playlist = $this->playlistFactory->getById($id);
-
-        if (!$this->getUser($request)->checkEditable($playlist))
-            throw new AccessDeniedException();
-
-        // Create a module to use
-        $module = $this->moduleFactory->createForWidget($type, null, $this->getUser($request)->userId, $id);
-
-        $this->getLog()->debug('Module created, passing back to Twig');
-
-        // Pass to view
-        $this->getState()->template = $module->addForm($request, $response);
-        $this->getState()->setData($module->setTemplateData([
-            'playlist' => $playlist,
-            'module' => $module
-        ]));
-
-        return $this->render($request, $response);
-    }
-
-    /**
      * Add Widget
      *
      * * @SWG\Post(
@@ -482,6 +454,13 @@ class Module extends Base
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="displayOrder",
+     *      in="formData",
+     *      description="Optional integer to say which position this assignment should occupy in the list. If more than one media item is being added, this will be the position of the first one.",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -494,9 +473,20 @@ class Module extends Base
      * )
      *
      *
+     * @param Request $request
+     * @param Response $response
      * @param string $type
-     * @param int $playlistId
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\DuplicateEntityException
      */
     public function addWidget(Request $request, Response $response,$type, $id)
     {
@@ -514,14 +504,19 @@ class Module extends Base
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
 
         // Load some information about this playlist
+        // loadWidgets = true to keep the ordering correct
         $playlist->load([
             'playlistIncludeRegionAssignments' => false,
-            'loadWidgets' => false,
+            'loadWidgets' => true,
             'loadTags' => false
         ]);
 
         // Create a module to use
         $module = $this->moduleFactory->createForWidget($type, null, $this->getUser($request)->userId, $id);
+
+        // Assign this module to this Playlist in the appropriate place (which could be null)
+        $displayOrder = $this->getSanitizer($request->getParams())->getInt('displayOrder');
+        $playlist->assignWidget($module->widget, $displayOrder);
 
         // Inject the Current User
         $module->setUser($this->getUser($request));
@@ -536,6 +531,13 @@ class Module extends Base
 
         // Call module add
         $module->add();
+
+        // Module add will have saved our widget with the correct playlistId and displayOrder
+        // if we have provided a displayOrder, then we ought to also save the Playlist so that new orders for those
+        // existing Widgets are also saved.
+        if ($displayOrder !== null) {
+            $playlist->save();
+        }
 
         // Permissions
         if ($this->getConfig()->getSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
@@ -565,8 +567,16 @@ class Module extends Base
 
     /**
      * Edit Widget Form
-     * @param int $widgetId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function editWidgetForm(Request $request, Response $response, $id)
     {
@@ -599,8 +609,18 @@ class Module extends Base
     /**
      * Edit a Widget
      *
-     * @param int $widgetId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function editWidget(Request $request, Response $response, $id)
     {
@@ -637,8 +657,16 @@ class Module extends Base
 
     /**
      * Delete Widget Form
-     * @param int $widgetId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function deleteWidgetForm(Request $request, Response $response, $id)
     {
@@ -681,12 +709,23 @@ class Module extends Base
      *  )
      *)
      *
-     * @param int $widgetId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function deleteWidget(Request $request, Response $response, $id)
     {
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if (!$this->getUser($request)->checkDeleteable($module->widget))
             throw new AccessDeniedException();
@@ -714,7 +753,7 @@ class Module extends Base
         $module->widget->delete();
 
          // Delete Media?
-        if ($request->getParam('deleteMedia', 0) == 1) {
+        if ($sanitizedParams->getCheckbox('deleteMedia') == 1) {
             foreach ($widgetMedia as $mediaId) {
                 $media = $this->mediaFactory->getById($mediaId);
 
@@ -1098,9 +1137,18 @@ class Module extends Base
 
     /**
      * Get Resource
+     * @param Request $request
+     * @param Response $response
      * @param $regionId
-     * @param $widgetId
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function getResource(Request $request, Response $response, $regionId, $id)
     {

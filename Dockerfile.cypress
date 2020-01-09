@@ -2,9 +2,14 @@ FROM cypress/base:8
 
 WORKDIR /app
 
-COPY cypress.json ./
-COPY cypress ./cypress
-
 RUN npm install --save-dev --slient cypress
 
 RUN $(npm bin)/cypress verify
+
+RUN mkdir /app/results
+
+# Create this file so that we can volume mount it
+RUN touch /app/cypress.json
+
+# Create this folder so that we can volume mount it
+RUN mkdir /app/cypress

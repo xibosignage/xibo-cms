@@ -1172,7 +1172,8 @@ class State implements Middleware
                     $c->get('logService'),
                     $c->get('sanitizerService'),
                     $c->get('user'),
-                    $c->get('userFactory')
+                    $c->get('userFactory'),
+                    $c->get('permissionFactory')
                 );
             },
             'dataSetColumnFactory' => function(ContainerInterface $c) {

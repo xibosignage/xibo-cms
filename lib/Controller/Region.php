@@ -11,7 +11,6 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Permission;
-use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
@@ -108,52 +107,17 @@ class Region extends Base
     }
 
     /**
-     * Timeline Form
-     * @param int $regionId
-     * @throws XiboException
-     */
-    public function timelineForm(Request $request, Response $response, $id)
-    {
-        // Get a complex object of playlists and widgets
-        $region = $this->regionFactory->getById($id);
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-
-        if (!$this->getUser($request)->checkEditable($region))
-            throw new AccessDeniedException();
-
-        // Set the view we have requested
-        $this->session->set('timeLineView', $sanitizedParams->getString('view', $this->session->get('timeLineView')));
-
-        // Load the region
-        $region->load();
-
-        // Loop through everything setting permissions
-        $playlist = $region->getPlaylist();
-        foreach ($playlist->widgets as $widget) {
-            /* @var Widget $widget */
-            $widget->module = $this->moduleFactory->createWithWidget($widget, $region);
-
-            // Augment with tags
-            $widget->tags = $widget->module->getMediaTags();
-        }
-
-        // Pass to view
-        $this->getState()->template = ($this->session->get('timeLineView') == 'grid') ? 'region-form-grid' : 'region-form-timeline';
-        $this->getState()->setData([
-            'region' => $region,
-            'playlist' => $playlist,
-            'modules' => $this->moduleFactory->getAssignableModules(),
-            'transitions' => $this->transitionData(),
-            'help' => $this->getHelp()->link('Layout', 'RegionOptions')
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
      * Edit Form
-     * @param int $regionId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function editForm(Request $request, Response $response, $id)
     {
@@ -175,8 +139,16 @@ class Region extends Base
 
     /**
      * Delete Form
-     * @param int $regionId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function deleteForm(Request $request, Response $response, $id)
     {
@@ -197,8 +169,18 @@ class Region extends Base
 
     /**
      * Add a region
-     * @param int $layoutId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/region/{id}",
      *  operationId="regionAdd",
@@ -252,7 +234,6 @@ class Region extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
     public function add(Request $request, Response $response, $id)
     {
@@ -320,8 +301,18 @@ class Region extends Base
     }
 
     /**
-     * @param int $regionId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/region/{id}",
      *  operationId="regionEdit",
@@ -405,7 +396,6 @@ class Region extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -462,8 +452,18 @@ class Region extends Base
 
     /**
      * Delete a region
-     * @param int $regionId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Delete(
      *  path="/region/{regionId}",
      *  operationId="regionDelete",
@@ -483,7 +483,6 @@ class Region extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
     public function delete(Request $request, Response $response, $id)
     {
@@ -616,8 +615,17 @@ class Region extends Base
 
     /**
      * Represents the Preview inside the Layout Designer
-     * @param int $regionId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function preview(Request $request, Response $response, $id)
     {

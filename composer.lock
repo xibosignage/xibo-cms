@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fa3df64b06b03e38cea37598827de119",
+    "content-hash": "f7a35df99fac4ce3268e1bdef5915985",
     "packages": [
         {
             "name": "abraham/twitteroauth",
@@ -5039,21 +5039,21 @@
         },
         {
             "name": "xibosignage/xibo-xmr",
-            "version": "0.7",
+            "version": "0.8",
             "source": {
                 "type": "git",
                 "url": "https://github.com/xibosignage/xibo-xmr.git",
-                "reference": "1379547fe4566d0e6327ba61a12e49ec47433a61"
+                "reference": "e0df7052b077e67f9f0249498640be8e01b328d6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/xibosignage/xibo-xmr/zipball/1379547fe4566d0e6327ba61a12e49ec47433a61",
-                "reference": "1379547fe4566d0e6327ba61a12e49ec47433a61",
+                "url": "https://api.github.com/repos/xibosignage/xibo-xmr/zipball/e0df7052b077e67f9f0249498640be8e01b328d6",
+                "reference": "e0df7052b077e67f9f0249498640be8e01b328d6",
                 "shasum": ""
             },
             "require": {
                 "monolog/monolog": "^1.17",
-                "php": ">=5.5",
+                "php": ">=7.0.8",
                 "react/zmq": "^0.3.0"
             },
             "bin": [
@@ -5062,7 +5062,7 @@
             "type": "library",
             "notification-url": "https://packagist.org/downloads/",
             "license": [
-                "AGPL-3.0"
+                "AGPL-3.0-or-later"
             ],
             "authors": [
                 {
@@ -5070,8 +5070,8 @@
                     "homepage": "https://github.com/dasgarner"
                 },
                 {
-                    "name": "Spring Signage Ltd",
-                    "homepage": "http://springsignage.com"
+                    "name": "Xibo Signage Ltd",
+                    "homepage": "https://xibo.org.uk"
                 },
                 {
                     "name": "Xibo Contributors",
@@ -5085,7 +5085,7 @@
                 "spring signage",
                 "xibo"
             ],
-            "time": "2018-02-01T14:20:44+00:00"
+            "time": "2020-01-07T11:13:02+00:00"
         },
         {
             "name": "zendframework/zendxml",
@@ -6561,7 +6561,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": ">=7",
+        "php": ">=7.0.8",
         "ext-pdo": "*",
         "ext-json": "*",
         "ext-zip": "*"

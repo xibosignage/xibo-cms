@@ -204,8 +204,8 @@ class SubPlaylist extends ModuleWidget
 
         // Get the list of playlists
         $subPlaylistId = $this->getSanitizer()->getIntArray('subPlaylistId');
-        $spots = $this->getSanitizer()->getIntArray('subPlaylistIdSpots');
-        $spotLength = $this->getSanitizer()->getIntArray('subPlaylistIdSpotLength');
+        $spots = $this->getSanitizer()->getStringArray('subPlaylistIdSpots');
+        $spotLength = $this->getSanitizer()->getStringArray('subPlaylistIdSpotLength');
         $spotFill = $this->getSanitizer()->getStringArray('subPlaylistIdSpotFill');
 
         // Make up a companion setting which maps the playlistIds to the options

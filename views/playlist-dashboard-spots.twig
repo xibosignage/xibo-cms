@@ -1,0 +1,133 @@
+{#
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+#}
+{% extends "form-base.twig" %}
+
+{% block formHtml %}
+    {% if spotsFound <= 0 %}
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-warning">
+                    {% trans "This Playlist does not have any Spots for you to manage. Please choose another." %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if spotsFound > 0 %}
+        <div class="widget">
+            <div class="widget-title">
+                <h3>{{ playlist.name }} <small>{{ spotsFound }} {% trans "Spots" %}</small></h3>
+            </div>
+            <div class="widget-body">
+
+                {% set widgetLength = playlist.widgets|length %}
+                {% set remaining = spotsFound - widgetLength %}
+
+                {% for widget in playlist.widgets %}
+
+                    <div class="row">
+                        <div class="col-md-1">
+                            <span class="row-title">{{ loop.index }}</span>
+                        </div>
+                        <div class="col-md-2">
+                            {% if widget.viewble %}
+                                {% if widget.module.getModule().type == 'image' %}
+                                    {% set downloadUrl = urlFor("library.download", {id: widget.getPrimaryMediaId()}) %}
+                                    <a class="img-replace" data-toggle="lightbox" data-type="image" href="{{ downloadUrl }}?preview=1">
+                                        <img src='{{downloadUrl}}?preview=1&width=50&height=50&cache=1' style='max-height: 50px; max-width: 50px;'/>
+                                    </a>
+                                {% else %}
+                                    <i title="{{ widget.module.getModule().name }}" class="fa fa-2x module-icon-{{ widget.type }}" style="height: 50px; max-width: 50px;"></i>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8"
+                             data-button-type="replace"
+                             data-playlist-id="{{ widget.playlistId }}"
+                             data-widget-id="{{ widget.widgetId }}"
+                             data-widget-name="{{ widget.module.getName() }}"
+                                {% if widget.module.getModule().regionSpecific == 0 %}
+                                data-media-id="{{ widget.getPrimaryMediaId() }}"
+                                {% endif %}
+                             >
+
+                            {% if widget.module.getModule().regionSpecific == 0 and widget.editable %}
+                                {% if not widget.viewble %}
+                                    <button class="btn btn-block disabled">
+                                        <i class="fa fa-lock fa-lg"></i>
+                                    </button>
+                                {% elseif not widget.editable %}
+                                    <button class="btn btn-block disabled">
+                                        {{ widget.module.getName() }} <i class="fa fa-lock fa-lg"></i>
+                                    </button>
+                                {% else %}
+                                    <button class="btn btn-block btn-warning spot-action-button">{{ widget.module.getName() }} </button>
+                                {% endif %}
+                            {% else %}
+                                <button class="btn btn-block btn-default" disabled>{{ widget.module.getName() }} - {% trans "Locked" %}</button>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-1">
+                            {% if widget.deletable == 1 and currentUser.routeViewable("/playlist") and widget.module.getModule().regionSpecific == 0 %}
+                                <a class="XiboFormButton btns" title="{% trans "Delete" %}" href="{{ urlFor("playlist.module.widget.delete.form", {id: widget.widgetId}) }}">
+                                    <i class="fa fa-lg fa-trash" aria-hidden="true" style="padding:8px 0 8px; color:#d9534f;"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                {% endfor %}
+
+                {% if remaining > 0 %}
+                    {% for i in 0..remaining - 1 %}
+
+                        <div class="row">
+                            <div class="col-md-1">
+                                <span class="row-title">{{ loop.index + widgetLength }}</span>
+                            </div>
+                            <div class="col-md-2">
+                            </div>
+                            <div class="col-md-8"
+                                 data-button-type="add"
+                                 data-widget-id=""
+                                 data-playlist-id="{{ playlist.playlistId }}"
+                                 data-widget-preview="{{ urlFor("library.download") }}?preview=1"
+                                 data-widget-del="{{ urlFor("playlist.module.widget.delete.form") }}"
+                                 data-route-viewable="{{ currentUser.routeViewable("/playlist")  }}">
+                                {% if loop.first %}
+                                    <button class="btn btn-block btn-success spot-action-button">{% trans "Add" %}</button>
+                                {% else %}
+                                    <button class="btn btn-block btn-default" disabled>{% trans "Empty" %}</button>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-1 delete-widget">
+                            </div>
+                        </div>
+
+                    {% endfor %}
+                {% endif %}
+
+            </div>
+        </div>
+    {% endif %}
+
+{% endblock %}

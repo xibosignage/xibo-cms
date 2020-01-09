@@ -124,9 +124,23 @@
                     </div>
 
                     <div class="tab-pane" id="data">
+                        {% set title %}{% trans "Source" %}{% endset %}
+                        {% set helpText %}{% trans "Select source type of the provided remote Dataset URL" %}{% endset %}
+                        {% set json %}{% trans "JSON" %}{% endset %}
+                        {% set csv %}{% trans "CSV" %}{% endset %}
+                        {% set options = [
+                            { sourceId: 1, source: json },
+                            { sourceId: 2, source: csv },
+                        ] %}
+                        {{ forms.dropdown("sourceId", "single", title, 1, options, "sourceId", "source", helpText) }}
+
                         {% set title %}{% trans "Data root" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the element in your remote data which we should use as the starting point when we match the remote Columns. This should be an array or an object. You can use the test button below to see the structure that is returned." %}{% endset %}
-                        {{ forms.input("dataRoot", title, "", helpText, "", "") }}
+                        {{ forms.input("dataRoot", title, "", helpText, "json-source-field", "") }}
+
+                        {% set title %}{% trans "Ignore first row?" %}{% endset %}
+                        {% set helpText %}{% trans "For CSV source, should the first row be ignored?" %}{% endset %}
+                        {{ forms.checkbox("ignoreFirstRow", title, 0, helpText, "csv-source-field") }}
 
                         <div class="form-group">
                             <div class="col-sm-offset-2 col-sm-10">
@@ -146,9 +160,9 @@
                             { typeid: "sum", type: summ_sum },
                             { typeid: "count", type: summ_count }
                         ] %}
-                        {{ forms.dropdown("summarize", "single", title, "", options, "typeid", "type", helpText) }}
+                        {{ forms.dropdown("summarize", "single", title, "", options, "typeid", "type", helpText, "json-source-field") }}
 
-                        <div class="form-group">
+                        <div class="form-group json-source-field">
                             <label class="col-sm-2 control-label" for="summarizeField">{% trans "By Field" %}</label>
                             <div class="col-sm-10">
                                 <input class="form-control" type="text" name="summarizeField" id="summarizeField" />

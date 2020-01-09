@@ -15,6 +15,7 @@
         var uploadFormUpdateAllDefault = {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %};
         var uploadFormDeleteOldDefault = {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %};
         var tooltipDelay = {'show': 250, 'hide': 0};
+        var playlistEditorUrl = "{{ urlFor("playlist.timeline.form") }}";
         
         // Save navbar position
         var navbarPosition = 'vertical';
@@ -137,10 +138,6 @@
                     url: "{{ url_for("region.preview", {id: ':id'}) }}",
                     type: 'GET'
                 },
-                addForm: {
-                    url: "{{ url_for("module.widget.add.form", {type: ':type', id: ':id'}) }}",
-                    type: 'GET'
-                },
                 add: {
                     url: "{{ url_for("module.widget.add", {id: ':id', type: ':type'}) }}",
                     type: 'POST'
@@ -196,10 +193,6 @@
                 addMedia: {
                     url: "{{ url_for("playlist.library.assign", {id: ':id'}) }}",
                     type: 'POST'
-                },
-                addWidgetForm: {
-                    url: "{{ url_for("module.widget.add.form", {type: ':type', id: ':id'}) }}",
-                    type: 'GET'
                 },
                 addWidget: {
                     url: "{{ url_for("module.widget.add", {type: ':type', id: ':id'}) }}",
@@ -291,7 +284,7 @@
                 toolbarTagsMessage: "{% trans "%tagCount% tags" %}",
                 deleteObject: "{% trans "Delete selected %object%" %}",
                 changeLayout: "{% trans "Change Layout" %}",
-                layoutOptions: "{% trans "Layout Designer options" %}",
+                options: "{% trans "Options" %}",
                 displayTooltipsName: "{% trans "Tooltips?" %}",
                 displayTooltipsTitle: "{% trans "Show/Hide Tooltips" %}",
                 resetTour: "{% trans "Show tour!" %}",
@@ -302,6 +295,13 @@
                 search: "{% trans "Search" %}",
                 add: "{% trans "Add" %}",
                 grab: "{% trans "Grab" %}",
+                addAsFavourite: "{% trans "Add as favourite" %}",
+                addedToFavourites: "{% trans "Module added to favourites!" %}",
+                moduleNavStart: "{% trans "Scroll to the start!" %}",
+                moduleNavEnd: "{% trans "Scroll to the end!" %}",
+                moduleNavLeft: "{% trans "Scroll left!" %}",
+                moduleNavRight: "{% trans "Scroll right!" %}",
+                removedFromFavourites: "{% trans "Module removed from favourites!" %}",
                 noResults: "{% trans "No results for the filter!" %}",
                 searchFilters: {
                     name: "{% trans "Name" %}",
@@ -318,11 +318,21 @@
                     tags: "{% trans "Tags"%}",
                     thumbnail: "{% trans "Thumbnail"%}"
                 },
+                queue: {
+                    title: "{% trans "Media Add Queue"%}",
+                    clear: "{% trans "Clear Queue"%}",
+                    addToRegion: "{% trans "Add to Selected Region"%}",
+                    addToPlaylist: "{% trans "Add to Playlist"%}",
+                    selectRegion: "{% trans "Click in Region to Add"%}",
+                    cancel: "{% trans "Cancel"%}"
+                },
                 menuItems: {
                     toolsName: "{% trans "Tools" %}",
                     toolsTitle: "{% trans "Layout Designer tools" %}",
                     widgetsName: "{% trans "Widgets" %}",
-                    widgetsTitle: "{% trans "Layout Designer widgets" %}"
+                    widgetsTitle: "{% trans "Layout Designer widgets" %}",
+                    libraryName: "{% trans "Library" %}",
+                    libraryTitle: "{% trans "Library search" %}"
                 },
                 tools: {
                     region: {
@@ -357,6 +367,15 @@
                 }
             };
 
+            var topbarTrans = {
+                name: "{% trans "Name" %}",
+                nameDetail: "{% trans "Layout name" %}",
+                duration: "{% trans "Duration" %}",
+                durationDetail: "{% trans "Layout duration" %}",
+                dimensions: "{% trans "Dimensions" %}",
+                dimensionsDetail: "{% trans "Layout dimensions" %}"
+            };
+
             var historyManagerTrans = {
                 revert: {
                     saveForm: "{% trans "Revert %target% form save" %}",
@@ -386,8 +405,8 @@
 
             var errorMessagesTrans = {
                 error: "{% trans "ERROR" %}",
-                loadingLayout: "{% trans "There was a problem loading the layout!" %}",
-                loadingPlaylist: "{% trans "There was a problem loading the layout!" %}",
+                loadingLayout: "{% trans "There was a problem loading the Layout!" %}",
+                loadingPlaylist: "{% trans "There was a problem loading the Playlist!" %}",
                 userSavePreferencesFailed: "{% trans "User save preferences failed!" %}",
                 userLoadPreferencesFailed: "{% trans "User load preferences failed!" %}",
                 libraryLoadFailed: "{% trans "Library load failed!" %}",
@@ -406,6 +425,12 @@
                 transformRegionFailed: "{% trans "Transform region failed!" %}",
                 previewFailed: "{% trans "Preview failed!" %}",
                 noWidgetsNeedSaving: "{% trans "No widgets need saving!" %}"
+            };
+
+            var widgetStatusTrans = {
+                dueToExpire: "{% trans "Due to expire" %}",
+                expired: "{% trans "Expired" %}",
+                deleteOnExpire: "{% trans "Delete on expire" %}"
             };
 
             var datasetQueryBuilderTranslations = {

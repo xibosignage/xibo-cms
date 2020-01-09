@@ -222,7 +222,9 @@ class DisplayFactory extends BaseFactory
                   `display`.timeZone,
                   `display`.overrideConfig,
                   `display`.newCmsAddress,
-                  `display`.newCmsKey
+                  `display`.newCmsKey,
+                  `display`.orientation,
+                  `display`.resolution
               ';
 
         if ($parsedBody->getCheckbox('showTags') === 1) {
@@ -346,8 +348,14 @@ class DisplayFactory extends BaseFactory
             $params['clientCode'] = '%' . $parsedBody->getString('clientCode') . '%';
         }
 
-        if ($parsedBody->getInt('mediaInventoryStatus') != '') {
-            if ($parsedBody->getInt('mediaInventoryStatus') === -1) {
+        if ($parsedBody->getString('orientation', $filterBy) != '') {
+            $body .= ' AND display.orientation = :orientation ';
+            $params['orientation'] = $parsedBody->getString('orientation', $filterBy);
+        }
+
+        if ($parsedBody->getInt('mediaInventoryStatus', $filterBy) != '') {
+            if ($parsedBody->getInt('mediaInventoryStatus', $filterBy) === -1) {
+
                 $body .= ' AND display.mediaInventoryStatus <> 1 ';
             } else {
                 $body .= ' AND display.mediaInventoryStatus = :mediaInventoryStatus ';

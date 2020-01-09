@@ -7,27 +7,8 @@
     </div>
     <div class="preview-select"></div>
 {{else}}
-    <p class="top-btn top-right-btn" data-toggle="tooltip" data-placement="bottom" title="{{ trans.toggleFullscreen }}">
-        <i id="fs-btn" class="fa fa-arrows-alt"></i>
-    </p>
-
-    {{#if renderLayout}}
-        <p class="top-btn top-left-btn" data-toggle="tooltip" data-placement="right" title="{{ trans.playPreviewLayout }}">
-            <i id="play-btn" class="fa fa-play-circle"></i>
-        </p>
-    {{else}}
-        <p class="top-btn top-left-btn" data-toggle="tooltip" data-placement="right" title="{{ trans.backToLayout }}">
-            <i id="back-btn" class="fa fa-arrow-left"></i>
-        </p>
-
-        <p id="inline-editor-save" class="top-btn top-right-btn second" data-toggle="tooltip" data-placement="left" title="{{ trans.saveEditorChanges }}">
-            <i id="fs-btn-save" class="fa fa-save"></i>
-        </p>
-    {{/if}}
-
     <div id="border-before" class="layout-viewer-border"></div>
     <div id="border-after" class="layout-viewer-border"></div>
-
 {{/if}}
 
 <div class="viewer-element {{containerStyle}}"

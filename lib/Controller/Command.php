@@ -140,14 +140,17 @@ class Command extends Base
 
             $command->includeProperty('buttons');
 
-            // Default Layout
-            $command->buttons[] = array(
-                'id' => 'command_button_edit',
-                'url' => $this->urlFor($request,'command.edit.form', ['id' => $command->commandId]),
-                'text' => __('Edit')
-            );
+             // Command edit
+             if ($this->getUser($request)->checkEditable($command)) {
+                 $command->buttons[] = array(
+                     'id' => 'command_button_edit',
+                     'url' => $this->urlFor($request, 'command.edit.form', ['id' => $command->commandId]),
+                     'text' => __('Edit')
+                 );
+             }
 
-            if ($this->getUser()->checkDeleteable($command)) {
+            // Command delete
+            if ($this->getUser($request)->checkDeleteable($command)) {
                 $command->buttons[] = array(
                     'id' => 'command_button_delete',
                     'url' => $this->urlFor($request,'command.delete.form', ['id' => $command->commandId]),
@@ -160,6 +163,16 @@ class Command extends Base
                         array('name' => 'text', 'value' => __('Delete')),
                         array('name' => 'rowtitle', 'value' => $command->command)
                     )
+                );
+            }
+
+            // Command Permissions
+            if ($this->getUser($request)->checkPermissionsModifyable($command)) {
+                // Permissions button
+                $command->buttons[] = array(
+                    'id' => 'command_button_permissions',
+                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Command', 'id' => $command->commandId]),
+                    'text' => __('Permissions')
                 );
             }
         }
@@ -206,8 +219,9 @@ class Command extends Base
     {
         $command = $this->commandFactory->getById($id);
 
-        if ($command->getOwnerId() != $this->getUser($request)->userId && $this->getUser($request)->userTypeId != 1)
+        if (!$this->getUser($request)->checkEditable($command)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'command-form-edit';
         $this->getState()->setData([
@@ -234,8 +248,9 @@ class Command extends Base
     {
         $command = $this->commandFactory->getById($id);
 
-        if ($command->getOwnerId() != $this->getUser($request)->userId && $this->getUser($request)->userTypeId != 1)
+        if (!$this->getUser($request)->checkDeleteable($command)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'command-form-delete';
         $this->getState()->setData([
@@ -371,8 +386,9 @@ class Command extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $command = $this->commandFactory->getById($id);
 
-        if ($command->getOwnerId() != $this->getUser($request)->userId && $this->getUser($request)->userTypeId != 1)
+        if (!$this->getUser($request)->checkEditable($command)) {
             throw new AccessDeniedException();
+        }
 
         $command->command = $sanitizedParams->getString('command');
         $command->description = $sanitizedParams->getString('description');
@@ -424,8 +440,9 @@ class Command extends Base
     {
         $command = $this->commandFactory->getById($id);
 
-        if ($command->getOwnerId() != $this->getUser($request)->userId && $this->getUser($request)->userTypeId != 1)
+        if (!$this->getUser($request)->checkDeleteable($command)) {
             throw new AccessDeniedException();
+        }
 
         $command->setChildObjectDependencies($this->displayProfileFactory);
         $command->delete();

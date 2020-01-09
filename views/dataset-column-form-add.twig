@@ -72,7 +72,11 @@
                     {{ forms.input("listContent", title, "", helpText, "listContent") }}
                     
                     {% set title %}{% trans "Remote Data Path" %}{% endset %}
-                    {% set helpText %}{% trans "Give the JSON-path in the remote data for the value that you want to fill this column. This path should be relative to the DataRoot configured on the DataSet." %}{% endset %}
+                    {% if dataSet.sourceId == 1 %}
+                        {% set helpText %}{% trans "Give the JSON-path in the remote data for the value that you want to fill this column. This path should be relative to the DataRoot configured on the DataSet." %}{% endset %}
+                    {% else %}
+                        {% set helpText %}{% trans "Provide Column number relative to the spreadsheet, numeration starts from 0 ie to get values from Column A from spreadsheet to this column enter 0" %}{% endset %}
+                    {% endif %}
                     {{ forms.input("remoteField", title, dataSetColumn.remoteField, helpText, "remoteField") }}
 
                     {% set title %}{% trans "Column Order" %}{% endset %}

@@ -24,6 +24,7 @@
         {# Add common file #}
         {% include "common.twig" %}
 
+        <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js"></script>
         <script src="{{ theme.rootUri() }}dist/layoutDesigner.bundle.min.js"></script>
         <script type="text/javascript">
 
@@ -37,7 +38,7 @@
                     scheduleTitle: "{% trans "Schedule Now" %}",
                     saveTemplateTitle: "{% trans "Save Template" %}",
                     readOnlyModeTitle: "{% trans "Read Only Mode" %}",
-                    readOnlyModeMessage: "{% trans "You are viewing this Layout in read only mode, checkout from the Actions menu bellow!" %}",
+                    readOnlyModeMessage: "{% trans "You are viewing this Layout in read only mode, checkout by clicking on this message or from the Actions menu above!" %}",
                     checkoutMessage: "{% trans "Layout is not editable, please checkout!" %}",
                     viewModeTitle: "{% trans "View" %}",
                     welcomeModalMessage: "{% trans "This Layout is Published and cannot be edited. You can checkout the Layout for editing below, or continue to view it in a read only mode." %}"
@@ -46,9 +47,10 @@
                 var viewerTrans = {
                     inlineEditor: "{% trans "Inline Editor" %}",
                     toggleFullscreen: "{% trans "Toggle Fullscreen Mode" %}",
-                    backToLayout: "{% trans "Go back to Layout" %}",
+                    backToLayout: "{% trans "Go back to Layout view" %}",
                     saveEditorChanges: "{% trans "Save editor changes" %}",
                     playPreviewLayout: "{% trans "Play Layout preview" %}",
+                    editLayout: "{% trans "Edit Layout" %}",
                     stopPreviewLayout: "{% trans "Stop Layout preview" %}",
                     nextWidget: "{% trans "Next widget" %}",
                     previousWidget: "{% trans "Previous widget" %}"
@@ -58,23 +60,27 @@
                     zoomIn: "{% trans "Zoom in" %}",
                     zoomOut: "{% trans "Zoom out" %}",
                     resetZoom: "{% trans "Reset zoom" %}",
+                    zoomDelta: "{% trans "Visible area time span" %}",
+                    zoomFindSelected: "{% trans "Scroll to selected widget" %}",
                     startTime: "{% trans "Visible area start time" %}",
                     endTime: "{% trans "Visible area end time" %}",
                     layoutName: "{% trans "Layout name" %}",
                     layoutDuration: "{% trans "Layout duration" %}",
                     layoutDimensions: "{% trans "Layout dimensions" %}",
-                    emptyRegion: "{% trans "Empty Region" %}"
+                    emptyRegion: "{% trans "Empty Region" %}",
+                    addToThisPosition: "{% trans "Add to this position" %}"
                 };
 
                 var navigatorTrans = {
                     edit: "{% trans "Edit layout regions" %}",
                     addRegion: "{% trans "Add" %}",
                     addRegionDesc: "{% trans "Add a new region" %}",
-                    deleteRegion: "{% trans "Delete" %}",
+                    deleteRegion: "{% trans "Delete region" %}",
+                    toggleFullscreen: "{% trans "Toggle Fullscreen Mode" %}",
                     undo: "{% trans "Undo" %}",
                     undoDesc: "{% trans "Revert last change" %}",
                     close: "{% trans "Close" %}",
-                    closeDesc: "{% trans "Go back to the main editor" %}",
+                    closeDesc: "{% trans "Return to Layout View" %}",
                     save: "{% trans "Save" %}",
                     saveDesc: "{% trans "Save changes" %}"
                 };

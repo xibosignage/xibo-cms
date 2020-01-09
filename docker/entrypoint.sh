@@ -69,6 +69,10 @@ then
   MAINTENANCE_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16)
   mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='$MAINTENANCE_KEY' WHERE \`setting\`='MAINTENANCE_KEY' LIMIT 1"
 
+  # Configure Quick Chart
+  echo "Setting up Quickchart"
+  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='$CMS_QUICK_CHART_URL', userSee=0 WHERE \`setting\`='QUICK_CHART_URL' LIMIT 1"
+
   mv /var/www/backup/import.sql /var/www/backup/import.sql.done
 fi
 
@@ -157,6 +161,10 @@ then
     cp -v /var/www/cms/ca-certs/*.crt /usr/local/share/ca-certificates
     /usr/sbin/update-ca-certificates
 
+    # Configure Quick Chart
+    echo "Setting up Quickchart"
+    mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='$CMS_QUICK_CHART_URL', userSee=0 WHERE \`setting\`='QUICK_CHART_URL' LIMIT 1"
+
     # Update /etc/periodic/15min/cms-db-backup with current environment (for cron)
     /bin/sed -i "s/^MYSQL_BACKUP_ENABLED=.*$/MYSQL_BACKUP_ENABLED=$MYSQL_BACKUP_ENABLED/" /etc/periodic/15min/cms-db-backup
     /bin/sed -i "s/^MYSQL_USER=.*$/MYSQL_USER=$MYSQL_USER/" /etc/periodic/15min/cms-db-backup
@@ -166,16 +174,19 @@ then
     /bin/sed -i "s/^MYSQL_DATABASE=.*$/MYSQL_DATABASE=$MYSQL_DATABASE/" /etc/periodic/15min/cms-db-backup
 
     # Update /var/www/maintenance with current environment (for cron)
-    echo "Configuring Maintenance"
-    echo "#!/bin/bash" > /var/www/maintenance.sh
-    echo "" >> /var/www/maintenance.sh
-    /usr/bin/env | sed 's/^\(.*\)$/export \1/g' | grep -E "^export MYSQL" >> /var/www/maintenance.sh
-    echo "cd /var/www/cms && /usr/bin/php bin/xtr.php" >> /var/www/maintenance.sh
-    chmod 755 /var/www/maintenance.sh
+    if [ "$XTR_ENABLED" == "true" ]
+    then
+        echo "Configuring Maintenance"
+        echo "#!/bin/bash" > /var/www/maintenance.sh
+        echo "" >> /var/www/maintenance.sh
+        /usr/bin/env | sed 's/^\(.*\)$/export \1/g' | grep -E "^export MYSQL" >> /var/www/maintenance.sh
+        echo "cd /var/www/cms && /usr/bin/php bin/xtr.php" >> /var/www/maintenance.sh
+        chmod 755 /var/www/maintenance.sh
 
-    echo "* * * * *     /var/www/maintenance.sh > /dev/null 2>&1 " > /etc/crontabs/apache
-    echo "" >> /etc/crontabs/apache
-    crontab -u apache /etc/crontabs/apache
+        echo "* * * * *     /var/www/maintenance.sh > /dev/null 2>&1 " > /etc/crontabs/apache
+        echo "" >> /etc/crontabs/apache
+        crontab -u apache /etc/crontabs/apache
+    fi
 
     # Configure SSMTP to send emails if required
     /bin/sed -i "s/mailhub=.*$/mailhub=$CMS_SMTP_SERVER/" /etc/ssmtp/ssmtp.conf

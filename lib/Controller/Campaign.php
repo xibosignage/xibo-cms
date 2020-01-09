@@ -224,6 +224,13 @@ class Campaign extends Base
                     'url' => $this->urlFor($request,'campaign.edit.form', ['id' => $campaign->campaignId]),
                     'text' => __('Edit')
                 );
+
+                // Copy the campaign
+                $campaign->buttons[] = [
+                    'id' => 'campaign_button_copy',
+                    'url' => $this->urlFor('campaign.copy.form', ['id' => $campaign->campaignId]),
+                    'text' => __('Copy')
+                ];
             } else {
                 $campaign->buttons[] = ['divider' => true];
             }
@@ -832,5 +839,56 @@ class Campaign extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    public function copyForm($campaignId)
+    {
+        // get the Campaign
+        $campaign = $this->campaignFactory->getById($campaignId);
+
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $campaign->ownerId) {
+            throw new AccessDeniedException(__('You do not have permission to copy this Campaign'));
+        }
+
+        $this->getState()->template = 'campaign-form-copy';
+        $this->getState()->setData([
+            'campaign' => $campaign
+        ]);
+    }
+
+    /**
+     * @param $campaignId
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function copy($campaignId)
+    {
+        // get the Campaign
+        $campaign = $this->campaignFactory->getById($campaignId);
+
+        // get the Layouts assigned to the original Campaign
+        $layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId, false);
+
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $campaign->ownerId) {
+            throw new AccessDeniedException(__('You do not have permission to copy this Campaign'));
+        }
+
+        $newCampaign = clone $campaign;
+        $newCampaign->campaign = $this->getSanitizer()->getString('name');
+
+        // assign the same layouts to the new Campaign
+        foreach ($layouts as $layout) {
+            $newCampaign->assignLayout($layout);
+        }
+
+        $newCampaign->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => sprintf(__('Added %s'), $newCampaign->campaign),
+            'id' => $newCampaign->campaignId,
+            'data' => $newCampaign
+        ]);
     }
 }

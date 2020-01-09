@@ -67,7 +67,7 @@
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                 <li><a href="#populate" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
             </ul>
-            <form id="playlistAddForm" class="XiboForm form-horizontal playlistForm" method="post" action="{{ url_for("playlist.add") }}" data-gettag="{{ url_for("tag.getByName") }}">
+            <form id="playlistAddForm" class="form-horizontal playlistForm" method="post" action="{{ url_for("playlist.add") }}" data-gettag="{{ url_for("tag.getByName") }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}

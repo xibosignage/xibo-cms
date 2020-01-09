@@ -436,7 +436,8 @@ class Soap
                 $this->getLog()->debug(count($scheduleEvents) . ' events for eventId ' . $schedule->eventId);
 
                 $layoutId = $parsedRow->getInt('layoutId');
-                if ($layoutId != null && ($schedule->eventTypeId == Schedule::$LAYOUT_EVENT || $schedule->eventTypeId == Schedule::$OVERLAY_EVENT || $schedule->eventTypeId == Schedule::$INTERRUPT_EVENT)) {
+
+                if ($layoutId != null && ($schedule->eventTypeId == Schedule::$LAYOUT_EVENT || $schedule->eventTypeId == Schedule::$OVERLAY_EVENT || $schedule->eventTypeId == Schedule::$INTERRUPT_EVENT || $schedule->eventTypeId == Schedule::$CAMPAIGN_EVENT)) {
                     $layouts[] = $layoutId;
                 }
             }
@@ -977,8 +978,8 @@ class Soap
                     $scheduleId = $row['eventId'];
                     $is_priority = $parsedRow->getInt('isPriority');
 
-                    if ($eventTypeId == Schedule::$LAYOUT_EVENT || $eventTypeId == Schedule::$INTERRUPT_EVENT) {
-                        // Ensure we have a layoutId (we may not if an empty campaign is assigned)
+                     if ($eventTypeId == Schedule::$LAYOUT_EVENT || $eventTypeId == Schedule::$INTERRUPT_EVENT || $eventTypeId == Schedule::$CAMPAIGN_EVENT) {
+                         // Ensure we have a layoutId (we may not if an empty campaign is assigned)
                         // https://github.com/xibosignage/xibo/issues/894
                         if ($layoutId == 0 || empty($layoutId)) {
                             $this->getLog()->info(sprintf('Player has empty event scheduled. Display = %s, EventId = %d', $this->display->display, $scheduleId));
@@ -1001,6 +1002,8 @@ class Soap
                         $layout->setAttribute("priority", $is_priority);
                         $layout->setAttribute("syncEvent", $syncKey);
                         $layout->setAttribute("shareOfVoice", $row['shareOfVoice'] ?? 0);
+                        $layout->setAttribute("isGeoAware", $row['isGeoAware'] ?? 0);
+                        $layout->setAttribute("geoLocation", $row['geoLocation'] ?? null);
 
                         // Handle dependents
                         if (array_key_exists($layoutId, $layoutDependents)) {
@@ -1055,6 +1058,8 @@ class Soap
                         $overlay->setAttribute("todt", $toDt);
                         $overlay->setAttribute("scheduleid", $scheduleId);
                         $overlay->setAttribute("priority", $is_priority);
+                        $overlay->setAttribute("isGeoAware", $row['isGeoAware'] ?? 0);
+                        $overlay->setAttribute("geoLocation", $row['geoLocation'] ?? null);
 
                         // Add to the overlays node list
                         $overlayNodes->appendChild($overlay);
@@ -2062,10 +2067,10 @@ class Soap
 
                 return false;
 
-            } elseif ($this->bandwidthFactory->isBandwidthExceeded($displayBandwidthLimit, $bandwidthUsage)) {
+            } elseif ($this->bandwidthFactory->isBandwidthExceeded($displayBandwidthLimit, $bandwidthUsage, $displayId)) {
                 // Bandwidth Exceeded
                 // Create a notification if we don't already have one today for this display.
-                $subject = __(sprintf('Display ID %d exceeded the bandwidth limit ', $this->display->displayId));
+                $subject = __(sprintf('Display ID %d exceeded the bandwidth limit', $this->display->displayId));
                 $date = $this->dateService->parse();
 
                 if (count($this->notificationFactory->getBySubjectAndDate($subject, $this->dateService->getLocalDate($date->startOfDay(), 'U'), $this->dateService->getLocalDate($date->addDay()->startOfDay(), 'U'))) <= 0) {

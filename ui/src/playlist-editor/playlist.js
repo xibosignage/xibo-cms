@@ -48,6 +48,12 @@ Playlist.prototype.createDataStructure = function(data) {
             newWidget.previewTemplate = '<div class="tooltip playlist-widget-preview" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner-image"><img src=' + imageDownloadUrl.replace(':id', widgets[widget].mediaIds[0]) + '></div></div>';
         }
 
+
+        newWidget.designerObject = pE;
+
+        // calculate expire status
+        newWidget.calculateExpireStatus();
+        
         // Add newWidget to the playlist widget object
         this.widgets[newWidget.id] = newWidget;
 
@@ -103,9 +109,9 @@ Playlist.prototype.calculateTimeValues = function() {
  * Add action to take after dropping a draggable item
  * @param {object} droppable - Target drop object
  * @param {object} draggable - Dragged object
+ * @param {number=} addToPosition - Add to specific position in the widget list
  */
-Playlist.prototype.addElement = function(droppable, draggable) {
-
+Playlist.prototype.addElement = function(droppable, draggable, addToPosition = null) {
     const draggableType = $(draggable).data('type');
     const draggableSubType = $(draggable).data('subType');
 
@@ -114,61 +120,7 @@ Playlist.prototype.addElement = function(droppable, draggable) {
 
     // Add dragged item to region
     if(draggableType == 'media') { // Adding media from search tab to a region
-
-        // Get media Id
-        let mediaToAdd = {
-            media: [
-                $(draggable).data('mediaId')
-            ]
-        };
-
-        // Check if library duration options exists and add it to the query
-        if(pE.useLibraryDuration != undefined) {
-            mediaToAdd.useDuration = (pE.useLibraryDuration == "1");
-        }
-
-        // Show loading screen in the dropzone
-        pE.showLocalLoadingScreen();
-
-        pE.common.showLoadingScreen();
-
-        // Create change to be uploaded
-        pE.manager.addChange(
-            'addMedia',
-            'playlist', // targetType 
-            playlistId,  // targetId
-            null,  // oldValues
-            mediaToAdd, // newValues
-            {
-                updateTargetId: true,
-                updateTargetType: 'widget'
-            }
-        ).then((res) => { // Success
-
-            pE.common.hideLoadingScreen();
-
-            // The new selected object
-            pE.selectedObject.id = 'widget_' + res.data.newWidgets[0].widgetId;
-
-            // Behavior if successful
-            toastr.success(res.message);
-            pE.reloadData();
-        }).catch((error) => { // Fail/error
-
-            pE.common.hideLoadingScreen();
-
-            // Show error returned or custom message to the user
-            let errorMessage = '';
-
-            if(typeof error == 'string') {
-                errorMessage = error;
-            } else {
-                errorMessage = error.errorThrown;
-            }
-
-            // Show toast message
-            toastr.error(errorMessagesTrans.addMediaFailed.replace('%error%', errorMessage));
-        });
+        this.addMedia($(draggable).data('mediaId'), addToPosition);
     } else if(draggableType == 'module') { // Add widget/module
 
         // Get regionSpecific property
@@ -186,7 +138,8 @@ Playlist.prototype.addElement = function(droppable, draggable) {
                     validExtensionsMessage: translations.validExtensions + ': ' + $(draggable).data('validExt'),
                     validExt: validExt
                 },
-                playlistId: playlistId
+                playlistId: playlistId,
+                displayOrder: addToPosition
             },
             {
                 viewLibrary: {
@@ -219,12 +172,20 @@ Playlist.prototype.addElement = function(droppable, draggable) {
             // Replace playlist id
             requestPath = requestPath.replace(':id', playlistId);
 
+            // Set position to add if selected
+            let addOptions = null;
+            if(addToPosition != null) {
+                addOptions = {
+                    displayOrder: addToPosition
+                };
+            }
+
             pE.manager.addChange(
                 'addWidget',
                 'playlist', // targetType 
                 playlistId,  // targetId
                 null,  // oldValues
-                null, // newValues
+                addOptions, // newValues
                 {
                     updateTargetId: true,
                     updateTargetType: 'widget',
@@ -288,6 +249,84 @@ Playlist.prototype.addElement = function(droppable, draggable) {
             widget.editPermissions();
         }
     }
+};
+
+/**
+ * Add media to the playlist
+ * @param {Array.<number>} media
+ * @param {number=} addToPosition
+ */
+Playlist.prototype.addMedia = function(media, addToPosition = null) {
+    // Get playlist Id
+    const playlistId = this.playlistId;
+
+    // Get media Id
+    let mediaToAdd = {};
+
+    if($.isArray(media)) {
+        mediaToAdd = {
+            media: media
+        };
+    } else {
+        mediaToAdd = {
+            media: [
+                media
+            ]
+        };
+    }
+
+    // Check if library duration options exists and add it to the query
+    if(pE.useLibraryDuration != undefined) {
+        mediaToAdd.useDuration = (pE.useLibraryDuration == "1");
+    }
+
+    // Show loading screen in the dropzone
+    pE.showLocalLoadingScreen();
+
+    pE.common.showLoadingScreen();
+
+    // Set position to add if selected
+    if(addToPosition != null) {
+        mediaToAdd.displayOrder = addToPosition;
+    }
+
+    // Create change to be uploaded
+    pE.manager.addChange(
+        'addMedia',
+        'playlist', // targetType 
+        playlistId,  // targetId
+        null,  // oldValues
+        mediaToAdd, // newValues
+        {
+            updateTargetId: true,
+            updateTargetType: 'widget'
+        }
+    ).then((res) => { // Success
+
+        pE.common.hideLoadingScreen();
+
+        // The new selected object
+        pE.selectedObject.id = 'widget_' + res.data.newWidgets[0].widgetId;
+
+        // Behavior if successful
+        toastr.success(res.message);
+        pE.reloadData();
+    }).catch((error) => { // Fail/error
+
+        pE.common.hideLoadingScreen();
+
+        // Show error returned or custom message to the user
+        let errorMessage = '';
+
+        if(typeof error == 'string') {
+            errorMessage = error;
+        } else {
+            errorMessage = error.errorThrown;
+        }
+
+        // Show toast message
+        toastr.error(errorMessagesTrans.addMediaFailed.replace('%error%', errorMessage));
+    });
 };
 
 /**

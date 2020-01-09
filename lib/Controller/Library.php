@@ -27,9 +27,9 @@ use GuzzleHttp\Exception\RequestException;
 use Mimey\MimeTypes;
 use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
+use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
-use Respect\Validation\Validator as v;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\Widget;
@@ -516,6 +516,14 @@ class Library extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     function grid(Request $request, Response $response)
     {
@@ -691,7 +699,17 @@ class Library extends Base
 
     /**
      * Media Delete Form
-     * @param int $mediaId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function deleteForm(Request $request, Response $response, $id)
     {
@@ -715,8 +733,17 @@ class Library extends Base
 
     /**
      * Delete Media
-     * @param int $mediaId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Delete(
      *  path="/library/{mediaId}",
      *  operationId="libraryDelete",
@@ -779,8 +806,15 @@ class Library extends Base
     /**
      * Add a file to the library
      *  expects to be fed by the blueimp file upload handler
-     * @throws \Exception
-     *
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/library",
      *  operationId="libraryAdd",
@@ -828,7 +862,6 @@ class Library extends Base
      *  )
      * )
      *
-     * @param array $options
      */
     public function add(Request $request, Response $response)
     {
@@ -867,6 +900,7 @@ class Library extends Base
             'updateInLayouts' => $parsedBody->getCheckbox('updateInLayouts'),
             'deleteOldRevisions' => $parsedBody->getCheckbox('deleteOldRevisions'),
             'allowMediaTypeChange' => $options['allowMediaTypeChange'],
+            'displayOrder' => $parsedBody->getInt('displayOrder'),
             'playlistId' => $parsedBody->getInt('playlistId'),
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
@@ -1180,9 +1214,15 @@ class Library extends Base
 
     /**
      * Gets a file from the library
-     * @param int $mediaId
-     * @param string $type
-     *
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Get(
      *  path="/library/download/{mediaId}/{type}",
      *  operationId="libraryDownload",
@@ -1221,7 +1261,6 @@ class Library extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
     public function download(Request $request, Response $response)
     {
@@ -1386,8 +1425,9 @@ class Library extends Base
                     /* @var Media $font */
 
                     // Skip unreleased fonts
-                    if ($font->released == 0)
+                    if ($font->released == 0) {
                         continue;
+                    }
 
                     // Separate out the display name and the referenced name (referenced name cannot contain any odd characters or numbers)
                     $displayName = $font->name;
@@ -1398,7 +1438,8 @@ class Library extends Base
                     // Test to see if this user should have access to this font
                     if ($this->getUser($request)->checkViewable($font)) {
                         // Css for the local CMS contains the full download path to the font
-                        $url = $this->urlFor($request,'library.download', ['type' => 'font', 'id' => $font->mediaId]) . '?download=1&downloadFromLibrary=1';
+                        $url = $this->urlFor($request, 'library.download',
+                                ['type' => 'font', 'id' => $font->mediaId]) . '?download=1&downloadFromLibrary=1';
                         $localCss .= str_replace('[url]', $url, str_replace('[family]', $familyName, $fontTemplate));
 
                         // CKEditor string
@@ -2071,6 +2112,13 @@ class Library extends Base
      *      required=true
      *   ),
      *  @SWG\Parameter(
+     *      name="extension",
+     *      in="formData",
+     *      description="Optional extension of the media, jpg, png etc. If not set in the request it will be retrieved from the headers",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="optionalName",
      *      in="formData",
      *      description="An optional name for this media file, if left empty it will default to the file name",
@@ -2104,6 +2152,7 @@ class Library extends Base
         $url = $this->getSanitizer()->getString('url');
         $type = $this->getSanitizer()->getString('type');
         $optionalName = $this->getSanitizer()->getString('optionalName');
+        $extension = $this->getSanitizer()->getString('extension');
 
         // Validate the URL
         if (!v::url()->notEmpty()->validate(urldecode($url)) || !filter_var($url, FILTER_VALIDATE_URL)) {
@@ -2126,16 +2175,19 @@ class Library extends Base
 
         $this->getUser()->isQuotaFullByUser();
 
-        // if the type is not provided (web ui), get the extension from pathinfo/Guzzle and try to find correct module for the media
-        if (!isset($type)) {
+        // check if we have extension provided in the request (available via API), if not get it from the headers
+        if (!empty($extension)) {
+            $ext = $extension;
+        } else {
             $ext = $this->getRemoteFileExtension($url);
+        }
+
+        // check if we have type provided in the request (available via API), if not get the module type from the extension
+        if (!empty($type)) {
+            $module = $this->getModuleFactory()->create($type);
+        } else {
             $module = $this->getModuleFactory()->getByExtension($ext);
             $module = $this->getModuleFactory()->create($module->type);
-        } else {
-            // we have the type in request (API) double check that the module type exists
-            // we are also getting extension here from pathinfo / the Content-Type header via Guzzle, depending on the URL we may need it in saveFile in Media entity
-            $ext = $this->getRemoteFileExtension($url);
-            $module = $this->getModuleFactory()->create($type);
         }
 
         // if we were provided with optional Media name set it here, otherwise get it from pathinfo
@@ -2216,10 +2268,13 @@ class Library extends Base
          if ($extension == '') {
              $guzzle = new Client($this->getConfig()->getGuzzleProxy());
              $head = $guzzle->head($url);
-             $contentType = $head->getHeader('Content-Type');
+             $contentType = $head->getHeaderLine('Content-Type');
 
-             foreach ($contentType as $value) {
-                 $extension = $value;
+             $extension = $contentType;
+
+             if ($contentType === 'binary/octet-stream' && $head->hasHeader('x-amz-meta-filetype')) {
+                 $amazonContentType = $head->getHeaderLine('x-amz-meta-filetype');
+                 $extension = $amazonContentType;
              }
 
              // get the extension corresponding to the mime type

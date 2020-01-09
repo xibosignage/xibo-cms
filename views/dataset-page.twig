@@ -280,6 +280,12 @@
             $(dialog).find("#authentication").on('change', function() {
                 onAuthenticationFieldChanged(dialog);
             });
+
+            // remote DataSet source
+            onSourceFieldChanged(dialog);
+            $(dialog).find('#sourceId').on('change', function() {
+                onSourceFieldChanged(dialog);
+            });
         }
 
         function onRemoteFieldChanged(dialog) {
@@ -308,6 +314,30 @@
                 $authFieldUserName.removeClass("hidden");
                 $authFieldPassword.removeClass("hidden");
             }
+        }
+
+        function onSourceFieldChanged(dialog) {
+            let sourceId = $(dialog).find('#sourceId').val();
+            let $jsonSource =  $(dialog).find(".json-source-field");
+            let $csvSource = $(dialog).find(".csv-source-field");
+
+            if (sourceId == 1) {
+                $jsonSource.removeClass('hidden');
+                $csvSource.addClass('hidden');
+            } else {
+                $jsonSource.addClass('hidden');
+                $csvSource.removeClass('hidden');
+            }
+        }
+
+        function deleteMultiSelectFormOpen(dialog) {
+            {% set message = 'Delete any associated data?' %}
+
+            var $input = $('<input type=checkbox id="deleteData" name="deleteData"> {{ message|trans|e }} </input>');
+            $input.on('change', function() {
+                dialog.data().commitData = {deleteData: $(this).val()};
+            });
+            $(dialog).find('.modal-body').append($input);
         }
     </script>
 {% endblock %}

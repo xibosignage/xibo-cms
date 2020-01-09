@@ -87,6 +87,7 @@ $app->get('/schedule/{id}/events', ['\Xibo\Controller\Schedule','eventList'])->s
 $app->post('/schedule', ['\Xibo\Controller\Schedule','add'])->setName('schedule.add');
 $app->put('/schedule/{id}', ['\Xibo\Controller\Schedule','edit'])->setName('schedule.edit');
 $app->delete('/schedule/{id}', ['\Xibo\Controller\Schedule','delete'])->setName('schedule.delete');
+$app->delete('/schedulerecurrence/{id}', ['\Xibo\Controller\Schedule','deleteRecurrence'])->setName('schedule.recurrence.delete');
 
 /**
  * Notification
@@ -183,6 +184,7 @@ $app->get('/campaign', ['\Xibo\Controller\Campaign','grid'])->setName('campaign.
 $app->post('/campaign', ['\Xibo\Controller\Campaign','add'])->setName('campaign.add');
 $app->put('/campaign/{id}', ['\Xibo\Controller\Campaign','edit'])->setName('campaign.edit');
 $app->delete('/campaign/{id}', ['\Xibo\Controller\Campaign','delete'])->setName('campaign.delete');
+$app->post('/campaign/{id}/copy', ['\Xibo\Controller\Campaign','copy'])->name('campaign.copy');
 
 // We use POST requests so that we can support multiple records
 $app->post('/campaign/layout/assign/{id}', ['\Xibo\Controller\Campaign','assignLayout'])->setName('campaign.assign.layout');
@@ -249,6 +251,7 @@ $app->post('/display/wol/{id}', ['\Xibo\Controller\Display','wakeOnLan'])->setNa
 $app->put('/display/authorise/{id}', ['\Xibo\Controller\Display','toggleAuthorise'])->setName('display.authorise');
 $app->put('/display/defaultlayout/{id}', ['\Xibo\Controller\Display','setDefaultLayout'])->setName('display.defaultlayout');
 $app->put('/display/requestscreenshot/{id}', ['\Xibo\Controller\Display','requestScreenShot'])->setName('display.requestscreenshot');
+$app->put('/display/licenceCheck/{id}', ['\Xibo\Controller\Display','checkLicence'])->setName('display.licencecheck');
 $app->get('/display/screenshot/{id}', ['\Xibo\Controller\Display','screenShot'])->setName('display.screenShot');
 $app->post('/display/{id}/displaygroup/assign', ['\Xibo\Controller\Display','assignDisplayGroup'])->setName('display.assign.displayGroup');
 $app->put('/display/{id}/moveCms', ['\Xibo\Controller\Display','moveCms'])->setName('display.moveCms');

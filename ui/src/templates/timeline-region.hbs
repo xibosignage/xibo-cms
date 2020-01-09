@@ -31,6 +31,14 @@
     {{/if}}
 
     <div class="designer-region-overlay">
-        <div class="info" title="{{ id }}">{{ id }}</div>
+        {{#each widgets}}
+            <div class="designer-region-overlay-step"
+                data-position="{{@index}}"
+                data-toggle="tooltip" data-container="body"
+                title="{{../trans.addToThisPosition}}"></div>
+            <div class="designer-region-overlay-dummy"
+                style="width: calc({{ durationPercentage }}% - 14px);">
+            </div>
+        {{/each}}
     </div>
 </div>

@@ -1,14 +1,3 @@
-{{#unless edit}}
-    <p class="top-btn top-right-btn" data-toggle="tooltip" data-placement="left" title="{{ trans.edit }}">
-        <i id="edit-btn" class="fa fa-edit" ></i>
-    </p>
-{{else}}
-    <p class="top-btn top-right-btn" data-toggle="tooltip" data-placement="left" title="{{ trans.closeDesc }}">
-        <i id="close-btn-top" class="fa fa-close"></i>
-    </p>
-{{/unless}}
-
-
 <div id="{{ id }}" data-type="layout" class="layout selectable editable"  style="position:relative; 
         width: {{ scaledDimensions.width }}px; 
         height: {{ scaledDimensions.height }}px; 

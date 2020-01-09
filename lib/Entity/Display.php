@@ -336,6 +336,18 @@ class Display implements \JsonSerializable
      */
     public $newCmsKey;
 
+    /**
+     * @SWG\Property(description="The orientation of the Display, either landscape or portrait")
+     * @var string
+     */
+    public $orientation;
+
+    /**
+     * @SWG\Property(description="The resolution of the Display expressed as a string in the format WxH")
+     * @var string
+     */
+    public $resolution;
+
     /** @var array The configuration from the Display Profile  */
     private $profileConfig;
 
@@ -784,7 +796,9 @@ class Display implements \JsonSerializable
                     `timeZone` = :timeZone,
                     `overrideConfig` = :overrideConfig,
                     `newCmsAddress` = :newCmsAddress,
-                    `newCmsKey` = :newCmsKey
+                    `newCmsKey` = :newCmsKey,
+                    `orientation` = :orientation,
+                    `resolution` = :resolution
              WHERE displayid = :displayId
         ', [
             'display' => $this->display,
@@ -825,6 +839,8 @@ class Display implements \JsonSerializable
             'overrideConfig' => ($this->overrideConfig == '') ? null : json_encode($this->overrideConfig),
             'newCmsAddress' => $this->newCmsAddress,
             'newCmsKey' => $this->newCmsKey,
+            'orientation' => $this->orientation,
+            'resolution' => $this->resolution,
             'displayId' => $this->displayId
         ]);
 

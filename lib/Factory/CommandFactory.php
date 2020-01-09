@@ -28,17 +28,24 @@ class CommandFactory extends BaseFactory
     private $displayProfileFactory;
 
     /**
+     * @var PermissionFactory
+     */
+    private $permissionFactory;
+
+    /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerServiceInterface $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
+     * @param PermissionFactory $permissionFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $permissionFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
+        $this->permissionFactory = $permissionFactory;
     }
 
     /**
@@ -47,7 +54,7 @@ class CommandFactory extends BaseFactory
      */
     public function create()
     {
-        return new Command($this->getStore(), $this->getLog());
+        return new Command($this->getStore(), $this->getLog(), $this->permissionFactory);
     }
 
     /**
@@ -95,6 +102,18 @@ class CommandFactory extends BaseFactory
             $select .= ', commandString, validationString ';
         }
 
+        $select .= " , (SELECT GROUP_CONCAT(DISTINCT `group`.group)
+                          FROM `permission`
+                            INNER JOIN `permissionentity`
+                            ON `permissionentity`.entityId = permission.entityId
+                            INNER JOIN `group`
+                            ON `group`.groupId = `permission`.groupId
+                         WHERE entity = :permissionEntityForGroup
+                            AND objectId = command.commandId
+                            AND view = 1
+                        ) AS groupsWithPermissions ";
+        $params['permissionEntityForGroup'] = 'Xibo\\Entity\\Command';
+
         $body = ' FROM `command` ';
 
         if ($sanitizedFilter->getInt('displayProfileId') !== null) {
@@ -108,6 +127,8 @@ class CommandFactory extends BaseFactory
         }
 
         $body .= ' WHERE 1 = 1 ';
+
+        $this->viewPermissionSql('Xibo\Entity\Command', $body, $params, 'command.commandId', 'command.userId', $filterBy);
 
         if ($sanitizedFilter->getInt('commandId') !== null) {
             $body .= ' AND `command`.commandId = :commandId ';
@@ -127,7 +148,7 @@ class CommandFactory extends BaseFactory
         // Sorting?
         $order = '';
         if (is_array($sortOrder))
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+            $order .= ' ORDER BY ' . implode(',', $sortOrder);
 
         $limit = '';
         // Paging
@@ -145,6 +166,7 @@ class CommandFactory extends BaseFactory
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
+            unset($params['permissionEntityForGroup']);
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }

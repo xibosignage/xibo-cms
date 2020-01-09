@@ -290,29 +290,6 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     $media->enableStat = $controller->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
                 }
 
-                $resizeThreshold = $controller->getConfig()->getSetting('DEFAULT_RESIZE_THRESHOLD');
-                $resizeLimit = $controller->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT');
-
-                // Media released set to 0 or flag for large size images
-                // if image size is greater than 8000 X 8000 then we flag that image as too big
-                if ($file->width > $resizeLimit || $file->height > $resizeLimit) {
-                    $media->released = 2; // flag that image as too big
-                } elseif ($file->width > $file->height) { // 'landscape';
-
-                    if ($file->width <= $resizeThreshold) {
-                        $media->released = 1;
-                    } else {
-                        $media->released = 0;
-                    }
-                } else { // 'portrait';
-
-                    if ($file->height <= $resizeThreshold) {
-                        $media->released = 1;
-                    } else {
-                        $media->released = 0;
-                    }
-                }
-
                 // Save
                 $media->save();
 
@@ -362,16 +339,21 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Set default options (this sets options on the widget)
                 $module->setDefaultWidgetOptions();
+
                 // Assign media
                 $widget->assignMedia($media->mediaId);
+
                 // Calculate the widget duration for new uploaded media widgets
                 $widget->calculateDuration($module);
 
                 // Assign the new widget to the playlist
-                $playlist->assignWidget($widget);
+                $playlist->assignWidget($widget, $this->options['displayOrder'] ?? null);
 
                 // Save the playlist
                 $playlist->save();
+
+                // Configure widgetId is reponse
+                $file->widgetId = $widget->widgetId;
 
                 // Handle permissions
                 // https://github.com/xibosignage/xibo/issues/1274

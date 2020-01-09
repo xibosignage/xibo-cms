@@ -12,7 +12,7 @@ services:
       MYSQL_DATABASE: "cms"
 
   xmr:
-    image: xibosignage/xibo-xmr:release-0.7
+    image: xibosignage/xibo-xmr:latest
     ports:
      - "9505:9505"
     environment:
@@ -31,3 +31,6 @@ services:
     environment:
       CMS_DEV_MODE: "true"
       MYSQL_DATABASE: "cms"
+
+  quickchart:
+    image: ianw/quickchart
