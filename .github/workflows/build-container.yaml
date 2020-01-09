@@ -6,7 +6,7 @@ on:
       - master
       - develop
   release:
-    types: [published, prereleased]
+    types: [created]
 
 jobs:
   build:
@@ -19,12 +19,22 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Build Latest
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          docker build . -t xibosignage/xibo-cms:latest
       - name: Build Branch
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref != 'refs/heads/master'
         run: |
           docker build . -t xibosignage/xibo-cms:${GITHUB_REF##*/}
+
+      - name: Push Latest
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          docker login --username ${{ secrets.DOCKER_HUB_USERNAME }} --password ${{ secrets.DOCKER_HUB_TOKEN }}
+          docker push xibosignage/xibo-cms:latest
       - name: Push Branch
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref != 'refs/heads/master'
         run: |
           docker login --username ${{ secrets.DOCKER_HUB_USERNAME }} --password ${{ secrets.DOCKER_HUB_TOKEN }}
           docker push xibosignage/xibo-cms:${GITHUB_REF##*/}
