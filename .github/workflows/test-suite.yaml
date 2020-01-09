@@ -16,10 +16,10 @@ jobs:
           docker pull mysql:5.6
           docker pull xibosignage/xibo-xmr:latest
           docker pull xibosignage/xibo-cms:develop
-          docker pull xibosignage/xibo-cms:cypress
       - name: Build
         run: |
           docker build . -f Dockerfile.ci -t cms-web
+          docker build . -f Dockerfile.cypress -t cms-cypress
       - name: Run
         run: |
           docker run --name cms-db -e MYSQL_RANDOM_ROOT_PASSWORD=yes -e MYSQL_DATABASE=cms -e MYSQL_USER=cms -e MYSQL_PASSWORD=jenkins -d mysql:5.6
@@ -40,4 +40,4 @@ jobs:
         run: |
           docker exec cms-db mysql -ucms -pjenkins cms -e "INSERT INTO oauth_clients (id, secret, name, userId, authCode, clientCredentials) VALUES ('MrGPc7e3IL1hA6w13l7Ru5giygxmNiafGNhFv89d', 'Pk6DdDgu2HzSoepcMHRabY60lDEvQ9ucTejYvc5dOgNVSNaOJirCUM83oAzlwe0KBiGR2Nhi6ltclyNC1rmcq0CiJZXzE42KfeatQ4j9npr6nMIQAzMal8O8RiYrIoono306CfyvSSJRfVfKExIjj0ZyE4TUrtPezJbKmvkVDzh8aj3kbanDKatirhwpfqfVdfgsqVNjzIM9ZgKHnbrTX7nNULL3BtxxNGgDMuCuvKiJFrLSyIIz1F4SNrHwHz', 'cypress', 1, 0, 1)"
           docker exec cms-db mysql -ucms -pjenkins cms -e "INSERT INTO oauth_client_scopes (clientId, scopeId) VALUES ('MrGPc7e3IL1hA6w13l7Ru5giygxmNiafGNhFv89d', 'all') ON DUPLICATE KEY UPDATE scopeId = scopeId"
-          docker run --name cms-cypress --link=cms-web:web -v $(pwd)/cypress.json:/app/cypress.json -v $(pwd)/cypress:/app/cypress xibosignage/xibo-cms:cypress bash -c "CYPRESS_baseUrl=http://web /app/node_modules/.bin/cypress run --config screenshotsFolder=/app/results,video=false --reporter junit --reporter-options 'mochaFile=/app/results/results_cypress_[hash].xml,toConsole=true'"
+          docker run --name cms-cypress --link=cms-web:web -v $(pwd)/cypress.json:/app/cypress.json -v $(pwd)/cypress:/app/cypress cms-cypress bash -c "CYPRESS_baseUrl=http://web /app/node_modules/.bin/cypress run --config screenshotsFolder=/app/results,video=false --reporter junit --reporter-options 'mochaFile=/app/results/results_cypress_[hash].xml,toConsole=true'"
