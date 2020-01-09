@@ -267,6 +267,7 @@ class Soap4 extends Soap
      * @param string $hardwareKey Display Hardware Key
      * @return string $requiredXml Xml Formatted String
      * @throws \SoapFault
+     * @throws NotFoundException
      */
     function RequiredFiles($serverKey, $hardwareKey)
     {
@@ -283,20 +284,33 @@ class Soap4 extends Soap
      * @param int $chunkOffset The Offset of the Chunk Requested
      * @param string $chunkSize The Size of the Chunk Requested
      * @return mixed
+     * @throws NotFoundException
+     * @throws XiboException
      * @throws \SoapFault
+     * @throws \Xibo\Exception\InvalidArgumentException
      */
     function GetFile($serverKey, $hardwareKey, $fileId, $fileType, $chunkOffset, $chunkSize)
     {
-        $this->logProcessor->setRoute('GetFile');
+       // $this->logProcessor->setRoute('GetFile');
 
+        $sanitizer = $this->getSanitizer([
+            'serverKey' => $serverKey,
+            'hardwareKey' => $hardwareKey,
+            'fileId' => $fileId,
+            'fileType' => $fileType,
+            'chunkOffset' => $chunkOffset,
+            'chunkSize' => $chunkSize
+        ]);
         // Sanitize
-        $serverKey = $this->getSanitizer()->string($serverKey);
-        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
-        $fileId = $this->getSanitizer()->int($fileId);
-        $fileType = $this->getSanitizer()->string($fileType);
-        $chunkOffset = $this->getSanitizer()->int($chunkOffset);
-        $chunkSize = $this->getSanitizer()->int($chunkSize);
+        $serverKey = $sanitizer->getString('serverKey');
+        $hardwareKey = $sanitizer->getString('hardwareKey');
+        $fileId = $sanitizer->getInt('fileId');
+        $fileType = $sanitizer->getString('fileType');
+        // TODO Sanitizer :booms: here
+       // $chunkOffset = $sanitizer->getDouble('chunkOffset');
+       // $chunkSize = $sanitizer->getd('chunkSize');
 
+        $this->getLog()->debug('GET FILE  GET ' . ' hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: ' . $fileType . ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize);
         $libraryLocation = $this->getConfig()->getSetting("LIBRARY_LOCATION");
 
         // Check the serverKey matches
@@ -320,8 +334,6 @@ class Soap4 extends Soap
 
         try {
             if ($fileType == "layout") {
-                $fileId = $this->getSanitizer()->int($fileId);
-
                 // Validate the nonce
                 $requiredFile = $this->requiredFileFactory->getByDisplayAndLayout($this->display->displayId, $fileId);
 
@@ -470,9 +482,13 @@ class Soap4 extends Soap
     {
         $this->logProcessor->setRoute('NotifyStatus');
 
+        $sanitizer = $this->getSanitizer([
+            'serverKey' => $serverKey,
+            'hardwareKey' => $hardwareKey
+        ]);
         // Sanitize
-        $serverKey = $this->getSanitizer()->string($serverKey);
-        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $serverKey = $sanitizer->getString('serverKey');
+        $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
@@ -497,18 +513,19 @@ class Soap4 extends Soap
         $this->logBandwidth($this->display->displayId, Bandwidth::$NOTIFYSTATUS, strlen($status));
 
         $status = json_decode($status, true);
+        $sanitizedStatus = $this->getSanitizer($status);
 
-        $this->display->storageAvailableSpace = $this->getSanitizer()->getInt('availableSpace', $this->display->storageAvailableSpace, $status);
-        $this->display->storageTotalSpace = $this->getSanitizer()->getInt('totalSpace', $this->display->storageTotalSpace, $status);
-        $this->display->lastCommandSuccess = $this->getSanitizer()->getCheckbox('lastCommandSuccess', $this->display->lastCommandSuccess, $status);
-        $this->display->deviceName = $this->getSanitizer()->getString('deviceName', $this->display->deviceName, $status);
+        $this->display->storageAvailableSpace = $sanitizedStatus->getInt('availableSpace', ['default' => $this->display->storageAvailableSpace]);
+        $this->display->storageTotalSpace = $sanitizedStatus->getInt('totalSpace', ['default' => $this->display->storageTotalSpace]);
+        $this->display->lastCommandSuccess = $sanitizedStatus->getCheckbox('lastCommandSuccess');
+        $this->display->deviceName = $sanitizedStatus->getString('deviceName', ['default' => $this->display->deviceName]);
 
         if ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1 && $this->display->hasPropertyChanged('deviceName')) {
             $this->display->display = $this->display->deviceName;
         }
 
         // Timezone
-        $timeZone = $this->getSanitizer()->getString('timeZone', $status);
+        $timeZone = $sanitizedStatus->getString('timeZone');
 
         if (!empty($timeZone)) {
             // Validate the provided data and log/ignore if not well formatted
@@ -520,14 +537,14 @@ class Soap4 extends Soap
         }
 
         // Current Layout
-        $currentLayoutId = $this->getSanitizer()->getInt('currentLayoutId', $status);
+        $currentLayoutId = $sanitizedStatus->getInt('currentLayoutId');
 
         if ($currentLayoutId !== null) {
             $this->display->setCurrentLayoutId($this->getPool(), $currentLayoutId);
         }
 
         // Status Dialog
-        $statusDialog = $this->getSanitizer()->getString('statusDialog', null, $status);
+        $statusDialog = $sanitizedStatus->getString('statusDialog', ['default' => null]);
 
         if ($statusDialog !== null) {
             $this->getLog()->alert($statusDialog);

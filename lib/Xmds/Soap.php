@@ -24,6 +24,11 @@ namespace Xibo\Xmds;
 define('BLACKLIST_ALL', "All");
 define('BLACKLIST_SINGLE', "Single");
 
+use Nyholm\Psr7\Factory\Psr17Factory;
+use Nyholm\Psr7\ServerRequest;
+use Slim\Http\Factory\DecoratedResponseFactory;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Jenssegers\Date\Date;
 use Monolog\Logger;
 use Slim\Log;
@@ -280,6 +285,7 @@ class Soap
      * @param $hardwareKey
      * @param bool $httpDownloads
      * @return string
+     * @throws NotFoundException
      * @throws \SoapFault
      */
     protected function doRequiredFiles($serverKey, $hardwareKey, $httpDownloads)
@@ -383,18 +389,19 @@ class Soap
                 ORDER BY layoutId
             ';
 
-            $params = array(
+            $params = [
                 'displayId' => $this->display->displayId
-            );
+            ];
 
-            if ($this->display->isAuditing())
+            if ($this->display->isAuditing()) {
                 $this->getLog()->sql($SQL, $params);
+            }
 
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);
 
             // Our layout list will always include the default layout
-            $layouts = array();
+            $layouts = [];
             $layouts[] = $this->display->defaultLayoutId;
 
             // Build up the other layouts into an array
@@ -526,7 +533,7 @@ class Soap
             $mediaSth = $dbh->prepare('UPDATE media SET `MD5` = :md5, FileSize = :size WHERE MediaID = :mediaid');
 
             // Keep a list of path names added to RF to prevent duplicates
-            $pathsAdded = array();
+            $pathsAdded = [];
 
             foreach ($sth->fetchAll() as $row) {
                 $parsedRow = $this->getSanitizer($row);
@@ -548,7 +555,7 @@ class Soap
                     $fileSize = filesize($libraryLocation . $path);
 
                     // Update the media record with this information
-                    $mediaSth->execute(array('md5' => $md5, 'size' => $fileSize, 'mediaid' => $id));
+                    $mediaSth->execute(['md5' => $md5, 'size' => $fileSize, 'mediaid' => $id]);
                 }
 
                 // Add nonce
@@ -595,8 +602,9 @@ class Soap
 
             try {
                 // Check we haven't added this before
-                if (in_array($layoutId, $pathsAdded))
+                if (in_array($layoutId, $pathsAdded)) {
                     continue;
+                }
 
                 // Load this layout
                 $layout = $this->layoutFactory->loadById($layoutId);
@@ -1275,7 +1283,7 @@ class Soap
 
         // Current log level
         //$logLevel = $this->logProcessor->getLevel();
-        $logLevel = 'audit';
+        $logLevel = 'error';
         $discardedLogs = 0;
 
         // Get the display timezone to use when adjusting log dates.
@@ -1649,10 +1657,13 @@ class Soap
     protected function doMediaInventory($serverKey, $hardwareKey, $inventory)
     {
       //  $this->logProcessor->setRoute('MediaInventory');
-
+        $sanitizer = $this->getSanitizer([
+            'serverKey' => $serverKey,
+            'hardwareKey' => $hardwareKey
+        ]);
         // Sanitize
-        $serverKey = $this->getSanitizer()->string($serverKey);
-        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $serverKey = $sanitizer->getString('serverKey');
+        $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
@@ -1758,14 +1769,27 @@ class Soap
      */
     protected function doGetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId)
     {
+        // Attempt to create request, response
+        $nyholmFactory = new Psr17Factory();
+        $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
+        $response = $decoratedResponseFactory->createResponse(200);
+        $request = new Request(new ServerRequest('GET', PROJECT_ROOT . '/xmds'));
+
        // $this->logProcessor->setRoute('GetResource');
+        $sanitizer = $this->getSanitizer([
+            'serverKey' => $serverKey,
+            'hardwareKey' => $hardwareKey,
+            'layoutId' => $layoutId,
+            'regionId' => $regionId,
+            'mediaId' => $mediaId
+        ]);
 
         // Sanitize
-        $serverKey = $this->getSanitizer()->string($serverKey);
-        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
-        $layoutId = $this->getSanitizer()->int($layoutId);
-        $regionId = $this->getSanitizer()->string($regionId);
-        $mediaId = $this->getSanitizer()->string($mediaId);
+        $serverKey = $sanitizer->getString('serverKey');
+        $hardwareKey = $sanitizer->getString('hardwareKey');
+        $layoutId = $sanitizer->getInt('layoutId');
+        $regionId =$sanitizer->getString('regionId');
+        $mediaId = $sanitizer->getString('mediaId');
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
@@ -1787,7 +1811,7 @@ class Soap
             $requiredFile = $this->requiredFileFactory->getByDisplayAndWidget($this->display->displayId, $mediaId);
 
             $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($mediaId), $this->regionFactory->getById($regionId));
-            $resource = $module->getResourceOrCache($this->display->displayId);
+            $resource = $module->getResourceOrCache($request->withAttribute('displayId', $this->display->displayId), $response);
 
             $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
             $requiredFile->save();
@@ -1835,7 +1859,7 @@ class Soap
                     $PHONE_HOME_URL = $this->getConfig()->getSetting('PHONE_HOME_URL') . "?id=" . urlencode($this->getConfig()->getSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
 
                     if ($this->display->isAuditing())
-                        $this->getLog()->notice("audit", "PHONE_HOME_URL " . $PHONE_HOME_URL, "xmds", "RequiredFiles");
+                        $this->getLog()->notice(sprintf("audit", "PHONE_HOME_URL " . $PHONE_HOME_URL, "xmds", "RequiredFiles"));
 
                     // Set PHONE_HOME_TIME to NOW.
                     $sth = $dbh->prepare('UPDATE `setting` SET `value` = :time WHERE `setting`.`setting` = :setting LIMIT 1');
@@ -1847,7 +1871,7 @@ class Soap
                     @file_get_contents($PHONE_HOME_URL);
 
                     if ($this->display->isAuditing())
-                        $this->getLog()->notice("audit", "PHONE_HOME [OUT]", "xmds", "RequiredFiles");
+                        $this->getLog()->notice(sprintf("audit", "PHONE_HOME [OUT]", "xmds", "RequiredFiles"));
 
                 } catch (\Exception $e) {
 
@@ -2021,7 +2045,7 @@ class Soap
                 $subject = __('Bandwidth allowance exceeded');
                 $date = $this->dateService->parse();
 
-                if (count($this->notificationFactory->getBySubjectAndDate($subject, $this->dateService->getLocalDate($date->startOfDay(), 'U'), $this->dateService->getLocalDate($date->addDay(1)->startOfDay(), 'U'))) <= 0) {
+                if (count($this->notificationFactory->getBySubjectAndDate($subject, $this->dateService->getLocalDate($date->startOfDay(), 'U'), $this->dateService->getLocalDate($date->addDay()->startOfDay(), 'U'))) <= 0) {
 
                     $body = __(sprintf('Bandwidth allowance of %s exceeded. Used %s', ByteFormatter::format($xmdsLimit * 1024), ByteFormatter::format($bandwidthUsage)));
 
@@ -2044,7 +2068,7 @@ class Soap
                 $subject = __(sprintf('Display ID %d exceeded the bandwidth limit ', $this->display->displayId));
                 $date = $this->dateService->parse();
 
-                if (count($this->notificationFactory->getBySubjectAndDate($subject, $this->dateService->getLocalDate($date->startOfDay(), 'U'), $this->dateService->getLocalDate($date->addDay(1)->startOfDay(), 'U'))) <= 0) {
+                if (count($this->notificationFactory->getBySubjectAndDate($subject, $this->dateService->getLocalDate($date->startOfDay(), 'U'), $this->dateService->getLocalDate($date->addDay()->startOfDay(), 'U'))) <= 0) {
 
                     $body = __(sprintf('Display bandwidth limit %s exceeded. Used %s for Display Id %d', ByteFormatter::format($displayBandwidthLimit * 1024), ByteFormatter::format($bandwidthUsage), $this->display->displayId));
 
