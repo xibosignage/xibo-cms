@@ -32,7 +32,7 @@ class TransTokenParser extends \Twig\TokenParser\AbstractTokenParser
     /**
      * Parses a token and returns a node.
      *
-     * @param \Twig\Token $token A Twig_Token instance
+     * @param Token $token A Twig_Token instance
      *
      * @return TransNode A Twig_Node instance
      * @throws \Twig\Error\SyntaxError
@@ -72,12 +72,12 @@ class TransTokenParser extends \Twig\TokenParser\AbstractTokenParser
     }
 
     public function
-    decideForFork(\Twig\Token $token)
+    decideForFork(Token $token)
     {
         return $token->test(array('plural', 'notes', 'endtrans'));
     }
 
-    public function decideForEnd(\Twig\Token $token)
+    public function decideForEnd(Token $token)
     {
         return $token->test('endtrans');
     }

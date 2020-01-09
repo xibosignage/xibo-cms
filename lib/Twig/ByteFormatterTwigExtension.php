@@ -21,7 +21,7 @@ class ByteFormatterTwigExtension extends AbstractExtension
     public function getFilters()
     {
         return array(
-            new \Twig_SimpleFilter('byteFormat', array($this, 'byteFormat'))
+            new \Twig\TwigFilter('byteFormat', array($this, 'byteFormat'))
         );
     }
 

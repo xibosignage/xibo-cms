@@ -58,22 +58,30 @@ class TransNode extends Node
     public function compile(Compiler $compiler)
     {
         $compiler->addDebugInfo($this);
+
         list($msg, $vars) = $this->compileString($this->getNode('body'));
+
         if ($this->hasNode('plural')) {
             list($msg1, $vars1) = $this->compileString($this->getNode('plural'));
             $vars = array_merge($vars, $vars1);
         }
+
         $function = $this->getTransFunction($this->hasNode('plural'));
+
         if ($this->hasNode('notes')) {
             $message = trim($this->getNode('notes')->getAttribute('data'));
             // line breaks are not allowed cause we want a single line comment
             $message = str_replace(["\n", "\r"], ' ', $message);
             $compiler->write("// notes: {$message}\n");
         }
+
         if ($vars) {
+            // Add a hint for xgettext so that poedit goes not treat the variable substitution as PHP format
+            // https://github.com/xibosignage/xibo/issues/1284
             $compiler
-                ->write('echo strtr('.$function.'(')
-                ->subcompile($msg)
+                ->write('/* xgettext:no-php-format */')
+                ->write('echo strtr(' . $function . '(')
+                ->subcompile($msg);
             ;
             if ($this->hasNode('plural')) {
                 $compiler
@@ -84,7 +92,9 @@ class TransNode extends Node
                     ->raw(')')
                 ;
             }
+
             $compiler->raw('), array(');
+
             foreach ($vars as $var) {
                 if ('count' === $var->getAttribute('name')) {
                     $compiler
@@ -117,6 +127,7 @@ class TransNode extends Node
                     ->raw(')')
                 ;
             }
+
             $compiler->raw(");\n");
         }
     }
@@ -157,6 +168,6 @@ class TransNode extends Node
 
     private function getTransFunction(bool $plural): string
     {
-        return $plural ? 'ngettext' : 'gettext';
+        return $plural ? 'n__' : '__';
     }
 }
