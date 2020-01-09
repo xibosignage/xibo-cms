@@ -19,11 +19,13 @@ use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class DataSet
@@ -198,7 +200,7 @@ class DataSet implements \JsonSerializable
     /** @var array Blacklist for SQL */
     private $blackList = array(';', 'INSERT', 'UPDATE', 'SELECT', 'DELETE', 'TRUNCATE', 'TABLE', 'FROM', 'WHERE');
 
-    /** @var  SanitizerServiceInterface */
+    /** @var  SanitizerService */
     private $sanitizer;
 
     /** @var  ConfigServiceInterface */
@@ -226,7 +228,7 @@ class DataSet implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizer
+     * @param SanitizerInterface $sanitizer
      * @param ConfigServiceInterface $config
      * @param PoolInterface $pool
      * @param DataSetFactory $dataSetFactory
@@ -371,11 +373,11 @@ class DataSet implements \JsonSerializable
      */
     public function getData($filterBy = [], $options = [])
     {
-        $start = $this->sanitizer->getInt('start', 0, $filterBy);
-        $size = $this->sanitizer->getInt('size', 0, $filterBy);
-        $filter = $this->sanitizer->getParam('filter', $filterBy);
-        $ordering = $this->sanitizer->getString('order', $filterBy);
-        $displayId = $this->sanitizer->getInt('displayId', 0, $filterBy);
+        $start = $this->sanitizer->getInt('start', ['default' => 0]);
+        $size = $this->sanitizer->getInt('size', ['default' => 0]);
+        $filter = $this->sanitizer->getString('filter');
+        $ordering = $this->sanitizer->getString('order');
+        $displayId = $this->sanitizer->getInt('displayId', ['default' => 0]);
 
         $options = array_merge([
             'includeFormulaColumns' => true,
