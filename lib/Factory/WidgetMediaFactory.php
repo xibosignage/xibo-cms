@@ -70,7 +70,7 @@ class WidgetMediaFactory extends BaseFactory
     {
         $sanitizedFilter = $this->getSanitizer($filterBy);
 
-        if ($sanitizedFilter->getInt('moduleOnly', $filterBy) === 1) {
+        if ($sanitizedFilter->getInt('moduleOnly') === 1) {
             $sql = '
                 SELECT lkwidgetmedia.mediaId 
                   FROM `lkwidgetmedia` 

@@ -762,7 +762,7 @@ class MediaFactory extends BaseFactory
             $params['duration'] = $duration['variable'];
         }
 
-        $user = $this->getUser();
+        $user = $this->getUser($request);
 
         if ( ($user->userTypeId == 1 && $user->showContentFrom == 2) || $user->userTypeId == 4 ) {
             $body .= ' AND user.userTypeId = 4 ';

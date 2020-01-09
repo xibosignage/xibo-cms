@@ -101,10 +101,11 @@ class DataSetFactory extends BaseFactory
      */
     public function createEmpty()
     {
+        $array = [];
         return new DataSet(
             $this->getStore(),
             $this->getLog(),
-            $this->getSanitizer(),
+            $this->getSanitizer($array),
             $this->config,
             $this->pool,
             $this,
@@ -169,7 +170,7 @@ class DataSetFactory extends BaseFactory
      * @param array $filterBy
      * @return array[DataSet]
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query($sortOrder = null, $filterBy = [], $request = null)
     {
         $entries = [];
         $params = [];
@@ -225,7 +226,7 @@ class DataSetFactory extends BaseFactory
         ';
 
         // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy, $request);
 
         if ($parsedFilter->getInt('dataSetId') !== null) {
             $body .= ' AND dataset.dataSetId = :dataSetId ';

@@ -103,6 +103,7 @@ class BaseFactory
 
     /**
      * Get Sanitizer
+     * @param $array
      * @return \Xibo\Support\Sanitizer\SanitizerInterface
      */
     protected function getSanitizer($array)

@@ -65,11 +65,13 @@ class DataSetColumnTypeFactory extends BaseFactory
     {
         $entries = [];
         $params = [];
+        $sanitizedFilter = $this->getSanitizer($filterBy);
+        
         $sql = 'SELECT dataSetColumnTypeId, dataSetColumnType FROM `datasetcolumntype` WHERE 1 = 1 ';
 
-        if ($this->getSanitizer()->getInt('dataSetColumnTypeId') !== null) {
+        if ($sanitizedFilter->getInt('dataSetColumnTypeId') !== null) {
             $sql .= ' AND `datasetcolumntype`.dataSetColumnTypeId = :dataSetColumnTypeId ';
-            $params['dataSetColumnTypeId'] = $this->getSanitizer()->getInt('dataSetColumnTypeId');
+            $params['dataSetColumnTypeId'] = $sanitizedFilter->getInt('dataSetColumnTypeId');
         }
 
         foreach ($this->getStore()->select($sql, $params) as $row) {

@@ -64,13 +64,14 @@ class DataTypeFactory extends BaseFactory
     public function query($sortOrder = null, $filterBy = [])
     {
         $entries = [];
+        $sanitizedFilter = $this->getSanitizer($filterBy);
 
         $params = [];
         $sql = 'SELECT dataTypeId, dataType FROM `datatype` WHERE 1 = 1 ';
 
-        if ($this->getSanitizer()->getInt('dataTypeId') !== null) {
+        if ($sanitizedFilter->getInt('dataTypeId') !== null) {
             $sql .= ' AND `datatype`.dataTypeId = :dataTypeId ';
-            $params['dataTypeId'] = $this->getSanitizer()->getInt('dataTypeId');
+            $params['dataTypeId'] = $sanitizedFilter->getInt('dataTypeId');
         }
 
         foreach ($this->getStore()->select($sql, $params) as $row) {

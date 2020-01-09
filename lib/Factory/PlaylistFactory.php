@@ -22,7 +22,7 @@
 
 namespace Xibo\Factory;
 
-
+use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
@@ -306,7 +306,7 @@ class PlaylistFactory extends BaseFactory
 
         // Playlist Like
         if ($parsedFilter->getString('name') != '') {
-            $terms = explode(',', $parsedFilter->getString('name', $filterBy));
+            $terms = explode(',', $parsedFilter->getString('name'));
             $this->nameFilter('playlist', 'name', $terms, $body, $params);
         }
 
@@ -366,7 +366,7 @@ class PlaylistFactory extends BaseFactory
         }
 
         // Media Like
-        if ($parsedFilter->getString('mediaLike') !== null) {
+        if (!empty($parsedFilter->getString('mediaLike'))) {
             // TODO: sub-playlists
             $body .= ' AND `playlist`.playlistId IN (
                 SELECT DISTINCT `widget`.playlistId

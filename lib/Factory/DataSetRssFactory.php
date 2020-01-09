@@ -87,10 +87,12 @@ class DataSetRssFactory extends BaseFactory
      * @param $filterBy
      * @return DataSetRss[]
      */
-    public function query($sortOrder, $filterBy)
+    public function query($sortOrder, $filterBy, $request = null)
     {
-        $entries = array();
-        $params = array();
+        $entries = [];
+        $params = [];
+
+        $sanitizedFilter = $this->getSanitizer($filterBy);
 
         $select  = '
           SELECT `datasetrss`.id,
@@ -112,25 +114,25 @@ class DataSetRssFactory extends BaseFactory
         ';
 
         // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`datasetrss`.dataSetId', '`dataset`.userId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`datasetrss`.dataSetId', '`dataset`.userId', $filterBy, $request);
 
-        if ($this->getSanitizer()->getInt('id', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('id') !== null) {
             $body .= ' AND `datasetrss`.id = :id ';
-            $params['id'] = $this->getSanitizer()->getInt('id', $filterBy);
+            $params['id'] = $sanitizedFilter->getInt('id');
         }
 
-        if ($this->getSanitizer()->getInt('dataSetId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('dataSetId') !== null) {
             $body .= ' AND `datasetrss`.dataSetId = :dataSetId ';
-            $params['dataSetId'] = $this->getSanitizer()->getInt('dataSetId', $filterBy);
+            $params['dataSetId'] = $sanitizedFilter->getInt('dataSetId');
         }
 
-        if ($this->getSanitizer()->getString('psk', $filterBy) !== null) {
+        if ($sanitizedFilter->getString('psk') !== null) {
             $body .= ' AND `datasetrss`.psk = :psk ';
-            $params['psk'] = $this->getSanitizer()->getString('psk', $filterBy);
+            $params['psk'] = $sanitizedFilter->getString('psk');
         }
 
-        if ($this->getSanitizer()->getString('title', $filterBy) != null) {
-            $terms = explode(',', $this->getSanitizer()->getString('title', $filterBy));
+        if ($sanitizedFilter->getString('title', $filterBy) != null) {
+            $terms = explode(',', $sanitizedFilter->getString('title'));
             $this->nameFilter('datasetrss', 'title', $terms, $body, $params);
         }
 
@@ -141,8 +143,8 @@ class DataSetRssFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

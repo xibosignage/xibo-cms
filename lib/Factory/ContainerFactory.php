@@ -94,7 +94,7 @@ class ContainerFactory
                 return new \Xibo\Service\LogService($c->get('logger'));
             },
             'view' => function (ContainerInterface $c) {
-                $view =  new Twig(PROJECT_ROOT . '/views', ['cache' => PROJECT_ROOT . '/cache']);
+                $view =  Twig::create([PROJECT_ROOT . '/views', PROJECT_ROOT . '/modules'], ['cache' => PROJECT_ROOT . '/cache']);
                 $view->addExtension(new TransExtension());
                 $view->addExtension(new ByteFormatterTwigExtension());
                 $view->addExtension(new UrlDecodeTwigExtension());

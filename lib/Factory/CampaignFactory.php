@@ -119,7 +119,7 @@ class CampaignFactory extends BaseFactory
 
         if (count($campaigns) <= 0) {
             $this->getLog()->debug('Campaign not found with ID %d', $campaignId);
-            throw new NotFoundException(\__('Campaign not found'));
+            throw new NotFoundException(__('Campaign not found'));
         }
 
         // Set our layout
