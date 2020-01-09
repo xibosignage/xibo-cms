@@ -389,7 +389,8 @@ class State implements Middleware
                     $c->get('helpService'),
                     $c->get('dateService'),
                     $c->get('configService'),
-                    $c->get('auditLogFactory')
+                    $c->get('auditLogFactory'),
+                    $c->get('view')
                 );
             },
             '\Xibo\Controller\Campaign' => function(ContainerInterface $c) {
@@ -431,7 +432,8 @@ class State implements Middleware
                     $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('commandFactory'),
-                    $c->get('displayProfileFactory')
+                    $c->get('displayProfileFactory'),
+                    $c->get('view')
                 );
             },
             '\Xibo\Controller\DataSet' => function(ContainerInterface $c) {
@@ -444,7 +446,8 @@ class State implements Middleware
                     $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('dataSetFactory'),
-                    $c->get('dataSetColumnFactory')
+                    $c->get('dataSetColumnFactory'),
+                    $c->get('view')
                 );
             },
             '\Xibo\Controller\DataSetColumn' => function(ContainerInterface $c) {
@@ -460,7 +463,8 @@ class State implements Middleware
                     $c->get('dataSetColumnFactory'),
                     $c->get('dataSetColumnTypeFactory'),
                     $c->get('dataTypeFactory'),
-                    $c->get('pool')
+                    $c->get('pool'),
+                    $c->get('view')
                 );
             },
             '\Xibo\Controller\DataSetData' => function(ContainerInterface $c) {
@@ -473,7 +477,8 @@ class State implements Middleware
                     $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('dataSetFactory'),
-                    $c->get('mediaFactory')
+                    $c->get('mediaFactory'),
+                    $c->get('view')
                 );
             },
             '\Xibo\Controller\DataSetRss' => function(ContainerInterface $c) {
@@ -489,7 +494,8 @@ class State implements Middleware
                     $c->get('dataSetFactory'),
                     $c->get('dataSetColumnFactory'),
                     $c->get('pool'),
-                    $c->get('store')
+                    $c->get('store'),
+                    $c->get('view')
                 );
             },
             '\Xibo\Controller\DayPart' => function(ContainerInterface $c) {
@@ -506,7 +512,8 @@ class State implements Middleware
                     $c->get('displayFactory'),
                     $c->get('layoutFactory'),
                     $c->get('mediaFactory'),
-                    $c->get('scheduleFactory')
+                    $c->get('scheduleFactory'),
+                    $c->get('view')
                 );
             },
             '\Xibo\Controller\Display' => function(ContainerInterface $c) {
@@ -612,7 +619,8 @@ class State implements Middleware
                     $c->get('helpService'),
                     $c->get('dateService'),
                     $c->get('configService'),
-                    $c->get('helpFactory')
+                    $c->get('helpFactory'),
+                    $c->get('view')
                 );
             },
             '\Xibo\Controller\IconDashboard' => function(ContainerInterface $c) {
@@ -832,7 +840,8 @@ class State implements Middleware
                     $c->get('moduleFactory'),
                     $c->get('userGroupFactory'),
                     $c->get('userFactory'),
-                    $c->get('tagFactory')
+                    $c->get('tagFactory'),
+                    $c->get('view')
                 );
             },
             '\Xibo\Controller\Preview' => function(ContainerInterface $c) {
@@ -915,7 +924,8 @@ class State implements Middleware
                     $c->get('layoutFactory'),
                     $c->get('mediaFactory'),
                     $c->get('dayPartFactory'),
-                    $c->get('scheduleReminderFactory')
+                    $c->get('scheduleReminderFactory'),
+                    $c->get('view')
                 );
             },
             '\Xibo\Controller\Sessions' => function(ContainerInterface $c) {
