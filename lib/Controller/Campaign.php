@@ -529,7 +529,7 @@ class Campaign extends Base
 
         $layouts = [];
         foreach ($this->layoutFactory->getByCampaignId($id, false) as $layout) {
-            if (!$this->getUser()->checkViewable($layout)) {
+            if (!$this->getUser($request)->checkViewable($layout)) {
                 // Hide all layout details from the user
                 $emptyLayout = $this->layoutFactory->createEmpty();
                 $emptyLayout->layoutId = $layout->layoutId;
@@ -749,35 +749,39 @@ class Campaign extends Base
      *
      * @throws XiboException
      */
-    public function unassignLayout($campaignId)
+    public function unassignLayout(Request $request, Response $response, $id)
     {
-        $campaign = $this->campaignFactory->getById($campaignId);
+        $campaign = $this->campaignFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($campaign))
+        if (!$this->getUser($request)->checkEditable($campaign)) {
             throw new AccessDeniedException();
+        }
 
         // Make sure this is a non-layout specific campaign
-        if ($campaign->isLayoutSpecific == 1)
-            throw new InvalidArgumentException(__('You cannot change the assignment of a Layout Specific Campaign'),'campaignId');
+        if ($campaign->isLayoutSpecific == 1) {
+            throw new InvalidArgumentException(__('You cannot change the assignment of a Layout Specific Campaign'),
+                'campaignId');
+        }
 
         $campaign->setChildObjectDependencies($this->layoutFactory);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $layouts = $this->getSanitizer()->getIntArray('layoutId');
+        $layouts = $sanitizedParams->getIntArray('layoutId');
 
         if (count($layouts) <= 0)
             throw new \InvalidArgumentException(__('Layouts not provided'));
 
         // Check our permissions to see each one
-        $layouts = $this->getSanitizer()->getParam('layoutId', null);
+        $layouts = $request->getParam('layoutId', null);
         $layouts = is_array($layouts) ? $layouts : [];
         foreach ($layouts as $object) {
-            $layout = $this->layoutFactory->getById($this->getSanitizer()->getInt('layoutId', $object));
+            $layout = $this->layoutFactory->getById($sanitizedParams->getInt('layoutId', $object));
 
             if (!$this->getUser()->checkViewable($layout) && !$campaign->isLayoutAssigned($layout))
                 throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
 
             // Set the Display Order
-            $layout->displayOrder = $this->getSanitizer()->getInt('displayOrder', $object);
+            $layout->displayOrder = $sanitizedParams->getInt('displayOrder', $object);
 
             // Unassign it
             $campaign->unassignLayout($layout);
@@ -790,28 +794,31 @@ class Campaign extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Unassigned Layouts from %s'), $campaign->campaign)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Returns a Campaign's preview
      * @param int $campaignId
      */
-    public function preview($campaignId)
+    public function preview(Request $request, Response $response, $id)
     {
-        $campaign = $this->campaignFactory->getById($campaignId);
-        $layouts = $this->layoutFactory->getByCampaignId($campaignId);
+        $campaign = $this->campaignFactory->getById($id);
+        $layouts = $this->layoutFactory->getByCampaignId($id);
         $duration = 0 ;
         $extendedLayouts = [];
+
         foreach($layouts as $layout)
         {
             $duration += $layout->duration;
             $extendedLayouts[] = ['layout' => $layout,
                                   'duration' => $layout->duration,
                                   'previewOptions' => [
-                                      'getXlfUrl' => $this->urlFor('layout.getXlf', ['id' => $layout->layoutId]),
-                                      'getResourceUrl' => $this->urlFor('module.getResource'),
-                                      'libraryDownloadUrl' => $this->urlFor('library.download'),
-                                      'layoutBackgroundDownloadUrl' => $this->urlFor('layout.download.background'),
+                                      'getXlfUrl' => $this->urlFor($request,'layout.getXlf', ['id' => $layout->layoutId]),
+                                      'getResourceUrl' => $this->urlFor($request,'module.getResource'),
+                                      'libraryDownloadUrl' => $this->urlFor($request,'library.download'),
+                                      'layoutBackgroundDownloadUrl' => $this->urlFor($request,'layout.download.background'),
                                       'loaderUrl' => $this->getConfig()->uri('img/loader.gif')]
                                  ];
         }
@@ -823,5 +830,7 @@ class Campaign extends Base
             'duration' => $duration,
             'extendedLayouts' => $extendedLayouts
         ]);
+
+        return $this->render($request, $response);
     }
 }

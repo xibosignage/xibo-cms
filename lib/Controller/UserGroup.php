@@ -416,7 +416,7 @@ class UserGroup extends Base
         $group->group = $sanitizedParams->getString('group');
         $group->libraryQuota = $sanitizedParams->getInt('libraryQuota');
 
-        if ($this->getUser()->userTypeId == 1) {
+        if ($this->getUser($request)->userTypeId == 1) {
             $group->isSystemNotification = $sanitizedParams->getCheckbox('isSystemNotification');
             $group->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
         }

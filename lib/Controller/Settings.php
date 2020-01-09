@@ -625,5 +625,7 @@ class Settings extends Base
         $this->getState()->hydrate([
             'message' => __('Settings Updated')
         ]);
+
+        return $this->render($request, $response);
     }
 }

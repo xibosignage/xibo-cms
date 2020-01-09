@@ -20,6 +20,9 @@
  */
 namespace Xibo\Controller;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\DayPartFactory;
@@ -28,10 +31,10 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 
 /**
  * Class DayPart
@@ -60,7 +63,7 @@ class DayPart extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -72,10 +75,11 @@ class DayPart extends Base
      * @param LayoutFactory $layoutFactory
      * @param MediaFactory $mediaFactory
      * @param ScheduleFactory $scheduleFactory
+     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $dayPartFactory, $displayGroupFactory, $displayFactory, $layoutFactory, $mediaFactory, $scheduleFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $dayPartFactory, $displayGroupFactory, $displayFactory, $layoutFactory, $mediaFactory, $scheduleFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->dayPartFactory = $dayPartFactory;
         $this->displayGroupFactory = $displayGroupFactory;
@@ -87,10 +91,20 @@ class DayPart extends Base
 
     /**
      * View Route
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function displayPage()
+    public function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'daypart-page';
+        
+        return $this->render($request, $response);
     }
 
     /**
@@ -132,25 +146,35 @@ class DayPart extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function grid()
+    public function grid(Request $request, Response $response)
     {
+        $sanitizedParams = $this->getSanitizer($request->getQueryParams());
+        
         $filter = [
-            'dayPartId' => $this->getSanitizer()->getInt('dayPartId'),
-            'name' => $this->getSanitizer()->getString('name'),
-            'isAlways' => $this->getSanitizer()->getInt('isAlways'),
-            'isCustom' => $this->getSanitizer()->getInt('isCustom')
+            'dayPartId' => $sanitizedParams->getInt('dayPartId'),
+            'name' => $sanitizedParams->getString('name'),
+            'isAlways' => $sanitizedParams->getInt('isAlways'),
+            'isCustom' => $sanitizedParams->getInt('isCustom')
         ];
 
-        $dayParts = $this->dayPartFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
-        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+        $dayParts = $this->dayPartFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request), $request);
+        $embed = ($sanitizedParams->getString('embed') != null) ? explode(',', $sanitizedParams->getString('embed')) : [];
         
         foreach ($dayParts as $dayPart) {
             /* @var \Xibo\Entity\DayPart $dayPart */
             if (!in_array('exceptions', $embed)){
                 $dayPart->excludeProperty('exceptions');
             }
-            if ($this->isApi())
+            if ($this->isApi($request))
                 continue;
 
             $dayPart->includeProperty('buttons');
@@ -159,18 +183,18 @@ class DayPart extends Base
                 // CRUD
                 $dayPart->buttons[] = array(
                     'id' => 'daypart_button_edit',
-                    'url' => $this->urlFor('daypart.edit.form', ['id' => $dayPart->dayPartId]),
+                    'url' => $this->urlFor($request,'daypart.edit.form', ['id' => $dayPart->dayPartId]),
                     'text' => __('Edit')
                 );
 
-                if ($this->getUser()->checkDeleteable($dayPart)) {
+                if ($this->getUser($request)->checkDeleteable($dayPart)) {
                     $dayPart->buttons[] = array(
                         'id' => 'daypart_button_delete',
-                        'url' => $this->urlFor('daypart.delete.form', ['id' => $dayPart->dayPartId]),
+                        'url' => $this->urlFor($request,'daypart.delete.form', ['id' => $dayPart->dayPartId]),
                         'text' => __('Delete'),
                         'multi-select' => true,
                         'dataAttributes' => array(
-                            array('name' => 'commit-url', 'value' => $this->urlFor('daypart.delete', ['id' => $dayPart->dayPartId])),
+                            array('name' => 'commit-url', 'value' => $this->urlFor($request,'daypart.delete', ['id' => $dayPart->dayPartId])),
                             array('name' => 'commit-method', 'value' => 'delete'),
                             array('name' => 'id', 'value' => 'daypart_button_delete'),
                             array('name' => 'text', 'value' => __('Delete')),
@@ -180,7 +204,7 @@ class DayPart extends Base
                 }
             }
 
-            if ($this->getUser()->checkPermissionsModifyable($dayPart)) {
+            if ($this->getUser($request)->checkPermissionsModifyable($dayPart)) {
 
                 if (count($dayPart->buttons) > 0)
                     $dayPart->buttons[] = ['divider' => true];
@@ -188,7 +212,7 @@ class DayPart extends Base
                 // Edit Permissions
                 $dayPart->buttons[] = array(
                     'id' => 'daypart_button_permissions',
-                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'DayPart', 'id' => $dayPart->dayPartId]),
+                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DayPart', 'id' => $dayPart->dayPartId]),
                     'text' => __('Permissions')
                 );
             }
@@ -197,12 +221,22 @@ class DayPart extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->dayPartFactory->countLast();
         $this->getState()->setData($dayParts);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Add Daypart Form
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function addForm()
+    public function addForm(Request $request, Response $response)
     {
         $this->getState()->template = 'daypart-form-add';
         $this->getState()->setData([
@@ -210,21 +244,34 @@ class DayPart extends Base
                 'exceptions' => []
             ]
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edit Daypart
-     * @param int $dayPartId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function editForm($dayPartId)
+    public function editForm(Request $request, Response $response, $id)
     {
-        $dayPart = $this->dayPartFactory->getById($dayPartId);
+        $dayPart = $this->dayPartFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($dayPart))
+        if (!$this->getUser($request)->checkEditable($dayPart)) {
             throw new AccessDeniedException();
+        }
 
-        if ($dayPart->isAlways === 1 || $dayPart->isCustom === 1)
+        if ($dayPart->isAlways === 1 || $dayPart->isCustom === 1) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'daypart-form-edit';
         $this->getState()->setData([
@@ -233,30 +280,45 @@ class DayPart extends Base
                 'exceptions' => $dayPart->exceptions
             ]
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Delete Daypart
-     * @param int $dayPartId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function deleteForm($dayPartId)
+    public function deleteForm(Request $request, Response $response, $id)
     {
-        $dayPart = $this->dayPartFactory->getById($dayPartId);
+        $dayPart = $this->dayPartFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($dayPart))
+        if (!$this->getUser($request)->checkDeleteable($dayPart)) {
             throw new AccessDeniedException();
+        }
 
-        if ($dayPart->isAlways === 1 || $dayPart->isCustom === 1)
+        if ($dayPart->isAlways === 1 || $dayPart->isCustom === 1) {
             throw new AccessDeniedException();
+        }
 
         // Get a count of schedules for this day part
-        $schedules = $this->scheduleFactory->getByDayPartId($dayPartId);
+        $schedules = $this->scheduleFactory->getByDayPartId($id);
 
         $this->getState()->template = 'daypart-form-delete';
         $this->getState()->setData([
             'countSchedules' => count($schedules),
             'dayPart' => $dayPart
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -330,11 +392,19 @@ class DayPart extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function add()
+    public function add(Request $request, Response $response)
     {
         $dayPart = $this->dayPartFactory->createEmpty();
-        $this->handleCommonInputs($dayPart);
+        $this->handleCommonInputs($dayPart, $request);
 
         $dayPart
             ->setScheduleFactory($this->scheduleFactory)
@@ -347,6 +417,8 @@ class DayPart extends Base
             'id' => $dayPart->dayPartId,
             'data' => $dayPart
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -427,20 +499,22 @@ class DayPart extends Base
      *
      * @throws XiboException
      */
-    public function edit($dayPartId)
+    public function edit(Request $request, Response $response, $id)
     {
-        $dayPart = $this->dayPartFactory->getById($dayPartId)
+        $dayPart = $this->dayPartFactory->getById($id)
             ->setDateService($this->getDate())
             ->setChildObjectDependencies($this->displayGroupFactory, $this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->dayPartFactory)
             ->load();
 
-        if (!$this->getUser()->checkEditable($dayPart))
+        if (!$this->getUser($request)->checkEditable($dayPart)) {
             throw new AccessDeniedException();
+        }
 
-        if ($dayPart->isAlways === 1 || $dayPart->isCustom === 1)
+        if ($dayPart->isAlways === 1 || $dayPart->isCustom === 1) {
             throw new AccessDeniedException();
+        }
 
-        $this->handleCommonInputs($dayPart);
+        $this->handleCommonInputs($dayPart, $request);
         $dayPart
             ->setScheduleFactory($this->scheduleFactory)
             ->save();
@@ -452,25 +526,30 @@ class DayPart extends Base
             'id' => $dayPart->dayPartId,
             'data' => $dayPart
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Handle common inputs
      * @param $dayPart
+     * @param Request $request
      */
-    private function handleCommonInputs($dayPart)
+    private function handleCommonInputs($dayPart, Request $request)
     {
-        $dayPart->userId = $this->getUser()->userId;
-        $dayPart->name = $this->getSanitizer()->getString('name');
-        $dayPart->description = $this->getSanitizer()->getString('description');
-        $dayPart->isRetired = $this->getSanitizer()->getCheckbox('isRetired');
-        $dayPart->startTime = $this->getSanitizer()->getString('startTime');
-        $dayPart->endTime = $this->getSanitizer()->getString('endTime');
+        $dayPart->userId = $this->getUser($request)->userId;
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $dayPart->name = $sanitizedParams->getString('name');
+        $dayPart->description = $sanitizedParams->getString('description');
+        $dayPart->isRetired = $sanitizedParams->getCheckbox('isRetired');
+        $dayPart->startTime = $sanitizedParams->getString('startTime');
+        $dayPart->endTime = $sanitizedParams->getString('endTime');
 
         // Exceptions
-        $exceptionDays = $this->getSanitizer()->getStringArray('exceptionDays');
-        $exceptionStartTimes = $this->getSanitizer()->getStringArray('exceptionStartTimes');
-        $exceptionEndTimes = $this->getSanitizer()->getStringArray('exceptionEndTimes');
+        $exceptionDays = $sanitizedParams->getArray('exceptionDays');
+        $exceptionStartTimes = $sanitizedParams->getArray('exceptionStartTimes');
+        $exceptionEndTimes = $sanitizedParams->getArray('exceptionEndTimes');
 
         // Clear down existing exceptions
         $dayPart->exceptions = [];
@@ -512,8 +591,16 @@ class DayPart extends Base
 
     /**
      * Delete
-     * @param int $dayPartId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      * @SWG\Delete(
      *  path="/daypart/{dayPartId}",
      *  operationId="dayPartDelete",
@@ -533,14 +620,14 @@ class DayPart extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function delete($dayPartId)
+    public function delete(Request $request, Response $response, $id)
     {
-        $dayPart = $this->dayPartFactory->getById($dayPartId);
+        $dayPart = $this->dayPartFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($dayPart))
+        if (!$this->getUser($request)->checkDeleteable($dayPart)) {
             throw new AccessDeniedException();
+        }
 
         $dayPart
             ->setDateService($this->getDate())
@@ -552,5 +639,7 @@ class DayPart extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $dayPart->name)
         ]);
+
+        return $this->render($request, $response);
     }
 }

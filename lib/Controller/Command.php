@@ -8,15 +8,17 @@
 
 namespace Xibo\Controller;
 
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayProfileFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 
 /**
  * Class Command
@@ -38,7 +40,7 @@ class Command extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -47,17 +49,29 @@ class Command extends Base
      * @param CommandFactory $commandFactory
      * @param DisplayProfileFactory $displayProfileFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $commandFactory, $displayProfileFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $commandFactory, $displayProfileFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->commandFactory = $commandFactory;
         $this->displayProfileFactory = $displayProfileFactory;
     }
 
-    public function displayPage()
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
+    public function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'command-page';
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -97,40 +111,50 @@ class Command extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function grid()
+    function grid(Request $request, Response $response)
     {
+        $sanitzedParams = $this->getSanitizer($request->getParams());
+
         $filter = [
-            'commandId' => $this->getSanitizer()->getInt('commandId'),
-            'command' => $this->getSanitizer()->getString('command'),
-            'code' => $this->getSanitizer()->getString('code')
+            'commandId' => $sanitzedParams->getInt('commandId'),
+            'command' => $sanitzedParams->getString('command'),
+            'code' => $sanitzedParams->getString('code')
         ];
 
-        $commands = $this->commandFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $commands = $this->commandFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
 
         foreach ($commands as $command) {
             /* @var \Xibo\Entity\Command $command */
 
-            if ($this->isApi())
-                break;
+            if ($this->isApi($request))
+                continue;
 
             $command->includeProperty('buttons');
 
             // Default Layout
             $command->buttons[] = array(
                 'id' => 'command_button_edit',
-                'url' => $this->urlFor('command.edit.form', ['id' => $command->commandId]),
+                'url' => $this->urlFor($request,'command.edit.form', ['id' => $command->commandId]),
                 'text' => __('Edit')
             );
 
             if ($this->getUser()->checkDeleteable($command)) {
                 $command->buttons[] = array(
                     'id' => 'command_button_delete',
-                    'url' => $this->urlFor('command.delete.form', ['id' => $command->commandId]),
+                    'url' => $this->urlFor($request,'command.delete.form', ['id' => $command->commandId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor('command.delete', ['id' => $command->commandId])),
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'command.delete', ['id' => $command->commandId])),
                         array('name' => 'commit-method', 'value' => 'delete'),
                         array('name' => 'id', 'value' => 'command_button_delete'),
                         array('name' => 'text', 'value' => __('Delete')),
@@ -143,50 +167,82 @@ class Command extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->commandFactory->countLast();
         $this->getState()->setData($commands);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Add Command Form
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function addForm()
+    public function addForm(Request $request, Response $response)
     {
         $this->getState()->template = 'command-form-add';
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edit Command
-     * @param int $commandId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function editForm($commandId)
+    public function editForm(Request $request, Response $response, $id)
     {
-        $command = $this->commandFactory->getById($commandId);
+        $command = $this->commandFactory->getById($id);
 
-        if ($command->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
+        if ($command->getOwnerId() != $this->getUser($request)->userId && $this->getUser($request)->userTypeId != 1)
             throw new AccessDeniedException();
 
         $this->getState()->template = 'command-form-edit';
         $this->getState()->setData([
             'command' => $command
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Delete Command
-     * @param int $commandId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function deleteForm($commandId)
+    public function deleteForm(Request $request, Response $response, $id)
     {
-        $command = $this->commandFactory->getById($commandId);
+        $command = $this->commandFactory->getById($id);
 
-        if ($command->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
+        if ($command->getOwnerId() != $this->getUser($request)->userId && $this->getUser($request)->userTypeId != 1)
             throw new AccessDeniedException();
 
         $this->getState()->template = 'command-form-delete';
         $this->getState()->setData([
             'command' => $command
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -230,14 +286,25 @@ class Command extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\InvalidArgumentException
      */
-    public function add()
+    public function add(Request $request, Response $response)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
         $command = $this->commandFactory->create();
-        $command->command = $this->getSanitizer()->getString('command');
-        $command->description = $this->getSanitizer()->getString('description');
-        $command->code = $this->getSanitizer()->getString('code');
-        $command->userId = $this->getUser()->userId;
+        $command->command = $sanitizedParams->getString('command');
+        $command->description = $sanitizedParams->getString('description');
+        $command->code = $sanitizedParams->getString('code');
+        $command->userId = $this->getUser($request)->userId;
         $command->save();
 
         // Return
@@ -247,12 +314,23 @@ class Command extends Base
             'id' => $command->commandId,
             'data' => $command
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edit Command
-     * @param int $commandId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws \Xibo\Exception\NotFoundException
      * @SWG\Put(
      *  path="/command/{commandId}",
      *  operationId="commandEdit",
@@ -287,17 +365,17 @@ class Command extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function edit($commandId)
+    public function edit(Request $request, Response $response, $id)
     {
-        $command = $this->commandFactory->getById($commandId);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $command = $this->commandFactory->getById($id);
 
-        if ($command->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
+        if ($command->getOwnerId() != $this->getUser($request)->userId && $this->getUser($request)->userTypeId != 1)
             throw new AccessDeniedException();
 
-        $command->command = $this->getSanitizer()->getString('command');
-        $command->description = $this->getSanitizer()->getString('description');
+        $command->command = $sanitizedParams->getString('command');
+        $command->description = $sanitizedParams->getString('description');
         $command->save();
 
         // Return
@@ -307,12 +385,22 @@ class Command extends Base
             'id' => $command->commandId,
             'data' => $command
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Delete Command
-     * @param int $commandId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      * @SWG\Delete(
      *  path="/command/{commandId}",
      *  operationId="commandDelete",
@@ -332,11 +420,11 @@ class Command extends Base
      *  )
      * )
      */
-    public function delete($commandId)
+    public function delete(Request $request, Response $response, $id)
     {
-        $command = $this->commandFactory->getById($commandId);
+        $command = $this->commandFactory->getById($id);
 
-        if ($command->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
+        if ($command->getOwnerId() != $this->getUser($request)->userId && $this->getUser($request)->userTypeId != 1)
             throw new AccessDeniedException();
 
         $command->setChildObjectDependencies($this->displayProfileFactory);
@@ -347,5 +435,7 @@ class Command extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $command->command)
         ]);
+
+        return $this->render($request, $response);
     }
 }

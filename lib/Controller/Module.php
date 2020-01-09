@@ -1102,15 +1102,13 @@ class Module extends Base
      * @param $widgetId
      * @throws XiboException
      */
-    public function getResource(Request $request, Response $response)
+    public function getResource(Request $request, Response $response, $regionId, $id)
     {
-        $widgetId = $request->getAttribute('widgetId');
-        $regionId = $request->getAttribute('regionId');
-        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId), $this->regionFactory->getById($regionId));
+        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id), $this->regionFactory->getById($regionId));
 
-        if (!$this->getUser($request)->checkViewable($module->widget))
+        if (!$this->getUser($request)->checkViewable($module->widget)) {
             throw new AccessDeniedException();
-
+        }
         // Call module GetResource
         $module->setUser($this->getUser($request));
 

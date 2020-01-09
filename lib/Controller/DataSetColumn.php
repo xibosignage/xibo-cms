@@ -8,17 +8,19 @@
 
 namespace Xibo\Controller;
 
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetColumnTypeFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DataTypeFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Stash\Interfaces\PoolInterface;
 
 /**
@@ -45,7 +47,7 @@ class DataSetColumn extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -56,10 +58,11 @@ class DataSetColumn extends Base
      * @param DataSetColumnTypeFactory $dataSetColumnTypeFactory
      * @param DataTypeFactory $dataTypeFactory
      * @param PoolInterface $pool
+     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $dataSetFactory, $dataSetColumnFactory, $dataSetColumnTypeFactory, $dataTypeFactory, $pool)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $dataSetFactory, $dataSetColumnFactory, $dataSetColumnTypeFactory, $dataTypeFactory, $pool, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->dataSetFactory = $dataSetFactory;
         $this->dataSetColumnFactory = $dataSetColumnFactory;
@@ -67,27 +70,48 @@ class DataSetColumn extends Base
         $this->dataTypeFactory = $dataTypeFactory;
         $this->pool = $pool;
     }
+
     /**
      * Column Page
-     * @param $dataSetId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function displayPage($dataSetId)
+    public function displayPage(Request $request, Response $response, $id)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser($request)->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'dataset-column-page';
         $this->getState()->setData([
             'dataSet' => $dataSet
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Column Search
-     * @param $dataSetId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      * @SWG\Get(
      *  path="/dataset/{dataSetId}/column",
      *  operationId="dataSetColumnSearch",
@@ -118,16 +142,17 @@ class DataSetColumn extends Base
      *  )
      * )
      */
-    public function grid($dataSetId)
+    public function grid(Request $request, Response $response, $id)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser($request)->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
 
-        $dataSetColumns = $this->dataSetColumnFactory->query($this->gridRenderSort(), [
-            'dataSetId' => $dataSetId,
-            'dataSetColumnId' => $this->getSanitizer()->getInt('dataSetColumnId')
+        $dataSetColumns = $this->dataSetColumnFactory->query($this->gridRenderSort($request), [
+            'dataSetId' => $id,
+            'dataSetColumnId' => $this->getSanitizer($request->getParams())->getInt('dataSetColumnId')
         ]);
 
         foreach ($dataSetColumns as $column) {
@@ -136,7 +161,7 @@ class DataSetColumn extends Base
             $column->dataType = __($column->dataType);
             $column->dataSetColumnType = __($column->dataSetColumnType);
 
-            if ($this->isApi())
+            if ($this->isApi($request))
                 break;
 
             $column->includeProperty('buttons');
@@ -144,7 +169,7 @@ class DataSetColumn extends Base
             // Edit
             $column->buttons[] = array(
                 'id' => 'dataset_button_edit',
-                'url' => $this->urlFor('dataSet.column.edit.form', ['id' => $dataSetId, 'colId' => $column->dataSetColumnId]),
+                'url' => $this->urlFor($request,'dataSet.column.edit.form', ['id' => $id, 'colId' => $column->dataSetColumnId]),
                 'text' => __('Edit')
             );
 
@@ -152,7 +177,7 @@ class DataSetColumn extends Base
                 // Delete
                 $column->buttons[] = array(
                     'id' => 'dataset_button_delete',
-                    'url' => $this->urlFor('dataSet.column.delete.form', ['id' => $dataSetId, 'colId' => $column->dataSetColumnId]),
+                    'url' => $this->urlFor($request,'dataSet.column.delete.form', ['id' => $id, 'colId' => $column->dataSetColumnId]),
                     'text' => __('Delete')
                 );
             }
@@ -160,18 +185,30 @@ class DataSetColumn extends Base
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($dataSetColumns);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Add form
-     * @param int $dataSetId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function addForm($dataSetId)
+    public function addForm(Request $request, Response $response, $id)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser($request)->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'dataset-column-form-add';
         $this->getState()->setData([
@@ -180,12 +217,23 @@ class DataSetColumn extends Base
             'dataSetColumnTypes' => $this->dataSetColumnTypeFactory->query(),
             'help' => $this->getHelp()->link('DataSet', 'AddColumn')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Add
-     * @param $dataSetId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws \Xibo\Exception\NotFoundException
      * @SWG\Post(
      *  path="/dataset/{dataSetId}/column",
      *  operationId="dataSetColumnAdd",
@@ -274,26 +322,27 @@ class DataSetColumn extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function add($dataSetId)
+    public function add(Request $request, Response $response, $id)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser($request)->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
 
         // Create a Column
         $column = $this->dataSetColumnFactory->createEmpty();
-        $column->heading = $this->getSanitizer()->getString('heading');
-        $column->listContent = $this->getSanitizer()->getString('listContent');
-        $column->columnOrder = $this->getSanitizer()->getInt('columnOrder');
-        $column->dataTypeId = $this->getSanitizer()->getInt('dataTypeId');
-        $column->dataSetColumnTypeId = $this->getSanitizer()->getInt('dataSetColumnTypeId');
-        $column->formula = $this->getSanitizer()->getParam('formula', null);
-        $column->remoteField = $this->getSanitizer()->getParam('remoteField', null);
-        $column->showFilter = $this->getSanitizer()->getCheckbox('showFilter');
-        $column->showSort = $this->getSanitizer()->getCheckbox('showSort');
+        $column->heading = $sanitizedParams->getString('heading');
+        $column->listContent = $sanitizedParams->getString('listContent');
+        $column->columnOrder = $sanitizedParams->getInt('columnOrder');
+        $column->dataTypeId = $sanitizedParams->getInt('dataTypeId');
+        $column->dataSetColumnTypeId = $sanitizedParams->getInt('dataSetColumnTypeId');
+        $column->formula = $request->getParam('formula', null);
+        $column->remoteField = $request->getParam('remoteField', null);
+        $column->showFilter =$sanitizedParams->getCheckbox('showFilter');
+        $column->showSort = $sanitizedParams->getCheckbox('showSort');
 
         if ($column->dataSetColumnTypeId == 3){
             $this->pool->deleteItem('/dataset/cache/' . $dataSet->dataSetId);
@@ -316,35 +365,58 @@ class DataSetColumn extends Base
             'id' => $column->dataSetColumnId,
             'data' => $column
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edit Form
-     * @param $dataSetId
-     * @param $dataSetColumnId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @param $colId
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function editForm($dataSetId, $dataSetColumnId)
+    public function editForm(Request $request, Response $response, $id, $colId)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser($request)->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'dataset-column-form-edit';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'dataSetColumn' => $this->dataSetColumnFactory->getById($dataSetColumnId),
+            'dataSetColumn' => $this->dataSetColumnFactory->getById($colId),
             'dataTypes' => $this->dataTypeFactory->query(),
             'dataSetColumnTypes' => $this->dataSetColumnTypeFactory->query(),
             'help' => $this->getHelp()->link('DataSet', 'EditColumn')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edit
-     * @param $dataSetId
-     * @param $dataSetColumnId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @param $colId
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws \Xibo\Exception\NotFoundException
      * @SWG\Put(
      *  path="/dataset/{dataSetId}/column/{dataSetColumnId}",
      *  operationId="dataSetColumnEdit",
@@ -440,26 +512,26 @@ class DataSetColumn extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function edit($dataSetId, $dataSetColumnId)
+    public function edit(Request $request, Response $response, $id, $colId)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser($request)->checkEditable($dataSet))
             throw new AccessDeniedException();
 
         // Column
-        $column = $this->dataSetColumnFactory->getById($dataSetColumnId);
-        $column->heading = $this->getSanitizer()->getString('heading');
-        $column->listContent = $this->getSanitizer()->getString('listContent');
-        $column->columnOrder = $this->getSanitizer()->getInt('columnOrder');
-        $column->dataTypeId = $this->getSanitizer()->getInt('dataTypeId');
-        $column->dataSetColumnTypeId = $this->getSanitizer()->getInt('dataSetColumnTypeId');
-        $column->formula = $this->getSanitizer()->getParam('formula', null);
-        $column->remoteField = $this->getSanitizer()->getParam('remoteField', null);
-        $column->showFilter = $this->getSanitizer()->getCheckbox('showFilter');
-        $column->showSort = $this->getSanitizer()->getCheckbox('showSort');
+        $column = $this->dataSetColumnFactory->getById($colId);
+        $column->heading = $sanitizedParams->getString('heading');
+        $column->listContent = $sanitizedParams->getString('listContent');
+        $column->columnOrder = $sanitizedParams->getInt('columnOrder');
+        $column->dataTypeId = $sanitizedParams->getInt('dataTypeId');
+        $column->dataSetColumnTypeId = $sanitizedParams->getInt('dataSetColumnTypeId');
+        $column->formula = $request->getParam('formula', null);
+        $column->remoteField = $request->getParam('remoteField', null);
+        $column->showFilter = $sanitizedParams->getCheckbox('showFilter');
+        $column->showSort = $sanitizedParams->getCheckbox('showSort');
         $column->save();
 
         if ($column->dataSetColumnTypeId == 3 && $column->hasPropertyChanged('remoteField')){
@@ -475,33 +547,55 @@ class DataSetColumn extends Base
             'id' => $column->dataSetColumnId,
             'data' => $column
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Delete Form
-     * @param $dataSetId
-     * @param $dataSetColumnId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @param $colId
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function deleteForm($dataSetId, $dataSetColumnId)
+    public function deleteForm(Request $request, Response $response, $id, $colId)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($dataSet))
+        if (!$this->getUser($request)->checkDeleteable($dataSet)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'dataset-column-form-delete';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'dataSetColumn' => $this->dataSetColumnFactory->getById($dataSetColumnId),
+            'dataSetColumn' => $this->dataSetColumnFactory->getById($colId),
             'help' => $this->getHelp()->link('DataSet', 'DeleteColumn')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Delete
-     * @param $dataSetId
-     * @param $dataSetColumnId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @param $colId
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      * @SWG\Delete(
      *  path="/dataset/{dataSetId}/column/{dataSetColumnId}",
      *  operationId="dataSetColumnDelete",
@@ -528,15 +622,16 @@ class DataSetColumn extends Base
      *  )
      * )
      */
-    public function delete($dataSetId, $dataSetColumnId)
+    public function delete(Request $request, Response $response, $id, $colId)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($dataSet))
+        if (!$this->getUser($request)->checkDeleteable($dataSet)) {
             throw new AccessDeniedException();
+        }
 
         // Get the column
-        $column = $this->dataSetColumnFactory->getById($dataSetColumnId);
+        $column = $this->dataSetColumnFactory->getById($colId);
         $column->delete();
 
         // Return
@@ -544,5 +639,7 @@ class DataSetColumn extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $column->heading)
         ]);
+
+        return $this->render($request, $response);
     }
 }

@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -20,8 +21,12 @@
  */
 namespace Xibo\Controller;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\HelpFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -41,7 +46,7 @@ class Help extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -49,9 +54,9 @@ class Help extends Base
      * @param ConfigServiceInterface $config
      * @param HelpFactory $helpFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $helpFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $helpFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->helpFactory = $helpFactory;
     }
@@ -59,32 +64,34 @@ class Help extends Base
     /**
      * Help Page
      */
-    function displayPage()
+    function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'help-page';
+
+        return $this->render($request, $response);
     }
 
-    public function grid()
+    public function grid(Request $request, Response $response)
     {
-        $helpLinks = $this->helpFactory->query($this->gridRenderSort(), $this->gridRenderFilter());
+        $helpLinks = $this->helpFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([], $request));
 
         foreach ($helpLinks as $row) {
             /* @var \Xibo\Entity\Help $row */
 
             // we only want to show certain buttons, depending on the user logged in
-            if ($this->getUser()->userTypeId == 1) {
+            if ($this->getUser($request)->userTypeId == 1) {
 
                 // Edit
                 $row->buttons[] = array(
                     'id' => 'help_button_edit',
-                    'url' => $this->urlFor('help.edit.form', ['id' => $row->helpId]),
+                    'url' => $this->urlFor($request,'help.edit.form', ['id' => $row->helpId]),
                     'text' => __('Edit')
                 );
 
                 // Delete
                 $row->buttons[] = array(
                     'id' => 'help_button_delete',
-                    'url' => $this->urlFor('help.delete.form', ['id' => $row->helpId]),
+                    'url' => $this->urlFor($request,'help.delete.form', ['id' => $row->helpId]),
                     'text' => __('Delete')
                 );
 
@@ -100,65 +107,76 @@ class Help extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->helpFactory->countLast();
         $this->getState()->setData($helpLinks);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Add Form
      */
-    public function addForm()
+    public function addForm(Request $request, Response $response)
     {
-        if ($this->getUser()->userTypeId != 1)
+        if ($this->getUser($request)->userTypeId != 1)
             throw new AccessDeniedException();
 
         $this->getState()->template = 'help-form-add';
+
+        return $this->render($request, $response);
     }
 
     /**
      * Help Edit form
      * @param int $helpId
      */
-    public function editForm($helpId)
+    public function editForm(Request $request, Response $response, $id)
     {
-        if ($this->getUser()->userTypeId != 1)
+        if ($this->getUser($request)->userTypeId != 1)
             throw new AccessDeniedException();
 
-        $help = $this->helpFactory->getById($helpId);
+        $help = $this->helpFactory->getById($id);
 
         $this->getState()->template = 'help-form-edit';
         $this->getState()->setData([
             'help' => $help
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Delete Help Link Form
      * @param int $helpId
      */
-    public function deleteForm($helpId)
+    public function deleteForm(Request $request, Response $response, $id)
     {
-        if ($this->getUser()->userTypeId != 1)
+        if ($this->getUser($request)->userTypeId != 1) {
             throw new AccessDeniedException();
+        }
 
-        $help = $this->helpFactory->getById($helpId);
+        $help = $this->helpFactory->getById($id);
 
         $this->getState()->template = 'help-form-delete';
         $this->getState()->setData([
             'help' => $help
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Adds a help link
      */
-    public function add()
+    public function add(Request $request, Response $response)
     {
-        if ($this->getUser()->userTypeId != 1)
+        if ($this->getUser($request)->userTypeId != 1) {
             throw new AccessDeniedException();
+        }
 
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         $help = $this->helpFactory->createEmpty();
-        $help->topic = $this->getSanitizer()->getString('topic');
-        $help->category = $this->getSanitizer()->getString('category');
-        $help->link = $this->getSanitizer()->getString('link');
+        $help->topic = $sanitizedParams->getString('topic');
+        $help->category = $sanitizedParams->getString('category');
+        $help->link = $sanitizedParams->getString('link');
 
         $help->save();
 
@@ -168,21 +186,26 @@ class Help extends Base
             'id' => $help->helpId,
             'data' => $help
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edits a help link
      * @param int $helpId
      */
-    public function edit($helpId)
+    public function edit(Request $request, Response $response, $id)
     {
-        if ($this->getUser()->userTypeId != 1)
+        if ($this->getUser($request)->userTypeId != 1) {
             throw new AccessDeniedException();
+        }
 
-        $help = $this->helpFactory->getById($helpId);
-        $help->topic = $this->getSanitizer()->getString('topic');
-        $help->category = $this->getSanitizer()->getString('category');
-        $help->link = $this->getSanitizer()->getString('link');
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $help = $this->helpFactory->getById($id);
+        $help->topic = $sanitizedParams->getString('topic');
+        $help->category = $sanitizedParams->getString('category');
+        $help->link = $sanitizedParams->getString('link');
 
         $help->save();
 
@@ -192,6 +215,8 @@ class Help extends Base
             'id' => $help->helpId,
             'data' => $help
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -199,17 +224,20 @@ class Help extends Base
      * @param int $helpId
      * @throws \Xibo\Exception\NotFoundException
      */
-    public function delete($helpId)
+    public function delete(Request $request, Response $response, $id)
     {
-        if ($this->getUser()->userTypeId != 1)
+        if ($this->getUser($request)->userTypeId != 1) {
             throw new AccessDeniedException();
+        }
 
-        $help = $this->helpFactory->getById($helpId);
+        $help = $this->helpFactory->getById($id);
         $help->delete();
 
         // Return
         $this->getState()->hydrate([
             'message' => sprintf(__('Deleted %s'), $help->topic)
         ]);
+
+        return $this->render($request, $response);
     }
 }

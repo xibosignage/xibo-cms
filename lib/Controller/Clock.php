@@ -21,11 +21,11 @@
 namespace Xibo\Controller;
 
 
+use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 
@@ -43,7 +43,7 @@ class Clock extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -77,7 +77,14 @@ class Clock extends Base
      *  )
      * )
      *
-     * @throws \Exception
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function clock(Request $request, Response $response)
     {

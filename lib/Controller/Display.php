@@ -197,7 +197,15 @@ class Display extends Base
 
     /**
      * Include display page template page based on sub page selected
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
      * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     function displayPage(Request $request, Response $response)
     {
@@ -217,15 +225,24 @@ class Display extends Base
 
     /**
      * Display Management Page for an Individual Display
-     * @param int $displayId
-     * @throws \Xibo\Exception\NotFoundException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function displayManage($displayId)
+    function displayManage(Request $request, Response $response, $id)
     {
-        $display = $this->displayFactory->getById($displayId);
+        $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser()->checkViewable($display))
+        if (!$this->getUser($request)->checkViewable($display)) {
             throw new AccessDeniedException();
+        }
 
         // Zero out some variables
         $layouts = [];
@@ -248,9 +265,9 @@ class Display extends Base
           ORDER BY layout
         ';
 
-        foreach ($this->store->select($sql, ['displayId' => $displayId, 'type' => 'L']) as $row) {
+        foreach ($this->store->select($sql, ['displayId' => $id, 'type' => 'L']) as $row) {
             /** @var RequiredFile $rf */
-            $rf = $this->requiredFileFactory->getByDisplayAndLayout($displayId, $row['layoutId']);
+            $rf = $this->requiredFileFactory->getByDisplayAndLayout($id, $row['layoutId']);
 
             $totalCount++;
 
@@ -274,9 +291,9 @@ class Display extends Base
           ORDER BY `name`
         ';
 
-        foreach ($this->store->select($sql, ['displayId' => $displayId, 'type' => 'M']) as $row) {
+        foreach ($this->store->select($sql, ['displayId' => $id, 'type' => 'M']) as $row) {
             /** @var RequiredFile $rf */
-            $rf = $this->requiredFileFactory->getByDisplayAndMedia($displayId, $row['mediaId']);
+            $rf = $this->requiredFileFactory->getByDisplayAndMedia($id, $row['mediaId']);
 
             $totalSize = $totalSize + $row['fileSize'];
             $totalCount++;
@@ -311,9 +328,9 @@ class Display extends Base
           ORDER BY IFNULL(`widgetoption`.value, `widget`.type)
         ';
 
-        foreach ($this->store->select($sql, ['displayId' => $displayId, 'type' => 'W']) as $row) {
+        foreach ($this->store->select($sql, ['displayId' => $id, 'type' => 'W']) as $row) {
             /** @var RequiredFile $rf */
-            $rf = $this->requiredFileFactory->getByDisplayAndWidget($displayId, $row['widgetId']);
+            $rf = $this->requiredFileFactory->getByDisplayAndWidget($id, $row['widgetId']);
 
             $totalCount++;
 
@@ -336,7 +353,7 @@ class Display extends Base
             $base = 0;
 
         $units = (isset($suffixes[$base]) ? $suffixes[$base] : '');
-        $this->getLog()->debug('Base for size is %d and suffix is %s', $base, $units);
+        $this->getLog()->debug(sprintf('Base for size is %d and suffix is %s', $base, $units));
 
 
         // Call to render the template
@@ -369,6 +386,8 @@ class Display extends Base
                 'toDate' => $this->getDate()->getLocalDate()
             ]
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -648,7 +667,7 @@ class Display extends Base
                 );
             }
 
-            if ($this->getUser($request)->checkEditable($display) || $this->getUser()->checkDeleteable($display)) {
+            if ($this->getUser($request)->checkEditable($display) || $this->getUser($request)->checkDeleteable($display)) {
                 $display->buttons[] = ['divider' => true];
             }
 
@@ -1119,7 +1138,7 @@ class Display extends Base
         $display = $this->displayFactory->getById($id, true);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($display))
+        if (!$this->getUser($request)->checkEditable($display))
             throw new AccessDeniedException();
 
         // Update properties
@@ -1150,7 +1169,7 @@ class Display extends Base
 
         // Get the display profile and use that to pull in any overrides
         // start with an empty config
-        $display->overrideConfig = $this->editConfigFields($display->getDisplayProfile(), []);
+        $display->overrideConfig = $this->editConfigFields($display->getDisplayProfile(), [], $request);
 
         // Tags are stored on the displaygroup, we're just passing through here
         $display->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));

@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
- * This file (Base.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,7 +20,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Controller;
 use Slim\App;
 use Slim\Http\Response as Response;
@@ -33,9 +33,7 @@ use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
-use Xibo\Service\FactoryServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 
 /**
  * Class Base
@@ -107,37 +105,6 @@ class Base
 
     /** @var Twig */
     private $view;
-
-    /**
-     * Called by Slim when the Controller is instantiated from a route definition
-     * @param \Slim\App $app
-     * @param bool $setController
-     * @return $this
-
-    public function setApp($app, $setController = true)
-    {
-        $this->app = $app;
-
-        // Reference back to this from the app
-        // but only the first time
-        if ($app->controller == null && $setController)
-            $app->controller = $this;
-
-        return $this;
-    }
-     */
-    /**
-     * Get the App
-     * @return \Slim\App
-     * @throws ConfigurationException
-     */
-    public function getApp()
-    {
-        if ($this->app == null)
-            throw new ConfigurationException(__('Controller called before Slim has been setup'));
-
-        return $this->app;
-    }
 
     /**
      * Set common dependencies.
@@ -303,7 +270,7 @@ class Base
 
         // TODO not sure what to do with it yet  $this->rendered:o
         if ($this->noOutput) {
-            return $response->withStatus(200);
+            return $response;
         }
 
        // $app = $this->getApp();
@@ -368,7 +335,7 @@ class Base
         else {
             // WEB Normal
             if (empty($state->template)) {
-                $this->getLog()->debug('Template Missing. State: %s', json_encode($state));
+                $this->getLog()->debug(sprintf('Template Missing. State: %s', json_encode($state)));
                 throw new ControllerNotImplemented(__('Template Missing'));
             }
 
@@ -391,8 +358,6 @@ class Base
      */
     protected function gridRenderFilter($extraFilter = [], Request $request)
     {
-        $app = $this->getApp();
-
         $parsedFilter = $this->getSanitizer($request->getParams());
         // Handle filtering
         $filter = [
@@ -421,9 +386,6 @@ class Base
      */
     protected function gridRenderSort(Request $request)
     {
-        $app = $this->getApp();
-
-        $columns = $app->request()->get('columns');
         $columns = $request->getParam('columns');
 
         if ($columns == null || !is_array($columns))
@@ -449,17 +411,18 @@ class Base
     {
         $data = $this->getState()->getData();
         $state = $this->getState();
+
         // Supply the current user to the view
-        $data['currentUser'] = $this->getUser();
+        $data['currentUser'] = $this->getUser($request);
 
         // Render the view manually with Twig, parse it and pull out various bits
         $view = $this->view->render($response,$state->template . '.twig', $data);
         $view = $view->getBody();
         // Log Rendered View
-         $this->getLog()->debug('%s View: %s', $state->template, $view);
+         $this->getLog()->debug(sprintf('%s View: %s', $state->template, $view));
 
         if (!$view = json_decode($view, true)) {
-            $this->getLog()->error('Problem with Template: View = %s ', $state->template);
+            $this->getLog()->error(sprintf('Problem with Template: View = %s ', $state->template));
             throw new ControllerNotImplemented(__('Problem with Form Template'));
         }
 
@@ -486,7 +449,7 @@ class Base
                 $button = explode(',', trim($button));
 
                 if (count($button) != 2) {
-                    $this->getLog()->error('There is a problem with the buttons in the template: %s. Buttons: %s.', $state->template, var_export($view['buttons'], true));
+                    $this->getLog()->error(sprintf('There is a problem with the buttons in the template: %s. Buttons: %s.', $state->template, var_export($view['buttons'], true)));
                     throw new ControllerNotImplemented(__('Problem with Form Template'));
                 }
 

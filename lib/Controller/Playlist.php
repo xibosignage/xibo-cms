@@ -1,16 +1,31 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (Playlist.php)
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
 namespace Xibo\Controller;
 
-
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
@@ -27,10 +42,10 @@ use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 
 /**
  * Class Playlist
@@ -87,7 +102,7 @@ class Playlist extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -105,9 +120,9 @@ class Playlist extends Base
      * @param TagFactory $tagFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playlistFactory, $regionFactory, $mediaFactory, $permissionFactory,
-        $transitionFactory, $widgetFactory, $moduleFactory, $userGroupFactory, $userFactory, $tagFactory)
+        $transitionFactory, $widgetFactory, $moduleFactory, $userGroupFactory, $userFactory, $tagFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->playlistFactory = $playlistFactory;
         $this->regionFactory = $regionFactory;
@@ -124,7 +139,7 @@ class Playlist extends Base
     /**
      * Display Page
      */
-    public function displayPage()
+    public function displayPage(Request $request, Response $response)
     {
         $moduleFactory = $this->moduleFactory;
 
@@ -139,6 +154,8 @@ class Playlist extends Base
                     return $module;
                 }, $moduleFactory->getAssignableModules())
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -210,24 +227,25 @@ class Playlist extends Base
      * )
      * 
      */
-    public function grid()
+    public function grid(Request $request, Response $response)
     {
         $this->getState()->template = 'grid';
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Embed?
-        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+        $embed = ($sanitizedParams->getString('embed') != null) ? explode(',', $sanitizedParams->getString('embed')) : [];
 
         // Playlists
-        $playlists = $this->playlistFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
-            'name' => $this->getSanitizer()->getString('name'),
-            'userId' => $this->getSanitizer()->getInt('userId'),
-            'tags' => $this->getSanitizer()->getString('tags'),
-            'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
-            'playlistId' => $this->getSanitizer()->getInt('playlistId'),
-            'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
-            'mediaLike' => $this->getSanitizer()->getString('mediaLike'),
+        $playlists = $this->playlistFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+            'name' => $sanitizedParams->getString('name'),
+            'userId' => $sanitizedParams->getInt('userId'),
+            'tags' => $sanitizedParams->getString('tags'),
+            'exactTags' => $sanitizedParams->getCheckbox('exactTags'),
+            'playlistId' => $sanitizedParams->getInt('playlistId'),
+            'ownerUserGroupId' => $sanitizedParams->getInt('ownerUserGroupId'),
+            'mediaLike' => $sanitizedParams->getString('mediaLike'),
             'regionSpecific' => 0
-        ]));
+        ], $request), $request);
 
         foreach ($playlists as $playlist) {
 
@@ -262,18 +280,18 @@ class Playlist extends Base
                     // Permissions?
                     if ($loadPermissions) {
                         // Augment with editable flag
-                        $widget->isEditable = $this->getUser()->checkEditable($widget);
+                        $widget->isEditable = $this->getUser($request)->checkEditable($widget);
 
                         // Augment with deletable flag
-                        $widget->isDeletable = $this->getUser()->checkDeleteable($widget);
+                        $widget->isDeletable = $this->getUser($request)->checkDeleteable($widget);
 
                         // Augment with permissions flag
-                        $widget->isPermissionsModifiable = $this->getUser()->checkPermissionsModifyable($widget);
+                        $widget->isPermissionsModifiable = $this->getUser($request)->checkPermissionsModifyable($widget);
                     }
                 }
             }
 
-            if ($this->isApi())
+            if ($this->isApi($request))
                 continue;
 
             $playlist->includeProperty('buttons');
@@ -294,86 +312,88 @@ class Playlist extends Base
             }
 
             // Only proceed if we have edit permissions
-            if ($this->getUser()->checkEditable($playlist)) {
+            if ($this->getUser($request)->checkEditable($playlist)) {
 
                 if ($playlist->isDynamic === 0) {
                     // Timeline edit
-                    $playlist->buttons[] = array(
+                    $playlist->buttons[] = [
                         'id' => 'playlist_timeline_button_edit',
                         'class' => 'XiboCustomFormButton',
-                        'url' => $this->urlFor('playlist.timeline.form', ['id' => $playlist->playlistId]),
+                        'url' => $this->urlFor($request, 'playlist.timeline.form', ['id' => $playlist->playlistId]),
                         'text' => __('Timeline')
-                    );
+                    ];
 
                     $playlist->buttons[] = ['divider' => true];
                 }
 
                 // Edit Button
-                $playlist->buttons[] = array(
+                $playlist->buttons[] = [
                     'id' => 'playlist_button_edit',
-                    'url' => $this->urlFor('playlist.edit.form', ['id' => $playlist->playlistId]),
+                    'url' => $this->urlFor($request, 'playlist.edit.form', ['id' => $playlist->playlistId]),
                     'text' => __('Edit')
-                );
+                ];
 
                 // Copy Button
-                $playlist->buttons[] = array(
+                $playlist->buttons[] = [
                     'id' => 'playlist_button_copy',
-                    'url' => $this->urlFor('playlist.copy.form', ['id' => $playlist->playlistId]),
+                    'url' => $this->urlFor($request, 'playlist.copy.form', ['id' => $playlist->playlistId]),
                     'text' => __('Copy')
-                );
+                ];
 
                 // Set Enable Stat
-                $playlist->buttons[] = array(
+                $playlist->buttons[] = [
                     'id' => 'playlist_button_setenablestat',
-                    'url' => $this->urlFor('playlist.setenablestat.form', ['id' => $playlist->playlistId]),
+                    'url' => $this->urlFor($request, 'playlist.setenablestat.form', ['id' => $playlist->playlistId]),
                     'text' => __('Enable stats collection?'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor('playlist.setenablestat', ['id' => $playlist->playlistId])),
-                        array('name' => 'commit-method', 'value' => 'put'),
-                        array('name' => 'id', 'value' => 'playlist_button_setenablestat'),
-                        array('name' => 'text', 'value' => __('Enable stats collection?')),
-                        array('name' => 'rowtitle', 'value' => $playlist->name),
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'playlist.setenablestat', ['id' => $playlist->playlistId])],
+                        ['name' => 'commit-method', 'value' => 'put'],
+                        ['name' => 'id', 'value' => 'playlist_button_setenablestat'],
+                        ['name' => 'text', 'value' => __('Enable stats collection?')],
+                        ['name' => 'rowtitle', 'value' => $playlist->name],
                         ['name' => 'form-callback', 'value' => 'setEnableStatMultiSelectFormOpen']
-                    )
-                );
+                    ]
+                ];
 
                 $playlist->buttons[] = ['divider' => true];
             }
 
             // Extra buttons if have delete permissions
-            if ($this->getUser()->checkDeleteable($playlist)) {
+            if ($this->getUser($request)->checkDeleteable($playlist)) {
                 // Delete Button
-                $playlist->buttons[] = array(
+                $playlist->buttons[] = [
                     'id' => 'playlist_button_delete',
-                    'url' => $this->urlFor('playlist.delete.form', ['id' => $playlist->playlistId]),
+                    'url' => $this->urlFor($request,'playlist.delete.form', ['id' => $playlist->playlistId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor('playlist.delete', ['id' => $playlist->playlistId])),
-                        array('name' => 'commit-method', 'value' => 'delete'),
-                        array('name' => 'id', 'value' => 'playlist_button_delete'),
-                        array('name' => 'text', 'value' => __('Delete')),
-                        array('name' => 'rowtitle', 'value' => $playlist->name)
-                    )
-                );
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'playlist.delete', ['id' => $playlist->playlistId])],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'playlist_button_delete'],
+                        ['name' => 'text', 'value' => __('Delete')],
+                        ['name' => 'rowtitle', 'value' => $playlist->name]
+                    ]
+                ];
 
                 $playlist->buttons[] = ['divider' => true];
             }
 
             // Extra buttons if we have modify permissions
-            if ($this->getUser()->checkPermissionsModifyable($playlist)) {
+            if ($this->getUser($request)->checkPermissionsModifyable($playlist)) {
                 // Permissions button
-                $playlist->buttons[] = array(
+                $playlist->buttons[] = [
                     'id' => 'playlist_button_permissions',
-                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'Playlist', 'id' => $playlist->playlistId]),
+                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Playlist', 'id' => $playlist->playlistId]),
                     'text' => __('Permissions')
-                );
+                ];
             }
         }
 
         $this->getState()->recordsTotal = $this->playlistFactory->countLast();
         $this->getState()->setData($playlists);
+
+        return $this->render($request, $response);
     }
 
     //<editor-fold desc="CRUD">
@@ -381,9 +401,11 @@ class Playlist extends Base
     /**
      * Add Form
      */
-    public function addForm()
+    public function addForm(Request $request, Response $response)
     {
         $this->getState()->template = 'playlist-form-add';
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -444,21 +466,23 @@ class Playlist extends Base
      *
      * @throws XiboException
      */
-    public function add()
+    public function add(Request $request, Response $response)
     {
-        if ($this->getSanitizer()->getString('name') == '') {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        if ($sanitizedParams->getString('name') == '') {
             throw new InvalidArgumentException(__('Please enter playlist name'), 'name');
         }
 
-        $playlist = $this->playlistFactory->create($this->getSanitizer()->getString('name'), $this->getUser()->getId());
-        $playlist->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');
-        $playlist->enableStat = $this->getSanitizer()->getString('enableStat');
+        $playlist = $this->playlistFactory->create($sanitizedParams->getString('name'), $this->getUser($request)->getId());
+        $playlist->isDynamic = $sanitizedParams->getCheckbox('isDynamic');
+        $playlist->enableStat = $sanitizedParams->getString('enableStat');
 
-        $playlist->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
+        $playlist->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
 
         // Do we have a tag or name filter?
-        $nameFilter = $this->getSanitizer()->getString('filterMediaName');
-        $tagFilter = $this->getSanitizer()->getString('filterMediaTag');
+        $nameFilter = $sanitizedParams->getString('filterMediaName');
+        $tagFilter = $sanitizedParams->getString('filterMediaTag');
 
         // Capture these as dynamic filter criteria
         if ($playlist->isDynamic === 1) {
@@ -469,7 +493,7 @@ class Playlist extends Base
         $playlist->save();
 
         // Default permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+        foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
             /* @var Permission $permission */
             $permission->save();
         }
@@ -489,7 +513,7 @@ class Playlist extends Base
                     $itemDuration = ($item->duration == 0) ? $module->determineDuration() : $item->duration;
 
                     // Create a widget
-                    $widget = $this->widgetFactory->create($this->getUser()->userId, $playlist->playlistId, $item->mediaType, $itemDuration);
+                    $widget = $this->widgetFactory->create($this->getUser($request)->userId, $playlist->playlistId, $item->mediaType, $itemDuration);
                     $widget->assignMedia($item->mediaId);
 
                     // Assign the widget to the module
@@ -522,7 +546,7 @@ class Playlist extends Base
                             $permission->save();
                         }
                     } else {
-                        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+                        foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                             /* @var Permission $permission */
                             $permission->save();
                         }
@@ -538,15 +562,17 @@ class Playlist extends Base
             'id' => $playlist->playlistId,
             'data' => $playlist
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * @param $playlistId
      * @throws \Xibo\Exception\NotFoundException
      */
-    public function editForm($playlistId)
+    public function editForm(Request $request, Response $response, $id)
     {
-        $playlist = $this->playlistFactory->getById($playlistId);
+        $playlist = $this->playlistFactory->getById($id);
         $tags = '';
 
         $arrayOfTags = array_filter(explode(',', $playlist->tags));
@@ -561,14 +587,17 @@ class Playlist extends Base
             }
         }
 
-        if (!$this->getUser()->checkEditable($playlist))
+        if (!$this->getUser($request)->checkEditable($playlist)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'playlist-form-edit';
         $this->getState()->setData([
             'playlist' => $playlist,
             'tags' => $tags
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -631,24 +660,26 @@ class Playlist extends Base
      * @param int $playlistId
      * @throws XiboException
      */
-    public function edit($playlistId)
+    public function edit(Request $request, Response $response, $id)
     {
-        $playlist = $this->playlistFactory->getById($playlistId);
+        $playlist = $this->playlistFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($playlist))
+        if (!$this->getUser($request)->checkEditable($playlist)) {
             throw new AccessDeniedException();
+        }
 
-        $playlist->name = $this->getSanitizer()->getString('name');
-        $playlist->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');
-        $playlist->enableStat = $this->getSanitizer()->getString('enableStat');
+        $playlist->name = $sanitizedParams->getString('name');
+        $playlist->isDynamic = $sanitizedParams->getCheckbox('isDynamic');
+        $playlist->enableStat = $sanitizedParams->getString('enableStat');
 
-        $playlist->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
+        $playlist->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
 
         // Do we have a tag or name filter?
         // Capture these as dynamic filter criteria
         if ($playlist->isDynamic === 1) {
-            $playlist->filterMediaName = $this->getSanitizer()->getString('filterMediaName');
-            $playlist->filterMediaTags = $this->getSanitizer()->getString('filterMediaTag');
+            $playlist->filterMediaName = $sanitizedParams->getString('filterMediaName');
+            $playlist->filterMediaTags = $sanitizedParams->getString('filterMediaTag');
         }
 
         $playlist->save();
@@ -660,23 +691,28 @@ class Playlist extends Base
             'id' => $playlist->playlistId,
             'data' => $playlist
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * @param $playlistId
      * @throws \Xibo\Exception\NotFoundException
      */
-    public function deleteForm($playlistId)
+    public function deleteForm(Request $request, Response $response, $id)
     {
-        $playlist = $this->playlistFactory->getById($playlistId);
+        $playlist = $this->playlistFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($playlist))
+        if (!$this->getUser($request)->checkDeleteable($playlist)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'playlist-form-delete';
         $this->getState()->setData([
             'playlist' => $playlist
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -684,12 +720,13 @@ class Playlist extends Base
      * @param $playlistId
      * @throws \Xibo\Exception\XiboException
      */
-    public function delete($playlistId)
+    public function delete(Request $request, Response $response, $id)
     {
-        $playlist = $this->playlistFactory->getById($playlistId);
+        $playlist = $this->playlistFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($playlist))
+        if (!$this->getUser($request)->checkDeleteable($playlist)) {
             throw new AccessDeniedException();
+        }
 
         // Issue the delete
         $playlist->delete();
@@ -699,6 +736,8 @@ class Playlist extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $playlist->name)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -706,19 +745,22 @@ class Playlist extends Base
      * @param int $playlistId
      * @throws NotFoundException
      */
-    public function copyForm($playlistId)
+    public function copyForm(Request $request, Response $response, $id)
     {
         // Get the playlist
-        $playlist = $this->playlistFactory->getById($playlistId);
+        $playlist = $this->playlistFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($playlist))
+        if (!$this->getUser($request)->checkViewable($playlist)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'playlist-form-copy';
         $this->getState()->setData([
             'playlist' => $playlist
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -765,28 +807,30 @@ class Playlist extends Base
      * )
      * @throws XiboException
      */
-    public function copy($playlistId)
+    public function copy(Request $request, Response $response, $id)
     {
         // Get the playlist
-        $playlist = $this->playlistFactory->getById($playlistId);
+        $playlist = $this->playlistFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($playlist))
+        if (!$this->getUser($request)->checkViewable($playlist)) {
             throw new AccessDeniedException();
+        }
 
         // Load the playlist for Copy
         $playlist->load();
         $playlist = clone $playlist;
 
-        $playlist->name = $this->getSanitizer()->getString('name');
+        $playlist->name = $sanitizedParams->getString('name');
 
         // Copy the media on the playlist and change the assignments.
-        if ($this->getSanitizer()->getCheckbox('copyMediaFiles') == 1) {
+        if ($sanitizedParams->getCheckbox('copyMediaFiles') == 1) {
             foreach ($playlist->widgets as $widget) {
                 // Copy the media
                 $oldMedia = $this->mediaFactory->getById($widget->getPrimaryMediaId());
                 $media = clone $oldMedia;
-                $media->setOwner($this->getUser()->userId);
+                $media->setOwner($this->getUser($request)->userId);
                 $media->save();
 
                 $widget->unassignMedia($oldMedia->mediaId);
@@ -806,14 +850,14 @@ class Playlist extends Base
         $playlist->save();
 
         // Permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+        foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
             /* @var Permission $permission */
             $permission->save();
         }
 
         foreach ($playlist->widgets as $widget) {
             /* @var Widget $widget */
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
@@ -826,6 +870,8 @@ class Playlist extends Base
             'id' => $playlist->playlistId,
             'data' => $playlist
         ]);
+
+        return $this->render($request, $response);
     }
     //</editor-fold>
 
@@ -834,13 +880,14 @@ class Playlist extends Base
      * @param int $playlistId
      * @throws XiboException
      */
-    public function timelineForm($playlistId)
+    public function timelineForm(Request $request, Response $response, $id)
     {
         // Get a complex object of playlists and widgets
-        $playlist = $this->playlistFactory->getById($playlistId);
+        $playlist = $this->playlistFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($playlist))
+        if (!$this->getUser($request)->checkEditable($playlist)) {
             throw new AccessDeniedException();
+        }
 
         // Pass to view
         $this->getState()->template = 'region-form-timeline';
@@ -848,6 +895,8 @@ class Playlist extends Base
             'playlist' => $playlist,
             'help' => $this->getHelp()->link('Layout', 'RegionOptions')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -886,14 +935,15 @@ class Playlist extends Base
      * This is not used by the WEB app - remains here for API usage only
      * TODO: deprecate
      */
-    public function widgetGrid()
+    public function widgetGrid(Request $request, Response $response)
     {
         $this->getState()->template = 'grid';
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $widgets = $this->widgetFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
-            'playlistId' => $this->getSanitizer()->getInt('playlistId'),
-            'widgetId' => $this->getSanitizer()->getInt('widgetId')
-        ]));
+        $widgets = $this->widgetFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+            'playlistId' => $sanitizedParams->getInt('playlistId'),
+            'widgetId' => $sanitizedParams->getInt('widgetId')
+        ], $request));
 
         foreach ($widgets as $widget) {
             /* @var Widget $widget */
@@ -907,7 +957,7 @@ class Playlist extends Base
             // Add property for transition
             $widget->transition = sprintf('%s / %s', $widget->module->getTransition('in'), $widget->module->getTransition('out'));
 
-            if ($this->isApi()) {
+            if ($this->isApi($request)) {
                 $widget->createdDt = $this->getDate()->getLocalDate($widget->createdDt);
                 $widget->modifiedDt = $this->getDate()->getLocalDate($widget->modifiedDt);
                 $widget->fromDt = $this->getDate()->getLocalDate($widget->fromDt);
@@ -918,6 +968,8 @@ class Playlist extends Base
         // Store the table rows
         $this->getState()->recordsTotal = $this->widgetFactory->countLast();
         $this->getState()->setData($widgets);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1027,7 +1079,7 @@ class Playlist extends Base
             /* @var int $mediaId */
             $item = $this->mediaFactory->getById($mediaId);
 
-            if (!$this->getUser()->checkViewable($item))
+            if (!$this->getUser($request)->checkViewable($item))
                 throw new AccessDeniedException(__('You do not have permissions to use this media'));
 
             if ($item->mediaType == 'genericfile' || $item->mediaType == 'font')
@@ -1085,7 +1137,7 @@ class Playlist extends Base
                     $permission->save();
                 }
             } else {
-                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+                foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                     /* @var Permission $permission */
                     $permission->save();
                 }
@@ -1156,25 +1208,28 @@ class Playlist extends Base
      *
      * @throws XiboException
      */
-    function order($playlistId)
+    function order(Request $request, Response $response, $id)
     {
-        $playlist = $this->playlistFactory->getById($playlistId);
+        $playlist = $this->playlistFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($playlist))
+        if (!$this->getUser($request)->checkEditable($playlist)) {
             throw new AccessDeniedException();
+        }
 
         // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
-        if (!$playlist->isEditable())
+        if (!$playlist->isEditable()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
 
         // Load the widgets
         $playlist->load();
 
         // Get our list of widget orders
-        $widgets = $this->getSanitizer()->getParam('widgets', null);
+        $widgets = $request->getParam('widgets', null);
 
-        if ($widgets == null)
+        if ($widgets == null) {
             throw new InvalidArgumentException(__('Cannot Save empty region playlist. Please add widgets'), 'widgets');
+        }
 
         // Go through each one and move it
         foreach ($widgets as $widgetId => $position) {
@@ -1197,6 +1252,8 @@ class Playlist extends Base
             'message' => __('Order Changed'),
             'data' => $playlist
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1232,16 +1289,17 @@ class Playlist extends Base
      * @throws XiboException
      */
 
-    function setEnableStat($playlistId)
+    function setEnableStat(Request $request, Response $response, $id)
     {
         // Get the Playlist
-        $playlist = $this->playlistFactory->getById($playlistId);
+        $playlist = $this->playlistFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($playlist))
+        if (!$this->getUser($request)->checkViewable($playlist)) {
             throw new AccessDeniedException();
+        }
 
-        $enableStat = $this->getSanitizer()->getString('enableStat');
+        $enableStat = $this->getSanitizer($request->getParams())->getString('enableStat');
 
         $playlist->enableStat = $enableStat;
         $playlist->save(['saveTags' => false]);
@@ -1251,6 +1309,8 @@ class Playlist extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('For Playlist %s Enable Stats Collection is set to %s'), $playlist->name, __($playlist->enableStat))
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1258,14 +1318,15 @@ class Playlist extends Base
      * @param int $playlistId
      * @throws XiboException
      */
-    public function setEnableStatForm($playlistId)
+    public function setEnableStatForm(Request $request, Response $response, $id)
     {
         // Get the Playlist
-        $playlist = $this->playlistFactory->getById($playlistId);
+        $playlist = $this->playlistFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($playlist))
+        if (!$this->getUser($request)->checkViewable($playlist)) {
             throw new AccessDeniedException();
+        }
 
         $data = [
             'playlist' => $playlist,
@@ -1274,5 +1335,7 @@ class Playlist extends Base
 
         $this->getState()->template = 'playlist-form-setenablestat';
         $this->getState()->setData($data);
+
+        return $this->render($request, $response);
     }
 }

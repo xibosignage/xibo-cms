@@ -35,7 +35,6 @@ use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 
 /**
  * Class DisplayProfile
@@ -80,6 +79,7 @@ class DisplayProfile extends Base
      * @param CommandFactory $commandFactory
      * @param PlayerVersionFactory $playerVersionFactory
      * @param DayPartFactory $dayPartFactory
+     * @param Twig $view
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $pool, $displayProfileFactory, $commandFactory, $playerVersionFactory, $dayPartFactory, Twig $view)
     {
@@ -94,6 +94,14 @@ class DisplayProfile extends Base
 
     /**
      * Include display page template page based on sub page selected
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     function displayPage(Request $request, Response $response)
     {
@@ -146,7 +154,15 @@ class DisplayProfile extends Base
      *      )
      *  )
      * )
-     * @throws \Xibo\Exception\NotFoundException
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     function grid(Request $request, Response $response)
     {
@@ -200,7 +216,7 @@ class DisplayProfile extends Base
                 'text' => __('Copy')
             );
 
-            if ($this->getUser()->checkDeleteable($profile)) {
+            if ($this->getUser($request)->checkDeleteable($profile)) {
                 $profile->buttons[] = array(
                     'id' => 'displayprofile_button_delete',
                     'url' => $this->urlFor($request,'displayProfile.delete.form', ['id' => $profile->displayProfileId]),
@@ -218,6 +234,14 @@ class DisplayProfile extends Base
 
     /**
      * Display Profile Add Form
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     function addForm(Request $request, Response $response)
     {
@@ -267,6 +291,15 @@ class DisplayProfile extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\InvalidArgumentException
      */
     public function add(Request $request, Response $response)
     {
@@ -295,8 +328,16 @@ class DisplayProfile extends Base
 
     /**
      * Edit Profile Form
-     * @param int $displayProfileId
-     * @throws \Xibo\Exception\XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function editForm(Request $request, Response $response, $id)
     {
@@ -355,9 +396,17 @@ class DisplayProfile extends Base
 
     /**
      * Edit
-     * @param $displayProfileId
-     * @throws \Xibo\Exception\XiboException
-     * 
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\InvalidArgumentException
      * @SWG\Put(
      *  path="/displayprofile/{displayProfileId}",
      *  operationId="displayProfileEdit",
@@ -445,8 +494,16 @@ class DisplayProfile extends Base
 
     /**
      * Delete Form
-     * @param int $displayProfileId
-     * @throws \Xibo\Exception\NotFoundException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     function deleteForm(Request $request, Response $response, $id)
     {
@@ -467,9 +524,17 @@ class DisplayProfile extends Base
 
     /**
      * Delete Display Profile
-     * @param int $displayProfileId
-     * @throws \Xibo\Exception\XiboException
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\InvalidArgumentException
      * @SWG\Delete(
      *  path="/displayprofile/{displayProfileId}",
      *  operationId="displayProfileDelete",
@@ -510,8 +575,16 @@ class DisplayProfile extends Base
     }
 
     /**
-     * @param $displayProfileId
-     * @throws \Xibo\Exception\NotFoundException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function copyForm(Request $request, Response $response, $id)
     {
@@ -531,9 +604,17 @@ class DisplayProfile extends Base
 
     /**
      * Copy Display Profile
-     * @param int $displayProfileId
-     * @throws \Xibo\Exception\XiboException
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\InvalidArgumentException
      * @SWG\Post(
      *  path="/displayprofile/{displayProfileId}/copy",
      *  operationId="displayProfileCopy",

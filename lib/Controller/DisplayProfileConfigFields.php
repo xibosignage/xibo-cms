@@ -23,7 +23,6 @@ namespace Xibo\Controller;
 
 use Xibo\Exception\InvalidArgumentException;
 use Slim\Http\ServerRequest as Request;
-use Slim\Http\Response as Response;
 /**
  * Trait DisplayProfileConfigFields
  * @package Xibo\Controller
@@ -48,374 +47,374 @@ trait DisplayProfileConfigFields
         switch ($displayProfile->getClientType()) {
 
             case 'android':
-                if (!empty($sanitizedParams->getString('emailAddress'))) {
+                if (!empty($request->getParam('emailAddress'))) {
                     $displayProfile->setSetting('emailAddress', $sanitizedParams->getString('emailAddress'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('settingsPassword')) {
-                    $displayProfile->setSetting('settingsPassword', $this->getSanitizer()->getString('settingsPassword'), $ownConfig, $config);
+                if (!empty($request->getParam('settingsPassword'))) {
+                    $displayProfile->setSetting('settingsPassword', $sanitizedParams->getString('settingsPassword'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('collectInterval')) {
-                    $displayProfile->setSetting('collectInterval', $this->getSanitizer()->getInt('collectInterval'), $ownConfig, $config);
+                if (!empty($sanitizedParams->getInt('collectInterval'))) {
+                    $displayProfile->setSetting('collectInterval', $sanitizedParams->getInt('collectInterval'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('downloadStartWindow')) {
-                    $displayProfile->setSetting('downloadStartWindow', $this->getSanitizer()->getString('downloadStartWindow'), $ownConfig, $config);
+                if (!empty($request->getParam('downloadStartWindow'))) {
+                    $displayProfile->setSetting('downloadStartWindow', $sanitizedParams->getString('downloadStartWindow'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('downloadEndWindow')) {
-                    $displayProfile->setSetting('downloadEndWindow', $this->getSanitizer()->getString('downloadEndWindow'), $ownConfig, $config);
+                if (!empty($request->getParam('downloadEndWindow'))) {
+                    $displayProfile->setSetting('downloadEndWindow', $sanitizedParams->getString('downloadEndWindow'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('xmrNetworkAddress')) {
-                    $displayProfile->setSetting('xmrNetworkAddress', $this->getSanitizer()->getString('xmrNetworkAddress'), $ownConfig, $config);
+                if (!empty($request->getParam('xmrNetworkAddress'))) {
+                    $displayProfile->setSetting('xmrNetworkAddress', $sanitizedParams->getString('xmrNetworkAddress'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('statsEnabled')) {
-                    $displayProfile->setSetting('statsEnabled', $this->getSanitizer()->getCheckbox('statsEnabled'), $ownConfig, $config);
+                if (!empty($request->getParam('statsEnabled'))) {
+                    $displayProfile->setSetting('statsEnabled', $sanitizedParams->getCheckbox('statsEnabled'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('aggregationLevel')) {
-                    $displayProfile->setSetting('aggregationLevel', $this->getSanitizer()->getString('aggregationLevel'), $ownConfig, $config);
+                if (!empty($request->getParam('aggregationLevel'))) {
+                    $displayProfile->setSetting('aggregationLevel', $sanitizedParams->getString('aggregationLevel'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('orientation')) {
-                    $displayProfile->setSetting('orientation', $this->getSanitizer()->getInt('orientation'), $ownConfig, $config);
+                if (!empty($request->getParam('orientation'))) {
+                    $displayProfile->setSetting('orientation', $sanitizedParams->getInt('orientation'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('screenDimensions')) {
-                    $displayProfile->setSetting('screenDimensions', $this->getSanitizer()->getString('screenDimensions'), $ownConfig, $config);
+                if (!empty($request->getParam('screenDimensions'))) {
+                    $displayProfile->setSetting('screenDimensions', $sanitizedParams->getString('screenDimensions'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('blacklistVideo')) {
-                    $displayProfile->setSetting('blacklistVideo', $this->getSanitizer()->getCheckbox('blacklistVideo'), $ownConfig, $config);
+                if (!empty($request->getParam('blacklistVideo'))) {
+                    $displayProfile->setSetting('blacklistVideo', $sanitizedParams->getCheckbox('blacklistVideo'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('storeHtmlOnInternal')) {
-                    $displayProfile->setSetting('storeHtmlOnInternal', $this->getSanitizer()->getCheckbox('storeHtmlOnInternal'), $ownConfig, $config);
+                if (!empty($request->getParam('storeHtmlOnInternal'))) {
+                    $displayProfile->setSetting('storeHtmlOnInternal', $sanitizedParams->getCheckbox('storeHtmlOnInternal'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('useSurfaceVideoView')) {
-                    $displayProfile->setSetting('useSurfaceVideoView', $this->getSanitizer()->getCheckbox('useSurfaceVideoView'), $ownConfig, $config);
+                if (!empty($request->getParam('useSurfaceVideoView'))) {
+                    $displayProfile->setSetting('useSurfaceVideoView', $sanitizedParams->getCheckbox('useSurfaceVideoView'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('logLevel')) {
-                    $displayProfile->setSetting('logLevel', $this->getSanitizer()->getString('logLevel'), $ownConfig, $config);
+                if (!empty($request->getParam('logLevel'))) {
+                    $displayProfile->setSetting('logLevel', $sanitizedParams->getString('logLevel'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('versionMediaId')) {
-                    $displayProfile->setSetting('versionMediaId', $this->getSanitizer()->getInt('versionMediaId'), $ownConfig, $config);
+                if (!empty($request->getParam('versionMediaId'))) {
+                    $displayProfile->setSetting('versionMediaId', $sanitizedParams->getInt('versionMediaId'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('startOnBoot')) {
-                    $displayProfile->setSetting('startOnBoot', $this->getSanitizer()->getCheckbox('startOnBoot'), $ownConfig, $config);
+                if (!empty($request->getParam('startOnBoot'))) {
+                    $displayProfile->setSetting('startOnBoot', $sanitizedParams->getCheckbox('startOnBoot'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('actionBarMode')) {
-                    $displayProfile->setSetting('actionBarMode', $this->getSanitizer()->getInt('actionBarMode'), $ownConfig, $config);
+                if (!empty($request->getParam('actionBarMode'))) {
+                    $displayProfile->setSetting('actionBarMode', $sanitizedParams->getInt('actionBarMode'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('actionBarDisplayDuration')) {
-                    $displayProfile->setSetting('actionBarDisplayDuration', $this->getSanitizer()->getInt('actionBarDisplayDuration'), $ownConfig, $config);
+                if (!empty($request->getParam('actionBarDisplayDuration'))) {
+                    $displayProfile->setSetting('actionBarDisplayDuration', $sanitizedParams->getInt('actionBarDisplayDuration'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('actionBarIntent')) {
-                    $displayProfile->setSetting('actionBarIntent', $this->getSanitizer()->getString('actionBarIntent'), $ownConfig, $config);
+                if (!empty($request->getParam('actionBarIntent'))) {
+                    $displayProfile->setSetting('actionBarIntent', $sanitizedParams->getString('actionBarIntent'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('autoRestart')) {
-                    $displayProfile->setSetting('autoRestart', $this->getSanitizer()->getCheckbox('autoRestart'), $ownConfig, $config);
+                if (!empty($request->getParam('autoRestart'))) {
+                    $displayProfile->setSetting('autoRestart', $sanitizedParams->getCheckbox('autoRestart'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('startOnBootDelay')) {
-                    $displayProfile->setSetting('startOnBootDelay', $this->getSanitizer()->getInt('startOnBootDelay'), $ownConfig, $config);
+                if (!empty($request->getParam('startOnBootDelay'))) {
+                    $displayProfile->setSetting('startOnBootDelay', $sanitizedParams->getInt('startOnBootDelay'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('sendCurrentLayoutAsStatusUpdate')) {
-                    $displayProfile->setSetting('sendCurrentLayoutAsStatusUpdate', $this->getSanitizer()->getCheckbox('sendCurrentLayoutAsStatusUpdate'), $ownConfig, $config);
+                if (!empty($request->getParam('sendCurrentLayoutAsStatusUpdate'))) {
+                    $displayProfile->setSetting('sendCurrentLayoutAsStatusUpdate', $sanitizedParams->getCheckbox('sendCurrentLayoutAsStatusUpdate'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('screenShotRequestInterval')) {
-                    $displayProfile->setSetting('screenShotRequestInterval', $this->getSanitizer()->getInt('screenShotRequestInterval'), $ownConfig, $config);
+                if (!empty($request->getParam('screenShotRequestInterval'))) {
+                    $displayProfile->setSetting('screenShotRequestInterval', $sanitizedParams->getInt('screenShotRequestInterval'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('expireModifiedLayouts')) {
-                    $displayProfile->setSetting('expireModifiedLayouts', $this->getSanitizer()->getCheckbox('expireModifiedLayouts'), $ownConfig, $config);
+                if (!empty($request->getParam('expireModifiedLayouts'))) {
+                    $displayProfile->setSetting('expireModifiedLayouts', $sanitizedParams->getCheckbox('expireModifiedLayouts'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('screenShotIntent')) {
-                    $displayProfile->setSetting('screenShotIntent', $this->getSanitizer()->getString('screenShotIntent'), $ownConfig, $config);
+                if (!empty($request->getParam('screenShotIntent'))) {
+                    $displayProfile->setSetting('screenShotIntent', $sanitizedParams->getString('screenShotIntent'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('screenShotSize')) {
-                    $displayProfile->setSetting('screenShotSize', $this->getSanitizer()->getInt('screenShotSize'), $ownConfig, $config);
+                if (!empty($request->getParam('screenShotSize'))) {
+                    $displayProfile->setSetting('screenShotSize', $sanitizedParams->getInt('screenShotSize'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('updateStartWindow')) {
-                    $displayProfile->setSetting('updateStartWindow', $this->getSanitizer()->getString('updateStartWindow'), $ownConfig, $config);
+                if (!empty($request->getParam('updateStartWindow'))) {
+                    $displayProfile->setSetting('updateStartWindow', $sanitizedParams->getString('updateStartWindow'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('updateEndWindow')) {
-                    $displayProfile->setSetting('updateEndWindow', $this->getSanitizer()->getString('updateEndWindow'), $ownConfig, $config);
+                if (!empty($request->getParam('updateEndWindow'))) {
+                    $displayProfile->setSetting('updateEndWindow', $sanitizedParams->getString('updateEndWindow'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('dayPartId')) {
-                    $displayProfile->setSetting('dayPartId', $this->getSanitizer()->getInt('dayPartId'), $ownConfig, $config);
+                if (!empty($request->getParam('dayPartId'))) {
+                    $displayProfile->setSetting('dayPartId', $sanitizedParams->getInt('dayPartId'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('webViewPluginState')) {
-                    $displayProfile->setSetting('webViewPluginState', $this->getSanitizer()->getString('webViewPluginState'), $ownConfig, $config);
+                if (!empty($request->getParam('webViewPluginState'))) {
+                    $displayProfile->setSetting('webViewPluginState', $sanitizedParams->getString('webViewPluginState'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('hardwareAccelerateWebViewMode')) {
-                    $displayProfile->setSetting('hardwareAccelerateWebViewMode', $this->getSanitizer()->getString('hardwareAccelerateWebViewMode'), $ownConfig, $config);
+                if (!empty($request->getParam('hardwareAccelerateWebViewMode'))) {
+                    $displayProfile->setSetting('hardwareAccelerateWebViewMode', $sanitizedParams->getString('hardwareAccelerateWebViewMode'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('timeSyncFromCms')) {
-                    $displayProfile->setSetting('timeSyncFromCms', $this->getSanitizer()->getCheckbox('timeSyncFromCms'), $ownConfig, $config);
+                if (!empty($request->getParam('timeSyncFromCms'))) {
+                    $displayProfile->setSetting('timeSyncFromCms', $sanitizedParams->getCheckbox('timeSyncFromCms'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('webCacheEnabled')) {
-                    $displayProfile->setSetting('webCacheEnabled', $this->getSanitizer()->getCheckbox('webCacheEnabled'), $ownConfig, $config);
+                if (!empty($request->getParam('webCacheEnabled'))) {
+                    $displayProfile->setSetting('webCacheEnabled', $sanitizedParams->getCheckbox('webCacheEnabled'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('serverPort')) {
-                    $displayProfile->setSetting('serverPort', $this->getSanitizer()->getInt('serverPort'), $ownConfig, $config);
+                if (!empty($request->getParam('serverPort'))) {
+                    $displayProfile->setSetting('serverPort', $sanitizedParams->getInt('serverPort'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('installWithLoadedLinkLibraries')) {
-                    $displayProfile->setSetting('installWithLoadedLinkLibraries', $this->getSanitizer()->getCheckbox('installWithLoadedLinkLibraries'), $ownConfig, $config);
+                if (!empty($request->getParam('installWithLoadedLinkLibraries'))) {
+                    $displayProfile->setSetting('installWithLoadedLinkLibraries', $sanitizedParams->getCheckbox('installWithLoadedLinkLibraries'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('forceHttps')) {
-                    $displayProfile->setSetting('forceHttps', $this->getSanitizer()->getCheckbox('forceHttps'), $ownConfig, $config);
+                if (!empty($request->getParam('forceHttps'))) {
+                    $displayProfile->setSetting('forceHttps', $sanitizedParams->getCheckbox('forceHttps'), $ownConfig, $config);
                 }
 
                 break;
 
             case 'windows':
-                if (!empty($sanitizedParams->getInt('collectInterval'))) {
+                if (!empty($request->getParam('collectInterval'))) {
                     $displayProfile->setSetting('collectInterval', $sanitizedParams->getInt('collectInterval'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getString('downloadStartWindow'))) {
+                if (!empty($request->getParam('downloadStartWindow'))) {
                     $displayProfile->setSetting('downloadStartWindow', $sanitizedParams->getString('downloadStartWindow'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getString('downloadEndWindow')))  {
+                if (!empty($request->getParam('downloadEndWindow')))  {
                     $displayProfile->setSetting('downloadEndWindow', $sanitizedParams->getString('downloadEndWindow'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getString('xmrNetworkAddress')))  {
+                if (!empty($request->getParam('xmrNetworkAddress')))  {
                     $displayProfile->setSetting('xmrNetworkAddress', $sanitizedParams->getString('xmrNetworkAddress'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getInt('dayPartId')))  {
+                if (!empty($request->getParam('dayPartId')))  {
                     $displayProfile->setSetting('dayPartId', $sanitizedParams->getInt('dayPartId'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getCheckbox('statsEnabled')))  {
+                if (!empty($request->getParam('statsEnabled')))  {
                     $displayProfile->setSetting('statsEnabled', $sanitizedParams->getCheckbox('statsEnabled'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getString('aggregationLevel')))  {
+                if (!empty($request->getParam('aggregationLevel')))  {
                     $displayProfile->setSetting('aggregationLevel', $sanitizedParams->getString('aggregationLevel'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getCheckbox('powerpointEnabled')))  {
+                if (!empty($request->getParam('powerpointEnabled')))  {
                     $displayProfile->setSetting('powerpointEnabled', $sanitizedParams->getCheckbox('powerpointEnabled'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getDouble('sizeX')))  {
+                if (!empty($request->getParam('sizeX')))  {
                     $displayProfile->setSetting('sizeX', $sanitizedParams->getDouble('sizeX'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getDouble('sizeY'))) {
+                if (!empty($request->getParam('sizeY'))) {
                     $displayProfile->setSetting('sizeY', $sanitizedParams->getDouble('sizeY'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getDouble('offsetX')))  {
+                if (!empty($request->getParam('offsetX')))  {
                     $displayProfile->setSetting('offsetX', $sanitizedParams->getDouble('offsetX'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getDouble('offsetY')))  {
+                if (!empty($request->getParam('offsetY')))  {
                     $displayProfile->setSetting('offsetY', $sanitizedParams->getDouble('offsetY'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getCheckbox('clientInfomationCtrlKey')))  {
+                if (!empty($request->getParam('clientInfomationCtrlKey')))  {
                     $displayProfile->setSetting('clientInfomationCtrlKey', $sanitizedParams->getCheckbox('clientInfomationCtrlKey'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getString('clientInformationKeyCode')))  {
+                if (!empty($request->getParam('clientInformationKeyCode')))  {
                     $displayProfile->setSetting('clientInformationKeyCode', $sanitizedParams->getString('clientInformationKeyCode'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getString('logLevel')))  {
+                if (!empty($request->getParam('logLevel')))  {
                     $displayProfile->setSetting('logLevel', $sanitizedParams->getString('logLevel'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getString('logToDiskLocation')))  {
+                if (!empty($request->getParam('logToDiskLocation')))  {
                     $displayProfile->setSetting('logToDiskLocation', $sanitizedParams->getString('logToDiskLocation'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getCheckbox('showInTaskbar')))  {
+                if (!empty($request->getParam('showInTaskbar')))  {
                     $displayProfile->setSetting('showInTaskbar', $sanitizedParams->getCheckbox('showInTaskbar'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getString('cursorStartPosition')))  {
+                if (!empty($request->getParam('cursorStartPosition')))  {
                     $displayProfile->setSetting('cursorStartPosition', $sanitizedParams->getString('cursorStartPosition'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getCheckbox('doubleBuffering')))  {
+                if (!empty($request->getParam('doubleBuffering')))  {
                     $displayProfile->setSetting('doubleBuffering', $sanitizedParams->getCheckbox('doubleBuffering'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getInt('emptyLayoutDuration')))  {
+                if (!empty($request->getParam('emptyLayoutDuration')))  {
                     $displayProfile->setSetting('emptyLayoutDuration', $sanitizedParams->getInt('emptyLayoutDuration'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getCheckbox('enableMouse')))  {
+                if (!empty($request->getParam('enableMouse')))  {
                     $displayProfile->setSetting('enableMouse', $sanitizedParams->getCheckbox('enableMouse'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getCheckbox('enableShellCommands')))  {
+                if (!empty($request->getParam('enableShellCommands')))  {
                     $displayProfile->setSetting('enableShellCommands', $sanitizedParams->getCheckbox('enableShellCommands'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getCheckbox('expireModifiedLayouts')))  {
+                if (!empty($request->getParam('expireModifiedLayouts')))  {
                     $displayProfile->setSetting('expireModifiedLayouts', $sanitizedParams->getCheckbox('expireModifiedLayouts'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getInt('maxConcurrentDownloads')))  {
+                if (!empty($request->getParam('maxConcurrentDownloads')))  {
                     $displayProfile->setSetting('maxConcurrentDownloads', $sanitizedParams->getInt('maxConcurrentDownloads'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getString('shellCommandAllowList')))  {
+                if (!empty($request->getParam('shellCommandAllowList')))  {
                     $displayProfile->setSetting('shellCommandAllowList', $sanitizedParams->getString('shellCommandAllowList'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getCheckbox('sendCurrentLayoutAsStatusUpdate')))  {
+                if (!empty($request->getParam('sendCurrentLayoutAsStatusUpdate')))  {
                     $displayProfile->setSetting('sendCurrentLayoutAsStatusUpdate', $sanitizedParams->getCheckbox('sendCurrentLayoutAsStatusUpdate'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getInt('screenShotRequestInterval')))  {
+                if (!empty($request->getParam('screenShotRequestInterval')))  {
                     $displayProfile->setSetting('screenShotRequestInterval', $sanitizedParams->getInt('screenShotRequestInterval'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getInt('screenShotSize')))  {
+                if (!empty($request->getParam('screenShotSize')))  {
                     $displayProfile->setSetting('screenShotSize', $sanitizedParams->getInt('screenShotSize'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getInt('maxLogFileUploads')))  {
+                if (!empty($request->getParam('maxLogFileUploads')))  {
                     $displayProfile->setSetting('maxLogFileUploads', $sanitizedParams->getInt('maxLogFileUploads'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getInt('embeddedServerPort')))  {
+                if (!empty($request->getParam('embeddedServerPort')))  {
                     $displayProfile->setSetting('embeddedServerPort', $sanitizedParams->getInt('embeddedServerPort'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getCheckbox('preventSleep')))  {
+                if (!empty($request->getParam('preventSleep')))  {
                     $displayProfile->setSetting('preventSleep', $sanitizedParams->getCheckbox('preventSleep'), $ownConfig, $config);
                 }
 
-                if (!empty($sanitizedParams->getCheckbox('forceHttps')))  {
+                if (!empty($request->getParam('forceHttps')))  {
                     $displayProfile->setSetting('forceHttps', $sanitizedParams->getCheckbox('forceHttps'), $ownConfig, $config);
                 }
 
                 break;
 
             case 'linux':
-                if ($this->getSanitizer()->hasParam('collectInterval')) {
-                    $displayProfile->setSetting('collectInterval', $this->getSanitizer()->getInt('collectInterval'), $ownConfig, $config);
+                if (!empty($request->getParam('collectInterval'))) {
+                    $displayProfile->setSetting('collectInterval', $sanitizedParams->getInt('collectInterval'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('downloadStartWindow')) {
-                    $displayProfile->setSetting('downloadStartWindow', $this->getSanitizer()->getString('downloadStartWindow'), $ownConfig, $config);
+                if (!empty($request->getParam('downloadStartWindow'))) {
+                    $displayProfile->setSetting('downloadStartWindow', $sanitizedParams->getString('downloadStartWindow'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('downloadEndWindow')) {
-                    $displayProfile->setSetting('downloadEndWindow', $this->getSanitizer()->getString('downloadEndWindow'), $ownConfig, $config);
+                if (!empty($request->getParam('downloadEndWindow'))) {
+                    $displayProfile->setSetting('downloadEndWindow', $sanitizedParams->getString('downloadEndWindow'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('dayPartId')) {
-                    $displayProfile->setSetting('dayPartId', $this->getSanitizer()->getInt('dayPartId'), $ownConfig, $config);
+                if (!empty($request->getParam('dayPartId'))) {
+                    $displayProfile->setSetting('dayPartId', $sanitizedParams->getInt('dayPartId'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('xmrNetworkAddress')) {
-                    $displayProfile->setSetting('xmrNetworkAddress', $this->getSanitizer()->getString('xmrNetworkAddress'), $ownConfig, $config);
+                if (!empty($request->getParam('xmrNetworkAddress'))) {
+                    $displayProfile->setSetting('xmrNetworkAddress', $sanitizedParams->getString('xmrNetworkAddress'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('statsEnabled')) {
-                    $displayProfile->setSetting('statsEnabled', $this->getSanitizer()->getCheckbox('statsEnabled'), $ownConfig, $config);
+                if (!empty($request->getParam('statsEnabled'))) {
+                    $displayProfile->setSetting('statsEnabled', $sanitizedParams->getCheckbox('statsEnabled'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('aggregationLevel')) {
-                    $displayProfile->setSetting('aggregationLevel', $this->getSanitizer()->getString('aggregationLevel'), $ownConfig, $config);
+                if (!empty($request->getParam('aggregationLevel'))) {
+                    $displayProfile->setSetting('aggregationLevel', $sanitizedParams->getString('aggregationLevel'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('sizeX')) {
-                    $displayProfile->setSetting('sizeX', $this->getSanitizer()->getDouble('sizeX'), $ownConfig, $config);
+                if (!empty($request->getParam('sizeX'))) {
+                    $displayProfile->setSetting('sizeX', $sanitizedParams->getDouble('sizeX'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('sizeY')) {
-                    $displayProfile->setSetting('sizeY', $this->getSanitizer()->getDouble('sizeY'), $ownConfig, $config);
+                if (!empty($request->getParam('sizeY'))) {
+                    $displayProfile->setSetting('sizeY', $sanitizedParams->getDouble('sizeY'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('offsetX')) {
-                    $displayProfile->setSetting('offsetX', $this->getSanitizer()->getDouble('offsetX'), $ownConfig, $config);
+                if (!empty($request->getParam('offsetX'))) {
+                    $displayProfile->setSetting('offsetX', $sanitizedParams->getDouble('offsetX'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('offsetY')) {
-                    $displayProfile->setSetting('offsetY', $this->getSanitizer()->getDouble('offsetY'), $ownConfig, $config);
+                if (!empty($request->getParam('offsetY'))) {
+                    $displayProfile->setSetting('offsetY', $sanitizedParams->getDouble('offsetY'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('logLevel')) {
-                    $displayProfile->setSetting('logLevel', $this->getSanitizer()->getString('logLevel'), $ownConfig, $config);
+                if (!empty($request->getParam('logLevel'))) {
+                    $displayProfile->setSetting('logLevel', $sanitizedParams->getString('logLevel'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('enableShellCommands')) {
-                    $displayProfile->setSetting('enableShellCommands', $this->getSanitizer()->getCheckbox('enableShellCommands'), $ownConfig, $config);
+                if (!empty($request->getParam('enableShellCommands'))) {
+                    $displayProfile->setSetting('enableShellCommands', $sanitizedParams->getCheckbox('enableShellCommands'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('expireModifiedLayouts')) {
-                    $displayProfile->setSetting('expireModifiedLayouts', $this->getSanitizer()->getCheckbox('expireModifiedLayouts'), $ownConfig, $config);
+                if (!empty($request->getParam('expireModifiedLayouts'))) {
+                    $displayProfile->setSetting('expireModifiedLayouts', $sanitizedParams->getCheckbox('expireModifiedLayouts'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('maxConcurrentDownloads')) {
-                    $displayProfile->setSetting('maxConcurrentDownloads', $this->getSanitizer()->getInt('maxConcurrentDownloads'), $ownConfig, $config);
+                if (!empty($request->getParam('maxConcurrentDownloads'))) {
+                    $displayProfile->setSetting('maxConcurrentDownloads', $sanitizedParams->getInt('maxConcurrentDownloads'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('shellCommandAllowList')) {
-                    $displayProfile->setSetting('shellCommandAllowList', $this->getSanitizer()->getString('shellCommandAllowList'), $ownConfig, $config);
+                if (!empty($request->getParam('shellCommandAllowList'))) {
+                    $displayProfile->setSetting('shellCommandAllowList', $sanitizedParams->getString('shellCommandAllowList'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('sendCurrentLayoutAsStatusUpdate')) {
-                    $displayProfile->setSetting('sendCurrentLayoutAsStatusUpdate', $this->getSanitizer()->getCheckbox('sendCurrentLayoutAsStatusUpdate'), $ownConfig, $config);
+                if (!empty($request->getParam('sendCurrentLayoutAsStatusUpdate'))) {
+                    $displayProfile->setSetting('sendCurrentLayoutAsStatusUpdate', $sanitizedParams->getCheckbox('sendCurrentLayoutAsStatusUpdate'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('screenShotRequestInterval')) {
-                    $displayProfile->setSetting('screenShotRequestInterval', $this->getSanitizer()->getInt('screenShotRequestInterval'), $ownConfig, $config);
+                if (!empty($request->getParam('screenShotRequestInterval'))) {
+                    $displayProfile->setSetting('screenShotRequestInterval', $sanitizedParams->getInt('screenShotRequestInterval'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('screenShotSize')) {
-                    $displayProfile->setSetting('screenShotSize', $this->getSanitizer()->getInt('screenShotSize'), $ownConfig, $config);
+                if (!empty($request->getParam('screenShotSize'))) {
+                    $displayProfile->setSetting('screenShotSize', $sanitizedParams->getInt('screenShotSize'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('maxLogFileUploads')) {
-                    $displayProfile->setSetting('maxLogFileUploads', $this->getSanitizer()->getInt('maxLogFileUploads'), $ownConfig, $config);
+                if (!empty($request->getParam('maxLogFileUploads'))) {
+                    $displayProfile->setSetting('maxLogFileUploads', $sanitizedParams->getInt('maxLogFileUploads'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('embeddedServerPort')) {
-                    $displayProfile->setSetting('embeddedServerPort', $this->getSanitizer()->getInt('embeddedServerPort'), $ownConfig, $config);
+                if (!empty($request->getParam('embeddedServerPort'))) {
+                    $displayProfile->setSetting('embeddedServerPort', $sanitizedParams->getInt('embeddedServerPort'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('preventSleep')) {
-                    $displayProfile->setSetting('preventSleep', $this->getSanitizer()->getCheckbox('preventSleep'), $ownConfig, $config);
+                if (!empty($request->getParam('preventSleep'))) {
+                    $displayProfile->setSetting('preventSleep', $sanitizedParams->getCheckbox('preventSleep'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('forceHttps')) {
-                    $displayProfile->setSetting('forceHttps', $this->getSanitizer()->getCheckbox('forceHttps'), $ownConfig, $config);
+                if (!empty($request->getParam('forceHttps'))) {
+                    $displayProfile->setSetting('forceHttps', $sanitizedParams->getCheckbox('forceHttps'), $ownConfig, $config);
                 }
 
                 break;
@@ -423,79 +422,79 @@ trait DisplayProfileConfigFields
             case 'lg':
             case 'sssp':
 
-                if ($this->getSanitizer()->hasParam('emailAddress')) {
-                    $displayProfile->setSetting('emailAddress', $this->getSanitizer()->getString('emailAddress'), $ownConfig, $config);
+                if (!empty($request->getParam('emailAddress'))) {
+                    $displayProfile->setSetting('emailAddress', $sanitizedParams->getString('emailAddress'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('collectInterval')) {
-                    $displayProfile->setSetting('collectInterval', $this->getSanitizer()->getInt('collectInterval'), $ownConfig, $config);
+                if (!empty($request->getParam('collectInterval'))) {
+                    $displayProfile->setSetting('collectInterval', $sanitizedParams->getInt('collectInterval'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('downloadStartWindow')) {
-                    $displayProfile->setSetting('downloadStartWindow', $this->getSanitizer()->getString('downloadStartWindow'), $ownConfig, $config);
+                if (!empty($request->getParam('downloadStartWindow'))) {
+                    $displayProfile->setSetting('downloadStartWindow', $sanitizedParams->getString('downloadStartWindow'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('downloadEndWindow')) {
-                    $displayProfile->setSetting('downloadEndWindow', $this->getSanitizer()->getString('downloadEndWindow'), $ownConfig, $config);
+                if (!empty($request->getParam('downloadEndWindow'))) {
+                    $displayProfile->setSetting('downloadEndWindow', $sanitizedParams->getString('downloadEndWindow'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('dayPartId')) {
-                    $displayProfile->setSetting('dayPartId', $this->getSanitizer()->getInt('dayPartId'), $ownConfig, $config);
+                if (!empty($request->getParam('dayPartId'))) {
+                    $displayProfile->setSetting('dayPartId', $sanitizedParams->getInt('dayPartId'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('xmrNetworkAddress')) {
-                    $displayProfile->setSetting('xmrNetworkAddress', $this->getSanitizer()->getString('xmrNetworkAddress'), $ownConfig, $config);
+                if (!empty($request->getParam('xmrNetworkAddress'))) {
+                    $displayProfile->setSetting('xmrNetworkAddress', $sanitizedParams->getString('xmrNetworkAddress'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('statsEnabled')) {
-                    $displayProfile->setSetting('statsEnabled', $this->getSanitizer()->getCheckbox('statsEnabled'), $ownConfig, $config);
+                if (!empty($request->getParam('statsEnabled'))) {
+                    $displayProfile->setSetting('statsEnabled', $sanitizedParams->getCheckbox('statsEnabled'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('aggregationLevel')) {
-                    $displayProfile->setSetting('aggregationLevel', $this->getSanitizer()->getString('aggregationLevel'), $ownConfig, $config);
+                if (!empty($request->getParam('aggregationLevel'))) {
+                    $displayProfile->setSetting('aggregationLevel', $sanitizedParams->getString('aggregationLevel'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('orientation')) {
-                    $displayProfile->setSetting('orientation', $this->getSanitizer()->getInt('orientation'), $ownConfig, $config);
+                if (!empty($request->getParam('orientation'))) {
+                    $displayProfile->setSetting('orientation', $sanitizedParams->getInt('orientation'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('logLevel')) {
-                    $displayProfile->setSetting('logLevel', $this->getSanitizer()->getString('logLevel'), $ownConfig, $config);
+                if (!empty($request->getParam('logLevel'))) {
+                    $displayProfile->setSetting('logLevel', $sanitizedParams->getString('logLevel'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('versionMediaId')) {
-                    $displayProfile->setSetting('versionMediaId', $this->getSanitizer()->getInt('versionMediaId'), $ownConfig, $config);
+                if (!empty($request->getParam('versionMediaId'))) {
+                    $displayProfile->setSetting('versionMediaId', $sanitizedParams->getInt('versionMediaId'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('actionBarMode')) {
-                    $displayProfile->setSetting('actionBarMode', $this->getSanitizer()->getInt('actionBarMode'), $ownConfig, $config);
+                if (!empty($request->getParam('actionBarMode'))) {
+                    $displayProfile->setSetting('actionBarMode', $sanitizedParams->getInt('actionBarMode'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('actionBarDisplayDuration')) {
-                    $displayProfile->setSetting('actionBarDisplayDuration', $this->getSanitizer()->getInt('actionBarDisplayDuration'), $ownConfig, $config);
+                if (!empty($request->getParam('actionBarDisplayDuration'))) {
+                    $displayProfile->setSetting('actionBarDisplayDuration', $sanitizedParams->getInt('actionBarDisplayDuration'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('sendCurrentLayoutAsStatusUpdate')) {
-                    $displayProfile->setSetting('sendCurrentLayoutAsStatusUpdate', $this->getSanitizer()->getCheckbox('sendCurrentLayoutAsStatusUpdate'), $ownConfig, $config);
+                if (!empty($request->getParam('sendCurrentLayoutAsStatusUpdate'))){
+                    $displayProfile->setSetting('sendCurrentLayoutAsStatusUpdate', $sanitizedParams->getCheckbox('sendCurrentLayoutAsStatusUpdate'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('screenShotSize')) {
-                    $displayProfile->setSetting('screenShotSize', $this->getSanitizer()->getInt('screenShotSize'), $ownConfig, $config);
+                if (!empty($request->getParam('screenShotSize'))) {
+                    $displayProfile->setSetting('screenShotSize', $sanitizedParams->getInt('screenShotSize'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('mediaInventoryTimer')) {
-                    $displayProfile->setSetting('mediaInventoryTimer', $this->getSanitizer()->getInt('mediaInventoryTimer'), $ownConfig, $config);
+                if (!empty($request->getParam('mediaInventoryTimer'))) {
+                    $displayProfile->setSetting('mediaInventoryTimer', $sanitizedParams->getInt('mediaInventoryTimer'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('forceHttps')) {
-                    $displayProfile->setSetting('forceHttps', $this->getSanitizer()->getCheckbox('forceHttps'), $ownConfig, $config);
+                if (!empty($request->getParam('forceHttps'))) {
+                    $displayProfile->setSetting('forceHttps', $sanitizedParams->getCheckbox('forceHttps'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('timers')) {
+                if (!empty($request->getParam('timers'))) {
                     // Options object to be converted to a JSON string
                     $timerOptions = (object)[];
 
-                    $timers = $this->getSanitizer()->getStringArray('timers');
+                    $timers = $sanitizedParams->getArray('timers');
 
                     foreach ($timers as $timer) {
                         $timerDay = $timer['day'];
@@ -531,7 +530,7 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('timers', json_encode($timerOptions), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('pictureControls')) {
+                if (!empty($request->getParam('pictureControls'))) {
                     // Options object to be converted to a JSON string
                     $pictureControlsOptions = (object)[];
 
@@ -547,7 +546,7 @@ trait DisplayProfileConfigFields
                     $specialProperties->gamma = ["low", "medium", "high", "high2"];
 
                     // Get array from request
-                    $pictureControls = $this->getSanitizer()->getStringArray('pictureControls');
+                    $pictureControls = $sanitizedParams->getArray('pictureControls');
 
                     foreach ($pictureControls as $pictureControl) {
                         $propertyName = $pictureControl['property'];
@@ -580,10 +579,10 @@ trait DisplayProfileConfigFields
                 }
 
                 // Get values from lockOptions params
-                $usblock = $this->getSanitizer()->getString('usblock', '');
-                $osdlock = $this->getSanitizer()->getString('osdlock', '');
-                $keylockLocal = $this->getSanitizer()->getString('keylockLocal', '');
-                $keylockRemote = $this->getSanitizer()->getString('keylockRemote', '');
+                $usblock = $sanitizedParams->getString('usblock', ['default' => '']);
+                $osdlock = $sanitizedParams->getString('osdlock', ['default' => '']);
+                $keylockLocal = $sanitizedParams->getString('keylockLocal', ['default' => '']);
+                $keylockRemote = $sanitizedParams->getString('keylockRemote', ['default' => '']);
 
                 // Options object to be converted to a JSON string
                 $lockOptions = (object)[];

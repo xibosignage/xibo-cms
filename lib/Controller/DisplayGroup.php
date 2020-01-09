@@ -429,12 +429,11 @@ class DisplayGroup extends Base
      * Display Group Members form
      * @param int $displayGroupId
      */
-    public function membersForm(Request $request, Response $response, $args)
+    public function membersForm(Request $request, Response $response, $id)
     {
-        $displayGroupId = $args['displayGroupId'];
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser($request)->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
         // Displays in Group
@@ -449,7 +448,7 @@ class DisplayGroup extends Base
                 'displaysAssigned' => $displaysAssigned,
                 'displayGroupsAssigned' => $groupsAssigned
             ],
-            'tree' => $this->displayGroupFactory->getRelationShipTree($displayGroupId),
+            'tree' => $this->displayGroupFactory->getRelationShipTree($id),
             'help' => $this->getHelp()->link('DisplayGroup', 'Members')
         ]);
 
@@ -674,9 +673,18 @@ class DisplayGroup extends Base
 
     /**
      * Sets the Members of a group
-     * @param int $displayGroupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
      * @throws InvalidArgumentException
-     *
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/display/assign",
      *  operationId="displayGroupDisplayAssign",
@@ -714,32 +722,37 @@ class DisplayGroup extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function assignDisplay($displayGroupId)
+    public function assignDisplay(Request $request, Response $response, $id)
     {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if ($displayGroup->isDisplaySpecific == 1)
-            throw new InvalidArgumentException(__('This is a Display specific Display Group and its assignments cannot be modified.'), 'displayGroupId');
+        if ($displayGroup->isDisplaySpecific == 1) {
+            throw new InvalidArgumentException(__('This is a Display specific Display Group and its assignments cannot be modified.'),
+                'displayGroupId');
+        }
 
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser($request)->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
-        if ($displayGroup->isDynamic == 1)
+        if ($displayGroup->isDynamic == 1) {
             throw new \InvalidArgumentException(__('Displays cannot be manually assigned to a Dynamic Group'));
+        }
 
         $modifiedDisplays = [];
 
-        $displays = $this->getSanitizer()->getIntArray('displayId');
+        $displays = $sanitizedParams->getIntArray('displayId');
 
         foreach ($displays as $displayId) {
             $display = $this->displayFactory->getById($displayId);
 
-            if (!$this->getUser()->checkViewable($this->displayGroupFactory->getById($display->displayGroupId)))
+            if (!$this->getUser($request)->checkViewable($this->displayGroupFactory->getById($display->displayGroupId))) {
                 throw new AccessDeniedException(__('Access Denied to Display'));
+            }
 
             $displayGroup->assignDisplay($display);
 
@@ -749,13 +762,14 @@ class DisplayGroup extends Base
         }
 
         // Have we been provided with unassign id's as well?
-        $displays = $this->getSanitizer()->getIntArray('unassignDisplayId');
+        $displays = $sanitizedParams->getIntArray('unassignDisplayId');
 
         foreach ($displays as $displayId) {
             $display = $this->displayFactory->getById($displayId);
 
-            if (!$this->getUser()->checkViewable($this->displayGroupFactory->getById($display->displayGroupId)))
+            if (!$this->getUser($request)->checkViewable($this->displayGroupFactory->getById($display->displayGroupId))) {
                 throw new AccessDeniedException(__('Access Denied to Display'));
+            }
 
             $displayGroup->unassignDisplay($display);
 
@@ -779,13 +793,24 @@ class DisplayGroup extends Base
             'message' => sprintf(__('Displays assigned to %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Unassign displays from a Display Group
-     * @param int $displayGroupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
      * @throws InvalidArgumentException
-     *
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/display/unassign",
      *  operationId="displayGroupDisplayUnassign",
@@ -815,30 +840,35 @@ class DisplayGroup extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function unassignDisplay($displayGroupId)
+    public function unassignDisplay(Request $request, Response $response, $id)
     {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if ($displayGroup->isDisplaySpecific == 1)
-            throw new InvalidArgumentException(__('This is a Display specific Display Group and its assignments cannot be modified.'), 'displayGroupId');
+        if ($displayGroup->isDisplaySpecific == 1) {
+            throw new InvalidArgumentException(__('This is a Display specific Display Group and its assignments cannot be modified.'),
+                'displayGroupId');
+        }
 
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser($request)->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
-        if ($displayGroup->isDynamic == 1)
+        if ($displayGroup->isDynamic == 1) {
             throw new \InvalidArgumentException(__('Displays cannot be manually unassigned to a Dynamic Group'));
+        }
 
-        $displays = $this->getSanitizer()->getIntArray('displayId');
+        $displays = $sanitizedParams->getIntArray('displayId');
 
         foreach ($displays as $displayId) {
             $display = $this->displayFactory->getById($displayId);
 
-            if (!$this->getUser()->checkViewable($this->displayGroupFactory->getById($display->displayGroupId)))
+            if (!$this->getUser($request)->checkViewable($this->displayGroupFactory->getById($display->displayGroupId))) {
                 throw new AccessDeniedException(__('Access Denied to Display'));
+            }
 
             $this->getLog()->debug('Unassigning ' . $display->display);
 
@@ -853,13 +883,24 @@ class DisplayGroup extends Base
             'message' => sprintf(__('Displays unassigned from %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Sets the Members of a group
-     * @param int $displayGroupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
      * @throws InvalidArgumentException
-     *
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/displayGroup/assign",
      *  operationId="displayGroupDisplayGroupAssign",
@@ -897,42 +938,48 @@ class DisplayGroup extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function assignDisplayGroup($displayGroupId)
+    public function assignDisplayGroup(Request $request, Response $response, $id)
     {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if ($displayGroup->isDisplaySpecific == 1)
-            throw new InvalidArgumentException(__('This is a Display specific Display Group and its assignments cannot be modified.'), 'displayGroupId');
+        if ($displayGroup->isDisplaySpecific == 1) {
+            throw new InvalidArgumentException(__('This is a Display specific Display Group and its assignments cannot be modified.'),
+                'displayGroupId');
+        }
 
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser($request)->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
-        if ($displayGroup->isDynamic == 1)
+        if ($displayGroup->isDynamic == 1) {
             throw new \InvalidArgumentException(__('DisplayGroups cannot be manually assigned to a Dynamic Group'));
+        }
 
-        $displayGroups = $this->getSanitizer()->getIntArray('displayGroupId');
+        $displayGroups = $sanitizedParams->getIntArray('displayGroupId');
 
         foreach ($displayGroups as $assignDisplayGroupId) {
             $displayGroupAssign = $this->displayGroupFactory->getById($assignDisplayGroupId);
 
-            if (!$this->getUser()->checkViewable($displayGroupAssign))
+            if (!$this->getUser($request)->checkViewable($displayGroupAssign)) {
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
+            }
 
             $displayGroup->assignDisplayGroup($displayGroupAssign);
         }
 
         // Have we been provided with unassign id's as well?
-        $displayGroups = $this->getSanitizer()->getIntArray('unassignDisplayGroupId');
+        $displayGroups = $sanitizedParams->getIntArray('unassignDisplayGroupId');
 
         foreach ($displayGroups as $assignDisplayGroupId) {
             $displayGroupUnassign = $this->displayGroupFactory->getById($assignDisplayGroupId);
 
-            if (!$this->getUser()->checkViewable($displayGroupUnassign))
+            if (!$this->getUser($request)->checkViewable($displayGroupUnassign)) {
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
+            }
 
             $displayGroup->unassignDisplayGroup($displayGroupUnassign);
         }
@@ -946,13 +993,24 @@ class DisplayGroup extends Base
             'message' => sprintf(__('DisplayGroups assigned to %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Unassign DisplayGroups from a Display Group
-     * @param int $displayGroupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
      * @throws InvalidArgumentException
-     *
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/displayGroup/unassign",
      *  operationId="displayGroupDisplayGroupUnassign",
@@ -982,23 +1040,26 @@ class DisplayGroup extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function unassignDisplayGroup($displayGroupId)
+    public function unassignDisplayGroup(Request $request, Response $response, $id)
     {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if ($displayGroup->isDisplaySpecific == 1)
+        if ($displayGroup->isDisplaySpecific == 1) {
             throw new InvalidArgumentException(__('This is a Display specific Display Group and its assignments cannot be modified.'), 'displayGroupId');
+        }
 
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser($request)->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
-        if ($displayGroup->isDynamic == 1)
+        if ($displayGroup->isDynamic == 1) {
             throw new \InvalidArgumentException(__('DisplayGroups cannot be manually unassigned to a Dynamic Group'));
+        }
 
-        $displayGroups = $this->getSanitizer()->getIntArray('displayGroupId');
+        $displayGroups = $sanitizedParams->getIntArray('displayGroupId');
 
         foreach ($displayGroups as $assignDisplayGroupId) {
             $displayGroup->unassignDisplayGroup($this->displayGroupFactory->getById($assignDisplayGroupId));
@@ -1012,19 +1073,30 @@ class DisplayGroup extends Base
             'message' => sprintf(__('DisplayGroups unassigned from %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Media Form (media linked to displays)
-     * @param int $displayGroupId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function mediaForm($displayGroupId)
+    public function mediaForm(Request $request, Response $response, $id)
     {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser($request)->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
         // Load the groups details
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
@@ -1037,12 +1109,23 @@ class DisplayGroup extends Base
             'media' => $this->mediaFactory->getByDisplayGroupId($displayGroup->displayGroupId),
             'help' => $this->getHelp()->link('DisplayGroup', 'FileAssociations')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Assign Media
-     * @param int $displayGroupId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/media/assign",
      *  operationId="displayGroupMediaAssign",
@@ -1082,39 +1165,42 @@ class DisplayGroup extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function assignMedia($displayGroupId)
+    public function assignMedia(Request $request, Response $response, $id)
     {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser($request)->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
         // Load the groups details
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $displayGroup->load();
 
-        $mediaIds = $this->getSanitizer()->getIntArray('mediaId');
+        $mediaIds = $sanitizedParams->getIntArray('mediaId');
 
         // Loop through all the media
         foreach ($mediaIds as $mediaId) {
 
             $media = $this->mediaFactory->getById($mediaId);
 
-            if (!$this->getUser()->checkViewable($media))
+            if (!$this->getUser($request)->checkViewable($media)) {
                 throw new AccessDeniedException(__('You have selected media that you no longer have permission to use. Please reload the form.'));
+            }
 
             $displayGroup->assignMedia($media);
         }
 
         // Check for unassign
-        foreach ($this->getSanitizer()->getIntArray('unassignMediaId') as $mediaId) {
+        foreach ($sanitizedParams->getIntArray('unassignMediaId') as $mediaId) {
             // Get the media record
             $media = $this->mediaFactory->getById($mediaId);
 
-            if (!$this->getUser()->checkViewable($media))
+            if (!$this->getUser($request)->checkViewable($media)) {
                 throw new AccessDeniedException(__('You have selected media that you no longer have permission to use. Please reload the form.'));
+            }
 
             $displayGroup->unassignMedia($media);
         }
@@ -1128,6 +1214,8 @@ class DisplayGroup extends Base
             'message' => sprintf(__('Files assigned to %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1165,18 +1253,20 @@ class DisplayGroup extends Base
      *
      * @throws XiboException
      */
-    public function unassignMedia($displayGroupId)
+    public function unassignMedia(Request $request, Response $response, $id)
     {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser($request)->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
         // Load the groups details
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $displayGroup->load();
 
-        $mediaIds = $this->getSanitizer()->getIntArray('mediaId');
+        $mediaIds = $sanitizedParams->getIntArray('mediaId');
 
         // Loop through all the media
         foreach ($mediaIds as $mediaId) {
@@ -1193,20 +1283,31 @@ class DisplayGroup extends Base
             'message' => sprintf(__('Files unassigned from %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Layouts Form (layouts linked to displays)
-     * @param int $displayGroupId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function LayoutsForm($displayGroupId)
+    public function LayoutsForm(Request $request, Response $response, $id)
     {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser($request)->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
         // Load the groups details
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
@@ -1219,12 +1320,23 @@ class DisplayGroup extends Base
             'layouts' => $this->layoutFactory->getByDisplayGroupId($displayGroup->displayGroupId),
             'help' => $this->getHelp()->link('DisplayGroup', 'FileAssociations')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Assign Layouts
-     * @param int $displayGroupId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/layout/assign",
      *  operationId="displayGroupLayoutsAssign",
@@ -1264,39 +1376,42 @@ class DisplayGroup extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function assignLayouts($displayGroupId)
+    public function assignLayouts(Request $request, Response $response, $id)
     {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser($request)->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
         // Load the groups details
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $displayGroup->load();
 
-        $layoutIds = $this->getSanitizer()->getIntArray('layoutId');
+        $layoutIds = $sanitizedParams->getIntArray('layoutId');
 
         // Loop through all the media
         foreach ($layoutIds as $layoutId) {
 
             $layout = $this->layoutFactory->getById($layoutId);
 
-            if (!$this->getUser()->checkViewable($layout))
+            if (!$this->getUser($request)->checkViewable($layout)) {
                 throw new AccessDeniedException(__('You have selected a layout that you no longer have permission to use. Please reload the form.'));
+            }
 
             $displayGroup->assignLayout($layout);
         }
 
         // Check for unassign
-        foreach ($this->getSanitizer()->getIntArray('unassignLayoutId') as $layoutId) {
+        foreach ($sanitizedParams->getIntArray('unassignLayoutId') as $layoutId) {
             // Get the layout record
             $layout = $this->layoutFactory->getById($layoutId);
 
-            if (!$this->getUser()->checkViewable($layout))
+            if (!$this->getUser($request)->checkViewable($layout)) {
                 throw new AccessDeniedException(__('You have selected a layout that you no longer have permission to use. Please reload the form.'));
+            }
 
             $displayGroup->unassignLayout($layout);
         }
@@ -1310,12 +1425,23 @@ class DisplayGroup extends Base
             'message' => sprintf(__('Layouts assigned to %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Unassign Layout
-     * @param int $displayGroupId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/layout/unassign",
      *  operationId="displayGroupLayoutUnassign",
@@ -1345,24 +1471,25 @@ class DisplayGroup extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function unassignLayouts($displayGroupId)
+    public function unassignLayouts(Request $request, Response $response, $id)
     {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser($request)->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
         // Load the groups details
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $displayGroup->load();
 
-        $layoutIds = $this->getSanitizer()->getIntArray('layoutId');
+        $layoutIds = $sanitizedParams->getIntArray('layoutId');
 
         // Loop through all the media
         foreach ($layoutIds as $layoutId) {
-            $this->getLog()->debug('Unassign layoutId ' . $layoutId . ' from ' . $displayGroupId);
+            $this->getLog()->debug('Unassign layoutId ' . $layoutId . ' from ' . $id);
             $displayGroup->unassignLayout($this->layoutFactory->getById($layoutId));
         }
 
@@ -1375,29 +1502,50 @@ class DisplayGroup extends Base
             'message' => sprintf(__('Layouts unassigned from %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
-     * @param int $displayGroupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function collectNowForm($displayGroupId)
+    public function collectNowForm(Request $request, Response $response, $id)
     {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser($request)->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'displaygroup-form-collect-now';
         $this->getState()->setData([
             'displayGroup' => $displayGroup
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Cause the player to collect now
-     * @param int $displayGroupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException when the message cannot be sent
-     *
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/action/collectNow",
      *  operationId="displayGroupActionCollectNow",
@@ -1417,14 +1565,15 @@ class DisplayGroup extends Base
      *  )
      * )
      */
-    public function collectNow($displayGroupId)
+    public function collectNow(Request $request, Response $response, $id)
     {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser($request)->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
-        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($displayGroupId), new CollectNowAction());
+        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($id), new CollectNowAction());
 
         // Return
         $this->getState()->hydrate([
@@ -1432,13 +1581,22 @@ class DisplayGroup extends Base
             'message' => sprintf(__('Command Sent to %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Cause the player to collect now
-     * @param int $displayGroupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException when the message cannot be sent
-     *
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/action/clearStatsAndLogs",
      *  operationId="displayGroupActionClearStatsAndLogs",
@@ -1458,14 +1616,15 @@ class DisplayGroup extends Base
      *  )
      * )
      */
-    public function clearStatsAndLogs($displayGroupId)
+    public function clearStatsAndLogs(Request $request, Response $response, $id)
     {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser($request)->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
-        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($displayGroupId), new CollectNowAction());
+        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($id), new CollectNowAction());
 
         // Return
         $this->getState()->hydrate([
@@ -1473,14 +1632,24 @@ class DisplayGroup extends Base
             'message' => sprintf(__('Command Sent to %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Change to a new Layout
-     * @param $displayGroupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException
-     * @throws \Xibo\Exception\NotFoundException
-     *
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/action/changeLayout",
      *  operationId="displayGroupActionChangeLayout",
@@ -1535,20 +1704,20 @@ class DisplayGroup extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function changeLayout($displayGroupId)
+    public function changeLayout(Request $request, Response $response, $id)
     {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($displayGroup)) {
+        if (!$this->getUser($request)->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
         // Get the layoutId or campaignId
-        $layoutId = $this->getSanitizer()->getInt('layoutId');
-        $campaignId = $this->getSanitizer()->getInt('campaignId');
-        $downloadRequired = ($this->getSanitizer()->getCheckbox('downloadRequired') == 1);
+        $layoutId = $sanitizedParams->getInt('layoutId');
+        $campaignId = $sanitizedParams->getInt('campaignId');
+        $downloadRequired = ($sanitizedParams->getCheckbox('downloadRequired') == 1);
 
         if ($layoutId == 0 && $campaignId == 0) {
             throw new InvalidArgumentException(__('Please provide a Layout ID or Campaign ID'), 'layoutId');
@@ -1580,7 +1749,7 @@ class DisplayGroup extends Base
         }
 
         // Check to see if this layout is assigned to this display group.
-        if (count($this->layoutFactory->query(null, ['disableUserCheck' => 1, 'layoutId' => $layout->layoutId, 'displayGroupId' => $displayGroupId])) <= 0) {
+        if (count($this->layoutFactory->query(null, ['disableUserCheck' => 1, 'layoutId' => $layout->layoutId, 'displayGroupId' => $id])) <= 0) {
             // Assign
             $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
             $displayGroup->load();
@@ -1604,11 +1773,11 @@ class DisplayGroup extends Base
         }
 
         // Create and send the player action
-        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($displayGroupId), (new ChangeLayoutAction())->setLayoutDetails(
+        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($id), (new ChangeLayoutAction())->setLayoutDetails(
             $layout->layoutId,
-            $this->getSanitizer()->getInt('duration'),
+            $sanitizedParams->getInt('duration'),
             $downloadRequired,
-            $this->getSanitizer()->getString('changeMode', 'queue')
+            $sanitizedParams->getString('changeMode', 'queue')
         ));
 
         // Return
@@ -1617,13 +1786,22 @@ class DisplayGroup extends Base
             'message' => sprintf(__('Command Sent to %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Cause the player to revert to its scheduled content
-     * @param int $displayGroupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException when the message cannot be sent
-     *
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/action/revertToSchedule",
      *  operationId="displayGroupActionRevertToSchedule",
@@ -1643,14 +1821,15 @@ class DisplayGroup extends Base
      *  )
      * )
      */
-    public function revertToSchedule($displayGroupId)
+    public function revertToSchedule(Request $request, Response $response, $id)
     {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser($request)->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
-        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($displayGroupId), new RevertToSchedule());
+        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($id), new RevertToSchedule());
 
         // Return
         $this->getState()->hydrate([
@@ -1658,14 +1837,24 @@ class DisplayGroup extends Base
             'message' => sprintf(__('Command Sent to %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Add an Overlay Layout
-     * @param $displayGroupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException
-     * @throws \Xibo\Exception\NotFoundException
-     *
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/action/overlayLayout",
      *  operationId="displayGroupActionOverlayLayout",
@@ -1713,20 +1902,20 @@ class DisplayGroup extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function overlayLayout($displayGroupId)
+    public function overlayLayout(Request $request, Response $response, $id)
     {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($displayGroup)) {
+        if (!$this->getUser($request)->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
         // Get the layoutId
-        $layoutId = $this->getSanitizer()->getInt('layoutId');
-        $campaignId = $this->getSanitizer()->getInt('campaignId');
-        $downloadRequired = ($this->getSanitizer()->getCheckbox('downloadRequired') == 1);
+        $layoutId = $sanitizedParams->getInt('layoutId');
+        $campaignId = $sanitizedParams->getInt('campaignId');
+        $downloadRequired = ($sanitizedParams->getCheckbox('downloadRequired') == 1);
 
         if ($layoutId == 0 && $campaignId == 0) {
             throw new \InvalidArgumentException(__('Please provide a Layout ID or Campaign ID'));
@@ -1758,7 +1947,7 @@ class DisplayGroup extends Base
         }
 
         // Check to see if this layout is assigned to this display group.
-        if (count($this->layoutFactory->query(null, ['disableUserCheck' => 1, 'layoutId' => $layout->layoutId, 'displayGroupId' => $displayGroupId])) <= 0) {
+        if (count($this->layoutFactory->query(null, ['disableUserCheck' => 1, 'layoutId' => $layout->layoutId, 'displayGroupId' => $id])) <= 0) {
             // Assign
             $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
             $displayGroup->load();
@@ -1778,9 +1967,9 @@ class DisplayGroup extends Base
             }
         }
 
-        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($displayGroupId), (new OverlayLayoutAction())->setLayoutDetails(
+        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($id), (new OverlayLayoutAction())->setLayoutDetails(
             $layout->layoutId,
-            $this->getSanitizer()->getInt('duration'),
+            $sanitizedParams->getInt('duration'),
             $downloadRequired
         ));
 
@@ -1790,33 +1979,52 @@ class DisplayGroup extends Base
             'message' => sprintf(__('Command Sent to %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Command Form
-     * @param int $displayGroupId
-     * @throws \Xibo\Exception\NotFoundException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function commandForm($displayGroupId)
+    public function commandForm(Request $request, Response $response, $id)
     {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser($request)->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'displaygroup-form-command';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
             'commands' => $this->commandFactory->query()
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
-     * @param $displayGroupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException
+     * @throws NotFoundException
      * @throws XiboException
-     * @throws \Xibo\Exception\NotFoundException
-     *
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/action/command",
      *  operationId="displayGroupActionCommand",
@@ -1843,15 +2051,17 @@ class DisplayGroup extends Base
      *  )
      * )
      */
-    public function command($displayGroupId)
+    public function command(Request $request, Response $response, $id)
     {
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser($request)->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
-        $command = $this->commandFactory->getById($this->getSanitizer()->getInt('commandId'));
-        $displays = $this->displayFactory->getByDisplayGroupId($displayGroupId);
+        $command = $this->commandFactory->getById($sanitizedParams->getInt('commandId'));
+        $displays = $this->displayFactory->getByDisplayGroupId($id);
 
         $this->playerAction->sendAction($displays, (new CommandAction())->setCommandCode($command->code));
 
@@ -1868,31 +2078,52 @@ class DisplayGroup extends Base
             'message' => sprintf(__('Command Sent to %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
-     * @param $displayGroupId
-     * @throws \Xibo\Exception\NotFoundException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function copyForm($displayGroupId)
+    public function copyForm(Request $request, Response $response, $id)
     {
         // Create a form out of the config object.
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayGroup->userId)
+        if ($this->getUser($request)->userTypeId != 1 && $this->getUser($request)->userId != $displayGroup->userId) {
             throw new AccessDeniedException(__('You do not have permission to delete this profile'));
+        }
 
         $this->getState()->template = 'displaygroup-form-copy';
         $this->getState()->setData([
             'displayGroup' => $displayGroup
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Copy Display Group
-     * @param int $displayGroupId
-     * @throws \Xibo\Exception\XiboException
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/copy",
      *  operationId="displayGroupCopy",
@@ -1953,30 +2184,32 @@ class DisplayGroup extends Base
      *  )
      * )
      */
-    public function copy($displayGroupId)
+    public function copy(Request $request, Response $response, $id)
     {
         // get display group object
-        $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $displayGroup = $this->displayGroupFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($displayGroup)) {
+
+        if (!$this->getUser($request)->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
         // get an array of assigned displays
-        $membersDisplays = $this->displayFactory->getByDisplayGroupId($displayGroupId);
+        $membersDisplays = $this->displayFactory->getByDisplayGroupId($id);
 
         // get an array of assigned display groups
-        $membersDisplayGroups = $this->displayGroupFactory->getByParentId($displayGroupId);
+        $membersDisplayGroups = $this->displayGroupFactory->getByParentId($id);
 
         // get an array of assigned layouts
-        $assignedLayouts = $this->layoutFactory->getByDisplayGroupId($displayGroupId);
+        $assignedLayouts = $this->layoutFactory->getByDisplayGroupId($id);
 
         // get an array of assigned media files
-        $assignedFiles = $this->mediaFactory->getByDisplayGroupId($displayGroupId);
+        $assignedFiles = $this->mediaFactory->getByDisplayGroupId($id);
 
-        $copyMembers = $this->getSanitizer()->getCheckbox('copyMembers', 0);
-        $copyTags = $this->getSanitizer()->getCheckbox('copyTags', 0);
-        $copyAssignments = $this->getSanitizer()->getCheckbox('copyAssignments', 0);
+        $copyMembers = $sanitizedParams->getCheckbox('copyMembers');
+        $copyTags = $sanitizedParams->getCheckbox('copyTags');
+        $copyAssignments = $sanitizedParams->getCheckbox('copyAssignments');
 
 
 
@@ -2035,9 +2268,9 @@ class DisplayGroup extends Base
             $new->replaceTags($this->tagFactory->tagsFromString($tags));
         }
 
-        $new->displayGroup = $this->getSanitizer()->getString('displayGroup');
-        $new->description = $this->getSanitizer()->getString('description');
-        $new->setOwner($this->getUser()->userId);
+        $new->displayGroup = $sanitizedParams->getString('displayGroup');
+        $new->description = $sanitizedParams->getString('description');
+        $new->setOwner($this->getUser($request)->userId);
 
         // save without managing links, we need to save for new display group to get an ID, which is then used in next save to manage links - for dynamic groups.
         // we also don't want to call notify at this point (for file/layout assignment)
@@ -2055,5 +2288,7 @@ class DisplayGroup extends Base
             'id' => $new->displayGroupId,
             'data' => $new
         ]);
+
+        return $this->render($request, $response);
     }
 }

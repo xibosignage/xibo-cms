@@ -219,8 +219,8 @@ class StatusDashboard extends Base
             ]);
 
             // We would also like a library usage pie chart!
-            if ($this->getUser()->libraryQuota != 0) {
-                $libraryLimit = $this->getUser()->libraryQuota * 1024;
+            if ($this->getUser($request)->libraryQuota != 0) {
+                $libraryLimit = $this->getUser($request)->libraryQuota * 1024;
             }
             else {
                 $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;

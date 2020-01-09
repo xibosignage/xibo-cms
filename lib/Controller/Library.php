@@ -519,7 +519,7 @@ class Library extends Base
      */
     function grid(Request $request, Response $response)
     {
-        $user = $this->getUser();
+        $user = $this->getUser($request);
 
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
 
@@ -693,12 +693,13 @@ class Library extends Base
      * Media Delete Form
      * @param int $mediaId
      */
-    public function deleteForm($mediaId)
+    public function deleteForm(Request $request, Response $response, $id)
     {
-        $media = $this->mediaFactory->getById($mediaId);
+        $media = $this->mediaFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($media))
+        if (!$this->getUser($request)->checkDeleteable($media)) {
             throw new AccessDeniedException();
+        }
 
         $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
         $media->load(['deleting' => true]);
@@ -708,6 +709,8 @@ class Library extends Base
             'media' => $media,
             'help' => $this->getHelp()->link('Library', 'Delete')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -740,19 +743,21 @@ class Library extends Base
      *  )
      * )
      */
-    public function delete($mediaId)
+    public function delete(Request $request, Response $response, $id)
     {
-        $media = $this->mediaFactory->getById($mediaId);
+        $media = $this->mediaFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($media))
+        if (!$this->getUser($request)->checkDeleteable($media)) {
             throw new AccessDeniedException();
+        }
 
         // Check
         $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
         $media->load(['deleting' => true]);
 
-        if ($media->isUsed() && $this->getSanitizer()->getCheckbox('forceDelete') == 0)
+        if ($media->isUsed() && $this->getSanitizer($request->getParams())->getCheckbox('forceDelete') == 0) {
             throw new \InvalidArgumentException(__('This library item is in use.'));
+        }
 
         // Delete
         $media->delete();
@@ -767,6 +772,8 @@ class Library extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $media->name)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -825,8 +832,8 @@ class Library extends Base
      */
     public function add(Request $request, Response $response)
     {
-        $parsedBody = $this->getSanitizer($request->getParsedBody());
-        $options = $parsedBody->getArray('options');
+        $parsedBody = $this->getSanitizer($request->getParams());
+        $options = $parsedBody->getArray('options', ['default' => []]);
 
         $options = array_merge([
             'oldMediaId' => null,
@@ -880,7 +887,7 @@ class Library extends Base
         // Hand off to the Upload Handler provided by jquery-file-upload
         new XiboUploadHandler($options);
 
-        return $response;
+        return $this->render($request, $response);
     }
 
     /**
@@ -1266,6 +1273,8 @@ class Library extends Base
         $widget->getResource($request, $response);
 
         $this->setNoOutput(true);
+
+        return $this->render($request, $response);
     }
 
     /**
