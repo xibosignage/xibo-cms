@@ -159,7 +159,7 @@ describe('Layout Designer (Empty)', function() {
             cy.get('#layoutPublishForm').should('not.be.visible');
         });
 
-        it('creates a new tab in the toolbar and searches for items', () => {
+        it.skip('creates a new tab in the toolbar and searches for items', () => {
 
             populateLibraryWithMedia();
 
