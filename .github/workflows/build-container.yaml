@@ -6,7 +6,7 @@ on:
       - master
       - develop
   release:
-    types: [published, prereleased]
+    types: [created]
 
 jobs:
   build:
