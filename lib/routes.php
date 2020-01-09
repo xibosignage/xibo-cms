@@ -316,7 +316,7 @@ $app->post('/dataset/remote/test', ['\Xibo\Controller\DataSet','testRemoteReques
 // Columns
 $app->get('/dataset/{id}/column', ['\Xibo\Controller\DataSetColumn','grid'])->setName('dataSet.column.search');
 $app->post('/dataset/{id}/column', ['\Xibo\Controller\DataSetColumn','add'])->setName('dataSet.column.add');
-$app->put('/dataset/{id}/column/','colId', ['\Xibo\Controller\DataSetColumn','edit'])->setName('dataSet.column.edit');
+$app->put('/dataset/{id}/column/{colId}', ['\Xibo\Controller\DataSetColumn','edit'])->setName('dataSet.column.edit');
 $app->delete('/dataset/{id}/column/{colId}', ['\Xibo\Controller\DataSetColumn','delete'])->setName('dataSet.column.delete');
 // Data
 $app->get('/dataset/data/{id}', ['\Xibo\Controller\DataSetData','grid'])->setName('dataSet.data.search');

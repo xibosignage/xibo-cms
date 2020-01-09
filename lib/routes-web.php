@@ -235,7 +235,7 @@ $app->get('/dataset/form/import/{id}', ['\Xibo\Controller\DataSet','importForm']
 // columns
 $app->get('/dataset/{id}/column/view', ['\Xibo\Controller\DataSetColumn','displayPage'])->setName('dataSet.column.view');
 $app->get('/dataset/{id}/column/form/add', ['\Xibo\Controller\DataSetColumn','addForm'])->setName('dataSet.column.add.form');
-$app->get('/dataset/{id}/column/form/edit/','colId', ['\Xibo\Controller\DataSetColumn','editForm'])->setName('dataSet.column.edit.form');
+$app->get('/dataset/{id}/column/form/edit/{colId}', ['\Xibo\Controller\DataSetColumn','editForm'])->setName('dataSet.column.edit.form');
 $app->get('/dataset/{id}/column/form/delete/{colId}', ['\Xibo\Controller\DataSetColumn','deleteForm'])->setName('dataSet.column.delete.form');
 // data
 $app->get('/dataset/data/form/add/{id}', ['\Xibo\Controller\DataSetData','addForm'])->setName('dataSet.data.add.form');
