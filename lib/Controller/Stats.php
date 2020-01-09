@@ -299,8 +299,8 @@ class Stats extends Base
      */
     public function grid()
     {
-        $fromDt = $this->getSanitizer()->getDate('fromDt', $this->getSanitizer()->getDate('statsFromDt', $this->getDate()->parse()->addDay(-1)));
-        $toDt = $this->getSanitizer()->getDate('toDt', $this->getSanitizer()->getDate('statsToDt', $this->getDate()->parse()));
+        $fromDt = $this->getSanitizer()->getDate('fromDt');
+        $toDt = $this->getSanitizer()->getDate('toDt');
         $type = strtolower($this->getSanitizer()->getString('type'));
 
         $displayId = $this->getSanitizer()->getInt('displayId');
@@ -312,12 +312,17 @@ class Stats extends Base
         $start = $this->getSanitizer()->getInt('start', 0);
         $length = $this->getSanitizer()->getInt('length', 10);
 
-        $fromDt->startOfDay();
-        $toDt->addDay()->startOfDay();
+        if ($fromDt != null) {
+            $fromDt->startOfDay();
+        }
+
+        if ($toDt != null) {
+            $toDt->addDay()->startOfDay();
+        }
 
         // What if the fromdt and todt are exactly the same?
         // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
-        if ($fromDt == $toDt) {
+        if ($fromDt != null && $toDt != null && $fromDt == $toDt) {
             $toDt->addDay(1);
         }
 
@@ -363,7 +368,7 @@ class Stats extends Base
             ]);
 
         // Get results as array
-        $result = $resultSet->getArray();
+        $result = $resultSet['result']->getArray();
 
         $rows = [];
         foreach ($result['statData'] as $row) {
@@ -396,6 +401,7 @@ class Stats extends Base
         }
 
         $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $resultSet['totalCount'];
         $this->getState()->setData($rows);
     }
 
@@ -566,7 +572,7 @@ class Stats extends Base
         $out = fopen('php://output', 'w');
         fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count']);
 
-        while ($row = $resultSet->getNextRow() ) {
+        while ($row = $resultSet['result']->getNextRow() ) {
 
             $displayName = isset($row['display']) ? $this->getSanitizer()->string($row['display']) : '';
             $layoutName = isset($row['layout']) ? $this->getSanitizer()->string($row['layout']) : '';

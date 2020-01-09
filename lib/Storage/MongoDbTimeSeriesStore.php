@@ -449,8 +449,29 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
         $result = new TimeSeriesMongoDbResults($cursor);
 
-        return $result;
+        // Get total
+        try {
+            $totalQuery = [
+                $match,
+                [
+                    '$group' => [
+                        '_id'=> null,
+                        'count' => ['$sum' => 1],
+                    ]
+                ],
+            ];
+            $totalCursor = $collection->aggregate($totalQuery);
 
+        } catch (\MongoDB\Exception\RuntimeException $e) {
+            $this->log->error($e->getMessage());
+        }
+        $totalCount = $totalCursor->toArray();
+
+        return
+            [
+                'result' => $result,
+                'totalCount' => $totalCount[0]['count']
+            ];
     }
 
     /** @inheritdoc */
