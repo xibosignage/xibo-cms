@@ -28,7 +28,7 @@
   ],
   "repositories": [{
     "type": "vcs",
-    "url": "https://github.com/dasgarner/support"
+    "url": "https://github.com/PeterMis/support"
   }],
   "config": {
       "platform": {
@@ -57,7 +57,7 @@
     "sallar/jdatetime": "dev-master",
     "gettext/gettext": "~4.0",
     "slim/twig-view": "3.0.x",
-    "twig/twig": "^2.8",
+    "twig/twig": "3.x",
     "respect/validation": "1.1.*",
     "intervention/imagecache": "~2.3",
     "emojione/emojione": "^1.4",
