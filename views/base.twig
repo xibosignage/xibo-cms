@@ -174,8 +174,7 @@
             var CKEDITOR_DEFAULT_CONFIG = {
                 contentsCss: [ CKEDITOR.getUrl('contents.css'), "{{ url_for("library.font.css") }}" ],
                 font_names: '{{ ckeditorConfig }}' + CKEDITOR.config.font_names,
-                // TODO throws an error missing {id} :(
-               // imageDownloadUrl: "{{ url_for("library.download") }}?preview=1"
+                imageDownloadUrl: "{{ url_for("library.download", {id: ':id'}) }}?preview=1"
             }
 
         </script>

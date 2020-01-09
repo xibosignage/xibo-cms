@@ -274,5 +274,5 @@ catch (Exception $e) {
 
     header('HTTP/1.1 500 Internal Server Error');
     header('Content-Type: text/plain');
-    die (__('There has been an unknown error with XMDS, it has been logged. Please contact your administrator.'));
+    die ('There has been an unknown error with XMDS, it has been logged. Please contact your administrator.');
 }

@@ -101,7 +101,7 @@
         </div> 
     </div> 
     <div class="row">
-        <div id="CalendarContainer" data-event-source="{{ url_for("schedule.calendar.data") }}" data-agenda-link="{{ url_for("schedule.events") }}" data-calendar-type="{{ settings.CALENDAR_TYPE }}" class="col-sm-12">
+        <div id="CalendarContainer" data-event-source="{{ url_for("schedule.calendar.data") }}" data-agenda-link="{{ url_for("schedule.events", {id: ':id'}) }}" data-calendar-type="{{ settings.CALENDAR_TYPE }}" class="col-sm-12">
             <div id="Calendar"></div>
         </div>
     </div>
@@ -124,7 +124,7 @@
 {% endblock %}
 
 {% block javaScriptTemplates %}
-    {% raw %}
+    {% verbatim %}
         <script type="text/x-handlebars-template" id="calendar-template-day">
             <div id="cal-day-box">
                 <div class="row-fluid clearfix cal-row-head">
@@ -521,7 +521,7 @@
                     <div class="panel-body">
                     
                     <% if (agenda.errorMessage != '') { %>
-                       {% endraw %}
+                       {% endverbatim %}
                        <!-- Request failed - Show Error Message -->
                        <div class="text-danger text-center">
                            <% if (agenda.errorMessage == 'display_not_selected') { %>
@@ -532,7 +532,7 @@
                                <p>{% trans "Data request failed!" %}</p>
                            <% } %>
                        </div>
-                       {% raw %}
+                       {% verbatim %}
                    <% } else if(!jQuery.isEmptyObject(agenda.results)) { %>
                         <!-- Request successful - Show Data -->
                             
@@ -577,15 +577,15 @@
                     <tr class="table-title">
                         <th colspan="10">
                             <% if (layouts.type == 1) { %>
-                                {% endraw %}{% trans "Layouts" %}{% raw %}</span>
+                                {% endverbatim %}{% trans "Layouts" %}{% verbatim %}</span>
                             <% } else if (layouts.type == 3) { %>
-                                {% endraw %}{% trans "Overlay Layouts" %}{% raw %}
+                                {% endverbatim %}{% trans "Overlay Layouts" %}{% verbatim %}
                             <% } else if (layouts.type == 4) { %>
-                                {% endraw %}{% trans "Interrupt Layouts" %}{% raw %}
+                                {% endverbatim %}{% trans "Interrupt Layouts" %}{% verbatim %}
                             <% } %>
                         </th>
                     </tr>
-                    {% endraw %}
+                    {% endverbatim %}
                     <tr>
                         <th></th>
                         <th>{% trans "ID" %}</th>
@@ -598,7 +598,7 @@
                         <th>{% trans "Priority" %}</th>
                         <th>{% trans "Visible" %}</th>
                     </tr>
-                    {% raw %}
+                    {% verbatim %}
                 </thead>
                 <tbody>
                     <% _.each(layouts, function(layout){ %>
@@ -608,7 +608,7 @@
                             data-event-id="<%= layout.eventId %>" 
                             data-toggle="tooltip"
                             <% if (layout.itemClass == 'low-priority') { %>
-                                title="{% endraw %}{% trans "This layout will not be shown as there are higher priority layouts scheduled at this time" %}{% raw %}"
+                                title="{% endverbatim %}{% trans "This layout will not be shown as there are higher priority layouts scheduled at this time" %}{% verbatim %}"
                             <% } %> 
                         >
                             <td><span class="fa <%= layout.itemIcon %>"></span></td>
@@ -627,7 +627,7 @@
                             %>
                             <td><span class="fa <%= icon %>"></span></td>
                             <% if (layout.isAlways == 1) { %>
-                                <td>{% endraw %}{% trans "Always" %}{% raw %}</td>
+                                <td>{% endverbatim %}{% trans "Always" %}{% verbatim %}</td>
                                 <td><span class="fa fa-retweet"></span></td>
                             <% } else { %> 
                                 <td><%= layout.eventFromDt %></td>
@@ -653,7 +653,7 @@
 
         <script type="text/x-handlebars-template" id="calendar-template-agenda-displaygroups">
             <table id="displaygroups" class="table agenda-table">
-                {% endraw %}
+                {% endverbatim %}
                 <thead>
                     <tr class="table-title">
                         <th colspan="3">{% trans "Display Groups" %}</th>
@@ -664,7 +664,7 @@
                         <th>{% trans "Name" %}</th>
                     </tr>
                 </thead>
-                {% raw %}
+                {% verbatim %}
                 <tbody>
                     <% _.each(displaygroups, function(displaygroup){ %>
                         <tr data-elem-id="<%= displaygroup.displayGroupId %>">
@@ -684,7 +684,7 @@
         
         <script type="text/x-handlebars-template" id="calendar-template-agenda-campaigns">
             <table id="campaigns" class="table agenda-table">
-                {% endraw %}
+                {% endverbatim %}
                 <thead>
                     <tr class="table-title">
                         <th colspan="3">{% trans "Campaigns" %}</th>
@@ -695,7 +695,7 @@
                         <th>{% trans "Name" %}</th>
                     </tr>
                 </thead>
-                {% raw %}
+                {% verbatim %}
                 <tbody>
                     <% _.each(campaigns, function(campaign){ %>
                         <tr data-elem-id="<%= campaign.campaignId %>">
@@ -731,9 +731,9 @@
             <!-- Schedule -->
             <span>
                 <a href="<%= schedule.link %>" class="XiboFormButton">
-                    {% endraw %}
+                    {% endverbatim %}
                         {% trans "Schedule" %}
-                    {% raw %}
+                    {% verbatim %}
                 </a>
             </span>
             
@@ -764,28 +764,28 @@
                 <div class="col-sm-2">
                     <label for="reminder_type[]">
                         <select class="form-control" name="reminder_type[]">
-                            <option value="1" {{#eq type 1}}selected{{/eq}}>{% endraw %}{% trans "Minute" %}{% raw %}</option>
-                            <option value="2" {{#eq type 2}}selected{{/eq}}>{% endraw %}{% trans "Hour" %}{% raw %}</option>
-                            <option value="3" {{#eq type 3}}selected{{/eq}}>{% endraw %}{% trans "Day" %}{% raw %}</option>
-                            <option value="4" {{#eq type 4}}selected{{/eq}}>{% endraw %}{% trans "Week" %}{% raw %}</option>
-                            <option value="5" {{#eq type 5}}selected{{/eq}}>{% endraw %}{% trans "Month" %}{% raw %}</option>
+                            <option value="1" {{#eq type 1}}selected{{/eq}}>{% endverbatim %}{% trans "Minute" %}{% verbatim %}</option>
+                            <option value="2" {{#eq type 2}}selected{{/eq}}>{% endverbatim %}{% trans "Hour" %}{% verbatim %}</option>
+                            <option value="3" {{#eq type 3}}selected{{/eq}}>{% endverbatim %}{% trans "Day" %}{% verbatim %}</option>
+                            <option value="4" {{#eq type 4}}selected{{/eq}}>{% endverbatim %}{% trans "Week" %}{% verbatim %}</option>
+                            <option value="5" {{#eq type 5}}selected{{/eq}}>{% endverbatim %}{% trans "Month" %}{% verbatim %}</option>
                         </select>
                     </label>
                 </div>
                 <div class="col-sm-3">
                     <label for="reminder_option[]">
                         <select class="form-control" name="reminder_option[]">
-                            <option value="1" {{#eq option 1}}selected{{/eq}}>{% endraw %}{% trans "Before schedule starts" %}{% raw %}</option>
-                            <option value="2" {{#eq option 2}}selected{{/eq}}>{% endraw %}{% trans "After schedule starts" %}{% raw %}</option>
-                            <option value="3" {{#eq option 3}}selected{{/eq}}>{% endraw %}{% trans "Before schedule ends" %}{% raw %}</option>
-                            <option value="4" {{#eq option 4}}selected{{/eq}}>{% endraw %}{% trans "After schedule ends" %}{% raw %}</option>
+                            <option value="1" {{#eq option 1}}selected{{/eq}}>{% endverbatim %}{% trans "Before schedule starts" %}{% verbatim %}</option>
+                            <option value="2" {{#eq option 2}}selected{{/eq}}>{% endverbatim %}{% trans "After schedule starts" %}{% verbatim %}</option>
+                            <option value="3" {{#eq option 3}}selected{{/eq}}>{% endverbatim %}{% trans "Before schedule ends" %}{% verbatim %}</option>
+                            <option value="4" {{#eq option 4}}selected{{/eq}}>{% endverbatim %}{% trans "After schedule ends" %}{% verbatim %}</option>
                         </select>
                     </label>
                 </div>
                 <div class="col-sm-3">
                     <label for="reminder_isEmail[]">
                         <input type="checkbox" name="reminder_isEmail[]" {{#eq isEmail 1}}checked{{/eq}}/>
-                        {% endraw %}{% trans "Notify by email?" %}{% raw %}
+                        {% endverbatim %}{% trans "Notify by email?" %}{% verbatim %}
                         <input type="hidden" name="reminder_isEmailHidden[]" />
                     </label>
                 </div>
@@ -795,7 +795,7 @@
             </div>
         </script>
 
-        {% endraw %}
+        {% endverbatim %}
 {% endblock %}
 
 {% block javaScript %}

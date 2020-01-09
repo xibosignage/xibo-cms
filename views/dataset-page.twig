@@ -179,7 +179,7 @@
                     }
                 }).on('shown.bs.modal', function() {
                     // Configure the upload form
-                    var url = "{{ url_for("dataSet.import") }}".replace(":id", data.dataSetId);
+                    var url = "{{ url_for("dataSet.import", {id: ':id'}) }}".replace(":id", data.dataSetId);
                     var form = $(this).find("form");
                     var refreshSessionInterval;
 
@@ -315,7 +315,7 @@
 {% block javaScriptTemplates %}
     {{ parent() }}
 
-    {% raw %}
+    {% verbatim %}
 
     <script type="text/x-handlebars-template" id="template-dataset-upload">
         <form class="form-horizontal" method="post" enctype="multipart/form-data" data-max-file-size="{{ upload.maxSize }}" data-accept-file-types="/(\.|\/)csv/i">
@@ -358,7 +358,7 @@
             </div>
             <div class="row">
                 <div class="col-md-12">
-        {% endraw %}
+        {% endverbatim %}
                     {% set title %}{% trans "Overwrite existing data?" %}{% endset %}
                     {% set helpText %}{% trans "Erase all content in this DataSet and overwrite it with the new content in this import." %}{% endset %}
                     {{ forms.checkbox("overwrite", title, "", helpText) }}
@@ -370,7 +370,7 @@
                     {% set message %}{% trans "In the fields below please enter the column number in the CSV file that corresponds to the Column Heading listed. This should be done before Adding the file." %}{% endset %}
                     {{ forms.message(message) }}
 
-        {% raw %}
+        {% verbatim %}
                     {{#each columns}}
                     <div class="form-group">
                         <label class="col-sm-2 control-label" for="csvImport_{{dataSetColumnId}}">{{heading}}</label>
@@ -447,5 +447,5 @@
         {% } %}
         </script>
 
-    {% endraw %}
+    {% endverbatim %}
 {% endblock %}

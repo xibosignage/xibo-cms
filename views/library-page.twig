@@ -451,7 +451,7 @@
                 searchDelay: 3000,
                 "order": [[1, "asc"]],
                 ajax: {
-                    "url": "{{ url_for("library.usage") }}",
+                    "url": "{{ url_for("library.usage", {id: ':id'}) }}",
                     "data": function(dataDisplay) {
                         $.extend(dataDisplay, $(dialog).find("#usageReportForm").serializeObject());
                         return dataDisplay;
@@ -492,7 +492,7 @@
                 searchDelay: 3000,
                 "order": [[1, "asc"]],
                 ajax: {
-                    "url": "{{ url_for("library.usage.layouts") }}".replace(":id", $("#usageReportLayoutsTable").data().mediaId)
+                    "url": "{{ url_for("library.usage.layouts", {id: ':id'}) }}".replace(":id", $("#usageReportLayoutsTable").data().mediaId)
                 },
                 "columns": [
                     { "data": "layoutId"},

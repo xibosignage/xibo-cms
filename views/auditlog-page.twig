@@ -90,7 +90,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    {% raw %}
+    {% verbatim %}
     <script type="text/x-handlebars-template" id="table-array-viewer">
         <a class="arrayViewerToggle" href="#"><span class="fa fa-search"></span></a>
         <table class="arrayViewer table table-bordered">
@@ -110,7 +110,7 @@
             </tbody>
         </table>
     </script>
-    {% endraw %}
+    {% endverbatim %}
     <script type="text/javascript">
 
         $(document).ready(function() {

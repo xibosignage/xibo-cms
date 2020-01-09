@@ -101,7 +101,7 @@
                 if (type != "display")
                     return "";
 
-                var url = "{{ url_for("dataSet.data.delete.form", {"id": dataSet.dataSetId}) }}".replace(":rowId", data.id);
+                var url = "{{ url_for("dataSet.data.delete.form", {"id": dataSet.dataSetId, rowId:':id'}) }}".replace(":rowId", data.id);
 
                 return "<a href=\"" + url + "\" class=\"XiboFormButton\"><span class=\"fa fa-times\"></span></a>";
             }
@@ -153,7 +153,7 @@
             var data = table.row($(this)).data();
 
             // Load the edit form.
-            var editUrl = "{{ url_for("dataSet.data.edit.form", {"id": dataSet.dataSetId}) }}".replace(":rowId", data.id);
+            var editUrl = "{{ url_for("dataSet.data.edit.form", {"id": dataSet.dataSetId, rowId:':id'}) }}".replace(":rowId", data.id);
             XiboFormRender(editUrl);
         }, 500, true);
         

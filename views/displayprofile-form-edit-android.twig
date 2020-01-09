@@ -20,6 +20,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
+{% import "forms.twig" as forms %}
+
+{% block formHtml %}
 <div class="row">
     <div class="col-md-12">
         <ul class="nav nav-tabs" role="tablist">
@@ -35,7 +38,7 @@
         <form id="displayProfileForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("displayProfile.edit", {id: displayProfile.displayProfileId}) }}">
             <div class="tab-content">
                 <div class="tab-pane active" id="general">
-                    {% include "displayprofile-form-edit-common-fields.twig" %}
+                    {{ include('displayprofile-form-edit-common-fields.twig') }}
 
                     {% set title = "Email Address"|trans %}
                     {% set helpText = "The email address will be used to license this Player. This is the email address you provided when you purchased the licence."|trans %}
@@ -286,3 +289,4 @@
         </form>
     </div>
 </div>
+{% endblock %}
