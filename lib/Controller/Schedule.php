@@ -129,18 +129,21 @@ class Schedule extends Base
         // Boolean to check if the option show all was saved in session
         $displayGroupsShowAll = false;
 
-        if (count($displayGroupIds) > 0) {
+        if (is_array($displayGroupIds) && count($displayGroupIds) > 0) {
             foreach ($displayGroupIds as $displayGroupId) {
                 if ($displayGroupId == -1) {
                     $displayGroupsShowAll = true;
                     continue;
                 }
-                    
 
-                $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
-                
-                if ($this->getUser()->checkViewable($displayGroup)) {
-                    $displayGroups[] = $displayGroup;
+                try {
+                    $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+
+                    if ($this->getUser()->checkViewable($displayGroup)) {
+                        $displayGroups[] = $displayGroup;
+                    }
+                } catch (NotFoundException $e) {
+                    $this->getLog()->debug('Saved filter option for displayGroupId that no longer exists.');
                 }
             }
         }
