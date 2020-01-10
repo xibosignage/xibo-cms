@@ -888,8 +888,8 @@ class ForecastIo extends ModuleWidget
     /** @inheritdoc */
     public function getCacheDuration()
     {
-        $cachePeriod = $this->getSetting('cachePeriod', 60);
-        $updateInterval = $this->getOption('updateInterval', 60);
+        $cachePeriod = $this->getSetting('cachePeriod', 3600);
+        $updateInterval = $this->getOption('updateInterval', 60) * 60;
 
         return max($cachePeriod, $updateInterval);
     }
