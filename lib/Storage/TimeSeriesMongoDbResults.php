@@ -35,6 +35,11 @@ class TimeSeriesMongoDbResults implements TimeSeriesResultsInterface
     private $object;
 
     /**
+     * Total number of stats
+     */
+    public $totalCount;
+
+    /**
      * Iterator
      * @var \IteratorIterator
      */
@@ -108,5 +113,11 @@ class TimeSeriesMongoDbResults implements TimeSeriesResultsInterface
 
         return false;
 
+    }
+
+    /** @inheritdoc */
+    public function getTotalCount()
+    {
+        return $this->totalCount;
     }
 }
