@@ -478,8 +478,6 @@ class Schedule implements \JsonSerializable
         // Check and disallow Minute/Hourly repeats to be indefinite (or too long)
         $twelveHoursInSeconds = 12 * 60 * 60;
         $oneWeekInSeconds = 24 * 7 * 60 * 60;
-        $sixMonthsInSeconds = 6 * 30 * 24 * 60 * 60;
-
         if($this->recurrenceType == 'Minute') {
 
             if (empty($this->recurrenceRange)) {
@@ -501,9 +499,9 @@ class Schedule implements \JsonSerializable
             }
             $distance = ($this->getDate()->parse($this->recurrenceRange, 'U')->diffInSeconds($this->getDate()->parse($this->fromDt, 'U'))) / $this->recurrenceDetail;
 
-            if ($distance > $sixMonthsInSeconds) {
-                // Recurrence range cannot be more than 6 months
-                $exceedLimit = $this->getDate()->parse($this->fromDt, 'U')->addSeconds($sixMonthsInSeconds * $this->recurrenceDetail );
+            if ($distance > $oneWeekInSeconds) {
+                // Recurrence range cannot be more than 1 week
+                $exceedLimit = $this->getDate()->parse($this->fromDt, 'U')->addSeconds($oneWeekInSeconds * $this->recurrenceDetail );
                 throw new InvalidArgumentException(sprintf(__('The end time for this event can only be %s in the future because of the repeating interval being Hour.', $exceedLimit->format('Y-m-d H:i:s'))), 'recurrenceRange');
             }
         }
