@@ -114,6 +114,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $fromDt = isset($filterBy['fromDt']) ? $filterBy['fromDt'] : null;
         $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
         $statDate = isset($filterBy['statDate']) ? $filterBy['statDate'] : null;
+        $statId = isset($filterBy['statId']) ? $filterBy['statId'] : null;
 
         if ($statDate == null) {
 
@@ -146,7 +147,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $length = isset($filterBy['length']) ? $filterBy['length'] : null;
 
         $params = [];
-        $select = ' SELECT stat.statDate, stat.type, stat.displayId, stat.widgetId, stat.layoutId, stat.mediaId, stat.start as start, stat.end as end, stat.tag, stat.duration, stat.count, 
+        $select = ' SELECT stat.statId, stat.statDate, stat.type, stat.displayId, stat.widgetId, stat.layoutId, stat.mediaId, stat.start as start, stat.end as end, stat.tag, stat.duration, stat.count, 
         display.Display as display, layout.Layout as layout, media.Name AS media ';
 
         $body = '
@@ -167,7 +168,11 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         } else { // statDate Filter
             // get the next stats from the given date
             // we only get next chunk of stats from the laststatdate to todate
-            $body .= ' AND stat.statDate > '. $statDate->format('U');
+            $body .= ' AND stat.statDate >= '. $statDate->format('U');
+        }
+
+        if ($statId != null) {
+            $body .= ' AND stat.statId > '. $statId;
         }
 
         if (count($displayIds) > 0) {
@@ -242,7 +247,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             }
         }
 
-        $body .= " ORDER BY stat.start ";
+        $body .= " ORDER BY stat.statId ";
 
         $limit = '';
         if ($start !== null && $length !== null) {

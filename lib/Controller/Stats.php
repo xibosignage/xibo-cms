@@ -308,6 +308,7 @@ class Stats extends Base
         $layoutIds = $this->getSanitizer()->getIntArray('layoutId');
         $mediaIds = $this->getSanitizer()->getIntArray('mediaId');
         $statDate = $this->getSanitizer()->getDate('statDate');
+        $statId = $this->getSanitizer()->getString('statId');
         $campaignId = $this->getSanitizer()->getInt('campaignId');
 
         $start = $this->getSanitizer()->getInt('start', 0);
@@ -363,6 +364,7 @@ class Stats extends Base
                 'layoutIds' => $layoutIds,
                 'mediaIds' => $mediaIds,
                 'statDate' => $statDate,
+                'statId' => $statId,
                 'campaignId' => $campaignId,
                 'start' => $start,
                 'length' => $length,
@@ -381,6 +383,7 @@ class Stats extends Base
 
             $displayName = isset($row['display']) ? $this->getSanitizer()->string($row['display']) : '';
             $layoutName = isset($row['layout']) ? $this->getSanitizer()->string($row['layout']) : '';
+            $entry['id'] = $this->getSanitizer()->string($row['id']);
             $entry['type'] = $this->getSanitizer()->string($row['type']);
             $entry['displayId'] = $this->getSanitizer()->int(($row['displayId']));
             $entry['display'] = ($displayName != '') ? $displayName : __('Not Found');

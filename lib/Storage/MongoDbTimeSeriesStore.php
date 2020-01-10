@@ -22,6 +22,7 @@
 
 namespace Xibo\Storage;
 
+use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
 use MongoDB\Driver\Exception\AuthenticationException;
@@ -307,7 +308,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $fromDt = isset($filterBy['fromDt']) ? $filterBy['fromDt'] : null;
         $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
         $statDate = isset($filterBy['statDate']) ? $filterBy['statDate'] : null;
-
+        $statId = isset($filterBy['statId']) ? $filterBy['statId'] : null;
+        
         if ($statDate == null) {
 
             // Check whether fromDt and toDt are provided
@@ -353,7 +355,21 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             // get the next stats from the given date
             // we only get next chunk of stats from the laststatdate to todate
             $statDate = new UTCDateTime($statDate->format('U')*1000);
-            $match['$match']['statDate'] = [ '$gt' => $statDate];
+            $match['$match']['statDate'] = [ '$gte' => $statDate];
+        }
+
+        // in the case of user switches from mysql to mongo
+        // if ever adspace last statId set by mysql statId then an error will be thrown so we set statId to null
+        if (!empty($statId)) {
+            try {
+                $statId = new ObjectId($statId);
+            } catch (\MongoDB\Driver\Exception\InvalidArgumentException $e) {
+                $statId = null;
+            }
+        }
+
+        if (!empty($statId)) {
+            $match['$match']['_id'] = [ '$gt' => new ObjectId($statId)];
         }
 
         // Displays Filter
@@ -421,6 +437,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                $match,
                [
                    '$project' => [
+                       'id'=> '$_id',
                        'type'=> 1,
                        'start'=> 1,
                        'end'=> 1,

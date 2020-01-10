@@ -64,6 +64,7 @@ class TimeSeriesMongoDbResults implements TimeSeriesResultsInterface
 
             $entry = [];
 
+            $entry['id'] = $row['id'];
             $entry['type'] = $row['type'];
             $entry['start'] = $row['start']->toDateTime()->format('U');
             $entry['end'] = $row['end']->toDateTime()->format('U');
