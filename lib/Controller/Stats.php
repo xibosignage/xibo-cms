@@ -299,6 +299,7 @@ class Stats extends Base
      */
     public function grid()
     {
+        // This endpoint is only ever used by API
         $fromDt = $this->getSanitizer()->getDate('fromDt');
         $toDt = $this->getSanitizer()->getDate('toDt');
         $type = strtolower($this->getSanitizer()->getString('type'));
@@ -368,7 +369,7 @@ class Stats extends Base
             ]);
 
         // Get results as array
-        $result = $resultSet['result']->getArray();
+        $result = $resultSet->getArray();
 
         $rows = [];
         foreach ($result['statData'] as $row) {
@@ -401,7 +402,7 @@ class Stats extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $resultSet['totalCount'];
+        $this->getState()->recordsTotal = $resultSet->getTotalCount();
         $this->getState()->setData($rows);
     }
 
@@ -572,7 +573,7 @@ class Stats extends Base
         $out = fopen('php://output', 'w');
         fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count']);
 
-        while ($row = $resultSet['result']->getNextRow() ) {
+        while ($row = $resultSet->getNextRow() ) {
 
             $displayName = isset($row['display']) ? $this->getSanitizer()->string($row['display']) : '';
             $layoutName = isset($row['layout']) ? $this->getSanitizer()->string($row['layout']) : '';

@@ -113,7 +113,7 @@ class StatsArchiveTask implements TaskInterface
         $out = fopen($fileName, 'w');
         fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId']);
 
-        while ($row = $resultSet['result']->getNextRow() ) {
+        while ($row = $resultSet->getNextRow() ) {
 
             if ($this->timeSeriesStore->getEngine() == 'mongodb') {
 

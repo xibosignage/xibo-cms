@@ -165,7 +165,9 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         if (($fromDt != null) && ($toDt != null)) {
             $body .= ' AND stat.end > '. $fromDt->format('U') . ' AND stat.start <= '. $toDt->format('U');
         } else { // statDate Filter
-            $body .= ' AND stat.statDate >= '. $statDate->format('U');
+            // get the next stats from the given date
+            // we only get next chunk of stats from the laststatdate to todate
+            $body .= ' AND stat.statDate > '. $statDate->format('U');
         }
 
         if (count($displayIds) > 0) {
@@ -271,11 +273,10 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
 
         $result = new TimeSeriesMySQLResults($statement);
 
-        return
-            [
-                'result' => $result,
-                'totalCount' => isset($resTotal[0]['total']) ? $resTotal[0]['total'] : 0,
-            ];
+        // Total
+        $result->totalCount = isset($resTotal[0]['total']) ? $resTotal[0]['total'] : 0;
+
+        return $result;
     }
 
     /** @inheritdoc */

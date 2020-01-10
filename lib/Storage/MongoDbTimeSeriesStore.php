@@ -349,8 +349,11 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $toDt = new UTCDateTime($toDt->format('U')*1000);
             $match['$match']['start'] = [ '$lte' => $toDt];
         } else { // statDate Filter
+
+            // get the next stats from the given date
+            // we only get next chunk of stats from the laststatdate to todate
             $statDate = new UTCDateTime($statDate->format('U')*1000);
-            $match['$match']['statDate'] = [ '$gte' => $statDate];
+            $match['$match']['statDate'] = [ '$gt' => $statDate];
         }
 
         // Displays Filter
@@ -467,11 +470,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         }
         $totalCount = $totalCursor->toArray();
 
-        return
-            [
-                'result' => $result,
-                'totalCount' => $totalCount[0]['count']
-            ];
+        // Total
+        $result->totalCount = $totalCount[0]['count'];
+
+        return $result;
     }
 
     /** @inheritdoc */

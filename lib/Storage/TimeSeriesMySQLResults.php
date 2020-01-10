@@ -35,6 +35,11 @@ class TimeSeriesMySQLResults implements TimeSeriesResultsInterface
     private $object;
 
     /**
+     * Total number of stats
+     */
+    public $totalCount;
+
+    /**
      * @inheritdoc
      */
     public function __construct($stmtObject = null)
@@ -76,9 +81,20 @@ class TimeSeriesMySQLResults implements TimeSeriesResultsInterface
 
     }
 
+    /**
+     * @inheritdoc
+     */
     public function getNextRow()
     {
         return $this->object->fetch(\PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getTotalCount()
+    {
+        return $this->totalCount;
     }
 
 }
