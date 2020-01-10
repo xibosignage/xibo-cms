@@ -353,25 +353,22 @@ class Calendar extends ModuleWidget
         // Get the feed URL contents from cache or source
         $items = $this->parseFeed($this->getFeed(), $template, $currentEventTemplate);
 
-        // Return empty string if there are no items to show.
-        if (count($items) === 0) {
-            $this->getLog()->debug('No items returned after parsing the feed, including the noDataMessage');
-
             // Do we have a no-data message to display?
             $noDataMessage = $this->getRawNode('noDataMessage');
 
+        // Return no data message as the last element ( removed after JS event filtering )
             if ($noDataMessage != '') {
                 $items[] = [
                     'startDate' => 0,
                     'endDate' => Date::now()->addYear()->format('c'),
                     'item' => $noDataMessage,
-                    'currentEventItem' => $noDataMessage
+                'currentEventItem' => $noDataMessage,
+                'noDataMessage' => 1
                 ];
             } else {
                 $this->getLog()->error('Request failed for Widget=' . $this->getWidgetId() . '. Due to No Records Found');
                 return '';
             }
-        }
 
         // Information from the Module
         $itemsSideBySide = $this->getOption('itemsSideBySide', 0);
@@ -438,6 +435,12 @@ class Calendar extends ModuleWidget
                     $.each(items, function(index, element) {
                         // Parse the item and add it to the array if it has not finished yet
                         var endDate = moment(element.endDate);
+                        
+                        // If its the no data message element and the item array already have some elements
+                        // -> Skip that last element
+                        if(parsedItems.length > 0 && element.noDataMessage === 1) {
+                            return true;
+                        }
                         
                         if (endDate.isAfter(now)) {
                             if (moment(element.startDate).isBefore(now)) {
