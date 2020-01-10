@@ -7,6 +7,8 @@
 
 
 namespace Xibo\XTR;
+use Xibo\Entity\Region;
+use Xibo\Entity\Widget;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
 
@@ -24,11 +26,15 @@ class LayoutConvertTask implements TaskInterface
     /** @var LayoutFactory */
     private $layoutFactory;
 
+    /** @var \Xibo\Factory\ModuleFactory */
+    private $moduleFactory;
+
     /** @inheritdoc */
     public function setFactories($container)
     {
         $this->permissionFactory = $container->get('permissionFactory');
         $this->layoutFactory = $container->get('layoutFactory');
+        $this->moduleFactory = $container->get('moduleFactory');
         return $this;
     }
 
@@ -36,24 +42,42 @@ class LayoutConvertTask implements TaskInterface
     public function run()
     {
         // lklayoutmedia is removed at the end of this task
-        if (!$this->store->exists('SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = :schema AND TABLE_NAME = :name', [
-            'schema' => $_SERVER['MYSQL_DATABASE'],
+        if (!$this->store->exists('SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :name', [
             'name' => 'lklayoutmedia'
         ])) {
+            $this->appendRunMessage('Already converted');
             return;
         }
 
+        // Permissions handling
+        // -------------------
+        // Layout permissions should remain the same
+        // the lklayoutmediagroup table and lklayoutregiongroup table will be removed
+        // We do not have simple switch for the lklayoutmediagroup table as these are supposed to represent "Widgets"
+        // which did not exist at this point.
         // Build a keyed array of existing widget permissions
         $mediaPermissions = [];
-        foreach ($this->store->select('SELECT groupId, layoutId, regionId, mediaId, `view`, `edit`, `del` FROM `lklayoutmediagroup`', []) as $row) {
-            $permission = $this->permissionFactory->createEmpty();
-            $permission->entityId = 6; // Widget
-            $permission->groupId = $row['groupId'];
-            $permission->objectId = $row['layoutId'];
-            $permission->objectIdString = $row['regionId'];
-            $permission->view = $row['view'];
-            $permission->edit = $row['edit'];
-            $permission->delete = $row['del'];
+        foreach ($this->store->select('
+                SELECT `lklayoutmediagroup`.groupId, `lkwidgetmedia`.widgetId, `view`, `edit`, `del` 
+                  FROM `lklayoutmediagroup`
+                    INNER JOIN `lkwidgetmedia`
+                    ON `lklayoutmediagroup`.`mediaId` = `lkwidgetmedia`.widgetId
+                 WHERE `lkwidgetmedia`.widgetId IN (
+                     SELECT widget.widgetId
+                       FROM `widget`
+                        INNER JOIN `playlist`
+                        ON `playlist`.playlistId = `widget`.playlistId
+                      WHERE `playlist`.regionId = `lklayoutmediagroup`.regionId
+                 )
+            ', []) as $row) {
+            $permission = $this->permissionFactory->create(
+                $row['groupId'],
+                Widget::class,
+                $row['widgetId'],
+                $row['view'],
+                $row['edit'],
+                $row['del']
+            );
 
             $mediaPermissions[$row['mediaId']] = $permission;
         }
@@ -61,13 +85,14 @@ class LayoutConvertTask implements TaskInterface
         // Build a keyed array of existing region permissions
         $regionPermissions = [];
         foreach ($this->store->select('SELECT groupId, layoutId, regionId, `view`, `edit`, `del` FROM `lklayoutregiongroup`', []) as $row) {
-            $permission = $this->permissionFactory->createEmpty();
-            $permission->entityId = 7; // Widget
-            $permission->groupId = $row['groupId'];
-            $permission->objectId = $row['layoutId'];
-            $permission->view = $row['view'];
-            $permission->edit = $row['edit'];
-            $permission->delete = $row['del'];
+            $permission = $this->permissionFactory->create(
+                $row['groupId'],
+                Region::class,
+                $row['regionId'],
+                $row['view'],
+                $row['edit'],
+                $row['del']
+            );
 
             $regionPermissions[$row['regionId']] = $permission;
         }
@@ -76,7 +101,10 @@ class LayoutConvertTask implements TaskInterface
         $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
 
         // We need to go through each layout, save the XLF as a backup in the library and then upgrade it.
-        foreach ($this->store->select('SELECT layoutId, xml FROM `layout`', []) as $oldLayout) {
+        // This task applies to Layouts which are schemaVersion 1 or lower. xibosignage/xibo#2056
+        foreach ($this->store->select('SELECT layoutId, xml FROM `layout` WHERE schemaVersion < :schemaVersion', [
+            'schemaVersion' => 2
+        ]) as $oldLayout) {
 
             $oldLayoutId = intval($oldLayout['layoutId']);
 
@@ -89,6 +117,7 @@ class LayoutConvertTask implements TaskInterface
                     // Pull out the layout record, and set some best guess defaults
                     $layout = $this->layoutFactory->getById($oldLayoutId);
                     $layout->schemaVersion = 2;
+                    // We have to guess something here as we do not have any XML to go by. Default to landscape 1080p.
                     $layout->width = 1920;
                     $layout->height = 1080;
 
@@ -98,6 +127,15 @@ class LayoutConvertTask implements TaskInterface
 
                     // Create a new layout from the XML
                     $layout = $this->layoutFactory->loadByXlf($oldLayout['xml'], $this->layoutFactory->getById($oldLayoutId));
+                }
+
+                // We need one final pass through all widgets on the layout so that we can set the durations properly.
+                foreach ($layout->getWidgets() as $widget) {
+                    $module = $this->moduleFactory->createWithWidget($widget);
+                    $widget->calculateDuration($module, true);
+
+                    // Get global stat setting of widget to set to on/off/inherit
+                    $widget->setOptionValue('enableStat', 'attrib', $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
                 }
 
                 // Save the layout
@@ -132,10 +170,13 @@ class LayoutConvertTask implements TaskInterface
                     }
                 }
             } catch (\Exception $e) {
+                $this->appendRunMessage('Error upgrading Layout, this should be checked post-upgrade. ID: ' . $oldLayoutId);
                 $this->log->critical('Error upgrading Layout, this should be checked post-upgrade. ID: ' . $oldLayoutId);
                 $this->log->error($e->getMessage() . ' - ' . $e->getTraceAsString());
             }
         }
+
+        $this->appendRunMessage('Finished converting, dropping unnecessary tables.');
 
         // Drop the permissions
         $this->store->update('DROP TABLE `lklayoutmediagroup`;', []);
