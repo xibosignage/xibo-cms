@@ -171,6 +171,11 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $body .= ' AND stat.statDate >= '. $statDate->format('U');
         }
 
+        // In the case of user switches from  mongo to mysql - laststatId were saved as Mongo ObjectId string
+        if ($statId != null && !is_numeric($statId)) {
+            throw new InvalidArgumentException(__("Invalid statId provided"), 'statId');
+        }
+
         if ($statId != null) {
             $body .= ' AND stat.statId > '. $statId;
         }

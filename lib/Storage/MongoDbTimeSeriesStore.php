@@ -358,14 +358,9 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $match['$match']['statDate'] = [ '$gte' => $statDate];
         }
 
-        // in the case of user switches from mysql to mongo
-        // if ever adspace last statId set by mysql statId then an error will be thrown so we set statId to null
-        if (!empty($statId)) {
-            try {
-                $statId = new ObjectId($statId);
-            } catch (\MongoDB\Driver\Exception\InvalidArgumentException $e) {
-                $statId = null;
-            }
+        // In the case of user switches from mysql to mongo laststatId were saved as integer
+        if (!empty($statId) && is_numeric($statId)) {
+            throw new InvalidArgumentException(__("Invalid statId provided"), 'statId');
         }
 
         if (!empty($statId)) {
