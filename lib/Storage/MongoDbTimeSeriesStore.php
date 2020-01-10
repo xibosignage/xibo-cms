@@ -308,25 +308,37 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $fromDt = isset($filterBy['fromDt']) ? $filterBy['fromDt'] : null;
         $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
         $statDate = isset($filterBy['statDate']) ? $filterBy['statDate'] : null;
-        $statId = isset($filterBy['statId']) ? $filterBy['statId'] : null;
-        
+
+        // In the case of user switches from mysql to mongo - laststatId were saved as integer
+        if (isset($filterBy['statId'])) {
+            if (is_numeric($filterBy['statId'])) {
+                throw new InvalidArgumentException(__('Invalid statId provided'), 'statId');
+            }
+            else {
+                $statId = $filterBy['statId'];
+            }
+        } else {
+            $statId = null;
+        }
+
         if ($statDate == null) {
 
             // Check whether fromDt and toDt are provided
             if (($fromDt == null) && ($toDt == null)) {
-                throw new InvalidArgumentException(__("Either fromDt/toDt or statDate should be provided"), 'fromDt/toDt/statDate');
+                throw new InvalidArgumentException(__('Either fromDt/toDt or statDate should be provided'), 'fromDt/toDt/statDate');
+
             }
 
             if ($fromDt == null) {
-                throw new InvalidArgumentException(__("Fromdt cannot be null"), 'fromDt');
+                throw new InvalidArgumentException(__('Fromdt cannot be null'), 'fromDt');
             }
 
             if ($toDt == null) {
-                throw new InvalidArgumentException(__("Todt cannot be null"), 'toDt');
+                throw new InvalidArgumentException(__('Todt cannot be null'), 'toDt');
             }
         } else {
             if (($fromDt != null) || ($toDt != null)) {
-                throw new InvalidArgumentException(__("Either fromDt/toDt or statDate should be provided"), 'fromDt/toDt/statDate');
+                throw new InvalidArgumentException(__('Either fromDt/toDt or statDate should be provided'), 'fromDt/toDt/statDate');
             }
         }
 
@@ -356,11 +368,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             // we only get next chunk of stats from the laststatdate to todate
             $statDate = new UTCDateTime($statDate->format('U')*1000);
             $match['$match']['statDate'] = [ '$gte' => $statDate];
-        }
-
-        // In the case of user switches from mysql to mongo laststatId were saved as integer
-        if (!empty($statId) && is_numeric($statId)) {
-            throw new InvalidArgumentException(__("Invalid statId provided"), 'statId');
         }
 
         if (!empty($statId)) {

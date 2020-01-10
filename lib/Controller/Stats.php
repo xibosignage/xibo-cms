@@ -554,7 +554,7 @@ class Stats extends Base
         }
 
         if ($fromDt == null || $toDt == null) {
-            throw new InvalidArgumentException(__("Both fromDt/toDt should be provided"), 'fromDt/toDt');
+            throw new InvalidArgumentException(__('Both fromDt/toDt should be provided'), 'fromDt/toDt');
         }
 
         $fromDt->startOfDay();
