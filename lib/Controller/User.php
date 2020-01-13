@@ -35,6 +35,7 @@ use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\CampaignFactory;
+use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -1001,14 +1002,6 @@ class User extends Base
         $code = $this->getSanitizer()->getString('code');
         $recoveryCodes = $this->getSanitizer()->getStringArray('twoFactorRecoveryCodes');
 
-        if ($user->isSuperAdmin()) {
-            $user->showContentFrom = $this->getSanitizer()->getInt('showContentFrom');
-        }
-
-        if (!$user->isSuperAdmin() && $this->getSanitizer()->getInt('showContentFrom') == 2) {
-            throw new InvalidArgumentException(__('Option available only for Super Admins'), 'showContentFrom');
-        }
-
         if ($recoveryCodes != null || $recoveryCodes != []) {
             $user->twoFactorRecoveryCodes = json_decode($this->getSanitizer()->getStringArray('twoFactorRecoveryCodes'));
         }
@@ -1791,12 +1784,23 @@ class User extends Base
      *      description="successful operation"
      *  )
      * )
+     * @throws InvalidArgumentException
+     * @throws XiboException
      */
     public function prefEditFromForm()
     {
         $this->getUser()->setOptionValue('navigationMenuPosition', $this->getSanitizer()->getString('navigationMenuPosition'));
         $this->getUser()->setOptionValue('useLibraryDuration', $this->getSanitizer()->getCheckbox('useLibraryDuration'));
         $this->getUser()->setOptionValue('showThumbnailColumn', $this->getSanitizer()->getCheckbox('showThumbnailColumn'));
+
+        if ($this->getUser()->isSuperAdmin()) {
+            $this->getUser()->showContentFrom = $this->getSanitizer()->getInt('showContentFrom');
+        }
+
+        if (!$this->getUser()->isSuperAdmin() && $this->getSanitizer()->getInt('showContentFrom') == 2) {
+            throw new InvalidArgumentException(__('Option available only for Super Admins'), 'showContentFrom');
+        }
+
         $this->getUser()->save();
 
         // Return
