@@ -22,6 +22,7 @@
 
 namespace Xibo\Storage;
 
+use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
 use MongoDB\Driver\Exception\AuthenticationException;
@@ -308,23 +309,36 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
         $statDate = isset($filterBy['statDate']) ? $filterBy['statDate'] : null;
 
+        // In the case of user switches from mysql to mongo - laststatId were saved as integer
+        if (isset($filterBy['statId'])) {
+            if (is_numeric($filterBy['statId'])) {
+                throw new InvalidArgumentException(__('Invalid statId provided'), 'statId');
+            }
+            else {
+                $statId = $filterBy['statId'];
+            }
+        } else {
+            $statId = null;
+        }
+
         if ($statDate == null) {
 
             // Check whether fromDt and toDt are provided
             if (($fromDt == null) && ($toDt == null)) {
-                throw new InvalidArgumentException(__("Either fromDt/toDt or statDate should be provided"), 'fromDt/toDt/statDate');
+                throw new InvalidArgumentException(__('Either fromDt/toDt or statDate should be provided'), 'fromDt/toDt/statDate');
+
             }
 
             if ($fromDt == null) {
-                throw new InvalidArgumentException(__("Fromdt cannot be null"), 'fromDt');
+                throw new InvalidArgumentException(__('Fromdt cannot be null'), 'fromDt');
             }
 
             if ($toDt == null) {
-                throw new InvalidArgumentException(__("Todt cannot be null"), 'toDt');
+                throw new InvalidArgumentException(__('Todt cannot be null'), 'toDt');
             }
         } else {
             if (($fromDt != null) || ($toDt != null)) {
-                throw new InvalidArgumentException(__("Either fromDt/toDt or statDate should be provided"), 'fromDt/toDt/statDate');
+                throw new InvalidArgumentException(__('Either fromDt/toDt or statDate should be provided'), 'fromDt/toDt/statDate');
             }
         }
 
@@ -353,7 +367,11 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             // get the next stats from the given date
             // we only get next chunk of stats from the laststatdate to todate
             $statDate = new UTCDateTime($statDate->format('U')*1000);
-            $match['$match']['statDate'] = [ '$gt' => $statDate];
+            $match['$match']['statDate'] = [ '$gte' => $statDate];
+        }
+
+        if (!empty($statId)) {
+            $match['$match']['_id'] = [ '$gt' => new ObjectId($statId)];
         }
 
         // Displays Filter
@@ -421,6 +439,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                $match,
                [
                    '$project' => [
+                       'id'=> '$_id',
                        'type'=> 1,
                        'start'=> 1,
                        'end'=> 1,

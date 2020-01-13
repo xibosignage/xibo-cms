@@ -115,23 +115,35 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
         $statDate = isset($filterBy['statDate']) ? $filterBy['statDate'] : null;
 
+        // In the case of user switches from  mongo to mysql - laststatId were saved as Mongo ObjectId string
+        if (isset($filterBy['statId'])) {
+            if (!is_numeric($filterBy['statId'])) {
+                throw new InvalidArgumentException(__('Invalid statId provided'), 'statId');
+            }
+            else {
+                $statId = $filterBy['statId'];
+            }
+        } else {
+            $statId = null;
+        }
+
         if ($statDate == null) {
 
             // Check whether fromDt and toDt are provided
             if (($fromDt == null) && ($toDt == null)) {
-                throw new InvalidArgumentException(__("Either fromDt/toDt or statDate should be provided"), 'fromDt/toDt/statDate');
+                throw new InvalidArgumentException(__('Either fromDt/toDt or statDate should be provided'), 'fromDt/toDt/statDate');
             }
 
             if ($fromDt == null) {
-                throw new InvalidArgumentException(__("Fromdt cannot be null"), 'fromDt');
+                throw new InvalidArgumentException(__('Fromdt cannot be null'), 'fromDt');
             }
 
             if ($toDt == null) {
-                throw new InvalidArgumentException(__("Todt cannot be null"), 'toDt');
+                throw new InvalidArgumentException(__('Todt cannot be null'), 'toDt');
             }
         } else {
             if (($fromDt != null) || ($toDt != null)) {
-                throw new InvalidArgumentException(__("Either fromDt/toDt or statDate should be provided"), 'fromDt/toDt/statDate');
+                throw new InvalidArgumentException(__('Either fromDt/toDt or statDate should be provided'), 'fromDt/toDt/statDate');
             }
         }
 
@@ -146,7 +158,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $length = isset($filterBy['length']) ? $filterBy['length'] : null;
 
         $params = [];
-        $select = ' SELECT stat.statDate, stat.type, stat.displayId, stat.widgetId, stat.layoutId, stat.mediaId, stat.start as start, stat.end as end, stat.tag, stat.duration, stat.count, 
+        $select = ' SELECT stat.statId, stat.statDate, stat.type, stat.displayId, stat.widgetId, stat.layoutId, stat.mediaId, stat.start as start, stat.end as end, stat.tag, stat.duration, stat.count, 
         display.Display as display, layout.Layout as layout, media.Name AS media ';
 
         $body = '
@@ -167,7 +179,11 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         } else { // statDate Filter
             // get the next stats from the given date
             // we only get next chunk of stats from the laststatdate to todate
-            $body .= ' AND stat.statDate > '. $statDate->format('U');
+            $body .= ' AND stat.statDate >= '. $statDate->format('U');
+        }
+
+        if ($statId != null) {
+            $body .= ' AND stat.statId > '. $statId;
         }
 
         if (count($displayIds) > 0) {
@@ -242,7 +258,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             }
         }
 
-        $body .= " ORDER BY stat.start ";
+        $body .= " ORDER BY stat.statId ";
 
         $limit = '';
         if ($start !== null && $length !== null) {

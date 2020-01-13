@@ -59,6 +59,7 @@ class TimeSeriesMySQLResults implements TimeSeriesResultsInterface
             $entry = [];
 
             // Read the columns
+            $entry['id'] = $row['statId'];
             $entry['type'] = $row['type'];
             $entry['start'] = $row['start'];
             $entry['end'] = $row['end'];
