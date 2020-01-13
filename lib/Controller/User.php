@@ -1326,6 +1326,7 @@ class User extends Base
             'permissions' => $currentPermissions,
             'canSetOwner' => $object->canChangeOwner(),
             'owners' => $this->userFactory->query(),
+            'object' => $object,
             'help' => [
                 'permissions' => $this->getHelp()->link('Campaign', 'Permissions')
             ]
