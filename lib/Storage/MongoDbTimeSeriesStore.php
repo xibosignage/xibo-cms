@@ -490,7 +490,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $totalCount = $totalCursor->toArray();
 
         // Total
-        $result->totalCount = $totalCount[0]['count'];
+        $result->totalCount = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
 
         return $result;
     }
