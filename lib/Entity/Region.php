@@ -410,7 +410,9 @@ class Region implements \JsonSerializable
         }
         else if ($this->hash != $this->hash()) {
             $this->update();
-            $this->regionPlaylist = $this->playlistFactory->getByRegionId($this->regionId);
+            if ($this->regionPlaylist == null) {
+                $this->regionPlaylist = $this->playlistFactory->getByRegionId($this->regionId);
+            }
             $this->regionPlaylist->name = $this->name;
             $this->regionPlaylist->save();
 
