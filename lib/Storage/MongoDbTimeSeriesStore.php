@@ -321,27 +321,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $statId = null;
         }
 
-        if ($statDate == null) {
-
-            // Check whether fromDt and toDt are provided
-            if (($fromDt == null) && ($toDt == null)) {
-                throw new InvalidArgumentException(__('Either fromDt/toDt or statDate should be provided'), 'fromDt/toDt/statDate');
-
-            }
-
-            if ($fromDt == null) {
-                throw new InvalidArgumentException(__('Fromdt cannot be null'), 'fromDt');
-            }
-
-            if ($toDt == null) {
-                throw new InvalidArgumentException(__('Todt cannot be null'), 'toDt');
-            }
-        } else {
-            if (($fromDt != null) || ($toDt != null)) {
-                throw new InvalidArgumentException(__('Either fromDt/toDt or statDate should be provided'), 'fromDt/toDt/statDate');
-            }
-        }
-
         $type = isset($filterBy['type']) ? $filterBy['type'] : null;
         $displayIds = isset($filterBy['displayIds']) ? $filterBy['displayIds'] : [];
         $layoutIds = isset($filterBy['layoutIds']) ? $filterBy['layoutIds'] : [];
@@ -362,10 +341,11 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             $toDt = new UTCDateTime($toDt->format('U')*1000);
             $match['$match']['start'] = [ '$lte' => $toDt];
-        } else { // statDate Filter
+        }
 
-            // get the next stats from the given date
-            // we only get next chunk of stats from the laststatdate to todate
+        // statDate Filter
+        // get the next stats from the given date
+        if ($statDate != null) {
             $statDate = new UTCDateTime($statDate->format('U')*1000);
             $match['$match']['statDate'] = [ '$gte' => $statDate];
         }

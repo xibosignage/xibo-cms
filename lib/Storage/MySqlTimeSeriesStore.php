@@ -127,26 +127,6 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $statId = null;
         }
 
-        if ($statDate == null) {
-
-            // Check whether fromDt and toDt are provided
-            if (($fromDt == null) && ($toDt == null)) {
-                throw new InvalidArgumentException(__('Either fromDt/toDt or statDate should be provided'), 'fromDt/toDt/statDate');
-            }
-
-            if ($fromDt == null) {
-                throw new InvalidArgumentException(__('Fromdt cannot be null'), 'fromDt');
-            }
-
-            if ($toDt == null) {
-                throw new InvalidArgumentException(__('Todt cannot be null'), 'toDt');
-            }
-        } else {
-            if (($fromDt != null) || ($toDt != null)) {
-                throw new InvalidArgumentException(__('Either fromDt/toDt or statDate should be provided'), 'fromDt/toDt/statDate');
-            }
-        }
-
         $type = isset($filterBy['type']) ? $filterBy['type'] : null;
         $displayIds = isset($filterBy['displayIds']) ? $filterBy['displayIds'] : [];
         $layoutIds = isset($filterBy['layoutIds']) ? $filterBy['layoutIds'] : [];
@@ -176,10 +156,12 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         // fromDt/toDt Filter
         if (($fromDt != null) && ($toDt != null)) {
             $body .= ' AND stat.end > '. $fromDt->format('U') . ' AND stat.start <= '. $toDt->format('U');
-        } else { // statDate Filter
-            // get the next stats from the given date
-            // we only get next chunk of stats from the laststatdate to todate
-            $body .= ' AND stat.statDate >= '. $statDate->format('U');
+        }
+
+        // statDate Filter
+        // get the next stats from the given date
+        if ($statDate != null) {
+            $body .= ' AND stat.statDate >= ' . $statDate->format('U');
         }
 
         if ($statId != null) {
