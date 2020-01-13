@@ -252,6 +252,20 @@ class Stats extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="statDate",
+     *      in="formData",
+     *      description="The statDate filter returns records that are greater than or equal a particular date",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="statId",
+     *      in="formData",
+     *      description="The statId filter returns records that are greater than a particular statId",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="displayId",
      *      in="formData",
      *      description="An optional display Id to filter",
