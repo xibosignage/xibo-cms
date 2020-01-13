@@ -668,7 +668,7 @@ class Region extends Base
             $this->getState()->extra['text'] = __('Empty Region');
         } catch (InvalidArgumentException $e) {
             $this->getState()->extra['empty'] = true;
-            $this->getState()->extra['text'] = __('Please select a Playlist');
+            $this->getState()->extra['text'] = __('Please correct the error with this Widget');
         }
     }
 

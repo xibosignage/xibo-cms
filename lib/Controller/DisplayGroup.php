@@ -582,10 +582,11 @@ class DisplayGroup extends Base
     public function edit($displayGroupId)
     {
         $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
-        $preEditIsDynamic = $displayGroup->isDynamic;
+        $preEditIsDynamic = $displayGroup->getOriginalValue('isDynamic');
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $displayGroup->displayGroup = $this->getSanitizer()->getString('displayGroup');
