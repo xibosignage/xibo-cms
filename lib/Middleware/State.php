@@ -1121,7 +1121,8 @@ class State extends Middleware
                 $container->displayGroupFactory,
                 $container->widgetFactory,
                 $container->playerVersionFactory,
-                $container->playlistFactory
+                $container->playlistFactory,
+                $container->dataSetFactory
             );
         });
 

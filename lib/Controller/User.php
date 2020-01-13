@@ -132,6 +132,9 @@ class User extends Base
     /** @var PlaylistFactory */
     private $playlistFactory;
 
+    /** @var DataSetFactory */
+    private $dataSetFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -157,10 +160,11 @@ class User extends Base
      * @param WidgetFactory $widgetFactory
      * @param PlayerVersionFactory $playerVersionFactory
      * @param PlaylistFactory $playlistFactory
+     * @param DataSetFactory $dataSetFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userFactory,
                                 $userTypeFactory, $userGroupFactory, $pageFactory, $permissionFactory,
-                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory)
+                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory, $dataSetFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -180,6 +184,7 @@ class User extends Base
         $this->widgetFactory = $widgetFactory;
         $this->playerVersionFactory = $playerVersionFactory;
         $this->playlistFactory = $playlistFactory;
+        $this->dataSetFactory = $dataSetFactory;
     }
 
     /**
@@ -853,7 +858,7 @@ class User extends Base
             throw new AccessDeniedException();
 
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
-        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory, $this->playerVersionFactory, $this->playlistFactory);
+        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory, $this->playerVersionFactory, $this->playlistFactory, $this->dataSetFactory);
 
         if ($this->getSanitizer()->getCheckbox('deleteAllItems') != 1) {
 
