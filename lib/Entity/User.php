@@ -755,6 +755,12 @@ class User implements \JsonSerializable
             'oldUserId' => $this->userId
         ]);
 
+        // Reassign Dayparts
+        $this->getStore()->update('UPDATE `daypart` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
         // Load again
         $this->loaded = false;
         $this->load(true);
@@ -914,6 +920,7 @@ class User implements \JsonSerializable
 
         // Delete user specific entities
         $this->getStore()->update('DELETE FROM `resolution` WHERE userId = :userId', ['userId' => $this->userId]);
+        $this->getStore()->update('DELETE FROM `daypart` WHERE userId = :userId', ['userId' => $this->userId]);
         $this->getStore()->update('DELETE FROM `session` WHERE userId = :userId', ['userId' => $this->userId]);
         $this->getStore()->update('DELETE FROM `user` WHERE userId = :userId', ['userId' => $this->userId]);
     }
