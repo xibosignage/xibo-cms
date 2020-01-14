@@ -125,7 +125,6 @@ $app->get('/layout/status/:id', '\Xibo\Controller\Layout:status')->name('layout.
 // Layout Import
 $app->map('/layout/import', '\Xibo\Controller\Library:add')->via('HEAD');
 $app->post('/layout/import', '\Xibo\Controller\Layout:import')->name('layout.import');
-$app->post('/layout/:id/upgrade', '\Xibo\Controller\Layout:upgrade')->name('layout.upgrade');
 // Tagging
 $app->post('/layout/:id/tag', '\Xibo\Controller\Layout:tag')->name('layout.tag');
 $app->post('/layout/:id/untag', '\Xibo\Controller\Layout:untag')->name('layout.untag');
