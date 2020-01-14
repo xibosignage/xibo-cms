@@ -181,6 +181,7 @@ class Login extends Base
     public function login()
     {
         // Capture the prior route (if there is one)
+        $user = null;
         $redirect = 'login';
         $priorRoute = ($this->getSanitizer()->getString('priorRoute'));
 
@@ -189,16 +190,16 @@ class Login extends Base
             $username = $this->getSanitizer()->getUserName('username');
             $password = $this->getSanitizer()->getPassword('password');
 
-            $this->getLog()->debug('Login with username %s', $username);
+            $this->getLog()->debug('Login with username ' . $username);
 
             // Get our user
             try {
                 /* @var User $user */
                 $user = $this->userFactory->getByName($username);
 
-                // Dooh user
+                // DOOH user
                 if ($user->userTypeId === 4) {
-                    throw new AccessDeniedException('Invalid User Type');
+                    throw new AccessDeniedException('Sorry this account does not exist or does not have permission to access the web portal.');
                 }
 
                 // Check password
@@ -210,27 +211,8 @@ class Login extends Base
                     $this->app->redirect('tfa');
                 }
 
-                $user->touch();
-
-                $this->getLog()->info('%s user logged in.', $user->userName);
-
-                // Set the userId on the log object
-                $this->getLog()->setUserId($user->userId);
-
-                // Overwrite our stored user with this new object.
-                $this->getApp()->user = $user;
-
-                // Switch Session ID's
-                $session = $this->session;
-                $session->setIsExpired(0);
-                $session->regenerateSessionId();
-                $session->setUser($user->userId);
-
-                // Audit Log
-                $this->getLog()->audit('User', $user->userId, 'Login Granted', [
-                    'IPAddress' => $this->getApp()->request()->getIp(),
-                    'UserAgent' => $this->getApp()->request()->getUserAgent()
-                ]);
+                // We are logged in, so complete the login flow
+                $this->completeLoginFlow($user);
             }
             catch (NotFoundException $e) {
                 throw new AccessDeniedException('User not found');
@@ -240,7 +222,10 @@ class Login extends Base
         }
         catch (\Xibo\Exception\AccessDeniedException $e) {
             $this->getLog()->warning($e->getMessage());
-            if ($user->userTypeId != 4) {
+
+            // Modify our return message depending on whether we're a DOOH user or not
+            // we do this because a DOOH user is not allowed to log into the web UI directly and is API only.
+            if ($user === null || $user->userTypeId != 4) {
                 $this->getApp()->flash('login_message', __('Username or Password incorrect'));
             } else {
                 $this->getApp()->flash('login_message', __($e->getMessage()));
@@ -252,13 +237,14 @@ class Login extends Base
         }
 
         $this->setNoOutput(true);
-        $this->getLog()->debug('Redirect to %s', $redirect);
+        $this->getLog()->debug('Redirect to ' . $redirect);
         $this->getApp()->redirect($redirect);
     }
 
     /**
      * Forgotten password link requested
      * @throws \Xibo\Exception\XiboException
+     * @throws \PHPMailer\PHPMailer\Exception
      */
     public function forgottenPassword()
     {
@@ -580,27 +566,8 @@ class Login extends Base
         }
 
         if ($result) {
-            $user->touch();
-
-            $this->getLog()->info('%s user logged in.', $user->userName);
-
-            // Set the userId on the log object
-            $this->getLog()->setUserId($user->userId);
-
-            // Overwrite our stored user with this new object.
-            $this->getApp()->user = $user;
-
-            // Switch Session ID's
-            $session = $this->session;
-            $session->setIsExpired(0);
-            $session->regenerateSessionId();
-            $session->setUser($user->userId);
-
-            // Audit Log
-            $this->getLog()->audit('User', $user->userId, 'Login Granted', [
-                'IPAddress' => $this->getApp()->request()->getIp(),
-                'UserAgent' => $this->getApp()->request()->getUserAgent()
-            ]);
+            // We are logged in at this point
+            $this->completeLoginFlow($user);
 
             $this->setNoOutput(true);
 
@@ -613,5 +580,34 @@ class Login extends Base
             $this->getApp()->flash('login_message', __('Authentication code incorrect'));
             $this->getApp()->redirectTo('login');
         }
+    }
+
+    /**
+     * @param \Xibo\Entity\User $user
+     * @throws \Xibo\Exception\ConfigurationException
+     */
+    private function completeLoginFlow($user)
+    {
+        $user->touch();
+
+        $this->getLog()->info($user->userName . ' user logged in.');
+
+        // Set the userId on the log object
+        $this->getLog()->setUserId($user->userId);
+
+        // Overwrite our stored user with this new object.
+        $this->getApp()->user = $user;
+
+        // Switch Session ID's
+        $session = $this->session;
+        $session->setIsExpired(0);
+        $session->regenerateSessionId();
+        $session->setUser($user->userId);
+
+        // Audit Log
+        $this->getLog()->audit('User', $user->userId, 'Login Granted', [
+            'IPAddress' => $this->getApp()->request()->getIp(),
+            'UserAgent' => $this->getApp()->request()->getUserAgent()
+        ]);
     }
 }
