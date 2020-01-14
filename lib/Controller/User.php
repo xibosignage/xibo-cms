@@ -1421,7 +1421,7 @@ class User extends Base
             if ($object->permissionsClass() == 'Xibo\Entity\Campaign') {
                 $this->getLog()->debug('Changing owner on child Layout');
 
-                foreach ($this->layoutFactory->getByCampaignId($object->getId()) as $layout) {
+                foreach ($this->layoutFactory->getByCampaignId($object->getId(), true, true) as $layout) {
                     $layout->setOwner($ownerId, true);
                     $layout->save(['notify' => false]);
                 }

@@ -410,9 +410,18 @@ class Region implements \JsonSerializable
         }
         else if ($this->hash != $this->hash()) {
             $this->update();
-            if ($this->regionPlaylist == null) {
-                $this->regionPlaylist = $this->playlistFactory->getByRegionId($this->regionId);
+
+            // There are 3 cases that we need to consider
+            // 1 - Saving direct edit of region properties, $this->regionPlaylist will be null, as such we load it from database.
+            // 2 - Saving whole Layout without changing ownership, $this->regionPlaylist will be populated including widgets property, we do not need to save widgets, load from database,
+            // 3 - Saving whole Layout and changing the ownership (reassignAll or setOwner on Layout), in this case, we need to save widgets to cascade the ownerId change, don't load from database
+            // case 3 due to - https://github.com/xibosignage/xibo/issues/2061
+            $regionPlaylist = $this->playlistFactory->getByRegionId($this->regionId);
+
+            if ($this->regionPlaylist == null || $this->ownerId == $regionPlaylist->ownerId) {
+                $this->regionPlaylist = $regionPlaylist;
             }
+
             $this->regionPlaylist->name = $this->name;
             $this->regionPlaylist->save();
 
