@@ -35,6 +35,11 @@ class TimeSeriesMongoDbResults implements TimeSeriesResultsInterface
     private $object;
 
     /**
+     * Total number of stats
+     */
+    public $totalCount;
+
+    /**
      * Iterator
      * @var \IteratorIterator
      */
@@ -59,6 +64,7 @@ class TimeSeriesMongoDbResults implements TimeSeriesResultsInterface
 
             $entry = [];
 
+            $entry['id'] = $row['id'];
             $entry['type'] = $row['type'];
             $entry['start'] = $row['start']->toDateTime()->format('U');
             $entry['end'] = $row['end']->toDateTime()->format('U');
@@ -108,5 +114,11 @@ class TimeSeriesMongoDbResults implements TimeSeriesResultsInterface
 
         return false;
 
+    }
+
+    /** @inheritdoc */
+    public function getTotalCount()
+    {
+        return $this->totalCount;
     }
 }

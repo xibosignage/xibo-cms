@@ -22,6 +22,7 @@
 
 namespace Xibo\Storage;
 
+use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
 use MongoDB\Driver\Exception\AuthenticationException;
@@ -308,24 +309,16 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
         $statDate = isset($filterBy['statDate']) ? $filterBy['statDate'] : null;
 
-        if ($statDate == null) {
-
-            // Check whether fromDt and toDt are provided
-            if (($fromDt == null) && ($toDt == null)) {
-                throw new InvalidArgumentException(__("Either fromDt/toDt or statDate should be provided"), 'fromDt/toDt/statDate');
+        // In the case of user switches from mysql to mongo - laststatId were saved as integer
+        if (isset($filterBy['statId'])) {
+            if (is_numeric($filterBy['statId'])) {
+                throw new InvalidArgumentException(__('Invalid statId provided'), 'statId');
             }
-
-            if ($fromDt == null) {
-                throw new InvalidArgumentException(__("Fromdt cannot be null"), 'fromDt');
-            }
-
-            if ($toDt == null) {
-                throw new InvalidArgumentException(__("Todt cannot be null"), 'toDt');
+            else {
+                $statId = $filterBy['statId'];
             }
         } else {
-            if (($fromDt != null) || ($toDt != null)) {
-                throw new InvalidArgumentException(__("Either fromDt/toDt or statDate should be provided"), 'fromDt/toDt/statDate');
-            }
+            $statId = null;
         }
 
         $type = isset($filterBy['type']) ? $filterBy['type'] : null;
@@ -348,9 +341,17 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             $toDt = new UTCDateTime($toDt->format('U')*1000);
             $match['$match']['start'] = [ '$lte' => $toDt];
-        } else { // statDate Filter
+        }
+
+        // statDate Filter
+        // get the next stats from the given date
+        if ($statDate != null) {
             $statDate = new UTCDateTime($statDate->format('U')*1000);
             $match['$match']['statDate'] = [ '$gte' => $statDate];
+        }
+
+        if (!empty($statId)) {
+            $match['$match']['_id'] = [ '$gt' => new ObjectId($statId)];
         }
 
         // Displays Filter
@@ -414,34 +415,35 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
         $collection = $this->client->selectCollection($this->config['database'], $this->table);
         try {
-           $query = [
-               $match,
-               [
-                   '$project' => [
-                       'type'=> 1,
-                       'start'=> 1,
-                       'end'=> 1,
-                       'layout'=> '$layoutName',
-                       'display'=> '$displayName',
-                       'media'=> '$mediaName',
-                       'tag'=> '$eventName',
-                       'duration'=> '$duration',
-                       'count'=> '$count',
-                       'displayId'=> 1,
-                       'layoutId'=> 1,
-                       'widgetId'=> 1,
-                       'mediaId'=> 1,
-                       'statDate'=> 1,
-                   ]
-               ],
-           ];
+            $query = [
+                $match,
+                [
+                    '$project' => [
+                        'id'=> '$_id',
+                        'type'=> 1,
+                        'start'=> 1,
+                        'end'=> 1,
+                        'layout'=> '$layoutName',
+                        'display'=> '$displayName',
+                        'media'=> '$mediaName',
+                        'tag'=> '$eventName',
+                        'duration'=> '$duration',
+                        'count'=> '$count',
+                        'displayId'=> 1,
+                        'layoutId'=> 1,
+                        'widgetId'=> 1,
+                        'mediaId'=> 1,
+                        'statDate'=> 1,
+                    ]
+                ],
+            ];
 
-           if ($start !== null && $length !== null) {
-               $query[]['$skip'] =  $start;
-               $query[]['$limit'] = $length;
-           }
+            if ($start !== null && $length !== null) {
+                $query[]['$skip'] =  $start;
+                $query[]['$limit'] = $length;
+            }
 
-           $cursor = $collection->aggregate($query);
+            $cursor = $collection->aggregate($query);
 
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
@@ -449,8 +451,28 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
         $result = new TimeSeriesMongoDbResults($cursor);
 
-        return $result;
+        // Get total
+        try {
+            $totalQuery = [
+                $match,
+                [
+                    '$group' => [
+                        '_id'=> null,
+                        'count' => ['$sum' => 1],
+                    ]
+                ],
+            ];
+            $totalCursor = $collection->aggregate($totalQuery);
 
+        } catch (\MongoDB\Exception\RuntimeException $e) {
+            $this->log->error($e->getMessage());
+        }
+        $totalCount = $totalCursor->toArray();
+
+        // Total
+        $result->totalCount = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
+
+        return $result;
     }
 
     /** @inheritdoc */

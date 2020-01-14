@@ -252,6 +252,20 @@ class Stats extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="statDate",
+     *      in="formData",
+     *      description="The statDate filter returns records that are greater than or equal a particular date",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="statId",
+     *      in="formData",
+     *      description="The statId filter returns records that are greater than a particular statId",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="displayId",
      *      in="formData",
      *      description="An optional display Id to filter",
@@ -299,25 +313,32 @@ class Stats extends Base
      */
     public function grid()
     {
-        $fromDt = $this->getSanitizer()->getDate('fromDt', $this->getSanitizer()->getDate('statsFromDt', $this->getDate()->parse()->addDay(-1)));
-        $toDt = $this->getSanitizer()->getDate('toDt', $this->getSanitizer()->getDate('statsToDt', $this->getDate()->parse()));
+        // This endpoint is only ever used by API
+        $fromDt = $this->getSanitizer()->getDate('fromDt');
+        $toDt = $this->getSanitizer()->getDate('toDt');
         $type = strtolower($this->getSanitizer()->getString('type'));
 
         $displayId = $this->getSanitizer()->getInt('displayId');
         $layoutIds = $this->getSanitizer()->getIntArray('layoutId');
         $mediaIds = $this->getSanitizer()->getIntArray('mediaId');
         $statDate = $this->getSanitizer()->getDate('statDate');
+        $statId = $this->getSanitizer()->getString('statId');
         $campaignId = $this->getSanitizer()->getInt('campaignId');
 
         $start = $this->getSanitizer()->getInt('start', 0);
         $length = $this->getSanitizer()->getInt('length', 10);
 
-        $fromDt->startOfDay();
-        $toDt->addDay()->startOfDay();
+        if ($fromDt != null) {
+            $fromDt->startOfDay();
+        }
+
+        if ($toDt != null) {
+            $toDt->addDay()->startOfDay();
+        }
 
         // What if the fromdt and todt are exactly the same?
         // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
-        if ($fromDt == $toDt) {
+        if ($fromDt != null && $toDt != null && $fromDt == $toDt) {
             $toDt->addDay(1);
         }
 
@@ -357,6 +378,7 @@ class Stats extends Base
                 'layoutIds' => $layoutIds,
                 'mediaIds' => $mediaIds,
                 'statDate' => $statDate,
+                'statId' => $statId,
                 'campaignId' => $campaignId,
                 'start' => $start,
                 'length' => $length,
@@ -375,6 +397,7 @@ class Stats extends Base
 
             $displayName = isset($row['display']) ? $this->getSanitizer()->string($row['display']) : '';
             $layoutName = isset($row['layout']) ? $this->getSanitizer()->string($row['layout']) : '';
+            $entry['id'] = $this->getSanitizer()->string($row['id']);
             $entry['type'] = $this->getSanitizer()->string($row['type']);
             $entry['displayId'] = $this->getSanitizer()->int(($row['displayId']));
             $entry['display'] = ($displayName != '') ? $displayName : __('Not Found');
@@ -396,6 +419,7 @@ class Stats extends Base
         }
 
         $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $resultSet->getTotalCount();
         $this->getState()->setData($rows);
     }
 
@@ -544,7 +568,7 @@ class Stats extends Base
         }
 
         if ($fromDt == null || $toDt == null) {
-            throw new InvalidArgumentException(__("Both fromDt/toDt should be provided"), 'fromDt/toDt');
+            throw new InvalidArgumentException(__('Both fromDt/toDt should be provided'), 'fromDt/toDt');
         }
 
         $fromDt->startOfDay();
