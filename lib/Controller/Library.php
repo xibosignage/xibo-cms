@@ -1807,7 +1807,7 @@ class Library extends Base
         if (!$this->getUser()->checkViewable($media))
             throw new AccessDeniedException();
 
-        $layouts = $this->layoutFactory->query(null, ['mediaId' => $mediaId]);
+        $layouts = $this->layoutFactory->query(null, ['mediaId' => $mediaId, 'showDrafts' => 1]);
 
         if (!$this->isApi()) {
             foreach ($layouts as $layout) {

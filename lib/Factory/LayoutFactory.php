@@ -1728,8 +1728,10 @@ class LayoutFactory extends BaseFactory
                   FROM `lkwidgetmedia`
                     INNER JOIN `widget`
                     ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                    INNER JOIN `lkplaylistplaylist`
+                    ON `widget`.playlistId = `lkplaylistplaylist`.childId
                     INNER JOIN `playlist`
-                    ON `playlist`.playlistId = `widget`.playlistId
+                    ON `lkplaylistplaylist`.parentId = `playlist`.playlistId
                     INNER JOIN `region`
                     ON `region`.regionId = `playlist`.regionId
                  WHERE `lkwidgetmedia`.mediaId = :mediaId
@@ -1747,8 +1749,10 @@ class LayoutFactory extends BaseFactory
                   FROM `lkwidgetmedia`
                     INNER JOIN `widget`
                     ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                    INNER JOIN `lkplaylistplaylist`
+                    ON `widget`.playlistId = `lkplaylistplaylist`.childId
                     INNER JOIN `playlist`
-                    ON `playlist`.playlistId = `widget`.playlistId
+                    ON `lkplaylistplaylist`.parentId = `playlist`.playlistId
                     INNER JOIN `region`
                     ON `region`.regionId = `playlist`.regionId
                     INNER JOIN `media` 

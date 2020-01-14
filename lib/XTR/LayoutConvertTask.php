@@ -11,6 +11,7 @@ use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Helper\Environment;
 
 /**
  * Class LayoutConvertTask
@@ -46,6 +47,11 @@ class LayoutConvertTask implements TaskInterface
             'name' => 'lklayoutmedia'
         ])) {
             $this->appendRunMessage('Already converted');
+
+            // Disable the task
+            $this->disableTask();
+
+            // Don't do anything further
             return;
         }
 
@@ -101,8 +107,8 @@ class LayoutConvertTask implements TaskInterface
         $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
 
         // We need to go through each layout, save the XLF as a backup in the library and then upgrade it.
-        // This task applies to Layouts which are schemaVersion 1 or lower. xibosignage/xibo#2056
-        foreach ($this->store->select('SELECT layoutId, xml FROM `layout` WHERE schemaVersion < :schemaVersion', [
+        // This task applies to Layouts which are schemaVersion 2 or lower. xibosignage/xibo#2056
+        foreach ($this->store->select('SELECT layoutId, xml FROM `layout` WHERE schemaVersion <= :schemaVersion', [
             'schemaVersion' => 2
         ]) as $oldLayout) {
 
@@ -116,7 +122,7 @@ class LayoutConvertTask implements TaskInterface
 
                     // Pull out the layout record, and set some best guess defaults
                     $layout = $this->layoutFactory->getById($oldLayoutId);
-                    $layout->schemaVersion = 2;
+
                     // We have to guess something here as we do not have any XML to go by. Default to landscape 1080p.
                     $layout->width = 1920;
                     $layout->height = 1080;
@@ -139,6 +145,7 @@ class LayoutConvertTask implements TaskInterface
                 }
 
                 // Save the layout
+                $layout->schemaVersion = Environment::$XLF_VERSION;
                 $layout->save(['notify' => false, 'audit' => false]);
 
                 // Now that we have new ID's we need to cross reference them with the old IDs and recreate the permissions
@@ -185,8 +192,18 @@ class LayoutConvertTask implements TaskInterface
         $this->store->update('ALTER TABLE `layout` DROP `xml`;', []);
 
         // Disable the task
-        $this->getTask()->isActive = 0;
+        $this->disableTask();
 
         $this->appendRunMessage('Conversion Completed');
+    }
+
+    /**
+     * Disables and saves this task immediately
+     */
+    private function disableTask()
+    {
+        $this->getTask()->isActive = 0;
+        $this->getTask()->save();
+        $this->store->commitIfNecessary();
     }
 }

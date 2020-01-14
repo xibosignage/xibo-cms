@@ -7,7 +7,7 @@ on:
       - develop
       - release22
   release:
-    types: [created]
+    types: [published]
 
 jobs:
   build:
