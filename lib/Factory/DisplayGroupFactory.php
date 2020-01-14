@@ -173,13 +173,13 @@ class DisplayGroupFactory extends BaseFactory
               FROM `lkdgdg`
                 INNER JOIN `displaygroup`
                 ON `lkdgdg`.childId = `displaygroup`.displayGroupId
-             WHERE `lkdgdg`.parentId = :displayGroupId
+             WHERE `lkdgdg`.parentId = :displayGroupId AND displaygroup.isDynamic = 0
             UNION ALL
             SELECT `displaygroup`.displayGroupId, `displaygroup`.displayGroup, depth * -1, 0 AS level
               FROM `lkdgdg`
                 INNER JOIN `displaygroup`
                 ON `lkdgdg`.parentId = `displaygroup`.displayGroupId
-             WHERE `lkdgdg`.childId = :displayGroupId AND `lkdgdg`.parentId <> :displayGroupId
+             WHERE `lkdgdg`.childId = :displayGroupId AND `lkdgdg`.parentId <> :displayGroupId AND displaygroup.isDynamic = 0
             ORDER BY level, depth, displayGroup
         ', [
             'displayGroupId' => $displayGroupId

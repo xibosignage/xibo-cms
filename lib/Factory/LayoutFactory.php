@@ -417,7 +417,7 @@ class LayoutFactory extends BaseFactory
      */
     public function getByBackgroundImageId($backgroundImageId)
     {
-        return $this->query(null, ['disableUserCheck' => 1, 'backgroundImageId' => $backgroundImageId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'backgroundImageId' => $backgroundImageId, 'showDrafts' => 1]);
     }
 
     /**

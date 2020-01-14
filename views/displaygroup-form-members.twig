@@ -86,6 +86,8 @@
                                     <form class="form-inline" id="displayGroupForm">
                                         {% set title %}{% trans "Name" %}{% endset %}
                                         {{ inline.input("displayGroup", title) }}
+
+                                        {{ forms.hidden("isDynamic", 0) }}
                                     </form>
                                 </div>
                             </div>
