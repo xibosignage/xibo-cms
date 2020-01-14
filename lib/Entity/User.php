@@ -32,6 +32,7 @@ use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\Factory\CampaignFactory;
+use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -358,6 +359,9 @@ class User implements \JsonSerializable
     /** @var PlaylistFactory */
     private $playlistFactory;
 
+    /** @var DataSetFactory */
+    private $dataSetFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -419,7 +423,7 @@ class User implements \JsonSerializable
      * @param PlaylistFactory $playlistFactory
      * @return $this
      */
-    public function setChildObjectDependencies($campaignFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $displayFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory)
+    public function setChildObjectDependencies($campaignFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $displayFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory, $dataSetFactory)
     {
         $this->campaignFactory = $campaignFactory;
         $this->layoutFactory = $layoutFactory;
@@ -430,6 +434,7 @@ class User implements \JsonSerializable
         $this->widgetFactory = $widgetFactory;
         $this->playerVersionFactory = $playerVersionFactory;
         $this->playlistFactory = $playlistFactory;
+        $this->dataSetFactory = $dataSetFactory;
         return $this;
     }
 
@@ -739,9 +744,19 @@ class User implements \JsonSerializable
             $displayGroup->setOwner($user->getOwnerId());
             $displayGroup->save(['saveTags' => false, 'manageDynamicDisplayLinks' => false]);
         }
+        foreach($this->dataSetFactory->getByOwnerId($this->userId) as $dataSet) {
+            $dataSet->setOwner($user->getOwnerId());
+            $dataSet->save();
+        }
 
         // Reassign resolutions
         $this->getStore()->update('UPDATE `resolution` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign Dayparts
+        $this->getStore()->update('UPDATE `daypart` SET userId = :userId WHERE userId = :oldUserId', [
             'userId' => $user->userId,
             'oldUserId' => $this->userId
         ]);
@@ -899,8 +914,13 @@ class User implements \JsonSerializable
             $displayGroup->delete();
         }
 
+        foreach($this->dataSetFactory->getByOwnerId($this->userId) as $dataSet) {
+            $dataSet->delete();
+        }
+
         // Delete user specific entities
         $this->getStore()->update('DELETE FROM `resolution` WHERE userId = :userId', ['userId' => $this->userId]);
+        $this->getStore()->update('DELETE FROM `daypart` WHERE userId = :userId', ['userId' => $this->userId]);
         $this->getStore()->update('DELETE FROM `session` WHERE userId = :userId', ['userId' => $this->userId]);
         $this->getStore()->update('DELETE FROM `user` WHERE userId = :userId', ['userId' => $this->userId]);
     }

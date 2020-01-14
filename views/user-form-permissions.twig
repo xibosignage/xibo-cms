@@ -27,7 +27,15 @@
 {% set randomId = random() %}
 
 {% block formTitle %}
-    {% trans %}Permissions for {{ entity }}{% endtrans %}
+    {% if object.isLayoutSpecific == 1 %}
+        {% set objectName = "Layout"|trans %}
+    {% elseif object.isDisplaySpecific == 1 %}
+        {% set objectName = "Display"|trans %}
+    {% else %}
+        {% set objectName = entity|trans %}
+    {% endif %}
+
+    {% trans %}Permissions for {{ objectName }}{% endtrans %}
 {% endblock %}
 
 {% block formButtons %}

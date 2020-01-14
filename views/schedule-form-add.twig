@@ -65,11 +65,6 @@
                         ] %}
                         {{ forms.dropdown("eventTypeId", "single", title, "", eventTypes, "id", "label", helpText) }}
 
-                        <div class="interrupt-control">
-                            {% set message = "Only one Interrupt Layout will show at the same time. If the Schedule for a Player resolves to more than one, then the Interrupt shown will depend on Priority and Display Order."|trans %}
-                            {{ forms.message(message, "alert alert-info") }}
-                        </div>
-
                         {% set title %}{% trans "Display" %}{% endset %}
                         {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
                         {% set attributes = [

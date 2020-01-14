@@ -920,6 +920,18 @@ class DataSet extends Base
         $this->setNoOutput(true);
     }
 
+
+    /**
+     * Import Json schema
+     *
+     *  @SWG\Definition(definition="importJsonSchema", type="object",
+     *            @SWG\Property(property="uniqueKeys", type="array", description="A name of the unique column", @SWG\Items(type="string", @SWG\Property(property="colName", type="string"))),
+     *            @SWG\Property(property="truncate", type="array", description="Flag True or False, whether to truncate existing data on import", @SWG\Items(type="string", @SWG\Property(property="truncate", type="string"))),
+     *            @SWG\Property(property="rows", type="array", description="An array of objects with pairs: ColumnName:Value", @SWG\Items(type="object", @SWG\Property(property="colName", type="string"))),
+     *  )
+     */
+
+
     /**
      * Import JSON
      * @param int $dataSetId
@@ -941,10 +953,9 @@ class DataSet extends Base
      *  @SWG\Parameter(
      *      name="data",
      *      in="body",
-     *      schema="json",
      *      description="The row data, field name vs field data format. e.g. { uniqueKeys: [col1], rows: [{col1: value1}]}",
-     *      type="string",
-     *      required=true
+     *      required=true,
+     *      @SWG\Schema(ref="#/definitions/importJsonSchema")
      *   ),
      *  @SWG\Response(
      *      response=200,
