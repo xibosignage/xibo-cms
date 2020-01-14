@@ -1562,6 +1562,11 @@ class Soap
             if ($tag == 'null')
                 $tag = null;
 
+            if ($fromdt > $todt) {
+                $this->getLog()->debug('From date is greater than to date: ' . $fromdt . ', toDt: ' . $todt);
+                continue;
+            }
+
             // Adjust the date according to the display timezone
             // stats are returned in the local date/time of the Player
             // the CMS will have been configured with that Player's timezone, so we can convert accordingly.
