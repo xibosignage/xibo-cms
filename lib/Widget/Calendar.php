@@ -541,7 +541,7 @@ class Calendar extends ModuleWidget
 
         // Create an ICal helper and pass it the contents of the file.
         $iCal = new ICal(false, [
-            'replaceWindowsTimeZoneIds' => ($this->getSetting('replaceWindowsTimeZoneIds', 0) == 1)
+            'replaceWindowsTimeZoneIds' => ($this->getOption('replaceWindowsTimeZoneIds', 0) == 1)
         ]);
 
         try {
@@ -553,7 +553,7 @@ class Calendar extends ModuleWidget
         }
 
         // Before we parse anything - should we use the calendar timezone as a base for our calculations?
-        if ($this->getSetting('useCalendarTimezone') == 1) {
+        if ($this->getOption('useCalendarTimezone') == 1) {
             $iCal->defaultTimeZone = $iCal->calendarTimeZone();
         }
 
@@ -580,14 +580,19 @@ class Calendar extends ModuleWidget
         $this->getLog()->debug('End of day is ' . $endOfDay->toDateTimeString());
 
         // Force timezone of each event?
-        $useEventTimezone = $this->getSetting('useEventTimezone', 1);
+        $useEventTimezone = $this->getOption('useEventTimezone', 1);
 
         // Go through each event returned
         foreach ($iCal->eventsFromInterval($this->getOption('customInterval', '1 week')) as $event) {
             try {
                 /** @var \ICal\Event $event */
-                $startDt = Date::instance($iCal->iCalDateToDateTime($event->dtstart, $useEventTimezone));
-                $endDt = Date::instance($iCal->iCalDateToDateTime($event->dtend, $useEventTimezone));
+                $startDt = Date::instance($iCal->iCalDateToDateTime($event->dtstart));
+                $endDt = Date::instance($iCal->iCalDateToDateTime($event->dtend));
+
+                if ($useEventTimezone === 1) {
+                    $startDt->setTimezone($iCal->defaultTimeZone);
+                    $endDt->setTimezone($iCal->defaultTimeZone);
+                }
 
                 $this->getLog()->debug('Event with ' . $startDt->format('c') . ' / ' . $endDt->format('c') . '. diff in days = ' . $endDt->diff($startDt)->days);
 
