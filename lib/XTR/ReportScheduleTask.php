@@ -177,6 +177,7 @@ class ReportScheduleTask implements TaskInterface
                 }
 
                 // Finally save schedule report
+                $rs->message = null;
                 $rs->save();
             }
         }
