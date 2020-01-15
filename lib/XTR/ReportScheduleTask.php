@@ -126,8 +126,6 @@ class ReportScheduleTask implements TaskInterface
                 $rs = $this->reportScheduleFactory->getById($reportSchedule->reportScheduleId);
                 $rs->previousRunDt = $rs->lastRunDt;
                 $rs->lastRunDt = time();
-                $rs->isActive = 0;
-                $rs->save();
 
                 $this->log->debug('Last run date is updated to '. $rs->lastRunDt);
 
@@ -141,7 +139,7 @@ class ReportScheduleTask implements TaskInterface
                     $this->log->debug(__('Run report results: %s.', json_encode($result, JSON_PRETTY_PRINT)));
 
                     //  Save the result in a json file
-                    $fileName = tempnam(sys_get_temp_dir(), 'reportschedule');
+                    $fileName = $this->config->getSetting('LIBRARY_LOCATION') . '/temp/reportschedule';
                     $out = fopen($fileName, 'w');
                     fwrite($out, json_encode($result));
                     fclose($out);
@@ -153,6 +151,8 @@ class ReportScheduleTask implements TaskInterface
 
                     if ($result !== true) {
                         $this->log->error(__('Can\'t create ZIP. Error Code: %s', $result));
+                        $rs->isActive = 0;
+                        $rs->save();
                         continue;
                     }
 
@@ -176,13 +176,14 @@ class ReportScheduleTask implements TaskInterface
 
                 } catch (\Exception $error) {
                     $this->log->error('Error: ' . $error->getMessage());
+                    $rs->isActive = 0;
+                    $rs->save();
                     continue;
                 }
 
                 // Add the last savedreport in Report Schedule
                 $this->log->debug('Last savedReportId in Report Schedule: '. $savedReport->savedReportId);
                 $rs->lastSavedReportId = $savedReport->savedReportId;
-                $rs->isActive = 1;
                 $rs->save();
             }
         }
