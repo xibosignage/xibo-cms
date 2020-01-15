@@ -624,7 +624,7 @@ class ModuleFactory extends BaseFactory
         foreach ($sth->fetchAll(\PDO::FETCH_ASSOC) as $row) {
             $module = $this->createEmpty();
             $module->moduleId = $this->getSanitizer()->int($row['ModuleID']);
-            $module->name = $this->getSanitizer()->string($row['Name']);
+            $module->name = __($this->getSanitizer()->string($row['Name']));
             $module->description = $this->getSanitizer()->string($row['Description']);
             $module->validExtensions = $this->getSanitizer()->string($row['ValidExtensions']);
             $module->renderAs = $this->getSanitizer()->string($row['render_as']);

@@ -592,7 +592,9 @@
     });
 
     // Function to wait for a given condition before going to the next step
-    function customTourWait(tour, step, checkCallback, delay = 500) {
+    function customTourWait(tour, step, checkCallback, delay) {
+
+        delay = (delay === undefined) ? 500 : delay;
 
         hasSeenNewUserWizard = -1;
         tour.end();
@@ -608,7 +610,10 @@
     }
 
     // Restart tour and/or save to prefs
-    function restartTour(tour, saveToPrefs = false) {
+    function restartTour(tour, saveToPrefs) {
+
+        saveToPrefs = (saveToPrefs === undefined) ? false : saveToPrefs;
+
         if(saveToPrefs) {
             setNewUserWizardState(false);
         }
@@ -618,7 +623,10 @@
             tour.restart();
         }
 
-    function setNewUserWizardState(seen = true) {
+    function setNewUserWizardState(seen) {
+        
+        seen = (seen === undefined) ? true : seen;
+
         // If var is invalid, skip set
         if(hasSeenNewUserWizard == -1) {
             return;
