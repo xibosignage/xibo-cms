@@ -122,51 +122,61 @@ class ReportScheduleTask implements TaskInterface
                 $rs = $this->reportScheduleFactory->getById($reportSchedule->reportScheduleId);
                 $rs->previousRunDt = $rs->lastRunDt;
                 $rs->lastRunDt = time();
-                $rs->save();
-
-                // Get the generated saved as report name
-                $saveAs = $this->reportService->generateSavedReportName($reportSchedule->reportName, $reportSchedule->filterCriteria);
 
                 $this->log->debug('Last run date is updated to '. $rs->lastRunDt);
 
-                // Run the report to get results
-                $result =  $this->reportService->runReport($reportSchedule->reportName, $reportSchedule->filterCriteria, $reportSchedule->userId);
-                $this->log->debug('Run report results: %s.', json_encode($result, JSON_PRETTY_PRINT));
+                try {
+                    // Get the generated saved as report name
+                    $saveAs = $this->reportService->generateSavedReportName($reportSchedule->reportName, $reportSchedule->filterCriteria);
 
-                //  Save the result in a json file
-                $fileName = tempnam(sys_get_temp_dir(), 'reportschedule');
-                $out = fopen($fileName, 'w');
-                fwrite($out, json_encode($result));
-                fclose($out);
+                    // Run the report to get results
+                    $result =  $this->reportService->runReport($reportSchedule->reportName, $reportSchedule->filterCriteria, $reportSchedule->userId);
+                    $this->log->debug(__('Run report results: %s.', json_encode($result, JSON_PRETTY_PRINT)));
 
-                // Create a ZIP file and add our temporary file
-                $zipName = $this->config->getSetting('LIBRARY_LOCATION') . 'temp/reportschedule.json.zip';
-                $zip = new \ZipArchive();
-                $result = $zip->open($zipName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-                if ($result !== true)
-                    throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
+                    //  Save the result in a json file
+                    $fileName = tempnam($this->config->getSetting('LIBRARY_LOCATION') . '/temp/','reportschedule');
+                    $out = fopen($fileName, 'w');
+                    fwrite($out, json_encode($result));
+                    fclose($out);
 
-                $zip->addFile($fileName, 'reportschedule.json');
-                $zip->close();
+                    // Create a ZIP file and add our temporary file
+                    $zipName = $this->config->getSetting('LIBRARY_LOCATION') . 'temp/reportschedule.json.zip';
+                    $zip = new \ZipArchive();
+                    $result = $zip->open($zipName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
 
-                // Remove the JSON file
-                unlink($fileName);
+                    if ($result !== true) {
+                        throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
+                    }
 
-                $runDateTimestamp = $this->date->parse()->format('U');
+                    $zip->addFile($fileName, 'reportschedule.json');
+                    $zip->close();
 
-                // Upload to the library
-                $media = $this->mediaFactory->create(__('reportschedule_' . $reportSchedule->reportScheduleId . '_' . $runDateTimestamp ), 'reportschedule.json.zip', 'savedreport', $reportSchedule->userId);
-                $media->save();
+                    // Remove the JSON file
+                    unlink($fileName);
 
-                // Save Saved report
-                $savedReport = $this->savedReportFactory->create($saveAs, $reportSchedule->reportScheduleId, $media->mediaId, time(), $reportSchedule->userId);
-                $savedReport->save();
+                    $runDateTimestamp = $this->date->parse()->format('U');
 
-                $this->createPdfAndNotification($reportSchedule, $savedReport, $media);
+                    // Upload to the library
+                    $media = $this->mediaFactory->create(__('reportschedule_' . $reportSchedule->reportScheduleId . '_' . $runDateTimestamp ), 'reportschedule.json.zip', 'savedreport', $reportSchedule->userId);
+                    $media->save();
 
-                // Add the last savedreport in Report Schedule
-                $this->log->debug('Last savedReportId in Report Schedule: '. $savedReport->savedReportId);
-                $rs->lastSavedReportId = $savedReport->savedReportId;
+                    // Save Saved report
+                    $savedReport = $this->savedReportFactory->create($saveAs, $reportSchedule->reportScheduleId, $media->mediaId, time(), $reportSchedule->userId);
+                    $savedReport->save();
+
+                    $this->createPdfAndNotification($reportSchedule, $savedReport, $media);
+
+                    // Add the last savedreport in Report Schedule
+                    $this->log->debug('Last savedReportId in Report Schedule: '. $savedReport->savedReportId);
+                    $rs->lastSavedReportId = $savedReport->savedReportId;
+
+                } catch (\Exception $error) {
+                    $rs->isActive = 0;
+                    $rs->message = $error->getMessage();
+                    $this->log->error('Error: ' . $error->getMessage());
+                }
+
+                // Finally save schedule report
                 $rs->save();
             }
         }

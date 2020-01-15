@@ -129,6 +129,7 @@ class ReportScheduleFactory extends BaseFactory
                 reportschedule.createdDt, 
                 reportschedule.userId,
                 reportschedule.isActive,
+                reportschedule.message,
                `user`.UserName AS owner 
            ';
 
@@ -203,7 +204,7 @@ class ReportScheduleFactory extends BaseFactory
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }
-        
+
         return $entries;
     }
 }
