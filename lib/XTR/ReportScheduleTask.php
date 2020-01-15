@@ -133,13 +133,12 @@ class ReportScheduleTask implements TaskInterface
                     // Get the generated saved as report name
                     $saveAs = $this->reportService->generateSavedReportName($reportSchedule->reportName, $reportSchedule->filterCriteria);
 
-
                     // Run the report to get results
                     $result =  $this->reportService->runReport($reportSchedule->reportName, $reportSchedule->filterCriteria, $reportSchedule->userId);
                     $this->log->debug(__('Run report results: %s.', json_encode($result, JSON_PRETTY_PRINT)));
 
                     //  Save the result in a json file
-                    $fileName = $this->config->getSetting('LIBRARY_LOCATION') . '/temp/reportschedule';
+                    $fileName = tempnam($this->config->getSetting('LIBRARY_LOCATION') . '/temp/','reportschedule');
                     $out = fopen($fileName, 'w');
                     fwrite($out, json_encode($result));
                     fclose($out);
@@ -150,10 +149,7 @@ class ReportScheduleTask implements TaskInterface
                     $result = $zip->open($zipName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
 
                     if ($result !== true) {
-                        $this->log->error(__('Can\'t create ZIP. Error Code: %s', $result));
-                        $rs->isActive = 0;
-                        $rs->save();
-                        continue;
+                        throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
                     }
 
                     $zip->addFile($fileName, 'reportschedule.json');
@@ -174,16 +170,16 @@ class ReportScheduleTask implements TaskInterface
 
                     $this->createPdfAndNotification($reportSchedule, $savedReport, $media);
 
+                    // Add the last savedreport in Report Schedule
+                    $this->log->debug('Last savedReportId in Report Schedule: '. $savedReport->savedReportId);
+                    $rs->lastSavedReportId = $savedReport->savedReportId;
+
                 } catch (\Exception $error) {
-                    $this->log->error('Error: ' . $error->getMessage());
                     $rs->isActive = 0;
-                    $rs->save();
-                    continue;
+                    $this->log->error('Error: ' . $error->getMessage());
                 }
 
-                // Add the last savedreport in Report Schedule
-                $this->log->debug('Last savedReportId in Report Schedule: '. $savedReport->savedReportId);
-                $rs->lastSavedReportId = $savedReport->savedReportId;
+                // Finally save schedule report
                 $rs->save();
             }
         }
