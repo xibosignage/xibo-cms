@@ -353,25 +353,22 @@ class Calendar extends ModuleWidget
         // Get the feed URL contents from cache or source
         $items = $this->parseFeed($this->getFeed(), $template, $currentEventTemplate);
 
-        // Return empty string if there are no items to show.
-        if (count($items) === 0) {
-            $this->getLog()->debug('No items returned after parsing the feed, including the noDataMessage');
-
             // Do we have a no-data message to display?
             $noDataMessage = $this->getRawNode('noDataMessage');
 
+        // Return no data message as the last element ( removed after JS event filtering )
             if ($noDataMessage != '') {
                 $items[] = [
                     'startDate' => 0,
                     'endDate' => Date::now()->addYear()->format('c'),
                     'item' => $noDataMessage,
-                    'currentEventItem' => $noDataMessage
+                'currentEventItem' => $noDataMessage,
+                'noDataMessage' => 1
                 ];
             } else {
                 $this->getLog()->error('Request failed for Widget=' . $this->getWidgetId() . '. Due to No Records Found');
                 return '';
             }
-        }
 
         // Information from the Module
         $itemsSideBySide = $this->getOption('itemsSideBySide', 0);
@@ -438,6 +435,12 @@ class Calendar extends ModuleWidget
                     $.each(items, function(index, element) {
                         // Parse the item and add it to the array if it has not finished yet
                         var endDate = moment(element.endDate);
+                        
+                        // If its the no data message element and the item array already have some elements
+                        // -> Skip that last element
+                        if(parsedItems.length > 0 && element.noDataMessage === 1) {
+                            return true;
+                        }
                         
                         if (endDate.isAfter(now)) {
                             if (moment(element.startDate).isBefore(now)) {
@@ -541,7 +544,7 @@ class Calendar extends ModuleWidget
 
         // Create an ICal helper and pass it the contents of the file.
         $iCal = new ICal(false, [
-            'replaceWindowsTimeZoneIds' => ($this->getSetting('replaceWindowsTimeZoneIds', 0) == 1)
+            'replaceWindowsTimeZoneIds' => ($this->getOption('replaceWindowsTimeZoneIds', 0) == 1)
         ]);
 
         try {
@@ -553,7 +556,7 @@ class Calendar extends ModuleWidget
         }
 
         // Before we parse anything - should we use the calendar timezone as a base for our calculations?
-        if ($this->getSetting('useCalendarTimezone') == 1) {
+        if ($this->getOption('useCalendarTimezone') == 1) {
             $iCal->defaultTimeZone = $iCal->calendarTimeZone();
         }
 
@@ -580,14 +583,19 @@ class Calendar extends ModuleWidget
         $this->getLog()->debug('End of day is ' . $endOfDay->toDateTimeString());
 
         // Force timezone of each event?
-        $useEventTimezone = $this->getSetting('useEventTimezone', 1);
+        $useEventTimezone = $this->getOption('useEventTimezone', 1);
 
         // Go through each event returned
         foreach ($iCal->eventsFromInterval($this->getOption('customInterval', '1 week')) as $event) {
             try {
                 /** @var \ICal\Event $event */
-                $startDt = Date::instance($iCal->iCalDateToDateTime($event->dtstart, $useEventTimezone));
-                $endDt = Date::instance($iCal->iCalDateToDateTime($event->dtend, $useEventTimezone));
+                $startDt = Date::instance($iCal->iCalDateToDateTime($event->dtstart));
+                $endDt = Date::instance($iCal->iCalDateToDateTime($event->dtend));
+
+                if ($useEventTimezone === 1) {
+                    $startDt->setTimezone($iCal->defaultTimeZone);
+                    $endDt->setTimezone($iCal->defaultTimeZone);
+                }
 
                 $this->getLog()->debug('Event with ' . $startDt->format('c') . ' / ' . $endDt->format('c') . '. diff in days = ' . $endDt->diff($startDt)->days);
 

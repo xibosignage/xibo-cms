@@ -104,7 +104,6 @@ $app->get('/layout/form/discard/:id', '\Xibo\Controller\Layout:discardForm')->na
 $app->get('/layout/form/retire/:id', '\Xibo\Controller\Layout:retireForm')->name('layout.retire.form');
 $app->get('/layout/form/unretire/:id', '\Xibo\Controller\Layout:unretireForm')->name('layout.unretire.form');
 $app->get('/layout/form/setenablestat/:id', '\Xibo\Controller\Layout:setEnableStatForm')->name('layout.setenablestat.form');
-$app->get('/layout/form/upgrade/:id', '\Xibo\Controller\Layout:upgradeForm')->name('layout.upgrade.form');
 $app->get('/layout/form/export/:id', '\Xibo\Controller\Layout:exportForm')->name('layout.export.form');
 $app->get('/layout/form/campaign/assign/:id', '\Xibo\Controller\Layout:assignToCampaignForm')->name('layout.assignTo.campaign.form');
 

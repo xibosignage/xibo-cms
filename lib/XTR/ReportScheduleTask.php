@@ -21,6 +21,7 @@
  */
 
 namespace Xibo\XTR;
+use Xibo\Controller\Library;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\ReportScheduleFactory;
@@ -101,6 +102,9 @@ class ReportScheduleTask implements TaskInterface
     private function runReportSchedule()
     {
 
+        // Make sure the library exists
+        Library::ensureLibraryExists($this->config->getSetting('LIBRARY_LOCATION'));
+
         $reportSchedules = $this->reportScheduleFactory->query(null, ['isActive' => 1]);
 
         // Get list of ReportSchedule
@@ -122,51 +126,60 @@ class ReportScheduleTask implements TaskInterface
                 $rs = $this->reportScheduleFactory->getById($reportSchedule->reportScheduleId);
                 $rs->previousRunDt = $rs->lastRunDt;
                 $rs->lastRunDt = time();
-                $rs->save();
-
-                // Get the generated saved as report name
-                $saveAs = $this->reportService->generateSavedReportName($reportSchedule->reportName, $reportSchedule->filterCriteria);
 
                 $this->log->debug('Last run date is updated to '. $rs->lastRunDt);
 
-                // Run the report to get results
-                $result =  $this->reportService->runReport($reportSchedule->reportName, $reportSchedule->filterCriteria, $reportSchedule->userId);
-                $this->log->debug('Run report results: %s.', json_encode($result, JSON_PRETTY_PRINT));
+                try {
+                    // Get the generated saved as report name
+                    $saveAs = $this->reportService->generateSavedReportName($reportSchedule->reportName, $reportSchedule->filterCriteria);
 
-                //  Save the result in a json file
-                $fileName = tempnam(sys_get_temp_dir(), 'reportschedule');
-                $out = fopen($fileName, 'w');
-                fwrite($out, json_encode($result));
-                fclose($out);
+                    // Run the report to get results
+                    $result =  $this->reportService->runReport($reportSchedule->reportName, $reportSchedule->filterCriteria, $reportSchedule->userId);
+                    $this->log->debug(__('Run report results: %s.', json_encode($result, JSON_PRETTY_PRINT)));
 
-                // Create a ZIP file and add our temporary file
-                $zipName = $this->config->getSetting('LIBRARY_LOCATION') . 'temp/reportschedule.json.zip';
-                $zip = new \ZipArchive();
-                $result = $zip->open($zipName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-                if ($result !== true)
-                    throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
+                    //  Save the result in a json file
+                    $fileName = tempnam($this->config->getSetting('LIBRARY_LOCATION') . '/temp/','reportschedule');
+                    $out = fopen($fileName, 'w');
+                    fwrite($out, json_encode($result));
+                    fclose($out);
 
-                $zip->addFile($fileName, 'reportschedule.json');
-                $zip->close();
+                    // Create a ZIP file and add our temporary file
+                    $zipName = $this->config->getSetting('LIBRARY_LOCATION') . 'temp/reportschedule.json.zip';
+                    $zip = new \ZipArchive();
+                    $result = $zip->open($zipName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
 
-                // Remove the JSON file
-                unlink($fileName);
+                    if ($result !== true) {
+                        throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
+                    }
 
-                $runDateTimestamp = $this->date->parse()->format('U');
+                    $zip->addFile($fileName, 'reportschedule.json');
+                    $zip->close();
 
-                // Upload to the library
-                $media = $this->mediaFactory->create(__('reportschedule_' . $reportSchedule->reportScheduleId . '_' . $runDateTimestamp ), 'reportschedule.json.zip', 'savedreport', $reportSchedule->userId);
-                $media->save();
+                    // Remove the JSON file
+                    unlink($fileName);
 
-                // Save Saved report
-                $savedReport = $this->savedReportFactory->create($saveAs, $reportSchedule->reportScheduleId, $media->mediaId, time(), $reportSchedule->userId);
-                $savedReport->save();
+                    $runDateTimestamp = $this->date->parse()->format('U');
 
-                $this->createPdfAndNotification($reportSchedule, $savedReport, $media);
+                    // Upload to the library
+                    $media = $this->mediaFactory->create(__('reportschedule_' . $reportSchedule->reportScheduleId . '_' . $runDateTimestamp ), 'reportschedule.json.zip', 'savedreport', $reportSchedule->userId);
+                    $media->save();
 
-                // Add the last savedreport in Report Schedule
-                $this->log->debug('Last savedReportId in Report Schedule: '. $savedReport->savedReportId);
-                $rs->lastSavedReportId = $savedReport->savedReportId;
+                    // Save Saved report
+                    $savedReport = $this->savedReportFactory->create($saveAs, $reportSchedule->reportScheduleId, $media->mediaId, time(), $reportSchedule->userId);
+                    $savedReport->save();
+
+                    $this->createPdfAndNotification($reportSchedule, $savedReport, $media);
+
+                    // Add the last savedreport in Report Schedule
+                    $this->log->debug('Last savedReportId in Report Schedule: '. $savedReport->savedReportId);
+                    $rs->lastSavedReportId = $savedReport->savedReportId;
+
+                } catch (\Exception $error) {
+                    $rs->isActive = 0;
+                    $this->log->error('Error: ' . $error->getMessage());
+                }
+
+                // Finally save schedule report
                 $rs->save();
             }
         }
@@ -225,6 +238,7 @@ class ReportScheduleTask implements TaskInterface
 
             try {
                 $mpdf = new \Mpdf\Mpdf([
+                    'tempDir' => $this->config->getSetting('LIBRARY_LOCATION') . '/temp',
                     'orientation' => 'L',
                     'mode' => 'c',
                     'margin_left' => 20,
@@ -250,7 +264,7 @@ class ReportScheduleTask implements TaskInterface
                     $notification->subject = $report->description;
                     $notification->body = __('Attached please find the report for %s', $savedReport->saveAs);
                     $notification->createdDt = $this->date->getLocalDate(null, 'U');
-                    $notification->releaseDt = time() + 15 * 60 ; // 15 minutes after the notification is created so that the notification task can pick this
+                    $notification->releaseDt = time();
                     $notification->isEmail = 1;
                     $notification->isInterrupt = 0;
                     $notification->userId = $savedReport->userId; // event owner
@@ -265,8 +279,8 @@ class ReportScheduleTask implements TaskInterface
                     $notification->save();
                 }
             } catch (\Exception $error) {
-                $this->log->error('Report PDF could not be created and notification is not saved.');
-                $this->runMessage .= ' - Report PDF could not be created and notification is not saved.' . PHP_EOL . PHP_EOL;
+                $this->log->error($error->getMessage());
+                $this->runMessage .= $error->getMessage() . PHP_EOL . PHP_EOL;
             }
         }
 

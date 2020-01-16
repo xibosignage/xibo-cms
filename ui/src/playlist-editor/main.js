@@ -396,7 +396,7 @@ pE.deleteObject = function(objectType, objectId) {
 
         const widgetToDelete = pE.getElementByTypeAndId('widget', 'widget_' + objectId);
 
-        if(widgetToDelete.mediaIds.length == 0) {
+        if(widgetToDelete.isRegionSpecific()) {
             createDeleteModal(objectType, objectId);
         } else {
             pE.common.showLoadingScreen('checkMediaIsUsed');

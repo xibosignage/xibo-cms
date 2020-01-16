@@ -789,10 +789,10 @@ lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActio
             // Get buttons from form
             for(var button in res.buttons) {
                 if(res.buttons.hasOwnProperty(button)) {
-                    if(button != 'Cancel') {
+                    if(button != translations.cancel) {
                         let buttonType = 'btn-default';
 
-                        if(button === 'Save' || button === 'Publish') {
+                        if(button === translations.save || button === editorsTrans.publish) {
                             buttonType = 'btn-primary';
                         }
 
@@ -1015,7 +1015,7 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
 
         const widgetToDelete = lD.getElementByTypeAndId('widget', 'widget_' + objectAuxId + '_' + objectId, 'region_' + objectAuxId);
 
-        if(widgetToDelete.mediaIds.length == 0) {
+        if(widgetToDelete.isRegionSpecific()) {
             createDeleteModal(objectType, objectId);
         } else {
             lD.common.showLoadingScreen('checkMediaIsUsed');

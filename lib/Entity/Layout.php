@@ -36,10 +36,12 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Helper\Environment;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Widget\ModuleWidget;
 
 /**
  * Class Layout
@@ -1075,8 +1077,11 @@ class Layout implements \JsonSerializable
                 // Set the Layout Status
                 try {
                     $moduleStatus = $module->isValid();
+                    if ($module->hasStatusMessage()) {
+                        $this->pushStatusMessage($module->getStatusMessage());
+                    }
                 } catch (XiboException $xiboException) {
-                    $moduleStatus = 4;
+                    $moduleStatus = ModuleWidget::$STATUS_INVALID;
 
                     // Include the exception on
                     $this->pushStatusMessage($xiboException->getMessage());
@@ -1326,7 +1331,7 @@ class Layout implements \JsonSerializable
 
         // Update the layout status / duration accordingly
         if ($layoutHasEmptyRegion) {
-            $status = 4;
+            $status = ModuleWidget::$STATUS_INVALID;
             $this->pushStatusMessage(__('Empty Region'));
         }
 
@@ -1571,7 +1576,7 @@ class Layout implements \JsonSerializable
             }
 
             // Assume error
-            $this->status = 4;
+            $this->status = ModuleWidget::$STATUS_INVALID;
 
             // Reset duration
             $this->duration = 0;
@@ -1583,7 +1588,7 @@ class Layout implements \JsonSerializable
                 $this->getLog()->error('Cannot build Layout ' . $this->layoutId . '. error: ' . $e->getMessage());
 
                 // Will continue and save the status as 4
-                $this->status = 4;
+                $this->status = ModuleWidget::$STATUS_INVALID;
 
                 if ($e->getMessage() != '') {
                     $this->pushStatusMessage($e->getMessage());
@@ -1594,7 +1599,7 @@ class Layout implements \JsonSerializable
                 $options['notify'] = false;
             }
 
-            if ($this->status === 4 && $options['exceptionOnError']) {
+            if ($this->status === ModuleWidget::$STATUS_INVALID && $options['exceptionOnError']) {
                 $this->audit($this->layoutId, 'Publish layout failed, rollback', ['layoutId' => $this->layoutId]);
                 throw new InvalidArgumentException(__('There is an error with this Layout: %s', implode(',', $this->getStatusMessage())), 'status');
             }
@@ -1774,7 +1779,7 @@ class Layout implements \JsonSerializable
         $this->getLog()->debug('Adding Layout' . $this->layout);
 
         $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, enableStat, duration, autoApplyTransitions)
-                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, 3, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat, 0, :autoApplyTransitions)';
+                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, :schemaVersion, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat, 0, :autoApplyTransitions)';
 
         $time = $this->date->getLocalDate();
 
@@ -1788,6 +1793,7 @@ class Layout implements \JsonSerializable
             'status' => 3,
             'width' => $this->width,
             'height' => $this->height,
+            'schemaVersion' => Environment::$XLF_VERSION,
             'backgroundImageId' => $this->backgroundImageId,
             'backgroundColor' => $this->backgroundColor,
             'backgroundzIndex' => $this->backgroundzIndex,

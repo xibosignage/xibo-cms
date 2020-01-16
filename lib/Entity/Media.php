@@ -899,30 +899,35 @@ class Media implements \JsonSerializable
             $resizeLimit = $this->config->getSetting('DEFAULT_RESIZE_LIMIT');
 
             // Media released set to 0 for large size images
-            // if image size is greater than 8000 X 8000 then we flag that image as too big
-            if ($imgWidth > $resizeLimit || $imgHeight > $resizeLimit) {
+            // if image size is greater than Resize Limit then we flag that image as too big
+            if ($resizeLimit > 0 && ($imgWidth > $resizeLimit || $imgHeight > $resizeLimit)) {
                 $this->released = 2;
                 $this->getLog()->debug('Image size is too big. MediaId '. $this->mediaId);
 
-            } elseif ($imgWidth > $imgHeight) { // 'landscape';
+            } elseif ($resizeThreshold > 0) {
+                if ($imgWidth > $imgHeight) { // 'landscape';
 
-                if ($imgWidth <= $resizeThreshold) {
-                    $this->released = 1;
-                } else {
-                    $this->released = 0;
-                    $this->getLog()->debug('Image exceeded threshold, released set to 0. MediaId '. $this->mediaId);
+                    if ($imgWidth <= $resizeThreshold) {
+                        $this->released = 1;
+                    } else {
+                        if ($resizeThreshold > 0) {
+                            $this->released = 0;
+                            $this->getLog()->debug('Image exceeded threshold, released set to 0. MediaId '. $this->mediaId);
+                        }
+                    }
+                } else { // 'portrait';
 
-                }
-            } else { // 'portrait';
-
-                if ($imgHeight <= $resizeThreshold) {
-                    $this->released = 1;
-                } else {
-                    $this->released = 0;
-                    $this->getLog()->debug('Image exceeded threshold, released set to 0. MediaId '. $this->mediaId);
-
+                    if ($imgHeight <= $resizeThreshold) {
+                        $this->released = 1;
+                    } else {
+                        if ($resizeThreshold > 0) {
+                            $this->released = 0;
+                            $this->getLog()->debug('Image exceeded threshold, released set to 0. MediaId '. $this->mediaId);
+                        }
+                    }
                 }
             }
+
         }
     }
 

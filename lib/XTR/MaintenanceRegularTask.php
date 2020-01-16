@@ -18,6 +18,7 @@ use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\WakeOnLan;
+use Xibo\Widget\ModuleWidget;
 
 /**
  * Class MaintenanceRegularTask
@@ -376,7 +377,7 @@ class MaintenanceRegularTask implements TaskInterface
                 if ($this->date->parse($layout->publishedDate)->format('U') < $this->date->getLocalDate(null, 'U')) {
                     try {
                         // check if draft is valid
-                        if ($layout->status === 4 && isset($layout->statusMessage)) {
+                        if ($layout->status === ModuleWidget::$STATUS_INVALID && isset($layout->statusMessage)) {
                             throw new XiboException(__($layout->statusMessage));
                         } else {
                             // publish the layout

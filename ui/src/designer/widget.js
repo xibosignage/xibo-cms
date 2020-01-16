@@ -211,6 +211,24 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
 
         return totalDuration;
     };
+
+    /**
+     * Check the module list for the widget type and get if it's region specific or not
+     * @returns {boolean}
+     */
+    this.isRegionSpecific = function() {
+        let self = this;
+        let regionSpecific = false;
+
+        Object.keys(modulesList).forEach(function(item) {
+            if(modulesList[item].type == self.subType) {
+                regionSpecific = (modulesList[item].regionSpecific == 1);
+            }
+        });
+        
+        return regionSpecific;
+    };
+
 };
 
 /**

@@ -63,6 +63,7 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Widget\ModuleWidget;
 
 /**
  * Class Soap
@@ -599,7 +600,7 @@ class Soap
                 $path = $layout->xlfToDisk(['notify' => false]);
 
                 // If the status is *still* 4, then we skip this layout as it cannot build
-                if ($layout->status === 4) {
+                if ($layout->status === ModuleWidget::$STATUS_INVALID) {
                     $this->getLog()->debug('Skipping layoutId ' . $layout->layoutId . ' which wont build');
                     continue;
                 }
@@ -1477,7 +1478,7 @@ class Soap
 
             // if fromdt and to dt are same then ignore them
             if ($fromdt == $todt) {
-                $this->getLog()->error('Fromdt (' . $fromdt. ') and ToDt (' . $todt. ') are same. ');
+                $this->getLog()->debug('Fromdt (' . $fromdt. ') and ToDt (' . $todt. ') are same. ');
                 continue;
             }
 
@@ -1560,6 +1561,11 @@ class Soap
 
             if ($tag == 'null')
                 $tag = null;
+
+            if ($fromdt > $todt) {
+                $this->getLog()->debug('From date is greater than to date: ' . $fromdt . ', toDt: ' . $todt);
+                continue;
+            }
 
             // Adjust the date according to the display timezone
             // stats are returned in the local date/time of the Player
