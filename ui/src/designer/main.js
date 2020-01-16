@@ -692,6 +692,8 @@ lD.toggleNavigatorEditing = function(enable) {
 
         // Render navigator
         this.renderContainer(this.navigator, this.selectedObject);
+
+        toastr.info(layoutDesignerTrans.regionEditModeMessage);
     } else {
 
         // Refresh designer
@@ -706,7 +708,6 @@ lD.toggleNavigatorEditing = function(enable) {
 
         // Show viewer div
         this.editorContainer.find('#layout-viewer-container').css('display', 'block');
-
     }
 };
 

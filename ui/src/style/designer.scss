@@ -62,7 +62,7 @@ $viewer-inline-editor-overlay-bg-colour: $xibo-color-secondary;
 $navigator-shadow-colour: $xibo-color-white;
 $navigator-non-editable-shadow-colour: $xibo-color-gray;
 
-$navigator-navbar-bg-colour: $xibo-color-blue;
+$navigator-navbar-bg-colour: $xibo-color-orange;
 $navigator-navbar-fg-colour: $xibo-color-white;
 $navigator-navbar-btn-bg-colour: $xibo-color-dark-blue;
 $navigator-navbar-btn-fg-colour: $xibo-color-white;
@@ -999,7 +999,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     display: none;
     background: $designer-primary-color;
     @include border-radius(4px);
-    border: 2px solid $designer-module-border-color;
+    border: 2px solid darken($navigator-navbar-bg-colour, 10%);
 
     .layout {
         overflow: hidden;
@@ -1034,7 +1034,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     #layout-navigator-navbar {
         .navigator-navbar {
             padding: 4px;
-            background: $navigator-navbar-bg-colour;
+            background: darken($navigator-navbar-bg-colour, 10%);
             color: $navigator-navbar-fg-colour;
             min-height: 40px;
             margin: 0;
