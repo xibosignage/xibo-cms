@@ -33,6 +33,16 @@
                         {% set title %}{% trans "Loop?" %}{% endset %}
                         {% set helpText %}{% trans "If there is only one item in this region should it loop?" %}{% endset %}
                         {{ forms.checkbox("loop", title, region.getOptionValue("loop", 0), helpText) }}
+
+                        {% set message = "When should the Region Loop be enabled?"|trans %}
+                        {{ forms.message(message, 'alert-info') }}
+                        {% set message2 = "* If your Region contains more than one Widget, Loop should not be enabled."|trans %}
+                        {{ forms.message(message2, 'alert-info') }}
+                        {% set message3 = "* If your Region contains one Widget, and that Widget is a 'fixed' item (eg Text), Loop should not be enabled."|trans %}
+                        {{ forms.message(message3, 'alert-info') }}
+                        {% set message4 = "* If your Region contains one Widget, and that Widget needs to update periodically (eg RSS Ticker Widget), Loop can be enabled ONLY if the Widget needs to update MORE frequently than the duration of the overall Layout."|trans %}
+                        {{ forms.message(message4, 'alert-info') }}
+
                     </div>
 
                     <div class="tab-pane" id="positioningTab">

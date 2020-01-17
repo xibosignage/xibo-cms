@@ -625,6 +625,9 @@ class Region extends Base
             // No media to preview
             $this->getState()->extra['empty'] = true;
             $this->getState()->extra['text'] = __('Empty Region');
+        } catch (InvalidArgumentException $e) {
+            $this->getState()->extra['empty'] = true;
+            $this->getState()->extra['text'] = __('Please correct the error with this Widget');
         }
     }
 

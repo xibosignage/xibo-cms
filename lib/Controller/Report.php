@@ -26,6 +26,7 @@ use Xibo\Entity\Media;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;
@@ -143,7 +144,11 @@ class Report extends Base
             $adhocReportName = $reportSchedule->reportName;
 
             // We get the report description
-            $reportSchedule->reportName = $this->reportService->getReportByName($reportSchedule->reportName)->description;
+            try {
+                $reportSchedule->reportName = $this->reportService->getReportByName($reportSchedule->reportName)->description;
+            } catch (NotFoundException $notFoundException) {
+                $reportSchedule->reportName = __('Unknown or removed report.');
+            }
 
             switch ($reportSchedule->schedule) {
 
@@ -745,6 +750,7 @@ class Report extends Base
 
             try {
                 $mpdf = new \Mpdf\Mpdf([
+                    'tempDir' => $this->getConfig()->getSetting('LIBRARY_LOCATION') . '/temp',
                     'orientation' => 'L',
                     'mode' => 'c',
                     'margin_left' => 20,
@@ -761,7 +767,7 @@ class Report extends Base
                 $mpdf->WriteHTML($body);
                 $mpdf->Output($fileName, \Mpdf\Output\Destination::FILE);
             } catch (\Exception $error) {
-                $this->getLog()->error('Report PDF could not be created and notification is not saved.');
+                $this->getLog()->error($error->getMessage());
             }
 
         }

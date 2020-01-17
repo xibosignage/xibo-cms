@@ -54,6 +54,7 @@ interface ReportServiceInterface
     /**
      * Get report by report name
      * @param string $reportName
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function getReportByName($reportName);
 

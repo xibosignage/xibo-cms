@@ -422,7 +422,7 @@ class MediaFactory extends BaseFactory
      */
     public function getByOwnerId($ownerId)
     {
-        return $this->query(null, array('disableUserCheck' => 1, 'ownerId' => $ownerId));
+        return $this->query(null, array('disableUserCheck' => 1, 'ownerId' => $ownerId, 'isEdited' => 1));
     }
 
     /**
