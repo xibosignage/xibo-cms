@@ -51,6 +51,7 @@ class ReportSchedule implements \JsonSerializable
     public $previousRunDt;
     public $createdDt;
     public $isActive = 1;
+    public $message;
 
     /**
      * @SWG\Property(description="The username of the User that owns this report schedule")
@@ -119,8 +120,8 @@ class ReportSchedule implements \JsonSerializable
     private function add()
     {
         $this->reportScheduleId = $this->getStore()->insert('
-            INSERT INTO `reportschedule` (`name`, `lastSavedReportId`, `reportName`, `schedule`, `lastRunDt`, `previousRunDt`, `filterCriteria`, `userId`, `isActive`, `createdDt`) VALUES
-                                         (:name,  :lastSavedReportId,  :reportName,  :schedule,  :lastRunDt,  :previousRunDt,  :filterCriteria,  :userId,  :isActive,  :createdDt)
+            INSERT INTO `reportschedule` (`name`, `lastSavedReportId`, `reportName`, `schedule`, `lastRunDt`, `previousRunDt`, `filterCriteria`, `userId`, `isActive`, `message`, `createdDt`) VALUES
+                                         (:name,  :lastSavedReportId,  :reportName,  :schedule,  :lastRunDt,  :previousRunDt,  :filterCriteria,  :userId,  :isActive,  :message,  :createdDt)
         ', [
             'name' => $this->name,
             'lastSavedReportId' => $this->lastSavedReportId,
@@ -131,6 +132,7 @@ class ReportSchedule implements \JsonSerializable
             'filterCriteria' => $this->filterCriteria,
             'userId' => $this->userId,
             'isActive' => $this->isActive,
+            'message' => $this->message,
             'createdDt' => $this->createdDt,
         ]);
     }
@@ -151,6 +153,7 @@ class ReportSchedule implements \JsonSerializable
             `filterCriteria` = :filterCriteria,
             `userId` = :userId,
             `isActive` = :isActive,
+            `message` = :message,
             `createdDt` = :createdDt            
            WHERE reportScheduleId = :reportScheduleId', [
             'reportScheduleId' => $this->reportScheduleId,
@@ -163,6 +166,7 @@ class ReportSchedule implements \JsonSerializable
             'filterCriteria' => $this->filterCriteria,
             'userId' => $this->userId,
             'isActive' => $this->isActive,
+            'message' => $this->message,
             'createdDt' => $this->createdDt
         ]);
     }
