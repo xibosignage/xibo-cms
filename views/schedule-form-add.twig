@@ -122,7 +122,7 @@
 
                         <div class="form-group preview-button-container">
                             <div class="col-md-offset-2 col-md-10">
-                                <a id="previewButton" class="btn btn-success" target="_blank" data-url="{{ url_for("campaign.preview") }}">{% trans "Preview" %} <span class="fa fa-tablet"></span></a>
+                                <a id="previewButton" class="btn btn-success" target="_blank" data-url="{{ url_for("campaign.preview", {id: ':id'}) }}">{% trans "Preview" %} <span class="fa fa-tablet"></span></a>
                                 <span class="help-block">{% trans "Preview your selection in a new tab" %}</span>
                             </div>
                         </div>

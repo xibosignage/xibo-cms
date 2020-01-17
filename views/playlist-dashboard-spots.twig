@@ -110,7 +110,7 @@
                                  data-widget-id=""
                                  data-playlist-id="{{ playlist.playlistId }}"
                                  data-widget-preview="{{ url_for("library.download") }}?preview=1"
-                                 data-widget-del="{{ url_for("playlist.module.widget.delete.form") }}"
+                                 data-widget-del="{{ url_for("playlist.module.widget.delete.form", {id:':id'}) }}"
                                  data-route-viewable="{{ currentUser.routeViewable("/playlist")  }}">
                                 {% if loop.first %}
                                     <button class="btn btn-block btn-success spot-action-button">{% trans "Add" %}</button>

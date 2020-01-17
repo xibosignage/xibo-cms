@@ -115,7 +115,7 @@
 
             $spotElement.html("<span class=\"fa fa-cogs fa-spin\"></span>");
 
-            $.ajax("{{ url_for("playlistdashboard.show") }}".replace(":id", playlistId), {
+            $.ajax("{{ url_for("playlistdashboard.show", {id:':id'}) }}".replace(":id", playlistId), {
                 method: "GET",
                 success: function(response) {
                     if (response.success) {
@@ -285,7 +285,7 @@
 
     </script>
     {# Output a template for the upload form which will appear in the spot when clicked. #}
-    {% raw %}
+    {% verbatim %}
     <script type="text/x-handlebars-template" id="template-spot-dashboard">
         <form method="post" enctype="multipart/form-data" data-max-file-size="{{ upload.maxSize }}" data-accept-file-types="/(\.|\/){{ upload.validExt }}$/i">
             <input type="hidden" name="playlistId" value="{{ playlistId }}" />
@@ -334,5 +334,5 @@
         {{/if}}
     </script>
 
-    {% endraw %}
+    {% endverbatim %}
 {% endblock %}

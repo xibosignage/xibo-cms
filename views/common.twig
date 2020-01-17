@@ -15,7 +15,7 @@
         var uploadFormUpdateAllDefault = {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %};
         var uploadFormDeleteOldDefault = {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %};
         var tooltipDelay = {'show': 250, 'hide': 0};
-        var playlistEditorUrl = "{{ url_for("playlist.timeline.form") }}";
+        var playlistEditorUrl = "{{ url_for("playlist.timeline.form", {id:':id'}) }}";
         
         // Save navbar position
         var navbarPosition = 'vertical';
@@ -137,10 +137,6 @@
                 preview: {
                     url: "{{ url_for("region.preview", {id: ':id'}) }}",
                     type: 'GET'
-                },
-                add: {
-                    url: "{{ url_for("module.widget.add", {id: ':id', type: ':type'}) }}",
-                    type: 'POST'
                 },
                 delete: {
                     url: "{{ url_for("module.widget.delete", {id: ':id'}) }}",
