@@ -278,6 +278,7 @@ Widget.prototype.createClone = function() {
     const widgetClone = {
         id: 'ghost_' + this.id,
         widgetName: this.widgetName,
+        moduleName: this.moduleName,
         subType: this.subType,
         duration: this.getTotalDuration(),
         regionId: this.regionId,

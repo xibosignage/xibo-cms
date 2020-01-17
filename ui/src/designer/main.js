@@ -284,6 +284,7 @@ $(document).ready(function() {
             // Refresh navigators and viewer
             lD.renderContainer(lD.navigator);
             lD.renderContainer(lD.viewer, lD.selectedObject);
+            lD.renderContainer(lD.timeline);
         }
     }, 250));
 });

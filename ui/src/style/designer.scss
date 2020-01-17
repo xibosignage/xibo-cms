@@ -345,11 +345,12 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         color: $timeline-widget-fg-color;
         font-weight: bold;
         height: 100%;
-        border: 1px solid $timeline-widget-border-color;
+        border: none;
+        @include box-shadow(0 0 0 1px $timeline-widget-border-color);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        padding: 0 4px;
+        padding: 0;
         @include border-radius(4px);
 
         .widgetLabel {
@@ -361,6 +362,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
             text-align: center;
             opacity: 0.85;
             padding: 0 4px;
+            margin-left: 4px;
         }
 
         .widgetName {
@@ -378,7 +380,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
             position: absolute;
             z-index: 2;
             right: 4px;
-            top: 4px;
+            top: 24px;
         }
 
         .widget-transition-container {
@@ -430,6 +432,10 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
             padding-left: 5px;
         }
 
+        &.hideContent > * {
+            display: none;
+        }
+
         i.editProperty {
             float: right;
             cursor: pointer;
@@ -453,6 +459,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
         .widgetName, .widgetSubType {
             color: $timeline-ghost-fg-color;
+            margin-left: 4px;
         }    
     }
 
