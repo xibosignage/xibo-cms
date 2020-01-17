@@ -175,8 +175,9 @@ class UserGroupFactory extends BaseFactory
         $entries = [];
         $params = [];
 
-        if ($sortOrder === null)
+        if ($sortOrder === null) {
             $sortOrder = ['`group`'];
+        }
 
         $select = '
         SELECT 	`group`.group,
@@ -194,7 +195,7 @@ class UserGroupFactory extends BaseFactory
         ';
 
         // Permissions
-        if ($parsedFilter->getCheckbox('disableUserCheck', ['default' => 0]) == 0) {
+        if ($parsedFilter->getCheckbox('disableUserCheck') == 0) {
             // Normal users can only see their group
             if ($this->getUser($request)->userTypeId != 1) {
                 $body .= '
@@ -234,7 +235,7 @@ class UserGroupFactory extends BaseFactory
             $params['userId'] = $parsedFilter->getInt('userId');
         }
 
-        if ($parsedFilter->getInt('isUserSpecific') != -1) {
+        if ($parsedFilter->getInt('isUserSpecific', ['default' => -1]) != -1) {
             $body .= ' AND isUserSpecific = :isUserSpecific ';
             $params['isUserSpecific'] = $parsedFilter->getInt('isUserSpecific');
         }
@@ -259,7 +260,7 @@ class UserGroupFactory extends BaseFactory
             $params['notificationId'] = $parsedFilter->getInt('notificationId');
         }
 
-        if ($parsedFilter->getInt('displayGroupId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('displayGroupId') !== null) {
             $body .= ' 
                 AND `group`.groupId IN (
                     SELECT DISTINCT `permission`.groupId
@@ -282,7 +283,7 @@ class UserGroupFactory extends BaseFactory
         $limit = '';
         // Paging
         if ($filterBy !== null && $parsedFilter->getInt('start', ['default' => 0]) !== null && $parsedFilter->getInt('length', ['default' => 10]) !== null) {
-            $limit = ' LIMIT ' . intval($parsedFilter->getInt('start'), 0) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . intval($parsedFilter->getInt('start', ['default' => 0]), 0) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

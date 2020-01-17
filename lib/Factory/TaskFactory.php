@@ -94,11 +94,13 @@ class TaskFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        if ($sortOrder == null)
+        if ($sortOrder == null) {
             $sortOrder = ['name'];
-
-        $entries = array();
-        $params = array();
+        }
+        
+        $sanitizedFilter = $this->getSanitizer($filterBy);
+        $entries = [];
+        $params = [];
         $select = '
           SELECT `taskId`, `name`, `status`, `pid`, `configFile`, `class`, `options`, `schedule`, 
               `lastRunDt`, `lastRunStatus`, `lastRunMessage`, `lastRunDuration`, `lastRunExitCode`,
@@ -108,18 +110,18 @@ class TaskFactory extends BaseFactory
         $body = ' FROM `task` 
            WHERE 1 = 1 ';
 
-        if ($this->getSanitizer()->getString('name', $filterBy) != null) {
-            $params['name'] = $this->getSanitizer()->getString('name', $filterBy);
+        if ($sanitizedFilter->getString('name') != null) {
+            $params['name'] = $sanitizedFilter->getString('name');
             $body .= ' AND `name` = :name ';
         }
 
-        if ($this->getSanitizer()->getString('class', $filterBy) != null) {
-            $params['class'] = $this->getSanitizer()->getString('class', $filterBy);
+        if ($sanitizedFilter->getString('class') != null) {
+            $params['class'] = $sanitizedFilter->getString('class');
             $body .= ' AND `class` = :class ';
         }
 
-        if ($this->getSanitizer()->getInt('taskId', $filterBy) !== null) {
-            $params['taskId'] = $this->getSanitizer()->getString('taskId', $filterBy);
+        if ($sanitizedFilter->getInt('taskId') !== null) {
+            $params['taskId'] = $sanitizedFilter->getString('taskId');
             $body .= ' AND `taskId` = :taskId ';
         }
 
@@ -128,8 +130,8 @@ class TaskFactory extends BaseFactory
 
         // Paging
         $limit = '';
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $limit;

@@ -209,11 +209,12 @@ class UserFactory extends BaseFactory
     public function query($sortOrder = [], $filterBy = [], Request $request = null)
     {
         $entries = [];
-        $parsedBody = $this->getSanitizer($filterBy);
-
+        $parsedFilter = $this->getSanitizer($filterBy);
+        $this->getLog()->debug('USER FILTER ' . json_encode($filterBy));
         // Default sort order
-        if ($sortOrder === null || count($sortOrder) <= 0)
+        if ($sortOrder === null || count($sortOrder) <= 0) {
             $sortOrder = ['userName'];
+        }
 
         $params = [];
         $select = '
@@ -260,7 +261,7 @@ class UserFactory extends BaseFactory
              WHERE 1 = 1
          ';
 
-        if ($parsedBody->getCheckbox('disableUserCheck') == 0) {
+        if ($parsedFilter->getCheckbox('disableUserCheck') == 0) {
             // Normal users can only see themselves
             if ($this->getUser($request)->userTypeId == 3) {
                 $filterBy['userId'] = $this->getUser($request)->userId;
@@ -283,67 +284,67 @@ class UserFactory extends BaseFactory
             }
         }
 
-        if ($parsedBody->getInt('notUserId') !== null) {
+        if ($parsedFilter->getInt('notUserId') !== null) {
             $body .= ' AND user.userId <> :notUserId ';
-            $params['notUserId'] = $parsedBody->getInt('notUserId');
+            $params['notUserId'] = $parsedFilter->getInt('notUserId');
         }
 
         // User Id Provided?
-        if ($parsedBody->getInt('userId') !== null) {
+        if ($parsedFilter->getInt('userId') !== null) {
             $body .= " AND user.userId = :userId ";
-            $params['userId'] = $parsedBody->getInt('userId');
+            $params['userId'] = $parsedFilter->getInt('userId');
         }
 
         // Groups Provided
-        $groups = $parsedBody->getIntArray('groupIds');
+        $groups = $parsedFilter->getIntArray('groupIds');
 
         if ($groups !== null && count($groups) > 0) {
             $body .= ' AND user.userId IN (SELECT userId FROM `lkusergroup` WHERE groupId IN (' . implode($groups, ',') . ')) ';
         }
 
         // User Type Provided
-        if ($parsedBody->getInt('userTypeId') !== null) {
+        if ($parsedFilter->getInt('userTypeId') !== null) {
             $body .= " AND user.userTypeId = :userTypeId ";
-            $params['userTypeId'] = $parsedBody->getInt('userTypeId');
+            $params['userTypeId'] = $parsedFilter->getInt('userTypeId');
         }
 
         // User Name Provided
-        if ($parsedBody->getString('exactUserName') != null) {
+        if ($parsedFilter->getString('exactUserName') != null) {
             $body .= " AND user.userName = :exactUserName ";
-            $params['exactUserName'] = $parsedBody->getString('exactUserName');
+            $params['exactUserName'] = $parsedFilter->getString('exactUserName');
         }
 
-        if ($parsedBody->getString('userName', $filterBy) != null) {
-            $terms = explode(',', $parsedBody->getString('userName'));
+        if ($parsedFilter->getString('userName') != null) {
+            $terms = explode(',', $parsedFilter->getString('userName'));
             $this->nameFilter('user', 'userName', $terms, $body, $params);
         }
 
         // Email Provided
-        if ($parsedBody->getString('email') != null) {
+        if ($parsedFilter->getString('email') != null) {
             $body .= " AND user.email = :email ";
-            $params['email'] = $parsedBody->getString('email');
+            $params['email'] = $parsedFilter->getString('email');
         }
 
         // Retired users?
-        if ($parsedBody->getInt('retired') !== null) {
+        if ($parsedFilter->getInt('retired') !== null) {
             $body .= " AND user.retired = :retired ";
-            $params['retired'] = $parsedBody->getInt('retired');
+            $params['retired'] = $parsedFilter->getInt('retired');
         }
 
-        if ($parsedBody->getString('clientId') != null) {
+        if ($parsedFilter->getString('clientId') != null) {
             $body .= ' AND user.userId = (SELECT userId FROM `oauth_clients` WHERE id = :clientId) ';
-            $params['clientId'] = $parsedBody->getString('clientId');
+            $params['clientId'] = $parsedFilter->getString('clientId');
         }
 
         // Sorting?
         $order = '';
         if (is_array($sortOrder))
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+            $order .= ' ORDER BY ' . implode(',', $sortOrder);
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $parsedBody->getInt('start') !== null && $parsedBody->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($parsedBody->getInt('start'), 0) . ', ' . $parsedBody->getInt('length', ['default' => 10]);
+        if ($filterBy !== null && $parsedFilter->getInt('start') !== null && $parsedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($parsedFilter->getInt('start'), 0) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
