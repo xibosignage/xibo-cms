@@ -888,8 +888,9 @@
                         "in": "body",
                         "description": "The row data, field name vs field data format. e.g. { uniqueKeys: [col1], rows: [{col1: value1}]}",
                         "required": true,
-                        "schema": "json",
-                        "type": "string"
+                        "schema": {
+                            "$ref": "#/definitions/importJsonSchema"
+                        }
                     }
                 ],
                 "responses": {
@@ -4331,6 +4332,13 @@
                         "type": "string"
                     },
                     {
+                        "name": "extension",
+                        "in": "formData",
+                        "description": "Optional extension of the media, jpg, png etc. If not set in the request it will be retrieved from the headers",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "optionalName",
                         "in": "formData",
                         "description": "An optional name for this media file, if left empty it will default to the file name",
@@ -6120,6 +6128,20 @@
                         "type": "string"
                     },
                     {
+                        "name": "statDate",
+                        "in": "formData",
+                        "description": "The statDate filter returns records that are greater than or equal a particular date",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "statId",
+                        "in": "formData",
+                        "description": "The statId filter returns records that are greater than a particular statId",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "displayId",
                         "in": "formData",
                         "description": "An optional display Id to filter",
@@ -7187,7 +7209,7 @@
                 }
             }
         },
-        "group/members/assign/{userGroupId}": {
+        "/group/members/assign/{userGroupId}": {
             "post": {
                 "tags": [
                     "usergroup"
@@ -7227,7 +7249,7 @@
                 }
             }
         },
-        "group/members/unassign/{userGroupId}": {
+        "/group/members/unassign/{userGroupId}": {
             "post": {
                 "tags": [
                     "usergroup"
@@ -10648,6 +10670,50 @@
                 }
             }
         },
+        "importJsonSchema": {
+            "properties": {
+                "uniqueKeys": {
+                    "description": "A name of the unique column",
+                    "type": "array",
+                    "items": {
+                        "properties": {
+                            "colName": {
+                                "description": "Import Json schema",
+                                "type": "string"
+                            }
+                        },
+                        "type": "string"
+                    }
+                },
+                "truncate": {
+                    "description": "Flag True or False, whether to truncate existing data on import",
+                    "type": "array",
+                    "items": {
+                        "properties": {
+                            "truncate": {
+                                "description": "Import Json schema",
+                                "type": "string"
+                            }
+                        },
+                        "type": "string"
+                    }
+                },
+                "rows": {
+                    "description": "An array of objects with pairs: ColumnName:Value",
+                    "type": "array",
+                    "items": {
+                        "properties": {
+                            "colName": {
+                                "description": "Import Json schema",
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    }
+                }
+            },
+            "type": "object"
+        },
         "PlaylistWidgetList": {
             "properties": {
                 "widgetId": {
@@ -10735,6 +10801,12 @@
                     "type": "string"
                 },
                 "maxEnd": {
+                    "type": "string"
+                },
+                "start": {
+                    "type": "string"
+                },
+                "end": {
                     "type": "string"
                 },
                 "statDate": {

@@ -239,7 +239,7 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
     this.calculateExpireStatus = function() {
         let status = 0;
         const currentTime = Math.round(new Date().getTime() / 1000);
-        
+
         if(this.fromDt > this.DATE_MIN || this.toDt < this.DATE_MAX) {
             if(this.getOptions().deleteOnExpiry == 1) {
                 // Delete on expire
@@ -263,10 +263,28 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
 
         // save status icon
         this.expireStatusIcon = EXPIRE_STATUS_ICON_MAP[status];
-        
+
         // return status
         return status;
     };
+
+    /**
+     * Check the module list for the widget type and get if it's region specific or not
+     * @returns {boolean}
+     */
+    this.isRegionSpecific = function() {
+        let self = this;
+        let regionSpecific = false;
+
+        Object.keys(modulesList).forEach(function(item) {
+            if(modulesList[item].type == self.subType) {
+                regionSpecific = (modulesList[item].regionSpecific == 1);
+            }
+        });
+
+        return regionSpecific;
+    };
+
 };
 
 /**
