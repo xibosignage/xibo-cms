@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -53,6 +53,7 @@ class Help extends Base
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param HelpFactory $helpFactory
+     * @param Twig $view
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $helpFactory, Twig $view)
     {
@@ -63,6 +64,14 @@ class Help extends Base
 
     /**
      * Help Page
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     function displayPage(Request $request, Response $response)
     {
@@ -71,6 +80,17 @@ class Help extends Base
         return $this->render($request, $response);
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
+     */
     public function grid(Request $request, Response $response)
     {
         $helpLinks = $this->helpFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([], $request));
@@ -113,6 +133,14 @@ class Help extends Base
 
     /**
      * Add Form
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function addForm(Request $request, Response $response)
     {
@@ -126,7 +154,16 @@ class Help extends Base
 
     /**
      * Help Edit form
-     * @param int $helpId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function editForm(Request $request, Response $response, $id)
     {
@@ -145,7 +182,16 @@ class Help extends Base
 
     /**
      * Delete Help Link Form
-     * @param int $helpId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function deleteForm(Request $request, Response $response, $id)
     {
@@ -165,6 +211,14 @@ class Help extends Base
 
     /**
      * Adds a help link
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function add(Request $request, Response $response)
     {
@@ -192,7 +246,16 @@ class Help extends Base
 
     /**
      * Edits a help link
-     * @param int $helpId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -221,7 +284,15 @@ class Help extends Base
 
     /**
      * Delete
-     * @param int $helpId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\NotFoundException
      */
     public function delete(Request $request, Response $response, $id)

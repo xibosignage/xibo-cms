@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2012-2016 Spring Signage Ltd - http://www.springsignage.com
  *
  * This file is part of Xibo.
  *
@@ -423,8 +424,16 @@ class DayPart extends Base
 
     /**
      * Edit
-     * @param int $dayPartId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      * @SWG\Put(
      *  path="/daypart/{dayPartId}",
      *  operationId="dayPartEdit",
@@ -497,7 +506,6 @@ class DayPart extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
     public function edit(Request $request, Response $response, $id)
     {

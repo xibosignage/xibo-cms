@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -118,6 +118,7 @@ class Playlist extends Base
      * @param UserGroupFactory $userGroupFactory
      * @param UserFactory $userFactory
      * @param TagFactory $tagFactory
+     * @param Twig $view
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playlistFactory, $regionFactory, $mediaFactory, $permissionFactory,
         $transitionFactory, $widgetFactory, $moduleFactory, $userGroupFactory, $userFactory, $tagFactory, Twig $view)
@@ -138,6 +139,14 @@ class Playlist extends Base
 
     /**
      * Display Page
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function displayPage(Request $request, Response $response)
     {
@@ -252,7 +261,7 @@ class Playlist extends Base
             'playlistId' => $sanitizedParams->getInt('playlistId'),
             'ownerUserGroupId' => $sanitizedParams->getInt('ownerUserGroupId'),
             'mediaLike' => $sanitizedParams->getString('mediaLike'),
-            'regionSpecific' => $sanitizedParams->getInt('regionSpecific')
+            'regionSpecific' => 0
         ], $request), $request);
 
         foreach ($playlists as $playlist) {
@@ -593,8 +602,16 @@ class Playlist extends Base
     }
 
     /**
-     * @param $playlistId
-     * @throws \Xibo\Exception\NotFoundException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function editForm(Request $request, Response $response, $id)
     {
@@ -948,8 +965,16 @@ class Playlist extends Base
 
     /**
      * Timeline Form
-     * @param int $playlistId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function timelineForm(Request $request, Response $response, $id)
     {
@@ -1005,6 +1030,16 @@ class Playlist extends Base
      *
      * This is not used by the WEB app - remains here for API usage only
      * TODO: deprecate
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function widgetGrid(Request $request, Response $response)
     {

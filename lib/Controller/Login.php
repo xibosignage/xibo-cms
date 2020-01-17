@@ -1,14 +1,15 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (Login.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -99,14 +100,14 @@ class Login extends Base
      * Output a login form
      * @param Request $request
      * @param Response $response
-     * @param null $args
      * @return \Psr\Http\Message\ResponseInterface
      * @throws ConfigurationException
      * @throws \Twig\Error\LoaderError
      * @throws \Twig\Error\RuntimeError
      * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function loginForm(Request $request, Response $response, $args = null)
+    public function loginForm(Request $request, Response $response)
     {
         // Sanitize the body
         $sanitizedRequestBody = $this->getSanitizer($request->getParsedBody());
@@ -212,7 +213,7 @@ class Login extends Base
             $username = $parsedRequest->getString('username');
             $password = $parsedRequest->getString('password');
 
-            $this->getLog()->debug('Login with username %s', $username);
+            $this->getLog()->debug('Login with username ' .  $username);
 
             // Get our user
             try {
@@ -230,12 +231,12 @@ class Login extends Base
                 // check if 2FA is enabled
                 if ($user->twoFactorTypeId != 0) {
                     $_SESSION['tfaUsername'] = $user->userName;
-                    $this->app->redirect('tfa');
+                    $response->withRedirect($routeParser->urlFor('tfa'));
                 }
 
                 $user->touch();
 
-                $this->getLog()->info('%s user logged in.', $user->userName);
+                $this->getLog()->info(sprintf('%s user logged in.', $user->userName));
 
                 // Set the userId on the log object
                 $this->getLog()->setUserId($user->userId);
@@ -271,26 +272,33 @@ class Login extends Base
             $this->flash->addMessage('priorRoute', $priorRoute);
         }
         $this->setNoOutput(true);
-        $this->getLog()->debug('Redirect to %s', $redirect);
+        $this->getLog()->debug(sprintf('Redirect to %s', $redirect));
         return $response->withRedirect($redirect);
     }
 
     /**
      * Forgotten password link requested
-     * @throws \Xibo\Exception\XiboException
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \PHPMailer\PHPMailer\Exception
      */
-    public function forgottenPassword()
+    public function forgottenPassword(Request $request, Response $response)
     {
         // Is this functionality enabled?
         $passwordReminderEnabled = $this->getConfig()->getSetting('PASSWORD_REMINDER_ENABLED');
         $mailFrom = $this->getConfig()->getSetting('mail_from');
+
+        $parsedRequest = $this->getSanitizer($request->getParsedBody());
+        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
 
         if (!(($passwordReminderEnabled === 'On' || $passwordReminderEnabled === 'On except Admin') && $mailFrom != '')) {
             throw new ConfigurationException(__('This feature has been disabled by your administrator'));
         }
 
         // Get our username
-        $username = $this->getSanitizer()->getUserName('username');
+        $username = $parsedRequest->getString('username');
 
         // Log
         $this->getLog()->info('Forgotten Password Request for ' . $username);
@@ -324,7 +332,7 @@ class Login extends Base
             $this->pool->save($cache);
 
             // Make a link
-            $link = ((new HttpsDetect())->getUrl()) . $this->getApp()->urlFor('login') . '?nonce=' . $action . '::' . $nonce;
+            $link = ((new HttpsDetect())->getUrl()) . $routeParser->urlFor('login') . '?nonce=' . $action . '::' . $nonce;
 
             // Uncomment this to get a debug message showing the link.
             //$this->getLog()->debug('Link is:' . $link);
@@ -349,22 +357,22 @@ class Login extends Base
             if (!$mail->send()) {
                 throw new ConfigurationException('Unable to send password reminder to ' . $user->email);
             } else {
-                $this->getApp()->flash('login_message', __('Reminder email has been sent to your email address'));
+                $this->flash->addMessage('login_message', __('Reminder email has been sent to your email address'));
             }
 
             // Audit Log
             $this->getLog()->audit('User', $user->userId, 'Password Reset Link Granted', [
-                'IPAddress' => $this->getApp()->request()->getIp(),
-                'UserAgent' => $this->getApp()->request()->getUserAgent()
+                'IPAddress' => $request->getAttribute('ip_address'),
+                'UserAgent' => $request->getHeader('User-Agent')
             ]);
 
         } catch (XiboException $xiboException) {
             $this->getLog()->debug($xiboException->getMessage());
-            $this->getApp()->flash('login_message', __('User not found'));
+            $this->flash->addMessage('login_message', __('User not found'));
         }
 
         $this->setNoOutput(true);
-        $this->getApp()->redirectTo('login');
+        return $response->withRedirect($routeParser->urlFor('login'));
     }
 
     /**

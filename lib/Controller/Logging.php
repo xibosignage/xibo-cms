@@ -1,14 +1,15 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (Log.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -82,6 +83,16 @@ class Logging extends Base
         $this->userFactory = $userFactory;
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
     public function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'log-page';
@@ -99,12 +110,11 @@ class Logging extends Base
         // Date time criteria
         $seconds = $parsedQueryParams->getInt('seconds', ['default' => 120]);
         $intervalType = $parsedQueryParams->getInt('intervalType', ['default' => 1]);
-        // TODO dates...
-        //$fromDt = $parsedQueryParams->getDate('fromDt', ['default' => $this->getDate()->getLocalDate()]);
+        $fromDt = $parsedQueryParams->getDate('fromDt', ['default' => new Date($this->getDate()->getLocalDate())]);
 
         $logs = $this->logFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
-          //  'fromDt' => $fromDt->format('U') - ($seconds * $intervalType),
-          //  'toDt' => $fromDt->format('U'),
+            'fromDt' => $fromDt->format('U') - ($seconds * $intervalType),
+            'toDt' => $fromDt->format('U'),
             'type' => $parsedQueryParams->getString('level'),
             'page' => $parsedQueryParams->getString('page'),
             'channel' => $parsedQueryParams->getString('channel'),
@@ -132,11 +142,20 @@ class Logging extends Base
 
     /**
      * Truncate Log Form
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function truncateForm(Request $request, Response $response)
     {
-        if ($this->getUser($request)->userTypeId != 1)
+        if ($this->getUser($request)->userTypeId != 1) {
             throw new AccessDeniedException(__('Only Administrator Users can truncate the log'));
+        }
 
         $this->getState()->template = 'log-form-truncate';
         $this->getState()->setData([
@@ -148,11 +167,20 @@ class Logging extends Base
 
     /**
      * Truncate the Log
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function truncate(Request $request, Response $response)
     {
-        if ($this->getUser($request)->userTypeId != 1)
+        if ($this->getUser($request)->userTypeId != 1) {
             throw new AccessDeniedException(__('Only Administrator Users can truncate the log'));
+        }
 
         $this->store->update('TRUNCATE TABLE log', array());
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -134,6 +134,7 @@ class Base
 
     /**
      * Get the Current User
+     * @param Request|null $request
      * @return \Xibo\Entity\User
      */
     public function getUser(Request $request = null)
@@ -231,6 +232,7 @@ class Base
      */
     protected function getFlash($key)
     {
+        // TODO
         $template = $this->getApp()->view()->get('flash');
         return isset($template[$key]) ? $template[$key] : '';
     }
@@ -256,7 +258,6 @@ class Base
      * End the controller execution, calling render
      * @param Request $request
      * @param Response $response
-     * @param Twig $twig
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException
      * @throws ControllerNotImplemented if the controller is not implemented correctly

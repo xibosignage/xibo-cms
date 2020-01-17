@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -64,6 +64,7 @@ class Settings extends Base
      * @param LayoutFactory $layoutFactory
      * @param UserGroupFactory $userGroupFactory
      * @param TransitionFactory $transitionfactory
+     * @param Twig $view
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $layoutFactory, $userGroupFactory, $transitionfactory, Twig $view)
     {
@@ -79,6 +80,14 @@ class Settings extends Base
 
     /**
      * Display Page
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function displayPage(Request $request, Response $response)
     {
@@ -188,7 +197,15 @@ class Settings extends Base
 
     /**
      * Update settings
-     * @throws \Xibo\Exception\XiboException
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function update(Request $request, Response $response)
     {

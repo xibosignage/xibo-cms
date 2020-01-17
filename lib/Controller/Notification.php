@@ -1,13 +1,30 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
- * (Notification.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
 namespace Xibo\Controller;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\UserGroup;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
@@ -17,6 +34,7 @@ use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\AttachmentUploadHandler;
+use Xibo\Helper\SanitizerService;
 use Xibo\Helper\XiboUploadHandler;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -48,7 +66,7 @@ class Notification extends Base
     /**
      * Notification constructor.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -59,10 +77,11 @@ class Notification extends Base
      * @param DisplayGroupFactory $displayGroupFactory
      * @param UserGroupFactory $userGroupFactory
      * @param DisplayNotifyService $displayNotifyService
+     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $notificationFactory, $userNotificationFactory, $displayGroupFactory, $userGroupFactory, $displayNotifyService)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $notificationFactory, $userNotificationFactory, $displayGroupFactory, $userGroupFactory, $displayNotifyService, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->notificationFactory = $notificationFactory;
         $this->userNotificationFactory = $userNotificationFactory;
@@ -71,19 +90,39 @@ class Notification extends Base
         $this->displayNotifyService = $displayNotifyService;
     }
 
-    public function displayPage()
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
+    public function displayPage(Request $request, Response $response)
     {
         // Call to render the template
         $this->getState()->template = 'notification-page';
+
+        return $this->render($request, $response);
     }
 
     /**
      * Show a notification
-     * @param int $notificationId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function interrupt($notificationId)
+    public function interrupt(Request $request, Response $response, $id)
     {
-        $notification = $this->userNotificationFactory->getByNotificationId($notificationId);
+        $notification = $this->userNotificationFactory->getByNotificationId($id);
 
         // Mark it as read
         $notification->setRead($this->getDate()->getLocalDate(null, 'U'));
@@ -91,15 +130,25 @@ class Notification extends Base
 
         $this->getState()->template = 'notification-interrupt';
         $this->getState()->setData(['notification' => $notification]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Show a notification
-     * @param int $notificationId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function show($notificationId)
+    public function show(Request $request, Response $response, $id)
     {
-        $notification = $this->userNotificationFactory->getByNotificationId($notificationId);
+        $notification = $this->userNotificationFactory->getByNotificationId($id);
 
         // Mark it as read
         $notification->setRead($this->getDate()->getLocalDate(null, 'U'));
@@ -107,6 +156,8 @@ class Notification extends Base
 
         $this->getState()->template = 'notification-form-show';
         $this->getState()->setData(['notification' => $notification]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -146,15 +197,24 @@ class Notification extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function grid()
+    function grid(Request $request, Response $response)
     {
+        $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
         $filter = [
-            'notificationId' => $this->getSanitizer()->getInt('notificationId'),
-            'subject' => $this->getSanitizer()->getString('subject')
+            'notificationId' => $sanitizedQueryParams->getInt('notificationId'),
+            'subject' => $sanitizedQueryParams->getString('subject')
         ];
-        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
-        $notifications = $this->notificationFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $embed = ($sanitizedQueryParams->getString('embed') != null) ? explode(',', $sanitizedQueryParams->getString('embed')) : [];
+        $notifications = $this->notificationFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
 
         foreach ($notifications as $notification) {
             /* @var \Xibo\Entity\Notification $notification */
@@ -166,7 +226,7 @@ class Notification extends Base
                 ]);
             }
 
-            if ($this->isApi())
+            if ($this->isApi($request))
                 continue;
 
             $notification->includeProperty('buttons');
@@ -174,18 +234,18 @@ class Notification extends Base
             // Default Layout
             $notification->buttons[] = array(
                 'id' => 'notification_button_edit',
-                'url' => $this->urlFor('notification.edit.form', ['id' => $notification->notificationId]),
+                'url' => $this->urlFor($request,'notification.edit.form', ['id' => $notification->notificationId]),
                 'text' => __('Edit')
             );
 
-            if ($this->getUser()->checkDeleteable($notification)) {
+            if ($this->getUser($request)->checkDeleteable($notification)) {
                 $notification->buttons[] = array(
                     'id' => 'notification_button_delete',
-                    'url' => $this->urlFor('notification.delete.form', ['id' => $notification->notificationId]),
+                    'url' => $this->urlFor($request,'notification.delete.form', ['id' => $notification->notificationId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor('notification.delete', ['id' => $notification->notificationId])],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'notification.delete', ['id' => $notification->notificationId])],
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'notification_button_delete'],
                         ['name' => 'text', 'value' => __('Delete?')],
@@ -198,19 +258,29 @@ class Notification extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->notificationFactory->countLast();
         $this->getState()->setData($notifications);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Add Notification Form
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function addForm()
+    public function addForm(Request $request, Response $response)
     {
-        $groups = array();
-        $displays = array();
+        $groups = [];
+        $displays = [];
         $userGroups = [];
         $users = [];
 
-        foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
+        foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1], $request) as $displayGroup) {
             /* @var \Xibo\Entity\DisplayGroup $displayGroup */
 
             if ($displayGroup->isDisplaySpecific == 1) {
@@ -220,7 +290,7 @@ class Notification extends Base
             }
         }
 
-        foreach ($this->userGroupFactory->query(['`group`'], ['isUserSpecific' => -1]) as $userGroup) {
+        foreach ($this->userGroupFactory->query(['`group`'], ['isUserSpecific' => -1], $request) as $userGroup) {
             /* @var UserGroup $userGroup */
 
             if ($userGroup->isUserSpecific == 0) {
@@ -237,30 +307,42 @@ class Notification extends Base
             'users' => $users,
             'userGroups' => $userGroups,
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edit Notification Form
-     * @param int $notificationId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function editForm($notificationId)
+    public function editForm(Request $request, Response $response, $id)
     {
-        $notification = $this->notificationFactory->getById($notificationId);
+        $notification = $this->notificationFactory->getById($id);
         $notification->load();
 
         // Adjust the dates
         $notification->createdDt = $this->getDate()->getLocalDate($notification->createdDt);
         $notification->releaseDt = $this->getDate()->getLocalDate($notification->releaseDt);
 
-        if (!$this->getUser()->checkEditable($notification))
+        if (!$this->getUser($request)->checkEditable($notification)) {
             throw new AccessDeniedException();
+        }
 
-        $groups = array();
-        $displays = array();
+        $groups = [];
+        $displays = [];
         $userGroups = [];
         $users = [];
 
-        foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
+        foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1], $request) as $displayGroup) {
             /* @var \Xibo\Entity\DisplayGroup $displayGroup */
 
             if ($displayGroup->isDisplaySpecific == 1) {
@@ -270,7 +352,7 @@ class Notification extends Base
             }
         }
 
-        foreach ($this->userGroupFactory->query(['`group`'], ['isUserSpecific' => -1]) as $userGroup) {
+        foreach ($this->userGroupFactory->query(['`group`'], ['isUserSpecific' => -1], $request) as $userGroup) {
             /* @var UserGroup $userGroup */
 
             if ($userGroup->isUserSpecific == 0) {
@@ -294,29 +376,43 @@ class Notification extends Base
                 return $element->groupId;
             }, $notification->userGroups)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Delete Notification Form
-     * @param int $notificationId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function deleteForm($notificationId)
+    public function deleteForm(Request $request, Response $response, $id)
     {
-        $notification = $this->notificationFactory->getById($notificationId);
+        $notification = $this->notificationFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($notification))
+        if (!$this->getUser($request)->checkDeleteable($notification)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'notification-form-delete';
         $this->getState()->setData([
             'notification' => $notification
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Add attachment
      */
-    public function addAttachment()
+    public function addAttachment(Request $request, Response $response)
     {
 
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
@@ -325,12 +421,12 @@ class Notification extends Base
         Library::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
         $options = array(
-            'userId' => $this->getUser()->userId,
+            'userId' => $this->getUser($request)->userId,
             'controller' => $this,
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
-            'script_url' => $this->urlFor('notification.add'),
-            'upload_url' => $this->urlFor('notification.add'),
+            'script_url' => $this->urlFor($request,'notification.add'),
+            'upload_url' => $this->urlFor($request,'notification.add'),
             'image_versions' => array(),
             'accept_file_types' => '/\.jpg|.jpeg|.png|.bmp|.gif|.zip|.pdf/i'
         );
@@ -341,7 +437,7 @@ class Notification extends Base
         $this->getLog()->debug('Hand off to Upload Handler with options: %s', json_encode($options));
 
         // Hand off to the Upload Handler provided by jquery-file-upload
-        new AttachmentUploadHandler($options);
+        return new AttachmentUploadHandler($options);
     }
 
     /**
@@ -415,40 +511,52 @@ class Notification extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function add()
+    public function add(Request $request, Response $response)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
         $notification = $this->notificationFactory->createEmpty();
-        $notification->subject = $this->getSanitizer()->getString('subject');
-        $notification->body = $this->getSanitizer()->getParam('body', '');
+        $notification->subject = $sanitizedParams->getString('subject');
+        $notification->body = $request->getParam('body', '');
         $notification->createdDt = $this->getDate()->getLocalDate(null, 'U');
-        $notification->releaseDt = $this->getSanitizer()->getDate('releaseDt');
+        $notification->releaseDt = $sanitizedParams->getDate('releaseDt');
 
-        if ($notification->releaseDt !== null)
+        if ($notification->releaseDt !== null) {
             $notification->releaseDt = $notification->releaseDt->format('U');
-        else
+        } else {
             $notification->releaseDt = $notification->createdDt;
+        }
 
-        $notification->isEmail = $this->getSanitizer()->getCheckbox('isEmail');
-        $notification->isInterrupt = $this->getSanitizer()->getCheckbox('isInterrupt');
-        $notification->userId = $this->getUser()->userId;
-        $notification->nonusers = $this->getSanitizer()->getString('nonusers');
+        $notification->isEmail = $sanitizedParams->getCheckbox('isEmail');
+        $notification->isInterrupt = $sanitizedParams->getCheckbox('isInterrupt');
+        $notification->userId = $this->getUser($request)->userId;
+        $notification->nonusers = $sanitizedParams->getString('nonusers');
 
         // Displays and Users to link
-        foreach ($this->getSanitizer()->getIntArray('displayGroupIds') as $displayGroupId) {
+        foreach ($sanitizedParams->getIntArray('displayGroupIds') as $displayGroupId) {
             $notification->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
 
             // Notify (don't collect)
             $this->displayNotifyService->collectLater()->notifyByDisplayGroupId($displayGroupId);
         }
 
-        foreach ($this->getSanitizer()->getIntArray('userGroupIds') as $userGroupId) {
+        foreach ($sanitizedParams->getIntArray('userGroupIds') as $userGroupId) {
             $notification->assignUserGroup($this->userGroupFactory->getById($userGroupId));
         }
 
         $notification->save();
 
-        $attachedFilename = $this->getSanitizer()->getString('attachedFilename');
+        $attachedFilename = $sanitizedParams->getString('attachedFilename');
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
         $saveName = $notification->notificationId .'_' .$attachedFilename;
@@ -474,8 +582,9 @@ class Notification extends Base
                 }
             }
 
-            if (!$moved)
+            if (!$moved) {
                 throw new ConfigurationException(__('Problem moving uploaded file into the Attachment Folder'));
+            }
         }
 
         $notification->filename = $saveName;
@@ -490,12 +599,22 @@ class Notification extends Base
             'id' => $notification->notificationId,
             'data' => $notification
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edit Notification
-     * @param int $notificationId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      * @SWG\Put(
      *  path="/notification/{notificationId}",
      *  operationId="notificationEdit",
@@ -567,39 +686,40 @@ class Notification extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function edit($notificationId)
+    public function edit(Request $request, Response $response, $id)
     {
-        $notification = $this->notificationFactory->getById($notificationId);
+        $notification = $this->notificationFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         $notification->load();
 
         // Check Permissions
-        if (!$this->getUser()->checkEditable($notification))
+        if (!$this->getUser($request)->checkEditable($notification)) {
             throw new AccessDeniedException();
+        }
 
-        $notification->subject = $this->getSanitizer()->getString('subject');
-        $notification->body = $this->getSanitizer()->getParam('body', '');
+        $notification->subject = $sanitizedParams->getString('subject');
+        $notification->body = $request->getParam('body', '');
         $notification->createdDt = $this->getDate()->getLocalDate(null, 'U');
-        $notification->releaseDt = $this->getSanitizer()->getDate('releaseDt')->format('U');
-        $notification->isEmail = $this->getSanitizer()->getCheckbox('isEmail');
-        $notification->isInterrupt = $this->getSanitizer()->getCheckbox('isInterrupt');
-        $notification->userId = $this->getUser()->userId;
-        $notification->nonusers = $this->getSanitizer()->getString('nonusers');
+        $notification->releaseDt = $sanitizedParams->getDate('releaseDt')->format('U');
+        $notification->isEmail = $sanitizedParams->getCheckbox('isEmail');
+        $notification->isInterrupt = $sanitizedParams->getCheckbox('isInterrupt');
+        $notification->userId = $this->getUser($request)->userId;
+        $notification->nonusers = $sanitizedParams->getString('nonusers');
 
         // Clear existing assignments
         $notification->displayGroups = [];
         $notification->userGroups = [];
 
         // Displays and Users to link
-        foreach ($this->getSanitizer()->getIntArray('displayGroupIds') as $displayGroupId) {
+        foreach ($sanitizedParams->getIntArray('displayGroupIds') as $displayGroupId) {
             $notification->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
 
             // Notify (don't collect)
             $this->displayNotifyService->collectLater()->notifyByDisplayGroupId($displayGroupId);
         }
 
-        foreach ($this->getSanitizer()->getIntArray('userGroupIds') as $userGroupId) {
+        foreach ($sanitizedParams->getIntArray('userGroupIds') as $userGroupId) {
             $notification->assignUserGroup($this->userGroupFactory->getById($userGroupId));
         }
 
@@ -612,12 +732,22 @@ class Notification extends Base
             'id' => $notification->notificationId,
             'data' => $notification
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Delete Notification
-     * @param int $notificationId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      * @SWG\Delete(
      *  path="/notification/{notificationId}",
      *  operationId="notificationDelete",
@@ -637,14 +767,14 @@ class Notification extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function delete($notificationId)
+    public function delete(Request $request, Response $response, $id)
     {
-        $notification = $this->notificationFactory->getById($notificationId);
+        $notification = $this->notificationFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($notification))
+        if (!$this->getUser($request)->checkDeleteable($notification)) {
             throw new AccessDeniedException();
+        }
 
         $notification->delete();
 
@@ -652,8 +782,9 @@ class Notification extends Base
         if (!empty($notification->filename)) {
             // Library location
             $attachmentLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION'). 'attachment/';
-            if (file_exists($attachmentLocation . $notification->filename))
+            if (file_exists($attachmentLocation . $notification->filename)) {
                 unlink($attachmentLocation . $notification->filename);
+            }
         }
 
         // Return
@@ -661,6 +792,8 @@ class Notification extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $notification->subject)
         ]);
+
+        return $this->render($request, $response);
     }
 
     public function exportAttachment($notificationId)

@@ -1,14 +1,15 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (StatusDashboard.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,7 +17,7 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
 use Slim\Http\Response as Response;
@@ -91,8 +92,9 @@ class StatusDashboard extends Base
      * @param DisplayFactory $displayFactory
      * @param DisplayGroupFactory $displayGroupFactory
      * @param MediaFactory $mediaFactory
+     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $displayFactory, $displayGroupFactory, $mediaFactory, $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $displayFactory, $displayGroupFactory, $mediaFactory, Twig $view)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
@@ -106,6 +108,14 @@ class StatusDashboard extends Base
 
     /**
      * Displays
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function displays(Request $request, Response $response)
     {
@@ -124,10 +134,15 @@ class StatusDashboard extends Base
      * @param Request $request
      * @param Response $response
      * @param null $args
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function displayPage(Request $request, Response $response, $args = null)
+    function displayPage(Request $request, Response $response)
     {
-
         $data = [];
         // Set up some suffixes
         $suffixes = array('B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB');
@@ -449,6 +464,16 @@ class StatusDashboard extends Base
         return $this->render($request, $response);
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
     function displayGroups(Request $request, Response $response)
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());

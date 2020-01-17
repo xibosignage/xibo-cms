@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -542,8 +542,7 @@ class Display extends Base
             'clientAddress' => $parsedQueryParams->getString('clientAddress'),
             'mediaInventoryStatus' => $parsedQueryParams->getInt('mediaInventoryStatus'),
             'loggedIn' => $parsedQueryParams->getInt('loggedIn'),
-            // TODO Sanitizer does not like it as is
-            //'lastAccessed' => ($parsedQueryParams->getDate('lastAccessed', ['default' => 0, 'dateFormat' => 'U']) != null) ? $parsedQueryParams->getDate('lastAccessed', ['default' => 0, 'dateFormat' => 'U']) : null,
+            'lastAccessed' => ($parsedQueryParams->getDate('lastAccessed') != null) ? $parsedQueryParams->getDate('lastAccessed')->format('U') : null,
             'displayGroupIdMembers' => $parsedQueryParams->getInt('displayGroupIdMembers'),
             'orientation' => $parsedQueryParams->getString('orientation')
         ];
@@ -833,8 +832,6 @@ class Display extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->displayFactory->countLast();
         $this->getState()->setData($displays);
-
-        $this->getLog()->debug('DISPLAYS BEFORE RENDER GET DATA ' . json_encode($this->getState()->getData()));
 
         return $this->render($request, $response);
     }
@@ -1306,14 +1303,24 @@ class Display extends Base
 
     /**
      * Member of Display Groups Form
-     * @param int $displayId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function membershipForm($displayId)
+    public function membershipForm(Request $request, Response $response, $id)
     {
-        $display = $this->displayFactory->getById($displayId);
+        $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($display))
+        if (!$this->getUser($request)->checkEditable($display)) {
             throw new AccessDeniedException();
+        }
 
         // Groups we are assigned to
         $groupsAssigned = $this->displayGroupFactory->getByDisplayId($display->displayId);
@@ -1322,7 +1329,7 @@ class Display extends Base
         $allGroups = $this->displayGroupFactory->getByIsDynamic(0);
 
         // The available users are all users except users already in assigned users
-        $checkboxes = array();
+        $checkboxes = [];
 
         foreach ($allGroups as $group) {
             /* @var \Xibo\Entity\DisplayGroup $group */
@@ -1352,39 +1359,54 @@ class Display extends Base
             'checkboxes' => $checkboxes,
             'help' =>  $this->getHelp()->link('Display', 'Members')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Assign Display to Display Groups
-     * @param int $displayId
-     * @throws \Xibo\Exception\NotFoundException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function assignDisplayGroup($displayId)
+    public function assignDisplayGroup(Request $request, Response $response, $id)
     {
-        $display = $this->displayFactory->getById($displayId);
+        $display = $this->displayFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($display))
+        if (!$this->getUser($request)->checkEditable($display)) {
             throw new AccessDeniedException();
+        }
 
         // Go through each ID to assign
-        foreach ($this->getSanitizer()->getIntArray('displayGroupId') as $displayGroupId) {
+        foreach ($sanitizedParams->getIntArray('displayGroupId') as $displayGroupId) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
             $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
-            if (!$this->getUser()->checkEditable($displayGroup))
+            if (!$this->getUser($request)->checkEditable($displayGroup)) {
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
+            }
 
             $displayGroup->assignDisplay($display);
             $displayGroup->save(['validate' => false]);
         }
 
         // Have we been provided with unassign id's as well?
-        foreach ($this->getSanitizer()->getIntArray('unassignDisplayGroupId') as $displayGroupId) {
+        foreach ($sanitizedParams->getIntArray('unassignDisplayGroupId') as $displayGroupId) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
             $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
-            if (!$this->getUser()->checkEditable($displayGroup))
+            if (!$this->getUser($request)->checkEditable($displayGroup)) {
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
+            }
 
             $displayGroup->unassignDisplay($display);
             $displayGroup->save(['validate' => false]);
@@ -1396,25 +1418,30 @@ class Display extends Base
             'message' => sprintf(__('%s assigned to Display Groups'), $display->display),
             'id' => $display->displayId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Output a screen shot
-     * @param int $displayId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @throws NotFoundException
      */
-    public function screenShot($displayId)
+    public function screenShot(Request $request, Response $response, $id)
     {
-        $display = $this->displayFactory->getById($displayId);
+        $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser()->checkViewable($display))
+        if (!$this->getUser($request)->checkViewable($display)) {
             throw new AccessDeniedException();
+        }
 
         // The request will output its own content, disable framework
         $this->setNoOutput(true);
 
         // Output an image if present, otherwise not found image.
-        $file = 'screenshots/' . $displayId . '_screenshot.jpg';
+        $file = 'screenshots/' . $id . '_screenshot.jpg';
 
         // File upload directory.. get this from the settings object
         $library = $this->getConfig()->getSetting("LIBRARY_LOCATION");
@@ -1452,14 +1479,24 @@ class Display extends Base
 
     /**
      * Request ScreenShot form
-     * @param int $displayId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function requestScreenShotForm($displayId)
+    public function requestScreenShotForm(Request $request, Response $response, $id)
     {
-        $display = $this->displayFactory->getById($displayId);
+        $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser()->checkViewable($display))
+        if (!$this->getUser($request)->checkViewable($display)) {
             throw new AccessDeniedException();
+        }
 
         // Work out the next collection time based on the last accessed date/time and the collection interval
         if ($display->lastAccessed == 0) {
@@ -1475,14 +1512,23 @@ class Display extends Base
             'nextCollect' => $nextCollect,
             'help' =>  $this->getHelp()->link('Display', 'ScreenShot')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Request ScreenShot
-     * @param int $displayId
-     * @throws \InvalidArgumentException if XMR is not configured
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException if XMR cannot be contacted
-     *
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/display/requestscreenshot/{displayId}",
      *  operationId="displayRequestScreenshot",
@@ -1503,51 +1549,77 @@ class Display extends Base
      *  )
      * )
      */
-    public function requestScreenShot($displayId)
+    public function requestScreenShot(Request $request, Response $response, $id)
     {
-        $display = $this->displayFactory->getById($displayId);
+        $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser()->checkViewable($display))
+        if (!$this->getUser($request)->checkViewable($display)) {
             throw new AccessDeniedException();
+        }
 
         $display->screenShotRequested = 1;
         $display->save(['validate' => false, 'audit' => false]);
 
-        if (!empty($display->xmrChannel))
+        if (!empty($display->xmrChannel)) {
             $this->playerAction->sendAction($display, new ScreenShotAction());
+        }
 
         // Return
         $this->getState()->hydrate([
             'message' => sprintf(__('Request sent for %s'), $display->display),
             'id' => $display->displayId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Form for wake on Lan
-     * @param int $displayId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function wakeOnLanForm($displayId)
+    public function wakeOnLanForm(Request $request, Response $response, $id)
     {
-        $display = $this->displayFactory->getById($displayId);
+        $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser()->checkViewable($display))
+        if (!$this->getUser($request)->checkViewable($display)) {
             throw new AccessDeniedException();
+        }
 
-        if ($display->macAddress == '')
+        if ($display->macAddress == '') {
             throw new \InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'));
+        }
 
         $this->getState()->template = 'display-form-wakeonlan';
         $this->getState()->setData([
             'display' => $display,
             'help' =>  $this->getHelp()->link('Display', 'WakeOnLan')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Wake this display using a WOL command
-     * @param int $displayId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/display/wol/{displayId}",
      *  operationId="displayWakeOnLan",
@@ -1567,15 +1639,17 @@ class Display extends Base
      *  )
      * )
      */
-    public function wakeOnLan($displayId)
+    public function wakeOnLan(Request $request, Response $response, $id)
     {
-        $display = $this->displayFactory->getById($displayId);
+        $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser()->checkViewable($display))
+        if (!$this->getUser($request)->checkViewable($display)) {
             throw new AccessDeniedException();
+        }
 
-        if ($display->macAddress == '' || $display->broadCastAddress == '')
+        if ($display->macAddress == '' || $display->broadCastAddress == '') {
             throw new \InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'));
+        }
 
         $this->getLog()->notice('About to send WOL packet to ' . $display->broadCastAddress . ' with Mac Address ' . $display->macAddress);
 
@@ -1589,6 +1663,8 @@ class Display extends Base
             'message' => sprintf(__('Wake on Lan sent for %s'), $display->display),
             'id' => $display->displayId
         ]);
+
+        return $this->render($request,$response);
     }
 
     /**
@@ -1713,15 +1789,24 @@ class Display extends Base
 
     /**
      * Show the authorise form
-     * @param $displayId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
      * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function authoriseForm(Request $request, Response $response, $id)
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($display))
+        if (!$this->getUser($request)->checkEditable($display)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'display-form-authorise';
         $this->getState()->setData([
@@ -1767,8 +1852,9 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($display))
+        if (!$this->getUser($request)->checkEditable($display)) {
             throw new AccessDeniedException();
+        }
 
         $display->licensed = ($display->licensed == 1) ? 0 : 1;
         $display->save(['validate' => false]);
@@ -1783,15 +1869,24 @@ class Display extends Base
     }
 
     /**
-     * @param $displayId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
      * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function defaultLayoutForm(Request $request, Response $response, $id)
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($display))
+        if (!$this->getUser($request)->checkEditable($display)) {
             throw new AccessDeniedException();
+        }
 
         // Get the currently assigned default layout
         try {
@@ -1877,18 +1972,26 @@ class Display extends Base
     }
 
     /**
-     * @param $displayId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
      * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function moveCmsForm($displayId)
+    public function moveCmsForm(Request $request, Response $response, $id)
     {
-        if ($this->getUser()->twoFactorTypeId != 2) {
+        if ($this->getUser($request)->twoFactorTypeId != 2) {
             throw new AccessDeniedException('This action requires active Google Authenticator Two Factor authentication');
         }
 
-        $display = $this->displayFactory->getById($displayId);
+        $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($display)) {
+        if (!$this->getUser($request)->checkEditable($display)) {
             throw new AccessDeniedException();
         }
 
@@ -1899,24 +2002,35 @@ class Display extends Base
             'newCmsKey' => $display->newCmsKey
         ]);
 
+        return $this->render($request, $response);
+
     }
 
     /**
-     * @param $displayId
-     * @throws NotFoundException
-     * @throws \RobThree\Auth\TwoFactorAuthException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
      * @throws InvalidArgumentException
+     * @throws NotFoundException
      * @throws XiboException
+     * @throws \RobThree\Auth\TwoFactorAuthException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function moveCms($displayId)
+    public function moveCms(Request $request, Response $response, $id)
     {
-        if ($this->getUser()->twoFactorTypeId != 2) {
+        if ($this->getUser($request)->twoFactorTypeId != 2) {
             throw new AccessDeniedException('This action requires active Google Authenticator Two Factor authentication');
         }
 
-        $display = $this->displayFactory->getById($displayId);
+        $display = $this->displayFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($display)) {
+        if (!$this->getUser($request)->checkEditable($display)) {
             throw new AccessDeniedException();
         }
 
@@ -1930,16 +2044,16 @@ class Display extends Base
             $issuer = $appName;
         }
 
-        $authenticationCode = $this->getSanitizer()->getString('twoFactorCode', '');
+        $authenticationCode = $sanitizedParams->getString('twoFactorCode', '');
 
         $tfa = new TwoFactorAuth($issuer);
-        $result = $tfa->verifyCode($this->getUser()->twoFactorSecret, $authenticationCode);
+        $result = $tfa->verifyCode($this->getUser($request)->twoFactorSecret, $authenticationCode);
 
         if ($result) {
 
             // get the new CMS Address and Key from the form.
-            $newCmsAddress = $this->getSanitizer()->getString('newCmsAddress');
-            $newCmsKey = $this->getSanitizer()->getString('newCmsKey');
+            $newCmsAddress = $sanitizedParams->getString('newCmsAddress');
+            $newCmsKey = $sanitizedParams->getString('newCmsKey');
 
             // validate the URL
             if (!v::url()->notEmpty()->validate(urldecode($newCmsAddress)) || !filter_var($newCmsAddress, FILTER_VALIDATE_URL)) {
@@ -1958,20 +2072,33 @@ class Display extends Base
         } else {
             throw new InvalidArgumentException(__('Invalid Two Factor Authentication Code'), 'twoFactorCode');
         }
+
+        return $this->render($request, $response);
     }
 
-    public function addViaCodeForm()
+    public function addViaCodeForm(Request $request, Response $response)
     {
         $this->getState()->template = 'display-form-addViaCode';
+
+        return $this->render($request,$response);
     }
 
     /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
      * @throws InvalidArgumentException
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function addViaCode()
+    public function addViaCode(Request $request, Response $response)
     {
-        $user_code = $this->getSanitizer()->getString('user_code');
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $user_code = $sanitizedParams->getString('user_code');
         $cmsAddress = (new HttpsDetect())->getUrl();
         $cmsKey = $this->getConfig()->getSetting('SERVER_KEY');
 
@@ -1985,7 +2112,7 @@ class Display extends Base
             // When the valid code is submitted, it will be sent along with CMS Address and Key to Authentication Service maintained by Xibo Signage Ltd.
             // The Player will then call the service with the same code to retrieve the CMS details.
             // On success, the details will be removed from the Authentication Service.
-            $request = $guzzle->request('POST', 'https://auth.signlicence.co.uk/addDetails',
+            $guzzleRequest = $guzzle->request('POST', 'https://auth.signlicence.co.uk/addDetails',
                 $this->getConfig()->getGuzzleProxy([
                     'form_params' => [
                         'user_code' => $user_code,
@@ -1994,7 +2121,7 @@ class Display extends Base
                     ]
                 ]));
 
-            $data = json_decode($request->getBody(), true);
+            $data = json_decode($guzzleRequest->getBody(), true);
 
             $this->getState()->hydrate([
                 'message' => $data['message']
@@ -2003,24 +2130,37 @@ class Display extends Base
             $this->getLog()->debug($e->getMessage());
             throw new InvalidArgumentException('Provided user_code does not exist', 'user_code');
         }
+
+        return $this->render($request, $response);
     }
 
     /**
      * Request ScreenShot form
-     * @param int $displayId
-     * @throws \Xibo\Exception\NotFoundException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function checkLicenceForm($displayId)
+    public function checkLicenceForm(Request $request, Response $response, $id)
     {
-        $display = $this->displayFactory->getById($displayId);
+        $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser()->checkViewable($display))
+        if (!$this->getUser($request)->checkViewable($display)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'display-form-licence-check';
         $this->getState()->setData([
             'display' => $display
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -2043,17 +2183,25 @@ class Display extends Base
      *  )
      * )
      *
-     * @param int $displayId
-     * @throws \Xibo\Exception\ConfigurationException if XMR cannot be contacted
-     * @throws \Xibo\Exception\NotFoundException
-     * @throws \Xibo\Exception\XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException if XMR cannot be contacted
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function checkLicence($displayId)
+    public function checkLicence(Request $request, Response $response, $id)
     {
-        $display = $this->displayFactory->getById($displayId);
+        $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser()->checkViewable($display))
+        if (!$this->getUser($request)->checkViewable($display)) {
             throw new AccessDeniedException();
+        }
 
         if (empty($display->xmrChannel)) {
             throw new InvalidArgumentException('XMR is not configured for this Display', 'xmrChannel');
@@ -2066,5 +2214,7 @@ class Display extends Base
             'message' => sprintf(__('Request sent for %s'), $display->display),
             'id' => $display->displayId
         ]);
+
+        return $this->render($request, $response);
     }
 }

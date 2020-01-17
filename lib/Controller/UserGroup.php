@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006,2007,2008,2009 Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -76,6 +77,7 @@ class UserGroup extends Base
      * @param PageFactory $pageFactory
      * @param PermissionFactory $permissionFactory
      * @param UserFactory $userFactory
+     * @param Twig $view
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userGroupFactory, $pageFactory, $permissionFactory, $userFactory, Twig $view)
     {
@@ -89,6 +91,14 @@ class UserGroup extends Base
 
     /**
      * Display page logic
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     function displayPage(Request $request, Response $response)
     {
@@ -128,16 +138,26 @@ class UserGroup extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     function grid(Request $request, Response $response)
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
         $filterBy = [
             'groupId' => $sanitizedQueryParams->getInt('userGroupId'),
-            'group' => $sanitizedQueryParams->getString('userGroup')
+            'group' => $sanitizedQueryParams->getString('userGroup'),
+            'isUserSpecific' => 0
         ];
 
         $groups = $this->userGroupFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filterBy, $request), $request);
+        $this->getLog()->debug('GROUP GRID RESULTS ' . json_encode($groups));
         foreach ($groups as $group) {
             /* @var \Xibo\Entity\UserGroup $group */
 
@@ -202,6 +222,14 @@ class UserGroup extends Base
 
     /**
      * Form to Add a Group
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     function addForm(Request $request, Response $response)
     {
@@ -217,7 +245,15 @@ class UserGroup extends Base
 
     /**
      * Form to Edit a Group
-     * @param int $groupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\NotFoundException
      */
     function editForm(Request $request, Response $response, $id)
@@ -241,7 +277,15 @@ class UserGroup extends Base
 
     /**
      * Shows the Delete Group Form
-     * @param int $groupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\NotFoundException
      */
     function deleteForm(Request $request, Response $response, $id)
@@ -308,6 +352,14 @@ class UserGroup extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     function add(Request $request, Response $response)
     {
@@ -393,7 +445,15 @@ class UserGroup extends Base
      *      )
      *  )
      * )
-     * @param $groupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\NotFoundException
      */
     function edit(Request $request, Response $response, $id)
@@ -436,7 +496,15 @@ class UserGroup extends Base
 
     /**
      * Delete User Group
-     * @param $groupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\NotFoundException
      * @SWG\Delete(
      *  path="/group/{userGroupId}",
@@ -483,7 +551,15 @@ class UserGroup extends Base
 
     /**
      * ACL Form for the provided GroupId
-     * @param int $groupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\NotFoundException
      */
     public function aclForm(Request $request, Response $response, $id)
@@ -550,7 +626,15 @@ class UserGroup extends Base
 
     /**
      * ACL update
+     * @param Request $request
+     * @param Response $response
      * @param int $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\NotFoundException
      */
     public function acl(Request $request, Response $response, $id)
@@ -634,24 +718,33 @@ class UserGroup extends Base
 
     /**
      * Shows the Members of a Group
-     * @param int $groupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\NotFoundException
      */
-    public function membersForm($groupId)
+    public function membersForm(Request $request, Response $response, $id)
     {
-        $group = $this->userGroupFactory->getById($groupId);
+        $group = $this->userGroupFactory->getById($id);
 
-        if (!$this->isEditable($group))
+        if (!$this->isEditable($group, $request)) {
             throw new AccessDeniedException();
+        }
 
         // Users in group
-        $usersAssigned = $this->userFactory->query(null, array('groupIds' => array($groupId)));
+        $usersAssigned = $this->userFactory->query(null, ['groupIds' => [$id]], $request);
 
         // Users not in group
-        $allUsers = $this->userFactory->query();
+        $allUsers = $this->userFactory->query(null, [], $request);
 
         // The available users are all users except users already in assigned users
-        $checkboxes = array();
+        $checkboxes = [];
 
         foreach ($allUsers as $user) {
             /* @var User $user */
@@ -681,6 +774,8 @@ class UserGroup extends Base
             'checkboxes' => $checkboxes,
             'help' =>  $this->getHelp()->link('UserGroup', 'Members')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -715,45 +810,57 @@ class UserGroup extends Base
      *      )
      *  )
      * )
-     * @param $groupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\NotFoundException
      */
-    public function assignUser($groupId)
+    public function assignUser(Request $request, Response $response, $id)
     {
-        $this->getLog()->debug('Assign User for groupId %d', $groupId);
+        $this->getLog()->debug(sprintf('Assign User for groupId %d', $id));
+        $sanitizedPaarams = $this->getSanitizer($request->getParams());
 
-        $group = $this->userGroupFactory->getById($groupId);
+        $group = $this->userGroupFactory->getById($id);
         $group->load();
 
-        if (!$this->isEditable($group))
+        if (!$this->isEditable($group, $request)) {
             throw new AccessDeniedException();
+        }
 
-        $users = $this->getSanitizer()->getIntArray('userId');
+        $users = $sanitizedPaarams->getIntArray('userId');
 
         foreach ($users as $userId) {
 
-            $this->getLog()->debug('Assign User %d for groupId %d', $userId, $groupId);
+            $this->getLog()->debug(sprintf('Assign User %d for groupId %d', $userId, $id));
 
             $user = $this->userFactory->getById($userId);
 
-            if (!$this->getUser()->checkViewable($user))
+            if (!$this->getUser($request)->checkViewable($user)) {
                 throw new AccessDeniedException(__('Access Denied to User'));
+            }
 
             $group->assignUser($user);
             $group->save(['validate' => false]);
         }
 
         // Check to see if unassign has been provided.
-        $users = $this->getSanitizer()->getIntArray('unassignUserId');
+        $users = $sanitizedPaarams->getIntArray('unassignUserId');
 
         foreach ($users as $userId) {
 
-            $this->getLog()->debug('Unassign User %d for groupId %d', $userId, $groupId);
+            $this->getLog()->debug(sprintf('Unassign User %d for groupId %d', $userId, $id));
 
             $user = $this->userFactory->getById($userId);
 
-            if (!$this->getUser()->checkViewable($user))
+            if (!$this->getUser($request)->checkViewable($user)) {
                 throw new AccessDeniedException(__('Access Denied to User'));
+            }
 
             $group->unassignUser($user);
             $group->save(['validate' => false]);
@@ -765,6 +872,8 @@ class UserGroup extends Base
             'message' => sprintf(__('Membership set for %s'), $group->group),
             'id' => $group->groupId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -799,17 +908,27 @@ class UserGroup extends Base
      *      )
      *  )
      * )
-     * @param $groupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\NotFoundException
      */
-    public function unassignUser($groupId)
+    public function unassignUser(Request $request, Response $response, $id)
     {
-        $group = $this->userGroupFactory->getById($groupId);
+        $group = $this->userGroupFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->isEditable($group))
+        if (!$this->isEditable($group, $request)) {
             throw new AccessDeniedException();
+        }
 
-        $users = $this->getSanitizer()->getIntArray('userId');
+        $users = $sanitizedParams->getIntArray('userId');
 
         foreach ($users as $userId) {
             $group->unassignUser($this->userFactory->getById($userId));
@@ -822,24 +941,37 @@ class UserGroup extends Base
             'message' => sprintf(__('Membership set for %s'), $group->group),
             'id' => $group->groupId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Form to Copy Group
-     * @param int $groupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\NotFoundException
      */
-    function copyForm($groupId)
+    function copyForm(Request $request, Response $response, $id)
     {
-        $group = $this->userGroupFactory->getById($groupId);
+        $group = $this->userGroupFactory->getById($id);
 
-        if (!$this->isEditable($group))
+        if (!$this->isEditable($group, $request)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'usergroup-form-copy';
         $this->getState()->setData([
             'group' => $group
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -882,23 +1014,33 @@ class UserGroup extends Base
      *  )
      * )
      *
-     * @param int $userGroupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\NotFoundException
      */
-    public function copy($userGroupId)
+    public function copy(Request $request, Response $response, $id)
     {
-        $group = $this->userGroupFactory->getById($userGroupId);
+        $group = $this->userGroupFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check we have permission to view this group
-        if (!$this->isEditable($group))
+        if (!$this->isEditable($group, $request)) {
             throw new AccessDeniedException();
+        }
 
         // Clone the group
         $group->load([
-            'loadUsers' => ($this->getSanitizer()->getCheckbox('copyMembers') == 1)
+            'loadUsers' => ($sanitizedParams->getCheckbox('copyMembers') == 1)
         ]);
         $newGroup = clone $group;
-        $newGroup->group = $this->getSanitizer()->getString('group');
+        $newGroup->group = $sanitizedParams->getString('group');
         $newGroup->save();
 
         // Copy permissions
@@ -915,10 +1057,13 @@ class UserGroup extends Base
             'id' => $newGroup->groupId,
             'data' => $newGroup
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * @param \Xibo\Entity\UserGroup $group
+     * @param Request $request
      * @return bool
      */
     private function isEditable($group, Request $request)

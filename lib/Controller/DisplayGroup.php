@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2019 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -126,6 +127,7 @@ class DisplayGroup extends Base
      * @param ScheduleFactory $scheduleFactory
      * @param TagFactory $tagFactory
      * @param CampaignFactory $campaignFactory
+     * @param Twig $view
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $moduleFactory, $mediaFactory, $commandFactory, $scheduleFactory, $tagFactory, $campaignFactory, Twig $view)
     {
@@ -145,6 +147,14 @@ class DisplayGroup extends Base
 
     /**
      * Display Group Page Render
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function displayPage(Request $request, Response $response)
     {
@@ -222,6 +232,14 @@ class DisplayGroup extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function grid(Request $request, Response $response)
     {
@@ -250,7 +268,7 @@ class DisplayGroup extends Base
             // Check to see if we're getting this data for a Schedule attempt, or for a general list
             if ($parsedQueryParams->getCheckbox('forSchedule') == 1) {
                 // Can't schedule with view, but no edit permissions
-                if (!$scheduleWithView && !$this->getUser()->checkEditable($group))
+                if (!$scheduleWithView && !$this->getUser($request)->checkEditable($group))
                     continue;
             }
 
@@ -359,6 +377,14 @@ class DisplayGroup extends Base
 
     /**
      * Shows an add form for a display group
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function addForm(Request $request, Response $response)
     {
@@ -372,7 +398,16 @@ class DisplayGroup extends Base
 
     /**
      * Shows an edit form for a display group
-     * @param int $displayGroupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function editForm(Request $request, Response $response, $id)
     {
@@ -407,7 +442,16 @@ class DisplayGroup extends Base
 
     /**
      * Shows the Delete Group Form
-     * @param int $displayGroupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     function deleteForm(Request $request, Response $response, $id)
     {
@@ -427,7 +471,16 @@ class DisplayGroup extends Base
 
     /**
      * Display Group Members form
-     * @param int $displayGroupId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function membersForm(Request $request, Response $response, $id)
     {
@@ -509,6 +562,15 @@ class DisplayGroup extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function add(Request $request, Response $response)
     {
@@ -539,11 +601,17 @@ class DisplayGroup extends Base
 
     /**
      * Edits a Display Group
-     * @param int $displayGroupId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
      * @throws XiboException
-     * @throws \Xibo\Exception\NotFoundException
-     *
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/displaygroup/{displayGroupId}",
      *  operationId="displayGroupEdit",
@@ -604,8 +672,9 @@ class DisplayGroup extends Base
         $displayGroup = $this->displayGroupFactory->getById($id);
         $parsedRequestParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($displayGroup))
+        if (!$this->getUser($request)->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $displayGroup->displayGroup = $parsedRequestParams->getString('displayGroup');
@@ -629,10 +698,16 @@ class DisplayGroup extends Base
 
     /**
      * Deletes a Group
-     * @param int $displayGroupId
-     *
-     * @throws \Xibo\Exception\NotFoundException
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Delete(
      *  path="/displaygroup/{displayGroupId}",
      *  operationId="displayGroupDelete",
@@ -657,8 +732,9 @@ class DisplayGroup extends Base
         $displayGroup = $this->displayGroupFactory->getById($id);
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
-        if (!$this->getUser($request)->checkDeleteable($displayGroup))
+        if (!$this->getUser($request)->checkDeleteable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
         $displayGroup->delete();
 
@@ -1220,8 +1296,17 @@ class DisplayGroup extends Base
 
     /**
      * Unassign Media
-     * @param int $displayGroupId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/media/unassign",
      *  operationId="displayGroupMediaUnassign",
@@ -1251,7 +1336,6 @@ class DisplayGroup extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
     public function unassignMedia(Request $request, Response $response, $id)
     {
@@ -1744,7 +1828,7 @@ class DisplayGroup extends Base
             throw new InvalidArgumentException(__('Please provide Layout id or Campaign id'), 'layoutId');
         }
 
-        if (!$this->getUser()->checkViewable($layout)) {
+        if (!$this->getUser($request)->checkViewable($layout)) {
             throw new AccessDeniedException();
         }
 
@@ -1942,7 +2026,7 @@ class DisplayGroup extends Base
             throw new InvalidArgumentException(__('Please provide Layout id or Campaign id'), 'layoutId');
         }
 
-        if (!$this->getUser()->checkViewable($layout)) {
+        if (!$this->getUser($request)->checkViewable($layout)) {
             throw new AccessDeniedException();
         }
 

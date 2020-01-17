@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,13 +21,16 @@
  */
 namespace Xibo\Controller;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Jenssegers\Date\Date;
+use Slim\Views\Twig;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\SessionFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
@@ -48,7 +52,7 @@ class Sessions extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -56,26 +60,52 @@ class Sessions extends Base
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param SessionFactory $sessionFactory
+     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $sessionFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $sessionFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->store = $store;
         $this->sessionFactory = $sessionFactory;
     }
 
-    function displayPage()
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
+    function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'sessions-page';
+
+        return $this->render($request, $response);
     }
 
-    function grid()
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    function grid(Request $request, Response $response)
     {
-        $sessions = $this->sessionFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
-            'type' => $this->getSanitizer()->getString('type'),
-            'fromDt' => $this->getSanitizer()->getString('fromDt')
-        ]));
+        $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
+
+        $sessions = $this->sessionFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+            'type' => $sanitizedQueryParams->getString('type'),
+            'fromDt' => $sanitizedQueryParams->getString('fromDt')
+        ], $request));
 
         foreach ($sessions as $row) {
             /* @var \Xibo\Entity\Session $row */
@@ -83,14 +113,14 @@ class Sessions extends Base
             // Normalise the date
             $row->lastAccessed = $this->getDate()->getLocalDate(Date::createFromFormat($this->getDate()->getSystemFormat(), $row->lastAccessed));
 
-            if (!$this->isApi() && $this->getUser()->isSuperAdmin()) {
+            if (!$this->isApi($request) && $this->getUser($request)->isSuperAdmin()) {
 
                 $row->includeProperty('buttons');
 
                 // Edit
                 $row->buttons[] = array(
                     'id' => 'sessions_button_logout',
-                    'url' => $this->urlFor('sessions.confirm.logout.form', ['id' => $row->sessionId]),
+                    'url' => $this->urlFor($request,'sessions.confirm.logout.form', ['id' => $row->sessionId]),
                     'text' => __('Logout')
                 );
             }
@@ -99,43 +129,71 @@ class Sessions extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->sessionFactory->countLast();
         $this->getState()->setData($sessions);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Confirm Logout Form
-     * @param int $sessionId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function confirmLogoutForm($sessionId)
+    function confirmLogoutForm(Request $request, Response $response, $id)
     {
-        if ($this->getUser()->userTypeId != 1)
+        if ($this->getUser($request)->userTypeId != 1) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'sessions-form-confirm-logout';
         $this->getState()->setData([
-            'sessionId' => $sessionId,
+            'sessionId' => $id,
             'help' => $this->getHelp()->link('Sessions', 'Logout')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Logout
-     * @param int $sessionId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    function logout($sessionId)
+    function logout(Request $request, Response $response, $id)
     {
-        if ($this->getUser()->userTypeId != 1)
+        if ($this->getUser($request)->userTypeId != 1) {
             throw new AccessDeniedException();
+        }
 
-        $session = $this->sessionFactory->getById($sessionId);
+        $session = $this->sessionFactory->getById($id);
 
-        if ($session->userId != 0)
-            $this->store->update('UPDATE `session` SET IsExpired = 1 WHERE userID = :userId ', ['userId' => $session->userId]);
-        else
-            $this->store->update('UPDATE `session` SET IsExpired = 1 WHERE session_id = :session_id ', ['session_id' => $sessionId]);
+        if ($session->userId != 0) {
+            $this->store->update('UPDATE `session` SET IsExpired = 1 WHERE userID = :userId ',
+                ['userId' => $session->userId]);
+        } else {
+            $this->store->update('UPDATE `session` SET IsExpired = 1 WHERE session_id = :session_id ',
+                ['session_id' => $id]);
+        }
 
         // Return
         $this->getState()->hydrate([
             'message' => __('User Logged Out.')
         ]);
+
+        return $this->render($request, $response);
     }
 }

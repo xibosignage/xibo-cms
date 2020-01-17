@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,6 +22,9 @@
 
 namespace Xibo\Controller;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Entity\Media;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Exception\AccessDeniedException;
@@ -31,6 +34,7 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -81,9 +85,14 @@ class Report extends Base
     private $userFactory;
 
     /**
+     * @var Twig
+     */
+    private $view;
+
+    /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -96,10 +105,11 @@ class Report extends Base
      * @param SavedReportFactory $savedReportFactory
      * @param MediaFactory $mediaFactory
      * @param UserFactory $userFactory
+     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $reportService, $reportScheduleFactory, $savedReportFactory, $mediaFactory, $userFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $reportService, $reportScheduleFactory, $savedReportFactory, $mediaFactory, $userFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->store = $store;
         $this->timeSeriesStore = $timeSeriesStore;
@@ -114,15 +124,26 @@ class Report extends Base
 
     /**
      * Report Schedule Grid
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function reportScheduleGrid()
+    public function reportScheduleGrid(Request $request, Response $response)
     {
-        $reportSchedules = $this->reportScheduleFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
-            'name' => $this->getSanitizer()->getString('name'),
-            'userId' => $this->getSanitizer()->getInt('userId'),
-            'reportScheduleId' => $this->getSanitizer()->getInt('reportScheduleId'),
-            'reportName' => $this->getSanitizer()->getString('reportName')
-        ]));
+        $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
+
+        $reportSchedules = $this->reportScheduleFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+            'name' => $sanitizedQueryParams->getString('name'),
+            'userId' => $sanitizedQueryParams->getInt('userId'),
+            'reportScheduleId' => $sanitizedQueryParams->getInt('reportScheduleId'),
+            'reportName' => $sanitizedQueryParams->getString('reportName')
+        ], $request));
 
         /** @var \Xibo\Entity\ReportSchedule $reportSchedule */
         foreach ($reportSchedules as $reportSchedule) {
@@ -185,7 +206,7 @@ class Report extends Base
                 $reportSchedule->buttons[] = [
                     'id' => 'reportSchedule_lastsaved_report_button',
                     'class' => 'XiboRedirectButton',
-                    'url' => $this->urlFor('savedreport.open', ['id' => $lastSavedReport->savedReportId, 'name' => $lastSavedReport->reportName] ),
+                    'url' => $this->urlFor($request,'savedreport.open', ['id' => $lastSavedReport->savedReportId, 'name' => $lastSavedReport->reportName] ),
                     'text' => __('Open last saved report')
                 ];
             }
@@ -194,7 +215,7 @@ class Report extends Base
             $reportSchedule->buttons[] = [
                 'id' => 'reportSchedule_goto_report_button',
                 'class' => 'XiboRedirectButton',
-                'url' => $this->urlFor('report.form', ['name' => $adhocReportName] ),
+                'url' => $this->urlFor($request,'report.form', ['name' => $adhocReportName] ),
                 'text' => __('Back to Reports')
             ];
             $reportSchedule->buttons[] = ['divider' => true];
@@ -202,29 +223,29 @@ class Report extends Base
             // Edit
             $reportSchedule->buttons[] = [
                 'id' => 'reportSchedule_edit_button',
-                'url' => $this->urlFor('reportschedule.edit.form', ['id' => $reportSchedule->reportScheduleId]),
+                'url' => $this->urlFor($request,'reportschedule.edit.form', ['id' => $reportSchedule->reportScheduleId]),
                 'text' => __('Edit')
             ];
 
             // Reset to previous run
-            if ($this->getUser()->isSuperAdmin()) {
+            if ($this->getUser($request)->isSuperAdmin()) {
                 $reportSchedule->buttons[] = [
                     'id' => 'reportSchedule_reset_button',
-                    'url' => $this->urlFor('reportschedule.reset.form', ['id' => $reportSchedule->reportScheduleId]),
+                    'url' => $this->urlFor($request,'reportschedule.reset.form', ['id' => $reportSchedule->reportScheduleId]),
                     'text' => __('Reset to previous run')
                 ];
             }
 
             // Delete
-            if ($this->getUser()->checkDeleteable($reportSchedule)) {
+            if ($this->getUser($request)->checkDeleteable($reportSchedule)) {
                 // Show the delete button
                 $reportSchedule->buttons[] = array(
                     'id' => 'reportschedule_button_delete',
-                    'url' => $this->urlFor('reportschedule.delete.form', ['id' => $reportSchedule->reportScheduleId]),
+                    'url' => $this->urlFor($request,'reportschedule.delete.form', ['id' => $reportSchedule->reportScheduleId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor('reportschedule.delete', ['id' => $reportSchedule->reportScheduleId])),
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'reportschedule.delete', ['id' => $reportSchedule->reportScheduleId])),
                         array('name' => 'commit-method', 'value' => 'delete'),
                         array('name' => 'id', 'value' => 'reportschedule_button_delete'),
                         array('name' => 'text', 'value' => __('Delete')),
@@ -236,19 +257,19 @@ class Report extends Base
             // Toggle active
             $reportSchedule->buttons[] = [
                 'id' => 'reportSchedule_toggleactive_button',
-                'url' => $this->urlFor('reportschedule.toggleactive.form', ['id' => $reportSchedule->reportScheduleId]),
+                'url' => $this->urlFor($request,'reportschedule.toggleactive.form', ['id' => $reportSchedule->reportScheduleId]),
                 'text' => ($reportSchedule->isActive == 1) ? __('Pause') : __('Resume')
             ];
 
             // Delete all saved report
             $savedreports = $this->savedReportFactory->query(null, ['reportScheduleId'=> $reportSchedule->reportScheduleId]);
-            if ((count($savedreports) > 0)  && $this->getUser()->checkDeleteable($reportSchedule)) {
+            if ((count($savedreports) > 0)  && $this->getUser($request)->checkDeleteable($reportSchedule)) {
 
                 $reportSchedule->buttons[] = ['divider' => true];
 
                 $reportSchedule->buttons[] = array(
                     'id' => 'reportschedule_button_delete_all',
-                    'url' => $this->urlFor('reportschedule.deleteall.form', ['id' => $reportSchedule->reportScheduleId]),
+                    'url' => $this->urlFor($request,'reportschedule.deleteall.form', ['id' => $reportSchedule->reportScheduleId]),
                     'text' => __('Delete all saved reports'),
                 );
             }
@@ -257,14 +278,26 @@ class Report extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->reportScheduleFactory->countLast();
         $this->getState()->setData($reportSchedules);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Report Schedule Reset
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function reportScheduleReset($reportScheduleId)
+    public function reportScheduleReset(Request $request, Response $response, $id)
     {
-        $reportSchedule = $this->reportScheduleFactory->getById($reportScheduleId);
+        $reportSchedule = $this->reportScheduleFactory->getById($id);
 
         $this->getLog()->debug('Reset Report Schedule: '.$reportSchedule->name);
 
@@ -272,16 +305,27 @@ class Report extends Base
         $reportSchedule->lastSavedReportId = 0;
         $reportSchedule->lastRunDt = $reportSchedule->previousRunDt;
         $reportSchedule->save();
+
+        return $this->render($request, $response);
     }
 
     /**
      * Report Schedule Add
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function reportScheduleAdd()
+    public function reportScheduleAdd(Request $request, Response $response)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $name = $this->getSanitizer()->getString('name');
-        $reportName = $this->getSanitizer()->getParam('reportName', null);
+        $name = $sanitizedParams->getString('name');
+        $reportName = $request->getParam('reportName', null);
 
         $this->getLog()->debug('Add Report Schedule: '. $name);
 
@@ -296,7 +340,7 @@ class Report extends Base
         $reportSchedule->schedule = $result['schedule'];
         $reportSchedule->lastRunDt = 0;
         $reportSchedule->previousRunDt = 0;
-        $reportSchedule->userId = $this->getUser()->userId;
+        $reportSchedule->userId = $this->getUser($request)->userId;
         $reportSchedule->createdDt = $this->getDate()->getLocalDate(null, 'U');
 
         $reportSchedule->save();
@@ -308,20 +352,32 @@ class Report extends Base
             'id' => $reportSchedule->reportScheduleId,
             'data' => $reportSchedule
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Report Schedule Edit
-     * @param $reportScheduleId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function reportScheduleEdit($reportScheduleId)
+    public function reportScheduleEdit(Request $request, Response $response, $id)
     {
-        $reportSchedule = $this->reportScheduleFactory->getById($reportScheduleId);
+        $reportSchedule = $this->reportScheduleFactory->getById($id);
 
-        if ($reportSchedule->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1)
+        if ($reportSchedule->getOwnerId() != $this->getUser($request)->userId && $this->getUser($request)->userTypeId != 1) {
             throw new AccessDeniedException();
+        }
 
-        $reportSchedule->name = $this->getSanitizer()->getString('name');
+        $reportSchedule->name = $this->getSanitizer($request->getParams())->getString('name');
         $reportSchedule->save();
 
         // Return
@@ -331,18 +387,32 @@ class Report extends Base
             'id' => $reportSchedule->reportScheduleId,
             'data' => $reportSchedule
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Report Schedule Delete
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function reportScheduleDelete($reportScheduleId)
+    public function reportScheduleDelete(Request $request, Response $response, $id)
     {
 
-        $reportSchedule = $this->reportScheduleFactory->getById($reportScheduleId);
+        $reportSchedule = $this->reportScheduleFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($reportSchedule))
+        if (!$this->getUser($request)->checkDeleteable($reportSchedule)) {
             throw new AccessDeniedException(__('You do not have permissions to delete this report schedule'));
+        }
 
         try {
             $reportSchedule->delete();
@@ -356,21 +426,36 @@ class Report extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $reportSchedule->name)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Report Schedule Delete All Saved Report
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function reportScheduleDeleteAllSavedReport($reportScheduleId)
+    public function reportScheduleDeleteAllSavedReport(Request $request, Response $response, $id)
     {
 
-        $reportSchedule = $this->reportScheduleFactory->getById($reportScheduleId);
+        $reportSchedule = $this->reportScheduleFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($reportSchedule))
+        if (!$this->getUser($request)->checkDeleteable($reportSchedule)) {
             throw new AccessDeniedException(__('You do not have permissions to delete the saved report of this report schedule'));
+        }
 
         // Get all saved reports of the report schedule
-        $savedReports = $this->savedReportFactory->query(null, ['reportScheduleId' => $reportScheduleId]);
+        $savedReports = $this->savedReportFactory->query(null, ['reportScheduleId' => $id]);
         foreach ($savedReports as $savedreport) {
             try {
                 $savedreport->delete();
@@ -384,18 +469,31 @@ class Report extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted all saved reports of %s'), $reportSchedule->name)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Report Schedule Toggle Active
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function reportScheduleToggleActive($reportScheduleId)
+    public function reportScheduleToggleActive(Request $request, Response $response, $id)
     {
 
-        $reportSchedule = $this->reportScheduleFactory->getById($reportScheduleId);
+        $reportSchedule = $this->reportScheduleFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($reportSchedule))
+        if (!$this->getUser($request)->checkEditable($reportSchedule)) {
             throw new AccessDeniedException(__('You do not have permissions to pause/resume this report schedule'));
+        }
 
         if ($reportSchedule->isActive == 1) {
             $reportSchedule->isActive = 0;
@@ -405,6 +503,7 @@ class Report extends Base
             $msg = sprintf(__('Resumed %s'), $reportSchedule->name);
 
         }
+
         $reportSchedule->save();
 
         // Return
@@ -412,12 +511,22 @@ class Report extends Base
             'httpStatus' => 204,
             'message' => $msg
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Displays the Report Schedule Page
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function displayReportSchedulePage()
+    public function displayReportSchedulePage(Request $request, Response $response)
     {
         // Call to render the template
         $this->getState()->template = 'report-schedule-page';
@@ -425,15 +534,25 @@ class Report extends Base
             'users' => $this->userFactory->query(),
             'availableReports' => $this->reportService->listReports()
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Displays an Add form
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function addReportScheduleForm()
+    public function addReportScheduleForm(Request $request, Response $response)
     {
 
-        $reportName = $this->getSanitizer()->getParam('reportName', null);
+        $reportName = $request->getParam('reportName', null);
 
         // Populate form title and hidden fields
         $formData = $this->reportService->getReportScheduleFormData($reportName);
@@ -442,31 +561,55 @@ class Report extends Base
         $this->getState()->template = $template;
         $this->getState()->setData($formData['data']);
 
+        return $this->render($request, $response);
     }
 
     /**
      * Report Schedule Edit Form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function editReportScheduleForm($reportScheduleId)
+    public function editReportScheduleForm(Request $request, Response $response, $id)
     {
-        $reportSchedule = $this->reportScheduleFactory->getById($reportScheduleId);
+        $reportSchedule = $this->reportScheduleFactory->getById($id);
 
         $this->getState()->template = 'reportschedule-form-edit';
         $this->getState()->setData([
             'reportSchedule' => $reportSchedule
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Report Schedule Reset Form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function resetReportScheduleForm($reportScheduleId)
+    public function resetReportScheduleForm(Request $request, Response $response, $id)
     {
-        $reportSchedule = $this->reportScheduleFactory->getById($reportScheduleId);
+        $reportSchedule = $this->reportScheduleFactory->getById($id);
 
         // Only admin can reset it
-        if ($this->getUser()->userTypeId != 1)
+        if ($this->getUser($request)->userTypeId != 1) {
             throw new AccessDeniedException(__('You do not have permissions to reset this report schedule'));
+        }
 
         $data = [
             'reportSchedule' => $reportSchedule
@@ -474,17 +617,30 @@ class Report extends Base
 
         $this->getState()->template = 'reportschedule-form-reset';
         $this->getState()->setData($data);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Report Schedule Delete Form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function deleteReportScheduleForm($reportScheduleId)
+    public function deleteReportScheduleForm(Request $request, Response $response, $id)
     {
-        $reportSchedule = $this->reportScheduleFactory->getById($reportScheduleId);
+        $reportSchedule = $this->reportScheduleFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($reportSchedule))
+        if (!$this->getUser($request)->checkDeleteable($reportSchedule)) {
             throw new AccessDeniedException(__('You do not have permissions to delete this report schedule'));
+        }
 
         $data = [
             'reportSchedule' => $reportSchedule
@@ -493,17 +649,29 @@ class Report extends Base
         $this->getState()->template = 'reportschedule-form-delete';
         $this->getState()->setData($data);
 
+        return $this->render($request, $response);
     }
 
     /**
      * Report Schedule Delete All Saved Report Form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function deleteAllSavedReportReportScheduleForm($reportScheduleId)
+    public function deleteAllSavedReportReportScheduleForm(Request $request, Response $response, $id)
     {
-        $reportSchedule = $this->reportScheduleFactory->getById($reportScheduleId);
+        $reportSchedule = $this->reportScheduleFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($reportSchedule))
+        if (!$this->getUser($request)->checkDeleteable($reportSchedule)) {
             throw new AccessDeniedException(__('You do not have permissions to delete saved reports of this report schedule'));
+        }
 
         $data = [
             'reportSchedule' => $reportSchedule
@@ -512,17 +680,29 @@ class Report extends Base
         $this->getState()->template = 'reportschedule-form-deleteall';
         $this->getState()->setData($data);
 
+        return $this->render($request, $response);
     }
 
     /**
      * Report Schedule Toggle Active Form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function toggleActiveReportScheduleForm($reportScheduleId)
+    public function toggleActiveReportScheduleForm(Request $request, Response $response, $id)
     {
-        $reportSchedule = $this->reportScheduleFactory->getById($reportScheduleId);
+        $reportSchedule = $this->reportScheduleFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($reportSchedule))
+        if (!$this->getUser($request)->checkEditable($reportSchedule)) {
             throw new AccessDeniedException(__('You do not have permissions to pause/resume this report schedule'));
+        }
 
         $data = [
             'reportSchedule' => $reportSchedule
@@ -531,6 +711,7 @@ class Report extends Base
         $this->getState()->template = 'reportschedule-form-toggleactive';
         $this->getState()->setData($data);
 
+        return $this->render($request, $response);
     }
 
     //</editor-fold>
@@ -539,14 +720,24 @@ class Report extends Base
 
     /**
      * Saved report Grid
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function savedReportGrid()
+    public function savedReportGrid(Request $request, Response $response)
     {
-        $savedReports = $this->savedReportFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
-            'saveAs' => $this->getSanitizer()->getString('saveAs'),
-            'userId' => $this->getSanitizer()->getInt('userId'),
-            'reportName' => $this->getSanitizer()->getString('reportName')
-        ]));
+        $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
+
+        $savedReports = $this->savedReportFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+            'saveAs' => $sanitizedQueryParams->getString('saveAs'),
+            'userId' => $sanitizedQueryParams->getInt('userId'),
+            'reportName' => $sanitizedQueryParams->getString('reportName')
+        ], $request));
 
         foreach ($savedReports as $savedReport) {
             /** @var \Xibo\Entity\SavedReport $savedReport */
@@ -556,7 +747,7 @@ class Report extends Base
             $savedReport->buttons[] = [
                 'id' => 'button_show_report.now',
                 'class' => 'XiboRedirectButton',
-                'url' => $this->urlFor('savedreport.open', ['id' => $savedReport->savedReportId, 'name' => $savedReport->reportName] ),
+                'url' => $this->urlFor($request,'savedreport.open', ['id' => $savedReport->savedReportId, 'name' => $savedReport->reportName] ),
                 'text' => __('Open')
             ];
             $savedReport->buttons[] = ['divider' => true];
@@ -564,14 +755,14 @@ class Report extends Base
             $savedReport->buttons[] = [
                 'id' => 'button_goto_report',
                 'class' => 'XiboRedirectButton',
-                'url' => $this->urlFor('report.form', ['name' => $savedReport->reportName] ),
+                'url' => $this->urlFor($request,'report.form', ['name' => $savedReport->reportName] ),
                 'text' => __('Back to Reports')
             ];
 
             $savedReport->buttons[] = [
                 'id' => 'button_goto_schedule',
                 'class' => 'XiboRedirectButton',
-                'url' => $this->urlFor('reportschedule.view' ) . '?reportScheduleId=' . $savedReport->reportScheduleId. '&reportName='.$savedReport->reportName,
+                'url' => $this->urlFor($request,'reportschedule.view' ) . '?reportScheduleId=' . $savedReport->reportScheduleId. '&reportName='.$savedReport->reportName,
                 'text' => __('Go to schedule')
             ];
 
@@ -586,21 +777,21 @@ class Report extends Base
                 $savedReport->buttons[] = [
                     'id' => 'button_export_report',
                     'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor('savedreport.export', ['id' => $savedReport->savedReportId, 'name' => $savedReport->reportName] ),
+                    'url' => $this->urlFor($request,'savedreport.export', ['id' => $savedReport->savedReportId, 'name' => $savedReport->reportName] ),
                     'text' => __('Export as PDF')
                 ];
             }
 
             // Delete
-            if ($this->getUser()->checkDeleteable($savedReport)) {
+            if ($this->getUser($request)->checkDeleteable($savedReport)) {
                 // Show the delete button
                 $savedReport->buttons[] = array(
                     'id' => 'savedreport_button_delete',
-                    'url' => $this->urlFor('savedreport.delete.form', ['id' => $savedReport->savedReportId]),
+                    'url' => $this->urlFor($request,'savedreport.delete.form', ['id' => $savedReport->savedReportId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor('savedreport.delete', ['id' => $savedReport->savedReportId])),
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'savedreport.delete', ['id' => $savedReport->savedReportId])),
                         array('name' => 'commit-method', 'value' => 'delete'),
                         array('name' => 'id', 'value' => 'savedreport_button_delete'),
                         array('name' => 'text', 'value' => __('Delete')),
@@ -612,12 +803,22 @@ class Report extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->savedReportFactory->countLast();
         $this->getState()->setData($savedReports);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Displays the Saved Report Page
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function displaySavedReportPage()
+    public function displaySavedReportPage(Request $request, Response $response)
     {
         // Call to render the template
         $this->getState()->template = 'saved-report-page';
@@ -625,17 +826,30 @@ class Report extends Base
             'users' => $this->userFactory->query(),
             'availableReports' => $this->reportService->listReports()
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Report Schedule Delete Form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function deleteSavedReportForm($savedreportId)
+    public function deleteSavedReportForm(Request $request, Response $response, $id)
     {
-        $savedReport = $this->savedReportFactory->getById($savedreportId);
+        $savedReport = $this->savedReportFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($savedReport))
+        if (!$this->getUser($request)->checkDeleteable($savedReport)) {
             throw new AccessDeniedException(__('You do not have permissions to delete this report schedule'));
+        }
 
         $data = [
             'savedReport' => $savedReport
@@ -644,21 +858,34 @@ class Report extends Base
         $this->getState()->template = 'savedreport-form-delete';
         $this->getState()->setData($data);
 
+        return $this->render($request, $response);
     }
 
     /**
      * Saved Report Delete
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function savedReportDelete($savedreportId)
+    public function savedReportDelete(Request $request, Response $response, $id)
     {
 
-        $savedReport = $this->savedReportFactory->getById($savedreportId);
+        $savedReport = $this->savedReportFactory->getById($id);
 
         /** @var Media $media */
         $media = $this->mediaFactory->getById($savedReport->mediaId);
 
-        if (!$this->getUser()->checkDeleteable($savedReport))
+        if (!$this->getUser($request)->checkDeleteable($savedReport)) {
             throw new AccessDeniedException(__('You do not have permissions to delete this report schedule'));
+        }
 
         $savedReport->load();
         $media->load();
@@ -672,42 +899,59 @@ class Report extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $savedReport->saveAs)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Returns a Saved Report's preview
-     * @param int $savedreportId
-     * @param string $reportName
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @param $name
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function savedReportOpen($savedreportId, $reportName)
+    public function savedReportOpen(Request $request, Response $response, $id, $name)
     {
         // Retrieve the saved report result in array
-        $results = $this->reportService->getSavedReportResults($savedreportId, $reportName);
+        $results = $this->reportService->getSavedReportResults($id, $name);
 
         $this->getState()->template = $results['template'];
         $this->getState()->setData($results['chartData']);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Exports saved report as a PDF file
-     * @param int $savedreportId
-     * @param string $reportName
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @param $name
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function savedReportExport($savedreportId, $reportName)
+    public function savedReportExport(Request $request, Response $response, $id, $name)
     {
-        $savedReport = $this->savedReportFactory->getById($savedreportId);
+        $savedReport = $this->savedReportFactory->getById($id);
 
         // Retrieve the saved report result in array
-        $savedReportData = $this->reportService->getSavedReportResults($savedreportId, $reportName);
+        $savedReportData = $this->reportService->getSavedReportResults($id, $name);
 
         // Get the report config
-        $report = $this->reportService->getReportByName($reportName);
+        $report = $this->reportService->getReportByName($name);
         if ($report->output_type == 'chart') {
 
             $quickChartUrl = $this->getConfig()->getSetting('QUICK_CHART_URL');
             if (!empty($quickChartUrl)) {
-                $script = $this->reportService->getReportChartScript($savedreportId, $reportName);
+                $script = $this->reportService->getReportChartScript($id, $name);
                 $src = $quickChartUrl. "/chart?width=1000&height=300&c=".$script;
             } else {
                 $placeholder = __('Chart could not be drawn because the CMS has not been configured with a Quick Chart URL.');
@@ -720,13 +964,13 @@ class Report extends Base
         }
 
         // Get report email template
-        $emailTemplate = $this->reportService->getReportEmailTemplate($reportName);
+        $emailTemplate = $this->reportService->getReportEmailTemplate($name);
         if (!empty($emailTemplate)) {
 
             // Save PDF attachment
             ob_start();
             // Render the template
-            $this->app->render($emailTemplate,
+            $this->view->render($response,$emailTemplate,
                 [
                     'header' => $report->description,
                     'logo' => $this->getConfig()->uri('img/xibologo.png', true),
@@ -741,7 +985,7 @@ class Report extends Base
             $body = ob_get_contents();
             ob_end_clean();
 
-            $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION'). 'temp/saved_report_'.$savedreportId.'.pdf';
+            $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION'). 'temp/saved_report_'.$id.'.pdf';
 
             try {
                 $mpdf = new \Mpdf\Mpdf([
@@ -785,14 +1029,23 @@ class Report extends Base
 
     /**
      * Displays an Ad Hoc Report form
+     * @param Request $request
+     * @param Response $response
+     * @param $name
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function getReportForm($reportName)
+    public function getReportForm(Request $request, Response $response, $name)
     {
 
-        $this->getLog()->debug('Get report name: '.$reportName);
+        $this->getLog()->debug('Get report name: '. $name);
 
         // Get the report Class from the Json File
-        $className = $this->reportService->getReportClass($reportName);
+        $className = $this->reportService->getReportClass($name);
 
         // Create the report object
         $object = $this->reportService->createReportObject($className);
@@ -803,27 +1056,40 @@ class Report extends Base
         // Show the twig
         $this->getState()->template = $form['template'];
         $this->getState()->setData([
-            'reportName' => $reportName,
+            'reportName' => $name,
             'defaults' => $form['data']
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Displays Ad Hoc Report data in charts
+     * @param Request $request
+     * @param Response $response
+     * @param $name
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function getReportData($reportName)
+    public function getReportData(Request $request, Response $response, $name)
     {
-        $this->getLog()->debug('Get report name: '.$reportName);
+        $this->getLog()->debug('Get report name: '. $name);
 
         // Get the report Class from the Json File
-        $className = $this->reportService->getReportClass($reportName);
+        $className = $this->reportService->getReportClass($name);
 
         // Create the report object
         $object = $this->reportService->createReportObject($className);
 
         // Return data to build chart
-        $results =  $object->getResults(null);
+        $results =  $object->getResults(null, $request);
         $this->getState()->extra = $results;
+
+        return $this->render($request, $response);
     }
 
     //</editor-fold>

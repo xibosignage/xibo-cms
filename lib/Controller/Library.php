@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner, Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -336,6 +337,14 @@ class Library extends Base
 
     /**
      * Displays the page logic
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     function displayPage(Request $request, Response $response)
     {
@@ -353,8 +362,19 @@ class Library extends Base
 
     /**
      * Set Enable Stats Collection of a media
-     * @param int $mediaId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\DuplicateEntityException
      * @SWG\Put(
      *  path="/library/setenablestat/{mediaId}",
      *  operationId="mediaSetEnableStat",
@@ -381,18 +401,18 @@ class Library extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function setEnableStat($mediaId)
+    public function setEnableStat(Request $request, Response $response, $id)
     {
         // Get the Media
-        $media = $this->mediaFactory->getById($mediaId);
+        $media = $this->mediaFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($media))
+        if (!$this->getUser($request)->checkViewable($media)) {
             throw new AccessDeniedException();
+        }
 
-        $enableStat = $this->getSanitizer()->getString('enableStat');
+        $enableStat = $this->getSanitizer($request->getParams())->getString('enableStat');
 
         $media->enableStat = $enableStat;
         $media->save(['saveTags' => false]);
@@ -402,22 +422,32 @@ class Library extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('For Media %s Enable Stats Collection is set to %s'), $media->name, __($media->enableStat))
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Set Enable Stat Form
-     * @param int $mediaId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function setEnableStatForm($mediaId)
+    public function setEnableStatForm(Request $request, Response $response, $id)
     {
-
         // Get the Media
-        $media = $this->mediaFactory->getById($mediaId);
+        $media = $this->mediaFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($media))
+        if (!$this->getUser($request)->checkViewable($media)) {
             throw new AccessDeniedException();
+        }
 
         $data = [
             'media' => $media,
@@ -426,6 +456,8 @@ class Library extends Base
 
         $this->getState()->template = 'library-form-setenablestat';
         $this->getState()->setData($data);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -926,14 +958,24 @@ class Library extends Base
 
     /**
      * Edit Form
-     * @param int $mediaId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function editForm($mediaId)
+    public function editForm(Request $request, Response $response, $id)
     {
-        $media = $this->mediaFactory->getById($mediaId);
+        $media = $this->mediaFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($media))
+        if (!$this->getUser($request)->checkEditable($media)) {
             throw new AccessDeniedException();
+        }
 
         $tags = '';
 
@@ -959,6 +1001,8 @@ class Library extends Base
             'tags' => $tags,
             'expiryDate' => ($media->expires == 0 ) ? null : date('Y-m-d H:i:s', $media->expires)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1019,34 +1063,43 @@ class Library extends Base
      *  )
      * )
      *
-     * @param int $mediaId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\DuplicateEntityException
      */
-    public function edit($mediaId)
+    public function edit(Request $request, Response $response, $id)
     {
-        $media = $this->mediaFactory->getById($mediaId);
+        $media = $this->mediaFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($media))
+        if (!$this->getUser($request)->checkEditable($media)) {
             throw new AccessDeniedException();
+        }
 
-        if ($media->mediaType == 'font')
+        if ($media->mediaType == 'font') {
             throw new \InvalidArgumentException(__('Sorry, Fonts do not have any editable properties.'));
+        }
 
-        $media->name = $this->getSanitizer()->getString('name');
-        $media->duration = $this->getSanitizer()->getInt('duration');
-        $media->retired = $this->getSanitizer()->getCheckbox('retired');
-        $media->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
-        $media->enableStat = $this->getSanitizer()->getString('enableStat');
+        $media->name = $sanitizedParams->getString('name');
+        $media->duration = $sanitizedParams->getInt('duration');
+        $media->retired = $sanitizedParams->getCheckbox('retired');
+        $media->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+        $media->enableStat = $sanitizedParams->getString('enableStat');
 
-        if ($this->getSanitizer()->getDate('expires') != null ) {
+        if ($sanitizedParams->getDate('expires') != null ) {
 
-            if ($this->getSanitizer()->getDate('expires')->format('U') > time()) {
-                $media->expires = $this->getSanitizer()->getDate('expires')->format('U');
+            if ($sanitizedParams->getDate('expires')->format('U') > time()) {
+                $media->expires = $sanitizedParams->getDate('expires')->format('U');
             } else {
                 throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');
             }
@@ -1055,7 +1108,7 @@ class Library extends Base
         }
 
         // Should we update the media in all layouts?
-        if ($this->getSanitizer()->getCheckbox('updateInLayouts') == 1 || $media->hasPropertyChanged('enableStat')) {
+        if ($sanitizedParams->getCheckbox('updateInLayouts') == 1 || $media->hasPropertyChanged('enableStat')) {
             foreach ($this->widgetFactory->getByMediaId($media->mediaId) as $widget) {
                 /* @var Widget $widget */
                 $widget->duration = $media->duration;
@@ -1077,18 +1130,29 @@ class Library extends Base
             'id' => $media->mediaId,
             'data' => $media
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Tidy Library
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function tidyForm()
+    public function tidyForm(Request $request, Response $response)
     {
-        if ($this->getConfig()->getSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
+        if ($this->getConfig()->getSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1) {
             throw new ConfigurationException(__('Sorry this function is disabled.'));
+        }
 
         // Work out how many files there are
-        $media = $this->mediaFactory->query(null, ['unusedOnly' => 1, 'ownerId' => $this->getUser()->userId]);
+        $media = $this->mediaFactory->query(null, ['unusedOnly' => 1, 'ownerId' => $this->getUser($request)->userId]);
 
         $sumExcludingGeneric = 0;
         $countExcludingGeneric = 0;
@@ -1114,6 +1178,8 @@ class Library extends Base
             'countGeneric' => $countGeneric,
             'help' => $this->getHelp()->link('Content', 'TidyLibrary')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1137,16 +1203,27 @@ class Library extends Base
      *      description="successful operation"
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function tidy()
+    public function tidy(Request $request, Response $response)
     {
-        if ($this->getConfig()->getSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
+        if ($this->getConfig()->getSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1) {
             throw new ConfigurationException(__('Sorry this function is disabled.'));
+        }
 
-        $tidyGenericFiles = $this->getSanitizer()->getCheckbox('tidyGenericFiles');
+        $tidyGenericFiles = $this->getSanitizer($request->getParams())->getCheckbox('tidyGenericFiles');
 
         // Get a list of media that is not in use (for this user)
-        $media = $this->mediaFactory->query(null, ['unusedOnly' => 1, 'ownerId' => $this->getUser()->userId]);
+        $media = $this->mediaFactory->query(null, ['unusedOnly' => 1, 'ownerId' => $this->getUser($request)->userId]);
 
         $i = 0;
         foreach ($media as $item) {
@@ -1166,6 +1243,8 @@ class Library extends Base
             'message' => __('Library Tidy Complete'),
             'countDeleted' => $i
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1318,6 +1397,10 @@ class Library extends Base
 
     /**
      * Return the CMS flavored font css
+     * @param Request $request
+     * @param Response $response
+     * @return Response
+     * @throws XiboException
      */
     public function fontCss(Request $request, Response $response)
     {
@@ -1339,6 +1422,8 @@ class Library extends Base
 
     /**
      * Return the CMS flavored font css
+     * @param Request|null $request
+     * @throws XiboException
      */
     public function fontList(Request $request = null)
     {
@@ -1353,7 +1438,9 @@ class Library extends Base
 
     /**
      * Get font CKEditor config
+     * @param Request|null $request
      * @return string
+     * @throws XiboException
      */
     public function fontCKEditorConfig(Request $request = null)
     {
@@ -1366,8 +1453,12 @@ class Library extends Base
     /**
      * Installs fonts
      * @param array $options
+     * @param Request|null $request
      * @return array
+     * @throws ConfigurationException
+     * @throws InvalidArgumentException
      * @throws XiboException
+     * @throws \Xibo\Exception\DuplicateEntityException
      */
     public function installFonts($options = [], Request $request = null)
     {
@@ -1573,11 +1664,13 @@ class Library extends Base
      * @param $mediaId
      * @throws LibraryFullException
      */
-    public function mcaas($mediaId)
+    public function mcaas(Request $request, Response $response, $id)
     {
+        // TODO MCAAS
         // This is only available through the API
-        if (!$this->isApi())
+        if (!$this->isApi($request)) {
             throw new AccessDeniedException(__('Route is available through the API'));
+        }
 
         // We need to get the access token we used to authorize this request.
         // as we are API we can expect that in the $app.
@@ -1586,7 +1679,7 @@ class Library extends Base
 
         // Call Add with the oldMediaId
         $this->add([
-            'oldMediaId' => $mediaId,
+            'oldMediaId' => $id,
             'updateInLayouts' => 1,
             'deleteOldRevisions' => 1,
             'allowMediaTypeChange' => 1
@@ -1625,24 +1718,36 @@ class Library extends Base
      *  )
      * )
      *
-     * @param $mediaId
-     * @throws \Xibo\Exception\NotFoundException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\DuplicateEntityException
      */
-    public function tag($mediaId)
+    public function tag(Request $request, Response $response, $id)
     {
         // Edit permission
         // Get the media
-        $media = $this->mediaFactory->getById($mediaId);
+        $media = $this->mediaFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser()->checkEditable($media))
+        if (!$this->getUser($request)->checkEditable($media)) {
             throw new AccessDeniedException();
+        }
 
-        $tags = $this->getSanitizer()->getStringArray('tag');
+        $tags = $this->getSanitizer($request->getParams())->getArray('tag');
 
-        if (count($tags) <= 0)
+        if (count($tags) <= 0) {
             throw new \InvalidArgumentException(__('No tags to assign'));
+        }
 
         foreach ($tags as $tag) {
             $media->assignTag($this->tagFactory->tagFromString($tag));
@@ -1656,6 +1761,8 @@ class Library extends Base
             'id' => $media->mediaId,
             'data' => $media
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1687,24 +1794,36 @@ class Library extends Base
      *  )
      * )
      *
-     * @param $mediaId
-     * @throws \Xibo\Exception\NotFoundException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
      * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\DuplicateEntityException
      */
-    public function untag($mediaId)
+    public function untag(Request $request, Response $response, $id)
     {
         // Edit permission
         // Get the media
-        $media = $this->mediaFactory->getById($mediaId);
+        $media = $this->mediaFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser()->checkEditable($media))
+        if (!$this->getUser($request)->checkEditable($media)) {
             throw new AccessDeniedException();
+        }
 
-        $tags = $this->getSanitizer()->getStringArray('tag');
+        $tags = $this->getSanitizer($request->getParams())->getArray('tag');
 
-        if (count($tags) <= 0)
+        if (count($tags) <= 0) {
             throw new InvalidArgumentException(__('No tags to unassign'), 'tag');
+        }
 
         foreach ($tags as $tag) {
             $media->unassignTag($this->tagFactory->tagFromString($tag));
@@ -1718,27 +1837,41 @@ class Library extends Base
             'id' => $media->mediaId,
             'data' => $media
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Library Usage Report Form
-     * @param int $mediaId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function usageForm($mediaId)
+    public function usageForm(Request $request, Response $response, $id)
     {
-        $media = $this->mediaFactory->getById($mediaId);
+        $media = $this->mediaFactory->getById($id);
 
-        if (!$this->getUser()->checkViewable($media))
+        if (!$this->getUser($request)->checkViewable($media)) {
             throw new AccessDeniedException();
+        }
 
         // Get a list of displays that this mediaId is used on
-        $displays = $this->displayFactory->query($this->gridRenderSort(), $this->gridRenderFilter(['disableUserCheck' => 1, 'mediaId' => $mediaId]));
+        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter(['disableUserCheck' => 1, 'mediaId' => $id], $request), $request);
 
         $this->getState()->template = 'library-form-usage';
         $this->getState()->setData([
             'media' => $media,
             'countDisplays' => count($displays)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1761,21 +1894,30 @@ class Library extends Base
      *  )
      * )
      *
-     * @param int $mediaId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
      * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function usage($mediaId)
+    public function usage(Request $request, Response $response, $id)
     {
-        $media = $this->mediaFactory->getById($mediaId);
+        $media = $this->mediaFactory->getById($id);
 
-        if (!$this->getUser()->checkViewable($media))
+        if (!$this->getUser($request)->checkViewable($media)) {
             throw new AccessDeniedException();
+        }
 
         // Get a list of displays that this mediaId is used on by direct assignment
-        $displays = $this->displayFactory->query($this->gridRenderSort(), $this->gridRenderFilter(['mediaId' => $mediaId]));
+        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter(['mediaId' => $id], $request), $request);
 
         // have we been provided with a date/time to restrict the scheduled events to?
-        $mediaDate = $this->getSanitizer()->getDate('mediaEventDate');
+        $mediaDate = $this->getSanitizer($request->getParams())->getDate('mediaEventDate');
 
         if ($mediaDate !== null) {
             // Get a list of scheduled events that this mediaId is used on, based on the date provided
@@ -1784,12 +1926,12 @@ class Library extends Base
             $events = $this->scheduleFactory->query(null, [
                 'futureSchedulesFrom' => $mediaDate->format('U'),
                 'futureSchedulesTo' => $toDate->format('U'),
-                'mediaId' => $mediaId
+                'mediaId' => $id
             ]);
         } else {
             // All scheduled events for this mediaId
             $events = $this->scheduleFactory->query(null, [
-                'mediaId' => $mediaId
+                'mediaId' => $id
             ]);
         }
 
@@ -1837,7 +1979,7 @@ class Library extends Base
             }
         }
 
-        if ($this->isApi() && $displays == []) {
+        if ($this->isApi($request) && $displays == []) {
             $displays = [
                 'data' =>__('Specified Media item is not in use.')];
         }
@@ -1845,6 +1987,8 @@ class Library extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $totalRecords;
         $this->getState()->setData($displays);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1867,29 +2011,38 @@ class Library extends Base
      *  )
      * )
      *
-     * @param int $mediaId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
      * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function usageLayouts($mediaId)
+    public function usageLayouts(Request $request, Response $response, $id)
     {
-        $media = $this->mediaFactory->getById($mediaId);
+        $media = $this->mediaFactory->getById($id);
 
-        if (!$this->getUser()->checkViewable($media))
+        if (!$this->getUser($request)->checkViewable($media)) {
             throw new AccessDeniedException();
+        }
 
-        $layouts = $this->layoutFactory->query(null, ['mediaId' => $mediaId]);
+        $layouts = $this->layoutFactory->query(null, ['mediaId' => $id], $request);
 
-        if (!$this->isApi()) {
+        if (!$this->isApi($request)) {
             foreach ($layouts as $layout) {
                 $layout->includeProperty('buttons');
 
                 // Add some buttons for this row
-                if ($this->getUser()->checkEditable($layout)) {
+                if ($this->getUser($request)->checkEditable($layout)) {
                     // Design Button
                     $layout->buttons[] = array(
                         'id' => 'layout_button_design',
                         'linkType' => '_self', 'external' => true,
-                        'url' => $this->urlFor('layout.designer', array('id' => $layout->layoutId)),
+                        'url' => $this->urlFor($request,'layout.designer', ['id' => $layout->layoutId]),
                         'text' => __('Design')
                     );
                 }
@@ -1899,13 +2052,13 @@ class Library extends Base
                     'id' => 'layout_button_preview',
                     'linkType' => '_blank',
                     'external' => true,
-                    'url' => $this->urlFor('layout.preview', ['id' => $layout->layoutId]),
+                    'url' => $this->urlFor($request,'layout.preview', ['id' => $layout->layoutId]),
                     'text' => __('Preview Layout')
                 );
             }
         }
 
-        if ($this->isApi() && $layouts == []) {
+        if ($this->isApi($request) && $layouts == []) {
             $layouts = [
                 'data' =>__('Specified Media item is not in use.')
             ];
@@ -1914,21 +2067,32 @@ class Library extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->layoutFactory->countLast();
         $this->getState()->setData($layouts);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Copy Media form
-     * @param $mediaId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
      * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function copyForm($mediaId)
+    public function copyForm(Request $request, Response $response, $id)
     {
         // Get the Media
-        $media = $this->mediaFactory->getById($mediaId);
+        $media = $this->mediaFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($media))
+        if (!$this->getUser($request)->checkViewable($media)) {
             throw new AccessDeniedException();
+        }
 
         $tags = '';
 
@@ -1950,6 +2114,8 @@ class Library extends Base
             'help' => $this->getHelp()->link('Media', 'Copy'),
             'tags' => $tags
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1994,29 +2160,40 @@ class Library extends Base
      *  )
      * )
      *
-     * @param int $mediaId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\DuplicateEntityException
      */
-    public function copy($mediaId)
+    public function copy(Request $request, Response $response, $id)
     {
         // Get the Media
-        $media = $this->mediaFactory->getById($mediaId);
+        $media = $this->mediaFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($media))
+        if (!$this->getUser($request)->checkViewable($media)) {
             throw new AccessDeniedException();
+        }
 
         // Load the media for Copy
         $media->load();
         $media = clone $media;
 
         // Set new Name and tags
-        $media->name = $this->getSanitizer()->getString('name');
-        $media->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
+        $media->name = $sanitizedParams->getString('name');
+        $media->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
         // Set the Owner to user making the Copy
-        $media->setOwner($this->getUser()->userId);
+        $media->setOwner($this->getUser($request)->userId);
 
         // Set from global setting
         if ($media->enableStat == null) {
@@ -2033,6 +2210,8 @@ class Library extends Base
             'id' => $media->mediaId,
             'data' => $media
         ]);
+
+        return $this->render($request,  $response);
     }
 
 
@@ -2056,36 +2235,59 @@ class Library extends Base
      *  )
      * )
      *
-     * @param int $mediaId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
      * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function isUsed($mediaId)
+    public function isUsed(Request $request, Response $response, $id)
     {
         // Get the Media
-        $media = $this->mediaFactory->getById($mediaId);
+        $media = $this->mediaFactory->getById($id);
         $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($media))
+        if (!$this->getUser($request)->checkViewable($media)) {
             throw new AccessDeniedException();
+        }
 
         // Get count, being the number of times the media needs to appear to be true ( or use the default 0)
-        $count = $this->getSanitizer()->getInt('count', 0);
+        $count = $this->getSanitizer($request->getParams())->getInt('count', 0);
 
         // Check and return result
         $this->getState()->setData([
             'isUsed' => $media->isUsed($count)
         ]);
+
+        return $this->render($request, $response);
         
     }
 
-    public function uploadFromUrlForm()
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
+    public function uploadFromUrlForm(Request $request, Response $response)
     {
         $this->getState()->template = 'library-form-uploadFromUrl';
 
         $this->getState()->setData([
             'uploadSizeMessage' => sprintf(__('This form accepts files up to a maximum size of %s'), Environment::getMaxUploadSize())
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -2137,22 +2339,30 @@ class Library extends Base
      *  )
      * )
      *
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
      * @throws InvalidArgumentException
      * @throws LibraryFullException
      * @throws NotFoundException
-     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function uploadFromUrl()
+    public function uploadFromUrl(Request $request, Response $response)
     {
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Make sure the library exists
         self::ensureLibraryExists($libraryFolder);
 
-        $url = $this->getSanitizer()->getString('url');
-        $type = $this->getSanitizer()->getString('type');
-        $optionalName = $this->getSanitizer()->getString('optionalName');
-        $extension = $this->getSanitizer()->getString('extension');
+        $url = $sanitizedParams->getString('url');
+        $type = $sanitizedParams->getString('type');
+        $optionalName = $sanitizedParams->getString('optionalName');
+        $extension = $sanitizedParams->getString('extension');
 
         // Validate the URL
         if (!v::url()->notEmpty()->validate(urldecode($url)) || !filter_var($url, FILTER_VALIDATE_URL)) {
@@ -2173,7 +2383,7 @@ class Library extends Base
             throw new InvalidArgumentException(sprintf(__('This file size exceeds your environment Max Upload Size %s'), Environment::getMaxUploadSize()), 'size');
         }
 
-        $this->getUser()->isQuotaFullByUser();
+        $this->getUser($request)->isQuotaFullByUser();
 
         // check if we have extension provided in the request (available via API), if not get it from the headers
         if (!empty($extension)) {
@@ -2222,6 +2432,8 @@ class Library extends Base
             'id' => $media->mediaId,
             'data' => $media
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**

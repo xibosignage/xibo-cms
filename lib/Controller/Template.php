@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,10 +21,14 @@
  */
 namespace Xibo\Controller;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -48,7 +53,7 @@ class Template extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -56,10 +61,11 @@ class Template extends Base
      * @param ConfigServiceInterface $config
      * @param LayoutFactory $layoutFactory
      * @param TagFactory $tagFactory
+     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $layoutFactory, $tagFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $layoutFactory, $tagFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->layoutFactory = $layoutFactory;
         $this->tagFactory = $tagFactory;
@@ -67,11 +73,21 @@ class Template extends Base
 
     /**
      * Display page logic
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function displayPage()
+    function displayPage(Request $request, Response $response)
     {
         // Call to render the template
         $this->getState()->template = 'template-page';
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -92,18 +108,29 @@ class Template extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    function grid()
+    function grid(Request $request, Response $response)
     {
+        $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
         // Embed?
-        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+        $embed = ($sanitizedQueryParams->getString('embed') != null) ? explode(',', $sanitizedQueryParams->getString('embed')) : [];
 
-        $templates = $this->layoutFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
+        $templates = $this->layoutFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
             'excludeTemplates' => 0,
-            'tags' => $this->getSanitizer()->getString('tags'),
-            'layoutId' => $this->getSanitizer()->getInt('templateId'),
-            'layout' => $this->getSanitizer()->getString('template')
-        ]));
+            'tags' => $sanitizedQueryParams->getString('tags'),
+            'layoutId' => $sanitizedQueryParams->getInt('templateId'),
+            'layout' => $sanitizedQueryParams->getString('template')
+        ], $request), $request);
 
         foreach ($templates as $template) {
             /* @var \Xibo\Entity\Layout $template */
@@ -118,7 +145,7 @@ class Template extends Base
                 ]);
             }
 
-            if ($this->isApi())
+            if ($this->isApi($request))
                 break;
 
             $template->includeProperty('buttons');
@@ -126,48 +153,48 @@ class Template extends Base
             $template->thumbnail = '';
 
             if ($template->backgroundImageId != 0) {
-                $download = $this->urlFor('layout.download.background', ['id' => $template->layoutId]) . '?preview=1';
+                $download = $this->urlFor($request,'layout.download.background', ['id' => $template->layoutId]) . '?preview=1';
                 $template->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56" /></i></a>';
             }
 
             // Parse down for description
             $template->descriptionWithMarkup = \Parsedown::instance()->text($template->description);
 
-            if ($this->getUser()->checkEditable($template)) {
+            if ($this->getUser($request)->checkEditable($template)) {
 
                 // Design Button
                 $template->buttons[] = array(
                     'id' => 'layout_button_design',
                     'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor('layout.designer', array('id' => $template->layoutId)),
+                    'url' => $this->urlFor($request,'layout.designer', array('id' => $template->layoutId)),
                     'text' => __('Alter Template')
                 );
 
                 // Edit Button
                 $template->buttons[] = array(
                     'id' => 'layout_button_edit',
-                    'url' => $this->urlFor('layout.edit.form', ['id' => $template->layoutId]),
+                    'url' => $this->urlFor($request,'layout.edit.form', ['id' => $template->layoutId]),
                     'text' => __('Edit')
                 );
 
                 // Copy Button
                 $template->buttons[] = array(
                     'id' => 'layout_button_copy',
-                    'url' => $this->urlFor('layout.copy.form', ['id' => $template->layoutId]),
+                    'url' => $this->urlFor($request,'layout.copy.form', ['id' => $template->layoutId]),
                     'text' => __('Copy')
                 );
             }
 
             // Extra buttons if have delete permissions
-            if ($this->getUser()->checkDeleteable($template)) {
+            if ($this->getUser($request)->checkDeleteable($template)) {
                 // Delete Button
                 $template->buttons[] = array(
                     'id' => 'layout_button_delete',
-                    'url' => $this->urlFor('layout.delete.form', ['id' => $template->layoutId]),
+                    'url' => $this->urlFor($request,'layout.delete.form', ['id' => $template->layoutId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor('layout.delete', ['id' => $template->layoutId])),
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'layout.delete', ['id' => $template->layoutId])),
                         array('name' => 'commit-method', 'value' => 'delete'),
                         array('name' => 'id', 'value' => 'layout_button_delete'),
                         array('name' => 'text', 'value' => __('Delete')),
@@ -179,11 +206,11 @@ class Template extends Base
             $template->buttons[] = ['divider' => true];
 
             // Extra buttons if we have modify permissions
-            if ($this->getUser()->checkPermissionsModifyable($template)) {
+            if ($this->getUser($request)->checkPermissionsModifyable($template)) {
                 // Permissions button
                 $template->buttons[] = array(
                     'id' => 'layout_button_permissions',
-                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'Campaign', 'id' => $template->campaignId]),
+                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Campaign', 'id' => $template->campaignId]),
                     'text' => __('Permissions')
                 );
             }
@@ -194,7 +221,7 @@ class Template extends Base
             $template->buttons[] = array(
                 'id' => 'layout_button_export',
                 'linkType' => '_self', 'external' => true,
-                'url' => $this->urlFor('layout.export', ['id' => $template->layoutId]),
+                'url' => $this->urlFor($request,'layout.export', ['id' => $template->layoutId]),
                 'text' => __('Export')
             );
         }
@@ -202,16 +229,27 @@ class Template extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->layoutFactory->countLast();
         $this->getState()->setData($templates);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Template Form
-     * @param int $layoutId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    function addTemplateForm($layoutId)
+    function addTemplateForm(Request $request, Response $response, $id)
     {
         // Get the layout
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
 
         $tags = '';
 
@@ -228,8 +266,9 @@ class Template extends Base
         }
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($layout))
+        if (!$this->getUser($request)->checkViewable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to view this layout'));
+        }
 
         $this->getState()->template = 'template-form-add-from-layout';
         $this->getState()->setData([
@@ -237,12 +276,23 @@ class Template extends Base
             'tags' => $tags,
             'help' => $this->getHelp()->link('Template', 'Add')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Add template
-     * @param int $layoutId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      * @SWG\Post(
      *  path="/template/{layoutId}",
      *  operationId="template.add.from.layout",
@@ -296,19 +346,20 @@ class Template extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    function add($layoutId)
+    function add(Request $request, Response $response, $id)
     {
         // Get the layout
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($layout))
+        if (!$this->getUser($request)->checkViewable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to view this layout'));
+        }
 
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Should the copy include the widgets
-        $includeWidgets = ($this->getSanitizer()->getCheckbox('includeWidgets') == 1);
+        $includeWidgets = ($sanitizedParams->getCheckbox('includeWidgets') == 1);
 
         // Load without anything
         $layout->load([
@@ -323,11 +374,11 @@ class Template extends Base
 
         $layout = clone $layout;
 
-        $layout->layout = $this->getSanitizer()->getString('name');
-        $layout->tags = $this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags'));
+        $layout->layout = $sanitizedParams->getString('name');
+        $layout->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
         $layout->tags[] = $this->tagFactory->getByTag('template');
-        $layout->description = $this->getSanitizer()->getString('description');
-        $layout->setOwner($this->getUser()->userId, true);
+        $layout->description = $sanitizedParams->getString('description');
+        $layout->setOwner($this->getUser($request)->userId, true);
         $layout->save();
 
         if ($includeWidgets) {
@@ -348,5 +399,7 @@ class Template extends Base
             'id' => $layout->layoutId,
             'data' => $layout
         ]);
+
+        return $this->render($request, $response);
     }
 }

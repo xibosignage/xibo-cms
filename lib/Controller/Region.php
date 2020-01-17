@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (Region.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -255,7 +270,7 @@ class Region extends Base
 
         // Add a new region
         $region = $this->regionFactory->create(
-            $this->getUser()->userId, $layout->layout . '-' . (count($layout->regions) + 1),
+            $this->getUser($request)->userId, $layout->layout . '-' . (count($layout->regions) + 1),
             $sanitizedParams->getInt('width', 250),
             $sanitizedParams->getInt('height', 250),
             $sanitizedParams->getInt('top', 50),
@@ -283,7 +298,7 @@ class Region extends Base
             $this->getLog()->debug('Applying default permissions');
 
             // Apply the default permissions
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
@@ -510,9 +525,18 @@ class Region extends Base
 
     /**
      * Update Positions
-     * @param int $layoutId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
      * @throws NotFoundException
-     *
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/region/position/all/{layoutId}",
      *  operationId="regionPositionAll",
@@ -543,31 +567,33 @@ class Region extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    function positionAll($layoutId)
+    function positionAll(Request $request, Response $response, $id)
     {
         // Create the layout
-        $layout = $this->layoutFactory->loadById($layoutId);
+        $layout = $this->layoutFactory->loadById($id);
 
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout)) {
             throw new AccessDeniedException();
+        }
 
         // Check that this Layout is a Draft
-        if (!$layout->isChild())
+        if (!$layout->isChild()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
 
         // Pull in the regions and convert them to stdObjects
-        $regions = $this->getSanitizer()->getParam('regions', null);
+        $regions = $request->getParam('regions', null);
 
-        if ($regions == null)
+        if ($regions == null) {
             throw new \InvalidArgumentException(__('No regions present'));
+        }
 
         $regions = json_decode($regions);
 
         // Go through each region and update the region in the layout we have
         foreach ($regions as $newCoordinates) {
-
+            $sanitizedParams = $this->getSanitizer($newCoordinates);
             // Check that the properties we are expecting do actually exist
             if (!property_exists($newCoordinates, 'regionid'))
                 throw new \InvalidArgumentException(__('Missing regionid property'));
@@ -584,20 +610,21 @@ class Region extends Base
             if (!property_exists($newCoordinates, 'height'))
                 throw new \InvalidArgumentException(__('Missing height property'));
 
-            $regionId = $this->getSanitizer()->int($newCoordinates->regionid);
+            $regionId = $sanitizedParams->getInt($newCoordinates->regionid);
 
             // Load the region
             $region = $layout->getRegion($regionId);
 
             // Check Permissions
-            if (!$this->getUser()->checkEditable($region))
+            if (!$this->getUser($request)->checkEditable($region)) {
                 throw new AccessDeniedException();
+            }
 
             // New coordinates
-            $region->top = $this->getSanitizer()->double($newCoordinates->top);
-            $region->left = $this->getSanitizer()->double($newCoordinates->left);
-            $region->width = $this->getSanitizer()->double($newCoordinates->width);
-            $region->height = $this->getSanitizer()->double($newCoordinates->height);
+            $region->top = $sanitizedParams->getDouble($newCoordinates->top);
+            $region->left = $sanitizedParams->getDouble($newCoordinates->left);
+            $region->width = $sanitizedParams->getDouble($newCoordinates->width);
+            $region->height = $sanitizedParams->getDouble($newCoordinates->height);
             $this->getLog()->debug('Set ' . $region);
         }
 
@@ -611,6 +638,8 @@ class Region extends Base
             'id' => $layout->layoutId,
             'data' => $layout
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**

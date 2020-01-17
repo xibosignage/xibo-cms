@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -179,7 +179,7 @@ class DataSetRss extends Base
                 'text' => __('Edit')
             );
 
-            if ($this->getUser()->checkDeleteable($dataSet)) {
+            if ($this->getUser($request)->checkDeleteable($dataSet)) {
                 // Delete
                 $feed->buttons[] = array(
                     'id' => 'datasetrss_button_delete',

@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2010-13 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -105,6 +106,14 @@ class Applications extends Base
 
     /**
      * Display Page
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function displayPage(Request $request, Response $response)
     {
@@ -115,6 +124,14 @@ class Applications extends Base
 
     /**
      * Display page grid
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function grid(Request $request, Response $response)
     {
@@ -159,6 +176,13 @@ class Applications extends Base
 
     /**
      * Display the Authorize form.
+     * @param Request $request
+     * @param Response $response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function authorizeRequest(Request $request, Response $response)
     {
@@ -177,6 +201,9 @@ class Applications extends Base
 
     /**
      * Authorize an oAuth request
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws \League\OAuth2\Server\Exception\InvalidGrantException
      */
     public function authorize(Request $request, Response $response)
@@ -223,6 +250,14 @@ class Applications extends Base
 
     /**
      * Form to register a new application.
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function addForm(Request $request, Response $response)
     {
@@ -236,7 +271,15 @@ class Applications extends Base
 
     /**
      * Edit Application
-     * @param $clientId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\NotFoundException
      */
     public function editForm(Request $request, Response $response, $id)
@@ -280,7 +323,16 @@ class Applications extends Base
 
     /**
      * Delete Application Form
-     * @param $clientId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function deleteForm(Request $request, Response $response, $id)
     {
@@ -301,7 +353,15 @@ class Applications extends Base
 
     /**
      * Register a new application with OAuth
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws InvalidArgumentException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function add(Request $request, Response $response)
     {
@@ -328,6 +388,14 @@ class Applications extends Base
 
     /**
      * Form to register a new application for Advertisement.
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function addDoohForm(Request $request, Response $response)
     {
@@ -341,7 +409,15 @@ class Applications extends Base
 
     /**
      * Register a new application with OAuth
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws InvalidArgumentException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\NotFoundException
      */
     public function addDooh(Request $request, Response $response)
@@ -377,8 +453,17 @@ class Applications extends Base
 
     /**
      * Edit Application
-     * @param $clientId
-     * @throws \Xibo\Exception\XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -453,8 +538,9 @@ class Applications extends Base
 
             $this->getLog()->debug('Attempting to change ownership to ' . $user->userId . ' - ' . $user->userName);
 
-            if (!$this->getUser()->checkViewable($user))
+            if (!$this->getUser($request)->checkViewable($user)) {
                 throw new InvalidArgumentException('You do not have permission to assign this user', 'userId');
+            }
 
             $client->userId = $user->userId;
         }
@@ -473,7 +559,16 @@ class Applications extends Base
 
     /**
      * Delete application
-     * @param $clientId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function delete(Request $request, Response $response, $id)
     {

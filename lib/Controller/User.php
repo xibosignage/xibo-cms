@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -21,9 +21,11 @@
  */
 namespace Xibo\Controller;
 
+use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use RobThree\Auth\TwoFactorAuth;
+use Slim\Views\Twig;
 use Xibo\Entity\Campaign;
 use Xibo\Entity\Layout;
 use Xibo\Entity\Media;
@@ -54,6 +56,7 @@ use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Random;
 use Xibo\Helper\QuickChartQRProvider;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -133,10 +136,13 @@ class User extends Base
     /** @var PlaylistFactory */
     private $playlistFactory;
 
+    /** @var ContainerInterface */
+    private $container;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -158,10 +164,12 @@ class User extends Base
      * @param WidgetFactory $widgetFactory
      * @param PlayerVersionFactory $playerVersionFactory
      * @param PlaylistFactory $playlistFactory
+     * @param Twig $view
+     * @param ContainerInterface $container
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userFactory,
                                 $userTypeFactory, $userGroupFactory, $pageFactory, $permissionFactory,
-                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory, $view)
+                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory, Twig $view, ContainerInterface $container)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
@@ -181,17 +189,29 @@ class User extends Base
         $this->widgetFactory = $widgetFactory;
         $this->playerVersionFactory = $playerVersionFactory;
         $this->playlistFactory = $playlistFactory;
+        $this->container = $container;
     }
 
     /**
      * Controls which pages are to be displayed
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    function displayPage()
+    function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'user-page';
         $this->getState()->setData([
             'userTypes' => $this->userTypeFactory->query()
         ]);
+        
+        return $this->render($request, $response);
     }
 
     /**
@@ -209,14 +229,24 @@ class User extends Base
      *      @SWG\Schema(ref="#/definitions/User")
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function myDetails()
+    public function myDetails(Request $request, Response $response)
     {
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 200,
-            'data' => $this->getUser()
+            'data' => $this->getUser($request)
         ]);
+        
+        return $this->render($request, $response);
     }
 
     /**
@@ -265,10 +295,19 @@ class User extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     function grid(Request $request, Response $response)
     {
-        $sanitizedPrams = $this->getSanitizer($request->getParams());
+        $sanitizedPrams = $this->getSanitizer($request->getQueryParams());
+
         // Filter our users?
         $filterBy = [
             'userId' => $sanitizedPrams->getInt('userId'),
@@ -339,7 +378,7 @@ class User extends Base
                 );
             }
 
-            if ($this->getUser()->isSuperAdmin()) {
+            if ($this->getUser($request)->isSuperAdmin()) {
                 $user->buttons[] = ['divider' => true];
 
                 // Page Security
@@ -504,53 +543,67 @@ class User extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws InvalidArgumentException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function add()
+    public function add(Request $request, Response $response)
     {
         // Only group admins or super admins can create Users.
-        if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin())
+        if (!$this->getUser($request)->isSuperAdmin() && !$this->getUser($request)->isGroupAdmin()) {
             throw new AccessDeniedException(__('Only super and group admins can create users'));
-
+        }
+        
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Build a user entity and save it
         $user = $this->userFactory->create();
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
 
-        $user->userName = $this->getSanitizer()->getUserName('userName');
-        $user->email = $this->getSanitizer()->getString('email');
-        $user->homePageId = $this->getSanitizer()->getInt('homePageId');
-        $user->libraryQuota = $this->getSanitizer()->getInt('libraryQuota', 0);
-        $user->setNewPassword($this->getSanitizer()->getString('password'));
+        $user->userName = $sanitizedParams->getString('userName');
+        $user->email = $sanitizedParams->getString('email');
+        $user->homePageId = $sanitizedParams->getInt('homePageId');
+        $user->libraryQuota = $sanitizedParams->getInt('libraryQuota', ['default' => 0]);
+        $user->setNewPassword($sanitizedParams->getString('password'));
 
-        if ($this->getUser()->isSuperAdmin()) {
-            $user->userTypeId = $this->getSanitizer()->getInt('userTypeId');
-            $user->isSystemNotification = $this->getSanitizer()->getCheckbox('isSystemNotification');
-            $user->isDisplayNotification = $this->getSanitizer()->getCheckbox('isDisplayNotification');
+        if ($this->getUser($request)->isSuperAdmin()) {
+            $user->userTypeId = $sanitizedParams->getInt('userTypeId');
+            $user->isSystemNotification = $sanitizedParams->getCheckbox('isSystemNotification');
+            $user->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
         } else {
             $user->userTypeId = 3;
             $user->isSystemNotification = 0;
             $user->isDisplayNotification = 0;
         }
 
-        $user->firstName = $this->getSanitizer()->getString('firstName');
-        $user->lastName = $this->getSanitizer()->getString('lastName');
-        $user->phone = $this->getSanitizer()->getString('phone');
-        $user->ref1 = $this->getSanitizer()->getString('ref1');
-        $user->ref2 = $this->getSanitizer()->getString('ref2');
-        $user->ref3 = $this->getSanitizer()->getString('ref3');
-        $user->ref4 = $this->getSanitizer()->getString('ref4');
-        $user->ref5 = $this->getSanitizer()->getString('ref5');
+        $user->firstName = $sanitizedParams->getString('firstName');
+        $user->lastName = $sanitizedParams->getString('lastName');
+        $user->phone = $sanitizedParams->getString('phone');
+        $user->ref1 = $sanitizedParams->getString('ref1');
+        $user->ref2 = $sanitizedParams->getString('ref2');
+        $user->ref3 = $sanitizedParams->getString('ref3');
+        $user->ref4 = $sanitizedParams->getString('ref4');
+        $user->ref5 = $sanitizedParams->getString('ref5');
 
         // Options
-        $user->newUserWizard = $this->getSanitizer()->getCheckbox('newUserWizard');
-        $user->setOptionValue('hideNavigation', $this->getSanitizer()->getCheckbox('hideNavigation'));
-        $user->isPasswordChangeRequired = $this->getSanitizer()->getCheckbox('isPasswordChangeRequired');
+        $user->newUserWizard = $sanitizedParams->getCheckbox('newUserWizard');
+        $user->setOptionValue('hideNavigation', $sanitizedParams->getCheckbox('hideNavigation'));
+        $user->isPasswordChangeRequired = $sanitizedParams->getCheckbox('isPasswordChangeRequired');
 
         // Initial user group
-        $group = $this->userGroupFactory->getById($this->getSanitizer()->getInt('groupId'));
+        $group = $this->userGroupFactory->getById($sanitizedParams->getInt('groupId'));
 
-        if ($group->isUserSpecific == 1)
+        if ($group->isUserSpecific == 1) {
             throw new InvalidArgumentException(__('Invalid user group selected'), 'groupId');
-
+        }
+        
         // Save the user
         $user->save();
 
@@ -560,9 +613,10 @@ class User extends Base
 
         // Test to see if the user group selected has permissions to see the homepage selected
         // Make sure the user has permission to access this page.
-        if (!$user->checkViewable($this->pageFactory->getById($user->homePageId)))
+        if (!$user->checkViewable($this->pageFactory->getById($user->homePageId))) {
             throw new InvalidArgumentException(__('User does not have permission for this homepage'), 'homePageId');
-
+        }
+        
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 201,
@@ -570,6 +624,8 @@ class User extends Base
             'id' => $user->userId,
             'data' => $user
         ]);
+        
+        return $this->render($request, $response);
     }
 
     /**
@@ -732,54 +788,66 @@ class User extends Base
      *      )
      *  )
      * )
-     * @param $userId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\NotFoundException
      */
-    public function edit($userId)
+    public function edit(Request $request, Response $response, $id)
     {
-        $user = $this->userFactory->getById($userId);
+        $user = $this->userFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($user))
+        if (!$this->getUser($request)->checkEditable($user)) {
             throw new AccessDeniedException();
-
+        }
+        
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Build a user entity and save it
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
         $user->load();
-        $user->userName = $this->getSanitizer()->getUserName('userName');
-        $user->email = $this->getSanitizer()->getString('email');
-        $user->homePageId = $this->getSanitizer()->getInt('homePageId');
-        $user->libraryQuota = $this->getSanitizer()->getInt('libraryQuota');
-        $user->retired = $this->getSanitizer()->getCheckbox('retired');
+        $user->userName = $sanitizedParams->getString('userName');
+        $user->email = $sanitizedParams->getString('email');
+        $user->homePageId = $sanitizedParams->getInt('homePageId');
+        $user->libraryQuota = $sanitizedParams->getInt('libraryQuota');
+        $user->retired = $sanitizedParams->getCheckbox('retired');
 
-        if ($this->getUser()->isSuperAdmin()) {
-            $user->userTypeId = $this->getSanitizer()->getInt('userTypeId');
-            $user->isSystemNotification = $this->getSanitizer()->getCheckbox('isSystemNotification');
-            $user->isDisplayNotification = $this->getSanitizer()->getCheckbox('isDisplayNotification');
+        if ($this->getUser($request)->isSuperAdmin()) {
+            $user->userTypeId = $sanitizedParams->getInt('userTypeId');
+            $user->isSystemNotification = $sanitizedParams->getCheckbox('isSystemNotification');
+            $user->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
         }
 
-        $user->firstName = $this->getSanitizer()->getString('firstName');
-        $user->lastName = $this->getSanitizer()->getString('lastName');
-        $user->phone = $this->getSanitizer()->getString('phone');
-        $user->ref1 = $this->getSanitizer()->getString('ref1');
-        $user->ref2 = $this->getSanitizer()->getString('ref2');
-        $user->ref3 = $this->getSanitizer()->getString('ref3');
-        $user->ref4 = $this->getSanitizer()->getString('ref4');
-        $user->ref5 = $this->getSanitizer()->getString('ref5');
+        $user->firstName = $sanitizedParams->getString('firstName');
+        $user->lastName = $sanitizedParams->getString('lastName');
+        $user->phone = $sanitizedParams->getString('phone');
+        $user->ref1 = $sanitizedParams->getString('ref1');
+        $user->ref2 = $sanitizedParams->getString('ref2');
+        $user->ref3 = $sanitizedParams->getString('ref3');
+        $user->ref4 = $sanitizedParams->getString('ref4');
+        $user->ref5 = $sanitizedParams->getString('ref5');
 
         // Options
-        $user->newUserWizard = $this->getSanitizer()->getCheckbox('newUserWizard');
-        $user->setOptionValue('hideNavigation', $this->getSanitizer()->getCheckbox('hideNavigation'));
-        $user->isPasswordChangeRequired = $this->getSanitizer()->getCheckbox('isPasswordChangeRequired');
+        $user->newUserWizard = $sanitizedParams->getCheckbox('newUserWizard');
+        $user->setOptionValue('hideNavigation', $sanitizedParams->getCheckbox('hideNavigation'));
+        $user->isPasswordChangeRequired = $sanitizedParams->getCheckbox('isPasswordChangeRequired');
 
         // Make sure the user has permission to access this page.
-        if (!$user->checkViewable($this->pageFactory->getById($user->homePageId)))
+        if (!$user->checkViewable($this->pageFactory->getById($user->homePageId))) {
             throw new \InvalidArgumentException(__('User does not have permission for this homepage'));
+        }
 
         // If we are a super admin
-        if ($this->getUser()->userTypeId == 1) {
-            $newPassword = $this->getSanitizer()->getString('newPassword');
-            $retypeNewPassword = $this->getSanitizer()->getString('retypeNewPassword');
-            $disableTwoFactor = $this->getSanitizer()->getCheckbox('disableTwoFactor');
+        if ($this->getUser($request)->userTypeId == 1) {
+            $newPassword = $sanitizedParams->getString('newPassword');
+            $retypeNewPassword = $sanitizedParams->getString('retypeNewPassword');
+            $disableTwoFactor = $sanitizedParams->getCheckbox('disableTwoFactor');
 
             if ($newPassword != null && $newPassword != '') {
                 // Make sure they are the same
@@ -805,6 +873,8 @@ class User extends Base
             'id' => $user->userId,
             'data' => $user
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -846,27 +916,39 @@ class User extends Base
      *      )
      *  )
      * )
-     * @param $userId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws InvalidArgumentException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\NotFoundException
      */
-    public function delete($userId)
+    public function delete(Request $request, Response $response, $id)
     {
-        $user = $this->userFactory->getById($userId);
+        $user = $this->userFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($user))
+        if (!$this->getUser($request)->checkDeleteable($user)) {
             throw new AccessDeniedException();
+        }
 
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
         $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory, $this->playerVersionFactory, $this->playlistFactory);
 
-        if ($this->getSanitizer()->getCheckbox('deleteAllItems') != 1) {
+        if ($sanitizedParams->getCheckbox('deleteAllItems') != 1) {
 
             // Do we have a userId to reassign content to?
-            if ($this->getSanitizer()->getInt('reassignUserId') != null) {
+            if ($sanitizedParams->getInt('reassignUserId') != null) {
                 // Reassign all content owned by this user to the provided user
-                $this->getLog()->debug('Reassigning content to new userId: %d', $this->getSanitizer()->getInt('reassignUserId'));
+                $this->getLog()->debug(sprintf('Reassigning content to new userId: %d', $sanitizedParams->getInt('reassignUserId')));
 
-                $user->reassignAllTo($this->userFactory->getById($this->getSanitizer()->getInt('reassignUserId')));
+                $user->reassignAllTo($this->userFactory->getById($sanitizedParams->getInt('reassignUserId')));
             } else {
                 // Check to see if we have any child data that would prevent us from deleting
                 $children = $user->countChildren();
@@ -884,16 +966,28 @@ class User extends Base
             'message' => sprintf(__('Deleted %s'), $user->userName),
             'id' => $user->userId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * User Add Form
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function addForm()
+    public function addForm(Request $request, Response $response)
     {
         // Only group admins or super admins can create Users.
-        if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin())
+        if (!$this->getUser($request)->isSuperAdmin() && !$this->getUser($request)->isGroupAdmin()) {
             throw new AccessDeniedException(__('Only super and group admins can create users'));
+        }
 
         $defaultUserTypeId = 3;
         foreach ($this->userTypeFactory->query(null, ['userType' => $this->getConfig()->getSetting('defaultUsertype')] ) as $defaultUserType) {
@@ -905,7 +999,7 @@ class User extends Base
             'options' => [
                 'homepage' => $this->pageFactory->query(null, ['asHome' => 1]),
                 'groups' => $this->userGroupFactory->query(),
-                'userTypes' => ($this->getUser()->isSuperAdmin()) ? $this->userTypeFactory->getAllRoles() : $this->userTypeFactory->getNonAdminRoles(),
+                'userTypes' => ($this->getUser($request)->isSuperAdmin()) ? $this->userTypeFactory->getAllRoles() : $this->userTypeFactory->getNonAdminRoles(),
                 'defaultGroupId' => $this->getConfig()->getSetting('DEFAULT_USERGROUP'),
                 'defaultUserType' => $defaultUserTypeId
             ],
@@ -913,20 +1007,31 @@ class User extends Base
                 'add' => $this->getHelp()->link('User', 'Add')
             ]
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * User Edit Form
-     * @param $userId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\NotFoundException
      */
-    public function editForm($userId)
+    public function editForm(Request $request, Response $response, $id)
     {
-        $user = $this->userFactory->getById($userId);
+        $user = $this->userFactory->getById($id);
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
 
-        if (!$this->getUser()->checkEditable($user))
+        if (!$this->getUser($request)->checkEditable($user)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'user-form-edit';
         $this->getState()->setData([
@@ -939,37 +1044,57 @@ class User extends Base
                 'edit' => $this->getHelp()->link('User', 'Edit')
             ]
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * User Delete Form
-     * @param $userId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\NotFoundException
      */
-    public function deleteForm($userId)
+    public function deleteForm(Request $request, Response $response, $id)
     {
-        $user = $this->userFactory->getById($userId);
+        $user = $this->userFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($user))
+        if (!$this->getUser($request)->checkDeleteable($user)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'user-form-delete';
         $this->getState()->setData([
             'user' => $user,
-            'users' => $this->userFactory->query(null, ['notUserId' => $userId]),
+            'users' => $this->userFactory->query(null, ['notUserId' => $id]),
             'help' => [
                 'delete' => $this->getHelp()->link('User', 'Delete')
             ]
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Change my password form
-     * @throws \RobThree\Auth\TwoFactorAuthException
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function editProfileForm()
+    public function editProfileForm(Request $request, Response $response)
     {
-        $user = $this->getUser();
+        $user = $this->getUser($request);
 
         $this->getState()->template = 'user-form-edit-profile';
         $this->getState()->setData([
@@ -978,44 +1103,55 @@ class User extends Base
                 'editProfile' => $this->getHelp()->link('User', 'EditProfile')
             ],
             'data' => [
-                'setup' => $this->urlFor('user.setup.profile'),
-                'generate' => $this->urlFor('user.recovery.generate.profile'),
-                'show' => $this->urlFor('user.recovery.show.profile'),
+                'setup' => $this->urlFor($request,'user.setup.profile'),
+                'generate' => $this->urlFor($request,'user.recovery.generate.profile'),
+                'show' => $this->urlFor($request,'user.recovery.show.profile'),
             ]
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Change my Password
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
      * @throws InvalidArgumentException
-     * @throws \RobThree\Auth\TwoFactorAuthException
      * @throws XiboException
+     * @throws \RobThree\Auth\TwoFactorAuthException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function editProfile()
+    public function editProfile(Request $request, Response $response)
     {
-        $user = $this->getUser();
+        $user = $this->getUser($request);
         // Store current (before edit) value of twoFactorTypeId in a variable
         $oldTwoFactorTypeId = $user->twoFactorTypeId;
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // get all other values from the form
-        $oldPassword = $this->getSanitizer()->getString('password');
-        $newPassword = $this->getSanitizer()->getString('newPassword');
-        $retypeNewPassword = $this->getSanitizer()->getString('retypeNewPassword');
-        $user->email = $this->getSanitizer()->getString('email');
-        $user->twoFactorTypeId = $this->getSanitizer()->getInt('twoFactorTypeId');
-        $code = $this->getSanitizer()->getString('code');
-        $recoveryCodes = $this->getSanitizer()->getStringArray('twoFactorRecoveryCodes');
+        $oldPassword = $sanitizedParams->getString('password');
+        $newPassword = $sanitizedParams->getString('newPassword');
+        $retypeNewPassword = $sanitizedParams->getString('retypeNewPassword');
+        $user->email = $sanitizedParams->getString('email');
+        $user->twoFactorTypeId = $sanitizedParams->getInt('twoFactorTypeId');
+        $code = $sanitizedParams->getString('code');
+        $recoveryCodes = $sanitizedParams->getArray('twoFactorRecoveryCodes');
 
         if ($user->isSuperAdmin()) {
-            $user->showContentFrom = $this->getSanitizer()->getInt('showContentFrom');
+            $user->showContentFrom = $sanitizedParams->getInt('showContentFrom');
         }
 
-        if (!$user->isSuperAdmin() && $this->getSanitizer()->getInt('showContentFrom') == 2) {
+        if (!$user->isSuperAdmin() && $sanitizedParams->getInt('showContentFrom') == 2) {
             throw new InvalidArgumentException(__('Option available only for Super Admins'), 'showContentFrom');
         }
 
         if ($recoveryCodes != null || $recoveryCodes != []) {
-            $user->twoFactorRecoveryCodes = json_decode($this->getSanitizer()->getStringArray('twoFactorRecoveryCodes'));
+            $user->twoFactorRecoveryCodes = json_decode($sanitizedParams->getArray('twoFactorRecoveryCodes'));
         }
 
         // check if we have a new password provided, if so check if it was correctly entered
@@ -1025,7 +1161,7 @@ class User extends Base
 
         // check if we have saved secret, for google auth that is done on jQuery side
         if (!isset($user->twoFactorSecret) && $user->twoFactorTypeId === 1) {
-            $this->tfaSetup();
+            $this->tfaSetup($request, $response);
             $user->twoFactorSecret = $_SESSION['tfaSecret'];
             unset($_SESSION['tfaSecret']);
         }
@@ -1056,7 +1192,7 @@ class User extends Base
                 throw new InvalidArgumentException(__('Access Code is empty'), 'code');
             }
 
-            $validation = $this->tfaValidate($code);
+            $validation = $this->tfaValidate($code, $user);
 
             if (!$validation) {
                 unset($_SESSION['tfaSecret']);
@@ -1089,15 +1225,25 @@ class User extends Base
             'id' => $user->userId,
             'data' => $user
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \QRException
      * @throws \RobThree\Auth\TwoFactorAuthException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function tfaSetup()
+    public function tfaSetup(Request $request, Response $response)
     {
-        $user = $this->getUser();
+        $user = $this->getUser($request);
 
         $issuerSettings = $this->getConfig()->getSetting('TWOFACTOR_ISSUER');
         $appName = $this->getConfig()->getThemeConfig('app_name');
@@ -1125,16 +1271,18 @@ class User extends Base
         $this->getState()->setData([
             'qRUrl' => $qRUrl
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * @param string $code The Code to validate
+     * @param $user
      * @return bool
      * @throws \RobThree\Auth\TwoFactorAuthException
      */
-    public function tfaValidate($code)
+    public function tfaValidate($code, $user)
     {
-        $user = $this->getUser();
         $issuerSettings = $this->getConfig()->getSetting('TWOFACTOR_ISSUER');
         $appName = $this->getConfig()->getThemeConfig('app_name');
 
@@ -1158,9 +1306,15 @@ class User extends Base
         return $result;
     }
 
-    public function tfaRecoveryGenerate()
+    /**
+     * @param Request $request
+     * @return array
+     * @throws \Exception
+     */
+    public function tfaRecoveryGenerate(Request $request)
     {
-        $user = $this->getUser();
+        $user = $this->getUser($request);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // clear any existing codes when we generate new ones
         $user->twoFactorRecoveryCodes = [];
@@ -1169,7 +1323,8 @@ class User extends Base
         $codes = [];
 
         for ($i = 0; $i < $count; $i++) {
-            $codes[] = $this->getSanitizer()->string(Random::generateString(50));
+            // TODO sanitizer?
+            $codes[] = Random::generateString(50);
         }
 
         $user->twoFactorRecoveryCodes =  $codes;
@@ -1181,9 +1336,19 @@ class User extends Base
         return $codes;
     }
 
-    public function tfaRecoveryShow()
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
+    public function tfaRecoveryShow(Request $request, Response $response)
     {
-        $user = $this->getUser();
+        $user = $this->getUser($request);
 
         $user->twoFactorRecoveryCodes = json_decode($user->twoFactorRecoveryCodes);
 
@@ -1195,33 +1360,55 @@ class User extends Base
         $this->getState()->setData([
             'codes' => $user->twoFactorRecoveryCodes
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Force User Password Change
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function forceChangePasswordPage()
+    public function forceChangePasswordPage(Request $request, Response $response)
     {
-        $user = $this->getUser();
+        $user = $this->getUser($request);
 
         // if the flag to force change password is not set to 1 then redirect to the Homepage
         if ($user->isPasswordChangeRequired != 1) {
-            $this->getApp()->redirectTo('home');
+            $response->withRedirect('home');
         }
 
         $this->getState()->template = 'user-force-change-password-page';
+
+        return $this->render($request, $response);
     }
 
     /**
      * Force change my Password
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
      * @throws InvalidArgumentException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function forceChangePassword()
+    public function forceChangePassword(Request $request, Response $response)
     {
         // Save the user
-        $user = $this->getUser();
-        $newPassword = $this->getSanitizer()->getString('newPassword');
-        $retypeNewPassword = $this->getSanitizer()->getString('retypeNewPassword');
+        $user = $this->getUser($request);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $newPassword = $sanitizedParams->getString('newPassword');
+        $retypeNewPassword = $sanitizedParams->getString('retypeNewPassword');
 
         if ($newPassword == null || $retypeNewPassword == '')
             throw new InvalidArgumentException(__('Please enter the password'), 'password');
@@ -1243,6 +1430,8 @@ class User extends Base
             'id' => $user->userId,
             'data' => $user
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1276,49 +1465,71 @@ class User extends Base
      *  )
      * )
      *
+     * @param Request $request
+     * @param Response $response
      * @param string $entity
-     * @param int $objectId
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function permissionsGrid($entity, $objectId)
+    public function permissionsGrid(Request $request, Response $response,$entity, $id)
     {
-        $entity = $this->parsePermissionsEntity($entity, $objectId);
+        $entity = $this->parsePermissionsEntity($entity, $id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Load our object
-        $object = $entity->getById($objectId);
+        $object = $entity->getById($id);
 
         // Does this user have permission to edit the permissions?!
-        if (!$this->getUser()->checkPermissionsModifyable($object))
+        if (!$this->getUser($request)->checkPermissionsModifyable($object)) {
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
+        }
 
         // List of all Groups with a view / edit / delete check box
-        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $objectId, $this->gridRenderSort(), $this->gridRenderFilter(['name' => $this->getSanitizer()->getString('name')]));
+        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser($request), $object->permissionsClass(), $id, $this->gridRenderSort($request), $this->gridRenderFilter(['name' => $sanitizedParams->getString('name')], $request));
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($permissions);
         $this->getState()->recordsTotal = $this->permissionFactory->countLast();
+
+        return $this->render($request,  $response);
     }
 
     /**
      * Permissions to users for the provided entity
+     * @param Request $request
+     * @param Response $response
      * @param $entity
-     * @param $objectId
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\NotFoundException
      */
-    public function permissionsForm($entity, $objectId)
+    public function permissionsForm(Request $request, Response $response,$entity, $id)
     {
         $requestEntity = $entity;
 
-        $entity = $this->parsePermissionsEntity($entity, $objectId);
+        $entity = $this->parsePermissionsEntity($entity, $id);
 
         // Load our object
-        $object = $entity->getById($objectId);
+        $object = $entity->getById($id);
 
         // Does this user have permission to edit the permissions?!
-        if (!$this->getUser()->checkPermissionsModifyable($object))
+        if (!$this->getUser($request)->checkPermissionsModifyable($object)) {
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
+        }
 
         $currentPermissions = [];
-        foreach ($this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $objectId, ['groupId'], ['setOnly' => 1]) as $permission) {
+        foreach ($this->permissionFactory->getAllByObjectId($this->getUser($request), $object->permissionsClass(), $id, ['groupId'], ['setOnly' => 1]) as $permission) {
             /* @var Permission $permission */
             $currentPermissions[$permission->groupId] = [
                 'view' => ($permission->view == null) ? 0 : $permission->view,
@@ -1329,7 +1540,7 @@ class User extends Base
 
         $data = [
             'entity' => $requestEntity,
-            'objectId' => $objectId,
+            'objectId' => $id,
             'permissions' => $currentPermissions,
             'canSetOwner' => $object->canChangeOwner(),
             'owners' => $this->userFactory->query(),
@@ -1340,6 +1551,8 @@ class User extends Base
 
         $this->getState()->template = 'user-form-permissions';
         $this->getState()->setData($data);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1384,34 +1597,45 @@ class User extends Base
      *  )
      * )
      *
+     * @param Request $request
+     * @param Response $response
      * @param string $entity
-     * @param int $objectId
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function permissions($entity, $objectId)
+    public function permissions(Request $request, Response $response,$entity, $id)
     {
-        $entity = $this->parsePermissionsEntity($entity, $objectId);
+        $entity = $this->parsePermissionsEntity($entity, $id);
 
         // Load our object
-        $object = $entity->getById($objectId);
+        $object = $entity->getById($id);
 
         // Does this user have permission to edit the permissions?!
-        if (!$this->getUser()->checkPermissionsModifyable($object))
+        if (!$this->getUser($request)->checkPermissionsModifyable($object)) {
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
+        }
 
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Get all current permissions
-        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $objectId);
+        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser($request), $object->permissionsClass(), $id);
 
         // Get the provided permissions
-        $groupIds = $this->getSanitizer()->getStringArray('groupIds');
+        $groupIds = $sanitizedParams->getArray('groupIds');
 
         // Run the update
         $this->updatePermissions($permissions, $groupIds);
 
         // Should we update the owner?
-        if ($this->getSanitizer()->getInt('ownerId') != 0) {
+        if ($sanitizedParams->getInt('ownerId') != 0) {
 
-            $ownerId = $this->getSanitizer()->getInt('ownerId');
+            $ownerId = $sanitizedParams->getInt('ownerId');
 
             $this->getLog()->debug('Requesting update to a new Owner - id = ' . $ownerId);
 
@@ -1427,7 +1651,7 @@ class User extends Base
             if ($object->permissionsClass() == 'Xibo\Entity\Campaign') {
                 $this->getLog()->debug('Changing owner on child Layout');
 
-                foreach ($this->layoutFactory->getByCampaignId($object->getId()) as $layout) {
+                foreach ($this->layoutFactory->getByCampaignId($object->getId(), true, true, $request ) as $layout) {
                     $layout->setOwner($ownerId, true);
                     $layout->save(['notify' => false]);
                 }
@@ -1435,25 +1659,25 @@ class User extends Base
         }
 
         // Cascade permissions
-        if ($object->permissionsClass() == 'Xibo\Entity\Campaign' && $this->getSanitizer()->getCheckbox('cascade') == 1) {
+        if ($object->permissionsClass() == 'Xibo\Entity\Campaign' && $sanitizedParams->getCheckbox('cascade') == 1) {
             /* @var Campaign $object */
             $this->getLog()->debug('Cascade permissions down');
 
             // Define a function that can be called for each layout we find
-            $updatePermissionsOnLayout = function($layout) use ($object, $groupIds) {
+            $updatePermissionsOnLayout = function($layout) use ($object, $groupIds, $request) {
 
                 // Regions
                 foreach ($layout->regions as $region) {
                     /* @var Region $region */
-                    $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($region), $region->getId()), $groupIds);
+                    $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser($request), get_class($region), $region->getId()), $groupIds);
                     // Playlists
                     /* @var Playlist $playlist */
                     $playlist = $region->regionPlaylist;
-                    $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($playlist), $playlist->getId()), $groupIds);
+                    $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser($request), get_class($playlist), $playlist->getId()), $groupIds);
                     // Widgets
                     foreach ($playlist->widgets as $widget) {
                         /* @var Widget $widget */
-                        $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($widget), $widget->getId()), $groupIds);
+                        $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser($request), get_class($widget), $widget->getId()), $groupIds);
                     }
                 }
             };
@@ -1461,7 +1685,7 @@ class User extends Base
             foreach ($this->layoutFactory->getByCampaignId($object->campaignId, true, true) as $layout) {
                 /* @var Layout $layout */
                 // Assign the same permissions to the Layout
-                $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object), $layout->campaignId), $groupIds);
+                $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser($request), get_class($object), $layout->campaignId), $groupIds);
 
                 // Load the layout
                 $layout->load();
@@ -1472,20 +1696,20 @@ class User extends Base
             // We always cascade region permissions down to the Playlist
             $object->load(['loadPlaylists' => true]);
 
-            $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object->regionPlaylist), $object->regionPlaylist->getId()), $groupIds);
-        } else if ($object->permissionsClass() == 'Xibo\Entity\Playlist' && $this->getSanitizer()->getCheckbox('cascade') == 1) {
+            $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser($request), get_class($object->regionPlaylist), $object->regionPlaylist->getId()), $groupIds);
+        } else if ($object->permissionsClass() == 'Xibo\Entity\Playlist' && $sanitizedParams->getCheckbox('cascade') == 1) {
             $object->load();
 
             // Push the permissions down to each Widget
             foreach ($object->widgets as $widget) {
-                $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($widget), $widget->getId()), $groupIds);
+                $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser($request), get_class($widget), $widget->getId()), $groupIds);
             }
         } else if ($object->permissionsClass() == 'Xibo\Entity\Media') {
             // Are we a font?
             /** @var $object Media */
             if ($object->mediaType === 'font') {
                 // Drop permissions (we need to reassess).
-                $this->getApp()->container->get('\Xibo\Controller\Library')->setApp($this->getApp())->installFonts(['invalidateCache' => true]);
+                $this->container->get('\Xibo\Controller\Library')->installFonts(['invalidateCache' => true], $request);
             }
         }
 
@@ -1494,32 +1718,37 @@ class User extends Base
             'httpCode' => 204,
             'message' => __('Permissions Updated')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Parse the Permissions Entity
      * //TODO: this does some nasty service location via $app, if anyone has a better idea, please submit a PR
+     * // TODO: we inject containerInterface in user controller then we can get what we need here - better ideas?
      * @param string $entity
      * @param int $objectId
      * @return string
      */
     private function parsePermissionsEntity($entity, $objectId)
     {
-        if ($entity == '')
+        if ($entity == '') {
             throw new \InvalidArgumentException(__('Permissions requested without an entity'));
+        }
 
-        if ($objectId == 0)
+        if ($objectId == 0) {
             throw new \InvalidArgumentException(__('Permissions form requested without an object'));
+        }
 
         // Check to see that we can resolve the entity
         $entity = lcfirst($entity) . 'Factory';
 
-        if (!$this->getApp()->container->has($entity) || !method_exists($this->getApp()->container->get($entity), 'getById')) {
-            $this->getLog()->error('Invalid Entity %s', $entity);
+        if (!$this->container->has($entity) || !method_exists($this->container->get($entity), 'getById')) {
+            $this->getLog()->error(sprintf('Invalid Entity %s', $entity));
             throw new \InvalidArgumentException(__('Permissions form requested with an invalid entity'));
         }
 
-        return $this->getApp()->container->get($entity);
+        return $this->container->get($entity);
     }
 
     /**
@@ -1548,12 +1777,20 @@ class User extends Base
 
     /**
      * User Applications
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function myApplications(Request $request, Response $response)
     {
         $this->getState()->template = 'user-applications-form';
         $this->getState()->setData([
-            'applications' => $this->applicationFactory->getByUserId($this->getUser()->userId),
+            'applications' => $this->applicationFactory->getByUserId($this->getUser($request)->userId),
             'help' => $this->getHelp()->link('User', 'Applications')
         ]);
 
@@ -1631,7 +1868,12 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @return Response
+     * @throws ConfigurationException
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function prefEdit(Request $request, Response $response)
     {
@@ -1664,14 +1906,23 @@ class User extends Base
     }
 
     /**
-     * @param $userId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function membershipForm(Request $request, Response $response, $id)
     {
         $user = $this->userFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($user))
+        if (!$this->getUser($request)->checkEditable($user)) {
             throw new AccessDeniedException();
+        }
 
         // Groups we are assigned to
         $groupsAssigned = $this->userGroupFactory->getByUserId($user->userId);
@@ -1715,32 +1966,45 @@ class User extends Base
     }
 
     /**
-     * @param $userId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function assignUserGroup($userId)
+    public function assignUserGroup(Request $request, Response $response, $id)
     {
-        $user = $this->userFactory->getById($userId);
+        $user = $this->userFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($user))
+        if (!$this->getUser($request)->checkEditable($user)) {
             throw new AccessDeniedException();
+        }
 
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Go through each ID to assign
-        foreach ($this->getSanitizer()->getIntArray('userGroupId') as $userGroupId) {
+        foreach ($sanitizedParams->getIntArray('userGroupId') as $userGroupId) {
             $userGroup = $this->userGroupFactory->getById($userGroupId);
 
-            if (!$this->getUser()->checkEditable($userGroup))
+            if (!$this->getUser($request)->checkEditable($userGroup)) {
                 throw new AccessDeniedException(__('Access Denied to UserGroup'));
+            }
 
             $userGroup->assignUser($user);
             $userGroup->save(['validate' => false]);
         }
 
         // Have we been provided with unassign id's as well?
-        foreach ($this->getSanitizer()->getIntArray('unassignUserGroupId') as $userGroupId) {
+        foreach ($sanitizedParams->getIntArray('unassignUserGroupId') as $userGroupId) {
             $userGroup = $this->userGroupFactory->getById($userGroupId);
 
-            if (!$this->getUser()->checkEditable($userGroup))
+            if (!$this->getUser($request)->checkEditable($userGroup)) {
                 throw new AccessDeniedException(__('Access Denied to UserGroup'));
+            }
 
             $userGroup->unassignUser($user);
             $userGroup->save(['validate' => false]);
@@ -1752,40 +2016,72 @@ class User extends Base
             'message' => sprintf(__('%s assigned to User Groups'), $user->userName),
             'id' => $user->userId
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Update the User Welcome Tutorial to Seen
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function userWelcomeSetUnSeen()
+    public function userWelcomeSetUnSeen(Request $request, Response $response)
     {
-        $this->getUser()->newUserWizard = 0;
-        $this->getUser()->save(['validate' => false]);
+        $this->getUser($request)->newUserWizard = 0;
+        $this->getUser($request)->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
-            'message' => sprintf(__('%s has started the welcome tutorial'), $this->getUser()->userName)
+            'message' => sprintf(__('%s has started the welcome tutorial'), $this->getUser($request)->userName)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Update the User Welcome Tutorial to Seen
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function userWelcomeSetSeen()
+    public function userWelcomeSetSeen(Request $request, Response $response)
     {
-        $this->getUser()->newUserWizard = 1;
-        $this->getUser()->save(['validate' => false]);
+        $this->getUser($request)->newUserWizard = 1;
+        $this->getUser($request)->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
-            'message' => sprintf(__('%s has seen the welcome tutorial'), $this->getUser()->userName)
+            'message' => sprintf(__('%s has seen the welcome tutorial'), $this->getUser($request)->userName)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Preferences Form
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function preferencesForm(Request $request, Response $response)
     {
@@ -1824,6 +2120,15 @@ class User extends Base
      *      description="successful operation"
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function prefEditFromForm(Request $request, Response $response)
     {

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -174,6 +174,14 @@ class Module extends Base
 
     /**
      * Display the module page
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     function displayPage(Request $request, Response $response)
     {
@@ -187,7 +195,15 @@ class Module extends Base
 
     /**
      * A grid of modules
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function grid(Request $request, Response $response)
     {
@@ -244,8 +260,16 @@ class Module extends Base
 
     /**
      * Settings Form
-     * @param int $moduleId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function settingsForm(Request $request, Response $response, $id)
     {
@@ -272,8 +296,16 @@ class Module extends Base
 
     /**
      * Settings
-     * @param int $moduleId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function settings(Request $request, Response $response, $id)
     {
@@ -313,6 +345,14 @@ class Module extends Base
 
     /**
      * Verify
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function verifyForm(Request $request, Response $response)
     {
@@ -327,7 +367,14 @@ class Module extends Base
 
     /**
      * Verify Module
-     * @throws \Exception
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function verify(Request $request, Response $response)
     {
@@ -348,7 +395,15 @@ class Module extends Base
 
     /**
      * Form for the install list
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws InvalidArgumentException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function installListForm(Request $request, Response $response)
     {
@@ -368,23 +423,32 @@ class Module extends Base
     }
 
     /**
+     * @param Request $request
+     * @param Response $response
      * @param string $name
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
      * @throws InvalidArgumentException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function installForm(Request $request,Response $response, $name)
     {
         // Check the module hasn't already been installed
-        if ($this->checkModuleInstalled($name))
+        if ($this->checkModuleInstalled($name)) {
             throw new InvalidArgumentException(__('Module already installed'), 'install');
+        }
 
         // Use the name to get details about this module.
-        if (file_exists(PROJECT_ROOT . '/modules/' . $name . '.json'))
+        if (file_exists(PROJECT_ROOT . '/modules/' . $name . '.json')) {
             $module = json_decode(file_get_contents(PROJECT_ROOT . '/modules/' . $name . '.json'));
-        else if (file_exists(PROJECT_ROOT . '/custom/' . $name . '.json'))
+        } else if (file_exists(PROJECT_ROOT . '/custom/' . $name . '.json')) {
             $module = json_decode(file_get_contents(PROJECT_ROOT . '/custom/' . $name . '.json'));
-        else
+        } else {
             throw new \InvalidArgumentException(__('Invalid module'));
-
+        }
 
         $this->getState()->template = 'module-form-install';
         $this->getState()->setData([
@@ -397,8 +461,16 @@ class Module extends Base
 
     /**
      * Install Module
+     * @param Request $request
+     * @param Response $response
      * @param string $name
-     * @throws XiboException
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws InvalidArgumentException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function install(Request $request,Response $response, $name)
     {
@@ -408,12 +480,13 @@ class Module extends Base
         if ($this->checkModuleInstalled($name))
             throw new InvalidArgumentException(__('Module already installed'), 'install');
 
-        if (file_exists(PROJECT_ROOT . '/modules/' . $name . '.json'))
+        if (file_exists(PROJECT_ROOT . '/modules/' . $name . '.json')) {
             $moduleDetails = json_decode(file_get_contents(PROJECT_ROOT . '/modules/' . $name . '.json'));
-        else if (file_exists(PROJECT_ROOT . '/custom/' . $name . '.json'))
+        } else if (file_exists(PROJECT_ROOT . '/custom/' . $name . '.json')) {
             $moduleDetails = json_decode(file_get_contents(PROJECT_ROOT . '/custom/' . $name . '.json'));
-        else
+        } else {
             throw new \InvalidArgumentException(__('Invalid module'));
+        }
 
         // All modules should be capable of autoload
         $module = $this->moduleFactory->createForInstall($moduleDetails->class);
@@ -492,16 +565,19 @@ class Module extends Base
     {
         $playlist = $this->playlistFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($playlist))
+        if (!$this->getUser($request)->checkEditable($playlist)) {
             throw new AccessDeniedException();
+        }
 
         // Check we have a permission factory
-        if ($this->permissionFactory == null)
+        if ($this->permissionFactory == null) {
             throw new ConfigurationException(__('Sorry there is an error with this request, cannot set inherited permissions'));
+        }
 
         // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
-        if (!$playlist->isEditable())
+        if (!$playlist->isEditable()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
 
         // Load some information about this playlist
         // loadWidgets = true to keep the ordering correct
@@ -548,7 +624,7 @@ class Module extends Base
                 $permission->save();
             }
         } else {
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($module->widget), $module->widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($module->widget), $module->widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
@@ -582,8 +658,9 @@ class Module extends Base
     {
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
-        if (!$this->getUser($request)->checkEditable($module->widget))
+        if (!$this->getUser($request)->checkEditable($module->widget)) {
             throw new AccessDeniedException();
+        }
 
         // Media file?
         $media = null;
@@ -626,15 +703,17 @@ class Module extends Base
     {
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
-        if (!$this->getUser($request)->checkEditable($module->widget))
+        if (!$this->getUser($request)->checkEditable($module->widget)) {
             throw new AccessDeniedException();
+        }
 
         // Test to see if we are on a Region Specific Playlist or a standalone
         $playlist = $this->playlistFactory->getById($module->widget->playlistId);
 
         // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
-        if (!$playlist->isEditable())
+        if (!$playlist->isEditable()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
 
         // Inject the Current User
         $module->setUser($this->getUser($request));
@@ -672,8 +751,9 @@ class Module extends Base
     {
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
-        if (!$this->getUser($request)->checkDeleteable($module->widget))
+        if (!$this->getUser($request)->checkDeleteable($module->widget)) {
             throw new AccessDeniedException();
+        }
 
         // Set some dependencies that are used in the delete
         $module->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
@@ -727,15 +807,17 @@ class Module extends Base
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkDeleteable($module->widget))
+        if (!$this->getUser($request)->checkDeleteable($module->widget)) {
             throw new AccessDeniedException();
+        }
 
         // Test to see if we are on a Region Specific Playlist or a standalone
         $playlist = $this->playlistFactory->getById($module->widget->playlistId);
 
         // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
-        if (!$playlist->isEditable())
+        if (!$playlist->isEditable()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
 
         // Set some dependencies that are used in the delete
         $module->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
@@ -758,8 +840,9 @@ class Module extends Base
                 $media = $this->mediaFactory->getById($mediaId);
 
                 // Check we have permissions to delete
-                if (!$this->getUser()->checkDeleteable($media))
+                if (!$this->getUser($request)->checkDeleteable($media)) {
                     throw new AccessDeniedException();
+                }
 
                 $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
                 $media->delete();
@@ -776,16 +859,25 @@ class Module extends Base
 
     /**
      * Edit Widget Transition Form
+     * @param Request $request
+     * @param Response $response
      * @param string $type
-     * @param int $widgetId
-     * @throws XiboException
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function editWidgetTransitionForm($type, $widgetId)
+    public function editWidgetTransitionForm(Request $request, Response $response, $type, $id)
     {
-        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId));
+        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
-        if (!$this->getUser()->checkEditable($module->widget))
+        if (!$this->getUser($request)->checkEditable($module->widget)) {
             throw new AccessDeniedException();
+        }
 
         // Pass to view
         $this->getState()->template = 'module-form-transition';
@@ -808,6 +900,8 @@ class Module extends Base
             ],
             'help' => $this->getHelp()->link('Transition', 'Edit')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -865,39 +959,50 @@ class Module extends Base
      *   )
      * )
      *
+     * @param Request $request
+     * @param Response $response
      * @param string $type
-     * @param int $widgetId
-     *
-     * @throws XiboException
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function editWidgetTransition($type, $widgetId)
+    public function editWidgetTransition(Request $request, Response $response,$type, $id)
     {
-        $widget = $this->widgetFactory->getById($widgetId);
+        $widget = $this->widgetFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($widget))
+        if (!$this->getUser($request)->checkEditable($widget)) {
             throw new AccessDeniedException();
+        }
 
         // Test to see if we are on a Region Specific Playlist or a standalone
         $playlist = $this->playlistFactory->getById($widget->playlistId);
 
         // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
-        if (!$playlist->isEditable())
+        if (!$playlist->isEditable()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
 
         $widget->load();
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         switch ($type) {
             case 'in':
-                $widget->setOptionValue('transIn', 'attrib', $this->getSanitizer()->getString('transitionType'));
-                $widget->setOptionValue('transInDuration', 'attrib', $this->getSanitizer()->getInt('transitionDuration'));
-                $widget->setOptionValue('transInDirection', 'attrib', $this->getSanitizer()->getString('transitionDirection'));
+                $widget->setOptionValue('transIn', 'attrib', $sanitizedParams->getString('transitionType'));
+                $widget->setOptionValue('transInDuration', 'attrib', $sanitizedParams->getInt('transitionDuration'));
+                $widget->setOptionValue('transInDirection', 'attrib', $sanitizedParams->getString('transitionDirection'));
 
                 break;
 
             case 'out':
-                $widget->setOptionValue('transOut', 'attrib', $this->getSanitizer()->getString('transitionType'));
-                $widget->setOptionValue('transOutDuration', 'attrib', $this->getSanitizer()->getInt('transitionDuration'));
-                $widget->setOptionValue('transOutDirection', 'attrib', $this->getSanitizer()->getString('transitionDirection'));
+                $widget->setOptionValue('transOut', 'attrib', $sanitizedParams->getString('transitionType'));
+                $widget->setOptionValue('transOutDuration', 'attrib', $sanitizedParams->getInt('transitionDuration'));
+                $widget->setOptionValue('transOutDirection', 'attrib', $sanitizedParams->getString('transitionDirection'));
 
                 break;
 
@@ -913,19 +1018,30 @@ class Module extends Base
             'id' => $widget->widgetId,
             'data' => $widget
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Widget Audio Form
-     * @param int $widgetId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function widgetAudioForm($widgetId)
+    public function widgetAudioForm(Request $request, Response $response, $id)
     {
-        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId));
+        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
-        if (!$this->getUser()->checkEditable($module->widget))
+        if (!$this->getUser($request)->checkEditable($module->widget)) {
             throw new AccessDeniedException();
+        }
 
         $audioAvailable = true;
         if ($module->widget->countAudio() > 0) {
@@ -942,6 +1058,8 @@ class Module extends Base
             'media' => $this->mediaFactory->getByMediaType('audio'),
             'isAudioAvailable' => $audioAvailable
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -992,29 +1110,41 @@ class Module extends Base
      *  )
      * )
      *
-     * @param int $widgetId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function widgetAudio($widgetId)
+    public function widgetAudio(Request $request, Response $response, $id)
     {
-        $widget = $this->widgetFactory->getById($widgetId);
+        $widget = $this->widgetFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($widget))
+        if (!$this->getUser($request)->checkEditable($widget)) {
             throw new AccessDeniedException();
+        }
 
         // Test to see if we are on a Region Specific Playlist or a standalone
         $playlist = $this->playlistFactory->getById($widget->playlistId);
 
         // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
-        if (!$playlist->isEditable())
+        if (!$playlist->isEditable()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
 
         $widget->load();
 
         // Pull in the parameters we are expecting from the form.
-        $mediaId = $this->getSanitizer()->getInt('mediaId');
-        $volume = $this->getSanitizer()->getInt('volume', 100);
-        $loop = $this->getSanitizer()->getCheckbox('loop');
+        $mediaId = $sanitizedParams->getInt('mediaId');
+        $volume = $sanitizedParams->getInt('volume', 100);
+        $loop = $sanitizedParams->getCheckbox('loop');
 
         // Remove existing audio records.
         foreach ($widget->audio as $audio) {
@@ -1038,6 +1168,8 @@ class Module extends Base
             'id' => $widget->widgetId,
             'data' => $widget
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1061,22 +1193,33 @@ class Module extends Base
      *  )
      *)
      *
-     * @param int $widgetId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function widgetAudioDelete($widgetId)
+    public function widgetAudioDelete(Request $request, Response $response, $id)
     {
-        $widget = $this->widgetFactory->getById($widgetId);
+        $widget = $this->widgetFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($widget))
+        if (!$this->getUser($request)->checkEditable($widget)) {
             throw new AccessDeniedException();
+        }
 
         // Test to see if we are on a Region Specific Playlist or a standalone
         $playlist = $this->playlistFactory->getById($widget->playlistId);
 
         // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
-        if (!$playlist->isEditable())
+        if (!$playlist->isEditable()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
 
         $widget->load();
 
@@ -1092,47 +1235,81 @@ class Module extends Base
             'id' => $widget->widgetId,
             'data' => $widget
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Get Tab
+     * @param Request $request
+     * @param Response $response
      * @param string $tab
-     * @param int $widgetId
-     * @throws XiboException
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function getTab($tab, $widgetId)
+    public function getTab(Request $request, Response $response,$tab, $id)
     {
-        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId));
+        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
-        if (!$this->getUser()->checkViewable($module->widget))
+        if (!$this->getUser($request)->checkViewable($module->widget)) {
             throw new AccessDeniedException();
+        }
 
         // Pass to view
         $this->getState()->template = $module->getModuleType() . '-tab-' . $tab;
         $this->getState()->setData($module->getTab($tab));
-    }
 
-    public function getDataSets()
-    {
-        $this->getState()->template = 'grid';
-        $filter = [
-            'dataSet' => $this->getSanitizer()->getString('dataSet')
-        ];
-
-        $this->getState()->setData($this->dataSetFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter)));
-        $this->getState()->recordsTotal = $this->dataSetFactory->countLast();
+        return $this->render($request, $response);
     }
 
     /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
+    public function getDataSets(Request $request, Response $response)
+    {
+        $this->getState()->template = 'grid';
+        $filter = [
+            'dataSet' => $this->getSanitizer($request->getParams())->getString('dataSet')
+        ];
+
+        $this->getState()->setData($this->dataSetFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request), $request));
+        $this->getState()->recordsTotal = $this->dataSetFactory->countLast();
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
      * @param $type
      * @param $templateId
-     * @throws XiboException
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function getTemplateImage($type, $templateId)
+    public function getTemplateImage(Request $request, Response $response,$type, $templateId)
     {
         $module = $this->moduleFactory->create($type);
         $module->getTemplateImage($templateId);
         $this->setNoOutput(true);
+        return $this->render($request, $response);
     }
 
     /**
@@ -1173,37 +1350,58 @@ class Module extends Base
     }
 
     /**
-     * @param $moduleId
-     * @param $formName
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @param $name
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function customFormRender($moduleId, $formName)
+    public function customFormRender(Request $request, Response $response, $id, $name)
     {
-        $module = $this->moduleFactory->createById($moduleId);
+        $module = $this->moduleFactory->createById($id);
 
-        if (!method_exists($module, $formName))
+        if (!method_exists($module, $name)) {
             throw new ConfigurationException(__('Method does not exist'));
+        }
 
-        $formDetails = $module->$formName();
+        $formDetails = $module->$name();
 
         $this->getState()->template = $formDetails['template'];
         $this->getState()->setData($formDetails['data']);
+
+        return $this->render($request, $response);
     }
 
     /**
-     * @param $moduleId
-     * @param $formName
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @param $name
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function customFormExecute($moduleId, $formName)
+    public function customFormExecute(Request $request, Response $response, $id, $name)
     {
-        $module = $this->moduleFactory->createById($moduleId);
+        $module = $this->moduleFactory->createById($id);
 
-        if (!method_exists($module, $formName))
+        if (!method_exists($module, $name)) {
             throw new ConfigurationException(__('Method does not exist'));
+        }
 
-        $module->$formName();
+        $module->$name();
         $this->setNoOutput(true);
+        return $this->render($request, $response);
     }
 
     /**
@@ -1260,46 +1458,75 @@ class Module extends Base
 
     /**
      * Clear Cache Form
-     * @param $moduleId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function clearCacheForm($moduleId)
+    public function clearCacheForm(Request $request, Response $response, $id)
     {
-        $module = $this->moduleFactory->getById($moduleId);
+        $module = $this->moduleFactory->getById($id);
 
         $this->getState()->template = 'module-form-clear-cache';
         $this->getState()->setData([
             'module' => $module,
             'help' => $this->getHelp()->link('Module', 'General')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Clear Cache
-     * @param $moduleId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function clearCache($moduleId)
+    public function clearCache(Request $request, Response $response, $id)
     {
-        $module = $this->moduleFactory->createById($moduleId);
+        $module = $this->moduleFactory->createById($id);
         $module->dumpCacheForModule();
 
         $this->getState()->hydrate([
             'message' => sprintf(__('Cleared the Cache'))
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Widget Expiry Form
-     * @param int $widgetId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function widgetExpiryForm($widgetId)
+    public function widgetExpiryForm(Request $request, Response $response, $id)
     {
-        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId));
+        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
-        if (!$this->getUser()->checkEditable($module->widget))
+        if (!$this->getUser($request)->checkEditable($module->widget)) {
             throw new AccessDeniedException();
+        }
 
         // Pass to view
         $this->getState()->template = 'module-form-expiry';
@@ -1309,6 +1536,8 @@ class Module extends Base
             'toDt' => ($module->widget->toDt === Widget::$DATE_MAX) ? '' : $this->getDate()->getLocalDate($module->widget->toDt),
             'deleteOnExpiry' => $module->getOption('deleteOnExpiry', 0)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1359,15 +1588,26 @@ class Module extends Base
      *  )
      * )
      *
-     * @param int $widgetId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function widgetExpiry($widgetId)
+    public function widgetExpiry(Request $request, Response $response, $id)
     {
-        $widget = $this->widgetFactory->getById($widgetId);
+        $widget = $this->widgetFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($widget))
+        if (!$this->getUser($request)->checkEditable($widget)) {
             throw new AccessDeniedException();
+        }
 
         // Test to see if we are on a Region Specific Playlist or a standalone
         $playlist = $this->playlistFactory->getById($widget->playlistId);
@@ -1379,8 +1619,8 @@ class Module extends Base
         $widget->load();
 
         // Pull in the parameters we are expecting from the form.
-        $fromDt = $this->getSanitizer()->getDate('fromDt');
-        $toDt = $this->getSanitizer()->getDate('toDt');
+        $fromDt = $sanitizedParams->getDate('fromDt');
+        $toDt = $sanitizedParams->getDate('toDt');
 
         if ($fromDt !== null) {
             $widget->fromDt = $fromDt->format('U');
@@ -1395,7 +1635,7 @@ class Module extends Base
         }
 
         // Delete on expiry?
-        $widget->setOptionValue('deleteOnExpiry', 'attrib', ($this->getSanitizer()->getCheckbox('deleteOnExpiry') ? 1 : 0));
+        $widget->setOptionValue('deleteOnExpiry', 'attrib', ($sanitizedParams->getCheckbox('deleteOnExpiry') ? 1 : 0));
 
         // Save
         $widget->save([
@@ -1408,7 +1648,7 @@ class Module extends Base
             'audit' => true
         ]);
 
-        if ($this->isApi()) {
+        if ($this->isApi($request)) {
             $widget->createdDt = $this->getDate()->getLocalDate($widget->createdDt);
             $widget->modifiedDt = $this->getDate()->getLocalDate($widget->modifiedDt);
             $widget->fromDt = $this->getDate()->getLocalDate($widget->fromDt);
@@ -1421,5 +1661,7 @@ class Module extends Base
             'id' => $widget->widgetId,
             'data' => $widget
         ]);
+
+        return $this->render($request, $response);
     }
 }

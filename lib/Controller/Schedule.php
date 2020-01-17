@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -126,6 +126,7 @@ class Schedule extends Base
      * @param DayPartFactory $dayPartFactory
      * @param ScheduleReminderFactory $scheduleReminderFactory
      * @param ScheduleExclusionFactory $scheduleExclusionFactory
+     * @param Twig $view
      */
 
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $pool, $scheduleFactory, $displayGroupFactory, $campaignFactory, $commandFactory, $displayFactory, $layoutFactory, $mediaFactory, $dayPartFactory, $scheduleReminderFactory, $scheduleExclusionFactory, Twig $view)
@@ -146,6 +147,16 @@ class Schedule extends Base
         $this->scheduleExclusionFactory = $scheduleExclusionFactory;
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
     function displayPage(Request $request, Response $response)
     {
         // We need to provide a list of displays
@@ -232,8 +243,15 @@ class Schedule extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     function eventData(Request $request, Response $response)
     {
@@ -303,8 +321,9 @@ class Schedule extends Base
                 continue;
             }
 
-            if (count($scheduleEvents) <= 0)
+            if (count($scheduleEvents) <= 0) {
                 continue;
+            }
 
             $this->getLog()->debug('EventId ' . $row->eventId . ' as events: ' . json_encode($scheduleEvents));
 
@@ -321,7 +340,7 @@ class Schedule extends Base
             }
 
             // Event Permissions
-            $editable = $this->isEventEditable($row->displayGroups);
+            $editable = $this->isEventEditable($row->displayGroups, $request);
 
             // Event Title
             if ($row->campaignId == 0) {
@@ -330,11 +349,11 @@ class Schedule extends Base
             } else {
                 // Should we show the Layout name, or not (depending on permission)
                 // Make sure we only run the below code if we have to, its quite expensive
-                if (!$showLayoutName && !$this->getUser()->isSuperAdmin()) {
+                if (!$showLayoutName && !$this->getUser($request)->isSuperAdmin()) {
                     // Campaign
                     $campaign = $this->campaignFactory->getById($row->campaignId);
 
-                    if (!$this->getUser()->checkViewable($campaign))
+                    if (!$this->getUser($request)->checkViewable($campaign))
                         $row->campaign = __('Private Item');
                 }
                 $title = __('%s scheduled on %s', $row->campaign, $displayGroupList);
@@ -406,7 +425,7 @@ class Schedule extends Base
                  *  )
                  * )
                  */
-                $events[] = array(
+                $events[] = [
                     'id' => $row->eventId,
                     'title' => $title,
                     'url' => ($editable) ? $url : null,
@@ -417,19 +436,25 @@ class Schedule extends Base
                     'event' => $row,
                     'scheduleEvent' => $scheduleEvent,
                     'recurringEvent' => ($row->recurrenceType != '') ? true : false
-                );
+                ];
             }
         }
 
-        $response->withJson(['success' => 1, 'result' => $events]);
-
-        return $this->render($request, $response);
+        return $response->withJson(['success' => 1, 'result' => $events]);
     }
 
     /**
      * Event List
-     * @param $displayGroupId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Get(
      *  path="/schedule/{displayGroupId}/events",
      *  operationId="scheduleCalendarDataDisplayGroup",
@@ -454,10 +479,10 @@ class Schedule extends Base
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
      */
     public function eventList(Request $request, Response $response, $id)
     {
+        // TODO Agenda view complains
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -545,7 +570,7 @@ class Schedule extends Base
                     if (!$this->isApi($request))
                         $layout->link = $this->urlFor($request,'layout.designer', ['id' => $layout->layoutId]);
 
-                    if ($showLayoutName || $this->getUser()->checkViewable($layout))
+                    if ($showLayoutName || $this->getUser($request)->checkViewable($layout))
                         $layouts[$layoutId] = $layout;
                     else {
                         $layouts[$layoutId] = [
@@ -625,6 +650,7 @@ class Schedule extends Base
      * @param \Xibo\Entity\DisplayGroup $displayGroup
      * @param int $eventDisplayGroupId
      * @return array
+     * @throws NotFoundException
      */
     private function calculateIntermediates($display, $displayGroup, $eventDisplayGroupId)
     {
@@ -701,8 +727,17 @@ class Schedule extends Base
 
     /**
      * Shows a form to add an event
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function addForm()
+    function addForm(Request $request, Response $response)
     {
         // Get the display groups added to the session (if there are some)
         $displayGroupIds = $this->session->get('displayGroupIds');
@@ -715,8 +750,9 @@ class Schedule extends Base
 
                 $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
-                if ($this->getUser()->checkViewable($displayGroup))
+                if ($this->getUser($request)->checkViewable($displayGroup)) {
                     $displayGroups[] = $displayGroup;
+                }
             }
         }
 
@@ -735,6 +771,8 @@ class Schedule extends Base
             'defaultLat' => $defaultLat,
             'defaultLong' => $defaultLong
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -909,7 +947,16 @@ class Schedule extends Base
      *  )
      * )
      *
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function add(Request $request, Response $response)
     {
@@ -922,13 +969,13 @@ class Schedule extends Base
         $customDayPart = $this->dayPartFactory->getCustomDayPart();
 
         $schedule = $this->scheduleFactory->createEmpty();
-        $schedule->userId = $this->getUser()->userId;
+        $schedule->userId = $this->getUser($request)->userId;
         $schedule->eventTypeId = $sanitizedParams->getInt('eventTypeId');
         $schedule->campaignId = $sanitizedParams->getInt('campaignId');
         $schedule->commandId = $sanitizedParams->getInt('commandId');
-        $schedule->displayOrder = $sanitizedParams->getInt('displayOrder', 0);
-        $schedule->isPriority = $sanitizedParams->getInt('isPriority', 0);
-        $schedule->dayPartId = $sanitizedParams->getInt('dayPartId', $customDayPart->dayPartId);
+        $schedule->displayOrder = $sanitizedParams->getInt('displayOrder', ['default' => 0]);
+        $schedule->isPriority = $sanitizedParams->getInt('isPriority', ['default' => 0]);
+        $schedule->dayPartId = $sanitizedParams->getInt('dayPartId', ['default' => $customDayPart->dayPartId]);
         $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $sanitizedParams->getInt('shareOfVoice') : null;
         $schedule->isGeoAware = $sanitizedParams->getCheckbox('isGeoAware');
 
@@ -1077,19 +1124,30 @@ class Schedule extends Base
 
     /**
      * Shows a form to edit an event
-     * @param int $eventId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function editForm($eventId)
+    function editForm(Request $request, Response $response, $id)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Recurring event start/end
-        $eventStart = $this->getSanitizer()->getInt('eventStart', 1000) / 1000;
-        $eventEnd = $this->getSanitizer()->getInt('eventEnd', 1000) / 1000;
+        $eventStart = $sanitizedParams->getInt('eventStart', ['default' => 1000]) / 1000;
+        $eventEnd = $sanitizedParams->getInt('eventEnd', ['default' => 1000]) / 1000;
 
-        $schedule = $this->scheduleFactory->getById($eventId);
+        $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
-        if (!$this->isEventEditable($schedule->displayGroups))
+        if (!$this->isEventEditable($schedule->displayGroups, $request)) {
             throw new AccessDeniedException();
+        }
 
         // Fix the event dates for display
         if ($schedule->isAlwaysDayPart()) {
@@ -1104,7 +1162,7 @@ class Schedule extends Base
             $schedule->recurrenceRange = $this->getDate()->getLocalDate($schedule->recurrenceRange);
 
         // Get all reminders
-        $scheduleReminders = $this->scheduleReminderFactory->query(null, ['eventId' => $eventId]);
+        $scheduleReminders = $this->scheduleReminderFactory->query(null, ['eventId' => $id]);
 
         // get the default longitude and latitude from CMS options
         $defaultLat = (float)$this->getConfig()->getSetting('DEFAULT_LAT');
@@ -1113,7 +1171,7 @@ class Schedule extends Base
         $this->getState()->template = 'schedule-form-edit';
         $this->getState()->setData([
             'event' => $schedule,
-            'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1, 'retired' => 0, 'includeCampaignId' => $schedule->campaignId]),
+            'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1, 'retired' => 0, 'includeCampaignId' => $schedule->campaignId], $request),
             'commands' => $this->commandFactory->query(),
             'dayParts' => $this->dayPartFactory->allWithSystem(),
             'displayGroups' => $schedule->displayGroups,
@@ -1129,22 +1187,34 @@ class Schedule extends Base
             'eventStart' => $eventStart,
             'eventEnd' => $eventEnd,
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Shows the Delete a Recurring Event form
-     * @param int $eventId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function deleteRecurrenceForm($eventId)
+    function deleteRecurrenceForm(Request $request, Response $response, $id)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Recurring event start/end
-        $eventStart = $this->getSanitizer()->getInt('eventStart', 1000);
-        $eventEnd = $this->getSanitizer()->getInt('eventEnd', 1000);
+        $eventStart = $sanitizedParams->getInt('eventStart', ['default' => 1000]);
+        $eventEnd = $sanitizedParams->getInt('eventEnd', ['default' => 1000]);
 
-        $schedule = $this->scheduleFactory->getById($eventId);
+        $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
-        if (!$this->isEventEditable($schedule->displayGroups)) {
+        if (!$this->isEventEditable($schedule->displayGroups, $request)) {
             throw new AccessDeniedException();
         }
 
@@ -1155,12 +1225,22 @@ class Schedule extends Base
             'eventStart' => $eventStart,
             'eventEnd' => $eventEnd,
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Deletes a recurring Event from all displays
-     * @param int $eventId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Delete(
      *  path="/schedulerecurrence/{eventId}",
      *  operationId="schedulerecurrenceDelete",
@@ -1180,17 +1260,19 @@ class Schedule extends Base
      *  )
      * )
      */
-    public function deleteRecurrence($eventId)
+    public function deleteRecurrence(Request $request, Response $response, $id)
     {
-        $schedule = $this->scheduleFactory->getById($eventId);
+        $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
-        if (!$this->isEventEditable($schedule->displayGroups))
+        if (!$this->isEventEditable($schedule->displayGroups, $request)) {
             throw new AccessDeniedException();
+        }
 
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Recurring event start/end
-        $eventStart = $this->getSanitizer()->getInt('eventStart', 1000);
-        $eventEnd = $this->getSanitizer()->getInt('eventEnd', 1000);
+        $eventStart = $sanitizedParams->getInt('eventStart', ['default' => 1000]);
+        $eventEnd = $sanitizedParams->getInt('eventEnd', ['default' => 1000]);
         $scheduleExclusion = $this->scheduleExclusionFactory->create($schedule->eventId, $eventStart, $eventEnd);
 
         $this->getLog()->debug('Create a schedule exclusion record');
@@ -1201,12 +1283,23 @@ class Schedule extends Base
             'httpStatus' => 204,
             'message' => __('Deleted Event')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edits an event
-     * @param int $eventId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/schedule/{eventId}",
      *  operationId="scheduleEdit",
@@ -1355,8 +1448,6 @@ class Schedule extends Base
      *      @SWG\Schema(ref="#/definitions/Schedule")
      *  )
      * )
-     *
-     * @throws XiboException
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -1369,18 +1460,18 @@ class Schedule extends Base
         ]);
 
 
-        if (!$this->isEventEditable($schedule->displayGroups)) {
+        if (!$this->isEventEditable($schedule->displayGroups, $request)) {
             throw new AccessDeniedException();
         }
 
         $schedule->eventTypeId = $sanitizedParams->getInt('eventTypeId');
         $schedule->campaignId = $sanitizedParams->getInt('campaignId');
         $schedule->commandId = $sanitizedParams->getInt('commandId');
-        $schedule->displayOrder = $sanitizedParams->getInt('displayOrder', $schedule->displayOrder);
-        $schedule->isPriority = $sanitizedParams->getInt('isPriority', $schedule->isPriority);
-        $schedule->dayPartId = $sanitizedParams->getInt('dayPartId', $schedule->dayPartId);
-        $schedule->syncTimezone = $sanitizedParams->getCheckbox('syncTimezone', 0);
-        $schedule->syncEvent = $sanitizedParams->getCheckbox('syncEvent', 0);
+        $schedule->displayOrder = $sanitizedParams->getInt('displayOrder',['default' => $schedule->displayOrder]);
+        $schedule->isPriority = $sanitizedParams->getInt('isPriority', ['default' => $schedule->isPriority]);
+        $schedule->dayPartId = $sanitizedParams->getInt('dayPartId',['default' => $schedule->dayPartId]);
+        $schedule->syncTimezone = $sanitizedParams->getCheckbox('syncTimezone');
+        $schedule->syncEvent = $sanitizedParams->getCheckbox('syncEvent');
         $schedule->recurrenceType = $sanitizedParams->getString('recurrenceType');
         $schedule->recurrenceDetail = $sanitizedParams->getInt('recurrenceDetail');
         $recurrenceRepeatsOn = $sanitizedParams->getIntArray('recurrenceRepeatsOn');
@@ -1388,13 +1479,13 @@ class Schedule extends Base
         $schedule->recurrenceMonthlyRepeatsOn = $sanitizedParams->getInt('recurrenceMonthlyRepeatsOn');
         $schedule->displayGroups = [];
         $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $sanitizedParams->getInt('shareOfVoice') : null;
-        $schedule->isGeoAware = $this->getSanitizer()->getCheckbox('isGeoAware');
+        $schedule->isGeoAware = $sanitizedParams->getCheckbox('isGeoAware');
 
 
-        if ($this->isApi()) {
+        if ($this->isApi($request)) {
             if ($schedule->isGeoAware === 1) {
                 // get string array from API
-                $coordinates = $this->getSanitizer()->getStringArray('geoLocation');
+                $coordinates = $sanitizedParams->getArray('geoLocation');
 
                 // generate geo json and assign to Schedule
                 $schedule->geoLocation = $this->createGeoJson($coordinates);
@@ -1402,7 +1493,7 @@ class Schedule extends Base
         } else {
 
             // if we are not using API, then valid GeoJSON is created in the front end.
-            $schedule->geoLocation = $this->getSanitizer()->getString('geoLocation');
+            $schedule->geoLocation = $sanitizedParams->getString('geoLocation');
         }
 
         // if we are editing Layout/Campaign event that was set with Always daypart and change it to Command event type
@@ -1422,8 +1513,9 @@ class Schedule extends Base
             $toDt = $sanitizedParams->getDate('toDt');
             $recurrenceRange = $sanitizedParams->getDate('recurrenceRange');
 
-            if ($fromDt === null)
+            if ($fromDt === null) {
                 throw new \InvalidArgumentException(__('Please enter a from date'));
+            }
 
             $this->getLog()->debug('Times received are: FromDt=' . $this->getDate()->getLocalDate($fromDt) . '. ToDt=' . $this->getDate()->getLocalDate($toDt) . '. recurrenceRange=' . $this->getDate()->getLocalDate($recurrenceRange));
 
@@ -1434,7 +1526,7 @@ class Schedule extends Base
                 $schedule->toDt = null;
                 $schedule->recurrenceRange = ($recurrenceRange === null) ? null : $recurrenceRange->format('U');
 
-            } else if (!($this->isApi() || str_contains($this->getConfig()->getSetting('DATE_FORMAT'), 's'))) {
+            } else if (!($this->isApi($request) || Str::contains($this->getConfig()->getSetting('DATE_FORMAT'), 's'))) {
                 // In some circumstances we want to trim the seconds from the provided dates.
                 // this happens when the date format provided does not include seconds and when the add
                 // event comes from the UI.
@@ -1508,9 +1600,9 @@ class Schedule extends Base
 
         // API Request
         $rows = [];
-        if ($this->isApi()) {
+        if ($this->isApi($request)) {
 
-            $reminders =  $sanitizedParams->getStringArray('scheduleReminders');
+            $reminders =  $sanitizedParams->getArray('scheduleReminders');
             foreach ($reminders as $i => $reminder) {
 
                 $rows[$i]['reminder_scheduleReminderId'] = isset($reminder['reminder_scheduleReminderId']) ? (int) $reminder['reminder_scheduleReminderId'] : null;
@@ -1573,31 +1665,53 @@ class Schedule extends Base
             'id' => $schedule->eventId,
             'data' => $schedule
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Shows the DeleteEvent form
-     * @param int $eventId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function deleteForm($eventId)
+    function deleteForm(Request $request, Response $response, $id)
     {
-        $schedule = $this->scheduleFactory->getById($eventId);
+        $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
-        if (!$this->isEventEditable($schedule->displayGroups))
+        if (!$this->isEventEditable($schedule->displayGroups, $request)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'schedule-form-delete';
         $this->getState()->setData([
             'event' => $schedule,
             'help' => $this->getHelp()->link('Schedule', 'Delete')
         ]);
+
+        return $this->render($request,$response);
     }
 
     /**
      * Deletes an Event from all displays
-     * @param int $eventId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Delete(
      *  path="/schedule/{eventId}",
      *  operationId="scheduleDelete",
@@ -1617,13 +1731,14 @@ class Schedule extends Base
      *  )
      * )
      */
-    public function delete($eventId)
+    public function delete(Request $request, Response $response, $id)
     {
-        $schedule = $this->scheduleFactory->getById($eventId);
+        $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
-        if (!$this->isEventEditable($schedule->displayGroups))
+        if (!$this->isEventEditable($schedule->displayGroups, $request)) {
             throw new AccessDeniedException();
+        }
 
         $schedule
             ->setDisplayFactory($this->displayFactory)
@@ -1634,14 +1749,17 @@ class Schedule extends Base
             'httpStatus' => 204,
             'message' => __('Deleted Event')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Is this event editable?
      * @param array[\Xibo\Entity\DisplayGroup] $displayGroups
+     * @param Request $request
      * @return bool
      */
-    private function isEventEditable($displayGroups)
+    private function isEventEditable($displayGroups, Request $request)
     {
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
 
@@ -1651,11 +1769,11 @@ class Schedule extends Base
             /* @var \Xibo\Entity\DisplayGroup $\Xibo\Entity\DisplayGroup */
 
             // Can schedule with view, but no view permissions
-            if ($scheduleWithView && !$this->getUser()->checkViewable($displayGroup))
+            if ($scheduleWithView && !$this->getUser($request)->checkViewable($displayGroup))
                 return false;
 
             // Can't schedule with view, but no edit permissions
-            if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup))
+            if (!$scheduleWithView && !$this->getUser($request)->checkEditable($displayGroup))
                 return false;
         }
 
@@ -1664,23 +1782,32 @@ class Schedule extends Base
 
     /**
      * Schedule Now Form
+     * @param Request $request
+     * @param Response $response
      * @param string $from The object that called this form
      * @param int $id The Id
      *
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function scheduleNowForm($from, $id)
+    public function scheduleNowForm(Request $request, Response $response,$from, $id)
     {
-        $groups = array();
-        $displays = array();
+        $groups = [];
+        $displays = [];
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
 
-        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
+        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1], $request) as $displayGroup) {
             /* @var \Xibo\Entity\DisplayGroup $\Xibo\Entity\DisplayGroup */
 
             // Can't schedule with view, but no edit permissions
-            if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup))
+            if (!$scheduleWithView && !$this->getUser($request)->checkEditable($displayGroup)) {
                 continue;
+            }
 
             if ($displayGroup->isDisplaySpecific == 1) {
                 $displays[] = $displayGroup;
@@ -1695,11 +1822,13 @@ class Schedule extends Base
             'displayGroupId' => (($from == 'DisplayGroup') ? $id : 0),
             'displays' => $displays,
             'displayGroups' => $groups,
-            'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1]),
+            'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1], $request),
             'alwaysDayPart' => $this->dayPartFactory->getAlwaysDayPart(),
             'customDayPart' => $this->dayPartFactory->getCustomDayPart(),
             'help' => $this->getHelp()->link('Schedule', 'ScheduleNow')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /*

@@ -1,8 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2011-2017 Spring Signage Ltd
- * contributions by LukyLuke aka Lukas Zurschmiede - https://github.com/LukyLuke
  *
  * This file is part of Xibo.
  *
@@ -942,7 +942,7 @@ class DataSet extends Base
         $dataSet->dataSet = $sanitizedParams->getString('dataSet');
         $dataSet->description = $sanitizedParams->getString('description');
         $dataSet->code = $sanitizedParams->getString('code');
-        $dataSet->userId = $this->getUser()->userId;
+        $dataSet->userId = $this->getUser($request)->userId;
 
         $dataSet->save();
 
@@ -962,8 +962,14 @@ class DataSet extends Base
 
     /**
      * Import CSV
-     * @param int $dataSetId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/dataset/import/{dataSetId}",
      *  operationId="dataSetImport",
@@ -1011,8 +1017,6 @@ class DataSet extends Base
      *  )
      * )
      *
-     * @throws XiboException
-     * @throws \Exception
      */
     public function import(Request $request, Response $response, $id)
     {
@@ -1024,7 +1028,7 @@ class DataSet extends Base
         Library::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
         $options = array(
-            'userId' => $this->getUser()->userId,
+            'userId' => $this->getUser($request)->userId,
             'dataSetId' => $id,
             'controller' => $this,
             'upload_dir' => $libraryFolder . 'temp/',

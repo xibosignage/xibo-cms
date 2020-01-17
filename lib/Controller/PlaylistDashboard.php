@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -21,6 +21,10 @@
  */
 namespace Xibo\Controller;
 
+use Psr\Container\ContainerInterface;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\XiboException;
 use Xibo\Helper\XiboUploadHandler;
@@ -46,22 +50,42 @@ class PlaylistDashboard extends Base
     /** @var \Xibo\Factory\DisplayGroupFactory */
     private $displayGroupFactory;
 
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playlistFactory, $moduleFactory, $widgetFactory, $layoutFactory, $displayGroupFactory)
+    /** @var ContainerInterface */
+    private $container;
+
+    /**
+     * PlaylistDashboard constructor.
+     * @param $log
+     * @param $sanitizerService
+     * @param $state
+     * @param $user
+     * @param $help
+     * @param $date
+     * @param $config
+     * @param $playlistFactory
+     * @param $moduleFactory
+     * @param $widgetFactory
+     * @param $layoutFactory
+     * @param $displayGroupFactory
+     * @param Twig $view
+     */
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playlistFactory, $moduleFactory, $widgetFactory, $layoutFactory, $displayGroupFactory, Twig $view, ContainerInterface $container)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
         $this->playlistFactory = $playlistFactory;
         $this->moduleFactory = $moduleFactory;
         $this->widgetFactory = $widgetFactory;
         $this->layoutFactory = $layoutFactory;
         $this->displayGroupFactory = $displayGroupFactory;
+        $this->container = $container;
     }
 
-    public function displayPage()
+    public function displayPage(Request $request, Response $response)
     {
         // Do we have a Playlist already in our User Preferences?
         $playlist = null;
         try {
-            $playlistId = $this->getUser()->getOption('playlistDashboardSelectedPlaylistId');
+            $playlistId = $this->getUser($request)->getOption('playlistDashboardSelectedPlaylistId');
             if ($playlistId->value != 0) {
                 $playlist = $this->playlistFactory->getById($playlistId->value);
             }
@@ -74,36 +98,56 @@ class PlaylistDashboard extends Base
             'playlist' => $playlist,
             'validExtensions' => implode('|', $this->moduleFactory->getValidExtensions())
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Grid used for the Playlist drop down list
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function grid()
+    public function grid(Request $request, Response $response)
     {
         // Playlists
-        $playlists = $this->playlistFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
-            'name' => $this->getSanitizer()->getString('name'),
+        $playlists = $this->playlistFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+            'name' => $this->getSanitizer($request->getParams())->getString('name'),
             'regionSpecific' => 0
-        ]));
+        ], $request), $request);
 
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->playlistFactory->countLast();
         $this->getState()->setData($playlists);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Show a particular playlist
      *  the output from this is very much like a form.
-     * @param $playlistId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\NotFoundException
      */
-    public function show($playlistId)
+    public function show(Request $request, Response $response, $id)
     {
         // Record this Playlist as the one we have currently selected.
         try {
-            $this->getUser()->setOptionValue('playlistDashboardSelectedPlaylistId', $playlistId);
-            $this->getUser()->save();
+            $this->getUser($request)->setOptionValue('playlistDashboardSelectedPlaylistId', $id);
+            $this->getUser($request)->save();
         } catch (XiboException $exception) {
             $this->getLog()->error('Problem setting playlistDashboardSelectedPlaylistId user option. e = ' . $exception->getMessage());
         }
@@ -111,15 +155,16 @@ class PlaylistDashboard extends Base
         // Spots
         $spotsFound = 0;
 
-        $playlist = $this->playlistFactory->getById($playlistId);
+        $playlist = $this->playlistFactory->getById($id);
 
         // Only edit permissions
-        if (!$this->getUser()->checkEditable($playlist)) {
+        if (!$this->getUser($request)->checkEditable($playlist)) {
             throw new AccessDeniedException();
         }
 
         // Load my Playlist and information about its widgets
         $playlist->load();
+        $user = $this->getUser($request);
 
         foreach ($playlist->widgets as $widget) {
             // Create a module for the widget and load in some extra data
@@ -127,19 +172,19 @@ class PlaylistDashboard extends Base
 
             // Check my permissions
             if ($widget->module->getModule()->regionSpecific == 0) {
-                $widget->viewble = $this->getUser()->checkViewable($widget->module->getMedia());
-                $widget->editable = $this->getUser()->checkEditable($widget->module->getMedia());
-                $widget->deletable = $this->getUser()->checkDeleteable($widget->module->getMedia());
+                $widget->viewble = $user->checkViewable($widget->module->getMedia());
+                $widget->editable = $user->checkEditable($widget->module->getMedia());
+                $widget->deletable = $user->checkDeleteable($widget->module->getMedia());
             } else {
-                $widget->viewble = $this->getUser()->checkViewable($widget);
-                $widget->editable = $this->getUser()->checkEditable($widget);
-                $widget->deletable = $this->getUser()->checkDeleteable($widget);
+                $widget->viewble = $user->checkViewable($widget);
+                $widget->editable = $user->checkEditable($widget);
+                $widget->deletable = $user->checkDeleteable($widget);
             }
 
         }
 
         // Work out the slot size of the first sub-playlist we are in.
-        foreach ($this->playlistFactory->query(null, ['childId' => $playlist->playlistId, 'depth' => 1, 'disableUserCheck' => 1]) as $parent) {
+        foreach ($this->playlistFactory->query(null, ['childId' => $playlist->playlistId, 'depth' => 1, 'disableUserCheck' => 1], $request) as $parent) {
             // $parent is a playlist to which we belong.
             $this->getLog()->debug('This playlist is a sub-playlist in ' . $parent->name . '.');
             $parent->load();
@@ -167,19 +212,30 @@ class PlaylistDashboard extends Base
             'playlist' => $playlist,
             'spotsFound' => $spotsFound
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Delete Playlist Widget Form
-     * @param int $widgetId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function deletePlaylistWidgetForm($widgetId)
+    public function deletePlaylistWidgetForm(Request $request, Response $response, $id)
     {
-        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($widgetId));
+        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
-        if (!$this->getUser()->checkDeleteable($module->widget))
+        if (!$this->getUser($request)->checkDeleteable($module->widget)) {
             throw new AccessDeniedException();
+        }
 
         // Set some dependencies that are used in the delete
         $module->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
@@ -190,39 +246,50 @@ class PlaylistDashboard extends Base
             'module' => $module,
             'help' => $this->getHelp()->link('Media', 'Delete')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Upload adding/replacing accordingly
-     * @throws \Exception
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function upload()
+    public function upload(Request $request, Response $response)
     {
         $libraryFolder = $this->getConfig()->GetSetting('LIBRARY_LOCATION');
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Get Valid Extensions
         $validExt = $this->moduleFactory->getValidExtensions();
 
-        // pass in a library controller to handle the extra functions needed
-        $libraryController = $this->getApp()->container->get('\Xibo\Controller\Library');
+        // pass in a library controller to handle the extra functions needed // TODO we are injecting containerInterface to get the library controller like that, not sure if that's a good approach
+        $libraryController = $this->container->get('\Xibo\Controller\Library');
 
         $options = [
-            'userId' => $this->getUser()->userId,
+            'userId' => $this->getUser($request)->userId,
             'controller' => $libraryController,
-            'oldMediaId' => $this->getSanitizer()->getInt('oldMediaId'),
-            'widgetId' => $this->getSanitizer()->getInt('widgetId'),
+            'oldMediaId' => $sanitizedParams->getInt('oldMediaId'),
+            'widgetId' => $sanitizedParams->getInt('widgetId'),
             'updateInLayouts' => 1,
             'deleteOldRevisions' => 1,
             'allowMediaTypeChange' => 1,
-            'playlistId' => $this->getSanitizer()->getInt('playlistId'),
+            'playlistId' => $sanitizedParams->getInt('playlistId'),
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
-            'script_url' => $this->urlFor('library.add'),
-            'upload_url' => $this->urlFor('library.add'),
+            'script_url' => $this->urlFor($request,'library.add'),
+            'upload_url' => $this->urlFor($request,'library.add'),
             'image_versions' => [],
             'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i',
             'libraryLimit' => ($this->getConfig()->GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024),
-            'libraryQuotaFull' => false
+            'libraryQuotaFull' => false,
+            'request' => $request
         ];
 
         // Output handled by UploadHandler
@@ -232,5 +299,7 @@ class PlaylistDashboard extends Base
 
         // Hand off to the Upload Handler provided by jquery-file-upload
         new XiboUploadHandler($options);
+
+        return $this->render($request, $response);
     }
 }
