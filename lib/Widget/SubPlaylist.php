@@ -69,12 +69,13 @@ class SubPlaylist extends ModuleWidget
 
     /**
      * Extra data for the Form rendering
+     * @param $userId
      * @return array
      */
-    public function getExtra()
+    public function getExtra($userId)
     {
         return [
-            'playlists' => $this->getAssignablePlaylists(),
+            'playlists' => $this->getAssignablePlaylists($userId),
             'subPlaylistId' => $this->getAssignedPlaylistIds(),
             'subPlaylistOptions'=> $this->getSubPlaylistOptions()
         ];
@@ -91,6 +92,7 @@ class SubPlaylist extends ModuleWidget
     /**
      * @param int[] $playlistIds
      * @return $this
+     * @throws \Xibo\Exception\ValueTooLargeException
      */
     protected function setAssignedPlaylistIds($playlistIds)
     {
@@ -197,16 +199,17 @@ class SubPlaylist extends ModuleWidget
         // Set some dud durations
         $this->setDuration(10);
         $this->setUseDuration(0);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Options
-        $this->setOption('arrangement', $this->getSanitizer()->getString('arrangement'));
-        $this->setOption('remainder', $this->getSanitizer()->getString('remainder'));
+        $this->setOption('arrangement', $sanitizedParams->getString('arrangement'));
+        $this->setOption('remainder', $sanitizedParams->getString('remainder'));
 
         // Get the list of playlists
-        $subPlaylistId = $this->getSanitizer()->getIntArray('subPlaylistId');
-        $spots = $this->getSanitizer()->getStringArray('subPlaylistIdSpots');
-        $spotLength = $this->getSanitizer()->getStringArray('subPlaylistIdSpotLength');
-        $spotFill = $this->getSanitizer()->getStringArray('subPlaylistIdSpotFill');
+        $subPlaylistId = $sanitizedParams->getIntArray('subPlaylistId');
+        $spots = $sanitizedParams->getArray('subPlaylistIdSpots');
+        $spotLength = $sanitizedParams->getArray('subPlaylistIdSpotLength');
+        $spotFill = $sanitizedParams->getArray('subPlaylistIdSpotFill');
 
         // Make up a companion setting which maps the playlistIds to the options
         $subPlaylistOptions = [];

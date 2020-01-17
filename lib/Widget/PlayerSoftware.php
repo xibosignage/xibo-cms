@@ -83,15 +83,7 @@ class PlayerSoftware extends ModuleWidget
         return 1;
     }
 
-    /**
-     * @return PlayerVersionFactory
-     */
-    private function getPlayerVersionFactory()
-    {
-        return $this->getApp()->getContainer()->get('playerVersionFactory');
-    }
-
-    public function postProcess($media)
+    public function postProcess($media, PlayerVersionFactory $factory = null)
     {
         $version = '';
         $code = null;
@@ -156,7 +148,7 @@ class PlayerSoftware extends ModuleWidget
             $type = 'sssp';
         }
 
-        return $this->getPlayerVersionFactory()->create($type, $version, $code, $media->mediaId, $playerShowVersion);
+        return $factory->create($type, $version, $code, $media->mediaId, $playerShowVersion);
     }
 
     public function getValidExtensions()

@@ -459,11 +459,12 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
+     * @param $userId
      * @return \Xibo\Entity\Playlist[]
      */
-    final public function getAssignablePlaylists()
+    final public function getAssignablePlaylists($userId)
     {
-        return $this->playlistFactory->query(null, ['regionSpecific' => 0, 'notPlaylistId' => $this->widget->playlistId]);
+        return $this->playlistFactory->query(null, ['regionSpecific' => 0, 'notPlaylistId' => $this->widget->playlistId, 'userCheckUserId' => $userId]);
     }
 
     /**
@@ -1303,7 +1304,7 @@ abstract class ModuleWidget implements ModuleInterface
      *  this is run after the media item has been created and before it is saved.
      * @param Media $media
      */
-    public function postProcess($media)
+    public function postProcess($media, PlayerVersionFactory $factory = null)
     {
 
     }

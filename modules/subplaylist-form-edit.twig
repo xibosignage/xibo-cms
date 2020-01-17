@@ -27,7 +27,7 @@
     {% trans "Edit Sub-Playlist" %}
 {% endblock %}
 
-{% block extra %}{{ module.getExtra()|json_encode|raw }}{% endblock %}
+{% block extra %}{{ module.getExtra(currentUser.userId)|json_encode|raw }}{% endblock %}
 
 {% block formHtml %}
     <div class="row">
