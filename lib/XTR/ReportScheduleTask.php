@@ -169,6 +169,7 @@ class ReportScheduleTask implements TaskInterface
                     // Add the last savedreport in Report Schedule
                     $this->log->debug('Last savedReportId in Report Schedule: '. $savedReport->savedReportId);
                     $rs->lastSavedReportId = $savedReport->savedReportId;
+                    $rs->message = null;
 
                 } catch (\Exception $error) {
                     $rs->isActive = 0;
@@ -177,7 +178,6 @@ class ReportScheduleTask implements TaskInterface
                 }
 
                 // Finally save schedule report
-                $rs->message = null;
                 $rs->save();
             }
         }
