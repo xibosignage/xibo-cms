@@ -517,7 +517,7 @@ class ModuleFactory extends BaseFactory
      * @param array $filterBy
      * @return Module[]
      */
-    public function query($sortOrder = null, $filterBy = array())
+    public function query($sortOrder = null, $filterBy = [])
     {
         $parsedBody = $this->getSanitizer($filterBy);
         

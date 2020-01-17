@@ -216,18 +216,21 @@ class PermissionFactory extends BaseFactory
      * @return array[Permission]
      * @throws NotFoundException
      */
-    public function getAllByObjectId($user, $entity, $objectId, $sortOrder = null, $filterBy = null)
+    public function getAllByObjectId($user, $entity, $objectId, $sortOrder = null, $filterBy = [])
     {
         // Look up the entityId for any add operation that might occur
-        $entityId = $this->getStore()->select('SELECT entityId FROM permissionentity WHERE entity = :entity', array('entity' => $entity));
+        $entityId = $this->getStore()->select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => $entity]);
+        
+        $sanitizedFilter = $this->getSanitizer($filterBy);
 
-        if (count($entityId) <= 0)
+        if (count($entityId) <= 0) {
             throw new NotFoundException(__('Entity not found'));
+        }
 
         $entityId = $entityId[0]['entityId'];
 
-        $permissions = array();
-        $params = array('entityId' => $entityId, 'objectId' => $objectId);
+        $permissions = [];
+        $params = ['entityId' => $entityId, 'objectId' => $objectId];
 
         // SQL gets all Groups/User Specific Groups for non-retired users
         // then it joins them to the permission table for the object specified
@@ -238,7 +241,7 @@ class PermissionFactory extends BaseFactory
                  WHERE IsUserSpecific = 0 ';
 
         // Permissions for the group section
-        if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
+        if ($sanitizedFilter->getCheckbox('disableUserCheck') == 0) {
             // Normal users can only see their group
             if ($user->userTypeId != 1) {
                 $body .= '
@@ -267,7 +270,7 @@ class PermissionFactory extends BaseFactory
                         AND retired = 0 ';
 
         // Permissions for the user section
-        if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
+        if ($sanitizedFilter->getCheckbox('disableUserCheck') == 0) {
             // Normal users can only see themselves
             if ($user->userTypeId == 3) {
                 $body .= ' AND `user`.userId = :currentUserId ';
@@ -295,7 +298,7 @@ class PermissionFactory extends BaseFactory
             ) joinedGroup
         ';
 
-        if ($this->getSanitizer()->getInt('setOnly', 0, $filterBy) == 1) {
+        if ($sanitizedFilter->getInt('setOnly', ['default' => 0]) == 1) {
             $body .= ' INNER JOIN ';
         } else {
             $body .= ' LEFT OUTER JOIN ';
@@ -309,21 +312,22 @@ class PermissionFactory extends BaseFactory
          WHERE 1 = 1
         ';
 
-        if ($this->getSanitizer()->getString('name', $filterBy) != null) {
+        if ($sanitizedFilter->getString('name') != null) {
             $body .= ' AND joinedGroup.group LIKE :name ';
-            $params['name'] = '%' . $this->getSanitizer()->getString('name', $filterBy) . '%';
+            $params['name'] = '%' . $sanitizedFilter->getString('name') . '%';
         }
 
         $order = '';
-        if ($sortOrder == null)
+        if ($sortOrder == null) {
             $order = 'ORDER BY joinedGroup.isEveryone DESC, joinedGroup.isUserSpecific, joinedGroup.`group`';
-        else if (is_array($sortOrder))
+        } else if (is_array($sortOrder)) {
             $order = 'ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -331,6 +335,7 @@ class PermissionFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
+            // TODO Sanitizer?
             $permission = $this->createEmpty();
             $permission->permissionId = intval($row['permissionId']);
             $permission->groupId = intval($row['groupId']);
@@ -341,7 +346,7 @@ class PermissionFactory extends BaseFactory
             $permission->entity = $entity;
             $permission->entityId = intval($entityId);
             $permission->isUser = intval($row['isuserspecific']);
-            $permission->group = $this->getSanitizer()->string($row['group']);
+            $permission->group = ($row['group']);
 
             $permissions[] = $permission;
         }

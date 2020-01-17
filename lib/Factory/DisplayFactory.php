@@ -368,9 +368,9 @@ class DisplayFactory extends BaseFactory
             $params['loggedIn'] = $parsedBody->getInt('loggedIn');
         }
 
-        if ($parsedBody->getDate('lastAccessed') !== null) {
+        if ($parsedBody->getDate('lastAccessed', ['dateFormat' => 'U']) !== null) {
             $body .= ' AND display.lastAccessed > :lastAccessed ';
-            $params['lastAccessed'] = $parsedBody->getDate('lastAccessed');
+            $params['lastAccessed'] = $parsedBody->getDate('lastAccessed',['dateFormat' => 'U'])->format('U');
         }
 
         // Exclude a group?

@@ -62,8 +62,9 @@ class HelpFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        $entries = array();
-        $params = array();
+        $entries = [];
+        $params = [];
+        $sanitizedFilter = $this->getSanitizer($filterBy);
 
         $select = 'SELECT `helpId`, `topic`, `category`, `link` ';
 
@@ -72,9 +73,9 @@ class HelpFactory extends BaseFactory
          WHERE 1 = 1
         ';
 
-        if ($this->getSanitizer()->getInt('helpId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('helpId') !== null) {
             $body .= ' AND help.helpId = :helpId ';
-            $params['helpId'] = $this->getSanitizer()->getInt('helpId', $filterBy);
+            $params['helpId'] = $sanitizedFilter->getInt('helpId');
         }
 
         // Sorting?
@@ -83,8 +84,8 @@ class HelpFactory extends BaseFactory
             $order .= ' ORDER BY ' . implode(',', $sortOrder);
 
         $limit = '';
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit .= ' LIMIT ' . intval($this->getSanitizer()->getInt('start')) . ', ' . $this->getSanitizer()->getInt('length', 10);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
+            $limit .= ' LIMIT ' . intval($sanitizedFilter->getInt('start')) . ', ' . $sanitizedFilter->getInt('length',['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

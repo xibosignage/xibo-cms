@@ -154,7 +154,7 @@ class BaseFactory
     public function viewPermissionSql($entity, &$sql, &$params, $idColumn, $ownerColumn = null, $filterBy = [], Request $request = null)
     {
         $parsedBody = $this->getSanitizer($filterBy);
-        $checkUserId = $parsedBody->getInt('userCheckUserId', $filterBy);
+        $checkUserId = $parsedBody->getInt('userCheckUserId');
 
         if ($checkUserId !== null) {
             $this->getLog()->debug(sprintf('Checking permissions against a specific user: %d', $checkUserId));
