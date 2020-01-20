@@ -283,6 +283,41 @@ class LayoutFactory extends BaseFactory
         return intval($row[0]['campaignId']);
     }
 
+
+    /**
+     * Get layout by layout history
+     * @param int $layoutId
+     * @return Layout
+     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function getByLayoutHistory($layoutId)
+    {
+        // Get CampaignId from layout history
+        if ($layoutId == null) {
+            throw new InvalidArgumentException('Invalid Input', 'layoutId');
+        }
+
+        $row = $this->getStore()->select('SELECT campaignId FROM `layouthistory` WHERE layoutId = :layoutId LIMIT 1', ['layoutId' => $layoutId]);
+
+        if (count($row) <= 0) {
+            throw new NotFoundException(__('Layout does not exist'));
+        }
+
+        $campaignId = intval($row[0]['campaignId']);
+
+        // Get a Layout by its Layout Specific Campaign OwnerId
+        $layouts = $this->query(null, array('disableUserCheck' => 1, 'ownerCampaignId' => $campaignId, 'excludeTemplates' => -1, 'retired' => -1));
+
+        if (count($layouts) <= 0) {
+            throw new NotFoundException(\__('Layout not found'));
+        }
+
+        // Set our layout
+        return $layouts[0];
+    }
+
     /**
      * Get latest layoutId by CampaignId from layout history
      * @param int campaignId
