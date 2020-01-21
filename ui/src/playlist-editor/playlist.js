@@ -200,6 +200,7 @@ Playlist.prototype.addElement = function(droppable, draggable, addToPosition = n
 
                 // The new selected object
                 pE.selectedObject.id = 'widget_' + res.data.widgetId;
+                pE.selectedObject.type = 'widget';
 
                 // Behavior if successful 
                 toastr.success(res.message);
@@ -307,6 +308,7 @@ Playlist.prototype.addMedia = function(media, addToPosition = null) {
 
         // The new selected object
         pE.selectedObject.id = 'widget_' + res.data.newWidgets[0].widgetId;
+        pE.selectedObject.type = 'widget';
 
         // Behavior if successful
         toastr.success(res.message);

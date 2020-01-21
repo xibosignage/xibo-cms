@@ -446,8 +446,35 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         i.editProperty:hover {
             color: lighten($widget-main-fg-color, 20%);
         }
-    }
 
+        &.invalid-widget {
+            @include box-shadow(inset 0px 0px 10px 3px $xibo-color-red);
+        }
+
+        /* Highlight animation */
+        &:after {
+            content: '';
+            position: absolute;
+            opacity: 0;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            @include box-shadow(inset 0 0 10px 10px darken($designer-colour-widget, 40%));
+            background-color: $designer-colour-widget;
+            transition: opacity 0.3s;
+        }
+
+        &.invalid-widget:after {
+            background-color: $xibo-color-red;
+            @include box-shadow(inset 0px 0px 10px 10px darken($xibo-color-red, 40%));
+        }
+
+        /* Transition to showing the bigger shadow on hover */
+        &.highlighted::after {
+            opacity: 0.6;
+        }
+    }
 
     /* Designer Widget Ghost */
     .designer-widget-ghost {
@@ -1181,10 +1208,6 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
 #layout-editor  #layout-timeline .designer-widget.ui-droppable-active * {
     visibility: hidden;
-}
-
-#layout-editor  #layout-timeline .designer-widget.invalid-widget {
-    @include box-shadow(inset 0px 0px 10px 3px $xibo-color-red);
 }
 
 #layout-editor  #layout-timeline .designer-region.to-sort .designer-widget {

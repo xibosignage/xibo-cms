@@ -8,6 +8,11 @@ const regionPreviewContainerDimensions = {
     height: 48
 };
 
+const widgetHighlightAnimation = {
+    delayTime: 1000,
+    deltaTime: 1000
+};
+
 const timeLineLabelMap = [
      {
         maxTime: 20,
@@ -85,6 +90,8 @@ let Timeline = function(parent, container) {
         widgetMinimumVisibleDuration: 5, // Minimum % value so that the region details are shown
         widgetMinimumDurationOnStart: 15 // % of the shortest widget to be used to calculate the default zoom 
     };
+
+    this.highlightOnLoad = {};
 
     this.scrollOnLoad = {};
 
@@ -539,7 +546,9 @@ Timeline.prototype.render = function(layout) {
     // Button actions
     this.DOMObject.find('#findSelectedBtn').click(function() {
         if(lD.selectedObject.type == 'widget') {
-            self.scrollToWidget(lD.selectedObject);
+            self.highlightOnLoad = lD.selectedObject;
+            self.scrollOnLoad = lD.selectedObject;
+            self.render(lD.layout);
         }
     });
 
@@ -609,10 +618,22 @@ Timeline.prototype.render = function(layout) {
             lD.dropItemAdd(event.target, ui.draggable[0]);
         }
     }).each(function() {
-        if($(this).outerWidth() < self.properties.widgetContentMinimumVisibleWidth) {
-            $(this).addClass('hideContent').tooltip({
+
+        let $widget = $(this);
+
+        if($widget.outerWidth() < self.properties.widgetContentMinimumVisibleWidth) {
+            $widget.addClass('hideContent').tooltip({
                 title: timelineTrans.hiddenContentInWidget
             });
+        }
+
+        // Highlight marked widgets
+        if($widget.data('widgetRegion') != undefined) {
+            let widgetObj = lD.getElementByTypeAndId('widget', $widget.attr('id'), $widget.data('widgetRegion'));
+            
+            if(widgetObj.id == self.highlightOnLoad.id) {
+                self.highlightWidget(widgetObj);
+            }
         }
     });
 
@@ -733,7 +754,6 @@ Timeline.prototype.render = function(layout) {
     // Scroll to widget on load
     if(!$.isEmptyObject(this.scrollOnLoad)) {
         this.scrollToWidget(this.scrollOnLoad);
-        this.scrollOnLoad = {};
     }
 
     // Initialize tooltips
@@ -748,11 +768,28 @@ Timeline.prototype.scrollToWidget = function(targetWidget) {
     // Get region container
     const $regionsContainer = this.DOMObject.find('#regions-container');
     const $targetWidget = $regionsContainer.find('#' + targetWidget.id);
+    this.scrollOnLoad = {};
 
     if($targetWidget.length > 0) {
-        $regionsContainer.scrollLeft($regionsContainer.scrollLeft() - ($regionsContainer.offset().left - $targetWidget.offset().left));
+        //$regionsContainer.scrollLeft($regionsContainer.scrollLeft() - ($regionsContainer.offset().left - $targetWidget.offset().left));
+        let calculateScrollToWidget = ($regionsContainer.scrollLeft() - ($regionsContainer.offset().left - $targetWidget.offset().left));
+
+        this.properties.scrollPosition = calculateScrollToWidget / $regionsContainer.find("#regions").width();
+        this.render(lD.layout);
     }
 };
+
+Timeline.prototype.highlightWidget = _.debounce(function(widget) {
+    const widgetDOM = this.DOMObject.find('#' + widget.id);
+    const self = this;
+
+    widgetDOM.addClass('highlighted');
+
+    setTimeout(function() {
+        self.highlightOnLoad = {};
+        widgetDOM.removeClass('highlighted');
+    }, widgetHighlightAnimation.deltaTime);
+}, widgetHighlightAnimation.delayTime);
 
 /**
  * Scroll to first error widget
@@ -768,6 +805,8 @@ Timeline.prototype.scrollToBrokenWidget = function() {
 
         $.each(widgets, function() {
             if(this.isValid == 0) {
+
+                self.highlightOnLoad = this;
                 self.scrollOnLoad = this;
                 
                 app.selectObject($('#' + this.id), true);

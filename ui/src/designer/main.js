@@ -453,6 +453,10 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
                 // To select an object that still doesn't exist
                 if(refreshBeforeSelect) {
                     lD.refreshDesigner();
+                    // Higlight widget on refresh
+                    if(lD.selectedObject.type == 'widget') {
+                        lD.timeline.highlightOnLoad = lD.selectedObject;
+                    }
                     
                     // Make the timeline scroll to the new widget on load
                     lD.timeline.scrollOnLoad = lD.selectedObject;
@@ -1131,6 +1135,7 @@ lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
                         toastr.success(res.message);
 
                         lD.selectedObject.id = 'region_' + res.data.regionId;
+                        lD.selectedObject.type = 'region';
                         lD.reloadData(lD.layout, true);
                     }).catch((error) => { // Fail/error
 
@@ -1276,8 +1281,8 @@ lD.addModuleToPlaylist = function(playlistId, moduleType, moduleData, addToPosit
 
             // The new selected object as the id based on the previous selected region
             lD.selectedObject.id = 'widget_' + lD.selectedObject.regionId + '_' + res.data.widgetId;
+            lD.selectedObject.type = 'widget';
             lD.reloadData(lD.layout, true);
-            
         }).catch((error) => { // Fail/error
 
             lD.common.hideLoadingScreen('addModuleToPlaylist');
@@ -1354,6 +1359,7 @@ lD.addMediaToPlaylist = function(playlistId, media, addToPosition = null) {
 
         // The new selected object as the id based on the previous selected region
         lD.selectedObject.id = 'widget_' + res.data.regionId + '_' + res.data.newWidgets[0].widgetId;
+        lD.selectedObject.type = 'widget';
 
         lD.timeline.resetZoom();
         lD.reloadData(lD.layout, true);
