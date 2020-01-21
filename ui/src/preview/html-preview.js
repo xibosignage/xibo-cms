@@ -490,7 +490,9 @@ function media(parent, id, xml, options, preload) {
     
     self.run = function() {
 
-        $("#" + self.containerName).empty().append(self.iframe);
+        if(self.iframe != undefined) {
+            $("#" + self.containerName).empty().append(self.iframe);
+        }
 
         playLog(5, "debug", "Running media " + self.id + " for " + self.duration + " seconds");
                
@@ -629,7 +631,7 @@ function media(parent, id, xml, options, preload) {
     }
     else if (self.mediaType == "video") {
         preload.addFiles(tmpUrl);
-        self.iframe = $('<video id="' + self.containerName + '-vid" preload="auto" ' + ((self.options["mute"] == 1) ? 'muted' : '') + '><source src="' + tmpUrl + '">Unsupported Video</video>');
+        self.iframe = $('<video id="' + self.containerName + '-vid" preload="auto" ' + ((self.options["mute"] == 1) ? 'muted' : '') + ' ' + ((self.options["loop"] == 1) ? 'loop' : '') + '><source src="' + tmpUrl + '">Unsupported Video</video>');
         
         // Stretch video?
         if(self.options['scaletype'] == 'stretch') {
