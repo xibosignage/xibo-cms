@@ -456,12 +456,12 @@ class Soap
             //  4 - Background Images for all Scheduled Layouts
             //  5 - Media linked to display profile (linked through PlayerSoftware)
             $SQL = "
-                SELECT 1 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
+                SELECT 1 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, media.released
                    FROM `media`
                  WHERE media.type = 'font'
                     OR (media.type = 'module' AND media.moduleSystemFile = 1)
                 UNION ALL
-                SELECT 2 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
+                SELECT 2 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, media.released
                    FROM `media`
                     INNER JOIN `lkmediadisplaygroup`
                     ON lkmediadisplaygroup.mediaid = media.MediaID
@@ -469,9 +469,9 @@ class Soap
                     ON `lkdgdg`.parentId = `lkmediadisplaygroup`.displayGroupId
                     INNER JOIN `lkdisplaydg`
                     ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
-                 WHERE lkdisplaydg.DisplayID = :displayId AND media.released = 1
+                 WHERE lkdisplaydg.DisplayID = :displayId
                 UNION ALL
-                SELECT 3 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
+                SELECT 3 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, media.released
                   FROM region
                     INNER JOIN playlist
                     ON playlist.regionId = region.regionId
@@ -483,11 +483,11 @@ class Soap
                     ON widget.widgetId = lkwidgetmedia.widgetId
                     INNER JOIN media
                     ON media.mediaId = lkwidgetmedia.mediaId
-                 WHERE region.layoutId IN (%s) AND media.released = 1
+                 WHERE region.layoutId IN (%s)
                 UNION ALL
-                SELECT 4 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.FileSize
+                SELECT 4 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.FileSize, media.released
                   FROM `media`
-                 WHERE `media`.released = 1 AND `media`.mediaID IN (
+                 WHERE `media`.mediaID IN (
                     SELECT backgroundImageId
                       FROM `layout`
                      WHERE layoutId IN (%s)
@@ -498,7 +498,7 @@ class Soap
 
             if ($playerVersionMediaId != null) {
                 $SQL .= " UNION ALL 
-                          SELECT 5 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.fileSize
+                          SELECT 5 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.fileSize, media.released
                             FROM `media`
                             WHERE `media`.type = 'playersoftware' 
                             AND `media`.mediaId = :playerVersionMediaId
@@ -530,6 +530,7 @@ class Soap
                 $id = $this->getSanitizer()->string($row['id']);
                 $md5 = $row['MD5'];
                 $fileSize = $this->getSanitizer()->int($row['FileSize']);
+                $released = $this->getSanitizer()->int($row['released']);
 
                 // Check we haven't added this before
                 if (in_array($path, $pathsAdded))
@@ -547,7 +548,13 @@ class Soap
                 }
 
                 // Add nonce
-                $mediaNonce = $this->requiredFileFactory->createForMedia($this->display->displayId, $id, $fileSize, $path)->save();
+                $mediaNonce = $this->requiredFileFactory->createForMedia($this->display->displayId, $id, $fileSize, $path, $released)->save();
+
+                // skip media which has released == 0 or 2
+                if ($released == 0 || $released == 2) {
+                    continue;
+                }
+
                 $newRfIds[] = $mediaNonce->rfId;
 
                 // Add the file node
