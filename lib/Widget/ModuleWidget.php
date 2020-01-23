@@ -1084,6 +1084,7 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Return File
+     * @throws \Xibo\Exception\NotFoundException
      */
     protected function download($attachment = null)
     {
@@ -1097,19 +1098,16 @@ abstract class ModuleWidget implements ModuleInterface
         // The file path
         $libraryPath = $this->getConfig()->getSetting('LIBRARY_LOCATION') . $media->storedAs;
 
-        // size
-        $size = filesize($libraryPath);
-
-        // Set the content length
-        $headers = $this->getApp()->response()->headers();
-        $headers->set('Content-Length', $size);
+        // Set some headers
+        $headers = [];
+        $headers['Content-Length'] = filesize($libraryPath);
 
         // Different behaviour depending on whether we are a preview or not.
         if ($isPreview) {
             // correctly grab the MIME type of the file we want to serve
             $mimeTypes = new MimeTypes();
             $ext = explode('.', $media->storedAs);
-            $headers->set('Content-Type', $mimeTypes->getMimeType($ext[count($ext) - 1]));
+            $headers['Content-Type'] = $mimeTypes->getMimeType($ext[count($ext) - 1]);
         } else {
             // This widget is expected to output a file - usually this is for file based media
             // Get the name with library
@@ -1119,35 +1117,39 @@ abstract class ModuleWidget implements ModuleInterface
             $this->getApp()->etag($media->md5);
             $this->getApp()->expires('+1 week');
 
-            $headers->set('Content-Type', 'application/octet-stream');
-            $headers->set('Content-Transfer-Encoding', 'Binary');
-            $headers->set('Content-disposition', 'attachment; filename="' . $attachmentName . '"');
+            $headers['Content-Type'] = 'application/octet-stream';
+            $headers['Content-Transfer-Encoding'] = 'Binary';
+            $headers['Content-disposition'] = 'attachment; filename="' . $attachmentName . '"';
         }
 
         // Output the file
-        if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Apache') {
+        $sendFileMode = $this->getConfig()->getSetting('SENDFILE_MODE');
+
+        if ($sendFileMode == 'Apache') {
             // Send via Apache X-Sendfile header?
-            $headers->set('X-Sendfile', $libraryPath);
-        }
-        else if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Nginx') {
+            $headers['X-Sendfile'] = $libraryPath;
+        } else if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Nginx') {
             // Send via Nginx X-Accel-Redirect?
-            $headers->set('X-Accel-Redirect', '/download/' . $media->storedAs);
+            $headers['X-Accel-Redirect'] = '/download/' . $media->storedAs;
         }
-        else {
+
+        // Should we output the file via the application stack, or directly by reading the file.
+        if ($sendFileMode == 'Off') {
             // Return the file with PHP
             ob_end_flush();
 
             // add the php headers
-            // https://github.com/xibosignage/xibo/issues/1992
-            if (!$isPreview) {
-                header('Content-Type: application/octet-stream');
-                header("Content-Transfer-Encoding: Binary");
-                header('Content-disposition: attachment; filename="' . $attachmentName . '"');
-                header('Content-Length: ' . $size);
+            foreach ($headers as $header => $value) {
+                header($header . ': ' . $value);
             }
 
             readfile($libraryPath);
             exit;
+        } else {
+            // add the php headers
+            foreach ($headers as $header => $value) {
+                $this->getApp()->response()->header($header, $value);
+            }
         }
     }
 
