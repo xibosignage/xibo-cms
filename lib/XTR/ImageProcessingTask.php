@@ -21,7 +21,9 @@
  */
 
 namespace Xibo\XTR;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\ImageProcessingServiceInterface;
 
@@ -42,11 +44,19 @@ class ImageProcessingTask implements TaskInterface
     /** @var MediaFactory */
     private $mediaFactory;
 
+    /** @var DisplayFactory */
+    private $displayFactory;
+
+    /** @var ScheduleFactory */
+    private $scheduleFactory;
+
     /** @inheritdoc */
     public function setFactories($container)
     {
         $this->date = $container->get('dateService');
         $this->mediaFactory = $container->get('mediaFactory');
+        $this->displayFactory = $container->get('displayFactory');
+        $this->scheduleFactory = $container->get('scheduleFactory');
         $this->imageProcessingService = $container->get('imageProcessingService');
         return $this;
     }
@@ -73,6 +83,10 @@ class ImageProcessingTask implements TaskInterface
         $resizeThreshold = $this->config->getSetting('DEFAULT_RESIZE_THRESHOLD');
         $count = 0;
 
+
+        $eventsCached = [];
+        $displaysCached = [];
+
         // Get list of Images
         foreach ($images as $media) {
 
@@ -95,6 +109,42 @@ class ImageProcessingTask implements TaskInterface
             $media->release(md5_file($filePath), filesize($filePath));
             $this->store->commitIfNecessary();
 
+
+            // Get events using the media
+            $events = $this->scheduleFactory->query(null, ['mediaId' => $media->mediaId]);
+
+            foreach ($events as $event) {
+                /** @var \Xibo\Entity\Schedule $event */
+                if (in_array($event->eventId, $eventsCached))
+                    continue;
+
+                // Cache event
+                $eventsCached[] = $event->eventId;
+
+                $event->load();
+                $displayGroups = $event->displayGroups;
+
+                foreach ($displayGroups as $displayGroup) {
+                    $displays = $this->displayFactory->query(null, ['displayGroupId' => $displayGroup->displayGroupId]);
+
+                    foreach ($displays as $display) {
+                        if (in_array($display->displayId, $displaysCached))
+                            continue;
+
+                        // Cache display
+                        $displaysCached[] = $display->displayId;
+                    }
+                }
+            }
+
+        }
+
+        // Finally notify displays
+        if (count($displaysCached) > 0) {
+            foreach ($displaysCached as $displayId) {
+                $display = $this->displayFactory->getById($displayId);
+                $display->notify();
+            }
         }
 
         $this->appendRunMessage('Released and modified image count. ' . $count);
