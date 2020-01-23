@@ -1128,7 +1128,7 @@ abstract class ModuleWidget implements ModuleInterface
         if ($sendFileMode == 'Apache') {
             // Send via Apache X-Sendfile header?
             $headers['X-Sendfile'] = $libraryPath;
-        } else if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Nginx') {
+        } else if ($sendFileMode == 'Nginx') {
             // Send via Nginx X-Accel-Redirect?
             $headers['X-Accel-Redirect'] = '/download/' . $media->storedAs;
         }
