@@ -126,16 +126,13 @@ class ImageProcessingTask implements TaskInterface
 
         // Notify display
         if ($count > 0) {
-            foreach ($displayIds as $displayId) {
+            foreach (array_unique($displayIds) as $displayId) {
 
                 // Get display
                 $display = $this->displayFactory->getById($displayId);
                 $display->notify();
             }
         }
-
-
-
 
         $this->appendRunMessage('Released and modified image count. ' . $count);
 
