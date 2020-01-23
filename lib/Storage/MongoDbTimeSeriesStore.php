@@ -66,6 +66,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     private $mediaItems = [];
     private $widgets = [];
     private $layouts = [];
+    private $displayGroups = [];
 
     /** @var  MediaFactory */
     protected $mediaFactory;
@@ -291,6 +292,36 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $arrayOfTags = array_filter(explode(',', $display->tags));
         $arrayOfTagValues = array_filter(explode(',', $display->tagValues));
 
+        for ($i=0; $i<count($arrayOfTags); $i++) {
+            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
+                $tagFilter['dg'][$i]['tag'] = $arrayOfTags[$i];
+                $tagFilter['dg'][$i]['val'] = $arrayOfTagValues[$i];
+            } else {
+                $tagFilter['dg'][$i]['tag'] = $arrayOfTags[$i];
+            }
+        }
+
+        // Display tags
+        if (array_key_exists($display->displayGroupId, $this->displayGroups)) {
+            $displayGroup = $this->displayGroups[$display->displayGroupId];
+        } else {
+
+            try {
+
+                $displayGroup = $this->displayGroupFactory->getById($display->displayGroupId);
+
+                // Cache displaygroup
+                $this->displayGroups[$display->displayGroupId] = $displayGroup;
+
+            } catch (NotFoundException $notFoundException) {
+                $this->log->error('Display group not found');
+                return;
+            }
+
+        }
+
+        $arrayOfTags = array_filter(explode(',', $displayGroup->tags));
+        $arrayOfTagValues = array_filter(explode(',', $displayGroup->tagValues));
         for ($i=0; $i<count($arrayOfTags); $i++) {
             if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
                 $tagFilter['dg'][$i]['tag'] = $arrayOfTags[$i];

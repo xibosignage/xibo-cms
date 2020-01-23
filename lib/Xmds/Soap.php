@@ -1477,7 +1477,7 @@ class Soap
             $count = $node->getAttribute('count');
 
             if ($fromdt == '' || $todt == '' || $type == '') {
-                $this->getLog()->error('Stat submitted without the fromdt, todt or type attributes.');
+                $this->getLog()->info('Stat submitted without the fromdt, todt or type attributes.');
                 continue;
             }
 
@@ -1544,6 +1544,11 @@ class Soap
             $tag = $node->getAttribute('tag');
             if ($tag == 'null')
                 $tag = null;
+
+            if ($fromdt > $todt) {
+                $this->getLog()->debug('From date is greater than to date: ' . $fromdt . ', toDt: ' . $todt);
+                continue;
+            }
 
             // Adjust the date according to the display timezone
             // stats are returned in the local date/time of the Player
@@ -1976,7 +1981,7 @@ class Soap
         // Uncomment to enable auditing.
         //$this->logProcessor->setDisplay(0, true);
 
-        $this->display = $this->displayFactory->getById($displayId, true);
+        $this->display = $this->displayFactory->getById($displayId);
 
         $xmdsLimit = $this->getConfig()->getSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
         $displayBandwidthLimit = $this->display->bandwidthLimit;

@@ -294,21 +294,8 @@ class LayoutFactory extends BaseFactory
      */
     public function getByLayoutHistory($layoutId)
     {
-        // Get CampaignId from layout history
-        if ($layoutId == null) {
-            throw new InvalidArgumentException('Invalid Input', 'layoutId');
-        }
-
-        $row = $this->getStore()->select('SELECT campaignId FROM `layouthistory` WHERE layoutId = :layoutId LIMIT 1', ['layoutId' => $layoutId]);
-
-        if (count($row) <= 0) {
-            throw new NotFoundException(__('Layout does not exist'));
-        }
-
-        $campaignId = intval($row[0]['campaignId']);
-
-        // Get a Layout by its Layout Specific Campaign OwnerId
-        $layouts = $this->query(null, array('disableUserCheck' => 1, 'ownerCampaignId' => $campaignId, 'excludeTemplates' => -1, 'retired' => -1));
+        // Get a Layout by its Layout HistoryId
+        $layouts = $this->query(null, array('disableUserCheck' => 1, 'layoutHistoryId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
 
         if (count($layouts) <= 0) {
             throw new NotFoundException(\__('Layout not found'));
@@ -1758,6 +1745,14 @@ class LayoutFactory extends BaseFactory
             $params['mediaLike'] = '%' . $this->getSanitizer()->getString('mediaLike', $filterBy) . '%';
         }
 
+        // LayoutHistoryID
+        if ($this->getSanitizer()->getInt('layoutHistoryId', $filterBy) !== null) {
+            $body .= '
+                INNER JOIN `layouthistory`
+                ON `layouthistory`.layoutId = `layout`.layoutId
+            ';
+        }
+
         $body .= " WHERE 1 = 1 ";
 
         // Logged in user view permissions
@@ -1844,6 +1839,11 @@ class LayoutFactory extends BaseFactory
             // Join Campaign back onto it again
             $body .= " AND `campaign`.campaignId = :ownerCampaignId ";
             $params['ownerCampaignId'] = $this->getSanitizer()->getInt('ownerCampaignId', 0, $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('layoutHistoryId', $filterBy) !== null) {
+            $body .= " AND `layouthistory`.layoutId = :layoutHistoryId ";
+            $params['layoutHistoryId'] = $this->getSanitizer()->getInt('layoutHistoryId', 0, $filterBy);
         }
 
         // Get by regionId
