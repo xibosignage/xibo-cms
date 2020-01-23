@@ -82,8 +82,14 @@
                             {% set title %}{% trans "From Date" %}{% endset %}
                             {{ inline.date("statsFromDt", title, defaults.fromDateOneDay, "", "stats-from-dt", "", "") }}
 
-                            {% set title %}{% trans "To Date" %}{% endset %}
+                            {% set title %}{% trans "Time" %}{% endset %}
+                            {{ inline.time("statsFromDtTime", title, "00:00", "", "stats-from-dt-time") }}
+
+                            {% set titnle %}{% trans "To Date" %}{% endset %}
                             {{ inline.date("statsToDt", title, defaults.toDate, "", "stats-to-dt", "", "") }}
+
+                            {% set title %}{% trans "Time" %}{% endset %}
+                            {{ inline.time("statsToDtTime", title, "00:00", "", "stats-to-dt-time") }}
 
                             {% set title %}{% trans "Display" %}{% endset %}
                             {% set attributes = [
@@ -323,9 +329,13 @@
                 if (reportFilter.val() === '' || reportFilter.val() === undefined) {
                     $(".stats-from-dt").show();
                     $(".stats-to-dt").show();
+                    $(".stats-from-dt-time").show();
+                    $(".stats-to-dt-time").show();
                 } else {
                     $(".stats-from-dt").hide();
                     $(".stats-to-dt").hide();
+                    $(".stats-from-dt-time").hide();
+                    $(".stats-to-dt-time").hide();
                 }
             }
 
