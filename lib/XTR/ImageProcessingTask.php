@@ -21,6 +21,7 @@
  */
 
 namespace Xibo\XTR;
+use Xibo\Entity\DisplayGroup;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
@@ -77,17 +78,17 @@ class ImageProcessingTask implements TaskInterface
      */
     private function runImageProcessing()
     {
-        $images = $this->mediaFactory->query(null, ['released' => 0, 'allModules' => 1, 'imageProcessing' => 1]);
-
+        $now = time();
+        $rfLookAhead = (int) $this->config->getSetting('REQUIRED_FILES_LOOKAHEAD');
         $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
         $resizeThreshold = $this->config->getSetting('DEFAULT_RESIZE_THRESHOLD');
+
         $count = 0;
-
-
         $eventsCached = [];
-        $displaysCached = [];
+        $displayGroupsCached = [];
 
         // Get list of Images
+        $images = $this->mediaFactory->query(null, ['released' => 0, 'allModules' => 1, 'imageProcessing' => 1]);
         foreach ($images as $media) {
 
             $filePath = $libraryLocation . $media->storedAs;
@@ -109,10 +110,8 @@ class ImageProcessingTask implements TaskInterface
             $media->release(md5_file($filePath), filesize($filePath));
             $this->store->commitIfNecessary();
 
-
-            // Get events using the media
-            $events = $this->scheduleFactory->query(null, ['mediaId' => $media->mediaId]);
-
+            // Get events using the media and only events from now and within the RF Look Ahead
+            $events = $this->scheduleFactory->query(null, ['mediaId' => $media->mediaId, 'futureSchedulesFrom' => $now, 'futureSchedulesTo' => $now + $rfLookAhead]);
             foreach ($events as $event) {
                 /** @var \Xibo\Entity\Schedule $event */
                 if (in_array($event->eventId, $eventsCached))
@@ -122,28 +121,22 @@ class ImageProcessingTask implements TaskInterface
                 $eventsCached[] = $event->eventId;
 
                 $event->load();
-                $displayGroups = $event->displayGroups;
+                foreach ($event->displayGroups as $displayGroup) {
 
-                foreach ($displayGroups as $displayGroup) {
-                    $displays = $this->displayFactory->query(null, ['displayGroupId' => $displayGroup->displayGroupId]);
+                    if (in_array($displayGroup->displayGroupId, $displayGroupsCached))
+                        continue;
 
-                    foreach ($displays as $display) {
-                        if (in_array($display->displayId, $displaysCached))
-                            continue;
-
-                        // Cache display
-                        $displaysCached[] = $display->displayId;
-                    }
+                    // Cache display group
+                    $displayGroupsCached[] = $displayGroup->displayGroupId;
                 }
             }
-
         }
 
-        // Finally notify displays
-        if (count($displaysCached) > 0) {
-            foreach ($displaysCached as $displayId) {
-                $display = $this->displayFactory->getById($displayId);
-                $display->notify();
+        // Notify display groups
+        if (count($displayGroupsCached) > 0) {
+            foreach ($displayGroupsCached as $displayGroupId) {
+                /* @var DisplayGroup $displayGroup */
+                $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroupId);
             }
         }
 
