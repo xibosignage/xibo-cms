@@ -7,6 +7,7 @@
 
 
 namespace Xibo\XTR;
+use Psr\Container\ContainerInterface;
 use Slim\Helper\Set;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Task;
@@ -81,7 +82,7 @@ interface TaskInterface
     public function setUser($user);
 
     /**
-     * @param Set $container
+     * @param ContainerInterface $container
      * @return $this
      */
     public function setFactories($container);

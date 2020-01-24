@@ -217,7 +217,7 @@ class MaintenanceRegularTask implements TaskInterface
         $this->runMessage .= '## ' . __('Build Layouts') . PHP_EOL;
 
         // Build Layouts
-        foreach ($this->layoutFactory->query(null, ['status' => 3, 'showDrafts' => 1]) as $layout) {
+        foreach ($this->layoutFactory->query(null, ['status' => 3, 'showDrafts' => 1, 'disableUserCheck' => 1]) as $layout) {
             /* @var \Xibo\Entity\Layout $layout */
             try {
                 $layout->xlfToDisk(['notify' => true]);
@@ -365,7 +365,7 @@ class MaintenanceRegularTask implements TaskInterface
     {
         $this->runMessage .= '## ' . __('Publishing layouts with set publish dates') . PHP_EOL;
 
-        $layouts = $this->layoutFactory->query(null, ['havePublishDate' => 1]);
+        $layouts = $this->layoutFactory->query(null, ['havePublishDate' => 1, 'disableUserCheck' => 1]);
 
         // check if we have any layouts with set publish date
         if (count($layouts) > 0) {
@@ -396,7 +396,7 @@ class MaintenanceRegularTask implements TaskInterface
 
                         if (count($this->notificationFactory->getBySubjectAndDate($subject,
                                 $this->date->getLocalDate($date->startOfDay(), 'U'),
-                                $this->date->getLocalDate($date->addDay(1)->startOfDay(), 'U'))) <= 0) {
+                                $this->date->getLocalDate($date->addDay()->startOfDay(), 'U'))) <= 0) {
 
                             $body = __(sprintf('Publishing layout ID %d failed. With message %s', $layout->layoutId,
                                 $e->getMessage()));
