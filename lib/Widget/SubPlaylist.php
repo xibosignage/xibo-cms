@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -192,7 +192,11 @@ class SubPlaylist extends ModuleWidget
      *  )
      * )
      *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
      * @throws InvalidArgumentException
+     * @throws \Xibo\Exception\ValueTooLargeException
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -206,7 +210,7 @@ class SubPlaylist extends ModuleWidget
         $this->setOption('remainder', $sanitizedParams->getString('remainder'));
 
         // Get the list of playlists
-        $subPlaylistId = $sanitizedParams->getIntArray('subPlaylistId');
+        $subPlaylistId = $sanitizedParams->getIntArray('subPlaylistId', ['default' => []]);
         $spots = $sanitizedParams->getArray('subPlaylistIdSpots');
         $spotLength = $sanitizedParams->getArray('subPlaylistIdSpotLength');
         $spotFill = $sanitizedParams->getArray('subPlaylistIdSpotFill');
@@ -234,8 +238,9 @@ class SubPlaylist extends ModuleWidget
         $existingSubPlaylistId = $this->getAssignedPlaylistIds();
 
         // Validation
-        if (count($subPlaylistId) < 1)
+        if (count($subPlaylistId) < 1) {
             throw new InvalidArgumentException(__('Please select at least 1 Playlist to embed'), 'subPlaylistId');
+        }
 
         // Set the new list
         $this->setAssignedPlaylistIds($subPlaylistId);

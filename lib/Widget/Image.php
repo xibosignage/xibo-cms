@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -40,11 +41,11 @@ class Image extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function settings()
+    public function settings(Request $request, Response $response)
     {
-        parent::settings();
+        parent::settings($request, $response);
 
-        $this->module->settings['defaultScaleTypeId'] = $this->getSanitizer()->getString('defaultScaleTypeId');
+        $this->module->settings['defaultScaleTypeId'] = $this->getSanitizer($request->getParams())->getString('defaultScaleTypeId');
     }
 
     /** @inheritdoc */
@@ -147,12 +148,12 @@ class Image extends ModuleWidget
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Set the properties specific to Images
-        $this->setDuration($sanitizedParams->getInt('duration', $this->getDuration()));
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
         $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
         $this->setOption('name', $sanitizedParams->getString('name'));
-        $this->setOption('scaleType', $sanitizedParams->getString('scaleTypeId', 'center'));
-        $this->setOption('align', $sanitizedParams->getString('alignId', 'center'));
-        $this->setOption('valign', $sanitizedParams->getString('valignId', 'middle'));
+        $this->setOption('scaleType', $sanitizedParams->getString('scaleTypeId', ['default' => 'center']));
+        $this->setOption('align', $sanitizedParams->getString('alignId', ['default' => 'center']));
+        $this->setOption('valign', $sanitizedParams->getString('valignId', ['default' => 'middle']));
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
 
         $this->isValid();
@@ -284,8 +285,9 @@ class Image extends ModuleWidget
             return self::$STATUS_INVALID;
         }
 
-        if (!v::intType()->min(1, true)->validate($this->getDuration()))
+        if (!v::intType()->min(1, true)->validate($this->getDuration())) {
             throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
+        }
 
         return self::$STATUS_VALID;
     }

@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2014-15 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -19,6 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Widget;
+use Xibo\Controller\Library;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Slim\Http\Response as Response;
@@ -79,11 +81,17 @@ class Font extends ModuleWidget
 
     /**
      * Process any module settings
+     * @param Request $request
+     * @param Response $response
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Exception\XiboException
      */
-    public function settings()
+    public function settings(Request $request, Response $response)
     {
-        if ($this->getSanitizer()->getCheckbox('rebuildFonts', 0) == 1) {
-            $this->getApp()->getContainer()->get('\Xibo\Controller\Library')->setApp($this->getApp())->installFonts(['invalidateCache' => true]);
+        if ($this->getSanitizer($request->getParams())->getCheckbox('rebuildFonts') == 1) {
+            $this->container->get('\Xibo\Controller\Library')->installFonts(['invalidateCache' => true], $request);
         }
     }
 
@@ -143,7 +151,7 @@ class Font extends ModuleWidget
      */
     public function getResource(Request $request, Response $response)
     {
-        $this->download();
+        $this->download($request, $response);
     }
 
     /**

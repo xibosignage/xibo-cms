@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2018 Xibo Signage Ltd, Daniel Garner and James Packer
  *
  * This file is part of Xibo.
  *
@@ -39,13 +40,14 @@ class Video extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function settings()
+    public function settings(Request $request, Response $response)
     {
         // Process any module settings you asked for.
-        $this->module->settings['defaultMute'] = $this->getSanitizer()->getCheckbox('defaultMute');
+        $this->module->settings['defaultMute'] = $this->getSanitizer($request->getParams())->getCheckbox('defaultMute');
 
-        if ($this->getModule()->defaultDuration !== 0)
+        if ($this->getModule()->defaultDuration !== 0) {
             throw new \InvalidArgumentException(__('The Video Module must have a default duration of 0 to detect the end of videos.'));
+        }
 
         // Return an array of the processed settings.
         return $this->module->settings;
@@ -139,21 +141,22 @@ class Video extends ModuleWidget
      */
     public function edit(Request $request, Response $response, $id)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Set the properties specific to this module
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
-        $this->setOption('scaleType', $this->getSanitizer()->getString('scaleTypeId', 'aspect'));
-        $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
-        $this->setOption('showFullScreen', $this->getSanitizer()->getCheckbox('showFullScreen'));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
+        $this->setOption('scaleType', $sanitizedParams->getString('scaleTypeId', ['default' => 'aspect']));
+        $this->setOption('mute', $sanitizedParams->getCheckbox('mute'));
+        $this->setOption('showFullScreen', $sanitizedParams->getCheckbox('showFullScreen'));
 
         // Only loop if the duration is > 0
         if ($this->getUseDuration() == 0 || $this->getDuration() == 0) {
             $this->setDuration(0);
             $this->setOption('loop', 0);
         } else {
-            $this->setOption('loop', $this->getSanitizer()->getCheckbox('loop'));
+            $this->setOption('loop', $sanitizedParams->getCheckbox('loop'));
         }
         
         $this->saveWidget();
@@ -175,7 +178,7 @@ class Video extends ModuleWidget
         $this->getLog()->debug('Determine Duration from %s', $fileName);
         $info = new \getID3();
         $file = $info->analyze($fileName);
-        return intval($this->getSanitizer()->getDouble('playtime_seconds', 0, $file));
+        return intval($this->getSanitizer($file)->getDouble('playtime_seconds', ['default' => 0]));
     }
 
     /** @inheritdoc */
@@ -188,7 +191,7 @@ class Video extends ModuleWidget
     /** @inheritdoc */
     public function getResource(Request $request, Response $response)
     {
-        $this->download();
+        $this->download($request, $response);
     }
 
     /** @inheritdoc */

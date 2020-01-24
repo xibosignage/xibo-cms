@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
- * (GoogleTraffic.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -148,16 +163,22 @@ class Hls extends ModuleWidget
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Exception\ValueTooLargeException
      */
     public function edit(Request $request, Response $response, $id)
     {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
-        $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
-        $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
+        $this->setOption('uri', urlencode($sanitizedParams->getString('uri')));
+        $this->setOption('mute', $sanitizedParams->getCheckbox('mute'));
 
         // This causes some android devices to switch to a hardware accellerated web view
         $this->setOption('transparency', 0);
@@ -198,10 +219,10 @@ class Hls extends ModuleWidget
 
         // Render and output HTML
         $this
-            ->initialiseGetResource()
+            ->initialiseGetResource($request, $response)
             ->appendViewPortWidth($this->region->width)
-            ->appendJavaScriptFile('vendor/jquery-1.11.1.min.js')
-            ->appendJavaScriptFile('vendor/hls/hls.min.js')
+            ->appendJavaScriptFile('vendor/jquery-1.11.1.min.js', $request)
+            ->appendJavaScriptFile('vendor/hls/hls.min.js', $request)
             ->appendJavaScript('
                 $(document).ready(function() {
             
@@ -244,7 +265,7 @@ class Hls extends ModuleWidget
                      }
                 });
             ')
-            ->appendBody('<video id="video" poster="' . $this->getResourceUrl('vendor/hls/hls-1px-transparent.png') . '" ' . (($this->getOption('mute', 0) == 1) ? 'muted' : '') . '></video>')
+            ->appendBody('<video id="video" poster="' . $this->getResourceUrl('vendor/hls/hls-1px-transparent.png', null, $request) . '" ' . (($this->getOption('mute', 0) == 1) ? 'muted' : '') . '></video>')
             ->appendCss('
                 video {
                     width: 100%; 
@@ -253,7 +274,7 @@ class Hls extends ModuleWidget
             ')
         ;
 
-        return $this->finaliseGetResource();
+        $this->finaliseGetResource('get-resource', $response);
     }
 
     /** @inheritdoc */

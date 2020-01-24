@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2011-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -147,7 +148,6 @@ class DataSetView extends ModuleWidget
     public function getExtra()
     {
         return [
-            'templates' => $this->templatesAvailable(),
             'orderClause' => $this->getOrderClause(),
             'filterClause' => $this->getFilterClause(),
             'columns' => $this->dataSetColumns(),
@@ -160,7 +160,7 @@ class DataSetView extends ModuleWidget
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Do we have a step provided?
-        $step = $sanitizedParams->getInt('step', 2);
+        $step = $sanitizedParams->getInt('step', ['default' => 2]);
 
         if ($step == 1 || !$this->hasDataSet()) {
             return 'datasetview-form-edit-step1';
@@ -334,13 +334,14 @@ class DataSetView extends ModuleWidget
      */
     public function edit(Request $request, Response $response, $id)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Do we have a step provided?
-        $step = $this->getSanitizer()->getInt('step', 2);
+        $step = $sanitizedParams->getInt('step', ['default' => 2]);
 
         if ($step == 1) {
 
             // Read in the dataSetId, validate and store it
-            $dataSetId = $this->getSanitizer()->getInt('dataSetId');
+            $dataSetId = $sanitizedParams->getInt('dataSetId');
 
             // Do we already have a DataSet?
             if ($this->hasDataSet() && $dataSetId != $this->getOption('dataSetId')) {
@@ -356,14 +357,14 @@ class DataSetView extends ModuleWidget
             }
 
             // Check we have permission to use this DataSetId
-            if (!$this->getUser()->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId')))) {
+            if (!$this->getUser($request)->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId')))) {
                 throw new InvalidArgumentException(__('You do not have permission to use that dataset'), 'dataSetId');
             }
 
         } else {
 
             // Columns
-            $columns = $this->getSanitizer()->getIntArray('dataSetColumnId');
+            $columns = $sanitizedParams->getIntArray('dataSetColumnId');
 
             if (count($columns) == 0) {
                 $this->setOption('columns', '');
@@ -372,39 +373,39 @@ class DataSetView extends ModuleWidget
             }
 
             // Other properties
-            $this->setOption('name', $this->getSanitizer()->getString('name'));
-            $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-            $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-            $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
-            $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
-            $this->setOption('rowsPerPage', $this->getSanitizer()->getInt('rowsPerPage'));
-            $this->setOption('durationIsPerPage', $this->getSanitizer()->getCheckbox('durationIsPerPage'));
-            $this->setOption('showHeadings', $this->getSanitizer()->getCheckbox('showHeadings'));
-            $this->setOption('upperLimit', $this->getSanitizer()->getInt('upperLimit', 0));
-            $this->setOption('lowerLimit', $this->getSanitizer()->getInt('lowerLimit', 0));
-            $this->setOption('filter', $this->getSanitizer()->getParam('filter', null));
-            $this->setOption('ordering', $this->getSanitizer()->getString('ordering'));
-            $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
-            $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
-            $this->setOption('useOrderingClause', $this->getSanitizer()->getCheckbox('useOrderingClause'));
-            $this->setOption('useFilteringClause', $this->getSanitizer()->getCheckbox('useFilteringClause'));
-            $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
-            $this->setOption('noDataMessage_advanced', $this->getSanitizer()->getCheckbox('noDataMessage_advanced'));
-            $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
+            $this->setOption('name', $sanitizedParams->getString('name'));
+            $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+            $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+            $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
+            $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 120]));
+            $this->setOption('rowsPerPage', $sanitizedParams->getInt('rowsPerPage'));
+            $this->setOption('durationIsPerPage', $sanitizedParams->getCheckbox('durationIsPerPage'));
+            $this->setOption('showHeadings', $sanitizedParams->getCheckbox('showHeadings'));
+            $this->setOption('upperLimit', $sanitizedParams->getInt('upperLimit', ['default' => 0]));
+            $this->setOption('lowerLimit', $sanitizedParams->getInt('lowerLimit', ['default' => 0]));
+            $this->setOption('filter', $request->getParam('filter', null));
+            $this->setOption('ordering', $sanitizedParams->getString('ordering'));
+            $this->setOption('templateId', $sanitizedParams->getString('templateId'));
+            $this->setOption('overrideTemplate', $sanitizedParams->getCheckbox('overrideTemplate'));
+            $this->setOption('useOrderingClause', $sanitizedParams->getCheckbox('useOrderingClause'));
+            $this->setOption('useFilteringClause', $sanitizedParams->getCheckbox('useFilteringClause'));
+            $this->setRawNode('noDataMessage', $request->getParam('noDataMessage', ''));
+            $this->setOption('noDataMessage_advanced', $sanitizedParams->getCheckbox('noDataMessage_advanced'));
+            $this->setRawNode('javaScript', $request->getParam('javaScript', ''));
 
-            $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
-            $this->setOption('borderColor', $this->getSanitizer()->getString('borderColor'));
-            $this->setOption('fontColor', $this->getSanitizer()->getString('fontColor'));
-            $this->setOption('fontFamily', $this->getSanitizer()->getString('fontFamily'));
-            $this->setOption('fontSize', $this->getSanitizer()->getInt('fontSize'));
+            $this->setOption('backgroundColor', $sanitizedParams->getString('backgroundColor'));
+            $this->setOption('borderColor', $sanitizedParams->getString('borderColor'));
+            $this->setOption('fontColor', $sanitizedParams->getString('fontColor'));
+            $this->setOption('fontFamily', $sanitizedParams->getString('fontFamily'));
+            $this->setOption('fontSize', $sanitizedParams->getInt('fontSize'));
 
             if ($this->getOption('overrideTemplate') == 1) {
-                $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
+                $this->setRawNode('styleSheet', $request->getParam('styleSheet', null));
             }
 
             // Order and Filter criteria
-            $orderClauses = $this->getSanitizer()->getStringArray('orderClause');
-            $orderClauseDirections = $this->getSanitizer()->getStringArray('orderClauseDirection');
+            $orderClauses = $sanitizedParams->getArray('orderClause');
+            $orderClauseDirections = $sanitizedParams->getArray('orderClauseDirection');
             $orderClauseMapping = [];
 
             $i = -1;
@@ -423,10 +424,10 @@ class DataSetView extends ModuleWidget
 
             $this->setOption('orderClauses', json_encode($orderClauseMapping));
 
-            $filterClauses = $this->getSanitizer()->getStringArray('filterClause');
-            $filterClauseOperator = $this->getSanitizer()->getStringArray('filterClauseOperator');
-            $filterClauseCriteria = $this->getSanitizer()->getStringArray('filterClauseCriteria');
-            $filterClauseValue = $this->getSanitizer()->getStringArray('filterClauseValue');
+            $filterClauses = $sanitizedParams->getArray('filterClause');
+            $filterClauseOperator = $sanitizedParams->getArray('filterClauseOperator');
+            $filterClauseCriteria = $sanitizedParams->getArray('filterClauseCriteria');
+            $filterClauseValue = $sanitizedParams->getArray('filterClauseValue');
             $filterClauseMapping = [];
 
             $i = -1;
@@ -464,9 +465,12 @@ class DataSetView extends ModuleWidget
      */
     public function getResource(Request $request, Response $response)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $displayId = $request->getParam('displayId', 0);
+
         // Load in the template
         $data = [];
-        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
+        $isPreview = ($sanitizedParams->getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
@@ -475,7 +479,7 @@ class DataSetView extends ModuleWidget
         $styleSheet = '';
         if ($this->getOption('overrideTemplate', 1) == 0) {
             
-            $template = $this->getTemplateById($this->getOption('templateId'));
+            $template = $this->getTemplateById($this->getOption('templateId'), $request);
             
             if (isset($template))
                 $styleSheet = $template['css'];
@@ -485,7 +489,7 @@ class DataSetView extends ModuleWidget
         }
         
         // Get the embedded HTML out of RAW
-        $styleSheet = $this->parseLibraryReferences($isPreview, $styleSheet);
+        $styleSheet = $this->parseLibraryReferences($isPreview, $styleSheet, $request);
 
         // If we have some options then add them to the end of the style sheet
         if ($this->getOption('backgroundColor') != '') {
@@ -505,7 +509,7 @@ class DataSetView extends ModuleWidget
         }
 
         // Get the JavaScript node
-        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
+        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''), $request);
 
         $duration = $this->getCalculatedDurationForGetResource();
         $durationIsPerItem = $this->getOption('durationIsPerPage', 1);
@@ -521,7 +525,7 @@ class DataSetView extends ModuleWidget
         );
 
         // Generate the table
-        $table = $this->dataSetTableHtml($displayId, $isPreview);
+        $table = $this->dataSetTableHtml($displayId, $isPreview, $request);
 
         // Work out how many pages we will be showing.
         $pages = $table['countPages'];
@@ -533,7 +537,7 @@ class DataSetView extends ModuleWidget
         $data['controlMeta'] = '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $totalDuration . ' -->';
 
         // Add our fonts.css file
-        $headContent = '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
+        $headContent = '<link href="' . (($isPreview) ? $this->urlFor($request,'library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
         $headContent .= '<style type="text/css">' . $styleSheet . '</style>';
 
@@ -541,12 +545,12 @@ class DataSetView extends ModuleWidget
         $data['body'] = $table['html'];
 
         // Build some JS nodes
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js', null, $request) . '"></script>';
 
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-dataset-render.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-dataset-render.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js', null, $request) . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
@@ -559,7 +563,7 @@ class DataSetView extends ModuleWidget
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        return $this->renderTemplate($data);
+        $this->renderTemplate($data, 'get-resource', $response);
     }
 
     /**
@@ -568,7 +572,7 @@ class DataSetView extends ModuleWidget
      * @param bool $isPreview
      * @return array
      */
-    private function dataSetTableHtml($displayId = 0, $isPreview = true)
+    private function dataSetTableHtml($displayId = 0, $isPreview = true, Request $request)
     {
         // Show a preview of the data set table output.
         $dataSetId = $this->getOption('dataSetId');
@@ -684,7 +688,7 @@ class DataSetView extends ModuleWidget
                 ];
             }
 
-            $this->getLog()->debug('Resolved column mappings: %s', json_encode($columnIds));
+            $this->getLog()->debug(sprintf('Resolved column mappings: %s', json_encode($columnIds)));
 
             $filter = [
                 'filter' => $filter,
@@ -707,7 +711,7 @@ class DataSetView extends ModuleWidget
                 $timeZone = $display->getSetting('displayTimeZone', '');
                 $timeZone = ($timeZone == '') ? $this->getConfig()->getSetting('defaultTimezone') : $timeZone;
                 $dateNow->timezone($timeZone);
-                $this->getLog()->debug('Display Timezone Resolved: %s. Time: %s.', $timeZone, $dateNow->toDateTimeString());
+                $this->getLog()->debug(sprintf('Display Timezone Resolved: %s. Time: %s.', $timeZone, $dateNow->toDateTimeString()));
             }
 
             $this->getStore()->setTimeZone($this->getDate()->getLocalDate($dateNow, 'P'));
@@ -788,7 +792,7 @@ class DataSetView extends ModuleWidget
                         $file = $this->mediaFactory->queueDownload('datasetview_' . md5($dataSetId . $mapping['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)), $expires);
 
                         $replace = ($isPreview)
-                            ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
+                            ? '<img src="' . $this->urlFor($request,'library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                             : '<img src="' . $file->storedAs . '" />';
 
                     } else if ($mapping['dataTypeId'] == 5) {
@@ -802,12 +806,12 @@ class DataSetView extends ModuleWidget
                             $this->assignMedia($file->mediaId);
                         }
                         catch (NotFoundException $e) {
-                            $this->getLog()->error('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId);
+                            $this->getLog()->error(sprintf('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId));
                             continue;
                         }
 
                         $replace = ($isPreview)
-                            ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
+                            ? '<img src="' . $this->urlFor($request,'library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                             : '<img src="' . $file->storedAs . '" />';
                     }
 

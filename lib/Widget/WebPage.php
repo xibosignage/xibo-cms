@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2018 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -156,19 +157,21 @@ class WebPage extends ModuleWidget
      */
     public function edit(Request $request, Response $response, $id)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
         $this->setOption('xmds', true);
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
-        $this->setOption('transparency', $this->getSanitizer()->getCheckbox('transparency'));
-        $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
-        $this->setOption('scaling', $this->getSanitizer()->getInt('scaling'));
-        $this->setOption('offsetLeft', $this->getSanitizer()->getInt('offsetLeft'));
-        $this->setOption('offsetTop', $this->getSanitizer()->getInt('offsetTop'));
-        $this->setOption('pageWidth', $this->getSanitizer()->getInt('pageWidth'));
-        $this->setOption('pageHeight', $this->getSanitizer()->getInt('pageHeight'));
-        $this->setOption('modeid', $this->getSanitizer()->getInt('modeId'));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
+        $this->setOption('transparency', $sanitizedParams->getCheckbox('transparency'));
+        $this->setOption('uri', $sanitizedParams->getString('uri'));
+        $this->setOption('scaling', $sanitizedParams->getInt('scaling'));
+        $this->setOption('offsetLeft', $sanitizedParams->getInt('offsetLeft'));
+        $this->setOption('offsetTop', $sanitizedParams->getInt('offsetTop'));
+        $this->setOption('pageWidth', $sanitizedParams->getInt('pageWidth'));
+        $this->setOption('pageHeight', $sanitizedParams->getInt('pageHeight'));
+        $this->setOption('modeid', $sanitizedParams->getInt('modeId'));
 
         // Save the widget
         $this->isValid();
@@ -192,7 +195,7 @@ class WebPage extends ModuleWidget
         $data = [];
 
         // Replace the View Port Width?
-        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
+        $isPreview = ($this->getSanitizer($request->getParams())->getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
@@ -225,9 +228,9 @@ class WebPage extends ModuleWidget
         $data['body'] = '<iframe id="iframe" scrolling="no" frameborder="0" src="' . $url . '"></iframe>';
 
         // After body content
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-webpage-render.js') . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-webpage-render.js', null, $request) . '"></script>';
         $javaScriptContent .= '<script>
             var options = ' . json_encode($options) . '
             $(document).ready(function() {
@@ -239,20 +242,23 @@ class WebPage extends ModuleWidget
         // Replace the After body Content
         $data['javaScript'] = $javaScriptContent;
 
-        return $this->renderTemplate($data);
+        return $this->renderTemplate($data, 'get-resource', $response);
     }
 
     /** @inheritdoc */
     public function isValid()
     {
-        if (!v::url()->notEmpty()->validate(urldecode($this->getOption('uri'))))
+        if (!v::url()->notEmpty()->validate(urldecode($this->getOption('uri')))) {
             throw new InvalidArgumentException(__('Please enter a link'), 'uri');
+        }
 
-        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0) {
             throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
+        }
 
-        if ($this->getOption('modeid') == null)
+        if ($this->getOption('modeid') == null) {
             throw new InvalidArgumentException(__('You must select a mode.'), 'modeid');
+        }
 
         return self::$STATUS_PLAYER;
     }

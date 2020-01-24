@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -73,7 +73,7 @@ class PlayerSoftware extends ModuleWidget
     /** @inheritdoc */
     public function getResource(Request $request, Response $response)
     {
-        $this->download();
+        $this->download($request, $response);
     }
 
     /** @inheritdoc */

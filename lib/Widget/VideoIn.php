@@ -1,14 +1,15 @@
 <?php
 /**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2017-2018 Xibo Signage Ltd.
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -124,16 +125,21 @@ class VideoIn extends ModuleWidget
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Exception\ValueTooLargeException
      */
     public function edit(Request $request, Response $response, $id)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Set some options
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('sourceId', $this->getSanitizer()->getString('sourceId' ,'hdmi'));
-        $this->setOption('showFullScreen', $this->getSanitizer()->getCheckbox('showFullScreen'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('sourceId', $sanitizedParams->getString('sourceId' ,['default' => 'hdmi']));
+        $this->setOption('showFullScreen', $sanitizedParams->getCheckbox('showFullScreen'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
 
         $this->isValid();
 
@@ -144,11 +150,13 @@ class VideoIn extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
-        if (!v::stringType()->notEmpty()->validate($this->getOption('sourceId')))
+        if (!v::stringType()->notEmpty()->validate($this->getOption('sourceId'))) {
             throw new InvalidArgumentException(__('Please Select the sourceId'), 'sourceId');
+        }
 
-        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration()))
+        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration())) {
             throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
+        }
 
         // Client dependant
         return self::$STATUS_PLAYER;

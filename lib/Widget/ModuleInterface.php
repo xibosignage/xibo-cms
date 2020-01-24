@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -72,7 +73,7 @@ interface ModuleInterface
      * @param string $tab
      * @return mixed
      */
-    public function getTab($tab);
+    public function getTab($tab, Request $request);
 
     /**
      * Preview this module
@@ -107,7 +108,7 @@ interface ModuleInterface
      * Module Settings
      * @return mixed
      */
-    public function settings();
+    public function settings(Request $request, Response $response);
 
     /**
      * Get the Modified Date of this Widget

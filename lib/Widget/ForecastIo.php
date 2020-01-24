@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -17,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 namespace Xibo\Widget;
 
@@ -119,13 +119,15 @@ class ForecastIo extends ModuleWidget
 
     /**
      * Process any module settings
+     * @param Request $request @param Response $response
      * @throws InvalidArgumentException
      */
-    public function settings()
+    public function settings(Request $request, Response $response)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Process any module settings you asked for.
-        $apiKey = $this->getSanitizer()->getString('apiKey');
-        $cachePeriod = $this->getSanitizer()->getInt('cachePeriod', 300);
+        $apiKey = $sanitizedParams->getString('apiKey');
+        $cachePeriod = $sanitizedParams->getInt('cachePeriod', ['default' => 300]);
 
         if ($this->module->enabled != 0) {
             if ($apiKey == '')
@@ -313,31 +315,33 @@ class ForecastIo extends ModuleWidget
      */
     public function edit(Request $request, Response $response, $id)
     {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
-        $this->setOption('useDisplayLocation', $this->getSanitizer()->getCheckbox('useDisplayLocation'));
-        $this->setOption('longitude', $this->getSanitizer()->getDouble('longitude'));
-        $this->setOption('latitude', $this->getSanitizer()->getDouble('latitude'));
-        $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
-        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
-        $this->setOption('units', $this->getSanitizer()->getString('units'));
-        $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
-        $this->setOption('lang', $this->getSanitizer()->getString('lang', 'en'));
-        $this->setOption('dayConditionsOnly', $this->getSanitizer()->getCheckbox('dayConditionsOnly'));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
+        $this->setOption('useDisplayLocation', $sanitizedParams->getCheckbox('useDisplayLocation'));
+        $this->setOption('longitude', $sanitizedParams->getDouble('longitude'));
+        $this->setOption('latitude', $sanitizedParams->getDouble('latitude'));
+        $this->setOption('templateId', $sanitizedParams->getString('templateId'));
+        $this->setOption('overrideTemplate', $sanitizedParams->getCheckbox('overrideTemplate'));
+        $this->setOption('units', $sanitizedParams->getString('units'));
+        $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 60]));
+        $this->setOption('lang', $sanitizedParams->getString('lang', ['default' => 'en']));
+        $this->setOption('dayConditionsOnly', $sanitizedParams->getCheckbox('dayConditionsOnly'));
         
         if ($this->getOption('overrideTemplate') == 1) {
-            $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', null));
-            $this->setRawNode('currentTemplate', $this->getSanitizer()->getParam('currentTemplate', null));
-            $this->setOption('currentTemplate_advanced', $this->getSanitizer()->getCheckbox('currentTemplate_advanced'));
-            $this->setRawNode('dailyTemplate', $this->getSanitizer()->getParam('dailyTemplate', null));
-            $this->setOption('dailyTemplate_advanced', $this->getSanitizer()->getCheckbox('dailyTemplate_advanced'));
-            $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
-            $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
+            $this->setRawNode('styleSheet', $request->getParam('styleSheet', null));
+            $this->setRawNode('currentTemplate', $request->getParam('currentTemplate', null));
+            $this->setOption('currentTemplate_advanced', $sanitizedParams->getCheckbox('currentTemplate_advanced'));
+            $this->setRawNode('dailyTemplate', $request->getParam('dailyTemplate', null));
+            $this->setOption('dailyTemplate_advanced', $sanitizedParams->getCheckbox('dailyTemplate_advanced'));
+            $this->setOption('widgetOriginalWidth', $sanitizedParams->getInt('widgetOriginalWidth'));
+            $this->setOption('widgetOriginalHeight', $sanitizedParams->getInt('widgetOriginalHeight'));
         }
 
-        $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
+        $this->setRawNode('javaScript', $request->getParam('javaScript', ''));
 
         // Save the widget
         $this->isValid();
@@ -410,7 +414,7 @@ class ForecastIo extends ModuleWidget
     /**
      * Get Tab
      */
-     public function getTab($tab)
+     public function getTab($tab, Request $request)
      {
          if ($tab == 'forecast') {
              if (!$data = $this->getForecastData(0))
@@ -663,7 +667,7 @@ class ForecastIo extends ModuleWidget
     public function getResource(Request $request, Response $response)
     {
         // Behave exactly like the client.
-        if (!$foreCast = $this->getForecastData($displayId))
+        if (!$foreCast = $this->getForecastData($request->getAttribute('displayId', 0)))
             return '';
 
         // Do we need to override the language?
@@ -676,8 +680,9 @@ class ForecastIo extends ModuleWidget
         }
 
         $data = [];
-        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
-
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $isPreview = ($sanitizedParams->getCheckbox('preview') == 1);
+$this->getLog()->debug('FORECASAT GET RESOURCE ISPREVIEW IS ' . json_encode($isPreview));
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
         
@@ -685,7 +690,7 @@ class ForecastIo extends ModuleWidget
             
             // Get CSS and HTML from the default templates
 
-            $template = $this->getTemplateById($this->getOption('templateId'));
+            $template = $this->getTemplateById($this->getOption('templateId'), $request);
             
             if (isset($template)) {
                 $body = $template['main'];
@@ -698,52 +703,52 @@ class ForecastIo extends ModuleWidget
         } else {
             // Get CSS and HTML from the override input fields
             
-            $body = $this->parseLibraryReferences($isPreview, $this->getRawNode('currentTemplate', ''));
-            $dailyTemplate = $this->parseLibraryReferences($isPreview, $this->getRawNode('dailyTemplate', ''));
+            $body = $this->parseLibraryReferences($isPreview, $this->getRawNode('currentTemplate', ''), $request);
+            $dailyTemplate = $this->parseLibraryReferences($isPreview, $this->getRawNode('dailyTemplate', ''), $request);
             $styleSheet = $this->getRawNode('styleSheet', '');
-            $widgetOriginalWidth = $this->getSanitizer()->int($this->getOption('widgetOriginalWidth'));
-            $widgetOriginalHeight = $this->getSanitizer()->int($this->getOption('widgetOriginalHeight'));
+            $widgetOriginalWidth = $sanitizedParams->getInt($this->getOption('widgetOriginalWidth'));
+            $widgetOriginalHeight = $sanitizedParams->getInt($this->getOption('widgetOriginalHeight'));
         }
         
         // Parse library references
-        $body = $this->parseLibraryReferences($isPreview, $body);
-        $dailyTemplate = $this->parseLibraryReferences($isPreview, $dailyTemplate);
+        $body = $this->parseLibraryReferences($isPreview, $body, $request);
+        $dailyTemplate = $this->parseLibraryReferences($isPreview, $dailyTemplate, $request);
         
         // Provide the background images to the templates styleSheet
         $styleSheet = $this->makeSubstitutions([
-            'cloudy-image' => $this->getResourceUrl('forecastio/wi-cloudy.jpg'),
-            'day-cloudy-image' => $this->getResourceUrl('forecastio/wi-day-cloudy.jpg'),
-            'day-sunny-image' => $this->getResourceUrl('forecastio/wi-day-sunny.jpg'),
-            'fog-image' => $this->getResourceUrl('forecastio/wi-fog.jpg'),
-            'hail-image' => $this->getResourceUrl('forecastio/wi-hail.jpg'),
-            'night-clear-image' => $this->getResourceUrl('forecastio/wi-night-clear.jpg'),
-            'night-partly-cloudy-image' => $this->getResourceUrl('forecastio/wi-night-partly-cloudy.jpg'),            
-            'rain-image' => $this->getResourceUrl('forecastio/wi-rain.jpg'),
-            'snow-image' => $this->getResourceUrl('forecastio/wi-snow.jpg'),
-            'windy-image' => $this->getResourceUrl('forecastio/wi-windy.jpg'),
+            'cloudy-image' => $this->getResourceUrl('forecastio/wi-cloudy.jpg', null, $request),
+            'day-cloudy-image' => $this->getResourceUrl('forecastio/wi-day-cloudy.jpg', null, $request),
+            'day-sunny-image' => $this->getResourceUrl('forecastio/wi-day-sunny.jpg', null, $request),
+            'fog-image' => $this->getResourceUrl('forecastio/wi-fog.jpg', null, $request),
+            'hail-image' => $this->getResourceUrl('forecastio/wi-hail.jpg', null, $request),
+            'night-clear-image' => $this->getResourceUrl('forecastio/wi-night-clear.jpg', null, $request),
+            'night-partly-cloudy-image' => $this->getResourceUrl('forecastio/wi-night-partly-cloudy.jpg', null, $request),
+            'rain-image' => $this->getResourceUrl('forecastio/wi-rain.jpg', null, $request),
+            'snow-image' => $this->getResourceUrl('forecastio/wi-snow.jpg', null, $request),
+            'windy-image' => $this->getResourceUrl('forecastio/wi-windy.jpg', null, $request),
           ], $styleSheet
         );
 
         $headContent = '
-            <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">
-            <link href="' . $this->getResourceUrl('forecastio/weather-icons.min.css') . '" rel="stylesheet" media="screen">
-            <link href="' . $this->getResourceUrl('forecastio/font-awesome.min.css')  . '" rel="stylesheet" media="screen">
-            <link href="' . $this->getResourceUrl('forecastio/animate.css')  . '" rel="stylesheet" media="screen">
+            <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css', null, $request)  . '" rel="stylesheet" media="screen">
+            <link href="' . $this->getResourceUrl('forecastio/weather-icons.min.css', null, $request) . '" rel="stylesheet" media="screen">
+            <link href="' . $this->getResourceUrl('forecastio/font-awesome.min.css', null, $request)  . '" rel="stylesheet" media="screen">
+            <link href="' . $this->getResourceUrl('forecastio/animate.css', null, $request)  . '" rel="stylesheet" media="screen">
             <style type="text/css"> body { background-color: transparent }</style>
             <style type="text/css">
-                ' . $this->parseLibraryReferences($isPreview, $styleSheet) . '
+                ' . $this->parseLibraryReferences($isPreview, $styleSheet, $request) . '
             </style>
         ';
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . (($isPreview) ? $this->urlFor($request,'library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
         // Replace any icon sets
-        $data['head'] = str_replace('[[ICONS]]', $this->getResourceUrl('forecastio/' . $this->getOption('icons')), $headContent);
+        $data['head'] = str_replace('[[ICONS]]', $this->getResourceUrl('forecastio/' . $this->getOption('icons'), null, $request), $headContent);
 
         // Get the JavaScript node
-        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
+        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''), $request);
 
         // Handle the daily template (if its here)
         $dailySubs = '';
@@ -789,9 +794,9 @@ class ForecastIo extends ModuleWidget
             'widgetDesignHeight'=> $widgetOriginalHeight
         );
 
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js', null, $request) . '"></script>';
         $javaScriptContent .= '<script>
 
             var options = ' . json_encode($options) . '
@@ -807,7 +812,7 @@ class ForecastIo extends ModuleWidget
         $data['javaScript'] = $javaScriptContent;
 
         // Return that content.
-        return $this->renderTemplate($data);
+        $this->renderTemplate($data, 'get-resource', $response);
     }
 
     /** @inheritdoc */

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2015-2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -139,7 +139,11 @@ class Clock extends ModuleWidget
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Exception\ValueTooLargeException
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -263,7 +267,7 @@ class Clock extends ModuleWidget
                 $data['javaScript'] = $javaScriptContent;
 
                 // Add our fonts.css file
-                $headContent  = '<link href = "' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
+                $headContent  = '<link href = "' . (($isPreview) ? $this->urlFor($request,'library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
                 $headContent .= '<style type = "text/css" > ' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
                 $data['head'] = $headContent;
@@ -298,7 +302,7 @@ class Clock extends ModuleWidget
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
         // Return that content.
-        return $this->renderTemplate($data, $template, $response);
+        $this->renderTemplate($data, $template, $response);
     }
 
     /** @inheritdoc */

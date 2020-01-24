@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -156,6 +157,7 @@ class Text extends ModuleWidget
     public function edit(Request $request, Response $response, $id)
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
+
         $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
         $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
@@ -187,7 +189,7 @@ class Text extends ModuleWidget
             ->appendJavaScriptFile('xibo-image-render.js', $request)
             ->appendFontCss($request)
             ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
-            ->appendJavaScript($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', '')))
+            ->appendJavaScript($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', ''), $request))
         ;
 
         // Handle older layouts that have a direction node but no effect node
@@ -214,7 +216,7 @@ class Text extends ModuleWidget
         ]);
 
         // Pull out our text
-        $text = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('text', null));
+        $text = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('text', null), $request);
 
         // See if we need to replace out any [clock] or [date] tags
         $clock = false;
@@ -292,7 +294,7 @@ class Text extends ModuleWidget
             $this->appendCss('body { background-color: ' . $this->getOption('backgroundColor') . '; }');
         }
 
-        return $this->finaliseGetResource('get-resource', $response);
+        $this->finaliseGetResource('get-resource', $response);
     }
 
     /** @inheritdoc */

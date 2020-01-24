@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2015 Daniel Garner. 2006-2008 Daniel Garner and James Packer.
  *
  * This file is part of Xibo.
  *
@@ -27,10 +28,12 @@ class PowerPoint extends ModuleWidget
     /** @inheritdoc */
     public function edit(Request $request, Response $response, $id)
     {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
         $this->saveWidget();
     }
 
@@ -70,11 +73,13 @@ class PowerPoint extends ModuleWidget
 
     /**
      * Get Resource
-     * @param int $displayId
+     * @param Request $request
+     * @param Response $response
      * @return mixed
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function getResource(Request $request, Response $response)
     {
-        $this->download();
+        $this->download($request, $response);
     }
 }

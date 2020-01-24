@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -22,6 +23,7 @@ namespace Xibo\Widget;
 
 use Intervention\Image\ImageManagerStatic as Img;
 use Mimey\MimeTypes;
+use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\App;
@@ -210,6 +212,10 @@ abstract class ModuleWidget implements ModuleInterface
 
     /** @var Twig */
     protected $view;
+
+    /** @var ContainerInterface */
+    protected $container;
+
     // </editor-fold>
 
     /**
@@ -233,7 +239,7 @@ abstract class ModuleWidget implements ModuleInterface
      * @param UserGroupFactory $userGroupFactory
      * @param PlaylistFactory $playlistFactory
      */
-    public function __construct($store, $pool, $log, $config, $date, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, Twig $view)
+    public function __construct($store, $pool, $log, $config, $date, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, Twig $view, ContainerInterface $container)
     {
         $this->store = $store;
         $this->pool = $pool;
@@ -255,6 +261,7 @@ abstract class ModuleWidget implements ModuleInterface
         $this->userGroupFactory = $userGroupFactory;
         $this->playlistFactory = $playlistFactory;
         $this->view = $view;
+        $this->container = $container;
 
         $this->init();
     }
@@ -270,18 +277,6 @@ abstract class ModuleWidget implements ModuleInterface
         $this->layoutFactory = $layoutFactory;
         $this->widgetFactory = $widgetFactory;
         $this->displayGroupFactory = $displayGroupFactory;
-    }
-
-    /**
-     * Get the App
-     * @return App
-     */
-    protected function getApp()
-    {
-        if ($this->app == null)
-            throw new \RuntimeException(__('Module Widget Application not set'));
-
-        return $this->app;
     }
 
     /**
@@ -508,8 +503,12 @@ abstract class ModuleWidget implements ModuleInterface
      * Get User
      * @return User
      */
-    final protected function getUser()
+    final protected function getUser(Request $request)
     {
+        if (isset($request)) {
+            $this->user = $request->getAttribute('currentUser');
+        }
+
         return $this->user;
     }
 
@@ -815,7 +814,7 @@ abstract class ModuleWidget implements ModuleInterface
      * @return mixed
      * @throws ControllerNotImplemented
      */
-    public function getTab($tab)
+    public function getTab($tab, Request $request)
     {
         throw new ControllerNotImplemented();
     }
@@ -826,9 +825,9 @@ abstract class ModuleWidget implements ModuleInterface
      * @param string|null $type
      * @return string
      */
-    protected function getFileUrl($file, $type = null)
+    protected function getFileUrl($file, $type = null, Request $request)
     {
-        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
+        $isPreview = ($this->getSanitizer($request->getParams())->getCheckbox('preview') == 1);
         $params = ['id' => $file->mediaId];
 
         if ($type !== null) {
@@ -836,7 +835,7 @@ abstract class ModuleWidget implements ModuleInterface
         }
 
         if ($isPreview) {
-            return $this->getApp()->urlFor('library.download', $params) . '?preview=1"';
+            return $this->urlFor($request,'library.download', $params) . '?preview=1"';
         } else {
             $url = $file->storedAs;
         }
@@ -852,7 +851,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function getResourceUrl($uri, $type = null, Request $request)
     {
-        $isPreview = ($request->getParam('preview') == 1);
+        $isPreview = ($this->getSanitizer($request->getParams())->getCheckbox('preview') == 1);
 
         // Local clients store all files in the root of the library
         $uri = basename($uri);
@@ -986,7 +985,7 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * Process any module settings
      */
-    public function settings()
+    public function settings(Request $request, Response $response)
     {
 
     }
@@ -1074,72 +1073,80 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Return File
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
      */
-    protected function download(Request $request = null, Response $response = null)
+    protected function download(Request $request, Response $response)
     {
         $media = $this->mediaFactory->getById($this->getMediaId());
-        $attachment = $this->getSanitizer($request->getParams())->getString('attachment');
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $attachment = $sanitizedParams->getString('attachment');
 
         $this->getLog()->debug('Download for mediaId ' . $media->mediaId);
 
         // Are we a preview or not?
-        $isPreview = ($this->getSanitizer($request->getParams())->getCheckbox('preview') == 1);
+        $isPreview = ($sanitizedParams->getCheckbox('preview') == 1);
 
         // The file path
         $libraryPath = $this->getConfig()->getSetting('LIBRARY_LOCATION') . $media->storedAs;
 
-        // size
-        $size = filesize($libraryPath);
-
-        // Set the content length
-        $response->withHeader('Content-Length', $size);
+        // Set some headers
+        $headers = [];
+        $headers['Content-Length'] = filesize($libraryPath);
 
         // Different behaviour depending on whether we are a preview or not.
         if ($isPreview) {
             // correctly grab the MIME type of the file we want to serve
             $mimeTypes = new MimeTypes();
             $ext = explode('.', $media->storedAs);
-            $response->withHeader('Content-Type', $mimeTypes->getMimeType($ext[count($ext) - 1]));
+            $headers['Content-Type'] = $mimeTypes->getMimeType($ext[count($ext) - 1]);
         } else {
             // This widget is expected to output a file - usually this is for file based media
             // Get the name with library
-            $attachmentName = (($attachment == null) ? $media->storedAs : $attachment);
+            $attachmentName = $sanitizedParams->getString('attachment', ['default' => (($attachment == null) ? $media->storedAs : $attachment)]);
 
             // Issue some headers TODO
-            //$this->getApp()->etag($media->md5);
-            //$this->getApp()->expires('+1 week');
+           //$this->getApp()->etag($media->md5);
+           // $this->getApp()->expires('+1 week');
 
-            $response->withHeader('Content-Type', 'application/octet-stream');
-            $response->withHeader('Content-Transfer-Encoding', 'Binary');
-            $response->withHeader('Content-disposition', 'attachment; filename="' . $attachmentName . '"');
+            $headers['Content-Type'] = 'application/octet-stream';
+            $headers['Content-Transfer-Encoding'] = 'Binary';
+            $headers['Content-disposition'] = 'attachment; filename="' . $attachmentName . '"';
         }
 
         // Output the file
-        if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Apache') {
+        $sendFileMode = $this->getConfig()->getSetting('SENDFILE_MODE');
+
+        if ($sendFileMode == 'Apache') {
             // Send via Apache X-Sendfile header?
-            $response->withHeader('X-Sendfile', $libraryPath);
-        }
-        else if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Nginx') {
+            $headers['X-Sendfile'] = $libraryPath;
+        } else if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Nginx') {
             // Send via Nginx X-Accel-Redirect?
-            $response->withHeader('X-Accel-Redirect', '/download/' . $media->storedAs);
+            $headers['X-Accel-Redirect'] = '/download/' . $media->storedAs;
         }
-        else {
+
+        // Should we output the file via the application stack, or directly by reading the file.
+        if ($sendFileMode == 'Off') {
             // Return the file with PHP
             ob_end_flush();
 
             // add the php headers
-            // https://github.com/xibosignage/xibo/issues/1992
-            if (!$isPreview) {
-                header('Content-Type: application/octet-stream');
-                header("Content-Transfer-Encoding: Binary");
-                header('Content-disposition: attachment; filename="' . $attachmentName . '"');
-                header('Content-Length: ' . $size);
+            foreach ($headers as $header => $value) {
+                header($header . ': ' . $value);
             }
 
             readfile($libraryPath);
             exit;
+        } else {
+            // add the php headers
+            foreach ($headers as $header => $value) {
+                $response = $response->withHeader($header, $value);
+            }
+            return $response;
+            //return $response->withFile($libraryPath);
         }
-        return $response->withFile($libraryPath);
     }
 
     /**
@@ -1149,7 +1156,7 @@ abstract class ModuleWidget implements ModuleInterface
      * @param string $tokenRegEx
      * @return string The Parsed Content
      */
-    protected function parseLibraryReferences($isPreview, $content, $tokenRegEx = '/\[.*?\]/')
+    protected function parseLibraryReferences($isPreview, $content, Request $request, $tokenRegEx = '/\[.*?\]/')
     {
         $parsedContent = $content;
         $matches = '';
@@ -1171,7 +1178,7 @@ abstract class ModuleWidget implements ModuleInterface
                 $this->assignMedia($entry->mediaId);
 
                 // We have a valid mediaId to substitute
-                $replace = ($isPreview) ? $this->getApp()->urlFor('library.download', ['id' => $entry->mediaId]) . '?preview=1' : $entry->storedAs;
+                $replace = ($isPreview) ? $this->urlFor($request,'library.download', ['id' => $entry->mediaId]) . '?preview=1' : $entry->storedAs;
 
                 // Substitute the replacement we have found (it might be '')
                 $parsedContent = str_replace($sub, $replace, $parsedContent);
@@ -1189,7 +1196,7 @@ abstract class ModuleWidget implements ModuleInterface
      * @param bool $loadImage Should the image URL be loaded?
      * @return array
      */
-    public function templatesAvailable($loadImage = true)
+    public function templatesAvailable($loadImage = true, Request $request)
     {
         if (!isset($this->module->settings['templates'])) {
 
@@ -1205,13 +1212,13 @@ abstract class ModuleWidget implements ModuleInterface
 
                     if ($loadImage) {
                         // Find the URL to the module file representing this template image
-                        $template['image'] = $this->getApp()->urlFor('module.getTemplateImage', ['type' => $this->module->type, 'templateId' => $template['id']]);
+                        $template['image'] = $this->urlFor($request,'module.getTemplateImage', ['type' => $this->module->type, 'templateId' => $template['id']]);
                     }
                 } else {
                     $template['fileName'] = '';
                     $template['image'] = '';
                 }
-
+$this->getLog()->debug('templates avail ' . json_encode($template));
                 $this->module->settings['templates'][] = $template;
             }
         }
@@ -1224,9 +1231,9 @@ abstract class ModuleWidget implements ModuleInterface
      * @param int $templateId
      * @return array|null
      */
-    public function getTemplateById($templateId)
+    public function getTemplateById($templateId, Request $request)
     {
-        $templates = $this->templatesAvailable(false);
+        $templates = $this->templatesAvailable(false, $request);
         $template = null;
 
         if (count($templates) <= 0)
@@ -1257,15 +1264,15 @@ abstract class ModuleWidget implements ModuleInterface
      * @param int $templateId
      * @throws NotFoundException
      */
-    public function getTemplateImage($templateId)
+    public function getTemplateImage($templateId, Request $request)
     {
-        $template = $this->getTemplateById($templateId);
+        $template = $this->getTemplateById($templateId, $request);
 
         if ($template === null || !isset($template['fileName']) || $template['fileName'] == '')
             throw new NotFoundException();
 
         // Output the image associated with this template
-        echo Img::make(PROJECT_ROOT . '/' . $template['fileName'])->response();
+        echo Img::make(PROJECT_ROOT . '/' . $template['fileName'])->encode();
     }
 
     /**
@@ -1642,7 +1649,7 @@ abstract class ModuleWidget implements ModuleInterface
     protected function finaliseGetResource($templateName = 'get-resource', Response $response)
     {
         $this->data['javaScript'] = '<script type="text/javascript">var options = ' . $this->data['options'] . '; var items = ' . $this->data['items'] . ';</script>' . PHP_EOL . $this->data['javaScript'];
-        return $this->renderTemplate($this->data, $templateName, $response);
+        $this->renderTemplate($this->data, $templateName, $response);
     }
 
     /**

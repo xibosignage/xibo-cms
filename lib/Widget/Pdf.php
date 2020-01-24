@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
- * (Pdf.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 namespace Xibo\Widget;
@@ -87,15 +102,20 @@ class Pdf extends ModuleWidget
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Exception\ValueTooLargeException
      */
     public function edit(Request $request, Response $response, $id)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Set the properties specific to this module
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
 
         $this->isValid();
         $this->saveWidget();
@@ -113,12 +133,14 @@ class Pdf extends ModuleWidget
     /** @inheritdoc */
     public function getResource(Request $request, Response $response)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $displayId = $request->getAttribute('displayId', 0);
         $data = [];
-        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
+        $isPreview = ($sanitizedParams->getCheckbox('preview') == 1);
 
         // If not preview or a display, then return the file directly
         if (!$isPreview && $displayId === 0) {
-            $this->download();
+            $this->download($request, $response);
             return '';
         }
 
@@ -134,27 +156,27 @@ class Pdf extends ModuleWidget
             'durationIsPerItem' => false,
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => intval($this->getSanitizer()->getDouble('width')),
-            'previewHeight' => intval($this->getSanitizer()->getDouble('height'))
+            'previewWidth' => intval($sanitizedParams->getDouble('width')),
+            'previewHeight' => intval($sanitizedParams->getDouble('height'))
         );
 
         // File name?
-        $data['file'] = ($isPreview) ? $this->getApp()->urlFor('library.download', ['id' => $this->getMediaId()]) : $this->getMedia()->storedAs;
+        $data['file'] = ($isPreview) ? $this->urlFor($request,'library.download', ['id' => $this->getMediaId()]) : $this->getMedia()->storedAs;
 
         // Replace the head content
-        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/pdfjs/pdf.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/pdfjs/compatibility.js') . '"></script>';
+        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/pdfjs/pdf.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/pdfjs/compatibility.js', null, $request) . '"></script>';
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '</script>';
 
-        $data['pdfWorkerSrc'] = $this->getResourceUrl('vendor/pdfjs/pdf.worker.js');
+        $data['pdfWorkerSrc'] = $this->getResourceUrl('vendor/pdfjs/pdf.worker.js', null, $request);
 
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        return $this->renderTemplate($data, 'get-resource-pdf');
+        return $this->renderTemplate($data, 'get-resource-pdf', $response);
     }
 
     /** @inheritdoc */

@@ -72,9 +72,9 @@ class ModuleService implements ModuleServiceInterface
     /**
      * @inheritdoc
      */
-    public function get($module, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $view)
+    public function get($module, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $view, $container)
     {
-        $object = $this->getByClass($module->class, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $view);
+        $object = $this->getByClass($module->class, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $view, $container);
 
         $object->setModule($module);
 
@@ -84,10 +84,11 @@ class ModuleService implements ModuleServiceInterface
     /**
      * @inheritdoc
      */
-    public function getByClass($className, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $view)
+    public function getByClass($className, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $view, $container)
     {
-        if (!\class_exists($className))
+        if (!\class_exists($className)) {
             throw new NotFoundException(__('Class %s not found', $className));
+        }
 
         /* @var \Xibo\Widget\ModuleWidget $object */
         $object = new $className(
@@ -109,7 +110,8 @@ class ModuleService implements ModuleServiceInterface
             $permissionFactory,
             $userGroupFactory,
             $playlistFactory,
-            $view
+            $view,
+            $container
         );
 
         return $object;

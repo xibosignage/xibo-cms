@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -48,8 +49,9 @@ class GenericFile extends ModuleWidget
 
     /**
      * Get Resource
-     * @param int $displayId
-     * @return mixed
+     * @param Request $request
+     * @param Response $response
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function getResource(Request $request, Response $response)
     {
@@ -57,7 +59,7 @@ class GenericFile extends ModuleWidget
             ini_set('zlib.output_compression', 'Off');
         }
 
-        $this->download();
+        $this->download($request, $response);
     }
 
     /**

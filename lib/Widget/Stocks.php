@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2014-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -17,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 namespace Xibo\Widget;
 
@@ -98,12 +98,16 @@ class Stocks extends AlphaVantageBase
 
     /**
      * Process any module settings
+     * @param Request $request
+     * @param Response $response
+     * @return string[]
      * @throws InvalidArgumentException
      */
-    public function settings()
+    public function settings(Request $request, Response $response)
     {
-        $apiKey = $this->getSanitizer()->getString('apiKey');
-        $cachePeriod = $this->getSanitizer()->getInt('cachePeriod', 14400);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $apiKey = $sanitizedParams->getString('apiKey');
+        $cachePeriod = $sanitizedParams->getInt('cachePeriod', 14400);
 
         if ($this->module->enabled != 0) {
             if ($apiKey == '')
@@ -275,33 +279,39 @@ class Stocks extends AlphaVantageBase
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Exception\ValueTooLargeException
      */
     public function edit(Request $request, Response $response, $id)
     {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
-        $this->setOption('items', $this->getSanitizer()->getString('items'));
-        $this->setOption('effect', $this->getSanitizer()->getString('effect'));
-        $this->setOption('speed', $this->getSanitizer()->getInt('speed'));
-        $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
-        $this->setOption('noRecordsMessage', $this->getSanitizer()->getString('noRecordsMessage'));
-        $this->setOption('dateFormat', $this->getSanitizer()->getString('dateFormat'));
-        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
-        $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
-        $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
-        $this->setOption('durationIsPerPage', $this->getSanitizer()->getCheckbox('durationIsPerPage'));
-        $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $this->setDuration($sanitizedParams->getInt('duration',['default' =>  $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
+        $this->setOption('items', $sanitizedParams->getString('items'));
+        $this->setOption('effect', $sanitizedParams->getString('effect'));
+        $this->setOption('speed', $sanitizedParams->getInt('speed'));
+        $this->setOption('backgroundColor', $sanitizedParams->getString('backgroundColor'));
+        $this->setOption('noRecordsMessage', $sanitizedParams->getString('noRecordsMessage'));
+        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat'));
+        $this->setOption('overrideTemplate', $sanitizedParams->getCheckbox('overrideTemplate'));
+        $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 60]));
+        $this->setOption('templateId', $sanitizedParams->getString('templateId'));
+        $this->setOption('durationIsPerPage', $sanitizedParams->getCheckbox('durationIsPerPage'));
+        $this->setRawNode('javaScript', $request->getParam('javaScript', ''));
 
         if ($this->getOption('overrideTemplate') == 1) {
-            $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
-            $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
-            $this->setOption('maxItemsPerPage', $this->getSanitizer()->getInt('maxItemsPerPage', 4));
-            $this->setRawNode('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', null)));
-            $this->setRawNode('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', null)));
-            $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', $this->getSanitizer()->getParam('styleSheet', null)));
+            $this->setOption('widgetOriginalWidth', $sanitizedParams->getInt('widgetOriginalWidth'));
+            $this->setOption('widgetOriginalHeight', $sanitizedParams->getInt('widgetOriginalHeight'));
+            $this->setOption('maxItemsPerPage', $sanitizedParams->getInt('maxItemsPerPage', ['default' => 4]));
+            $this->setRawNode('mainTemplate', $request->getParam('mainTemplate', $request->getParam('mainTemplate', null)));
+            $this->setRawNode('itemTemplate', $request->getParam('itemTemplate', $request->getParam('itemTemplate', null)));
+            $this->setRawNode('styleSheet', $request->getParam('styleSheet', $request->getParam('styleSheet', null)));
         }
 
         // Save the widget
@@ -390,7 +400,7 @@ class Stocks extends AlphaVantageBase
      * @param $source
      * @return mixed
      */
-    private function makeSubstitutions($data, $source)
+    private function makeSubstitutions($data, $source, Request $request)
     {
         // Replace all matches.
         $matches = '';
@@ -401,7 +411,7 @@ class Stocks extends AlphaVantageBase
             $replace = str_replace('[', '', str_replace(']', '', $sub));
             $replacement = 'NULL';
             
-            $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
+            $isPreview = ($this->getSanitizer($request->getParams())->getCheckbox('preview') == 1);
             
             // Match that in the array
             if ( isset($data[$replace]) ){
@@ -509,11 +519,17 @@ class Stocks extends AlphaVantageBase
 
     /**
      * Get Tab
+     * @param $tab
+     * @param Request $request
+     * @return array
+     * @throws ConfigurationException
+     * @throws NotFoundException
      */
-    public function getTab($tab)
+    public function getTab($tab, Request $request)
     {
-        if (!$data = $this->getResults())
+        if (!$data = $this->getResults()) {
             throw new NotFoundException(__('No data returned, please check error log.'));
+        }
 
         return ['results' => $data[0]];
     }
@@ -522,7 +538,8 @@ class Stocks extends AlphaVantageBase
     public function getResource(Request $request, Response $response)
     {        
         $data = [];
-        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $isPreview = ($sanitizedParams->getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
@@ -538,7 +555,7 @@ class Stocks extends AlphaVantageBase
         
         if( $this->getOption('overrideTemplate') == 0 ) {
             
-            $template = $this->getTemplateById($this->getOption('templateId'));
+            $template = $this->getTemplateById($this->getOption('templateId'), $request);
             
             if (isset($template)) {
                 $mainTemplate = $template['main'];
@@ -554,22 +571,22 @@ class Stocks extends AlphaVantageBase
             $mainTemplate = $this->getRawNode('mainTemplate');
             $itemTemplate = $this->getRawNode('itemTemplate');
             $styleSheet = $this->getRawNode('styleSheet', '');
-            $widgetOriginalWidth = $this->getSanitizer()->int($this->getOption('widgetOriginalWidth'));
-            $widgetOriginalHeight = $this->getSanitizer()->int($this->getOption('widgetOriginalHeight'));
-            $maxItemsPerPage = $this->getSanitizer()->int($this->getOption('maxItemsPerPage'));
+            $widgetOriginalWidth = $sanitizedParams->getInt($this->getOption('widgetOriginalWidth'));
+            $widgetOriginalHeight = $sanitizedParams->getInt($this->getOption('widgetOriginalHeight'));
+            $maxItemsPerPage = $sanitizedParams->getInt($this->getOption('maxItemsPerPage'));
         }
 
         // Run through each item and substitute with the template
-        $mainTemplate = $this->parseLibraryReferences($isPreview, $mainTemplate);
-        $itemTemplate = $this->parseLibraryReferences($isPreview, $itemTemplate);
+        $mainTemplate = $this->parseLibraryReferences($isPreview, $mainTemplate, $request);
+        $itemTemplate = $this->parseLibraryReferences($isPreview, $itemTemplate, $request);
         
         $renderedItems = [];
         
         foreach ($items as $item) {
-            $renderedItems[] = $this->makeSubstitutions($item, $itemTemplate);
+            $renderedItems[] = $this->makeSubstitutions($item, $itemTemplate, $request);
         }        
 
-        $options = array(
+        $options = [
             'type' => $this->getModuleType(),
             'fx' => $this->getOption('effect', 'none'),
             'speed' => $this->getOption('speed', 500),
@@ -581,7 +598,7 @@ class Stocks extends AlphaVantageBase
             'widgetDesignWidth' => $widgetOriginalWidth,
             'widgetDesignHeight'=> $widgetOriginalHeight,
             'maxItemsPerPage' => $maxItemsPerPage
-        );
+        ];
 
         $itemsPerPage = $options['maxItemsPerPage'];
         $pages = count($renderedItems);
@@ -592,14 +609,14 @@ class Stocks extends AlphaVantageBase
         $data['controlMeta'] = '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $totalDuration . ' -->';
 
         // Get the JavaScript node
-        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
+        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''), $request);
 
         // Replace the head content
         $headContent = '';
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
-        <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . (($isPreview) ? $this->urlFor($request,'library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
+        <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css', null, $request)  . '" rel="stylesheet" media="screen">';
         
         $backgroundColor = $this->getOption('backgroundColor');
         if ($backgroundColor != '') {
@@ -609,10 +626,10 @@ class Stocks extends AlphaVantageBase
         }
         
         // Add the CSS if it isn't empty, and replace the wallpaper
-        $css = $this->makeSubstitutions([], $styleSheet, '');
+        $css = $this->makeSubstitutions([], $styleSheet, $request);
 
         if ($css != '') {
-            $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css) . '</style>';
+            $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css, $request) . '</style>';
         }
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
@@ -620,13 +637,13 @@ class Stocks extends AlphaVantageBase
         $data['head'] = $headContent;
 
         // Add some scripts to the JavaScript Content
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
 
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js', null, $request) . '"></script>';
 
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-finance-render.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-finance-render.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js', null, $request) . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
@@ -641,21 +658,24 @@ class Stocks extends AlphaVantageBase
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        return $this->renderTemplate($data);
+        $this->renderTemplate($data, 'get-resource', $response);
     }
 
     /** @inheritdoc */
     public function isValid()
     {
-        if ($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null))
+        if ($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null)) {
             throw new InvalidArgumentException(__('Please choose a template'), 'templateId');
+        }
 
-        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0) {
             throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
+        }
 
         // Validate for the items field
-        if ($this->getOption('items') == '')
+        if ($this->getOption('items') == '') {
             throw new InvalidArgumentException(__('Please provide a comma separated list of symbols in the items field.'), 'items');
+        }
 
         return self::$STATUS_VALID;
     }

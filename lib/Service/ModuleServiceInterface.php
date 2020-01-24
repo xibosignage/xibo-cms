@@ -9,6 +9,7 @@
 namespace Xibo\Service;
 
 
+use Psr\Container\ContainerInterface;
 use Slim\App;
 use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
@@ -61,9 +62,11 @@ interface ModuleServiceInterface
      * @param UserGroupFactory $userGroupFactory
      * @param PlaylistFactory $playlistFactory
      * @param Twig $view
+     * @param ContainerInterface $container
      * @return ModuleWidget
      */
-    public function get($module, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $view);
+    public function get($module, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $view, ContainerInterface $container);
+
     /**
      * @param string $className
      * @param ModuleFactory $moduleFactory
@@ -78,7 +81,8 @@ interface ModuleServiceInterface
      * @param UserGroupFactory $userGroupFactory
      * @param PlaylistFactory $playlistFactory
      * @param Twig $view
+     * @param ContainerInterface $container
      * @return ModuleWidget
      */
-    public function getByClass($className, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $view);
+    public function getByClass($className, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $view, ContainerInterface $container);
 }
