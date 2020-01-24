@@ -45,6 +45,7 @@ use Xibo\Middleware\State;
 use Xibo\Service\ConfigService;
 use Xibo\Service\DisplayNotifyService;
 use Xibo\Service\HelpService;
+use Xibo\Service\ImageProcessingService;
 use Xibo\Service\ModuleService;
 use Xibo\Service\ReportService;
 use Xibo\Service\SanitizeService;
@@ -70,26 +71,6 @@ class ContainerFactory
         $containerBuilder = new ContainerBuilder();
 
         $containerBuilder->addDefinitions([
-            'logger' => function (ContainerInterface $c) {
-                $logger = new Logger('WEB');
-                $uidProcessor = new UidProcessor();
-                $logHelper = new LogProcessor();
-                // File handler
-              //  $streamHandler = new \Monolog\Handler\StreamHandler('php://stdout', Logger::DEBUG);
-              //  $streamHandler->setFormatter(new \Monolog\Formatter\LineFormatter());
-             //   $streamHandler->pushProcessor(new \Monolog\Processor\UidProcessor());
-
-                // db
-              $dbhandler  =  new \Xibo\Helper\DatabaseLogHandler();
-
-             //   $logger->pushHandler($streamHandler);
-                // TODO log helper :(
-                //$logger->pushProcessor($logHelper);
-                $logger->pushProcessor($uidProcessor);
-                $logger->pushHandler($dbhandler);
-
-                return $logger;
-            },
             'logService' => function (ContainerInterface $c) {
                 return new \Xibo\Service\LogService($c->get('logger'));
             },

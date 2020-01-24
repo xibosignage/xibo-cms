@@ -210,7 +210,6 @@ class UserFactory extends BaseFactory
     {
         $entries = [];
         $parsedFilter = $this->getSanitizer($filterBy);
-        $this->getLog()->debug('USER FILTER ' . json_encode($filterBy));
         // Default sort order
         if ($sortOrder === null || count($sortOrder) <= 0) {
             $sortOrder = ['userName'];

@@ -94,9 +94,9 @@ class NotificationFactory extends BaseFactory
      * @return Notification
      * @throws NotFoundException
      */
-    public function getById($notificationId)
+    public function getById($notificationId, $request)
     {
-        $notifications = $this->query(null, ['notificationId' => $notificationId]);
+        $notifications = $this->query(null, ['notificationId' => $notificationId], $request);
 
         if (count($notifications) <= 0)
             throw new NotFoundException();
@@ -120,9 +120,10 @@ class NotificationFactory extends BaseFactory
      * @param array[Optional] $filterBy
      * @return Notification[]
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query($sortOrder = null, $filterBy = [], $request = null)
     {
-        $entries = array();
+        $entries = [];
+        $sanitizedFilter = $this->getSanitizer($filterBy);
 
         if ($sortOrder == null)
             $sortOrder = ['subject'];
@@ -145,45 +146,45 @@ class NotificationFactory extends BaseFactory
 
         $body .= ' WHERE 1 = 1 ';
 
-        self::viewPermissionSql('Xibo\Entity\Notification', $body, $params, '`notification`.notificationId', '`notification`.userId');
+        self::viewPermissionSql('Xibo\Entity\Notification', $body, $params, '`notification`.notificationId', '`notification`.userId', $filterBy, $request);
 
-        if ($this->getSanitizer()->getInt('notificationId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('notificationId') !== null) {
             $body .= ' AND `notification`.notificationId = :notificationId ';
-            $params['notificationId'] = $this->getSanitizer()->getInt('notificationId', $filterBy);
+            $params['notificationId'] = $sanitizedFilter->getInt('notificationId');
         }
 
-        if ($this->getSanitizer()->getString('subject', $filterBy) != null) {
+        if ($sanitizedFilter->getString('subject') != null) {
             $body .= ' AND `notification`.subject = :subject ';
-            $params['subject'] = $this->getSanitizer()->getString('subject', $filterBy);
+            $params['subject'] = $sanitizedFilter->getString('subject');
         }
 
-        if ($this->getSanitizer()->getInt('createFromDt', $filterBy) != null) {
+        if ($sanitizedFilter->getInt('createFromDt') != null) {
             $body .= ' AND `notification`.createDt >= :createFromDt ';
-            $params['createFromDt'] = $this->getSanitizer()->getInt('createFromDt', $filterBy);
+            $params['createFromDt'] = $sanitizedFilter->getInt('createFromDt');
         }
 
-        if ($this->getSanitizer()->getInt('releaseDt', $filterBy) != null) {
+        if ($sanitizedFilter->getInt('releaseDt') != null) {
             $body .= ' AND `notification`.releaseDt >= :releaseDt ';
-            $params['releaseDt'] = $this->getSanitizer()->getInt('releaseDt', $filterBy);
+            $params['releaseDt'] = $sanitizedFilter->getInt('releaseDt');
         }
 
-        if ($this->getSanitizer()->getInt('createToDt', $filterBy) != null) {
+        if ($sanitizedFilter->getInt('createToDt') != null) {
             $body .= ' AND `notification`.createDt < :createToDt ';
-            $params['createToDt'] = $this->getSanitizer()->getInt('createToDt', $filterBy);
+            $params['createToDt'] = $sanitizedFilter->getInt('createToDt');
         }
 
         // User Id?
-        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('userId') !== null) {
             $body .= ' AND `notification`.notificationId IN (
               SELECT notificationId 
                 FROM `lknotificationuser`
                WHERE userId = :userId 
             )';
-            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
+            $params['userId'] = $sanitizedFilter->getInt('userId');
         }
 
         // Display Id?
-        if ($this->getSanitizer()->getInt('displayId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('displayId') !== null) {
             $body .= ' AND `notification`.notificationId IN (
               SELECT notificationId 
                 FROM `lknotificationdg`
@@ -193,7 +194,7 @@ class NotificationFactory extends BaseFactory
                     ON `lkdisplaydg`.displayGroupId = `lkdgdg`.childId
                WHERE `lkdisplaydg`.displayId = :displayId 
             )';
-            $params['displayId'] = $this->getSanitizer()->getInt('displayId', $filterBy);
+            $params['displayId'] = $sanitizedFilter->getInt('displayId');
         }
 
         // Sorting?
@@ -203,8 +204,8 @@ class NotificationFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

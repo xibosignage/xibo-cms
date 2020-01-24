@@ -23,6 +23,7 @@
 namespace Xibo\Factory;
 
 
+use Psr\Container\ContainerInterface;
 use Slim\Views\Twig;
 use Xibo\Entity\Media;
 use Xibo\Entity\Module;
@@ -105,6 +106,9 @@ class ModuleFactory extends BaseFactory
     /** @var Twig */
     protected $view;
 
+    /** @var ContainerInterface */
+    protected $container;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -125,8 +129,10 @@ class ModuleFactory extends BaseFactory
      * @param ScheduleFactory $scheduleFactory
      * @param PermissionFactory $permissionFactory
      * @param UserGroupFactory $userGroupFactory
+     * @param Twig $view
+     * @param ContainerInterface $container
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $moduleService, $widgetFactory, $regionFactory, $playlistFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $view)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $moduleService, $widgetFactory, $regionFactory, $playlistFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $view, ContainerInterface $container)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
@@ -145,6 +151,7 @@ class ModuleFactory extends BaseFactory
         $this->permissionFactory = $permissionFactory;
         $this->userGroupFactory = $userGroupFactory;
         $this->view = $view;
+        $this->container = $container;
     }
 
     /**
@@ -184,7 +191,8 @@ class ModuleFactory extends BaseFactory
             $this->permissionFactory,
             $this->userGroupFactory,
             $this->playlistFactory,
-            $this->view
+            $this->view,
+            $this->container
         );
     }
 
@@ -217,7 +225,8 @@ class ModuleFactory extends BaseFactory
             $this->permissionFactory,
             $this->userGroupFactory,
             $this->playlistFactory,
-            $this->view
+            $this->view,
+            $this->container
         );
     }
 
@@ -242,7 +251,8 @@ class ModuleFactory extends BaseFactory
             $this->permissionFactory,
             $this->userGroupFactory,
             $this->playlistFactory,
-            $this->view
+            $this->view,
+            $this->container
         );
     }
 
@@ -266,7 +276,9 @@ class ModuleFactory extends BaseFactory
             $this->scheduleFactory,
             $this->permissionFactory,
             $this->userGroupFactory,
-            $this->playlistFactory
+            $this->playlistFactory,
+            $this->view,
+            $this->container
         );
     }
 
@@ -303,7 +315,8 @@ class ModuleFactory extends BaseFactory
             $this->permissionFactory,
             $this->userGroupFactory,
             $this->playlistFactory,
-            $this->view
+            $this->view,
+            $this->container
         );
         $object->setWidget($widget);
 

@@ -250,10 +250,9 @@ class LayoutFactory extends BaseFactory
      */
     public function getById($layoutId)
     {
-        $this->getLog()->debug('LAYOUT GET BY ID FOR ' . $layoutId);
-
-        if ($layoutId == 0)
+        if ($layoutId == 0) {
             throw new NotFoundException('LayoutId is 0');
+        }
 
         $layouts = $this->query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
 
