@@ -291,7 +291,7 @@ class Soap4 extends Soap
      */
     function GetFile($serverKey, $hardwareKey, $fileId, $fileType, $chunkOffset, $chunkSize)
     {
-       // $this->logProcessor->setRoute('GetFile');
+        $this->logProcessor->setRoute('GetFile');
 
         $sanitizer = $this->getSanitizer([
             'serverKey' => $serverKey,

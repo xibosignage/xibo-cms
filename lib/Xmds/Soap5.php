@@ -35,7 +35,8 @@ class Soap5 extends Soap4
      */
     public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress, $xmrChannel = null, $xmrPubKey = null)
     {
-       // $this->logProcessor->setRoute('RegisterDisplay');
+        $this->logProcessor->setRoute('RegisterDisplay');
+
         $sanitized = $this->getSanitizer([
             'serverKey' => $serverKey,
             'hardwareKey' => $hardwareKey,
@@ -66,12 +67,14 @@ class Soap5 extends Soap4
         }
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
+        }
 
         // Check the Length of the hardwareKey
-        if (strlen($hardwareKey) > 40)
+        if (strlen($hardwareKey) > 40) {
             throw new \SoapFault('Sender', 'The Hardware Key you sent was too long. Only 40 characters are allowed (SHA1).');
+        }
 
         // Return an XML formatted string
         $return = new \DOMDocument('1.0');
@@ -86,7 +89,7 @@ class Soap5 extends Soap4
             $display = $this->displayFactory->getByLicence($hardwareKey);
             $this->display = $display;
 
-            //$this->logProcessor->setDisplay($display->displayId, ($display->isAuditing()));
+            $this->logProcessor->setDisplay($display->displayId, ($display->isAuditing()));
 
             // Audit in
             $this->getLog()->debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);

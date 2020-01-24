@@ -189,9 +189,10 @@ class Soap
      * @param PlayerVersionFactory $playerVersionFactory
      */
 
-    public function __construct($pool, $store, $timeSeriesStore, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory, $displayEventFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory)
+    public function __construct($logProcessor, $pool, $store, $timeSeriesStore, $log, $date, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory, $displayEventFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory)
 
     {
+        $this->logProcessor = $logProcessor;
         $this->pool = $pool;
         $this->store = $store;
         $this->timeSeriesStore = $timeSeriesStore;
@@ -290,7 +291,7 @@ class Soap
      */
     protected function doRequiredFiles($serverKey, $hardwareKey, $httpDownloads)
     {
-       // $this->logProcessor->setRoute('RequiredFiles');
+        $this->logProcessor->setRoute('RequiredFiles');
         $sanitizer = $this->getSanitizer([
             'serverKey' => $serverKey,
             'hardwareKey' => $hardwareKey
@@ -805,11 +806,12 @@ class Soap
      * @param $hardwareKey
      * @param array $options
      * @return mixed
+     * @throws NotFoundException
      * @throws \SoapFault
      */
     protected function doSchedule($serverKey, $hardwareKey, $options = [])
     {
-        //$this->logProcessor->setRoute('Schedule');
+        $this->logProcessor->setRoute('Schedule');
         $sanitizer = $this->getSanitizer([
             'serverKey' => $serverKey,
             'hardwareKey' => $hardwareKey
@@ -1156,11 +1158,12 @@ class Soap
      * @param $type
      * @param $reason
      * @return bool|\SoapFault
+     * @throws NotFoundException
      * @throws \SoapFault
      */
     protected function doBlackList($serverKey, $hardwareKey, $mediaId, $type, $reason)
     {
-       // $this->logProcessor->setRoute('BlackList');
+        $this->logProcessor->setRoute('BlackList');
 
         // Sanitize
         $serverKey = $this->getSanitizer()->string($serverKey);
@@ -1247,11 +1250,12 @@ class Soap
      * @param $hardwareKey
      * @param $logXml
      * @return bool
+     * @throws NotFoundException
      * @throws \SoapFault
      */
     protected function doSubmitLog($serverKey, $hardwareKey, $logXml)
     {
-       // $this->logProcessor->setRoute('SubmitLog');
+        $this->logProcessor->setRoute('SubmitLog');
 
         // Sanitize
         $sanitizer = $this->getSanitizer([
@@ -1443,11 +1447,12 @@ class Soap
      * @param $hardwareKey
      * @param $statXml
      * @return bool
+     * @throws NotFoundException
      * @throws \SoapFault
      */
     protected function doSubmitStats($serverKey, $hardwareKey, $statXml)
     {
-       // $this->logProcessor->setRoute('SubmitStats');
+        $this->logProcessor->setRoute('SubmitStats');
         $sanitizer = $this->getSanitizer([
             'serverKey' => $serverKey,
             'hardwareKey' => $hardwareKey
@@ -1657,11 +1662,12 @@ class Soap
      * @param $hardwareKey
      * @param $inventory
      * @return bool
+     * @throws NotFoundException
      * @throws \SoapFault
      */
     protected function doMediaInventory($serverKey, $hardwareKey, $inventory)
     {
-      //  $this->logProcessor->setRoute('MediaInventory');
+        $this->logProcessor->setRoute('MediaInventory');
         $sanitizer = $this->getSanitizer([
             'serverKey' => $serverKey,
             'hardwareKey' => $hardwareKey
@@ -1770,6 +1776,7 @@ class Soap
      * @param $regionId
      * @param $mediaId
      * @return mixed
+     * @throws NotFoundException
      * @throws \SoapFault
      */
     protected function doGetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId)
@@ -1780,7 +1787,7 @@ class Soap
         $response = $decoratedResponseFactory->createResponse(200);
         $request = new Request(new ServerRequest('GET', PROJECT_ROOT . '/xmds'));
 
-       // $this->logProcessor->setRoute('GetResource');
+        $this->logProcessor->setRoute('GetResource');
         $sanitizer = $this->getSanitizer([
             'serverKey' => $serverKey,
             'hardwareKey' => $hardwareKey,
@@ -1898,11 +1905,12 @@ class Soap
         try {
             $this->display = $this->displayFactory->getByLicence($hardwareKey);
 
-            if ($this->display->licensed != 1)
+            if ($this->display->licensed != 1) {
                 return false;
+            }
 
             // Configure our log processor
-           // $this->logProcessor->setDisplay($this->display->displayId, ($this->display->isAuditing()));
+            $this->logProcessor->setDisplay($this->display->displayId, ($this->display->isAuditing()));
 
             return true;
 
