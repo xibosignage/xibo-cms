@@ -27,8 +27,8 @@
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Select a type and an item (i.e., layout/media/tag)" %}" id="reportAddBtn"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
-        <li class="btn btn-info btn-xs"><a class="btns" href="{{ urlFor("savedreport.view") }}?reportName=proofofplayReport"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
-        <li class="btn btn-primary btn-xs"><a class="btns" href="{{ urlFor("reportschedule.view") }}?reportName=proofofplayReport"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}?reportName=proofofplayReport"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
+        <li class="btn btn-primary btn-xs"><a class="btns" href="{{ url_for("reportschedule.view") }}?reportName=proofofplayReport"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
     </ul>
     <div class="proof-of-play-report-div pull-right btn-group">
         <button class="proof-of-play-report-btn btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
@@ -39,7 +39,7 @@
             {% for report in defaults.availableReports %}
                 {% if report.hidden == 0 %}
                     <li>
-                        <a href="{{ urlFor("report.form", {name: report.name}) }}">{{ report.description }}</a>
+                        <a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
                     </li>
                 {% endif %}
             {% endfor %}
@@ -91,7 +91,7 @@
                                 { name: "data-allow-clear", value: "true" },
                                 { name: "data-placeholder--id", value: null },
                                 { name: "data-placeholder--value", value: "" },
-                                { name: "data-search-url", value: urlFor("display.search") },
+                                { name: "data-search-url", value: url_for("display.search") },
                                 { name: "data-search-term", value: "display" },
                                 { name: "data-search-term-tags", value: "tags" },
                                 { name: "data-id-property", value: "displayId" },
@@ -104,7 +104,7 @@
                                 { name: "data-allow-clear", value: "true" },
                                 { name: "data-placeholder--id", value: null },
                                 { name: "data-placeholder--value", value: "" },
-                                { name: "data-search-url", value: urlFor("layout.search") },
+                                { name: "data-search-url", value: url_for("layout.search") },
                                 { name: "data-search-term", value: "layout" },
                                 { name: "data-search-term-tags", value: "tags" },
                                 { name: "data-id-property", value: "layoutId" },
@@ -119,7 +119,7 @@
                                 { name: "data-allow-clear", value: "true" },
                                 { name: "data-placeholder--id", value: null },
                                 { name: "data-placeholder--value", value: "" },
-                                { name: "data-search-url", value: urlFor("library.search") },
+                                { name: "data-search-url", value: url_for("library.search") },
                                 { name: "data-search-term", value: "media" },
                                 { name: "data-search-term-tags", value: "tags" },
                                 { name: "data-id-property", value: "mediaId" },
@@ -216,7 +216,7 @@
                     $.ajax({
                         type: "GET",
                         async: false,
-                        url: "{{ urlFor("user.pref") }}?preference=proofOfPlayGrid",
+                        url: "{{ url_for("user.pref") }}?preference=proofOfPlayGrid",
                         dataType: 'json',
                         success: function (json) {
                             try {
@@ -233,7 +233,7 @@
                 stateSaveCallback: function (settings, data) {
                     $.ajax({
                         type: "POST",
-                        url: "{{ urlFor("user.pref") }}",
+                        url: "{{ url_for("user.pref") }}",
                         data: {
                             preference: [{
                                 option: "proofOfPlayGrid",
@@ -251,7 +251,7 @@
                 searchDelay: 3000,
                 "order": [[1, "asc"]],
                 ajax: {
-                    "url": "{{ urlFor("report.data", {name: reportName}) }}",
+                    "url": "{{ url_for("report.data", {name: reportName}) }}",
                     "data": function (d) {
                         $.extend(d, $("#stats").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }
@@ -376,7 +376,7 @@
                 var tags = $("#tags").val();
                 var exactTags = $('#exactTags').is(":checked");
 
-                anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + type + "&tagsType=" + tagsType + "&tags=" + tags + "&exactTags=" + exactTags
+                anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?type=" + type + "&tagsType=" + tagsType + "&tags=" + tags + "&exactTags=" + exactTags
                     + "&reportName=proofofplayReport" );
 
             };

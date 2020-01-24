@@ -27,8 +27,8 @@
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Select a type and an item (i.e., layout/media/tag)" %}" id="reportAddBtn"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
-        <li class="btn btn-info btn-xs"><a class="btns" href="{{ urlFor("savedreport.view") }}?reportName=summaryReport"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
-        <li class="btn btn-primary btn-xs"><a class="btns" href="{{ urlFor("reportschedule.view") }}?reportName=summaryReport"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}?reportName=summaryReport"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
+        <li class="btn btn-primary btn-xs"><a class="btns" href="{{ url_for("reportschedule.view") }}?reportName=summaryReport"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
     </ul>
     <div class="proof-of-play-report-div pull-right btn-group">
         <button class="proof-of-play-report-btn btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
@@ -39,7 +39,7 @@
             {% for report in defaults.availableReports %}
                 {% if report.hidden == 0 %}
                     <li>
-                        <a href="{{ urlFor("report.form", {name: report.name}) }}">{{ report.description }}</a>
+                        <a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
                     </li>
                 {% endif %}
             {% endfor %}
@@ -117,7 +117,7 @@
                                 { name: "data-allow-clear", value: "true" },
                                 { name: "data-placeholder--id", value: null },
                                 { name: "data-placeholder--value", value: "" },
-                                { name: "data-search-url", value: urlFor("layout.search") },
+                                { name: "data-search-url", value: url_for("layout.search") },
                                 { name: "data-search-term", value: "layout" },
                                 { name: "data-search-term-tags", value: "tags" },
                                 { name: "data-id-property", value: "layoutId" },
@@ -133,7 +133,7 @@
                                 { name: "data-allow-clear", value: "true" },
                                 { name: "data-placeholder--id", value: null },
                                 { name: "data-placeholder--value", value: "" },
-                                { name: "data-search-url", value: urlFor("library.search") },
+                                { name: "data-search-url", value: url_for("library.search") },
                                 { name: "data-search-term", value: "media" },
                                 { name: "data-id-property", value: "mediaId" },
                                 { name: "data-text-property", value: "name" }
@@ -179,7 +179,7 @@
             imageLoader.show();
             $.ajax({
                 type: "get",
-                url: "{{ urlFor("report.data", {name: reportName}) }}",
+                url: "{{ url_for("report.data", {name: reportName}) }}",
                 cache: false,
                 dataType: "json",
                 data: $("#summaryReport").find("form").serialize(),
@@ -440,7 +440,7 @@
                         anchorReportAddBtn.removeAttr('href');
                     } else {
                         anchorReportAddBtn.parent().removeClass('disabled');
-                        anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + typeVal + "&layoutId=" + layoutVal + "&reportName=summaryReport" );
+                        anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?type=" + typeVal + "&layoutId=" + layoutVal + "&reportName=summaryReport" );
                         anchorReportAddBtn.removeAttr('title');
 
                     }
@@ -450,7 +450,7 @@
                         anchorReportAddBtn.removeAttr('href');
                     } else {
                         anchorReportAddBtn.parent().removeClass('disabled');
-                        anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + typeVal + "&mediaId=" + mediaVal + "&reportName=summaryReport" );
+                        anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?type=" + typeVal + "&mediaId=" + mediaVal + "&reportName=summaryReport" );
                         anchorReportAddBtn.removeAttr('title');
 
                     }
@@ -460,7 +460,7 @@
                         anchorReportAddBtn.removeAttr('href');
                     } else {
                         anchorReportAddBtn.parent().removeClass('disabled');
-                        anchorReportAddBtn.attr("href", "{{ urlFor("reportschedule.add.form") }}?type=" + typeVal + "&eventTag=" + eventTagVal + "&reportName=summaryReport" );
+                        anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?type=" + typeVal + "&eventTag=" + eventTagVal + "&reportName=summaryReport" );
                         anchorReportAddBtn.removeAttr('title');
 
                     }
