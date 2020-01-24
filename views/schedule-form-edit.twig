@@ -214,7 +214,7 @@
 
                     <div class="tab-pane" id="geoSchedule">
                         {% set title %}{% trans "Geo Schedule?" %}{% endset %}
-                        {% set helpText %}{% trans "Should this event be location aware? Enable this checkbox and select an area on the map below" %}{% endset %}
+                        {% set helpText %}{% trans "Should this event be location aware? Enable this checkbox and select an area by drawing a polygon or rectangle layer on the map below." %}{% endset %}
                         {{ forms.checkbox("isGeoAware", title, event.isGeoAware, helpText, "") }}
 
                         <div id="geoScheduleMap" style="height: 500px; width: 100%" class="hidden"></div>
