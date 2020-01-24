@@ -60,15 +60,15 @@ class Storage implements Middleware
       //  self::setStorage($container);
 
        // $this->next->call();
-        $handler->handle($request);
+        $response = $handler->handle($request);
 
         // Are we in a transaction coming out of the stack?
         if ($container->get('store')->getConnection()->inTransaction()) {
             // We need to commit or rollback? Default is commit
+            // TODO need to handle this without $app->commit
             if ($app->commit) {
                 $container->get('store')->commitIfNecessary();
             } else {
-
                 $container->get('logService')->debug('Storage rollback.');
 
                 $container->get('store')->getConnection()->rollBack();
@@ -85,7 +85,7 @@ class Storage implements Middleware
 
         $container->get('store')->close();
 
-        return $handler->handle($request);
+        return $response;
     }
 
     /**
