@@ -20,6 +20,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+use Monolog\Logger;
+use Monolog\Processor\UidProcessor;
 use Xibo\Factory\ContainerFactory;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -42,6 +44,19 @@ try {
     die($e->getMessage());
 }
 
+$container->set('logger', function () {
+    $logger = new Logger('API');
+
+    $uidProcessor = new UidProcessor();
+    // db
+    $dbhandler  =  new \Xibo\Helper\DatabaseLogHandler();
+
+    $logger->pushProcessor($uidProcessor);
+    $logger->pushHandler($dbhandler);
+
+    return $logger;
+});
+
 // Create a Slim application
 $app = \DI\Bridge\Slim\Bridge::create($container);
 
@@ -49,11 +64,11 @@ $app = \DI\Bridge\Slim\Bridge::create($container);
 $app->config = $container->get('configService');
 $routeParser = $app->getRouteCollector()->getRouteParser();
 // Config
-
+$app->add(new \Xibo\Middleware\Log($app));
 $app->add(new \Xibo\Middleware\ApiAuthorizationOAuth($app));
 $app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\State($app));
-//$app->view(new \Xibo\Middleware\ApiView());
+
 $app->addRoutingMiddleware();
 $app->setBasePath('/api/authorize');
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);

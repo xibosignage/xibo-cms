@@ -20,6 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+use Monolog\Logger;
 use Xibo\Factory\ContainerFactory;
 
 define('XIBO', true);
@@ -33,7 +34,6 @@ require PROJECT_ROOT . '/vendor/autoload.php';
 if (!file_exists(PROJECT_ROOT . '/web/settings.php')) {
     die('Not configured');
 }
-$uidProcessor = new \Monolog\Processor\UidProcessor(7);
 
 // TODO create logProcessor correctly here for xmds instead of containerFactory
 // We create a Slim Object ONLY for logging
@@ -66,7 +66,19 @@ try {
 } catch (Exception $e) {
     die($e->getMessage());
 }
+$uidProcessor =  new \Monolog\Processor\UidProcessor(7);
+$container->set('logger', function () use($uidProcessor) {
+    $logger = new Logger('XMDS');
 
+    // db
+    $dbhandler  =  new \Xibo\Helper\DatabaseLogHandler();
+
+    $logger->pushProcessor($uidProcessor);
+
+    $logger->pushHandler($dbhandler);
+
+    return $logger;
+});
 // Create a Slim application
 $app = \DI\Bridge\Slim\Bridge::create($container);
 // Set state
@@ -125,12 +137,14 @@ if (isset($_GET['file'])) {
         /** @var \Stash\Item $nonce */
         $nonce = $container->get('pool')->getItem('/display/nonce/' . $_REQUEST['displayId']);
 
-        if ($nonce->isMiss())
+        if ($nonce->isMiss()) {
             throw new \Xibo\Exception\NotFoundException('No nonce cache');
+        }
 
         // Check the nonce against the nonce we received
-        if ($nonce->get() != $_REQUEST['file'])
+        if ($nonce->get() != $_REQUEST['file']) {
             throw new \Xibo\Exception\NotFoundException('Nonce mismatch');
+        }
 
         switch ($_REQUEST['type']) {
             case 'L':
@@ -221,14 +235,15 @@ try {
     if (!file_exists($wsdl))
         throw new InvalidArgumentException(__('Your client is not the correct version to communicate with this CMS.'));
 
-    // Create a log processor
-   // $logProcessor = new \Xibo\Xmds\LogProcessor($container->get('logService'), $uidProcessor->getUid());
-   // $container->get('logger')->addProcessor($logProcessor);
+    // logProcessor
+    $logProcessor = new \Xibo\Xmds\LogProcessor($container->get('logService'), $uidProcessor->getUid());
+    $container->get('logger')->pushProcessor($logProcessor);
 
     // Create a SoapServer
     $soap = new SoapServer($wsdl);
     //$soap = new SoapServer($wsdl, array('cache_wsdl' => WSDL_CACHE_NONE));
     $soap->setClass('\Xibo\Xmds\Soap' . $version,
+        $logProcessor,
         $container->get('pool'),
         $container->get('store'),
         $container->get('timeSeriesStore'),

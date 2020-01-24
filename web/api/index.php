@@ -20,6 +20,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+use Monolog\Logger;
+use Monolog\Processor\UidProcessor;
 use Xibo\Factory\ContainerFactory;
 use Xibo\Service\ConfigService;
 use Nyholm\Psr7\Factory\Psr17Factory;
@@ -45,6 +47,19 @@ try {
     die($e->getMessage());
 }
 
+$container->set('logger', function () {
+    $logger = new Logger('API');
+
+    $uidProcessor = new UidProcessor();
+    // db
+    $dbhandler  =  new \Xibo\Helper\DatabaseLogHandler();
+
+    $logger->pushProcessor($uidProcessor);
+    $logger->pushHandler($dbhandler);
+
+    return $logger;
+});
+
 // Create a Slim application
 $app = \DI\Bridge\Slim\Bridge::create($container);
 $app->setBasePath('/api');
@@ -53,12 +68,12 @@ $app->setBasePath('/api');
 $app->config = $container->get('configService');
 $routeParser = $app->getRouteCollector()->getRouteParser();
 
+$app->add(new \Xibo\Middleware\Log($app));
 $app->add(new \Xibo\Middleware\ApiAuthenticationOAuth($app));
 $app->add(new \Xibo\Middleware\State($app));
 $app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\Xmr($app));
-// Replaced with a new function in base controller
-//$app->view(new \Xibo\Middleware\ApiView());
+
 $app->addRoutingMiddleware();
 
 // Define Custom Error Handler

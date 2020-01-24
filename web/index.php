@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,9 +20,10 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use Slim\Views\Twig;
+use Monolog\Logger;
+use Monolog\Processor\UidProcessor;
+use Psr\Container\ContainerInterface;
 use Slim\Views\TwigMiddleware;
-use Xibo\Service\ConfigService;
 use Xibo\Factory\ContainerFactory;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Slim\Http\Factory\DecoratedResponseFactory;
@@ -49,26 +50,26 @@ if (!file_exists('settings.php')) {
     }
 }
 
-// TODO might be better to create logger like before and not in containerFactory
-/* Create a logger
-$logger = new \Xibo\Helper\AccessibleMonologWriter(array(
-    'name' => 'WEB',
-    'handlers' => [
-        new \Xibo\Helper\DatabaseLogHandler()
-    ],
-    'processors' => array(
-        new \Xibo\Helper\LogProcessor(),
-        new \Monolog\Processor\UidProcessor(7)
-    )
-), false);
-*/
-
 // Create the container for dependency injection.
 try {
     $container = ContainerFactory::create();
 } catch (Exception $e) {
     die($e->getMessage());
 }
+
+
+$container->set('logger', function (ContainerInterface $container) {
+    $logger = new Logger('WEB');
+
+    $uidProcessor = new UidProcessor();
+    // db
+    $dbhandler  =  new \Xibo\Helper\DatabaseLogHandler();
+
+    $logger->pushProcessor($uidProcessor);
+    $logger->pushHandler($dbhandler);
+
+    return $logger;
+});
 
 // Create a Slim application
 $app = \DI\Bridge\Slim\Bridge::create($container);
@@ -82,6 +83,7 @@ $app->router = $app->getRouteCollector()->getRouteParser();
 // Middleware (onion, outside inwards and then out again - i.e. the last one is first and last);
 //
 $twigMiddleware = TwigMiddleware::createFromContainer($app);
+$app->add(new \Xibo\Middleware\Log($app));
 $app->add(new RKA\Middleware\IpAddress(true, []));
 $app->add(new \Xibo\Middleware\Actions($app));
 $app->add(new \Xibo\Middleware\Theme($app));
@@ -126,6 +128,7 @@ $customErrorHandler = function (Request $request, Throwable $exception, bool $di
 
 // Add Error Middleware
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
+// TODO rewrite and try to use our errorHandler here
 //$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
 
 // All application routes
