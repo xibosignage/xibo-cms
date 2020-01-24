@@ -159,9 +159,9 @@ class State implements Middleware
         $container->get('configService')->setDependencies($container->get('store'), $app->rootUri);
 
         // Register the report service
-        $container->set('reportService', function(ContainerInterface $container) use($app){
+        $container->set('reportService', function(ContainerInterface $container) {
             return new ReportService(
-                $app,
+                $container,
                 $container->get('state'),
                 $container->get('store'),
                 $container->get('timeSeriesStore'),
@@ -592,7 +592,8 @@ class State implements Middleware
                     $c->get('user'),
                     $c->get('helpService'),
                     $c->get('dateService'),
-                    $c->get('configService')
+                    $c->get('configService'),
+                    $c->get('view')
                 );
                 return $controller->setApp($app);
             },
@@ -656,7 +657,8 @@ class State implements Middleware
                     $c->get('dataSetFactory'),
                     $c->get('campaignFactory'),
                     $c->get('displayGroupFactory'),
-                    $c->get('view')
+                    $c->get('view'),
+                    $c
                 );
             },
             '\Xibo\Controller\Library' => function(ContainerInterface $c) {
@@ -740,7 +742,8 @@ class State implements Middleware
                     $c->get('displayGroupFactory'),
                     $c->get('displayFactory'),
                     $c->get('scheduleFactory'),
-                    $c->get('playerVersionFactory')
+                    $c->get('playerVersionFactory'),
+                    $c
                 );
             },
             '\Xibo\Controller\MediaManager' => function(ContainerInterface $c) {
@@ -895,7 +898,8 @@ class State implements Middleware
                     $c->get('transitionFactory'),
                     $c->get('moduleFactory'),
                     $c->get('layoutFactory'),
-                    $c->get('userGroupFactory')
+                    $c->get('userGroupFactory'),
+                    $c->get('view')
                 );
             },
             '\Xibo\Controller\Report' => function(ContainerInterface $c) {
@@ -1042,7 +1046,8 @@ class State implements Middleware
                     $c->get('mediaFactory'),
                     $c->get('notificationFactory'),
                     $c->get('userNotificationFactory'),
-                    $c->get('view')
+                    $c->get('view'),
+                    $c
                 );
             },
             '\Xibo\Controller\Tag' => function(ContainerInterface $c) {
@@ -1376,7 +1381,8 @@ class State implements Middleware
                     $c->get('scheduleFactory'),
                     $c->get('permissionFactory'),
                     $c->get('userGroupFactory'),
-                    $c->get('view')
+                    $c->get('view'),
+                    $c
                 );
             },
             'notificationFactory' => function(ContainerInterface $c) {
