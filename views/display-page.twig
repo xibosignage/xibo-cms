@@ -81,19 +81,6 @@
                                     {% set title %}{% trans "Display Profile" %}{% endset %}
                                     {{ inline.dropdown("displayProfileId", "single", title, "", [{displayProfileId:null, name:""}]|merge(displayProfiles), "displayProfileId", "name") }}
 
-                                    {% set title %}{% trans "Commercial Licence" %}{% endset %}
-                                    {% set licensed %}{% trans "Licensed fully" %}{% endset %}
-                                    {% set trial %}{% trans "Trial" %}{% endset %}
-                                    {% set notLinceced %}{% trans "Not licenced" %}{% endset %}
-                                    {% set notApplicable %}{% trans "Not applicable" %}{% endset %}
-                                    {% set options = [
-                                        { optionid: "", option: "" },
-                                        { optionid: "1", option: licensed},
-                                        { optionid: "2", option: trial},
-                                        { optionid: "0", option: notLinceced},
-                                        { optionid: "3", option: notApplicable}
-                                    ] %}
-                                    {{ inline.dropdown("commercialLicence", "single", title, "", options, "optionid", "option") }}
                                 </div>
 
                                 <div class="tab-pane" id="filter-advanced">
@@ -145,6 +132,20 @@
                                         { optionid: "portrait", option: portrait}
                                     ] %}
                                     {{ inline.dropdown("orientation", "single", title, "", options, "optionid", "option") }}
+
+                                    {% set title %}{% trans "Commercial Licence" %}{% endset %}
+                                    {% set licensed %}{% trans "Licensed fully" %}{% endset %}
+                                    {% set trial %}{% trans "Trial" %}{% endset %}
+                                    {% set notLinceced %}{% trans "Not licenced" %}{% endset %}
+                                    {% set notApplicable %}{% trans "Not applicable" %}{% endset %}
+                                    {% set options = [
+                                        { optionid: "", option: "" },
+                                        { optionid: "1", option: licensed},
+                                        { optionid: "2", option: trial},
+                                        { optionid: "0", option: notLinceced},
+                                        { optionid: "3", option: notApplicable}
+                                    ] %}
+                                    {{ inline.dropdown("commercialLicence", "single", title, "", options, "optionid", "option") }}
                                 </div>
                             </div>
                         </form>
