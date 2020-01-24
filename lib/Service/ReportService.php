@@ -22,6 +22,7 @@
 
 namespace Xibo\Service;
 
+use Psr\Container\ContainerInterface;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Storage\StorageServiceInterface;
@@ -34,9 +35,9 @@ use Xibo\Storage\TimeSeriesStoreInterface;
 class ReportService implements ReportServiceInterface
 {
     /**
-     * @var \Slim\Slim
+     * @var ContainerInterface
      */
-    public $app;
+    public $container;
 
     /**
      * @var \Xibo\Helper\ApplicationState
@@ -80,9 +81,9 @@ class ReportService implements ReportServiceInterface
     /**
      * @inheritdoc
      */
-    public function __construct($app, $state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer, $savedReportFactory)
+    public function __construct($container, $state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer, $savedReportFactory)
     {
-        $this->app = $app;
+        $this->container = $container;
         $this->state = $state;
         $this->store = $store;
         $this->timeSeriesStore = $timeSeriesStore;
@@ -182,7 +183,7 @@ class ReportService implements ReportServiceInterface
             $this->date,
             $this->sanitizer);
 
-        $object->setFactories($this->app->container);
+        $object->setFactories($this->container);
 
         return $object;
 
