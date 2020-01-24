@@ -328,7 +328,7 @@ class Module extends Base
         $module->installFiles();
 
         // Get the settings (may throw an exception)
-        $module->settings();
+        $module->settings($request, $response);
 
         // Save
         $module->getModule()->save();
@@ -672,12 +672,18 @@ class Module extends Base
             }
         }
 
+        $templates = [];
+        if (in_array($module->getModuleType(), ['forecastio', 'ticker', 'twitter','twittermetro', 'currencies', 'stocks', 'datasetview'])) {
+            $templates = $module->templatesAvailable(true, $request);
+        }
+
         // Pass to view
         $this->getState()->template = $module->editForm($request, $response);
         $this->getState()->setData($module->setTemplateData([
             'module' => $module,
             'media' => $media,
-            'validExtensions' => str_replace(',', '|', $module->getModule()->validExtensions)
+            'validExtensions' => str_replace(',', '|', $module->getModule()->validExtensions),
+            'templatesAvailable' => $templates
         ]));
 
         return $this->render($request, $response);
@@ -1263,7 +1269,7 @@ class Module extends Base
 
         // Pass to view
         $this->getState()->template = $module->getModuleType() . '-tab-' . $tab;
-        $this->getState()->setData($module->getTab($tab));
+        $this->getState()->setData($module->getTab($tab, $request));
 
         return $this->render($request, $response);
     }
@@ -1307,7 +1313,7 @@ class Module extends Base
     public function getTemplateImage(Request $request, Response $response,$type, $templateId)
     {
         $module = $this->moduleFactory->create($type);
-        $module->getTemplateImage($templateId);
+        $module->getTemplateImage($templateId, $request);
         $this->setNoOutput(true);
         return $this->render($request, $response);
     }

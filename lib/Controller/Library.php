@@ -1368,10 +1368,9 @@ class Library extends Base
                 throw new AccessDeniedException();
             }
         } else if (!$this->getUser($request)->checkViewable($media)) {
-            throw new AccessDeniedException();
-        }
+            throw new AccessDeniedException();}
 
-        if ($type === '' && $media->mediaType === 'module') {
+        if ($type == null && $media->mediaType === 'module') {
             $type = 'genericfile';
         }
 
@@ -1423,9 +1422,18 @@ class Library extends Base
     /**
      * Return the CMS flavored font css
      * @param Request|null $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws InvalidArgumentException
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\DuplicateEntityException
      */
-    public function fontList(Request $request = null)
+    public function fontList(Request $request, Response $response)
     {
         // Regenerate the CSS for fonts
         $css = $this->installFonts(['invalidateCache' => false], $request);
@@ -1434,6 +1442,8 @@ class Library extends Base
         $this->getState()->hydrate([
             'data' => $css['list']
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**

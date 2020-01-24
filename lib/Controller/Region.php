@@ -25,6 +25,7 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Entity\Permission;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\InvalidArgumentException;
@@ -105,11 +106,11 @@ class Region extends Base
      * @param ModuleFactory $moduleFactory
      * @param LayoutFactory $layoutFactory
      * @param UserGroupFactory $userGroupFactory
+     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $regionFactory, $widgetFactory, $permissionFactory,
-                                $transitionFactory, $moduleFactory, $layoutFactory, $userGroupFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $regionFactory, $widgetFactory, $permissionFactory, $transitionFactory, $moduleFactory, $layoutFactory, $userGroupFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->session = $session;
         $this->regionFactory = $regionFactory;
@@ -255,11 +256,13 @@ class Region extends Base
         $layout = $this->layoutFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout)) {
             throw new AccessDeniedException();
+        }
 
-        if (!$layout->isChild())
+        if (!$layout->isChild()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
 
         $layout->load([
             'loadPlaylists' => true,
@@ -271,10 +274,10 @@ class Region extends Base
         // Add a new region
         $region = $this->regionFactory->create(
             $this->getUser($request)->userId, $layout->layout . '-' . (count($layout->regions) + 1),
-            $sanitizedParams->getInt('width', 250),
-            $sanitizedParams->getInt('height', 250),
-            $sanitizedParams->getInt('top', 50),
-            $sanitizedParams->getInt('left', 50)
+            $sanitizedParams->getInt('width', ['default' => 250]),
+            $sanitizedParams->getInt('height', ['default' => 250]),
+            $sanitizedParams->getInt('top', ['default' => 50]),
+            $sanitizedParams->getInt('left', ['default' => 50])
         );
 
         $layout->regions[] = $region;
@@ -417,14 +420,16 @@ class Region extends Base
         $region = $this->regionFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($region))
+        if (!$this->getUser($request)->checkEditable($region)) {
             throw new AccessDeniedException();
+        }
 
         // Check that this Regions Layout is in an editable state
         $layout = $this->layoutFactory->getById($region->layoutId);
 
-        if (!$layout->isChild())
+        if (!$layout->isChild()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
 
         // Load before we save
         $region->load();

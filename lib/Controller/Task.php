@@ -22,6 +22,7 @@
 
 namespace Xibo\Controller;
 
+use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
@@ -83,6 +84,9 @@ class Task extends Base
     /** @var  UserNotificationFactory */
     private $userNotificationFactory;
 
+    /** ContainerInterface */
+    private $container;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -104,7 +108,7 @@ class Task extends Base
      * @param NotificationFactory $notificationFactory
      * @param UserNotificationFactory $userNotificationFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $pool, $taskFactory, $userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $mediaFactory, $notificationFactory, $userNotificationFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $pool, $taskFactory, $userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $mediaFactory, $notificationFactory, $userNotificationFactory, Twig $view, ContainerInterface $container)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
         $this->taskFactory = $taskFactory;
@@ -118,6 +122,7 @@ class Task extends Base
         $this->mediaFactory = $mediaFactory;
         $this->notificationFactory = $notificationFactory;
         $this->userNotificationFactory = $userNotificationFactory;
+        $this->container = $container;
     }
 
     /**
@@ -471,7 +476,7 @@ class Task extends Base
             $start = time();
 // TODO
             $taskClass
-                ->setSanitizer($this->getSanitizer())
+                ->setSanitizer($this->getSanitizer($request->getParams()))
                 ->setUser($this->getUser())
                 ->setConfig($this->getConfig())
                 ->setLogger($this->getLog())
@@ -479,7 +484,7 @@ class Task extends Base
                 ->setPool($this->pool)
                 ->setStore($this->store)
                 ->setTimeSeriesStore($this->timeSeriesStore)
-                ->setFactories($this->getApp()->container)
+                ->setFactories($this->container)
                 ->setTask($task)
                 ->run();
 
@@ -522,7 +527,7 @@ class Task extends Base
      *  continue polling until there aren't any more to run
      *  allow for multiple polls to run at the same time
      */
-    public function poll()
+    public function poll(Request $request, Response $response)
     {
         $this->getLog()->debug('XTR poll started');
 
@@ -577,7 +582,7 @@ class Task extends Base
                     // Pass to run.
                     try {
                         // Run is isolated
-                        $this->run($taskId);
+                        $this->run($request,$response,$taskId);
 
                         // Set to idle
                         $this->store->update($updateSth, ['taskId' => $taskId, 'status' => \Xibo\Entity\Task::$STATUS_IDLE], 'xtr', true);
@@ -616,6 +621,9 @@ class Task extends Base
         }
 
         $this->getLog()->debug('XTR poll stopped');
+        // No output
+        $this->setNoOutput(true);
+        return $this->render($request, $response);
     }
 
     private function pollProcessTimeouts()

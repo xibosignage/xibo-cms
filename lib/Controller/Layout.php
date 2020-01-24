@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Parsedown;
@@ -114,6 +115,9 @@ class Layout extends Base
     /** @var  DisplayGroupFactory */
     private $displayGroupFactory;
 
+    /** ContainerInterface */
+    private  $container;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -134,8 +138,11 @@ class Layout extends Base
      * @param MediaFactory $mediaFactory
      * @param DataSetFactory $dataSetFactory
      * @param CampaignFactory $campaignFactory
+     * @param $displayGroupFactory
+     * @param Twig $view
+     * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory, $campaignFactory, $displayGroupFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory, $campaignFactory, $displayGroupFactory, Twig $view, ContainerInterface $container)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
@@ -151,6 +158,7 @@ class Layout extends Base
         $this->dataSetFactory = $dataSetFactory;
         $this->campaignFactory = $campaignFactory;
         $this->displayGroupFactory = $displayGroupFactory;
+        $this->container = $container;
     }
 
     /**
@@ -312,6 +320,7 @@ class Layout extends Base
     function add(Request $request, Response $response)
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
+
         $name = $sanitizedParams->getString('name');
         $description = $sanitizedParams->getString('description');
         $templateId = $sanitizedParams->getInt('layoutId');
@@ -2140,8 +2149,9 @@ class Layout extends Base
             throw new AccessDeniedException();
 
         // Make sure we're not a draft
-        if ($layout->isChild())
+        if ($layout->isChild()) {
             throw new InvalidArgumentException('Cannot manage tags on a Draft Layout', 'layoutId');
+        }
 
         // Make sure our file name is reasonable
         $layoutName = preg_replace('/[^a-z0-9]+/', '-', strtolower($layout->layout));
@@ -2217,7 +2227,7 @@ class Layout extends Base
 
         // Make sure there is room in the library
         /** @var Library $libraryController */
-        $libraryController = $this->getApp()->getContainer()->get('\Xibo\Controller\Library')->setApp($this->getApp());
+        $libraryController = $this->container->get('\Xibo\Controller\Library');
         $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
 
         $options = array(
@@ -2292,8 +2302,9 @@ class Layout extends Base
         $layout = $this->layoutFactory->loadById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout)) {
             throw new AccessDeniedException();
+        }
 
         // Resolution
         $resolution = $this->resolutionFactory->getById($sanitizedParams->getInt('resolutionId'));
@@ -2377,7 +2388,13 @@ class Layout extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function downloadBackground(Request $request, Response $response, $id)
     {
@@ -2385,11 +2402,13 @@ class Layout extends Base
 
         $layout = $this->layoutFactory->getById($id);
 
-        if (!$this->getUser($request)->checkViewable($layout))
+        if (!$this->getUser($request)->checkViewable($layout)) {
             throw new AccessDeniedException();
+        }
 
-        if ($layout->backgroundImageId == null)
+        if ($layout->backgroundImageId == null) {
             throw new NotFoundException();
+        }
 
         // This media may not be viewable, but we won't check it because the user has permission to view the
         // layout that it is assigned to.
@@ -2398,12 +2417,14 @@ class Layout extends Base
         // Make a media module
         $widget = $this->moduleFactory->createWithMedia($media);
 
-        if ($widget->getModule()->regionSpecific == 1)
+        if ($widget->getModule()->regionSpecific == 1) {
             throw new NotFoundException('Cannot download non-region specific module');
+        }
 
         $widget->getResource($request, $response);
 
         $this->setNoOutput(true);
+        return $this->render($request, $response);
     }
 
     /**

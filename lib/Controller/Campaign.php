@@ -200,8 +200,9 @@ class Campaign extends Base
         foreach ($campaigns as $campaign) {
             /* @var \Xibo\Entity\Campaign $campaign */
 
-            if ($this->isApi($request))
+            if ($this->isApi($request)) {
                 break;
+            }
 
             $campaign->includeProperty('buttons');
             $campaign->buttons = [];

@@ -821,7 +821,7 @@ class DisplayGroup extends Base
 
         $modifiedDisplays = [];
 
-        $displays = $sanitizedParams->getIntArray('displayId');
+        $displays = $sanitizedParams->getIntArray('displayId', ['default' => []]);
 
         foreach ($displays as $displayId) {
             $display = $this->displayFactory->getById($displayId);
@@ -838,7 +838,7 @@ class DisplayGroup extends Base
         }
 
         // Have we been provided with unassign id's as well?
-        $displays = $sanitizedParams->getIntArray('unassignDisplayId');
+        $displays = $sanitizedParams->getIntArray('unassignDisplayId', ['default' => []]);
 
         foreach ($displays as $displayId) {
             $display = $this->displayFactory->getById($displayId);
@@ -937,7 +937,7 @@ class DisplayGroup extends Base
             throw new \InvalidArgumentException(__('Displays cannot be manually unassigned to a Dynamic Group'));
         }
 
-        $displays = $sanitizedParams->getIntArray('displayId');
+        $displays = $sanitizedParams->getIntArray('displayId', ['default' => []]);
 
         foreach ($displays as $displayId) {
             $display = $this->displayFactory->getById($displayId);
@@ -1035,7 +1035,7 @@ class DisplayGroup extends Base
             throw new \InvalidArgumentException(__('DisplayGroups cannot be manually assigned to a Dynamic Group'));
         }
 
-        $displayGroups = $sanitizedParams->getIntArray('displayGroupId');
+        $displayGroups = $sanitizedParams->getIntArray('displayGroupId', ['default' => []]);
 
         foreach ($displayGroups as $assignDisplayGroupId) {
             $displayGroupAssign = $this->displayGroupFactory->getById($assignDisplayGroupId);
@@ -1048,7 +1048,7 @@ class DisplayGroup extends Base
         }
 
         // Have we been provided with unassign id's as well?
-        $displayGroups = $sanitizedParams->getIntArray('unassignDisplayGroupId');
+        $displayGroups = $sanitizedParams->getIntArray('unassignDisplayGroupId', ['default' => []]);
 
         foreach ($displayGroups as $assignDisplayGroupId) {
             $displayGroupUnassign = $this->displayGroupFactory->getById($assignDisplayGroupId);
@@ -1135,7 +1135,7 @@ class DisplayGroup extends Base
             throw new \InvalidArgumentException(__('DisplayGroups cannot be manually unassigned to a Dynamic Group'));
         }
 
-        $displayGroups = $sanitizedParams->getIntArray('displayGroupId');
+        $displayGroups = $sanitizedParams->getIntArray('displayGroupId', ['default' => []]);
 
         foreach ($displayGroups as $assignDisplayGroupId) {
             $displayGroup->unassignDisplayGroup($this->displayGroupFactory->getById($assignDisplayGroupId));
@@ -1255,7 +1255,7 @@ class DisplayGroup extends Base
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $displayGroup->load();
 
-        $mediaIds = $sanitizedParams->getIntArray('mediaId');
+        $mediaIds = $sanitizedParams->getIntArray('mediaId', ['default' => []]);
 
         // Loop through all the media
         foreach ($mediaIds as $mediaId) {
@@ -1269,8 +1269,10 @@ class DisplayGroup extends Base
             $displayGroup->assignMedia($media);
         }
 
+        $unassignMediaIds  = $sanitizedParams->getIntArray('unassignMediaId', ['default' => []]);
+
         // Check for unassign
-        foreach ($sanitizedParams->getIntArray('unassignMediaId') as $mediaId) {
+        foreach ($unassignMediaIds as $mediaId) {
             // Get the media record
             $media = $this->mediaFactory->getById($mediaId);
 
@@ -1350,7 +1352,7 @@ class DisplayGroup extends Base
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $displayGroup->load();
 
-        $mediaIds = $sanitizedParams->getIntArray('mediaId');
+        $mediaIds = $sanitizedParams->getIntArray('mediaId', ['default' => []]);
 
         // Loop through all the media
         foreach ($mediaIds as $mediaId) {
@@ -1474,7 +1476,7 @@ class DisplayGroup extends Base
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $displayGroup->load();
 
-        $layoutIds = $sanitizedParams->getIntArray('layoutId');
+        $layoutIds = $sanitizedParams->getIntArray('layoutId', ['default' => []]);
 
         // Loop through all the media
         foreach ($layoutIds as $layoutId) {
@@ -1489,7 +1491,7 @@ class DisplayGroup extends Base
         }
 
         // Check for unassign
-        foreach ($sanitizedParams->getIntArray('unassignLayoutId') as $layoutId) {
+        foreach ($sanitizedParams->getIntArray('unassignLayoutId', ['default' => []]) as $layoutId) {
             // Get the layout record
             $layout = $this->layoutFactory->getById($layoutId);
 
@@ -1569,7 +1571,7 @@ class DisplayGroup extends Base
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $displayGroup->load();
 
-        $layoutIds = $sanitizedParams->getIntArray('layoutId');
+        $layoutIds = $sanitizedParams->getIntArray('layoutId', ['default' => []]);
 
         // Loop through all the media
         foreach ($layoutIds as $layoutId) {

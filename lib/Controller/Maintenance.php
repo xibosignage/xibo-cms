@@ -23,6 +23,7 @@
 
 namespace Xibo\Controller;
 
+use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
@@ -78,6 +79,9 @@ class Maintenance extends Base
     /** @var  PlayerVersionFactory */
     private $playerVersionFactory;
 
+    /** @var ContainerInterface */
+    private $container;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -97,7 +101,7 @@ class Maintenance extends Base
      * @param ScheduleFactory $scheduleFactory
      * @param PlayerVersionFactory $playerVersionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $taskFactory, $mediaFactory, $layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory, $playerVersionFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $taskFactory, $mediaFactory, $layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory, $playerVersionFactory, Twig $view, ContainerInterface $container)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
         $this->taskFactory = $taskFactory;
@@ -109,6 +113,7 @@ class Maintenance extends Base
         $this->displayFactory = $displayFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->playerVersionFactory = $playerVersionFactory;
+        $this->container = $container;
     }
 
     /**
@@ -152,12 +157,12 @@ class Maintenance extends Base
 
                 // Are we full maintenance?
                 if (!$quick) {
-                    $this->runTask('MaintenanceDailyTask');
+                    $this->runTask('MaintenanceDailyTask', $request, $response);
                 }
 
                 // Always run quick tasks
-                $this->runTask('MaintenanceRegularTask');
-                $this->runTask('EmailNotificationsTask');
+                $this->runTask('MaintenanceRegularTask', $request, $response);
+                $this->runTask('EmailNotificationsTask', $request, $response);
             }
             else {
                 print __("Maintenance key invalid.");
@@ -172,17 +177,19 @@ class Maintenance extends Base
 
         // No output
         $this->setNoOutput(true);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Run task
      * @param $class
      */
-    private function runTask($class)
+    private function runTask($class, Request $request, Response $response)
     {
         /** @var \Xibo\Controller\Task $taskController */
-        $taskController = $this->getApp()->container->get('\Xibo\Controller\Task');
-        $taskController->setApp($this->getApp());
+        $taskController = $this->container->get('\Xibo\Controller\Task');
+        //$taskController->setApp($this->getApp());
 
         $task = $this->taskFactory->getByClass('\Xibo\XTR\\' . $class);
 
@@ -192,7 +199,7 @@ class Maintenance extends Base
 
         } else {
             // Hand off to the task controller
-            $taskController->run($task->taskId);
+            $taskController->run($request, $response, $task->taskId);
 
             // Echo the task output
             $task = $this->taskFactory->getById($task->taskId);

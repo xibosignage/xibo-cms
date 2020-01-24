@@ -25,6 +25,7 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Entity\UserGroup;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
@@ -209,12 +210,13 @@ class Notification extends Base
     function grid(Request $request, Response $response)
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
+
         $filter = [
             'notificationId' => $sanitizedQueryParams->getInt('notificationId'),
             'subject' => $sanitizedQueryParams->getString('subject')
         ];
         $embed = ($sanitizedQueryParams->getString('embed') != null) ? explode(',', $sanitizedQueryParams->getString('embed')) : [];
-        $notifications = $this->notificationFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $notifications = $this->notificationFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request), $request);
 
         foreach ($notifications as $notification) {
             /* @var \Xibo\Entity\Notification $notification */
@@ -326,7 +328,7 @@ class Notification extends Base
      */
     public function editForm(Request $request, Response $response, $id)
     {
-        $notification = $this->notificationFactory->getById($id);
+        $notification = $this->notificationFactory->getById($id, $request);
         $notification->load();
 
         // Adjust the dates
@@ -395,7 +397,7 @@ class Notification extends Base
      */
     public function deleteForm(Request $request, Response $response, $id)
     {
-        $notification = $this->notificationFactory->getById($id);
+        $notification = $this->notificationFactory->getById($id, $request);
 
         if (!$this->getUser($request)->checkDeleteable($notification)) {
             throw new AccessDeniedException();
@@ -689,7 +691,7 @@ class Notification extends Base
      */
     public function edit(Request $request, Response $response, $id)
     {
-        $notification = $this->notificationFactory->getById($id);
+        $notification = $this->notificationFactory->getById($id, $request);
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $notification->load();
 
@@ -712,14 +714,14 @@ class Notification extends Base
         $notification->userGroups = [];
 
         // Displays and Users to link
-        foreach ($sanitizedParams->getIntArray('displayGroupIds') as $displayGroupId) {
+        foreach ($sanitizedParams->getIntArray('displayGroupIds', ['default' => []]) as $displayGroupId) {
             $notification->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
 
             // Notify (don't collect)
             $this->displayNotifyService->collectLater()->notifyByDisplayGroupId($displayGroupId);
         }
 
-        foreach ($sanitizedParams->getIntArray('userGroupIds') as $userGroupId) {
+        foreach ($sanitizedParams->getIntArray('userGroupIds', ['default' => []]) as $userGroupId) {
             $notification->assignUserGroup($this->userGroupFactory->getById($userGroupId));
         }
 
@@ -770,7 +772,7 @@ class Notification extends Base
      */
     public function delete(Request $request, Response $response, $id)
     {
-        $notification = $this->notificationFactory->getById($id);
+        $notification = $this->notificationFactory->getById($id, $request);
 
         if (!$this->getUser($request)->checkDeleteable($notification)) {
             throw new AccessDeniedException();
@@ -796,9 +798,9 @@ class Notification extends Base
         return $this->render($request, $response);
     }
 
-    public function exportAttachment($notificationId)
+    public function exportAttachment(Request $request, Response $response, $id)
     {
-        $notification = $this->notificationFactory->getById($notificationId);
+        $notification = $this->notificationFactory->getById($id, $request);
 
         $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION'). 'attachment/'.$notification->filename;
 

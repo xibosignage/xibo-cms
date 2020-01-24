@@ -1822,7 +1822,7 @@ class Schedule extends Base
             'displayGroupId' => (($from == 'DisplayGroup') ? $id : 0),
             'displays' => $displays,
             'displayGroups' => $groups,
-            'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1], $request),
+            'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1], [], $request),
             'alwaysDayPart' => $this->dayPartFactory->getAlwaysDayPart(),
             'customDayPart' => $this->dayPartFactory->getCustomDayPart(),
             'help' => $this->getHelp()->link('Schedule', 'ScheduleNow')
