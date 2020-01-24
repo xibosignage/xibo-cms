@@ -509,7 +509,8 @@ class Display extends Base
             'loggedIn' => $this->getSanitizer()->getInt('loggedIn'),
             'lastAccessed' => ($this->getSanitizer()->getDate('lastAccessed') != null) ? $this->getSanitizer()->getDate('lastAccessed')->format('U') : null,
             'displayGroupIdMembers' => $this->getSanitizer()->getInt('displayGroupIdMembers'),
-            'orientation' => $this->getSanitizer()->getString('orientation')
+            'orientation' => $this->getSanitizer()->getString('orientation'),
+            'commercialLicence' => $this->getSanitizer()->getInt('commercialLicence')
         ];
 
         // Get a list of displays
@@ -585,6 +586,20 @@ class Display extends Base
 
                 default:
                     $display->statusDescription = __('Unknown Display Status');
+            }
+
+            // Commercial Licence
+            switch ($display->commercialLicence) {
+                case 1:
+                    $display->commercialLicenceDescription = __('Display is fully licensed');
+                    break;
+
+                case 2:
+                    $display->commercialLicenceDescription = __('Display is on a trial licence');
+                    break;
+
+                default:
+                    $display->commercialLicenceDescription = __('Display is not licensed');
             }
 
             // Thumbnail
@@ -673,7 +688,15 @@ class Display extends Base
                     $display->buttons[] = array(
                         'id' => 'display_button_checkLicence',
                         'url' => $this->urlFor('display.licencecheck.form', ['id' => $display->displayId]),
-                        'text' => __('Check Licence')
+                        'text' => __('Check Licence'),
+                        'multi-select' => true,
+                        'dataAttributes' => array(
+                            array('name' => 'commit-url', 'value' => $this->urlFor('display.licencecheck', ['id' => $display->displayId])),
+                            array('name' => 'commit-method', 'value' => 'put'),
+                            array('name' => 'id', 'value' => 'display_button_checkLicence'),
+                            array('name' => 'text', 'value' => __('Check Licence')),
+                            array('name' => 'rowtitle', 'value' => $display->display)
+                        )
                     );
                 }
 
@@ -1895,7 +1918,7 @@ class Display extends Base
     }
 
     /**
-     * Request ScreenShot form
+     * Check commercial licence form
      * @param int $displayId
      * @throws \Xibo\Exception\NotFoundException
      */
@@ -1903,8 +1926,9 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($displayId);
 
-        if (!$this->getUser()->checkViewable($display))
+        if (!$this->getUser()->checkViewable($display)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'display-form-licence-check';
         $this->getState()->setData([
@@ -1913,6 +1937,8 @@ class Display extends Base
     }
 
     /**
+     * Check commercial licence
+     *
      * @SWG\Put(
      *  summary="Licence Check",
      *  path="/display/licenceCheck/{displayId}",
@@ -1941,8 +1967,9 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($displayId);
 
-        if (!$this->getUser()->checkViewable($display))
+        if (!$this->getUser()->checkViewable($display)) {
             throw new AccessDeniedException();
+        }
 
         if (empty($display->xmrChannel)) {
             throw new InvalidArgumentException('XMR is not configured for this Display', 'xmrChannel');

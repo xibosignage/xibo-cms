@@ -502,6 +502,25 @@ class Soap4 extends Soap
         $this->display->storageTotalSpace = $this->getSanitizer()->getInt('totalSpace', $this->display->storageTotalSpace, $status);
         $this->display->lastCommandSuccess = $this->getSanitizer()->getCheckbox('lastCommandSuccess', $this->display->lastCommandSuccess, $status);
         $this->display->deviceName = $this->getSanitizer()->getString('deviceName', $this->display->deviceName, $status);
+        $commercialLicenceString = $this->getSanitizer()->getString('licenceResult', null, $status);
+
+        // Commercial Licence Check,  0 - Not licensed, 1 - licensed, 2 - trial licence, 3 - not applicable
+        if (!empty($commercialLicenceString)) {
+            if ($commercialLicenceString === 'Licensed fully') {
+                $commercialLicence = 1;
+            } elseif ($commercialLicenceString === 'Trial') {
+                $commercialLicence = 2;
+            } else {
+                $commercialLicence = 0;
+            }
+
+            $this->display->commercialLicence = $commercialLicence;
+        }
+
+        // commercial licence not applicable for Windows and Linux players.
+        if (in_array($this->display->clientType, ['windows', 'linux'])) {
+            $this->display->commercialLicence = 3;
+        }
 
         if ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1 && $this->display->hasPropertyChanged('deviceName')) {
             $this->display->display = $this->display->deviceName;

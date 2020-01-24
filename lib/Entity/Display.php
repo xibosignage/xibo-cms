@@ -348,6 +348,12 @@ class Display implements \JsonSerializable
      */
     public $resolution;
 
+    /**
+     * @SWG\Property(description="Status of the commercial licence for this Display. 0 - Not licensed, 1 - licensed, 2 - trial licence, 3 - not applicable")
+     * @var int
+     */
+    public $commercialLicence;
+
     /** @var array The configuration from the Display Profile  */
     private $profileConfig;
 
@@ -718,8 +724,8 @@ class Display implements \JsonSerializable
     private function add()
     {
         $this->displayId = $this->getStore()->insert('
-            INSERT INTO display (display, auditingUntil, defaultlayoutid, license, licensed, lastAccessed, inc_schedule, email_alert, alert_timeout, clientAddress, xmrChannel, xmrPubKey, lastCommandSuccess, macAddress, lastChanged, lastWakeOnLanCommandSent, client_type, client_version, client_code, overrideConfig, newCmsAddress, newCmsKey)
-              VALUES (:display, :auditingUntil, :defaultlayoutid, :license, :licensed, :lastAccessed, :inc_schedule, :email_alert, :alert_timeout, :clientAddress, :xmrChannel, :xmrPubKey, :lastCommandSuccess, :macAddress, :lastChanged, :lastWakeOnLanCommandSent, :clientType, :clientVersion, :clientCode, :overrideConfig, :newCmsAddress, :newCmsKey)
+            INSERT INTO display (display, auditingUntil, defaultlayoutid, license, licensed, lastAccessed, inc_schedule, email_alert, alert_timeout, clientAddress, xmrChannel, xmrPubKey, lastCommandSuccess, macAddress, lastChanged, lastWakeOnLanCommandSent, client_type, client_version, client_code, overrideConfig, newCmsAddress, newCmsKey, commercialLicence)
+              VALUES (:display, :auditingUntil, :defaultlayoutid, :license, :licensed, :lastAccessed, :inc_schedule, :email_alert, :alert_timeout, :clientAddress, :xmrChannel, :xmrPubKey, :lastCommandSuccess, :macAddress, :lastChanged, :lastWakeOnLanCommandSent, :clientType, :clientVersion, :clientCode, :overrideConfig, :newCmsAddress, :newCmsKey, :commercialLicence)
         ', [
             'display' => $this->display,
             'auditingUntil' => 0,
@@ -742,7 +748,8 @@ class Display implements \JsonSerializable
             'clientCode' => $this->clientCode,
             'overrideConfig' => ($this->overrideConfig == '') ? null : json_encode($this->overrideConfig),
             'newCmsAddress' => null,
-            'newCmsKey' => null
+            'newCmsKey' => null,
+            'commercialLicence' => $this->commercialLicence
         ]);
 
 
@@ -755,6 +762,7 @@ class Display implements \JsonSerializable
 
         $displayGroup->save();
     }
+
 
     private function edit()
     {
@@ -798,7 +806,8 @@ class Display implements \JsonSerializable
                     `newCmsAddress` = :newCmsAddress,
                     `newCmsKey` = :newCmsKey,
                     `orientation` = :orientation,
-                    `resolution` = :resolution
+                    `resolution` = :resolution,
+                    `commercialLicence` = :commercialLicence
              WHERE displayid = :displayId
         ', [
             'display' => $this->display,
@@ -841,6 +850,7 @@ class Display implements \JsonSerializable
             'newCmsKey' => $this->newCmsKey,
             'orientation' => $this->orientation,
             'resolution' => $this->resolution,
+            'commercialLicence' => $this->commercialLicence,
             'displayId' => $this->displayId
         ]);
 
