@@ -35,6 +35,7 @@ use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\CampaignFactory;
+use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -131,6 +132,9 @@ class User extends Base
     /** @var PlaylistFactory */
     private $playlistFactory;
 
+    /** @var DataSetFactory */
+    private $dataSetFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -156,10 +160,11 @@ class User extends Base
      * @param WidgetFactory $widgetFactory
      * @param PlayerVersionFactory $playerVersionFactory
      * @param PlaylistFactory $playlistFactory
+     * @param DataSetFactory $dataSetFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userFactory,
                                 $userTypeFactory, $userGroupFactory, $pageFactory, $permissionFactory,
-                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory)
+                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory, $dataSetFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -179,6 +184,7 @@ class User extends Base
         $this->widgetFactory = $widgetFactory;
         $this->playerVersionFactory = $playerVersionFactory;
         $this->playlistFactory = $playlistFactory;
+        $this->dataSetFactory = $dataSetFactory;
     }
 
     /**
@@ -852,7 +858,7 @@ class User extends Base
             throw new AccessDeniedException();
 
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
-        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory, $this->playerVersionFactory, $this->playlistFactory);
+        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory, $this->playerVersionFactory, $this->playlistFactory, $this->dataSetFactory);
 
         if ($this->getSanitizer()->getCheckbox('deleteAllItems') != 1) {
 
@@ -1000,14 +1006,6 @@ class User extends Base
         $user->twoFactorTypeId = $this->getSanitizer()->getInt('twoFactorTypeId');
         $code = $this->getSanitizer()->getString('code');
         $recoveryCodes = $this->getSanitizer()->getStringArray('twoFactorRecoveryCodes');
-
-        if ($user->isSuperAdmin()) {
-            $user->showContentFrom = $this->getSanitizer()->getInt('showContentFrom');
-        }
-
-        if (!$user->isSuperAdmin() && $this->getSanitizer()->getInt('showContentFrom') == 2) {
-            throw new InvalidArgumentException(__('Option available only for Super Admins'), 'showContentFrom');
-        }
 
         if ($recoveryCodes != null || $recoveryCodes != []) {
             $user->twoFactorRecoveryCodes = json_decode($this->getSanitizer()->getStringArray('twoFactorRecoveryCodes'));
@@ -1328,6 +1326,7 @@ class User extends Base
             'permissions' => $currentPermissions,
             'canSetOwner' => $object->canChangeOwner(),
             'owners' => $this->userFactory->query(),
+            'object' => $object,
             'help' => [
                 'permissions' => $this->getHelp()->link('Campaign', 'Permissions')
             ]
@@ -1422,7 +1421,7 @@ class User extends Base
             if ($object->permissionsClass() == 'Xibo\Entity\Campaign') {
                 $this->getLog()->debug('Changing owner on child Layout');
 
-                foreach ($this->layoutFactory->getByCampaignId($object->getId()) as $layout) {
+                foreach ($this->layoutFactory->getByCampaignId($object->getId(), true, true) as $layout) {
                     $layout->setOwner($ownerId, true);
                     $layout->save(['notify' => false]);
                 }
@@ -1791,12 +1790,23 @@ class User extends Base
      *      description="successful operation"
      *  )
      * )
+     * @throws InvalidArgumentException
+     * @throws XiboException
      */
     public function prefEditFromForm()
     {
         $this->getUser()->setOptionValue('navigationMenuPosition', $this->getSanitizer()->getString('navigationMenuPosition'));
         $this->getUser()->setOptionValue('useLibraryDuration', $this->getSanitizer()->getCheckbox('useLibraryDuration'));
         $this->getUser()->setOptionValue('showThumbnailColumn', $this->getSanitizer()->getCheckbox('showThumbnailColumn'));
+
+        if ($this->getUser()->isSuperAdmin()) {
+            $this->getUser()->showContentFrom = $this->getSanitizer()->getInt('showContentFrom');
+        }
+
+        if (!$this->getUser()->isSuperAdmin() && $this->getSanitizer()->getInt('showContentFrom') == 2) {
+            throw new InvalidArgumentException(__('Option available only for Super Admins'), 'showContentFrom');
+        }
+
         $this->getUser()->save();
 
         // Return

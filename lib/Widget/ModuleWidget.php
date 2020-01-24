@@ -65,9 +65,10 @@ use Xibo\Storage\StorageServiceInterface;
  */
 abstract class ModuleWidget implements ModuleInterface
 {
-    protected static $STATUS_INVALID = 0;
-    protected static $STATUS_VALID = 1;
-    protected static $STATUS_PLAYER = 2;
+
+    public static $STATUS_VALID = 1;
+    public static $STATUS_PLAYER = 2;
+    public static $STATUS_INVALID = 4;
 
     /**
      * @var Slim
@@ -674,6 +675,24 @@ abstract class ModuleWidget implements ModuleInterface
     final public function getCalculatedDurationForGetResource()
     {
         return ($this->widget->useDuration == 0) ? $this->getModule()->defaultDuration : $this->widget->duration;
+    }
+
+    /**
+     * Check if status message is not empty
+     * @return bool
+     */
+    final public function hasStatusMessage()
+    {
+        return !empty($this->statusMessage);
+    }
+
+    /**
+     * Gets the Module status message
+     * @return string
+     */
+    final public function getStatusMessage()
+    {
+        return $this->statusMessage;
     }
 
     /**

@@ -38,7 +38,17 @@ function dsInit(layoutid, options, layoutPreview) {
     document.onkeypress = keyHandler;
 
     playLog(0, "info", "Xibo HTML Preview v" + VERSION + " Starting Up", true);
-    var preload = html5Preloader();
+    var preload = {
+        addedFiles: [],
+        preloader: html5Preloader(),
+        addFiles: function (url) { // Wrapped add files method, checking if the files were added already and save a list
+            if(!this.addedFiles.includes(url)) {
+                this.preloader.addFiles(url);
+                this.addedFiles.push(url);
+            }
+        }
+    };
+
     new Layout(layoutid, options, preload, layoutPreview);
 }
 
@@ -217,9 +227,10 @@ function Layout(id, options, preload, layoutPreview) {
         playLog(4, "debug", "Layout " + self.id + " has " + self.regionObjects.length + " regions");
         self.ready = true;
         preload.addFiles(options.loaderUrl);
+
         if (layoutPreview){
             // previewing only one layout in the layout preview page
-            preload.on('finish', self.run);
+            preload.preloader.on('finish', self.run);
         } else {
             // previewing a set of layouts in the campaign preview page
             self.run();
@@ -662,7 +673,7 @@ function media(parent, id, xml, options, preload) {
         var tmpUrl2 = options.libraryDownloadUrl.replace(":id", mediaId);
 
         //preload.getFile(tmpUrl2);
-        if(preload.filesLoadedMap[tmpUrl2] != undefined) {
+        if(preload.preloader.filesLoadedMap[tmpUrl2] != undefined) {
             preload.addFiles(tmpUrl2);
         }
 

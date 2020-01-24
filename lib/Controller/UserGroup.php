@@ -646,7 +646,7 @@ class UserGroup extends Base
     /**
      * Assign User to the User Group
      * @SWG\Post(
-     *  path="group/members/assign/{userGroupId}",
+     *  path="/group/members/assign/{userGroupId}",
      *  operationId="userGroupAssign",
      *  tags={"usergroup"},
      *  summary="Assign User to User Group",
@@ -730,7 +730,7 @@ class UserGroup extends Base
     /**
      * Unassign User to the User Group
      * @SWG\Post(
-     *  path="group/members/unassign/{userGroupId}",
+     *  path="/group/members/unassign/{userGroupId}",
      *  operationId="userGroupUnassign",
      *  tags={"usergroup"},
      *  summary="Unassign User from User Group",

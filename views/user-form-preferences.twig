@@ -50,6 +50,16 @@
                     ] %}
                     {{ forms.dropdown("navigationMenuPosition", "single", title, currentUser.getOptionValue("navigationMenuPosition", "default"), options, "id", "value", helpText) }}
                 {% endif %}
+
+                {% if currentUser.isSuperAdmin() %}
+                    {% set title %}{% trans "Show Content From" %}{% endset %}
+                    {% set helpText %}{% trans "Select Standard or DOOH to see relevant content" %}{% endset %}
+                    {% set options = [
+                        { id: 1, value: "Standard"|trans },
+                        { id: 2, value: "DOOH"|trans }
+                    ] %}
+                    {{ forms.dropdown("showContentFrom", "single", title, currentUser.showContentFrom, options, "id", "value", helpText) }}
+                {% endif %}
             
                 {% set title %}{% trans "Use Library duration?" %}{% endset %}
                 {% set helpText %}{% trans "Assign all Media items based on their Library duration. Leave this option unticked to use the Default Module duration." %}{% endset %}

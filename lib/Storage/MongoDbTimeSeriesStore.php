@@ -438,12 +438,12 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                ],
            ];
 
-           if ($start !== null && $length !== null) {
-               $query[]['$skip'] =  $start;
-               $query[]['$limit'] = $length;
-           }
+            if ($start !== null && $length !== null) {
+                $query[]['$skip'] =  $start;
+                $query[]['$limit'] = $length;
+            }
 
-           $cursor = $collection->aggregate($query);
+            $cursor = $collection->aggregate($query);
 
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());

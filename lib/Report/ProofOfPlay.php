@@ -466,7 +466,19 @@ class ProofOfPlay implements ReportInterface
                 $fromDt->startOfDay();
 
                 $toDt = $this->getSanitizer()->getDate('statsToDt', $this->getDate()->parse());
-                $toDt->addDay()->startOfDay();
+                $toDt->startOfDay();
+
+                $fromDtTime = $this->getSanitizer()->getString('statsFromDtTime');
+                $toDtTime = $this->getSanitizer()->getString('statsToDtTime');
+
+                if ($fromDtTime !== null && $toDtTime !== null) {
+
+                    $startTimeArray = explode(':', $fromDtTime);
+                    $fromDt->setTime(intval($startTimeArray[0]), intval($startTimeArray[1]));
+
+                    $toTimeArray = explode(':', $toDtTime);
+                    $toDt->setTime(intval($toTimeArray[0]), intval($toTimeArray[1]));
+                }
 
                 // What if the fromdt and todt are exactly the same?
                 // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)

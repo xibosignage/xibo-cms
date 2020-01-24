@@ -229,7 +229,8 @@ class DisplayGroup extends Base
             'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
             'isDisplaySpecific' => $this->getSanitizer()->getInt('isDisplaySpecific'),
             'displayGroupIdMembers' => $this->getSanitizer()->getInt('displayGroupIdMembers'),
-            'userId' => $this->getSanitizer()->getInt('userId')
+            'userId' => $this->getSanitizer()->getInt('userId'),
+            'isDynamic' => $this->getSanitizer()->getInt('isDynamic')
         ];
 
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
@@ -582,9 +583,11 @@ class DisplayGroup extends Base
     public function edit($displayGroupId)
     {
         $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+        $preEditIsDynamic = $displayGroup->getOriginalValue('isDynamic');
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $displayGroup->displayGroup = $this->getSanitizer()->getString('displayGroup');
@@ -593,6 +596,26 @@ class DisplayGroup extends Base
         $displayGroup->isDynamic = $this->getSanitizer()->getCheckbox('isDynamic');
         $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1) ? $this->getSanitizer()->getString('dynamicCriteria') : null;
         $displayGroup->dynamicCriteriaTags = ($displayGroup->isDynamic == 1) ? $this->getSanitizer()->getString('dynamicCriteriaTags') : null;
+
+        // if we have changed the type from dynamic to non-dynamic or other way around, clear display/dg members
+        if ($preEditIsDynamic != $displayGroup->isDynamic) {
+            $this->getLog()->debug('Display Group Id ' . $displayGroup->displayGroupId . ' switched is dynamic from ' . $preEditIsDynamic . ' To ' . $displayGroup->isDynamic . ' Clearing members for this Display Group.');
+            // get an array of assigned displays
+            $membersDisplays = $this->displayFactory->getByDisplayGroupId($displayGroupId);
+
+            // get an array of assigned display groups
+            $membersDisplayGroups = $this->displayGroupFactory->getByParentId($displayGroupId);
+
+            // unassign Displays
+            foreach ($membersDisplays as $display) {
+                $displayGroup->unassignDisplay($display);
+            }
+
+            // unassign Display Groups
+            foreach ($membersDisplayGroups as $dg) {
+                $displayGroup->unassignDisplayGroup($dg);
+            }
+        }
 
         $displayGroup->save();
 
