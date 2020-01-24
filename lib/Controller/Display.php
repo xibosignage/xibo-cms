@@ -1366,11 +1366,13 @@ class Display extends Base
         $date = $display->getCurrentScreenShotTime($this->pool);
 
         if ($date != '') {
+            $w = $img->getWidth();
+            $h = $img->getHeight();
             $img
-                ->rectangle(0, 0, 110, 15, function($draw) {
+                ->rectangle($w - 110, $h - 15, 110, 15, function($draw) {
                     $draw->background('#ffffff');
                 })
-                ->text($date, 10, 10);
+                ->text($date, $w - 100, $h - 5);
         }
 
         // Cache headers
