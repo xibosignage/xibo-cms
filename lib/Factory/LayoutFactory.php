@@ -1883,13 +1883,13 @@ class LayoutFactory extends BaseFactory
 
         // PlaylistID
         if ($this->getSanitizer()->getInt('playlistId', 0, $filterBy) != 0) {
-            $body .= ' AND layout.layoutId IN (
-                SELECT DISTINCT `region`.layoutId
-                   FROM `playlist`
-                    INNER JOIN `region`
-                    ON `region`.regionId = `playlist`.regionId
-                 WHERE `playlist`.playlistId = :playlistId
-                )
+            $body .= ' AND layout.layoutId IN (SELECT DISTINCT `region`.layoutId
+                    FROM `lkplaylistplaylist`
+                      INNER JOIN `playlist`
+                      ON `playlist`.playlistId = `lkplaylistplaylist`.parentId
+                      INNER JOIN `region`
+                      ON `region`.regionId = `playlist`.regionId
+                   WHERE `lkplaylistplaylist`.childId = :playlistId )
             ';
 
             $params['playlistId'] = $this->getSanitizer()->getInt('playlistId', 0, $filterBy);

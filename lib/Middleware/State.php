@@ -883,7 +883,10 @@ class State extends Middleware
                 $container->moduleFactory,
                 $container->userGroupFactory,
                 $container->userFactory,
-                $container->tagFactory
+                $container->tagFactory,
+                $container->layoutFactory,
+                $container->displayFactory,
+                $container->scheduleFactory
             );
         });
 
