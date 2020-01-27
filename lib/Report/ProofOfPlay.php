@@ -341,8 +341,8 @@ class ProofOfPlay implements ReportInterface
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         $displayId = $sanitizedParams->getInt('displayId', ['default' => $filterCriteria]);
-        $layoutIds = $sanitizedParams->getIntArray('layoutId', ['default' => $filterCriteria]);
-        $mediaIds = $sanitizedParams->getIntArray('mediaId', ['default' => $filterCriteria]);
+        $layoutIds = $sanitizedParams->getIntArray('layoutId', ['default' => []]);
+        $mediaIds = $sanitizedParams->getIntArray('mediaId', ['default' => []]);
         $type = strtolower($sanitizedParams->getString('type'));
         $tags = $sanitizedParams->getString('tags', ['default' => $filterCriteria]);
         $tagsType = $sanitizedParams->getString('tagsType', ['default' => $filterCriteria]);
@@ -407,9 +407,10 @@ class ProofOfPlay implements ReportInterface
                 $length = $sanitizedFilter->getInt('length', ['default' => 10]);
             }
         } else {
+            $sanitizedFilterCriteria = $this->getSanitizer($filterCriteria);
             $start = 0;
             $length = -1;
-            $sortBy = $this->getSanitizer()->getString('sortBy', $filterCriteria);
+            $sortBy = $sanitizedFilterCriteria->getString('sortBy');
 
             $columns = ($sortBy == '') ? ['widgetId'] : [$sortBy];
         }
@@ -419,7 +420,7 @@ class ProofOfPlay implements ReportInterface
         // --------------------------
         // Our report has a range filter which determins whether or not the user has to enter their own from / to dates
         // check the range filter first and set from/to dates accordingly.
-        $reportFilter = $this->getSanitizer()->getString('reportFilter', $filterCriteria);
+        $reportFilter = $sanitizedParams->getString('reportFilter');
 
         // Use the current date as a helper
         $now = $this->getDate()->parse();
@@ -469,10 +470,10 @@ class ProofOfPlay implements ReportInterface
             case '':
             default:
                 // Expect dates to be provided.
-                $fromDt = $this->getSanitizer()->getDate('statsFromDt', $this->getDate()->parse()->addDay(-1));
+                $fromDt = $sanitizedParams->getDate('statsFromDt', ['default' => $this->getDate()->parse()->subDay()]);
                 $fromDt->startOfDay();
 
-                $toDt = $this->getSanitizer()->getDate('statsToDt', $this->getDate()->parse());
+                $toDt = $sanitizedParams->getDate('statsToDt', ['default' => $this->getDate()->parse()]);
                 $toDt->addDay()->startOfDay();
 
                 // What if the fromdt and todt are exactly the same?
@@ -499,27 +500,28 @@ class ProofOfPlay implements ReportInterface
         foreach ($result['result'] as $row) {
 
             $entry = [];
+            $sanitizedRow = $this->getSanitizer($row);
 
-            $widgetId = $this->getSanitizer()->int($row['widgetId']);
-            $widgetName = $this->getSanitizer()->string($row['media']);
+            $widgetId = $sanitizedRow->getInt('widgetId');
+            $widgetName = $sanitizedRow->getString('media');
             // If the media name is empty, and the widgetid is not, then we can assume it has been deleted.
             $widgetName = ($widgetName == '' &&  $widgetId != 0) ? __('Deleted from Layout') : $widgetName;
-            $displayName = $this->getSanitizer()->string($row['display']);
-            $layoutName = $this->getSanitizer()->string($row['layout']);
+            $displayName = $sanitizedRow->getString('display');
+            $layoutName = $sanitizedRow->getString('layout');
 
-            $entry['type'] = $this->getSanitizer()->string($row['type']);
-            $entry['displayId'] = $this->getSanitizer()->int(($row['displayId']));
+            $entry['type'] = $sanitizedRow->getString('type');
+            $entry['displayId'] = $sanitizedRow->getInt('displayId');
             $entry['display'] = ($displayName != '') ? $displayName : __('Not Found');
-            $entry['layoutId'] = $this->getSanitizer()->int($row['layoutId']);
+            $entry['layoutId'] = $sanitizedRow->getInt('layoutId');
             $entry['layout'] = ($layoutName != '') ? $layoutName :  __('Not Found');
-            $entry['widgetId'] = $this->getSanitizer()->int($row['widgetId']);
+            $entry['widgetId'] = $sanitizedRow->getInt('widgetId');
             $entry['media'] = $widgetName;
-            $entry['tag'] = $this->getSanitizer()->string($row['tag']);
-            $entry['numberPlays'] = $this->getSanitizer()->int($row['numberPlays']);
-            $entry['duration'] = $this->getSanitizer()->int($row['duration']);
+            $entry['tag'] = $sanitizedRow->getString('tag');
+            $entry['numberPlays'] = $sanitizedRow->getInt('numberPlays');
+            $entry['duration'] = $sanitizedRow->getInt('duration');
             $entry['minStart'] = $this->getDate()->parse($row['minStart'], 'U')->format('Y-m-d H:i:s');
             $entry['maxEnd'] = $this->getDate()->parse($row['maxEnd'], 'U')->format('Y-m-d H:i:s');
-            $entry['mediaId'] = $this->getSanitizer()->int($row['mediaId']);
+            $entry['mediaId'] = $sanitizedRow->getInt('mediaId');
 
             $rows[] = $entry;
         }

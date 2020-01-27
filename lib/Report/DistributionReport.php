@@ -204,7 +204,7 @@ class DistributionReport implements ReportInterface
     public function setReportScheduleFormData(Request $request)
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
-$this->getLog()->debug('setReportSchedule params ' . json_encode($request->getParams()));
+
         $filter = $sanitizedParams->getString('filter');
         $groupByFilter = $sanitizedParams->getString('groupByFilter');
         $displayId = $sanitizedParams->getString('displayId');
@@ -329,15 +329,15 @@ $this->getLog()->debug('setReportSchedule params ' . json_encode($request->getPa
     public function getResults($filterCriteria, Request $request)
     {
         $this->getLog()->debug('Filter criteria: '. json_encode($filterCriteria, JSON_PRETTY_PRINT));
-        $sanitizedCriteria = $this->getSanitizer($request->getParams());
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $type = strtolower($sanitizedCriteria->getString('type', ['default' => $filterCriteria]));
-        $layoutId = $sanitizedCriteria->getInt('layoutId', ['default' => $filterCriteria]);
-        $mediaId = $sanitizedCriteria->getInt('mediaId', ['default' => $filterCriteria]);
-        $eventTag = $sanitizedCriteria->getString('eventTag', ['default' => $filterCriteria]);
+        $type = strtolower($sanitizedParams->getString('type'));
+        $layoutId = $sanitizedParams->getInt('layoutId');
+        $mediaId = $sanitizedParams->getInt('mediaId');
+        $eventTag = $sanitizedParams->getString('eventTag');
 
-        $displayId = $sanitizedCriteria->getInt('displayId', ['default' => $filterCriteria]);
-        $displayGroupId = $sanitizedCriteria->getInt('displayGroupId', ['default' => $filterCriteria]);
+        $displayId = $sanitizedParams->getInt('displayId');
+        $displayGroupId = $sanitizedParams->getInt('displayGroupId');
 
         // Get an array of display id this user has access to.
         $displayIds = [];
@@ -376,7 +376,7 @@ $this->getLog()->debug('setReportSchedule params ' . json_encode($request->getPa
         // --------------------------
         // Our report has a range filter which determins whether or not the user has to enter their own from / to dates
         // check the range filter first and set from/to dates accordingly.
-        $reportFilter = $sanitizedCriteria->getString('reportFilter');
+        $reportFilter = $sanitizedParams->getString('reportFilter');
 
         // Use the current date as a helper
         $now = $this->getDate()->parse();
@@ -426,10 +426,10 @@ $this->getLog()->debug('setReportSchedule params ' . json_encode($request->getPa
             case '':
             default:
                 // Expect dates to be provided.
-                $fromDt = $sanitizedCriteria->getDate('statsFromDt', ['default' => $this->getDate()->parse()->subDay()]);
+                $fromDt = $sanitizedParams->getDate('statsFromDt', ['default' => $this->getDate()->parse()->subDay()]);
                 $fromDt->startOfDay();
 
-                $toDt = $sanitizedCriteria->getDate('statsToDt', ['default' =>  $this->getDate()->parse()]);
+                $toDt = $sanitizedParams->getDate('statsToDt', ['default' =>  $this->getDate()->parse()]);
                 $toDt->addDay()->startOfDay();
 
                 // What if the fromdt and todt are exactly the same?
@@ -443,7 +443,7 @@ $this->getLog()->debug('setReportSchedule params ' . json_encode($request->getPa
 
         // Use the group by filter provided
         // NB: this differs from the Summary Report where we set the group by according to the range selected
-        $groupByFilter = $sanitizedCriteria->getString('groupByFilter', ['default' => $filterCriteria]);
+        $groupByFilter = $sanitizedParams->getString('groupByFilter');
 
         //
         // Get Results!

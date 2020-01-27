@@ -356,6 +356,7 @@ trait ReportTrait
 
     /**
      * Set the filter
+     * @param Request $request
      * @param array[Optional] $extraFilter
      * @return array
      */
@@ -384,6 +385,7 @@ trait ReportTrait
 
     /**
      * Set the sort order
+     * @param Request $request
      * @return array
      */
     public function gridRenderSort(Request $request)
