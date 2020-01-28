@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -1253,6 +1253,7 @@ let generateGeoMap = function () {
 
         function onEachFeature(feature, layer) {
             drawnItems.addLayer(layer);
+            mymap.fitBounds(layer.getBounds());
         }
 
         // disable adding new polygons
