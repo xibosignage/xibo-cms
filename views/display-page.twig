@@ -163,6 +163,8 @@
                                 <th>{% trans "IP Address" %}</th>
                                 <th>{% trans "Mac Address" %}</th>
                                 <th>{% trans "Timezone" %}</th>
+                                <th>{% trans "Latitude" %}</th>
+                                <th>{% trans "Longitude" %}</th>
                                 <th>{% trans "Screen shot?" %}</th>
                                 <th>{% trans "Thumbnail" %}</th>
                                 <th>{% trans "Bandwidth Limit" %}</th>
@@ -344,6 +346,8 @@
                     {"data": "clientAddress", "visible": false},
                     {"data": "macAddress"},
                     {"data": "timeZone", "visible": false},
+                    {"data": "latitude", "visible": false},
+                    {"data": "longitude", "visible": false},
                     {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false, "name": "screenShotRequested"},
                     {
                         "name": "thumbnail",

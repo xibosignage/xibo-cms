@@ -543,6 +543,15 @@ class Soap4 extends Soap
             $this->display->resolution = $width . 'x' . $height;
         }
 
+        // Lat/Long
+        $latitude = $this->getSanitizer()->getDouble('latitude', null, $status);
+        $longitude = $this->getSanitizer()->getDouble('longitude', null, $status);
+
+        if ($latitude != null && $longitude != null) {
+            $this->display->latitude = $latitude;
+            $this->display->longitude = $longitude;
+        }
+
         // Touch the display record
         try {
             if (count($this->display->getChangedProperties()) > 0)
