@@ -362,7 +362,7 @@ class Stats extends Base
         $displayIds = [];
         if (!$this->getUser($request)->isSuperAdmin()) {
             // Get an array of display id this user has access to.
-            foreach ($this->displayFactory->query() as $display) {
+            foreach ($this->displayFactory->query(null, [], $request) as $display) {
                 $displayIds[] = $display->displayId;
             }
 

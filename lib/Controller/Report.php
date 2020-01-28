@@ -118,6 +118,7 @@ class Report extends Base
         $this->savedReportFactory = $savedReportFactory;
         $this->mediaFactory = $mediaFactory;
         $this->userFactory = $userFactory;
+        $this->view = $view;
     }
 
     /// //<editor-fold desc="Report Schedules">
@@ -143,7 +144,7 @@ class Report extends Base
             'userId' => $sanitizedQueryParams->getInt('userId'),
             'reportScheduleId' => $sanitizedQueryParams->getInt('reportScheduleId'),
             'reportName' => $sanitizedQueryParams->getString('reportName')
-        ], $request));
+        ], $request), $request);
 
         /** @var \Xibo\Entity\ReportSchedule $reportSchedule */
         foreach ($reportSchedules as $reportSchedule) {
@@ -262,7 +263,7 @@ class Report extends Base
             ];
 
             // Delete all saved report
-            $savedreports = $this->savedReportFactory->query(null, ['reportScheduleId'=> $reportSchedule->reportScheduleId]);
+            $savedreports = $this->savedReportFactory->query(null, ['reportScheduleId'=> $reportSchedule->reportScheduleId], $request);
             if ((count($savedreports) > 0)  && $this->getUser($request)->checkDeleteable($reportSchedule)) {
 
                 $reportSchedule->buttons[] = ['divider' => true];
@@ -330,7 +331,7 @@ class Report extends Base
         $this->getLog()->debug('Add Report Schedule: '. $name);
 
         // Set Report Schedule form data
-        $result = $this->reportService->setReportScheduleFormData($reportName);
+        $result = $this->reportService->setReportScheduleFormData($reportName, $request);
 
         $reportSchedule = $this->reportScheduleFactory->createEmpty();
         $reportSchedule->name = $name;
@@ -371,7 +372,7 @@ class Report extends Base
      */
     public function reportScheduleEdit(Request $request, Response $response, $id)
     {
-        $reportSchedule = $this->reportScheduleFactory->getById($id);
+        $reportSchedule = $this->reportScheduleFactory->getById($id, 0, $request);
 
         if ($reportSchedule->getOwnerId() != $this->getUser($request)->userId && $this->getUser($request)->userTypeId != 1) {
             throw new AccessDeniedException();
@@ -555,7 +556,7 @@ class Report extends Base
         $reportName = $request->getParam('reportName', null);
 
         // Populate form title and hidden fields
-        $formData = $this->reportService->getReportScheduleFormData($reportName);
+        $formData = $this->reportService->getReportScheduleFormData($reportName, $request);
 
         $template = $formData['template'];
         $this->getState()->template = $template;
@@ -579,7 +580,7 @@ class Report extends Base
      */
     public function editReportScheduleForm(Request $request, Response $response, $id)
     {
-        $reportSchedule = $this->reportScheduleFactory->getById($id);
+        $reportSchedule = $this->reportScheduleFactory->getById($id, 0, $request);
 
         $this->getState()->template = 'reportschedule-form-edit';
         $this->getState()->setData([
@@ -604,7 +605,7 @@ class Report extends Base
      */
     public function resetReportScheduleForm(Request $request, Response $response, $id)
     {
-        $reportSchedule = $this->reportScheduleFactory->getById($id);
+        $reportSchedule = $this->reportScheduleFactory->getById($id, 0, $request);
 
         // Only admin can reset it
         if ($this->getUser($request)->userTypeId != 1) {
@@ -636,7 +637,7 @@ class Report extends Base
      */
     public function deleteReportScheduleForm(Request $request, Response $response, $id)
     {
-        $reportSchedule = $this->reportScheduleFactory->getById($id);
+        $reportSchedule = $this->reportScheduleFactory->getById($id, 0, $request);
 
         if (!$this->getUser($request)->checkDeleteable($reportSchedule)) {
             throw new AccessDeniedException(__('You do not have permissions to delete this report schedule'));
@@ -667,7 +668,7 @@ class Report extends Base
      */
     public function deleteAllSavedReportReportScheduleForm(Request $request, Response $response, $id)
     {
-        $reportSchedule = $this->reportScheduleFactory->getById($id);
+        $reportSchedule = $this->reportScheduleFactory->getById($id, 0, $request);
 
         if (!$this->getUser($request)->checkDeleteable($reportSchedule)) {
             throw new AccessDeniedException(__('You do not have permissions to delete saved reports of this report schedule'));
@@ -698,7 +699,7 @@ class Report extends Base
      */
     public function toggleActiveReportScheduleForm(Request $request, Response $response, $id)
     {
-        $reportSchedule = $this->reportScheduleFactory->getById($id);
+        $reportSchedule = $this->reportScheduleFactory->getById($id, 0, $request);
 
         if (!$this->getUser($request)->checkEditable($reportSchedule)) {
             throw new AccessDeniedException(__('You do not have permissions to pause/resume this report schedule'));
@@ -737,7 +738,7 @@ class Report extends Base
             'saveAs' => $sanitizedQueryParams->getString('saveAs'),
             'userId' => $sanitizedQueryParams->getInt('userId'),
             'reportName' => $sanitizedQueryParams->getString('reportName')
-        ], $request));
+        ], $request), $request);
 
         foreach ($savedReports as $savedReport) {
             /** @var \Xibo\Entity\SavedReport $savedReport */
@@ -970,7 +971,7 @@ class Report extends Base
             // Save PDF attachment
             ob_start();
             // Render the template
-            $this->view->render($response,$emailTemplate,
+            echo $this->view->fetch($emailTemplate,
                 [
                     'header' => $report->description,
                     'logo' => $this->getConfig()->uri('img/xibologo.png', true),
@@ -1086,7 +1087,7 @@ class Report extends Base
         $object = $this->reportService->createReportObject($className);
 
         // Return data to build chart
-        $results =  $object->getResults(null, $request);
+        $results =  $object->getResults([], $request);
         $this->getState()->extra = $results;
 
         return $this->render($request, $response);

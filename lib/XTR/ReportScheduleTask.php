@@ -21,6 +21,8 @@
  */
 
 namespace Xibo\XTR;
+
+use Slim\Views\Twig;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\ReportScheduleFactory;
@@ -29,8 +31,6 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\ReportServiceInterface;
-use Slim\View;
-use Slim\Slim;
 
 
 /**
@@ -41,7 +41,7 @@ class ReportScheduleTask implements TaskInterface
 {
     use TaskTrait;
 
-    /** @var View */
+    /** @var Twig */
     private $view;
 
     /** @var DateServiceInterface */
@@ -101,7 +101,7 @@ class ReportScheduleTask implements TaskInterface
     private function runReportSchedule()
     {
 
-        $reportSchedules = $this->reportScheduleFactory->query(null, ['isActive' => 1]);
+        $reportSchedules = $this->reportScheduleFactory->query(null, ['isActive' => 1, 'disableUserCheck' => 1]);
 
         // Get list of ReportSchedule
         foreach($reportSchedules as $reportSchedule) {
@@ -119,7 +119,7 @@ class ReportScheduleTask implements TaskInterface
                 }
 
                 // execute the report
-                $rs = $this->reportScheduleFactory->getById($reportSchedule->reportScheduleId);
+                $rs = $this->reportScheduleFactory->getById($reportSchedule->reportScheduleId, 1);
                 $rs->previousRunDt = $rs->lastRunDt;
                 $rs->lastRunDt = time();
                 $rs->save();
@@ -130,7 +130,7 @@ class ReportScheduleTask implements TaskInterface
                 $this->log->debug('Last run date is updated to '. $rs->lastRunDt);
 
                 // Run the report to get results
-                $result =  $this->reportService->runReport($reportSchedule->reportName, $reportSchedule->filterCriteria, $reportSchedule->userId);
+                $result =  $this->reportService->runReport($reportSchedule->reportName, $reportSchedule->filterCriteria, $reportSchedule->userId, $request);
                 $this->log->debug('Run report results: %s.', json_encode($result, JSON_PRETTY_PRINT));
 
                 //  Save the result in a json file
@@ -208,7 +208,7 @@ class ReportScheduleTask implements TaskInterface
 
             // Save PDF attachment
             ob_start();
-            $this->view->display($emailTemplate,
+            echo $this->view->fetch($emailTemplate,
                 [
                     'header' => $report->description,
                     'logo' => $this->config->uri('img/xibologo.png', true),

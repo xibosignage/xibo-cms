@@ -89,13 +89,13 @@ class ReportScheduleFactory extends BaseFactory
      * @return ReportSchedule
      * @throws NotFoundException
      */
-    public function getById($reportScheduleId)
+    public function getById($reportScheduleId, $disableUserCheck = 0, Request $request = null)
     {
 
         if ($reportScheduleId == 0)
             throw new NotFoundException();
 
-        $reportSchedules = $this->query(null, ['reportScheduleId' => $reportScheduleId]);
+        $reportSchedules = $this->query(null, ['reportScheduleId' => $reportScheduleId, 'disableUserCheck' => $disableUserCheck], $request);
 
         if (count($reportSchedules) <= 0) {
             throw new NotFoundException(\__('Report Schedule not found'));
@@ -153,7 +153,7 @@ class ReportScheduleFactory extends BaseFactory
         }
 
         if ($sanitizedFilter->getInt('reportScheduleId', ['default' => 0]) != 0) {
-            $params['reportScheduleId'] = $sanitizedFilter->getInt('reportScheduleId', 0,  $filterBy);
+            $params['reportScheduleId'] = $sanitizedFilter->getInt('reportScheduleId', ['default' => 0]);
             $body .= " AND reportschedule.reportScheduleId = :reportScheduleId ";
         }
 
@@ -175,9 +175,9 @@ class ReportScheduleFactory extends BaseFactory
         }
 
         // isActive
-        if ($sanitizedFilter->getInt('isActive', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('isActive') !== null) {
             $body .= " AND reportschedule.isActive = :isActive ";
-            $params['isActive'] = $sanitizedFilter->getInt('isActive', $filterBy);
+            $params['isActive'] = $sanitizedFilter->getInt('isActive');
         }
 
         // Sorting?

@@ -169,7 +169,7 @@ class State implements Middleware
                 $container->get('configService'),
                 $container->get('dateService'),
                 $container->get('sanitizerService'),
-                $container->get('sanitizerService')
+                $container->get('savedReportFactory')
             );
         });
 
@@ -805,7 +805,8 @@ class State implements Middleware
                     $c->get('displayFactory'),
                     $c->get('scheduleFactory'),
                     $c->get('dataSetFactory'),
-                    $c->get('view')
+                    $c->get('view'),
+                    $c
                 );
             },
             '\Xibo\Controller\Notification' => function(ContainerInterface $c) {

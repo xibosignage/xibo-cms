@@ -307,7 +307,7 @@ class ProofOfPlay implements ReportInterface
     public function getSavedReportResults($json, $savedReport)
     {
         // Get filter criteria
-        $rs = $this->reportScheduleFactory->getById($savedReport->reportScheduleId)->filterCriteria;
+        $rs = $this->reportScheduleFactory->getById($savedReport->reportScheduleId, 1)->filterCriteria;
         $filterCriteria = json_decode($rs, true);
 
         $tagsType = $filterCriteria['tagsType'];
@@ -338,14 +338,14 @@ class ProofOfPlay implements ReportInterface
     /** @inheritdoc */
     public function getResults($filterCriteria, Request $request)
     {
+        $sanitizedCriteria = $this->getSanitizer($filterCriteria);
         $sanitizedParams = $this->getSanitizer($request->getParams());
-
-        $displayId = $sanitizedParams->getInt('displayId', ['default' => $filterCriteria]);
-        $layoutIds = $sanitizedParams->getIntArray('layoutId', ['default' => []]);
-        $mediaIds = $sanitizedParams->getIntArray('mediaId', ['default' => []]);
-        $type = strtolower($sanitizedParams->getString('type'));
-        $tags = $sanitizedParams->getString('tags', ['default' => $filterCriteria]);
-        $tagsType = $sanitizedParams->getString('tagsType', ['default' => $filterCriteria]);
+        $displayId = $sanitizedParams->getInt('displayId', ['default' => $sanitizedCriteria->getInt('displayId')]);
+        $layoutIds = $sanitizedParams->getIntArray('layoutId',  ['default' => $sanitizedCriteria->getIntArray('layoutId', ['default' => []])]);
+        $mediaIds = $sanitizedParams->getIntArray('mediaId',  ['default' => $sanitizedCriteria->getIntArray('mediaId', ['default' => []])]);
+        $type = strtolower($sanitizedParams->getString('type',  ['default' => $sanitizedCriteria->getString('type')]));
+        $tags = $sanitizedParams->getString('tags',  ['default' => $sanitizedCriteria->getString('tags')]);
+        $tagsType = $sanitizedParams->getString('tagsType',  ['default' => $sanitizedCriteria->getString('tagsType')]);
         $exactTags = $sanitizedParams->getCheckbox('exactTags');
 
         // Do not filter by display if super admin and no display is selected
@@ -388,7 +388,7 @@ class ProofOfPlay implements ReportInterface
 
         // Sorting?
 
-        if($filterCriteria == null) {
+        if($filterCriteria == []) {
 
             $filterBy = $this->gridRenderFilter($request);
             $sortOrder = $this->gridRenderSort($request);
@@ -407,10 +407,9 @@ class ProofOfPlay implements ReportInterface
                 $length = $sanitizedFilter->getInt('length', ['default' => 10]);
             }
         } else {
-            $sanitizedFilterCriteria = $this->getSanitizer($filterCriteria);
             $start = 0;
             $length = -1;
-            $sortBy = $sanitizedFilterCriteria->getString('sortBy');
+            $sortBy = $sanitizedCriteria->getString('sortBy');
 
             $columns = ($sortBy == '') ? ['widgetId'] : [$sortBy];
         }
@@ -420,7 +419,7 @@ class ProofOfPlay implements ReportInterface
         // --------------------------
         // Our report has a range filter which determins whether or not the user has to enter their own from / to dates
         // check the range filter first and set from/to dates accordingly.
-        $reportFilter = $sanitizedParams->getString('reportFilter');
+        $reportFilter = $sanitizedParams->getString('reportFilter', ['default' => $sanitizedCriteria->getString('reportFilter')]);
 
         // Use the current date as a helper
         $now = $this->getDate()->parse();

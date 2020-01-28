@@ -22,6 +22,7 @@
 
 namespace Xibo\Service;
 
+use Slim\Http\ServerRequest as Request;
 use Psr\Container\ContainerInterface;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\SavedReportFactory;
@@ -192,7 +193,7 @@ class ReportService implements ReportServiceInterface
     /**
      * @inheritdoc
      */
-    public function getReportScheduleFormData($reportName)
+    public function getReportScheduleFormData($reportName, Request $request)
     {
         $this->log->debug('Populate form title and hidden fields');
 
@@ -201,13 +202,13 @@ class ReportService implements ReportServiceInterface
         $object = $this->createReportObject($className);
 
         // Populate form title and hidden fields
-        return $object->getReportScheduleFormData();
+        return $object->getReportScheduleFormData($request);
     }
 
     /**
      * @inheritdoc
      */
-    public function setReportScheduleFormData($reportName)
+    public function setReportScheduleFormData($reportName, Request $request)
     {
         $this->log->debug('Set Report Schedule form data');
 
@@ -216,7 +217,7 @@ class ReportService implements ReportServiceInterface
         $object = $this->createReportObject($className);
 
         // Set Report Schedule form data
-        return $object->setReportScheduleFormData();
+        return $object->setReportScheduleFormData($request);
     }
 
     /**
@@ -277,7 +278,7 @@ class ReportService implements ReportServiceInterface
     /**
      * @inheritdoc
      */
-    public function runReport($reportName, $filterCriteria, $userId)
+    public function runReport($reportName, $filterCriteria, $userId, Request $request)
     {
         $this->log->debug('Run the report to get results');
 
@@ -287,11 +288,11 @@ class ReportService implements ReportServiceInterface
 
         // Set userId
         $object->setUserId($userId);
-
+$user = $this->container->get('userFactory')->getById($userId);
         $filterCriteria = json_decode($filterCriteria, true);
 
         // Retrieve the result array
-        return $object->getResults($filterCriteria);
+        return $object->getResults($filterCriteria, $request->withAttribute('currentUser', $user));
     }
 
     /**

@@ -330,14 +330,15 @@ class DistributionReport implements ReportInterface
     {
         $this->getLog()->debug('Filter criteria: '. json_encode($filterCriteria, JSON_PRETTY_PRINT));
         $sanitizedParams = $this->getSanitizer($request->getParams());
+        $sanitizedCriteria = $this->getSanitizer($filterCriteria);
 
-        $type = strtolower($sanitizedParams->getString('type'));
-        $layoutId = $sanitizedParams->getInt('layoutId');
-        $mediaId = $sanitizedParams->getInt('mediaId');
-        $eventTag = $sanitizedParams->getString('eventTag');
+        $type = strtolower($sanitizedParams->getString('type',  ['default' => $sanitizedCriteria->getString('type')]));
+        $layoutId = $sanitizedParams->getInt('layoutId', ['default' => $sanitizedCriteria->getInt('layoutId')]);
+        $mediaId = $sanitizedParams->getInt('mediaId', ['default' => $sanitizedCriteria->getInt('mediaId')]);
+        $eventTag = $sanitizedParams->getString('eventTag', ['default' => $sanitizedCriteria->getString('eventTag')]);
 
-        $displayId = $sanitizedParams->getInt('displayId');
-        $displayGroupId = $sanitizedParams->getInt('displayGroupId');
+        $displayId = $sanitizedParams->getInt('displayId',  ['default' => $sanitizedCriteria->getInt('displayId')]);
+        $displayGroupId = $sanitizedParams->getInt('displayGroupId',  ['default' => $sanitizedCriteria->getInt('displayGroupId')]);
 
         // Get an array of display id this user has access to.
         $displayIds = [];
@@ -376,8 +377,7 @@ class DistributionReport implements ReportInterface
         // --------------------------
         // Our report has a range filter which determins whether or not the user has to enter their own from / to dates
         // check the range filter first and set from/to dates accordingly.
-        $reportFilter = $sanitizedParams->getString('reportFilter');
-
+        $reportFilter = $sanitizedParams->getString('reportFilter', ['default' => $sanitizedCriteria->getString('reportFilter')]);
         // Use the current date as a helper
         $now = $this->getDate()->parse();
 
@@ -443,7 +443,7 @@ class DistributionReport implements ReportInterface
 
         // Use the group by filter provided
         // NB: this differs from the Summary Report where we set the group by according to the range selected
-        $groupByFilter = $sanitizedParams->getString('groupByFilter');
+        $groupByFilter = $sanitizedParams->getString('groupByFilter', ['default' => $sanitizedCriteria->getString('groupByFilter')]);
 
         //
         // Get Results!
