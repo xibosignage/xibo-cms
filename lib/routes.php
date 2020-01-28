@@ -151,6 +151,8 @@ $app->put('/playlist/:id', '\Xibo\Controller\Playlist:edit')->name('playlist.edi
 $app->delete('/playlist/:id', '\Xibo\Controller\Playlist:delete')->name('playlist.delete');
 $app->post('/playlist/copy/:id', '\Xibo\Controller\Playlist:copy')->name('playlist.copy');
 $app->put('/playlist/setenablestat/:id', '\Xibo\Controller\Playlist:setEnableStat')->name('playlist.setenablestat');
+$app->get('/playlist/usage/:id', '\Xibo\Controller\Playlist:usage')->name('playlist.usage');
+$app->get('/playlist/usage/layouts/:id', '\Xibo\Controller\Playlist:usageLayouts')->name('playlist.usage.layouts');
 
 // Widgets Order
 $app->get('/playlist/widget', '\Xibo\Controller\Playlist:widgetGrid')->name('playlist.widget.search');

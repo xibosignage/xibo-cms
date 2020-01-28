@@ -277,6 +277,89 @@
             playlistAddFormOpen();
         }
 
+        ///
+        /// Playlist Usage Form
+        ///
+        function usageFormOpen(dialog) {
+            // Displays tab
+            var usageTable = $("#usageReportTable").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true,
+                stateSave: true, stateDuration: 0,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[1, "asc"]],
+                ajax: {
+                    "url": "{{ urlFor("playlist.usage") }}".replace(":id", $("#usageReportTable").data().playlistId),
+                    "data": function(dataDisplay) {
+                        $.extend(dataDisplay, $(dialog).find("#usageReportForm").serializeObject());
+                        return dataDisplay;
+                    }
+                },
+                "columns": [
+                    { "data": "displayId"},
+                    { "data": "display" },
+                    { "data": "description" }
+                ]
+            });
+
+            usageTable.on('draw', dataTableDraw);
+            usageTable.on('processing.dt', dataTableProcessing);
+
+            $("#playlistEventDateLink").datetimepicker({
+                format: bootstrapDateFormatDateOnly,
+                autoclose: true,
+                language: language,
+                calendarType: calendarType,
+                minView: 2,
+                todayHighlight: true
+            });
+
+            $("#dateClearButton").on("click", function () {
+                $("#playlistEventDateLink").val("")
+                $("#playlistEventDate").val("");
+                $("#playlistEventDateLink").datetimepicker("update");
+                usageTable.ajax.reload();
+            });
+
+            // Layouts tab
+            var usageTableLayouts = $("#usageReportLayoutsTable").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true,
+                stateSave: true, stateDuration: 0,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[1, "asc"]],
+                ajax: {
+                    "url": "{{ urlFor("playlist.usage.layouts") }}".replace(":id", $("#usageReportLayoutsTable").data().playlistId)
+                },
+                "columns": [
+                    { "data": "layoutId"},
+                    { "data": "layout" },
+                    { "data": "description" },
+                    {
+                        "orderable": false,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
+
+            usageTableLayouts.on('draw', dataTableDraw);
+            usageTableLayouts.on('processing.dt', dataTableProcessing);
+
+            // Tidy up timepickers on modal close
+            if(dialog.hasClass('modal')) {
+                dialog.on("hide.bs.modal", function(e) {
+                    if(e.namespace === 'bs.modal') {
+                        // Remove colour pickers
+                        dialog.find("#playlistEventDateLink").datetimepicker('remove');
+                    }
+                });
+            }
+        }
+
+
+
         function playlistFormPopulateMediaTable(dialog) {
             nameFilter = $(dialog).find("input[name=filterMediaName]").val();
             tagFilter = $(dialog).find("input[name=filterMediaTag]").val();

@@ -131,6 +131,7 @@ $app->get('/playlist/form/copy/:id', '\Xibo\Controller\Playlist:copyForm')->name
 $app->get('/playlist/form/delete/:id', '\Xibo\Controller\Playlist:deleteForm')->name('playlist.delete.form');
 $app->get('/playlist/form/timeline/:id', '\Xibo\Controller\Playlist:timelineForm')->name('playlist.timeline.form');
 $app->get('/playlist/form/setenablestat/:id', '\Xibo\Controller\Playlist:setEnableStatForm')->name('playlist.setenablestat.form');
+$app->get('/playlist/form/usage/:id', '\Xibo\Controller\Playlist:usageForm')->name('playlist.usage.form');
 
 // Module functions
 $app->get('/playlist/widget/form/edit/:id', '\Xibo\Controller\Module:editWidgetForm')->name('module.widget.edit.form');
