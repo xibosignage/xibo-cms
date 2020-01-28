@@ -1274,7 +1274,7 @@ abstract class ModuleWidget implements ModuleInterface
             throw new NotFoundException();
 
         // Output the image associated with this template
-        echo Img::make(PROJECT_ROOT . '/' . $template['fileName'])->response();
+        echo Img::make(PROJECT_ROOT . '/' . $template['fileName'])->encode();
     }
 
     /**
