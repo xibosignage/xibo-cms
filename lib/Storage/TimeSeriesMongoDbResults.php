@@ -79,7 +79,7 @@ class TimeSeriesMongoDbResults implements TimeSeriesResultsInterface
             $entry['widgetId'] = isset($row['widgetId']) ? $row['widgetId']: 0;
             $entry['mediaId'] = isset($row['mediaId']) ? $row['mediaId']: 0;
             $entry['statDate'] = isset($row['statDate']) ? $row['statDate']->toDateTime()->format('U') : null;
-
+            $entry['engagements'] = isset($row['engagements']) ? $row['engagements'] : [];
 
             $rows[] = $entry;
         }

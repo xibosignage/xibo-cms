@@ -1487,6 +1487,24 @@ class Soap
             $type = $node->getAttribute('type');
             $duration = $node->getAttribute('duration');
             $count = $node->getAttribute('count');
+            $engagements = [];
+
+            foreach ($node->childNodes as $nodeElements) {
+                /* @var \DOMElement $nodeElements */
+                if ($nodeElements->nodeName == "engagements") {
+                    $i = 0;
+                    foreach ($nodeElements->childNodes as $child) {
+
+                        /* @var \DOMElement $child */
+                        if ($child->nodeName == "engagement") {
+                            $engagements[$i]['tag'] = $child->getAttribute('tag');
+                            $engagements[$i]['duration'] = $child->getAttribute('duration');
+                            $engagements[$i]['count'] = $child->getAttribute('count');
+                            $i++;
+                        }
+                    }
+                }
+            }
 
             // if fromdt and to dt are same then ignore them
             if ($fromdt == $todt) {
@@ -1623,6 +1641,7 @@ class Soap
                 'widgetId' => (int) $widgetId,
                 'duration' => (int) $duration,
                 'count' => ($count != '') ? (int) $count : 1,
+                'engagements' => (count($engagements) > 0) ? json_encode($engagements) : '[]',
             ];
         }
 

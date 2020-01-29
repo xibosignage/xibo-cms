@@ -245,6 +245,9 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             // TagFilter array
             $statData[$k]['tagFilter'] = $tagFilter;
+
+            // Engagements
+            $statData[$k]['engagements'] = json_decode($statData[$k]['engagements']);
         }
 
         // Insert statistics
@@ -434,6 +437,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                        'widgetId'=> 1,
                        'mediaId'=> 1,
                        'statDate'=> 1,
+                       'engagements'=> 1,
                    ]
                ],
            ];
