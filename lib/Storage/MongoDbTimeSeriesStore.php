@@ -434,6 +434,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                        'widgetId'=> 1,
                        'mediaId'=> 1,
                        'statDate'=> 1,
+                       'engagements'=> 1,
                    ]
                ],
            ];

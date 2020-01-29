@@ -414,6 +414,7 @@ class Stats extends Base
             $entry['mediaId'] = $this->getSanitizer()->int($row['mediaId']);
             $entry['tag'] = $this->getSanitizer()->string($row['tag']);
             $entry['statDate'] = isset($row['statDate']) ? $this->getDate()->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : '';
+            $entry['engagements'] = $row['engagements'];
 
             $rows[] = $entry;
         }

@@ -74,6 +74,7 @@ class TimeSeriesMySQLResults implements TimeSeriesResultsInterface
             $entry['widgetId'] = $row['widgetId'];
             $entry['mediaId'] = $row['mediaId'];
             $entry['statDate'] = $row['statDate'];
+            $entry['engagements'] = isset($row['engagements']) ? json_decode($row['engagements']) : [];
 
             $rows[] = $entry;
         }

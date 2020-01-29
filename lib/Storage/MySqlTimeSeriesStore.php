@@ -78,10 +78,11 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $statData[$k]['statDate'] = $statData[$k]['statDate']->format('U');
             $statData[$k]['fromDt'] = $statData[$k]['fromDt']->format('U');
             $statData[$k]['toDt'] = $statData[$k]['toDt']->format('U');
+            $statData[$k]['engagements'] = json_encode($statData[$k]['engagements']);
         }
 
-        $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, campaignID, layoutID, mediaID, Tag, `widgetId`, duration, `count`) VALUES ';
-        $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+        $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, campaignID, layoutID, mediaID, Tag, `widgetId`, duration, `count`, `engagements`) VALUES ';
+        $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
         $sql = $sql . implode(', ', array_fill(1, count($statData), $placeHolders));
 
@@ -138,7 +139,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $length = isset($filterBy['length']) ? $filterBy['length'] : null;
 
         $params = [];
-        $select = ' SELECT stat.statId, stat.statDate, stat.type, stat.displayId, stat.widgetId, stat.layoutId, stat.mediaId, stat.start as start, stat.end as end, stat.tag, stat.duration, stat.count, 
+        $select = ' SELECT stat.statId, stat.statDate, stat.type, stat.displayId, stat.widgetId, stat.layoutId, stat.mediaId, stat.start as start, stat.end as end, stat.tag, stat.duration, stat.count, stat.engagements, 
         display.Display as display, layout.Layout as layout, media.Name AS media ';
 
         $body = '
