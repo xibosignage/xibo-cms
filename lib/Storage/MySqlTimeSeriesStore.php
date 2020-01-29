@@ -78,6 +78,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $statData[$k]['statDate'] = $statData[$k]['statDate']->format('U');
             $statData[$k]['fromDt'] = $statData[$k]['fromDt']->format('U');
             $statData[$k]['toDt'] = $statData[$k]['toDt']->format('U');
+            $statData[$k]['engagements'] = json_encode($statData[$k]['engagements']);
         }
 
         $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, campaignID, layoutID, mediaID, Tag, `widgetId`, duration, `count`, `engagements`) VALUES ';
