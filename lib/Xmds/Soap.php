@@ -1342,19 +1342,19 @@ class Soap
             // Get the date and the message (all log types have these)
             foreach ($node->childNodes as $nodeElements) {
 
-                if ($nodeElements->nodeName == "scheduleID") {
+                if ($nodeElements->nodeName == 'scheduleID') {
                     $scheduleId = $nodeElements->textContent;
-                } else if ($nodeElements->nodeName == "layoutID") {
+                } else if ($nodeElements->nodeName == 'layoutID') {
                     $layoutId = $nodeElements->textContent;
-                } else if ($nodeElements->nodeName == "mediaID") {
+                } else if ($nodeElements->nodeName == 'mediaID') {
                     $mediaId = $nodeElements->textContent;
-                } else if ($nodeElements->nodeName == "type") {
+                } else if ($nodeElements->nodeName == 'type') {
                     $type = $nodeElements->textContent;
-                } else if ($nodeElements->nodeName == "method") {
+                } else if ($nodeElements->nodeName == 'method') {
                     $method = $nodeElements->textContent;
-                } else if ($nodeElements->nodeName == "message") {
+                } else if ($nodeElements->nodeName == 'message') {
                     $message = $nodeElements->textContent;
-                } else if ($nodeElements->nodeName == "thread") {
+                } else if ($nodeElements->nodeName == 'thread') {
                     if ($nodeElements->textContent != '')
                         $thread = '[' . $nodeElements->textContent . '] ';
                 }
@@ -1491,12 +1491,12 @@ class Soap
 
             foreach ($node->childNodes as $nodeElements) {
                 /* @var \DOMElement $nodeElements */
-                if ($nodeElements->nodeName == "engagements") {
+                if ($nodeElements->nodeName == 'engagements') {
                     $i = 0;
                     foreach ($nodeElements->childNodes as $child) {
 
                         /* @var \DOMElement $child */
-                        if ($child->nodeName == "engagement") {
+                        if ($child->nodeName == 'engagement') {
                             $engagements[$i]['tag'] = $child->getAttribute('tag');
                             $engagements[$i]['duration'] = $child->getAttribute('duration');
                             $engagements[$i]['count'] = $child->getAttribute('count');
