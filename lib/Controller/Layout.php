@@ -1793,7 +1793,7 @@ class Layout extends Base
                 break;
 
             case ModuleWidget::$STATUS_PLAYER:
-                $status = __('There are items on this Layout that can only be assessed by the client');
+                $status = __('There are items on this Layout that can only be assessed by the Display');
                 break;
 
             case 3:
