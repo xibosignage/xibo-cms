@@ -8,6 +8,11 @@ const regionPreviewContainerDimensions = {
     height: 48
 };
 
+const widgetHighlightAnimation = {
+    delayTime: 1000,
+    deltaTime: 1000
+};
+
 const timeLineLabelMap = [
      {
         maxTime: 20,
@@ -81,9 +86,12 @@ let Timeline = function(parent, container) {
         scrollPosition: 0, // scroll position
         scrollVerticalPosition: 0, // scroll vertical position
         scrollWidth: 0, // To fix the double scroll reseting to 0 bug
-        widgetMinimumVisibleRatio: 10, // Minimum % value so that the region details are shown
+        widgetContentMinimumVisibleWidth: 25, // Minimum with in px to show widget's content
+        widgetMinimumVisibleDuration: 5, // Minimum % value so that the region details are shown
         widgetMinimumDurationOnStart: 15 // % of the shortest widget to be used to calculate the default zoom 
     };
+
+    this.highlightOnLoad = {};
 
     this.scrollOnLoad = {};
 
@@ -193,7 +201,7 @@ Timeline.prototype.checkRegionsVisibility = function(regions) {
             const widthRatio = regions[region].widgets[widget].getTotalDuration() / visibleDuration;
 
             // Mark region as hidden if the widget is too small to be displayed
-            if(widthRatio < (this.properties.widgetMinimumVisibleRatio/100)) {
+            if(widthRatio < (this.properties.widgetMinimumVisibleDuration/100)) {
                 regions[region].hideDetails = true;
                 break;
             }
@@ -333,7 +341,7 @@ Timeline.prototype.createGhostWidgetsDynamically = function(regions) {
         // starting and ending time to check/draw ghosts in
         //      get the ghosts drawing starting time, depending on the minimum visualization time and if the widgets are shown on screen after it or not
         const ghostsStartTime = (widgetsTotalDuration > this.properties.minTime) ? widgetsTotalDuration : this.properties.minTime;
-        const ghostsEndTime = this.properties.maxTime;
+        const ghostsEndTime = (this.properties.maxTime > lD.layout.duration) ? lD.layout.duration : this.properties.maxTime;
         
         // distance from the beggining of ghosts and the end of the widgets
         let paddingLeft = 0;
@@ -347,7 +355,7 @@ Timeline.prototype.createGhostWidgetsDynamically = function(regions) {
         let auxTime = widgetsTotalDuration;
 
         // go through auxiliar time, advancing with each widget's time
-        while( auxTime < ghostsEndTime) {
+        while(auxTime < ghostsEndTime) {
 
             // repeat widget playlist to advance time and create the ghost widgets
             for(let widget in currentRegion.widgets) {
@@ -474,6 +482,7 @@ Timeline.prototype.moveWidgetInRegion = function(regionId, widgetId, moveType) {
 Timeline.prototype.render = function(layout) {
 
     const app = this.parent;
+    const self = this;
 
     // If starting zoom is not defined, calculate its value based on minimum widget duration
     if(this.properties.zoom === -1) {
@@ -486,9 +495,6 @@ Timeline.prototype.render = function(layout) {
     // Calulate time values based on scroll position
     this.calculateTimeValues();
     
-    // Check regions to see if they can be rendered with details or not
-    this.checkRegionsVisibility(layout.regions);
-
     // Calculate region preview
     this.calculateRegionPreview(layout.regions);
 
@@ -538,10 +544,11 @@ Timeline.prototype.render = function(layout) {
     });
 
     // Button actions
-    const self = this;
     this.DOMObject.find('#findSelectedBtn').click(function() {
         if(lD.selectedObject.type == 'widget') {
-            self.scrollToWidget(lD.selectedObject);
+            self.highlightOnLoad = lD.selectedObject;
+            self.scrollOnLoad = lD.selectedObject;
+            self.render(lD.layout);
         }
     });
 
@@ -609,6 +616,24 @@ Timeline.prototype.render = function(layout) {
         },
         drop: function(event, ui) {
             lD.dropItemAdd(event.target, ui.draggable[0]);
+        }
+    }).each(function() {
+
+        let $widget = $(this);
+
+        if($widget.outerWidth() < self.properties.widgetContentMinimumVisibleWidth) {
+            $widget.addClass('hideContent').tooltip({
+                title: timelineTrans.hiddenContentInWidget
+            });
+        }
+
+        // Highlight marked widgets
+        if($widget.data('widgetRegion') != undefined) {
+            let widgetObj = lD.getElementByTypeAndId('widget', $widget.attr('id'), $widget.data('widgetRegion'));
+            
+            if(widgetObj.id == self.highlightOnLoad.id) {
+                self.highlightWidget(widgetObj);
+            }
         }
     });
 
@@ -729,7 +754,6 @@ Timeline.prototype.render = function(layout) {
     // Scroll to widget on load
     if(!$.isEmptyObject(this.scrollOnLoad)) {
         this.scrollToWidget(this.scrollOnLoad);
-        this.scrollOnLoad = {};
     }
 
     // Initialize tooltips
@@ -744,11 +768,28 @@ Timeline.prototype.scrollToWidget = function(targetWidget) {
     // Get region container
     const $regionsContainer = this.DOMObject.find('#regions-container');
     const $targetWidget = $regionsContainer.find('#' + targetWidget.id);
+    this.scrollOnLoad = {};
 
     if($targetWidget.length > 0) {
-        $regionsContainer.scrollLeft($regionsContainer.scrollLeft() - ($regionsContainer.offset().left - $targetWidget.offset().left));
+        //$regionsContainer.scrollLeft($regionsContainer.scrollLeft() - ($regionsContainer.offset().left - $targetWidget.offset().left));
+        let calculateScrollToWidget = ($regionsContainer.scrollLeft() - ($regionsContainer.offset().left - $targetWidget.offset().left));
+
+        this.properties.scrollPosition = calculateScrollToWidget / $regionsContainer.find("#regions").width();
+        this.render(lD.layout);
     }
 };
+
+Timeline.prototype.highlightWidget = _.debounce(function(widget) {
+    const widgetDOM = this.DOMObject.find('#' + widget.id);
+    const self = this;
+
+    widgetDOM.addClass('highlighted');
+
+    setTimeout(function() {
+        self.highlightOnLoad = {};
+        widgetDOM.removeClass('highlighted');
+    }, widgetHighlightAnimation.deltaTime);
+}, widgetHighlightAnimation.delayTime);
 
 /**
  * Scroll to first error widget
@@ -764,6 +805,8 @@ Timeline.prototype.scrollToBrokenWidget = function() {
 
         $.each(widgets, function() {
             if(this.isValid == 0) {
+
+                self.highlightOnLoad = this;
                 self.scrollOnLoad = this;
                 
                 app.selectObject($('#' + this.id), true);
