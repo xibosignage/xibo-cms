@@ -1641,7 +1641,7 @@ class Soap
                 'widgetId' => (int) $widgetId,
                 'duration' => (int) $duration,
                 'count' => ($count != '') ? (int) $count : 1,
-                'engagements' => (count($engagements) > 0) ? $engagements : '[]',
+                'engagements' => (count($engagements) > 0) ? $engagements : [],
             ];
         }
 
