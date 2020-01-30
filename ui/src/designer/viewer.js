@@ -181,6 +181,11 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
     // Get target element( get region if element is a Widget type )
     const targetElement = (element.type === 'widget') ? lD.layout.regions[element.regionId] : element;
 
+    // Stop rendering if the element is invalid
+    if(targetElement == undefined) {
+        return;
+    }
+
     // Apply scaling
     let containerElementDimensions = this.scaleElement(targetElement, container);
 

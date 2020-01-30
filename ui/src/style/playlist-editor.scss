@@ -71,6 +71,11 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
     z-index:  3000;
 }
 
+.second-dialog ~ .select2-container.select2-container--open {
+    z-index:  3200;
+}
+
+
 .playlist-widget-preview {
     z-index: $playlist-editor-z-index-background;
 

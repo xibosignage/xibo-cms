@@ -161,8 +161,8 @@ Toolbar.prototype.loadPrefs = function() {
             // Load favourites
             self.menuItems[self.widgetMenuIndex].favouriteModules = (loadedData.favouriteModules != undefined) ? loadedData.favouriteModules : [];
 
-            // Tooltip options
-            app.common.displayTooltips = (loadedData.displayTooltips == 1);
+                // Tooltip options
+            app.common.displayTooltips = (loadedData.displayTooltips == 1 || loadedData.displayTooltips == undefined);
 
             // If there was a opened menu, load content for that one
             if(self.openedMenu != -1) {
