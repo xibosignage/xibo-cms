@@ -22,6 +22,7 @@
 
 namespace Xibo\Storage;
 
+use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Service\DateServiceInterface;
@@ -35,6 +36,11 @@ use Xibo\Exception\NotFoundException;
  */
 class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
 {
+    // Keep all stats in this array after processing
+    private $stats = [];
+    private $layoutCampaignIds = [];
+    private $layoutIdsNotFound = [];
+
     /** @var StorageServiceInterface */
     private $store;
 
@@ -73,28 +79,71 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function addStat($statData)
     {
-        // Set to Unix Timestamp
-        foreach ($statData as $k => $stat) {
-            $statData[$k]['statDate'] = $statData[$k]['statDate']->format('U');
-            $statData[$k]['fromDt'] = $statData[$k]['fromDt']->format('U');
-            $statData[$k]['toDt'] = $statData[$k]['toDt']->format('U');
-            $statData[$k]['engagements'] = json_encode($statData[$k]['engagements']);
-        }
 
-        $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, campaignID, layoutID, mediaID, Tag, `widgetId`, duration, `count`, `engagements`) VALUES ';
-        $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+        // For a type "event" we have layoutid 0 so is campaignId
+        // otherwise we should try and resolve the campaignId
+        $campaignId = 0;
+        if ($statData['type'] != 'event') {
 
-        $sql = $sql . implode(', ', array_fill(1, count($statData), $placeHolders));
+            if (array_key_exists($statData['layoutId'], $this->layoutCampaignIds)) {
+                $campaignId = $this->layoutCampaignIds[$statData['layoutId']];
+            } else {
 
-        // Flatten the array
-        $data = [];
-        foreach ($statData as $stat) {
-            foreach ($stat as $field) {
-                $data[] = $field;
+                try {
+
+                    // Get the layout campaignId
+                    $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($statData['layoutId']);
+
+                    // Put layout campaignId to memory
+                    $this->layoutCampaignIds[$statData['layoutId']] = $campaignId;
+
+                } catch (XiboException $error) {
+
+                    if (!in_array($statData['layoutId'], $this->layoutIdsNotFound)) {
+                        $this->layoutIdsNotFound[] = $statData['layoutId'];
+                        $this->log->error('Layout not found. Layout Id: '. $statData['layoutId']);
+                    }
+                    return;
+                }
             }
         }
 
-        $this->store->isolated($sql, $data);
+
+        // Set to Unix Timestamp
+        $statData['statDate'] = $statData['statDate']->format('U');
+        $statData['fromDt'] = $statData['fromDt']->format('U');
+        $statData['toDt'] = $statData['toDt']->format('U');
+        $statData['campaignId'] = $campaignId;
+        $statData['displayId'] = $statData['display']->displayId;
+        $statData['engagements'] = json_encode($statData['engagements']);
+        unset($statData['display']);
+
+        $this->stats[] = $statData;
+
+    }
+
+    /** @inheritdoc */
+    public function addStatFinalize()
+    {
+
+        if (count($this->stats) > 0) {
+
+            $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, campaignID, layoutID, mediaID, Tag, `widgetId`, duration, `count`, `engagements`) VALUES ';
+            $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+
+            $sql = $sql . implode(', ', array_fill(1, count($this->stats), $placeHolders));
+
+            // Flatten the array
+            $data = [];
+            foreach ($this->stats as $stat) {
+                foreach ($stat as $field) {
+                    $data[] = $field;
+                }
+            }
+
+            $this->store->isolated($sql, $data);
+
+        }
 
     }
 

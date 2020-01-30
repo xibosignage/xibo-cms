@@ -1466,8 +1466,8 @@ class Soap
         // Get the display timezone to use when adjusting log dates.
         $defaultTimeZone = $this->getConfig()->getSetting('defaultTimezone');
 
-        // Process the XML file into an array
-        $stats = [];
+        // Count stats processed from XML
+        $statCount = 0;
 
         // Load the XML into a DOMDocument
         $document = new \DOMDocument("1.0");
@@ -1506,48 +1506,32 @@ class Soap
                 }
             }
 
-            // if fromdt and to dt are same then ignore them
-            if ($fromdt == $todt) {
-                $this->getLog()->debug('Fromdt (' . $fromdt. ') and ToDt (' . $todt. ') are same. ');
+            if ($fromdt == '' || $todt == '' || $type == '') {
+                $this->getLog()->info('Stat submitted without the fromdt, todt or type attributes.');
                 continue;
             }
 
-            if ($fromdt == '' || $todt == '' || $type == '') {
-                $this->getLog()->error('Stat submitted without the fromdt, todt or type attributes.');
+            // if fromdt and to dt are same then ignore them
+            if ($fromdt == $todt) {
+                $this->getLog()->error('Fromdt (' . $fromdt. ') and ToDt (' . $todt. ') are same. ');
                 continue;
             }
 
             $scheduleId = $node->getAttribute('scheduleid');
-
             if (empty($scheduleId)) {
                 $scheduleId = 0;
             }
 
-            $campaignId = 0;
             $layoutId = $node->getAttribute('layoutid');
 
-            // For a type "event" we have layoutid 0
-            // otherwise we should try and resolve the campaignId
             if ($type != 'event') {
-                try {
-                    // Handle the splash screen
-                    if ($layoutId == 'splash') {
-                        if (!in_array($layoutId, $layoutIdsNotFound)) {
-                            $layoutIdsNotFound[] = $layoutId;
-                            $this->getLog()->info('Splash Screen Statistic Ignored');
-                        }
 
-                        continue;
-                    }
-
-                    // Get the layout campaignId
-                    $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
-
-                } catch (XiboException $error) {
-
+                // Handle the splash screen
+                if ($layoutId == 'splash') {
+                    // only logging this message one time
                     if (!in_array($layoutId, $layoutIdsNotFound)) {
                         $layoutIdsNotFound[] = $layoutId;
-                        $this->getLog()->error('Layout not found. Layout Id: '. $layoutId);
+                        $this->getLog()->info('Splash Screen Statistic Ignored');
                     }
 
                     continue;
@@ -1582,13 +1566,12 @@ class Soap
                 } catch (NotFoundException $notFoundException) {
                     // Widget isn't found
                     // we can only log this and move on
-                    $this->getLog()->info('Stat for a widgetId that doesnt exist: ' . $widgetId);
+                    $this->getLog()->error('Stat for a widgetId that doesnt exist: ' . $widgetId);
                     continue;
                 }
             }
-            
-            $tag = $node->getAttribute('tag');
 
+            $tag = $node->getAttribute('tag');
             if ($tag == 'null')
                 $tag = null;
 
@@ -1627,14 +1610,14 @@ class Soap
                 continue;
             }
 
-            $stats[] = [
+            // Important - stats will now send display entity instead of displayId
+            $stats = [
                 'type' => $type,
                 'statDate' => $now,
                 'fromDt' => $fromdt,
                 'toDt' => $todt,
                 'scheduleId' => $scheduleId,
-                'displayId' => $this->display->displayId,
-                'campaignId' => (int) $campaignId,
+                'display' => $this->display,
                 'layoutId' => (int) $layoutId,
                 'mediaId' => $mediaId,
                 'tag' => $tag,
@@ -1643,11 +1626,15 @@ class Soap
                 'count' => ($count != '') ? (int) $count : 1,
                 'engagements' => (count($engagements) > 0) ? $engagements : '[]',
             ];
+
+            $this->getTimeSeriesStore()->addStat($stats);
+
+            $statCount++;
         }
 
         /*Insert stats*/
-        if (count($stats) > 0) {
-            $this->getTimeSeriesStore()->addStat($stats);
+        if ($statCount > 0) {
+            $this->getTimeSeriesStore()->addStatFinalize();
         } else {
             $this->getLog()->info('0 stats resolved from data package');
         }
