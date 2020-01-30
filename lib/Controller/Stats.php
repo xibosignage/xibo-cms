@@ -589,7 +589,7 @@ class Stats extends Base
         ]);
 
         $out = fopen('php://output', 'w');
-        fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count']);
+        fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'Engagements']);
 
         while ($row = $resultSet->getNextRow() ) {
 
@@ -603,11 +603,13 @@ class Stats extends Base
                 $statDate = isset($row['statDate']) ? $this->getDate()->parse($row['statDate']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s') : null;
                 $fromDt = $this->getDate()->parse($row['start']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
                 $toDt = $this->getDate()->parse($row['end']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
+                $engagements = isset($row['engagements']) ? json_encode($row['engagements']): '[]';
             } else {
 
                 $statDate = isset($row['statDate']) ?$this->getDate()->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : null;
                 $fromDt = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
                 $toDt = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
+                $engagements = isset($row['engagements']) ? $row['engagements']: '[]';
             }
 
             $layout = ($layoutName != '') ? $layoutName :  __('Not Found');
@@ -618,7 +620,7 @@ class Stats extends Base
             $duration = isset($row['duration']) ? $this->getSanitizer()->string($row['duration']): '';
             $count = isset($row['count']) ? $this->getSanitizer()->string($row['count']): '';
 
-            fputcsv($out, [$statDate, $type, $fromDt, $toDt, $layout, $display, $media, $tag, $duration, $count]);
+            fputcsv($out, [$statDate, $type, $fromDt, $toDt, $layout, $display, $media, $tag, $duration, $count, $engagements]);
         }
 
         fclose($out);
