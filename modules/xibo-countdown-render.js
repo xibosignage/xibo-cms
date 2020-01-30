@@ -1,6 +1,7 @@
 /**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
