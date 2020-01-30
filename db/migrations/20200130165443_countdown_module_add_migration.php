@@ -39,7 +39,7 @@ class CountdownModuleAddMigration extends AbstractMigration
                 'regionSpecific' => 1,
                 'description' => 'Countdown Module',
                 'schemaVersion' => 1,
-                'previewEnabled' => 0,
+                'previewEnabled' => 1,
                 'assignable' => 1,
                 'render_as' => 'html',
                 'viewPath' => '../modules',
