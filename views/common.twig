@@ -138,10 +138,6 @@
                     url: "{{ urlFor("region.preview") }}",
                     type: 'GET'
                 },
-                addForm: {
-                    url: "{{ urlFor("module.widget.add.form") }}",
-                    type: 'GET'
-                },
                 add: {
                     url: "{{ urlFor("module.widget.add") }}",
                     type: 'POST'
@@ -198,10 +194,6 @@
                     url: "{{ urlFor("playlist.library.assign") }}",
                     type: 'POST'
                 },
-                addWidgetForm: {
-                    url: "{{ urlFor("module.widget.add.form") }}",
-                    type: 'GET'
-                },
                 addWidget: {
                     url: "{{ urlFor("module.widget.add") }}",
                     type: 'POST'
@@ -250,7 +242,8 @@
                 loading: "{% trans "Loading" %}",
                 resetTourNotification: "{% trans "Layout Designer Tour enabled!" %}",
                 tooltipsDisabled: "{% trans "Tooltips disabled!" %}",
-                tooltipsEnabled: "{% trans "Tooltips enabled!" %}"
+                tooltipsEnabled: "{% trans "Tooltips enabled!" %}",
+                publish: "{% trans "Publish" %}"
             };
 
             var uploadTrans = {
@@ -433,6 +426,12 @@
                 transformRegionFailed: "{% trans "Transform region failed!" %}",
                 previewFailed: "{% trans "Preview failed!" %}",
                 noWidgetsNeedSaving: "{% trans "No widgets need saving!" %}"
+            };
+
+            var widgetStatusTrans = {
+                dueToExpire: "{% trans "Due to expire" %}",
+                expired: "{% trans "Expired" %}",
+                deleteOnExpire: "{% trans "Delete on expire" %}"
             };
 
             var datasetQueryBuilderTranslations = {

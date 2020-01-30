@@ -218,7 +218,10 @@ class DisplayFactory extends BaseFactory
                   `display`.timeZone,
                   `display`.overrideConfig,
                   `display`.newCmsAddress,
-                  `display`.newCmsKey
+                  `display`.newCmsKey,
+                  `display`.orientation,
+                  `display`.resolution,
+                  `display`.commercialLicence
               ';
 
         if ($this->getSanitizer()->getCheckbox('showTags', $filterBy) === 1) {
@@ -340,6 +343,11 @@ class DisplayFactory extends BaseFactory
         if ($this->getSanitizer()->getString('clientCode', $filterBy) != '') {
             $body .= ' AND display.client_code LIKE :clientCode ';
             $params['clientCode'] = '%' . $this->getSanitizer()->getString('clientCode', $filterBy) . '%';
+        }
+
+        if ($this->getSanitizer()->getString('orientation', $filterBy) != '') {
+            $body .= ' AND display.orientation = :orientation ';
+            $params['orientation'] = $this->getSanitizer()->getString('orientation', $filterBy);
         }
 
         if ($this->getSanitizer()->getInt('mediaInventoryStatus', $filterBy) != '') {
@@ -467,6 +475,12 @@ class DisplayFactory extends BaseFactory
                     $members[] = $displayId;
                 }
             }
+        }
+
+        // filter by commercial licence
+        if ($this->getSanitizer()->getInt('commercialLicence', $filterBy) !== null) {
+            $body .= ' AND display.commercialLicence = :commercialLicence ';
+            $params['commercialLicence'] = $this->getSanitizer()->getInt('commercialLicence', $filterBy);
         }
 
         // Sorting?

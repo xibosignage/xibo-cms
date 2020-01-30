@@ -79,7 +79,7 @@
                         checked
                     {% endif %}
                 >
-                <label for="showAll">Show All</label>
+                <label for="showAll">{% trans "Show All" %}</label>
             </div>
 
             <div class="progress pull-right"><span id="calendar-progress"></span></div>
@@ -115,7 +115,7 @@
                     <li class="event-special"><span class="fa fa-repeat"></span> {% trans "Recurring" %}</li>
                     <li class="event-inverse"><span class="fa fa-lock"></span> {% trans "View Permission Only" %}</li>
                     <li class="event-command"><span class="fa fa-wrench"></span> {% trans "Command" %}</li>
-                    <li class="event-interrupt"><span class="fa fa-exclamation"></span> {% trans "Interrupt" %}</li>
+                    <li class="event-interrupt"><span class="fa fa-hand-paper"></span> {% trans "Interrupt" %}</li>
                     <li class="event-geo-location"><span class="fa fa-map-marker"></span> {% trans "Geo Location" %}</li>
                 </ul>
             </div>
@@ -259,7 +259,7 @@
                     }
 
                     if (event.event.eventTypeId == 4) {
-                        eventIcon = "fa-exclamation";
+                        eventIcon = "fa-hand-paper";
                     }
 
                     if (event.event.isGeoAware === 1) {
@@ -356,7 +356,7 @@
                     }
 
                     if (event.event.eventTypeId == 4) {
-                        eventIcon = "fa-exclamation";
+                        eventIcon = "fa-hand-paper";
                     }
 
                     if (event.event.isGeoAware === 1) {
@@ -443,7 +443,7 @@
             }
 
             if (event.event.eventTypeId == 4) {
-                eventIcon = "fa-exclamation";
+                eventIcon = "fa-hand-paper";
             }
 
             if (event.event.isGeoAware === 1) {

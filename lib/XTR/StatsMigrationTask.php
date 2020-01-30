@@ -24,6 +24,7 @@ namespace Xibo\XTR;
 use Xibo\Entity\Task;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TaskFactory;
 use Xibo\Factory\UserFactory;
@@ -45,10 +46,16 @@ class StatsMigrationTask implements TaskInterface
     /** @var TaskFactory */
     private $taskFactory;
 
+    /** @var DisplayFactory */
+    private $displayFactory;
+
     /** @var LayoutFactory */
     private $layoutFactory;
 
     private $archiveExist;
+
+    private $displays = [];
+    private $displaysNotFound = [];
 
     public $archiveTask;
 
@@ -58,6 +65,7 @@ class StatsMigrationTask implements TaskInterface
         $this->userFactory = $container->get('userFactory');
         $this->taskFactory = $container->get('taskFactory');
         $this->layoutFactory = $container->get('layoutFactory');
+        $this->displayFactory = $container->get('displayFactory');
         return $this;
     }
 
@@ -363,9 +371,16 @@ class StatsMigrationTask implements TaskInterface
             }
             $numberOfLoops++;
 
-            $statDataMongo = [];
-
+            $statCount = 0;
             foreach ($stats->fetchAll() as $stat) {
+
+                // Get display
+                $display = $this->getDisplay((int) $stat['displayId']);
+
+                if (empty($display)) {
+                    $this->log->error('Display not found. Display Id: '. $stat['displayId']);
+                    continue;
+                }
 
                 $entry = [];
 
@@ -377,21 +392,24 @@ class StatsMigrationTask implements TaskInterface
                 $entry['scheduleId'] = (int) $stat['scheduleId'];
                 $entry['mediaId'] = (int) $stat['mediaId'];
                 $entry['layoutId'] = (int) $stat['layoutId'];
-                $entry['displayId'] = (int) $stat['displayId'];
+                $entry['display'] = $display;
                 $entry['campaignId'] = (int) $stat['campaignId'];
                 $entry['tag'] = $stat['tag'];
                 $entry['widgetId'] = (int) $stat['widgetId'];
                 $entry['duration'] = (int) $stat['duration'];
                 $entry['count'] = (int) $stat['count'];
 
-                $statDataMongo[] = $entry;
-
                 $watermark = $stat['statId'];
+
+                // Add stats in store $this->stats
+                $this->timeSeriesStore->addStat($entry);
+                $statCount++;
+
             }
 
-            // Do the insert in chunk
-            if (count($statDataMongo) > 0) {
-                $this->timeSeriesStore->addStat($statDataMongo);
+            // Write stats
+            if ($statCount > 0) {
+                $this->timeSeriesStore->addStatFinalize();
             } else {
                 $this->appendRunMessage('No stat to migrate from stat to mongo');
                 $this->log->debug('No stat to migrate from stat to mongo');
@@ -453,12 +471,19 @@ class StatsMigrationTask implements TaskInterface
                 break;
             }
             $numberOfLoops++;
-
-            $statDataMongo = [];
             $temp = [];
 
             $statIgnoredCount = 0;
+            $statCount = 0;
             foreach ($stats->fetchAll() as $stat) {
+
+                // Get display
+                $display = $this->getDisplay((int) $stat['displayId']);
+
+                if (empty($display)) {
+                    $this->log->error('Display not found. Display Id: '. $stat['displayId']);
+                    continue;
+                }
 
                 $watermark = $stat['statId'];
                 $entry = [];
@@ -491,7 +516,7 @@ class StatsMigrationTask implements TaskInterface
                 $entry['fromDt'] = $start;
                 $entry['toDt'] = $end;
                 $entry['scheduleId'] = (int) $stat['scheduleId'];
-                $entry['displayId'] = (int) $stat['displayId'];
+                $entry['display'] = $display;
                 $entry['campaignId'] = (int) $campaignId;
                 $entry['layoutId'] = (int) $stat['layoutId'];
                 $entry['mediaId'] = (int) $stat['mediaId'];
@@ -500,16 +525,19 @@ class StatsMigrationTask implements TaskInterface
                 $entry['duration'] = $end->diffInSeconds($start);
                 $entry['count'] = isset($stat['count']) ? (int) $stat['count'] : 1;
 
-                $statDataMongo[] = $entry;
+                // Add stats in store $this->stats
+                $this->timeSeriesStore->addStat($entry);
+                $statCount++;
+
             }
 
             if ($statIgnoredCount > 0) {
                 $this->appendRunMessage($statIgnoredCount. ' stat(s) were ignored while migrating');
             }
 
-            // Do the insert in chunk
-            if (count($statDataMongo) > 0) {
-                $this->timeSeriesStore->addStat($statDataMongo);
+            // Write stats
+            if ($statCount > 0) {
+                $this->timeSeriesStore->addStatFinalize();
             } else {
                 $this->appendRunMessage('No stat to migrate from stat archive to mongo');
                 $this->log->debug('No stat to migrate from stat archive to mongo');
@@ -518,7 +546,7 @@ class StatsMigrationTask implements TaskInterface
             // Give Mongo time to recover
             if ($watermark > 0) {
 
-                if(count($statDataMongo) > 0 ) {
+                if($statCount > 0 ) {
                     $this->appendRunMessage('- '. $count. ' rows migrated.');
                     $this->log->debug('Mongo stats migration from stat_archive. '.$count.' rows effected, sleeping.');
                 }
@@ -626,5 +654,35 @@ class StatsMigrationTask implements TaskInterface
         }
 
         return;
+    }
+
+    // Cahce/Get display
+    function getDisplay($displayId) {
+
+        // Get display if in memory
+        if (array_key_exists($displayId, $this->displays)) {
+            $display = $this->displays[$displayId];
+        } else if (array_key_exists($displayId, $this->displaysNotFound)) {
+            // Display not found
+            return false;
+
+        } else {
+
+            try {
+                $display = $this->displayFactory->getById($displayId);
+
+                // Cache display
+                $this->displays[$displayId] = $display;
+
+            } catch (NotFoundException $error) {
+
+                // Cache display not found
+                $this->displaysNotFound[$displayId] = $displayId;
+                return false;
+            }
+        }
+
+        return $display;
+
     }
 }

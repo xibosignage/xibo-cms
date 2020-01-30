@@ -1,6 +1,7 @@
 // Import
 @import "mixins";
 @import "common";
+@import "toolbar";
 @import "topbar";
 
 // Colours
@@ -23,13 +24,13 @@ $layout-selected-color: lighten($layout-main-bg-color, 10%);
 
 $region-main-bg-color: $xibo-color-orange;
 $region-main-fg-color: $xibo-color-black;
-$region-hover-color: darken($region-main-bg-color, 5%);
-$region-selected-color: darken($region-main-bg-color, 20%);
+$region-hover-color: lighten($region-main-bg-color, 5%);
+$region-selected-color: darken($region-main-bg-color, 10%);
 
 $widget-main-bg-color: $xibo-color-green;
 $widget-main-fg-color: $xibo-color-black;
-$widget-hover-color: lighten($widget-main-bg-color, 15%);
-$widget-selected-color: lighten($widget-main-bg-color, 5%);
+$widget-hover-color: lighten($widget-main-bg-color, 10%);
+$widget-selected-color: darken($widget-main-bg-color, 10%);
 
 $timeline-widget-bg-color: $xibo-color-white;
 $timeline-widget-fg-color: $xibo-color-black;
@@ -110,7 +111,17 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     }
 
     #layout-editor  {
-        margin-top: 40px;
+        margin-top: 0;
+    }
+}
+
+@media (max-width: 1200px) {
+    #layout-editor  {
+        margin-top: 0;
+    }
+
+    #page-wrapper #layout-editor  {
+        margin-top: 25px;
     }
 }
 
@@ -364,6 +375,10 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
         .widgetProperties {
             float: right;
+            position: absolute;
+            z-index: 2;
+            right: 4px;
+            top: 4px;
         }
 
         .widget-transition-container {
@@ -1106,6 +1121,31 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     top: 0;
     position: absolute;
     @include border-radius(4px);
+
+    div {
+        position: relative;
+        display: block;
+        float: left;
+        height: 100%;
+    }
+
+    margin-right: -6px;
+
+    .designer-region-overlay-step {
+        background: darken($xibo-color-white, 20%);
+        width: 14px;
+        margin: 0;
+
+        &:hover, &.ui-droppable-hover {
+            background: $xibo-color-white;
+            @include box-shadow(0px 0px 3px 1px $xibo-color-white);
+        }
+
+        &:not(:first-child) {
+            margin-left: -5px;
+            margin-right: 5px;
+        }
+    }
 }
 
 #layout-editor #layout-timeline .designer-widget.selectable:hover {
@@ -1148,25 +1188,25 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     @include z-index-set($designer-z-index-select);
 
     .designer-region-overlay {
-        @include background-stripes(45deg, $region-hover-color, lighten($region-hover-color, 10%), 10px, 4px);
+        @include background-stripes(45deg, $region-hover-color, lighten($region-hover-color, 20%), 10px, 4px);
         display: block;
         opacity: 0.75;
     }
 
     &.ui-droppable-hover, &:hover {
         .designer-region-overlay {
-            @include background-stripes(45deg, darken($region-hover-color, 10%), $region-hover-color, 10px, 4px);
+            @include background-stripes(45deg, darken($region-hover-color, 20%), lighten($region-hover-color, 10%), 10px, 4px);
         }
     }
 }
 
 #layout-editor #layout-navigator .designer-region.ui-droppable-active {
     @include z-index-set($designer-z-index-select);
-    @include background-stripes(45deg, $region-hover-color, lighten($region-hover-color, 10%), 10px, 4px);
+    @include background-stripes(45deg, $region-hover-color, lighten($region-hover-color, 20%), 10px, 4px);
 
     &.ui-droppable-hover,
     &:hover {
-        @include background-stripes(45deg, darken($region-hover-color, 10%), $region-hover-color, 10px, 4px);
+        @include background-stripes(45deg, darken($region-hover-color, 20%), lighten($region-hover-color, 10%), 10px, 4px);
     }
 
     * {

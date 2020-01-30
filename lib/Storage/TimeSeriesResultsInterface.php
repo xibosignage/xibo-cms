@@ -45,4 +45,10 @@ interface TimeSeriesResultsInterface
      */
     public function getNextRow();
 
+    /**
+     * Get total number of stats
+     * @return integer
+     */
+    public function getTotalCount();
+
 }

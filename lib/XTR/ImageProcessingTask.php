@@ -21,7 +21,10 @@
  */
 
 namespace Xibo\XTR;
+use Xibo\Entity\DisplayGroup;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\ImageProcessingServiceInterface;
 
@@ -42,11 +45,15 @@ class ImageProcessingTask implements TaskInterface
     /** @var MediaFactory */
     private $mediaFactory;
 
+    /** @var DisplayFactory */
+    private $displayFactory;
+
     /** @inheritdoc */
     public function setFactories($container)
     {
         $this->date = $container->get('dateService');
         $this->mediaFactory = $container->get('mediaFactory');
+        $this->displayFactory = $container->get('displayFactory');
         $this->imageProcessingService = $container->get('imageProcessingService');
         return $this;
     }
@@ -73,6 +80,9 @@ class ImageProcessingTask implements TaskInterface
         $resizeThreshold = $this->config->getSetting('DEFAULT_RESIZE_THRESHOLD');
         $count = 0;
 
+        // All displayIds
+        $displayIds = [];
+
         // Get list of Images
         foreach ($images as $media) {
 
@@ -95,6 +105,35 @@ class ImageProcessingTask implements TaskInterface
             $media->release(md5_file($filePath), filesize($filePath));
             $this->store->commitIfNecessary();
 
+            $mediaDisplays= [];
+            $sql = 'SELECT displayId FROM `requiredfile` WHERE itemId = :itemId';
+            foreach ($this->store->select($sql, ['itemId' =>  $media->mediaId]) as $row) {
+                $displayIds[] = $row['displayId'];
+                $mediaDisplays[] = $row['displayId'];
+            }
+
+            // Update Required Files
+            foreach ($mediaDisplays as $displayId) {
+
+                $this->store->update('UPDATE `requiredfile` SET released = :released, size = :size
+                WHERE `requiredfile`.displayId = :displayId AND `requiredfile`.itemId = :itemId ', [
+                    'released' => 1,
+                    'size' => $media->fileSize,
+                    'displayId' => $displayId,
+                    'itemId' => $media->mediaId
+                ]);
+            }
+
+        }
+
+        // Notify display
+        if ($count > 0) {
+            foreach (array_unique($displayIds) as $displayId) {
+
+                // Get display
+                $display = $this->displayFactory->getById($displayId);
+                $display->notify();
+            }
         }
 
         $this->appendRunMessage('Released and modified image count. ' . $count);

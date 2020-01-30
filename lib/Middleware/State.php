@@ -883,7 +883,10 @@ class State extends Middleware
                 $container->moduleFactory,
                 $container->userGroupFactory,
                 $container->userFactory,
-                $container->tagFactory
+                $container->tagFactory,
+                $container->layoutFactory,
+                $container->displayFactory,
+                $container->scheduleFactory
             );
         });
 
@@ -1140,7 +1143,8 @@ class State extends Middleware
                 $container->displayGroupFactory,
                 $container->widgetFactory,
                 $container->playerVersionFactory,
-                $container->playlistFactory
+                $container->playlistFactory,
+                $container->dataSetFactory
             );
         });
 

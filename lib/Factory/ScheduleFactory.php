@@ -387,15 +387,16 @@ class ScheduleFactory extends BaseFactory
 
         // Restrict to mediaId - meaning layout schedules of which the layouts contain the selected mediaId
         if ($this->getSanitizer()->getInt('mediaId', $filterBy) !== null) {
-            //TODO: handle sub-playlists
             $sql .= '
                 AND schedule.campaignId IN (
                     SELECT `lkcampaignlayout`.campaignId
                       FROM `lkwidgetmedia`
                        INNER JOIN `widget`
                        ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                       INNER JOIN `playlist`
-                       ON `playlist`.playlistId = `widget`.playlistId
+                       INNER JOIN `lkplaylistplaylist`
+                        ON `widget`.playlistId = `lkplaylistplaylist`.childId
+                        INNER JOIN `playlist`
+                        ON `lkplaylistplaylist`.parentId = `playlist`.playlistId
                        INNER JOIN `region`
                        ON `region`.regionId = `playlist`.regionId
                        INNER JOIN layout
@@ -412,6 +413,30 @@ class ScheduleFactory extends BaseFactory
                 )
             ';
             $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
+        }
+
+        // Restrict to playlistId - meaning layout schedules of which the layouts contain the selected playlistId
+        if ($this->getSanitizer()->getInt('playlistId', $filterBy) !== null) {
+
+            $sql .= '
+                AND schedule.campaignId IN (
+                    SELECT `lkcampaignlayout`.campaignId
+                      FROM `lkplaylistplaylist` 
+                        INNER JOIN `playlist`
+                        ON `lkplaylistplaylist`.parentId = `playlist`.playlistId
+                       INNER JOIN `region`
+                       ON `region`.regionId = `playlist`.regionId
+                       INNER JOIN layout
+                       ON layout.LayoutID = region.layoutId
+                       INNER JOIN `lkcampaignlayout`
+                       ON lkcampaignlayout.layoutId = layout.layoutId
+                     WHERE `lkplaylistplaylist`.childId = :playlistId
+                     
+                )
+            ';
+
+            $params['playlistId'] = $this->getSanitizer()->getInt('playlistId', $filterBy);
+
         }
 
         // Sorting?

@@ -58,7 +58,7 @@
                 ] %}
                 {{ forms.dropdown("enableStat", "single", title, module.getOption("enableStat", theme.getSetting("WIDGET_STATS_ENABLED_DEFAULT")), options, "id", "value", helpText) }}
 
-                {% set message %}{% trans "This module is compatibile only with webOS player" %}{% endset %}
+                {% set message %}{% trans "This Module is compatible with webOS and Tizen Players only" %}{% endset %}
                 {{ forms.message(message, "alert alert-info") }}
             </form>
         </div>

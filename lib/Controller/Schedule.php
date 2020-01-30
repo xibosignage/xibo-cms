@@ -331,13 +331,22 @@ class Schedule extends Base
                 $title = __('%s scheduled on %s', $row->campaign, $displayGroupList);
             }
 
+            if ($row->recurrenceType == 'Minute' || $row->recurrenceType == 'Hour') {
+                $title .= __(', Repeats every %s %s', $row->recurrenceDetail, $row->recurrenceType);
+            }
+
             // Event URL
             $editUrl = ($this->isApi()) ? 'schedule.edit' : 'schedule.edit.form';
             $url = ($editable) ? $this->urlFor($editUrl, ['id' => $row->eventId]) : '#';
 
+            $days = [];
+
             // Event scheduled events
             foreach ($scheduleEvents as $scheduleEvent) {
                 $this->getLog()->debug('Parsing event dates from %s and %s', $scheduleEvent->fromDt, $scheduleEvent->toDt);
+
+                // Get the day of schedule start
+                $fromDtDay = $this->getDate()->parse($scheduleEvent->fromDt, 'U')->format('Y-m-d');
 
                 // Handle command events which do not have a toDt
                 if ($row->eventTypeId == \Xibo\Entity\Schedule::$COMMAND_EVENT)
@@ -353,6 +362,15 @@ class Schedule extends Base
 
                 $this->getLog()->debug('Start date is ' . $fromDt->toRssString() . ' ' . $scheduleEvent->fromDt);
                 $this->getLog()->debug('End date is ' . $toDt->toRssString() . ' ' . $scheduleEvent->toDt);
+
+                // For a minute/hourly repeating events show only 1 event per day
+                if ($row->recurrenceType == 'Minute' || $row->recurrenceType == 'Hour')  {
+                    if (array_key_exists($fromDtDay, $days)) {
+                        continue;
+                    } else {
+                        $days[$fromDtDay] = $scheduleEvent->fromDt;
+                    }
+                }
 
                 /**
                  * @SWG\Definition(

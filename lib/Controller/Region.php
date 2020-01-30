@@ -10,7 +10,6 @@ namespace Xibo\Controller;
 
 
 use Xibo\Entity\Permission;
-use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
@@ -103,46 +102,6 @@ class Region extends Base
         $this->layoutFactory = $layoutFactory;
         $this->moduleFactory = $moduleFactory;
         $this->userGroupFactory = $userGroupFactory;
-    }
-
-    /**
-     * Timeline Form
-     * @param int $regionId
-     * @throws XiboException
-     */
-    public function timelineForm($regionId)
-    {
-        // Get a complex object of playlists and widgets
-        $region = $this->regionFactory->getById($regionId);
-
-        if (!$this->getUser()->checkEditable($region))
-            throw new AccessDeniedException();
-
-        // Set the view we have requested
-        $this->session->set('timeLineView', $this->getSanitizer()->getString('view', $this->session->get('timeLineView')));
-
-        // Load the region
-        $region->load();
-
-        // Loop through everything setting permissions
-        $playlist = $region->getPlaylist();
-        foreach ($playlist->widgets as $widget) {
-            /* @var Widget $widget */
-            $widget->module = $this->moduleFactory->createWithWidget($widget, $region);
-
-            // Augment with tags
-            $widget->tags = $widget->module->getMediaTags();
-        }
-
-        // Pass to view
-        $this->getState()->template = ($this->session->get('timeLineView') == 'grid') ? 'region-form-grid' : 'region-form-timeline';
-        $this->getState()->setData([
-            'region' => $region,
-            'playlist' => $playlist,
-            'modules' => $this->moduleFactory->getAssignableModules(),
-            'transitions' => $this->transitionData(),
-            'help' => $this->getHelp()->link('Layout', 'RegionOptions')
-        ]);
     }
 
     /**
@@ -666,6 +625,9 @@ class Region extends Base
             // No media to preview
             $this->getState()->extra['empty'] = true;
             $this->getState()->extra['text'] = __('Empty Region');
+        } catch (InvalidArgumentException $e) {
+            $this->getState()->extra['empty'] = true;
+            $this->getState()->extra['text'] = __('Please correct the error with this Widget');
         }
     }
 

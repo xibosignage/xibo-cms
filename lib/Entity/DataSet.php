@@ -287,6 +287,15 @@ class DataSet implements \JsonSerializable
     }
 
     /**
+     * Set the owner of this DataSet
+     * @param $userId
+     */
+    public function setOwner($userId)
+    {
+        $this->userId = $userId;
+    }
+
+    /**
      * Get the Count of Records in the last getData()
      * @return int
      */
@@ -889,11 +898,12 @@ class DataSet implements \JsonSerializable
      */
     private function edit()
     {
-        $sql = 'DataSet = :dataSet, Description = :description, lastDataEdit = :lastDataEdit, `code` = :code, `isLookup` = :isLookup, `isRemote` = :isRemote ';
+        $sql = 'DataSet = :dataSet, Description = :description, userId = :userId, lastDataEdit = :lastDataEdit, `code` = :code, `isLookup` = :isLookup, `isRemote` = :isRemote ';
         $params = [
             'dataSetId' => $this->dataSetId,
             'dataSet' => $this->dataSet,
             'description' => $this->description,
+            'userId' => $this->userId,
             'lastDataEdit' => $this->lastDataEdit,
             'code' => $this->code,
             'isLookup' => $this->isLookup,

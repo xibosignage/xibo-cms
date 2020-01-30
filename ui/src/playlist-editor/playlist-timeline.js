@@ -31,6 +31,25 @@ PlaylistTimeline.prototype.render = function() {
         }
     });
 
+    this.DOMObject.find('.timeline-overlay-step').droppable({
+        greedy: true,
+        accept: '[drop-to="region"]',
+        drop: function(event, ui) {
+            const position = parseInt($(event.target).data('position')) + 1;
+
+            pE.playlist.addElement(event.target, ui.draggable[0], position);
+        }
+    });
+
+    this.DOMObject.find('.timeline-overlay-step').click(function(e) {
+        if(!$.isEmptyObject(pE.toolbar.selectedCard) || !$.isEmptyObject(pE.toolbar.selectedQueue)) {
+            e.stopPropagation();
+            const position = parseInt($(this).data('position')) + 1;
+
+            pE.selectObject($(this).parents('#playlist-timeline'), false, {positionToAdd: position});
+        }
+    });
+
     this.DOMObject.find('.playlist-widget').droppable({
         greedy: true,
         accept: function(el) {

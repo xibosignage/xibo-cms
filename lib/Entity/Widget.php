@@ -650,7 +650,7 @@ class Widget implements \JsonSerializable
             // Widget duration is as specified
             $this->calculatedDuration = $this->duration;
 
-        } else if ($this->type === 'video') {
+        } else if ($this->type === 'video' || $this->type === 'audio') {
             // The calculated duration is the "real" duration (caters for 0 videos)
             $this->calculatedDuration = $module->getDuration(['real' => true]);
 

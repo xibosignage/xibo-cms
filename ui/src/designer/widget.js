@@ -1,5 +1,19 @@
 // WIDGET Module
 
+const EXPIRE_STATUS_MSG_MAP = [
+    '',
+    widgetStatusTrans.dueToExpire,
+    widgetStatusTrans.expired,
+    widgetStatusTrans.deleteOnExpire
+];
+
+const EXPIRE_STATUS_ICON_MAP = [
+    '',
+    'fa-calendar-o',
+    'fa-calendar-check-o',
+    'fa-calendar-times-o'
+];
+
 /**
  * Widget contructor
  * @param {number} id - widget id
@@ -74,6 +88,11 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
     // Date limits constants
     this.DATE_MIN = 0;
     this.DATE_MAX = 2147483647;
+
+    // Widget expire status
+    this.expireStatus = 0; // 0: Not set, 1: Due to expire, 2: Expired, 3: Delete on expire
+    this.expireStatusTitle = '';
+    this.expireStatusIcon = '';
 
     // Auto transitions
     this.transitionIn = data.transitionIn;
@@ -211,6 +230,61 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
 
         return totalDuration;
     };
+
+    /**
+     * Get widget status based on expire dates
+     * @returns {number} - Widget expire state : 0: Not set, 1: Due to expire, 2: Expired, 3: Delete on expire
+     * @
+     */
+    this.calculateExpireStatus = function() {
+        let status = 0;
+        const currentTime = Math.round(new Date().getTime() / 1000);
+
+        if(this.fromDt > this.DATE_MIN || this.toDt < this.DATE_MAX) {
+            if(this.getOptions().deleteOnExpiry == 1) {
+                // Delete on expire
+                status = 3;
+            } else {
+                if(currentTime < this.toDt) {
+                    // Due to expire
+                    status = 1;
+                } else {
+                    // Expired
+                    status = 2;
+                }
+            }
+        }
+
+        // save status to the widget property
+        this.expireStatus = status;
+
+        // save status message
+        this.expireStatusTitle = EXPIRE_STATUS_MSG_MAP[status];
+
+        // save status icon
+        this.expireStatusIcon = EXPIRE_STATUS_ICON_MAP[status];
+
+        // return status
+        return status;
+    };
+
+    /**
+     * Check the module list for the widget type and get if it's region specific or not
+     * @returns {boolean}
+     */
+    this.isRegionSpecific = function() {
+        let self = this;
+        let regionSpecific = false;
+
+        Object.keys(modulesList).forEach(function(item) {
+            if(modulesList[item].type == self.subType) {
+                regionSpecific = (modulesList[item].regionSpecific == 1);
+            }
+        });
+
+        return regionSpecific;
+    };
+
 };
 
 /**

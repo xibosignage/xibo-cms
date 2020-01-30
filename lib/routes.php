@@ -126,7 +126,6 @@ $app->get('/layout/status/:id', '\Xibo\Controller\Layout:status')->name('layout.
 // Layout Import
 $app->map('/layout/import', '\Xibo\Controller\Library:add')->via('HEAD');
 $app->post('/layout/import', '\Xibo\Controller\Layout:import')->name('layout.import');
-$app->post('/layout/:id/upgrade', '\Xibo\Controller\Layout:upgrade')->name('layout.upgrade');
 // Tagging
 $app->post('/layout/:id/tag', '\Xibo\Controller\Layout:tag')->name('layout.tag');
 $app->post('/layout/:id/untag', '\Xibo\Controller\Layout:untag')->name('layout.untag');
@@ -152,6 +151,8 @@ $app->put('/playlist/:id', '\Xibo\Controller\Playlist:edit')->name('playlist.edi
 $app->delete('/playlist/:id', '\Xibo\Controller\Playlist:delete')->name('playlist.delete');
 $app->post('/playlist/copy/:id', '\Xibo\Controller\Playlist:copy')->name('playlist.copy');
 $app->put('/playlist/setenablestat/:id', '\Xibo\Controller\Playlist:setEnableStat')->name('playlist.setenablestat');
+$app->get('/playlist/usage/:id', '\Xibo\Controller\Playlist:usage')->name('playlist.usage');
+$app->get('/playlist/usage/layouts/:id', '\Xibo\Controller\Playlist:usageLayouts')->name('playlist.usage.layouts');
 
 // Widgets Order
 $app->get('/playlist/widget', '\Xibo\Controller\Playlist:widgetGrid')->name('playlist.widget.search');
@@ -249,6 +250,7 @@ $app->post('/display/wol/:id', '\Xibo\Controller\Display:wakeOnLan')->name('disp
 $app->put('/display/authorise/:id', '\Xibo\Controller\Display:toggleAuthorise')->name('display.authorise');
 $app->put('/display/defaultlayout/:id', '\Xibo\Controller\Display:setDefaultLayout')->name('display.defaultlayout');
 $app->put('/display/requestscreenshot/:id', '\Xibo\Controller\Display:requestScreenShot')->name('display.requestscreenshot');
+$app->put('/display/licenceCheck/:id', '\Xibo\Controller\Display:checkLicence')->name('display.licencecheck');
 $app->get('/display/screenshot/:id', '\Xibo\Controller\Display:screenShot')->name('display.screenShot');
 $app->post('/display/:id/displaygroup/assign', '\Xibo\Controller\Display:assignDisplayGroup')->name('display.assign.displayGroup');
 $app->put('/display/:id/moveCms', '\Xibo\Controller\Display:moveCms')->name('display.moveCms');

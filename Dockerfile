@@ -1,7 +1,7 @@
 # Multi-stage build
 # Stage 0
 # Compile xsendfile apache module
-FROM alpine:3.8 as sendfile
+FROM alpine:3.11 as sendfile
 ADD docker/mod_xsendfile.c /mod_xsendfile.c
 RUN apk update && apk upgrade && apk add \
     gcc \
@@ -38,7 +38,7 @@ RUN find -type d -name '.git' -exec rm -r {} + && \
 
 # Stage 2
 # Run webpack
-FROM node:latest AS webpack
+FROM node:12 AS webpack
 WORKDIR /app
 
 # Install webpack
@@ -60,7 +60,7 @@ RUN npm run build
 
 # Stage 3
 # Build the CMS container
-FROM alpine:3.8
+FROM alpine:3.11
 MAINTAINER Xibo Signage <support@xibosignage.com>
 
 # Install apache, PHP, and supplimentary programs.
@@ -88,13 +88,17 @@ RUN apk update && apk upgrade && apk add tar \
     php7-mbstring \
     php7-memcached \
     php7-zlib \
-    php7-mongodb \
     mysql-client \
     ssmtp \
     apache2 \
     ca-certificates \
     tzdata \
     && rm -rf /var/cache/apk/*
+
+RUN apk add --no-cache build-base php7-dev php7-pear openssl-dev \
+    && pecl install mongodb \
+    && apk del build-base php7-dev \
+    && echo extension=mongodb.so > /etc/php7/conf.d/51_mongodb.ini
 
 # Add all necessary config files in one layer
 ADD docker/ /
@@ -137,7 +141,8 @@ ENV CMS_DEV_MODE=false \
     CMS_APACHE_MAX_REQUEST_WORKERS=60 \
     CMS_APACHE_MAX_CONNECTIONS_PER_CHILD=300 \
     CMS_APACHE_TIMEOUT=30 \
-    CMS_QUICK_CHART_URL=http://cms-quickchart:3400
+    CMS_QUICK_CHART_URL=http://cms-quickchart:3400 \
+    XTR_ENABLED=true
 
 # Expose port 80
 EXPOSE 80

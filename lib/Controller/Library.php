@@ -23,9 +23,9 @@ namespace Xibo\Controller;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Mimey\MimeTypes;
+use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
-use Respect\Validation\Validator as v;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\Widget;
@@ -844,6 +844,7 @@ class Library extends Base
             'updateInLayouts' => $this->getSanitizer()->getCheckbox('updateInLayouts', $options['updateInLayouts']),
             'deleteOldRevisions' => $this->getSanitizer()->getCheckbox('deleteOldRevisions', $options['deleteOldRevisions']),
             'allowMediaTypeChange' => $options['allowMediaTypeChange'],
+            'displayOrder' => $this->getSanitizer()->getInt('displayOrder'),
             'playlistId' => $this->getSanitizer()->getInt('playlistId'),
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
@@ -1127,6 +1128,9 @@ class Library extends Base
 
         if (!file_exists($libraryFolder . '/screenshots'))
             mkdir($libraryFolder . '/screenshots', 0777, true);
+
+        if (!file_exists($libraryFolder . '/attachment'))
+            mkdir($libraryFolder . '/attachment', 0777, true);
 
         // Check that we are now writable - if not then error
         if (!is_writable($libraryFolder))
@@ -1804,7 +1808,7 @@ class Library extends Base
         if (!$this->getUser()->checkViewable($media))
             throw new AccessDeniedException();
 
-        $layouts = $this->layoutFactory->query(null, ['mediaId' => $mediaId]);
+        $layouts = $this->layoutFactory->query(null, ['mediaId' => $mediaId, 'showDrafts' => 1]);
 
         if (!$this->isApi()) {
             foreach ($layouts as $layout) {
@@ -2039,6 +2043,20 @@ class Library extends Base
      *      required=true
      *   ),
      *  @SWG\Parameter(
+     *      name="extension",
+     *      in="formData",
+     *      description="Optional extension of the media, jpg, png etc. If not set in the request it will be retrieved from the headers",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option to enable the collection of Media Proof of Play statistics, On, Off or Inherit.",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="optionalName",
      *      in="formData",
      *      description="An optional name for this media file, if left empty it will default to the file name",
@@ -2072,6 +2090,8 @@ class Library extends Base
         $url = $this->getSanitizer()->getString('url');
         $type = $this->getSanitizer()->getString('type');
         $optionalName = $this->getSanitizer()->getString('optionalName');
+        $extension = $this->getSanitizer()->getString('extension');
+        $enableStat = $this->getSanitizer()->getString('enableStat', $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT'));
 
         // Validate the URL
         if (!v::url()->notEmpty()->validate(urldecode($url)) || !filter_var($url, FILTER_VALIDATE_URL)) {
@@ -2094,16 +2114,19 @@ class Library extends Base
 
         $this->getUser()->isQuotaFullByUser();
 
-        // if the type is not provided (web ui), get the extension from pathinfo/Guzzle and try to find correct module for the media
-        if (!isset($type)) {
+        // check if we have extension provided in the request (available via API), if not get it from the headers
+        if (!empty($extension)) {
+            $ext = $extension;
+        } else {
             $ext = $this->getRemoteFileExtension($url);
+        }
+
+        // check if we have type provided in the request (available via API), if not get the module type from the extension
+        if (!empty($type)) {
+            $module = $this->getModuleFactory()->create($type);
+        } else {
             $module = $this->getModuleFactory()->getByExtension($ext);
             $module = $this->getModuleFactory()->create($module->type);
-        } else {
-            // we have the type in request (API) double check that the module type exists
-            // we are also getting extension here from pathinfo / the Content-Type header via Guzzle, depending on the URL we may need it in saveFile in Media entity
-            $ext = $this->getRemoteFileExtension($url);
-            $module = $this->getModuleFactory()->create($type);
         }
 
         // if we were provided with optional Media name set it here, otherwise get it from pathinfo
@@ -2122,7 +2145,7 @@ class Library extends Base
         }
 
         // add our media to queueDownload and process the downloads
-        $this->mediaFactory->queueDownload($name, str_replace(' ', '%20', htmlspecialchars_decode($url)), 0, ['fileType' => strtolower($module->getModuleType()), 'duration' => $module->determineDuration(), 'extension' => $ext]);
+        $this->mediaFactory->queueDownload($name, str_replace(' ', '%20', htmlspecialchars_decode($url)), 0, ['fileType' => strtolower($module->getModuleType()), 'duration' => $module->determineDuration(), 'extension' => $ext, 'enableStat' => $enableStat]);
         $this->mediaFactory->processDownloads(function($media) {
             // Success
             $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);
@@ -2184,10 +2207,13 @@ class Library extends Base
          if ($extension == '') {
              $guzzle = new Client($this->getConfig()->getGuzzleProxy());
              $head = $guzzle->head($url);
-             $contentType = $head->getHeader('Content-Type');
+             $contentType = $head->getHeaderLine('Content-Type');
 
-             foreach ($contentType as $value) {
-                 $extension = $value;
+             $extension = $contentType;
+
+             if ($contentType === 'binary/octet-stream' && $head->hasHeader('x-amz-meta-filetype')) {
+                 $amazonContentType = $head->getHeaderLine('x-amz-meta-filetype');
+                 $extension = $amazonContentType;
              }
 
              // get the extension corresponding to the mime type

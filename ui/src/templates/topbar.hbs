@@ -1,4 +1,4 @@
-<nav class="navbar navbar-fixed-top navbar-expand">
+<nav class="navbar navbar-expand">
 
     <div class="container-toolbar container-fluid">
         {{!-- Menu items/tabs --}}
@@ -19,13 +19,15 @@
                 <span class="layout-info-label">{{trans.name}}:</span>"{{mainObject.name}}"
             </span>
 
-            <span data-toggle="tooltip" 
+            <span class="layout-info-duration"
+                data-toggle="tooltip" 
                 data-placement="bottom" 
                 title="{{trans.durationDetail}}">
                 <i class="fa fa-clock-o layout-info-icon"></i><span class="layout-info-label">{{trans.duration}}:</span>{{mainObject.duration}}s
             </span>
 
-            <span data-toggle="tooltip" 
+            <span class="layout-info-dimensions"
+                data-toggle="tooltip" 
                 data-placement="bottom" 
                 title="{{trans.dimensionsDetail}}">
                 <i class="fa fa-arrows layout-info-icon"></i><span class="layout-info-label">{{trans.dimensions}}:</span>{{mainObject.width}}x{{mainObject.height}}

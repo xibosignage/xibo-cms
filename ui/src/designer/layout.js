@@ -103,6 +103,9 @@ Layout.prototype.createDataStructure = function(data) {
 
             newWidget.designerObject = lD;
 
+            // calculate expire status
+            newWidget.calculateExpireStatus();
+
             // Add newWidget to the Region widget object
             newRegion.widgets[newWidget.id] = newWidget;
 

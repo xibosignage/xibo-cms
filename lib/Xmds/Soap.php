@@ -63,6 +63,7 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Widget\ModuleWidget;
 
 /**
  * Class Soap
@@ -455,12 +456,12 @@ class Soap
             //  4 - Background Images for all Scheduled Layouts
             //  5 - Media linked to display profile (linked through PlayerSoftware)
             $SQL = "
-                SELECT 1 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
+                SELECT 1 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, media.released
                    FROM `media`
                  WHERE media.type = 'font'
                     OR (media.type = 'module' AND media.moduleSystemFile = 1)
                 UNION ALL
-                SELECT 2 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
+                SELECT 2 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, media.released
                    FROM `media`
                     INNER JOIN `lkmediadisplaygroup`
                     ON lkmediadisplaygroup.mediaid = media.MediaID
@@ -468,9 +469,9 @@ class Soap
                     ON `lkdgdg`.parentId = `lkmediadisplaygroup`.displayGroupId
                     INNER JOIN `lkdisplaydg`
                     ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
-                 WHERE lkdisplaydg.DisplayID = :displayId AND media.released = 1
+                 WHERE lkdisplaydg.DisplayID = :displayId
                 UNION ALL
-                SELECT 3 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
+                SELECT 3 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, media.released
                   FROM region
                     INNER JOIN playlist
                     ON playlist.regionId = region.regionId
@@ -482,11 +483,11 @@ class Soap
                     ON widget.widgetId = lkwidgetmedia.widgetId
                     INNER JOIN media
                     ON media.mediaId = lkwidgetmedia.mediaId
-                 WHERE region.layoutId IN (%s) AND media.released = 1
+                 WHERE region.layoutId IN (%s)
                 UNION ALL
-                SELECT 4 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.FileSize
+                SELECT 4 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.FileSize, media.released
                   FROM `media`
-                 WHERE `media`.released = 1 AND `media`.mediaID IN (
+                 WHERE `media`.mediaID IN (
                     SELECT backgroundImageId
                       FROM `layout`
                      WHERE layoutId IN (%s)
@@ -497,7 +498,7 @@ class Soap
 
             if ($playerVersionMediaId != null) {
                 $SQL .= " UNION ALL 
-                          SELECT 5 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.fileSize
+                          SELECT 5 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.fileSize, media.released
                             FROM `media`
                             WHERE `media`.type = 'playersoftware' 
                             AND `media`.mediaId = :playerVersionMediaId
@@ -529,6 +530,7 @@ class Soap
                 $id = $this->getSanitizer()->string($row['id']);
                 $md5 = $row['MD5'];
                 $fileSize = $this->getSanitizer()->int($row['FileSize']);
+                $released = $this->getSanitizer()->int($row['released']);
 
                 // Check we haven't added this before
                 if (in_array($path, $pathsAdded))
@@ -546,7 +548,13 @@ class Soap
                 }
 
                 // Add nonce
-                $mediaNonce = $this->requiredFileFactory->createForMedia($this->display->displayId, $id, $fileSize, $path)->save();
+                $mediaNonce = $this->requiredFileFactory->createForMedia($this->display->displayId, $id, $fileSize, $path, $released)->save();
+
+                // skip media which has released == 0 or 2
+                if ($released == 0 || $released == 2) {
+                    continue;
+                }
+
                 $newRfIds[] = $mediaNonce->rfId;
 
                 // Add the file node
@@ -600,7 +608,7 @@ class Soap
                 $path = $layout->xlfToDisk(['notify' => false]);
 
                 // If the status is *still* 4, then we skip this layout as it cannot build
-                if ($layout->status === 4) {
+                if ($layout->status === ModuleWidget::$STATUS_INVALID) {
                     $this->getLog()->debug('Skipping layoutId ' . $layout->layoutId . ' which wont build');
                     continue;
                 }
@@ -1334,19 +1342,19 @@ class Soap
             // Get the date and the message (all log types have these)
             foreach ($node->childNodes as $nodeElements) {
 
-                if ($nodeElements->nodeName == "scheduleID") {
+                if ($nodeElements->nodeName == 'scheduleID') {
                     $scheduleId = $nodeElements->textContent;
-                } else if ($nodeElements->nodeName == "layoutID") {
+                } else if ($nodeElements->nodeName == 'layoutID') {
                     $layoutId = $nodeElements->textContent;
-                } else if ($nodeElements->nodeName == "mediaID") {
+                } else if ($nodeElements->nodeName == 'mediaID') {
                     $mediaId = $nodeElements->textContent;
-                } else if ($nodeElements->nodeName == "type") {
+                } else if ($nodeElements->nodeName == 'type') {
                     $type = $nodeElements->textContent;
-                } else if ($nodeElements->nodeName == "method") {
+                } else if ($nodeElements->nodeName == 'method') {
                     $method = $nodeElements->textContent;
-                } else if ($nodeElements->nodeName == "message") {
+                } else if ($nodeElements->nodeName == 'message') {
                     $message = $nodeElements->textContent;
-                } else if ($nodeElements->nodeName == "thread") {
+                } else if ($nodeElements->nodeName == 'thread') {
                     if ($nodeElements->textContent != '')
                         $thread = '[' . $nodeElements->textContent . '] ';
                 }
@@ -1458,8 +1466,8 @@ class Soap
         // Get the display timezone to use when adjusting log dates.
         $defaultTimeZone = $this->getConfig()->getSetting('defaultTimezone');
 
-        // Process the XML file into an array
-        $stats = [];
+        // Count stats processed from XML
+        $statCount = 0;
 
         // Load the XML into a DOMDocument
         $document = new \DOMDocument("1.0");
@@ -1479,6 +1487,29 @@ class Soap
             $type = $node->getAttribute('type');
             $duration = $node->getAttribute('duration');
             $count = $node->getAttribute('count');
+            $engagements = [];
+
+            foreach ($node->childNodes as $nodeElements) {
+                /* @var \DOMElement $nodeElements */
+                if ($nodeElements->nodeName == 'engagements') {
+                    $i = 0;
+                    foreach ($nodeElements->childNodes as $child) {
+
+                        /* @var \DOMElement $child */
+                        if ($child->nodeName == 'engagement') {
+                            $engagements[$i]['tag'] = $child->getAttribute('tag');
+                            $engagements[$i]['duration'] = $child->getAttribute('duration');
+                            $engagements[$i]['count'] = $child->getAttribute('count');
+                            $i++;
+                        }
+                    }
+                }
+            }
+
+            if ($fromdt == '' || $todt == '' || $type == '') {
+                $this->getLog()->info('Stat submitted without the fromdt, todt or type attributes.');
+                continue;
+            }
 
             // if fromdt and to dt are same then ignore them
             if ($fromdt == $todt) {
@@ -1486,42 +1517,21 @@ class Soap
                 continue;
             }
 
-            if ($fromdt == '' || $todt == '' || $type == '') {
-                $this->getLog()->error('Stat submitted without the fromdt, todt or type attributes.');
-                continue;
-            }
-
             $scheduleId = $node->getAttribute('scheduleid');
-
             if (empty($scheduleId)) {
                 $scheduleId = 0;
             }
 
-            $campaignId = 0;
             $layoutId = $node->getAttribute('layoutid');
 
-            // For a type "event" we have layoutid 0
-            // otherwise we should try and resolve the campaignId
             if ($type != 'event') {
-                try {
-                    // Handle the splash screen
-                    if ($layoutId == 'splash') {
-                        if (!in_array($layoutId, $layoutIdsNotFound)) {
-                            $layoutIdsNotFound[] = $layoutId;
-                            $this->getLog()->info('Splash Screen Statistic Ignored');
-                        }
 
-                        continue;
-                    }
-
-                    // Get the layout campaignId
-                    $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
-
-                } catch (XiboException $error) {
-
+                // Handle the splash screen
+                if ($layoutId == 'splash') {
+                    // only logging this message one time
                     if (!in_array($layoutId, $layoutIdsNotFound)) {
                         $layoutIdsNotFound[] = $layoutId;
-                        $this->getLog()->error('Layout not found. Layout Id: '. $layoutId);
+                        $this->getLog()->info('Splash Screen Statistic Ignored');
                     }
 
                     continue;
@@ -1556,15 +1566,19 @@ class Soap
                 } catch (NotFoundException $notFoundException) {
                     // Widget isn't found
                     // we can only log this and move on
-                    $this->getLog()->info('Stat for a widgetId that doesnt exist: ' . $widgetId);
+                    $this->getLog()->error('Stat for a widgetId that doesnt exist: ' . $widgetId);
                     continue;
                 }
             }
-            
-            $tag = $node->getAttribute('tag');
 
+            $tag = $node->getAttribute('tag');
             if ($tag == 'null')
                 $tag = null;
+
+            if ($fromdt > $todt) {
+                $this->getLog()->debug('From date is greater than to date: ' . $fromdt . ', toDt: ' . $todt);
+                continue;
+            }
 
             // Adjust the date according to the display timezone
             // stats are returned in the local date/time of the Player
@@ -1596,26 +1610,31 @@ class Soap
                 continue;
             }
 
-            $stats[] = [
+            // Important - stats will now send display entity instead of displayId
+            $stats = [
                 'type' => $type,
                 'statDate' => $now,
                 'fromDt' => $fromdt,
                 'toDt' => $todt,
                 'scheduleId' => $scheduleId,
-                'displayId' => $this->display->displayId,
-                'campaignId' => (int) $campaignId,
+                'display' => $this->display,
                 'layoutId' => (int) $layoutId,
                 'mediaId' => $mediaId,
                 'tag' => $tag,
                 'widgetId' => (int) $widgetId,
                 'duration' => (int) $duration,
                 'count' => ($count != '') ? (int) $count : 1,
+                'engagements' => (count($engagements) > 0) ? $engagements : [],
             ];
+
+            $this->getTimeSeriesStore()->addStat($stats);
+
+            $statCount++;
         }
 
         /*Insert stats*/
-        if (count($stats) > 0) {
-            $this->getTimeSeriesStore()->addStat($stats);
+        if ($statCount > 0) {
+            $this->getTimeSeriesStore()->addStatFinalize();
         } else {
             $this->getLog()->info('0 stats resolved from data package');
         }

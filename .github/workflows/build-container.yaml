@@ -1,0 +1,79 @@
+name: Build Container
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+      - release22
+  release:
+    types: [published]
+
+jobs:
+  build:
+    name: Build Containers
+    if: github.repository == 'xibosignage/xibo-cms'
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+
+      - name: Build Latest
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          docker build . -t xibosignage/xibo-cms:latest
+      - name: Build Branch
+        if: github.event_name == 'push' && github.ref != 'refs/heads/master'
+        run: |
+          docker build . -t xibosignage/xibo-cms:${GITHUB_REF##*/}
+
+      - name: Push Latest
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          docker login --username ${{ secrets.DOCKER_HUB_USERNAME }} --password ${{ secrets.DOCKER_HUB_TOKEN }}
+          docker push xibosignage/xibo-cms:latest
+      - name: Push Branch
+        if: github.event_name == 'push' && github.ref != 'refs/heads/master'
+        run: |
+          docker login --username ${{ secrets.DOCKER_HUB_USERNAME }} --password ${{ secrets.DOCKER_HUB_TOKEN }}
+          docker push xibosignage/xibo-cms:${GITHUB_REF##*/}
+
+      - name: Build Release
+        if: github.event_name == 'release'
+        run: |
+          docker build . -t xibosignage/xibo-cms:release-${GITHUB_REF##*/}
+      - name: Push Release
+        if: github.event_name == 'release'
+        run: |
+          docker login --username ${{ secrets.DOCKER_HUB_USERNAME }} --password ${{ secrets.DOCKER_HUB_TOKEN }}
+          docker push xibosignage/xibo-cms:release-${GITHUB_REF##*/}
+
+  deploy:
+    name: Deploy Test Instances
+    runs-on: ubuntu-18.04
+    needs: build
+    if: github.repository == 'xibosignage/xibo-cms' && github.event_name == 'push'
+    steps:
+      - name: Deploy to Develop
+        uses: joelwmale/webhook-action@1.0.0
+        if: github.ref == 'refs/heads/develop'
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_DEVELOP_URL }}
+          data: ''
+      - name: Deploy to Staging
+        uses: joelwmale/webhook-action@1.0.0
+        if: github.ref == 'refs/heads/release22'
+        env:
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_STAGING_URL }}
+          data: ''
+
+  in_fork:
+    name: Skip in a fork
+    runs-on: ubuntu-18.04
+    if: github.repository != 'xibosignage/xibo-cms'
+    steps:
+      - name: Skip
+        run: |
+          echo 'Skipped while in a fork'

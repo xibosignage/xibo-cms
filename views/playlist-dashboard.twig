@@ -19,122 +19,45 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
 #}
 {% extends "authed.twig" %}
+{% import "forms.twig" as forms %}
 
 {% block pageContent %}
-    {% if spots|length <= 0 %}
-        <h1>{% trans "Your account has not been configured correctly, please contact your service provider" %}</h1>
-    {% endif %}
 
-    {% for spot in spots %}
-        {% if spot.spots > 0 %}
-            <div class="row">
-                <div class="col-lg-6">
-                    <div class="widget">
-                        <div class="widget-title">
-                            <h3>{{ spot.playlist.name }} <small>{{ spot.spots }} {% trans "Spots" %}</small></h3>
-                        </div>
-                        <div class="widget-body">
+    <div class="row">
+        <div class="col-lg-6">
+           {# Playlist selection #}
+            {% set attributes = [
+                { name: "data-placeholder--id", value: null },
+                { name: "data-placeholder--value", value: "" },
+                { name: "data-search-url", value:  urlFor("playlistdashboard.search") },
+                { name: "data-search-term", value: "name" },
+                { name: "data-id-property", value: "playlistId" },
+                { name: "data-text-property", value: "name" }
+            ] %}
 
-                            {% set widgetLength = spot.playlist.widgets|length %}
-                            {% set remaining = spot.spots - widgetLength %}
+            {% set title %}{% trans "Playlist" %}{% endset %}
+            {% set helpText %}{% trans "Please select a Playlist to manage" %}{% endset %}
+            {{ forms.dropdown("playlistId", "single", title, "", [playlist], "playlistId", "name", helpText, "playlist-control pagedSelect", "", "", "", attributes) }}
 
-                            {% for widget in spot.playlist.widgets %}
-
-                                <div class="row">
-                                    <div class="col-md-1">
-                                        <span class="row-title">{{ loop.index }}</span>
-                                    </div>
-                                    <div class="col-md-1">
-                                        {% if currentUser.checkViewable(widget.module.getMedia()) == 1 %}
-                                            {% if widget.module.getModule().name == 'Image' %}
-                                                <img src='{{ urlFor("library.download", {id: widget.getPrimaryMediaId()}) }}?preview=1' style='height: 50px; max-width: 50px;'/>
-                                            {% else %}
-                                                <i title="{{ widget.module.getModule().name }}" class="fa fa-2x module-icon-{{ widget.type }}" style="height: 50px; max-width: 50px;"></i>
-                                            {% endif %}
-                                        {% endif %}
-                                    </div>
-                                    <div class="col-md-9"
-                                         data-button-type="replace"
-                                         data-playlist-id="{{ widget.playlistId }}"
-                                         data-widget-id="{{ widget.widgetId }}"
-                                         data-widget-name="{{ widget.module.getName() }}"
-                                            {% if widget.module.getModule().regionSpecific == 0 %}
-                                            data-media-id="{{ widget.getPrimaryMediaId() }}"
-                                            {% endif %}
-                                         >
-
-                                        {% if widget.module.getModule().regionSpecific == 0 and widget.enabled %}
-                                            {% if currentUser.checkViewable(widget.module.getMedia()) != 1 %}
-                                                <button class="btn btn-block disabled">
-                                                    <i class="fa fa-lock fa-lg"></i>
-                                                </button>
-                                            {% elseif currentUser.checkEditable(widget.module.getMedia()) != 1 %}
-                                                <button class="btn btn-block disabled">
-                                                    {{ widget.module.getName() }} <i class="fa fa-lock fa-lg"></i>
-                                                </button>
-                                            {% else %}
-                                                <button class="btn btn-block btn-warning spot-action-button">{{ widget.module.getName() }} </button>
-                                            {% endif %}
-                                        {% else %}
-                                            <button class="btn btn-block btn-default" disabled>{{ widget.module.getName() }} - {% trans "Locked" %}</button>
-                                        {% endif %}
-                                    </div>
-                                    <div class="col-md-1">
-                                        {% if currentUser.checkDeleteable(widget.module.getMedia()) == 1 %}
-                                            <a class="XiboFormButton btns" title="{% trans "Delete" %}" href="{{ urlFor("playlist.module.widget.delete.form", {id: widget.widgetId}) }}">
-                                                <i class="fa fa-lg fa-trash" aria-hidden="true" style="padding:8px 0 8px; color:#d9534f;"></i>
-                                            </a>
-                                        {% endif %}
-                                    </div>
-                                </div>
-
-                            {% endfor %}
-
-                            {% for i in 0..remaining - 1 %}
-
-                                <div class="row">
-                                    <div class="col-md-1">
-                                        <span class="row-title">{{ loop.index + widgetLength }}</span>
-                                    </div>
-                                    <div class="col-md-1">
-                                    </div>
-                                    <div class="col-md-9"
-                                         data-button-type="add"
-                                         data-widget-id=""
-                                         data-playlist-id="{{ spot.playlist.playlistId }}"
-                                         data-widget-preview="{{ urlFor("library.download") }}?preview=1"
-                                         data-widget-del="{{ urlFor("playlist.module.widget.delete.form") }}">
-                                        {% if loop.first %}
-                                            <button class="btn btn-block btn-success spot-action-button">{% trans "Add" %}</button>
-                                        {% else %}
-                                            <button class="btn btn-block btn-default" disabled>{% trans "Empty" %}</button>
-                                        {% endif %}
-                                    </div>
-
-                                    <div class="col-md-1 delete-widget">
-                                    </div>
-                                </div>
-
-                            {% endfor %}
-
-                        </div>
-                    </div>
-                </div>
-                {% if loop.first %}
-                    <div class="col-lg-6">
-                        <div class="well">
-                            <h3>{% trans "Playlist Content" %}</h3>
-                            <p>Fill empty Spots by clicking on ‘Add’ to select the media file you wish to use.</p>
-
-                            <p>Replace existing media files by clicking on a Spot and select the new media file you wish to use.</p>
-
-                            <p>{{ libraryUpload.maxSizeMessage }}</p>
-                        </div>
-                    </div>
-                {% endif %}
-        {% endif %}
         </div>
-    {% endfor %}
+    </div>
+    <div class="row">
+        <div class="col-lg-6">
+            <div id="spots">
+
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="well">
+                <h3>{% trans "Playlist Content" %}</h3>
+                <p>Fill empty Spots by clicking on ‘Add’ to select the media file you wish to use.</p>
+
+                <p>Replace existing media files by clicking on a Spot and select the new media file you wish to use.</p>
+
+                <p>{{ libraryUpload.maxSizeMessage }}</p>
+            </div>
+        </div>
+    </div>
 
 {% endblock %}
 
@@ -143,17 +66,25 @@
     {% include "common.twig" %}
     <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js"></script>
     <script type="text/javascript">
+        // Define some global variables to keep hold of
+        let template;
+        let uploadUrl;
 
-        // Bind our buttons on the dashboard
-        var template;
         $(document).ready(function() {
 
-            let url = "{{ urlFor("playlist.library.add") }}";
+            // We need to have the URL of hte upload form available
+            uploadUrl = "{{ urlFor("playlistdashboard.library.add") }}";
+
+            // Bind our buttons on the dashboard
+            // Listen to the playlist selector change
+            $("div.playlist-control select").on("change", function() {
+                loadPlaylistIntoSpotEditor($(this).val());
+            });
 
             // Upload server status check for browsers with CORS support:
             if ($.support.cors) {
                 $.ajax({
-                    url: url,
+                    url: uploadUrl,
                     type: 'HEAD'
                 }).fail(function () {
                     $('<span class="alert alert-error"/>')
@@ -165,134 +96,195 @@
             // Compile our template once
             template = Handlebars.compile($("#template-spot-dashboard").html());
 
-            function spotActionButtonClick(button) {
+            // Do we need to load a preset?
+            loadPlaylistIntoSpotEditor($("div.playlist-control select").val());
+        });
 
-                // Whip away the current button
-                let $container = button.parent();
-                let $imgDiv = $container.prev();
-                let $delButtonDiv = $container.next();
-
-                // Remove the button
-                button.remove();
-
-                // Append a new one
-                $container.append(template({
-                    playlistId: $container.data("playlistId"),
-                    widgetId: $container.data("widgetId"),
-                    oldMediaId: $container.data("mediaId"),
-                    upload: {
-                        maxSize: {{ libraryUpload.maxSize }},
-                        validExt: "{{ validExtensions }}"
-                    }
-                }));
-
-                // Hand over to blue-imp
-                // Configure the upload form
-                let form = $container.find("form");
-
-                // Initialize the jQuery File Upload widget:
-                form.fileupload({
-                    url: url,
-                    disableImageResize: true,
-                    maxNumberOfFiles: 1,
-                    limitMultiFileUploads: 1,
-                    autoUpload: true,
-                    dropZone: $(this).parent()
-                });
-
-                // Enable iframe cross-domain access via redirect option:
-                form.fileupload('option', 'redirect', window.location.href.replace(/\/[^\/]*$/, '/cors/result.html?%s'));
-
-                form.bind('fileuploadalways', function (e, data) {
-                    if (data.textStatus === "success") {
-                        // Take the data and update our form back to a replace button
-                        let result = data.result.files[0];
-                        console.log(result);
-
-                        // Pull the results out
-                        if (result.error !== undefined) {
-                            toastr.error(result.error);
-                        } else {
-                            // update the container with a new mediaId
-                            $container.data("mediaId", result.mediaId);
-                            $container.data("widgetId", result.widgetId);
-                            $container.data("widgetName", result.name);
-
-                            if ($container.data("buttonType") === "add") {
-
-                                $container.data("buttonType", "replace");
-
-                                // Change Empty to Add in the next row down (if there is one)
-                                let $next = $container.parent().next().find("button");
-                                $next.addClass("spot-action").addClass("btn-success").removeClass("btn-default").prop("disabled", false).html("Add");
-                                $next.on("click", function () {
-                                    spotActionButtonClick($next);
-                                });
-                            }
-                        }
-                    } else {
-                        toastr.error(data.result);
-                    }
-
-                    var button;
-                    if ($container.data("widgetName") !== undefined) {
-                        // Switch back to a button
-                        button = $("<button class=\"btn btn-block btn-warning spot-action-button\">" + $container.data("widgetName") + "</button>");
-                        $container.append(button);
-
-                        let delButton = $("<a class=\"XiboFormButton added btns\" title=\"{% trans "Delete" %}\" href=\"" + $container.data("widgetDel").replace(":id", $container.data("widgetId")) + "\"><i class=\"fa fa-lg fa-trash\" aria-hidden=\"true\" style=\"padding:8px 0 8px; color:#d9534f;\"></i></a>");
-                        $delButtonDiv.append(delButton);
-
-                        let thumbnail = $("<img src=\"" + $container.data("widgetPreview").replace(":id", $container.data("mediaId")) + "\" style=\"height: 50px; max-width: 50px;\"/>");
-                        $imgDiv.append(thumbnail);
-                    } else {
-                        let button = $("<button class=\"btn btn-block btn-success spot-action-button\">Add</button>");
-                        $container.append(button);
-                        button.on("click", function () {
-                            spotActionButtonClick($(this));
-                        });
-                    }
-
-                    setTimeout(function() {
-                        form.fileupload('destroy');
-                        form.remove();
-                    }, 500);
-                });
-
-                // Click our new button
-                $container.find('input[name="files[]"]').trigger("click");
+        /**
+         * Load a Playlist into the Spot Editor
+         * @param playlistId the playlistId
+         */
+        function loadPlaylistIntoSpotEditor(playlistId) {
+            // Check we have a playlistId provided
+            if (playlistId === undefined || playlistId === null || playlistId === "") {
+                return;
             }
 
-            // Bind an on-click event to each of our buttons
-            // when we click them, they get replaced with a file upload form.
-            // once complete, or cancelled, they get reloaded with new information, or the old info put back.
-            $(".spot-action-button").on("click", function() {
-                spotActionButtonClick($(this));
+            // Make an AJAX call to the spots backend for this, and dump the resulting HTML into our target div.
+            let $spotElement = $("#spots");
+
+            $spotElement.html("<span class=\"fa fa-cogs fa-spin\"></span>");
+
+            $.ajax("{{ urlFor("playlistdashboard.show") }}".replace(":id", playlistId), {
+                method: "GET",
+                success: function(response) {
+                    if (response.success) {
+                        $spotElement.html(response.html);
+
+                        // Run init generally to capture any Xibo special elements
+                        XiboInitialise("#spots");
+
+                        // Also bind to any special buttons we have on our page.
+
+                        // Bind an on-click event to each of our buttons
+                        // when we click them, they get replaced with a file upload form.
+                        // once complete, or cancelled, they get reloaded with new information, or the old info put back.
+                        $spotElement.find(".spot-action-button").on("click", function() {
+                            spotActionButtonClick($(this));
+                        });
+
+                        // Bind click event to delete a playlist widget
+                        $spotElement.find(".delete-widget").click(function(e) {
+                            let $anchor = $(this).children();
+                            e.preventDefault();
+                            XiboFormRender($anchor);
+                        });
+                    } else {
+                        SystemMessage(response.message);
+                    }
+                }
+            })
+        }
+
+        /**
+         * What should happen when we click a button?
+         * @param button
+         */
+        function spotActionButtonClick(button) {
+
+            // Whip away the current button
+            let $container = button.parent();
+            let $imgDiv = $container.prev();
+            let $delButtonDiv = $container.next();
+
+            // Remove the button, thumbnail and whatever else
+            button.remove();
+            $imgDiv.empty();
+            $delButtonDiv.empty();
+
+            // Append a new one
+            $container.append(template({
+                playlistId: $container.data("playlistId"),
+                widgetId: $container.data("widgetId"),
+                oldMediaId: $container.data("mediaId"),
+                upload: {
+                    maxSize: {{ libraryUpload.maxSize }},
+                    validExt: "{{ validExtensions }}"
+                }
+            }));
+
+            // Hand over to blue-imp
+            // Configure the upload form
+            let form = $container.find("form");
+
+            // Initialize the jQuery File Upload widget:
+            form.fileupload({
+                url: uploadUrl,
+                disableImageResize: true,
+                maxNumberOfFiles: 1,
+                limitMultiFileUploads: 1,
+                autoUpload: true,
+                dropZone: $(this).parent()
             });
-        });
 
-        // Bind click event to delete a playlist widget
-        $(".delete-widget").click(function(e) {
-            let $anchor = $(this).children();
-            e.preventDefault();
-            XiboFormRender($anchor);
-        });
+            // Enable iframe cross-domain access via redirect option:
+            form.fileupload('option', 'redirect', window.location.href.replace(/\/[^\/]*$/, '/cors/result.html?%s'));
 
+            form.bind('fileuploadalways', function (e, data) {
+                if (data.textStatus === "success") {
+                    // Take the data and update our form back to a replace button
+                    let result = data.result.files[0];
 
-        // Callback
+                    // Pull the results out
+                    if (result.error !== undefined) {
+                        toastr.error(result.error);
+                    } else {
+                        // update the container with a new mediaId
+                        $container.data("mediaId", result.mediaId);
+                        $container.data("widgetId", result.widgetId);
+                        $container.data("widgetName", result.name);
+                        $container.data("mediaType", result.mediaType);
+
+                        if ($container.data("buttonType") === "add") {
+
+                            $container.data("buttonType", "replace");
+
+                            // Change Empty to Add in the next row down (if there is one)
+                            let $next = $container.parent().next().find("button");
+                            $next.addClass("spot-action").addClass("btn-success").removeClass("btn-default").prop("disabled", false).html("Add");
+                            $next.on("click", function () {
+                                spotActionButtonClick($next);
+                            });
+                        }
+                    }
+                } else {
+                    toastr.error(data.result);
+                }
+
+                let button;
+                if ($container.data("widgetName") !== undefined) {
+                    // Switch back to a button
+                    button = $("<button class=\"btn btn-block btn-warning spot-action-button\">" + $container.data("widgetName") + "</button>");
+                    $container.append(button);
+
+                    var delTempl = Handlebars.compile($("#delete-template").html());
+                    $delButtonDiv.append(delTempl({
+                        href: $container.data("widgetDel").replace(":id", $container.data("widgetId")),
+                        routeViewable: $container.data("routeViewable"),
+                        transDelete: "{% trans "Delete" %}"
+                    }));
+
+                    if ($container.data("mediaType") === "image") {
+                        let previewUrl = $container.data("widgetPreview").replace(":id", $container.data("mediaId"));
+                        let thumbnail = $("<a class=\"img-replace\" data-toggle=\"lightbox\" data-type=\"image\" href=\"" + previewUrl + "\">" +
+                            "<img src=\"" + previewUrl + "&width=50&height=50&cache=1\" style=\"max-height: 50px; max-width: 50px;\"/>" +
+                            "</a>");
+
+                        $imgDiv.append(thumbnail);
+                    } else {
+                        $imgDiv.append($("<i class=\"fa fa-2x module-icon-" + $container.data("mediaType") + "\" style=\"height: 50px; max-width: 50px;\"></i>"));
+                    }
+
+                } else {
+                    button = $("<button class=\"btn btn-block btn-success spot-action-button\">Add</button>");
+                    $container.append(button);
+
+                }
+
+                // Bind to the button.
+                button.on("click", function () {
+                    spotActionButtonClick($(this));
+                });
+
+                setTimeout(function() {
+                    form.fileupload('destroy');
+                    form.remove();
+                }, 500);
+            });
+
+            // Click our new button
+            $container.find('input[name="files[]"]').trigger("click");
+        }
+
+        /**
+         * Callback used by the Playlist Module Delete form opening.
+         */
         function playlistModuleDeleteFormOpen() {
 
             $("#playlistModuleDeleteForm").submit(function(e) {
-
                 e.preventDefault();
+
+                // Call the usual form submit.
                 XiboFormSubmit($("#playlistModuleDeleteForm"), null, function(xhr, form) {
-                    if (xhr.success)
-                        window.location.reload();
+                    if (xhr.success) {
+                        loadPlaylistIntoSpotEditor($("div.playlist-control select").val());
+                    }
                 });
             });
         }
 
     </script>
+    {# Output a template for the upload form which will appear in the spot when clicked. #}
     {% raw %}
     <script type="text/x-handlebars-template" id="template-spot-dashboard">
         <form method="post" enctype="multipart/form-data" data-max-file-size="{{ upload.maxSize }}" data-accept-file-types="/(\.|\/){{ upload.validExt }}$/i">
@@ -332,5 +324,15 @@
             </div>
         </form>
     </script>
+
+    <!-- The template to display delete button -->
+    <script type="text/x-handlebars-template" id="delete-template">
+        {{#if routeViewable}}
+            <a class="XiboFormButton added btns" title="{{ transDelete }}" href="{{ href }}">
+                <i class="fa fa-lg fa-trash" aria-hidden="true" style="padding:8px 0 8px; color:#d9534f;"></i>
+            </a>
+        {{/if}}
+    </script>
+
     {% endraw %}
 {% endblock %}

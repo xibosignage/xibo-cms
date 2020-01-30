@@ -74,6 +74,7 @@
                             <th>{% trans "Next Run" %}</th>
                             <th>{% trans "Previous Run" %}</th>
                             <th>{% trans "Active" %}</th>
+                            <th>{% trans "Failed Message" %}</th>
                             <th>{% trans "Created" %}</th>
                             <th></th>
                         </tr>
@@ -186,6 +187,22 @@
                                 icon = "fa-times";
 
                             return "<span class='fa " + icon + "' title='" + (row.isActiveDescription) + "'></span>";
+                        },
+                        "visible": false
+                    },
+                    {
+                        "data": "message",
+                        "render": function (data, type, row) {
+                            if (type !== "display")
+                                return data;
+
+                            var icon = "";
+                            if (data !== null)
+                                icon = "fa-exclamation-triangle";
+                            else
+                                icon = "";
+
+                            return "<span class='fa " + icon + "' title='" + (row.message) + "'></span>";
                         },
                         "visible": false
                     },

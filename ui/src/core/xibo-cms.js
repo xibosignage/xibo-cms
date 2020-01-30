@@ -124,6 +124,14 @@ function XiboInitialise(scope) {
             $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
         }, 500);
         
+        // Prevent enter key to submit form
+        $(this).find(".XiboFilter form").on('keydown', function(event) {
+            if(event.keyCode == 13) {
+                event.preventDefault();
+                return false;
+            }
+        });
+        
         // Bind the filter form
         $(this).find(".XiboFilter form input").on("keyup",  filterRefresh);
         $(this).find(".XiboFilter form input, .XiboFilter form select").on("change", filterRefresh);
@@ -411,7 +419,13 @@ function XiboInitialise(scope) {
 
     // make a vanilla layout, display and media selector for reuse
     $(scope + " .pagedSelect select.form-control").each(function() {
-        makePagedSelect($(this), $("body"));
+        let $this = $(this);
+        let anchor = $this.data("anchorElement");
+        if (anchor !== undefined && anchor !== "") {
+            makePagedSelect($(this), $(anchor));
+        } else {
+            makePagedSelect($(this), $("body"));
+        }
     });
 
     // make a local select that search for text or tags
@@ -734,7 +748,10 @@ function dataTableConfigureRefresh(gridId, table, refresh) {
     });
 }
 
-function dataTableAddButtons(table, filter, allButtons = true) {
+function dataTableAddButtons(table, filter, allButtons) {
+
+    allButtons = (allButtons === undefined) ? true : allButtons;
+
     if (allButtons) {
         var colVis = new $.fn.dataTable.Buttons(table, {
             buttons: [

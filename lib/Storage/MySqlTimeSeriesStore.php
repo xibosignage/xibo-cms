@@ -22,6 +22,7 @@
 
 namespace Xibo\Storage;
 
+use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Service\DateServiceInterface;
@@ -35,6 +36,11 @@ use Xibo\Exception\NotFoundException;
  */
 class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
 {
+    // Keep all stats in this array after processing
+    private $stats = [];
+    private $layoutCampaignIds = [];
+    private $layoutIdsNotFound = [];
+
     /** @var StorageServiceInterface */
     private $store;
 
@@ -73,27 +79,71 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function addStat($statData)
     {
-        // Set to Unix Timestamp
-        foreach ($statData as $k => $stat) {
-            $statData[$k]['statDate'] = $statData[$k]['statDate']->format('U');
-            $statData[$k]['fromDt'] = $statData[$k]['fromDt']->format('U');
-            $statData[$k]['toDt'] = $statData[$k]['toDt']->format('U');
-        }
 
-        $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, campaignID, layoutID, mediaID, Tag, `widgetId`, duration, `count`) VALUES ';
-        $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+        // For a type "event" we have layoutid 0 so is campaignId
+        // otherwise we should try and resolve the campaignId
+        $campaignId = 0;
+        if ($statData['type'] != 'event') {
 
-        $sql = $sql . implode(', ', array_fill(1, count($statData), $placeHolders));
+            if (array_key_exists($statData['layoutId'], $this->layoutCampaignIds)) {
+                $campaignId = $this->layoutCampaignIds[$statData['layoutId']];
+            } else {
 
-        // Flatten the array
-        $data = [];
-        foreach ($statData as $stat) {
-            foreach ($stat as $field) {
-                $data[] = $field;
+                try {
+
+                    // Get the layout campaignId
+                    $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($statData['layoutId']);
+
+                    // Put layout campaignId to memory
+                    $this->layoutCampaignIds[$statData['layoutId']] = $campaignId;
+
+                } catch (XiboException $error) {
+
+                    if (!in_array($statData['layoutId'], $this->layoutIdsNotFound)) {
+                        $this->layoutIdsNotFound[] = $statData['layoutId'];
+                        $this->log->error('Layout not found. Layout Id: '. $statData['layoutId']);
+                    }
+                    return;
+                }
             }
         }
 
-        $this->store->isolated($sql, $data);
+
+        // Set to Unix Timestamp
+        $statData['statDate'] = $statData['statDate']->format('U');
+        $statData['fromDt'] = $statData['fromDt']->format('U');
+        $statData['toDt'] = $statData['toDt']->format('U');
+        $statData['campaignId'] = $campaignId;
+        $statData['displayId'] = $statData['display']->displayId;
+        $statData['engagements'] = json_encode($statData['engagements']);
+        unset($statData['display']);
+
+        $this->stats[] = $statData;
+
+    }
+
+    /** @inheritdoc */
+    public function addStatFinalize()
+    {
+
+        if (count($this->stats) > 0) {
+
+            $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, campaignID, layoutID, mediaID, Tag, `widgetId`, duration, `count`, `engagements`) VALUES ';
+            $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+
+            $sql = $sql . implode(', ', array_fill(1, count($this->stats), $placeHolders));
+
+            // Flatten the array
+            $data = [];
+            foreach ($this->stats as $stat) {
+                foreach ($stat as $field) {
+                    $data[] = $field;
+                }
+            }
+
+            $this->store->isolated($sql, $data);
+
+        }
 
     }
 
@@ -115,24 +165,16 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
         $statDate = isset($filterBy['statDate']) ? $filterBy['statDate'] : null;
 
-        if ($statDate == null) {
-
-            // Check whether fromDt and toDt are provided
-            if (($fromDt == null) && ($toDt == null)) {
-                throw new InvalidArgumentException(__("Either fromDt/toDt or statDate should be provided"), 'fromDt/toDt/statDate');
+        // In the case of user switches from  mongo to mysql - laststatId were saved as Mongo ObjectId string
+        if (isset($filterBy['statId'])) {
+            if (!is_numeric($filterBy['statId'])) {
+                throw new InvalidArgumentException(__('Invalid statId provided'), 'statId');
             }
-
-            if ($fromDt == null) {
-                throw new InvalidArgumentException(__("Fromdt cannot be null"), 'fromDt');
-            }
-
-            if ($toDt == null) {
-                throw new InvalidArgumentException(__("Todt cannot be null"), 'toDt');
+            else {
+                $statId = $filterBy['statId'];
             }
         } else {
-            if (($fromDt != null) || ($toDt != null)) {
-                throw new InvalidArgumentException(__("Either fromDt/toDt or statDate should be provided"), 'fromDt/toDt/statDate');
-            }
+            $statId = null;
         }
 
         $type = isset($filterBy['type']) ? $filterBy['type'] : null;
@@ -146,10 +188,11 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $length = isset($filterBy['length']) ? $filterBy['length'] : null;
 
         $params = [];
-        $sql = '
-        SELECT stat.statDate, stat.type, stat.displayId, stat.widgetId, stat.layoutId, stat.mediaId, stat.start as start, stat.end as end, stat.tag, stat.duration, stat.count, 
-        display.Display as display, layout.Layout as layout, media.Name AS media
-          FROM stat
+        $select = ' SELECT stat.statId, stat.statDate, stat.type, stat.displayId, stat.widgetId, stat.layoutId, stat.mediaId, stat.start as start, stat.end as end, stat.tag, stat.duration, stat.count, stat.engagements, 
+        display.Display as display, layout.Layout as layout, media.Name AS media ';
+
+        $body = '
+        FROM stat
             LEFT OUTER JOIN display
             ON stat.DisplayID = display.DisplayID
             LEFT OUTER JOIN layout
@@ -158,30 +201,36 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             ON media.mediaID = stat.mediaID
             LEFT OUTER JOIN widget
             ON widget.widgetId = stat.widgetId
-         WHERE 1 = 1
-          
-        ';
+         WHERE 1 = 1 ';
 
         // fromDt/toDt Filter
         if (($fromDt != null) && ($toDt != null)) {
-            $sql .= ' AND stat.end > '. $fromDt->format('U') . ' AND stat.start <= '. $toDt->format('U');
-        } else { // statDate Filter
-            $sql .= ' AND stat.statDate >= '. $statDate->format('U');
+            $body .= ' AND stat.end > '. $fromDt->format('U') . ' AND stat.start <= '. $toDt->format('U');
+        }
+
+        // statDate Filter
+        // get the next stats from the given date
+        if ($statDate != null) {
+            $body .= ' AND stat.statDate >= ' . $statDate->format('U');
+        }
+
+        if ($statId != null) {
+            $body .= ' AND stat.statId > '. $statId;
         }
 
         if (count($displayIds) > 0) {
-            $sql .= ' AND stat.displayID IN (' . implode(',', $displayIds) . ')';
+            $body .= ' AND stat.displayID IN (' . implode(',', $displayIds) . ')';
         }
 
         // Type filter
         if ($type == 'layout') {
-            $sql .= ' AND `stat`.type = \'layout\' ';
+            $body .= ' AND `stat`.type = \'layout\' ';
         } else if ($type == 'media') {
-            $sql .= ' AND `stat`.type = \'media\' AND IFNULL(`media`.mediaId, 0) <> 0 ';
+            $body .= ' AND `stat`.type = \'media\' AND IFNULL(`media`.mediaId, 0) <> 0 ';
         } else if ($type == 'widget') {
-            $sql .= ' AND `stat`.type = \'widget\' AND IFNULL(`widget`.widgetId, 0) <> 0 ';
+            $body .= ' AND `stat`.type = \'widget\' AND IFNULL(`widget`.widgetId, 0) <> 0 ';
         } else if ($type == 'event') {
-            $sql .= ' AND `stat`.type = \'event\' ';
+            $body .= ' AND `stat`.type = \'event\' ';
         }
 
         // Layout Filter
@@ -195,7 +244,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                 $params['layoutId_' . $i] = $layoutId;
             }
 
-            $sql .= '  AND `stat`.campaignId IN (SELECT campaignId from layouthistory where layoutId IN (' . trim($layoutSql, ',') . ')) ';
+            $body .= '  AND `stat`.campaignId IN (SELECT campaignId from layouthistory where layoutId IN (' . trim($layoutSql, ',') . ')) ';
         }
 
         // Media Filter
@@ -209,7 +258,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                 $params['mediaId_' . $i] = $mediaId;
             }
 
-            $sql .= ' AND `media`.mediaId IN (' . trim($mediaSql, ',') . ')';
+            $body .= ' AND `media`.mediaId IN (' . trim($mediaSql, ',') . ')';
         }
 
         // Campaign selection
@@ -234,21 +283,35 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         // Campaign Filter
         if ($campaignId != null) {
             if (count($campaignIds) != 0) {
-                $sql .= ' AND stat.campaignId IN (' . implode(',', $campaignIds) . ')';
+                $body .= ' AND stat.campaignId IN (' . implode(',', $campaignIds) . ')';
             } else {
                 // we wont get any match as we store layoutspecific campaignid in stat
-                $sql .= ' AND stat.campaignId = '. $campaignId;
+                $body .= ' AND stat.campaignId = '. $campaignId;
             }
         }
 
-        $sql .= " ORDER BY stat.start ";
+        $body .= " ORDER BY stat.statId ";
 
-        if ($start !== null && $length !== null)
-            $sql .= ' LIMIT ' . $start . ', ' . $length;
+        $limit = '';
+        if ($start !== null && $length !== null) {
+            $limit = ' LIMIT ' . $start . ', ' . $length;
+        }
+
+
+        // Total count
+        $resTotal = [];
+        if ($start !== null && $length !== null) {
+            $resTotal = $this->store->select('
+              SELECT COUNT(*) AS total FROM (   ' . $select. $body . ') total
+            ', $params);
+        }
 
         // Run our query using a connection object (to save memory)
         $connection = $this->store->getConnection();
         $connection->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
+
+        /*Execute sql statement*/
+        $sql = $select . $body. $limit;
 
         $statement = $connection->prepare($sql);
 
@@ -258,8 +321,10 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
 
         $result = new TimeSeriesMySQLResults($statement);
 
-        return $result;
+        // Total
+        $result->totalCount = isset($resTotal[0]['total']) ? $resTotal[0]['total'] : 0;
 
+        return $result;
     }
 
     /** @inheritdoc */

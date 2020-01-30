@@ -21,9 +21,9 @@
  */
 namespace Xibo\Controller;
 
-use Xibo\Helper\XiboUploadHandler;
-use Xibo\Exception\XiboException;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\XiboException;
+use Xibo\Helper\XiboUploadHandler;
 
 /**
  * Class PlaylistDashboard
@@ -56,6 +56,119 @@ class PlaylistDashboard extends Base
         $this->displayGroupFactory = $displayGroupFactory;
     }
 
+    public function displayPage()
+    {
+        // Do we have a Playlist already in our User Preferences?
+        $playlist = null;
+        try {
+            $playlistId = $this->getUser()->getOption('playlistDashboardSelectedPlaylistId');
+            if ($playlistId->value != 0) {
+                $playlist = $this->playlistFactory->getById($playlistId->value);
+            }
+        } catch (XiboException $exception) {
+            $this->getLog()->error('Problem getting playlistDashboardSelectedPlaylistId user option. e = ' . $exception->getMessage());
+        }
+
+        $this->getState()->template = 'playlist-dashboard';
+        $this->getState()->setData([
+            'playlist' => $playlist,
+            'validExtensions' => implode('|', $this->moduleFactory->getValidExtensions())
+        ]);
+    }
+
+    /**
+     * Grid used for the Playlist drop down list
+     */
+    public function grid()
+    {
+        // Playlists
+        $playlists = $this->playlistFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
+            'name' => $this->getSanitizer()->getString('name'),
+            'regionSpecific' => 0
+        ]));
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $this->playlistFactory->countLast();
+        $this->getState()->setData($playlists);
+    }
+
+    /**
+     * Show a particular playlist
+     *  the output from this is very much like a form.
+     * @param $playlistId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function show($playlistId)
+    {
+        // Record this Playlist as the one we have currently selected.
+        try {
+            $this->getUser()->setOptionValue('playlistDashboardSelectedPlaylistId', $playlistId);
+            $this->getUser()->save();
+        } catch (XiboException $exception) {
+            $this->getLog()->error('Problem setting playlistDashboardSelectedPlaylistId user option. e = ' . $exception->getMessage());
+        }
+
+        // Spots
+        $spotsFound = 0;
+
+        $playlist = $this->playlistFactory->getById($playlistId);
+
+        // Only edit permissions
+        if (!$this->getUser()->checkEditable($playlist)) {
+            throw new AccessDeniedException();
+        }
+
+        // Load my Playlist and information about its widgets
+        $playlist->load();
+
+        foreach ($playlist->widgets as $widget) {
+            // Create a module for the widget and load in some extra data
+            $widget->module = $this->moduleFactory->createWithWidget($widget);
+
+            // Check my permissions
+            if ($widget->module->getModule()->regionSpecific == 0) {
+                $widget->viewble = $this->getUser()->checkViewable($widget->module->getMedia());
+                $widget->editable = $this->getUser()->checkEditable($widget->module->getMedia());
+                $widget->deletable = $this->getUser()->checkDeleteable($widget->module->getMedia());
+            } else {
+                $widget->viewble = $this->getUser()->checkViewable($widget);
+                $widget->editable = $this->getUser()->checkEditable($widget);
+                $widget->deletable = $this->getUser()->checkDeleteable($widget);
+            }
+
+        }
+
+        // Work out the slot size of the first sub-playlist we are in.
+        foreach ($this->playlistFactory->query(null, ['childId' => $playlist->playlistId, 'depth' => 1, 'disableUserCheck' => 1]) as $parent) {
+            // $parent is a playlist to which we belong.
+            $this->getLog()->debug('This playlist is a sub-playlist in ' . $parent->name . '.');
+            $parent->load();
+
+            foreach ($parent->widgets as $parentWidget) {
+                if ($parentWidget->type === 'subplaylist') {
+                    // Create a SubPlaylist widget so we can easily get the items we want.
+                    $subPlaylist = $this->moduleFactory->createWithWidget($parentWidget);
+                    $subPlaylistOptions = $subPlaylist->getSubPlaylistOptions($playlist->playlistId);
+
+                    // This will be included?
+                    $spotCount = isset($subPlaylistOptions['subPlaylistIdSpots']) ? intval($subPlaylistOptions['subPlaylistIdSpots']) : 0;
+
+                    // Take the highest number of Spots we can find out of all the assignments.
+                    $spotsFound = ($spotCount > $spotsFound) ? $spotCount : $spotsFound;
+
+                    // Assume this one isn't in the list more than one time.
+                    break;
+                }
+            }
+        }
+
+        $this->getState()->template = 'playlist-dashboard-spots';
+        $this->getState()->setData([
+            'playlist' => $playlist,
+            'spotsFound' => $spotsFound
+        ]);
+    }
+
     /**
      * Delete Playlist Widget Form
      * @param int $widgetId
@@ -76,65 +189,6 @@ class PlaylistDashboard extends Base
         $this->getState()->setData([
             'module' => $module,
             'help' => $this->getHelp()->link('Media', 'Delete')
-        ]);
-    }
-
-    public function displayPage()
-    {
-        // Spots
-        $spots = [];
-
-        // Get a list of all the Playlists that the current user has permissions for
-        foreach ($this->playlistFactory->query() as $playlist) {
-
-            // Only edit permissions
-            if (!$this->getUser()->checkEditable($playlist)) {
-                continue;
-            }
-
-            // Work out the slot size of the first sub-playlist we are in.
-            foreach ($this->playlistFactory->query(null, ['childId' => $playlist->playlistId, 'depth' => 1, 'disableUserCheck' => 1]) as $parent) {
-                // $parent is a playlist to which we belong.
-                // find out widget and delete it
-                $this->getLog()->debug('This playlist is a sub-playlist in ' . $parent->name . '.');
-                $parent->load();
-
-                foreach ($parent->widgets as $parentWidget) {
-                    if ($parentWidget->type === 'subplaylist') {
-                        // Create a SubPlaylist widget so we can easily get the items we want.
-                        $subPlaylist = $this->moduleFactory->createWithWidget($parentWidget);
-                        $subPlaylistOptions = $subPlaylist->getSubPlaylistOptions($playlist->playlistId);
-
-                        // This will be included?
-                        $spotCount = isset($subPlaylistOptions['subPlaylistIdSpots']) ? intval($subPlaylistOptions['subPlaylistIdSpots']) : 0;
-
-                        if ($spotCount > 0) {
-                            $playlist->load();
-
-                            foreach ($playlist->widgets as $widget) {
-                                // Create a module for the widget and load in some extra data
-                                $widget->module = $this->moduleFactory->createWithWidget($widget);
-
-                                // Check my permissions
-                                $widget->enabled = $this->getUser()->checkEditable($widget);
-                            }
-                        }
-
-                        $spots[] = [
-                            'spots' => $spotCount,
-                            'playlist' => $playlist
-                        ];
-
-                        break 2;
-                    }
-                }
-            }
-        }
-
-        $this->getState()->template = 'playlist-dashboard';
-        $this->getState()->setData([
-            'spots' => $spots,
-            'validExtensions' => implode('|', $this->moduleFactory->getValidExtensions())
         ]);
     }
 

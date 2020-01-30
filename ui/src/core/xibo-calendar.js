@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -1171,6 +1171,14 @@ let generateGeoMap = function () {
         }
     });
 
+    let drawControlEditOnly = new L.Control.Draw({
+        position: 'topright',
+        draw: false,
+        edit: {
+            featureGroup: drawnItems
+        }
+    });
+
     mymap.addControl(drawControl);
 
     // add search Control - allows searching by country/city and automatically moves map to that location
@@ -1200,6 +1208,10 @@ let generateGeoMap = function () {
         json = layer.toGeoJSON();
 
         $('#geoLocation').val(JSON.stringify(json));
+
+        // disable adding new polygons
+        mymap.removeControl(drawControl);
+        mymap.addControl(drawControlEditOnly);
     });
 
     // update the hidden field geoJson with new coordinates
@@ -1222,6 +1234,12 @@ let generateGeoMap = function () {
             $('#geoLocation').val('');
             drawnItems.removeLayer(layer);
         });
+
+        // re-enable adding new polygons
+        if (drawnItems.getLayers().length === 0) {
+            mymap.removeControl(drawControlEditOnly);
+            mymap.addControl(drawControl);
+        }
     });
 
     // if we are editing an event with existing Geo JSON, make sure we load it and add the layer to the map
@@ -1235,6 +1253,11 @@ let generateGeoMap = function () {
 
         function onEachFeature(feature, layer) {
             drawnItems.addLayer(layer);
+            mymap.fitBounds(layer.getBounds());
         }
+
+        // disable adding new polygons
+        mymap.removeControl(drawControl);
+        mymap.addControl(drawControlEditOnly);
     }
 };

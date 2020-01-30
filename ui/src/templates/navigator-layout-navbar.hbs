@@ -10,6 +10,11 @@
             title="{{trans.addRegionDesc}}">
             <i class="fa fa-plus"></i>
         </button>
+
+        <button type="button" id="delete-btn" {{#unless trashBinActive}}disabled{{/unless}} class="btn btn-sm tooltip-always-on" data-toggle="tooltip" data-placement="bottom"
+            title="{{trans.deleteRegion}}">
+            <i class="fa fa-trash"></i>
+        </button>
     </div>
     
     {{! Right region }}
