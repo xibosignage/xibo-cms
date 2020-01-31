@@ -161,6 +161,17 @@ $(document).ready(function() {
                     // Custom dropdown options
                     [
                         {
+                            id: 'discardLayout',
+                            title: layoutDesignerTrans.discardTitle,
+                            logo: 'fa-times-circle-o',
+                            class: 'btn-warning',
+                            action: lD.showDiscardScreen,
+                            inactiveCheck: function() {
+                                return (lD.layout.editable == false);
+                            },
+                            inactiveCheckClass: 'hidden',
+                        },
+                        {
                             id: 'publishLayout',
                             title: layoutDesignerTrans.publishTitle,
                             logo: 'fa-check-square-o',
@@ -601,6 +612,57 @@ lD.publishLayout = function() {
 };
 
 /**
+ * Discard layout
+ */
+lD.discardLayout = function() {
+    const linkToAPI = urlsForApi.layout.discard;
+    let requestPath = linkToAPI.url;
+
+    lD.common.showLoadingScreen();
+
+    // replace id if necessary/exists
+    requestPath = requestPath.replace(':id', lD.layout.parentLayoutId);
+
+    const serializedData = $('#layoutDiscardForm').serialize();
+
+    $.ajax({
+        url: requestPath,
+        type: linkToAPI.type,
+        data: serializedData
+    }).done(function(res) {
+
+        lD.common.hideLoadingScreen();
+
+        if(res.success) {
+
+            console.log('discardLayout success');
+
+            toastr.success(res.message);
+
+            // Redirect to the layout grid
+            window.location.href = urlsForApi.layout.list.url;
+        } else {
+
+            // Login Form needed?
+            if(res.login) {
+                window.location.href = window.location.href;
+                location.reload(false);
+            } else {
+                toastr.error(res.message);
+
+                // Close dialog
+                bootbox.hideAll();
+            }
+        }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        lD.common.hideLoadingScreen();
+
+        // Output error to console
+        console.error(jqXHR, textStatus, errorThrown);
+    });
+}
+
+/**
  * Read Only Mode
  */
 lD.welcomeScreen = function() {
@@ -767,6 +829,13 @@ lD.showPublishScreen = function() {
 };
 
 /**
+ * Layout publish screen
+ */
+lD.showDiscardScreen = function() {
+    lD.loadFormFromAPI('discardForm', lD.layout.parentLayoutId, '', 'lD.discardLayout();');
+};
+
+/**
  * Layout schedule screen
  */
 lD.showScheduleScreen = function() {
@@ -821,7 +890,7 @@ lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActio
                     if(button != translations.cancel) {
                         let buttonType = 'btn-default';
 
-                        if(button === translations.save || button === editorsTrans.publish) {
+                        if(button === translations.save || button === editorsTrans.publish || button === editorsTrans.discard) {
                             buttonType = 'btn-primary';
                         }
 

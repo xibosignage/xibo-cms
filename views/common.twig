@@ -71,6 +71,10 @@
                     url: "{{ urlFor("layout.publish") }}",
                     type: 'PUT'
                 },
+                discard: {
+                    url: "{{ urlFor("layout.discard") }}",
+                    type: 'PUT'
+                },
                 list: {
                     url: "{{ urlFor("layout.view") }}"
                 },
@@ -90,6 +94,10 @@
                 },
                 publishForm: {
                     url: "{{ urlFor("layout.publish.form") }}",
+                    type: 'GET'
+                },
+                discardForm: {
+                    url: "{{ urlFor("layout.discard.form") }}",
                     type: 'GET'
                 }
             },
@@ -243,7 +251,8 @@
                 resetTourNotification: "{% trans "Layout Designer Tour enabled!" %}",
                 tooltipsDisabled: "{% trans "Tooltips disabled!" %}",
                 tooltipsEnabled: "{% trans "Tooltips enabled!" %}",
-                publish: "{% trans "Publish" %}"
+                publish: "{% trans "Publish" %}",
+                discard: "{% trans "Discard" %}"
             };
 
             var uploadTrans = {
