@@ -542,6 +542,9 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 $query[]['$limit'] = $length;
             }
 
+            // Sort by id (statId)
+            $query[]['$sort'] = ['id'=> 1];
+
             $cursor = $collection->aggregate($query);
 
         } catch (\MongoDB\Exception\RuntimeException $e) {
