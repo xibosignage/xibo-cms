@@ -13,6 +13,7 @@ $playlist-editor-widget-bg-color: $xibo-color-white;
 $playlist-editor-widget-fg-color:$xibo-color-black;
 $playlist-editor-widget-fg-color2: $xibo-color-gray;
 $playlist-editor-widget-selected-color: $xibo-color-green;
+$playlist-editor-widget-multi-selected-color: $xibo-color-purple;
 $playlist-editor-widget-hover-bg-color: lighten($xibo-color-green, 20%);
 $playlist-editor-widget-border-color: $xibo-color-gray;
 $playlist-editor-playlist-hover-color-color: lighten($xibo-color-primary, 20%);
@@ -75,7 +76,6 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
     z-index:  3200;
 }
 
-
 .playlist-widget-preview {
     z-index: $playlist-editor-z-index-background;
 
@@ -93,6 +93,17 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
             height: 60px;
             max-width: 200px;
         }
+    }
+}
+
+.multi-delete-modal .multi-delete-element {
+
+    & > div {
+        overflow: hidden;
+    }
+
+    .checkbox, .help-block {
+        margin: 0;
     }
 }
 
@@ -169,6 +180,16 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
                 display: block;
                 @include background-stripes(45deg, darken($playlist-editor-playlist-hover-color-color, 10%), lighten($playlist-editor-playlist-hover-color-color, 20%), 10px, 4px);
             }
+        }
+    }
+
+    .playlist-timeline-container {
+        z-index: auto;
+    }
+
+    &.multi-select {
+        .playlist-timeline-container {
+            z-index: $playlist-editor-z-index-select;
         }
     }
 
@@ -333,6 +354,16 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
 
     .playlist-widget.invalid-widget {
         @include box-shadow(inset 0px 0px 10px 3px $xibo-color-red);
+    }
+
+    &.multi-select {
+        .playlist-widget:hover {
+                background: lighten($playlist-editor-widget-multi-selected-color, 20%) !important;
+        }
+
+        .playlist-widget.multi-selected {
+                background: $playlist-editor-widget-multi-selected-color !important;
+        }
     }
 
     .ui-droppable-active {
