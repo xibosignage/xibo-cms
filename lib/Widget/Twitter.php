@@ -536,6 +536,9 @@ class Twitter extends TwitterBase
         // Get the template
         $template = $this->parseLibraryReferences($isPreview, $template);
 
+        // Parse translations
+        $template = $this->parseTranslations($template);
+
         // Parse the text template
         $matches = '';
         preg_match_all('/\[.*?\]/', $template, $matches);

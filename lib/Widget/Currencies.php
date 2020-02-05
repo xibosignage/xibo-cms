@@ -18,6 +18,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * 
+ * Template strings to be translated, that will be used to replace tags in the ||tag|| format
+ * __('RATE')
  */
 namespace Xibo\Widget;
 
@@ -737,6 +740,10 @@ class Currencies extends AlphaVantageBase
         // Run through each item and substitute with the template
         $mainTemplate = $this->parseLibraryReferences($isPreview, $mainTemplate);
         $itemTemplate = $this->parseLibraryReferences($isPreview, $itemTemplate);
+
+        // Parse translations
+        $mainTemplate = $this->parseTranslations($mainTemplate);
+        $itemTemplate = $this->parseTranslations($itemTemplate);
         
         $renderedItems = [];
         
