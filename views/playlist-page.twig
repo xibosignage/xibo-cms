@@ -443,7 +443,7 @@
 
                         XiboSubmitResponse(xhr, form);
 
-                        if (xhr.success) {
+                        if (xhr.success && xhr.data.isDynamic == 0) {
 
                             // Open the editor
                             openPlaylistEditorForm(xhr.id);
