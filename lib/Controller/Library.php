@@ -803,6 +803,20 @@ class Library extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="tags",
+     *      in="formData",
+     *      description="Comma separated string of Tags that should be assigned to uploaded Media",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="expires",
+     *      in="formData",
+     *      description="Date in Y-m-d H:i:s format, will set expiration date on the uploaded Media",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation"
@@ -821,6 +835,16 @@ class Library extends Base
         ], $options);
 
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+        if ($this->getSanitizer()->getDate('expires') != null ) {
+
+            if ($this->getSanitizer()->getDate('expires')->format('U') > time()) {
+                $expires = $this->getSanitizer()->getDate('expires')->format('U');
+            } else {
+                throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');
+            }
+        } else {
+            $expires = 0;
+        }
 
         // Make sure the library exists
         self::ensureLibraryExists($libraryFolder);
@@ -853,7 +877,8 @@ class Library extends Base
             'image_versions' => array(),
             'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i',
             'libraryLimit' => $libraryLimit,
-            'libraryQuotaFull' => ($libraryLimit > 0 && $this->libraryUsage() > $libraryLimit)
+            'libraryQuotaFull' => ($libraryLimit > 0 && $this->libraryUsage() > $libraryLimit),
+            'expires' => $expires
         );
 
         // Output handled by UploadHandler
@@ -951,6 +976,13 @@ class Library extends Base
      *      in="formData",
      *      description="Flag indicating whether to update the duration in all Layouts the Media is assigned to",
      *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="expires",
+     *      in="formData",
+     *      description="Date in Y-m-d H:i:s format, will set expiration date on the Media item",
+     *      type="string",
      *      required=false
      *   ),
      *  @SWG\Response(
@@ -2063,6 +2095,13 @@ class Library extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="expires",
+     *      in="formData",
+     *      description="Date in Y-m-d H:i:s format, will set expiration date on the Media item",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -2092,6 +2131,17 @@ class Library extends Base
         $optionalName = $this->getSanitizer()->getString('optionalName');
         $extension = $this->getSanitizer()->getString('extension');
         $enableStat = $this->getSanitizer()->getString('enableStat', $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT'));
+
+        if ($this->getSanitizer()->getDate('expires') != null ) {
+
+            if ($this->getSanitizer()->getDate('expires')->format('U') > time()) {
+                $expires = $this->getSanitizer()->getDate('expires')->format('U');
+            } else {
+                throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');
+            }
+        } else {
+            $expires = 0;
+        }
 
         // Validate the URL
         if (!v::url()->notEmpty()->validate(urldecode($url)) || !filter_var($url, FILTER_VALIDATE_URL)) {
@@ -2145,7 +2195,7 @@ class Library extends Base
         }
 
         // add our media to queueDownload and process the downloads
-        $this->mediaFactory->queueDownload($name, str_replace(' ', '%20', htmlspecialchars_decode($url)), 0, ['fileType' => strtolower($module->getModuleType()), 'duration' => $module->determineDuration(), 'extension' => $ext, 'enableStat' => $enableStat]);
+        $this->mediaFactory->queueDownload($name, str_replace(' ', '%20', htmlspecialchars_decode($url)), $expires, ['fileType' => strtolower($module->getModuleType()), 'duration' => $module->determineDuration(), 'extension' => $ext, 'enableStat' => $enableStat]);
         $this->mediaFactory->processDownloads(function($media) {
             // Success
             $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);
