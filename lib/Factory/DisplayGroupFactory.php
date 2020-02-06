@@ -337,7 +337,12 @@ class DisplayGroupFactory extends BaseFactory
         // Filter by DisplayGroup Name?
         if ($this->getSanitizer()->getString('displayGroup', $filterBy) != null) {
             $terms = explode(',', $this->getSanitizer()->getString('displayGroup', $filterBy));
-            $this->nameFilter('displaygroup', 'displayGroup', $terms, $body, $params);
+
+            $useRegex = false;
+            if ($this->getSanitizer()->getCheckbox('useRegex') == 1) {
+                $useRegex = true;
+            }
+            $this->nameFilter('displaygroup', 'displayGroup', $terms, $body, $params, $useRegex);
         }
 
         // Tags
@@ -364,7 +369,7 @@ class DisplayGroupFactory extends BaseFactory
                 ";
 
                 $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, $operator, $body, $params);
+                $this->tagFilter($tags, $operator, $body, $params, true);
             }
         }
 

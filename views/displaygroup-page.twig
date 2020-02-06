@@ -57,6 +57,9 @@
 
                             {% set title %}{% trans "Exact match?" %}{% endset %}
                             {{ inline.checkbox("exactTags", title) }}
+
+                            {% set title %}{% trans "Use Regex?" %}{% endset %}
+                            {{ inline.checkbox("useRegex", title) }}
                         </form>
                     </div>
                 </div>
