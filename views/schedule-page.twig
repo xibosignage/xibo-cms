@@ -98,6 +98,12 @@
                 <span class="fa fa-step-forward"></span>
             </div>
         </div> 
+
+        <div class="col-sm-12 cal-event-loader" style="display:none;">
+            <span class="alert alert-info col-xs-12">
+                <i class="fa fa-spin fa-spinner"></i>&nbsp;{% trans "Events loading..." %}
+            </span> 
+        </div> 
     </div> 
     <div class="row">
         <div id="CalendarContainer" data-event-source="{{ urlFor("schedule.calendar.data") }}" data-agenda-link="{{ urlFor("schedule.events") }}" data-calendar-type="{{ settings.CALENDAR_TYPE }}" class="col-sm-12">
@@ -309,6 +315,11 @@
         <script type="text/x-handlebars-template" id="calendar-template-month-day">
             <div class="cal-month-day <%= cls %>">
                 <span class="pull-right" data-cal-date="<%= data_day %>" data-cal-view="day" data-toggle="tooltip" title="<%= tooltip %>"><%= day %></span>
+
+                <% if (events.length > 0) { %>
+                    <span class="cal-month-day-number-events label label-info" data-toggle="tooltip" title="{% endraw %}{% trans "Number of events" %}{% raw %}"><%= events.length %></span>
+                <% } %>
+
                 <% if (events.length > 0) { %>
                 <div class="events-list" data-cal-start="<%= start %>" data-cal-end="<%= end %>">
                     <% _.each(events, function(event) { %>
@@ -606,6 +617,10 @@
                             <% } else if (layouts.type == 4) { %>
                                 {% endraw %}{% trans "Interrupt Layouts" %}{% raw %}
                             <% } %>
+                            
+                            <span class="pull-right badge" title="{% endraw %}{% trans "Number of Layouts" %}{% raw %}" data-toggle="tooltip" data-placement="top">
+                                <%= layouts.length %>
+                            </span>
                         </th>
                     </tr>
                     {% endraw %}

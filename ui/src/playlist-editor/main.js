@@ -27,6 +27,7 @@ const loadingTemplate = require('../templates/loading.hbs');
 const dropZoneTemplate = require('../templates/drop-zone.hbs');
 const contextMenuTemplate = require('../templates/context-menu.hbs');
 const deleteElementModalContentTemplate = require('../templates/delete-element-modal-content.hbs');
+const deleteMultiElementModalContentTemplate = require('../templates/delete-multi-element-modal-content.hbs');
 
 // Include modules
 const Playlist = require('../playlist-editor/playlist.js');
@@ -350,15 +351,27 @@ pE.undoLastAction = function() {
  * Delete selected object
  */
 pE.deleteSelectedObject = function() {
-    pE.deleteObject(pE.selectedObject.type, pE.selectedObject[pE.selectedObject.type + 'Id']);
+    if(pE.editorContainer.hasClass('multi-select')) {
+        // Get selected widgets
+        let selectedWidgetsIds = [];
+
+        pE.timeline.DOMObject.find('.playlist-widget.multi-selected').each(function() {
+            selectedWidgetsIds.push($(this).data('widgetId'));
+
+        });
+
+        pE.deleteMultipleObjects('widget', selectedWidgetsIds);
+    } else {
+        pE.deleteObject(pE.selectedObject.type, pE.selectedObject[pE.selectedObject.type + 'Id']);
+    }
 };
 
 /**
  * Delete object
- * @param {object} objectToDelete - menu to load content for
+ * @param {string} objectType
+ * @param {number} objectId
  */
 pE.deleteObject = function(objectType, objectId) {
-
     const createDeleteModal = function(objectType, objectId, hasMedia = false, showDeleteFromLibrary = false) {
 
         bootbox.hideAll();
@@ -460,6 +473,178 @@ pE.deleteObject = function(objectType, objectId) {
                     // Output error to console
                     console.error(jqXHR, textStatus, errorThrown);
                 });
+        }
+    }
+};
+
+/**
+ * Delete multiple objects
+ * @param {object[]} objectsToDelete
+ */
+pE.deleteMultipleObjects = function(objectsType, objectIds) {
+    const createMultiDeleteModal = function(objectArray) {
+        bootbox.hideAll();
+
+        const htmlContent = deleteMultiElementModalContentTemplate({
+            mainMessage: deleteMenuTrans.deleteMultipleObjects,
+            objectArray: objectArray,
+            trans: deleteMenuTrans
+        });
+
+        // Create buttons object
+        let buttons = {
+            cancel: {
+                label: editorsTrans.no,
+                className: 'btn-default'
+            }
+        };
+
+        // Select all button ( if there are 2 or more checkboxes )
+        if($(htmlContent).find('input[type="checkbox"]').length > 1) {
+            buttons.selectAll = {
+                label: editorsTrans.selectAll,
+                className: 'btn-warning',
+                callback: function() {
+                    $(this).find('input[type="checkbox"]').prop('checked', true);
+                    return false;
+                }
+            };
+        }
+        
+        buttons.confirm = {
+            label: editorsTrans.yes,
+            className: 'btn-danger',
+            callback: function() {
+                const $objects = $(this).find('.multi-delete-element');
+                let deletedElements = 0;
+
+                // Show modal
+                pE.common.showLoadingScreen('deleteObjects');
+
+                // Leave multi select mode
+                pE.toolbar.toggleMultiselectMode(false);
+
+                // Loop all items and make a delete request for each
+                for(let index = 0;index < $objects.length; index++) {
+                    const $element = $($objects[index]);
+
+                    // Empty options object
+                    let options = null;
+                    const objectId = $element.data('id');
+                    const objectType = $element.data('type');
+
+                    // If delete media is checked, pass that as a param for delete
+                    if($element.find('input.deleteMedia').is(':checked')) {
+                        options = {
+                            deleteMedia: 1
+                        };
+                    }
+
+                    // Delete element from the layout
+                    pE.playlist.deleteElement(objectType, objectId, options).then((res) => { // Success
+
+                        // Behavior if successful 
+                        toastr.success(res.message)
+                        
+                        deletedElements++;
+
+                        if(deletedElements == $objects.length) {
+                            // Hide loading screen
+                            pE.common.hideLoadingScreen('deleteObjects');
+                            
+                            // Reload data
+                            pE.reloadData();
+
+                            // Hide/close modal
+                            bootbox.hideAll();
+                        }
+                        
+                    }).catch((error) => { // Fail/error
+
+                        pE.common.hideLoadingScreen('deleteObjects');
+
+                        // Show error returned or custom message to the user
+                        let errorMessage = '';
+
+                        if(typeof error == 'string') {
+                            errorMessage = error;
+                        } else {
+                            errorMessage = error.errorThrown;
+                        }
+
+                        toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
+                    });
+                }
+
+                return false;
+            }
+        };
+
+        bootbox.dialog({
+            title: editorsTrans.deleteMultipleTitle,
+            message: htmlContent,
+            buttons: buttons
+        }).attr('data-test', 'deleteObjectModal');
+    };
+
+    if(objectsType === 'widget') {
+
+        pE.common.showLoadingScreen('checkMediaIsUsed');
+        let arrayOfWidgets = [];
+
+        for(let index = 0;index < objectIds.length;index++) {
+
+            let widgetId = objectIds[index];
+            let widgetToDelete = pE.getElementByTypeAndId('widget', 'widget_' + widgetId);
+            let linkToAPI = urlsForApi.media.isUsed;
+            let requestPath = linkToAPI.url.replace(':id', widgetToDelete.mediaIds[0]);
+
+            if(widgetToDelete.isRegionSpecific()) {
+                arrayOfWidgets.push({
+                    'objectId': widgetId,
+                    'objectType': 'widget',
+                    'objectName': widgetToDelete.widgetName,
+                    'hasMedia': false,
+                    'dataUsed': false
+                });
+
+                if(arrayOfWidgets.length == objectIds.length) {
+                    createMultiDeleteModal(arrayOfWidgets);
+                    pE.common.hideLoadingScreen('checkMediaIsUsed');
+                }
+            } else {
+                // Request with count as being 2, for the published layout and draft
+                $.get(requestPath + '?count=1')
+                    .done(function(res) {
+                        if(res.success) {
+                            arrayOfWidgets.push({
+                                'objectId': widgetId,
+                                'objectType': 'widget',
+                                'objectName': widgetToDelete.widgetName,
+                                'hasMedia': true,
+                                'dataUsed': res.data.isUsed
+                            });
+
+                            if(arrayOfWidgets.length == objectIds.length) {
+                                createMultiDeleteModal(arrayOfWidgets);
+                                pE.common.hideLoadingScreen('checkMediaIsUsed');
+                            }
+                        } else {
+                            if(res.login) {
+                                window.location.href = window.location.href;
+                                location.reload(false);
+                            } else {
+                                toastr.error(res.message);
+                            }
+                        }
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+
+                        pE.common.hideLoadingScreen('checkMediaIsUsed');
+
+                        // Output error to console
+                        console.error(jqXHR, textStatus, errorThrown);
+                    });
+            }
         }
     }
 };

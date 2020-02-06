@@ -561,6 +561,10 @@ class Stocks extends AlphaVantageBase
         // Run through each item and substitute with the template
         $mainTemplate = $this->parseLibraryReferences($isPreview, $mainTemplate);
         $itemTemplate = $this->parseLibraryReferences($isPreview, $itemTemplate);
+
+        // Parse translations
+        $mainTemplate = $this->parseTranslations($mainTemplate);
+        $itemTemplate = $this->parseTranslations($itemTemplate);
         
         $renderedItems = [];
         

@@ -384,14 +384,23 @@ Toolbar.prototype.render = function() {
         }
 
         // Delete object
-        this.DOMObject.find('#trashContainer.active').click(
-            this.customActions.deleteSelectedObjectAction
-        );
+        this.DOMObject.find('#trashContainer').click(function() {
+            if($(this).hasClass('active')) {
+                self.customActions.deleteSelectedObjectAction();
+            }
+        });
 
-        // Delete object
-        this.DOMObject.find('#undoContainer.active').click(
-            app.undoLastAction
-        );
+        // Revert last action
+        this.DOMObject.find('#undoContainer').click(function() {
+            if($(this).hasClass('active')) {
+                app.undoLastAction();
+            }
+        });
+
+        // Enable multi select mode
+        this.DOMObject.find('#multiSelectContainer').click(function() {
+            self.toggleMultiselectMode();
+        });
     }
 
     const setButtonActionAndState = function(button) {
@@ -706,6 +715,11 @@ Toolbar.prototype.deselectCardsAndDropZones = function() {
 
     // Remove drop class from droppable elements
     $('.ui-droppable').removeClass('ui-droppable-active');
+
+    // Disable multi-select mode
+    if(this.parent.editorContainer.hasClass('multi-select')) {
+        this.toggleMultiselectMode(false);
+    }
 
     // Hide designer overlay
     $('.custom-overlay').hide().unbind();
@@ -1412,6 +1426,59 @@ Toolbar.prototype.queueAddToRegionPlaylist = function(menu) {
 
     // Destroy queue
     this.destroyQueue(menu);
+};
+
+/**
+ * Revert last action
+ */
+Toolbar.prototype.toggleMultiselectMode = function(forceSelect = null) {
+    const self = this;
+    const app = this.parent;
+    const timeline = app.timeline;
+    const editorContainer = app.editorContainer;
+
+    const updateTrashContainer = function() {
+        // Upate trash container status
+        self.DOMObject.find('#trashContainer').toggleClass('active', (timeline.DOMObject.find('.playlist-widget.multi-selected').length > 0));
+    };
+
+    // Check if needs to be selected or unselected
+    let multiSelectFlag = (forceSelect != null) ? forceSelect : !editorContainer.hasClass('multi-select');
+
+    // Toggle multi select class on container
+    editorContainer.toggleClass('multi-select', multiSelectFlag);
+
+    // Toggle class on button
+    this.DOMObject.find('#multiSelectContainer').toggleClass('multiselect-active', multiSelectFlag);
+
+    if(multiSelectFlag) {
+        // Show overlay
+        $('.custom-overlay').show().unbind().click(() => {
+            self.deselectCardsAndDropZones();
+        });
+
+        // Disable timeline sort
+        timeline.DOMObject.find('#timeline-container').sortable('disable');
+        
+        // Enable select for each widget
+        timeline.DOMObject.find('.playlist-widget.deletable').removeClass('selected').unbind().click(function(e) {
+            e.stopPropagation();
+            $(this).toggleClass('multi-selected');
+            
+            updateTrashContainer();
+        });
+
+        updateTrashContainer();
+    } else {
+        // Hide designer overlay
+        $('.custom-overlay').hide().unbind();
+        
+        // Re-render timeline
+        app.renderContainer(timeline);
+
+        // Re-render toolbar
+        app.renderContainer(this);
+    }
 };
 
 module.exports = Toolbar;

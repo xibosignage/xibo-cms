@@ -346,9 +346,6 @@ Playlist.prototype.deleteElement = function(elementType, elementId, options = nu
 
         pE.common.hideLoadingScreen();
 
-        // Unselect selected object before deleting
-        pE.selectObject(null, true);
-
         // Create a delete type change, upload it but don't add it to the history array
         return pE.manager.addChange(
             "delete",
