@@ -8,9 +8,8 @@ Copyright (C) 2006-2020 Xibo Signage Ltd and Contributors.
 
 - develop: Work in progress toward 2.3
 - master: Currently 2.2
+- release23: Bug fixes for 2.3
 - release22: Bug fixes for 2.2
-- release21: Bug fixes for 2.1
-- release20: Bug fixes for 2.0
 - release18: Work in progress toward the next 1.8
 - release17: Archive of 1.7
 - release1.6.4: Archive of 1.6

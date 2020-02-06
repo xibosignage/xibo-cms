@@ -21,7 +21,6 @@
  */
 namespace Xibo\Controller;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Entity\ScheduleExclusion;
 use Xibo\Entity\ScheduleReminder;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
@@ -879,7 +878,8 @@ class Schedule extends Base
      *      in="formData",
      *      description="Array of comma separated strings each with comma separated pair of coordinates",
      *      type="array",
-     *      required=false
+     *      required=false,
+     *      @SWG\Items(type="string")
      *   ),
      *   @SWG\Response(
      *      response=201,
@@ -1328,7 +1328,8 @@ class Schedule extends Base
      *      in="formData",
      *      description="Array of comma separated strings each with comma separated pair of coordinates",
      *      type="array",
-     *      required=false
+     *      required=false,
+     *      @SWG\Items(type="string")
      *   ),
      *   @SWG\Response(
      *      response=200,
