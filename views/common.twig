@@ -71,6 +71,10 @@
                     url: "{{ urlFor("layout.publish") }}",
                     type: 'PUT'
                 },
+                discard: {
+                    url: "{{ urlFor("layout.discard") }}",
+                    type: 'PUT'
+                },
                 list: {
                     url: "{{ urlFor("layout.view") }}"
                 },
@@ -90,6 +94,10 @@
                 },
                 publishForm: {
                     url: "{{ urlFor("layout.publish.form") }}",
+                    type: 'GET'
+                },
+                discardForm: {
+                    url: "{{ urlFor("layout.discard.form") }}",
                     type: 'GET'
                 }
             },
@@ -233,9 +241,11 @@
             // TRANSLATIONS
             var editorsTrans = {
                 deleteTitle: "{% trans "Delete %obj%" %}",
+                deleteMultipleTitle: "{% trans "Delete selected elements" %}",
                 deleteConfirm: "{% trans "Are you sure? All changes related to this object will be erased" %}",
                 yes: "{% trans "Yes" %}",
                 no: "{% trans "No" %}",
+                selectAll: "{% trans "Select All" %}",
                 allChangesSaved: "{% trans "All changes saved!" %}",
                 back: "{% trans "Back" %}",
                 loadPropertyForObject: "{% trans "Load %prop% for %obj%" %}",
@@ -243,7 +253,8 @@
                 resetTourNotification: "{% trans "Layout Designer Tour enabled!" %}",
                 tooltipsDisabled: "{% trans "Tooltips disabled!" %}",
                 tooltipsEnabled: "{% trans "Tooltips enabled!" %}",
-                publish: "{% trans "Publish" %}"
+                publish: "{% trans "Publish" %}",
+                discard: "{% trans "Discard" %}"
             };
 
             var uploadTrans = {
@@ -259,7 +270,8 @@
                 mainMessage: "{% trans "Are you sure you want to remove this %obj%? This action cannot be undone." %}",
                 infoDeleteMessage: "{% trans "This widget is linked to Media in the Library which is also in use elsewhere. If this should be deleted then please do so from the Library page." %}",
                 deleteMediaFromLibraryTitle: "{% trans "Also delete from the Library?" %}",
-                deleteMediaFromLibraryMessage: "{% trans "This widget is linked to Media in the Library. Check this option to also delete that Media." %}"
+                deleteMediaFromLibraryMessage: "{% trans "This widget is linked to Media in the Library. Check this option to also delete that Media." %}",
+                deleteMultipleObjects: "{% trans "Are you sure you want to remove these elements? This action cannot be undone." %}"
             };
 
             var contextMenuTrans = {
@@ -284,6 +296,7 @@
             var toolbarTrans = {
                 toolbarTagsMessage: "{% trans "%tagCount% tags" %}",
                 deleteObject: "{% trans "Delete selected %object%" %}",
+                selectMultipleWidgets: "{% trans "Select multiple widgets" %}",
                 changeLayout: "{% trans "Change Layout" %}",
                 options: "{% trans "Options" %}",
                 displayTooltipsName: "{% trans "Tooltips?" %}",
@@ -430,7 +443,8 @@
             };
 
             var widgetStatusTrans = {
-                dueToExpire: "{% trans "Due to expire" %}",
+                setToStart: "{% trans "Set to start" %}",
+                setToExpire: "{% trans "Set to expire" %}",
                 expired: "{% trans "Expired" %}",
                 deleteOnExpire: "{% trans "Delete on expire" %}"
             };

@@ -88,6 +88,15 @@
                     </a>
                 </li>
                 
+                {{#if showOptions}}
+                    <li>
+                        <a id="multiSelectContainer" data-toggle="tooltip" data-placement="top" title="{{trans.selectMultipleWidgets}}"
+                            class="navbar-peek-button navbar-multiselect active">
+                            <i class="fa fa-object-group"></i>
+                        </a>
+                    </li>
+                {{/if}}
+
                 <li>
                     <a id="trashContainer" data-toggle="tooltip" data-placement="top" title="{{trans.trashBinActiveTitle}}"
                         class="navbar-peek-button navbar-bin {{#if trashActive}}active{{/if}}">

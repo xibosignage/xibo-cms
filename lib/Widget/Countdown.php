@@ -18,6 +18,18 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * 
+ * Template strings to be translated, that will be used to replace tags in the ||tag|| format
+ * __('Years')
+ * __('Months')
+ * __('Weeks')
+ * __('Hours')
+ * __('Minutes')
+ * __('Seconds')
+ * __('Total Hours')
+ * __('Total Minutes')
+ * __('Total Seconds')
  */
 namespace Xibo\Widget;
 
@@ -278,6 +290,9 @@ class Countdown extends ModuleWidget
 
         // Make subsitutions
         $mainTemplate = $this->makeSubstitutions($mainTemplate);
+
+        // Parse translations
+        $mainTemplate = $this->parseTranslations($mainTemplate);
         
         $options = array(
             'type' => $this->getModuleType(),

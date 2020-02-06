@@ -18,6 +18,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  *
+ * 
+ * Template strings to be translated, that will be used to replace tags in the ||tag|| format
+ * __('Wind')
+ * __('Humidity')
+ * __('Feels Like')
+ * __('Right now')
+ * __('Pressure')
+ * __('Visibility')
+ * __('TODAY')
+ * __('RIGHT NOW')
  */
 namespace Xibo\Widget;
 
@@ -707,6 +717,10 @@ class ForecastIo extends ModuleWidget
         // Parse library references
         $body = $this->parseLibraryReferences($isPreview, $body);
         $dailyTemplate = $this->parseLibraryReferences($isPreview, $dailyTemplate);
+
+        // Parse translations
+        $body = $this->parseTranslations($body);
+        $dailyTemplate = $this->parseTranslations($dailyTemplate);
         
         // Provide the background images to the templates styleSheet
         $styleSheet = $this->makeSubstitutions([

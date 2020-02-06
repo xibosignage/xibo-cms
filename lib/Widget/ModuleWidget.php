@@ -1773,5 +1773,31 @@ abstract class ModuleWidget implements ModuleInterface
         return $this;
     }
 
+    /**
+     * Parse for any translation references
+     * @param string $content containing translation references in ||tag||.
+     * @param string $tokenRegEx
+     * @return string The Parsed Content
+     */
+    final protected function parseTranslations($content, $tokenRegEx = '/\|\|.*?\|\|/')
+    {
+        $parsedContent = $content;
+        $matches = '';
+        preg_match_all($tokenRegEx, $content, $matches);
+
+        foreach ($matches[0] as $sub) {
+            // Parse out the translateTag
+            $translateTag = str_replace('||', '', $sub);
+
+            // We have a valid translateTag to substitute
+            $replace = __($translateTag);
+
+            // Substitute the replacement we have found (it might be '')
+            $parsedContent = str_replace($sub, $replace, $parsedContent);
+        }
+
+        return $parsedContent;
+    }
+
     //</editor-fold>
 }
