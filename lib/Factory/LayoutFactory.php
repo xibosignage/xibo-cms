@@ -39,7 +39,6 @@ use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\Widget\SubPlaylist;
 
 /**
  * Class LayoutFactory
@@ -1029,7 +1028,7 @@ class LayoutFactory extends BaseFactory
         if (isset($layoutDetails['regions']) && count($layoutDetails['regions']) > 0) {
             $this->getLog()->debug('Updating region names according to layout.json');
             foreach ($layout->regions as $region) {
-                if (array_key_exists($region->tempId, $layoutDetails['regions'])) {
+                if (array_key_exists($region->tempId, $layoutDetails['regions']) && !empty($layoutDetails['regions'][$region->tempId])) {
                     $region->name = $layoutDetails['regions'][$region->tempId];
                     $region->regionPlaylist->name = $layoutDetails['regions'][$region->tempId];
                 }
