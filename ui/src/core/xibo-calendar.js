@@ -26,6 +26,8 @@ let mymap;
 
 $(document).ready(function() {
 
+    var getJsonRequestControl = null;
+
     // Set a listener for popover clicks
     //  http://stackoverflow.com/questions/11703093/how-to-dismiss-a-twitter-bootstrap-popover-by-clicking-outside
     $('body').on('click', function (e) {
@@ -108,7 +110,12 @@ $(document).ready(function() {
 
                     $('#calendar-progress').addClass('fa fa-cog fa-spin');
 
-                    $.getJSON(url, params)
+                    // If there is already a request, abort it
+                    if(getJsonRequestControl) {
+                        getJsonRequestControl.abort();
+                    }
+
+                    getJsonRequestControl = $.getJSON(url, params)
                         .done(function(data) {
                             events = data.result;
 
@@ -159,8 +166,10 @@ $(document).ready(function() {
                             
                             calendar._render();
 
+                            if(res.statusText != 'abort') {
                             toastr.error(translations.failure);
                             console.error(res);
+                            }
                         });
                 } else {
                     
@@ -294,7 +303,12 @@ $(document).ready(function() {
                         $('#calendar-progress').removeClass('fa fa-cog fa-spin');
                     } else {
                         // 3 - make request to get the data for the events
-                        $.getJSON(url, params)
+                        
+                        // If there is already a request, abort it
+                        if(getJsonRequestControl) {
+                            getJsonRequestControl.abort();
+                        }
+                        getJsonRequestControl = $.getJSON(url, params)
                             .done(function(data) {
                                 
                                 if(!jQuery.isEmptyObject(data.data) && data.data.events != undefined && data.data.events.length > 0){
@@ -318,7 +332,9 @@ $(document).ready(function() {
                                 if (done != undefined)
                                     done();
                                 
+                                if(res.statusText != 'abort') {
                                 events['errorMessage'] = 'request_failed';
+                                }
                                 
                                 calendar._render();
                                 
@@ -330,6 +346,8 @@ $(document).ready(function() {
                 
             },
             onAfterEventsLoad: function(events) {
+                $('.cal-event-loader').hide();
+
                 if(!events) {
                     return;
                 }
@@ -339,6 +357,7 @@ $(document).ready(function() {
                 // Show time slider on agenda view and call the calendar view on slide stop event
                 if (this.options.view == 'agenda') {
                     $('.cal-event-time-bar').show();
+                    $('.cal-event-loader').show();
 
                     const $timePicker = $('#timePicker');
                     
