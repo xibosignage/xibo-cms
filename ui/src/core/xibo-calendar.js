@@ -167,8 +167,8 @@ $(document).ready(function() {
                             calendar._render();
 
                             if(res.statusText != 'abort') {
-                            toastr.error(translations.failure);
-                            console.error(res);
+                                toastr.error(translations.failure);
+                                console.error(res);
                             }
                         });
                 } else {
@@ -326,14 +326,14 @@ $(document).ready(function() {
 
                                 $('#calendar-progress').removeClass('fa fa-cog fa-spin');
                             })
-                            .fail(function(data) {
+                            .fail(function(res) {
                                 // Deal with the failed request
 
                                 if (done != undefined)
                                     done();
                                 
                                 if(res.statusText != 'abort') {
-                                events['errorMessage'] = 'request_failed';
+                                    events['errorMessage'] = 'request_failed';
                                 }
                                 
                                 calendar._render();
