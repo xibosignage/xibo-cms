@@ -537,6 +537,9 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 ],
             ];
 
+            // Sort by id (statId) - we must sort before we do pagination as mongo stat has descending order indexing on start/end
+            $query[]['$sort'] = ['id'=> 1];
+
             if ($start !== null && $length !== null) {
                 $query[]['$skip'] =  $start;
                 $query[]['$limit'] = $length;
