@@ -437,7 +437,6 @@
         });
 
         var displayData = {{ displayStatus|raw }};
-console.log(displayData);
         var displayStatusChart = new Chart($("#displayStatusChart"), {
             type: 'doughnut',
             data: {
@@ -687,7 +686,6 @@ console.log(displayData);
                     data.start = dataToSend.start;
                     data.order = dataToSend.order;
                     data.columns = [];
-console.log(dataToSend);
                     $.each(dataToSend.columns, function (index, e) {
                         var col = {};
                         col.data = e.data;
@@ -697,7 +695,6 @@ console.log(dataToSend);
                     });
 
                     $.extend(data, $("#displaysGrid").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
-console.log($("#displaysGrid").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     return data;
                 }
             },
