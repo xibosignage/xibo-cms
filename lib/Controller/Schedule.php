@@ -1065,7 +1065,7 @@ class Schedule extends Base
         $rows = [];
         if ($this->isApi($request)) {
 
-            $reminders =  $sanitizedParams->getArray('scheduleReminders');
+            $reminders =  $sanitizedParams->getArray('scheduleReminders', ['default' => []]);
             foreach ($reminders as $i => $reminder) {
 
                 $rows[$i]['reminder_value'] = (int) $reminder['reminder_value'];
@@ -1075,7 +1075,7 @@ class Schedule extends Base
             }
         } else {
 
-            for ($i=0; $i < count($sanitizedParams->getIntArray('reminder_value')); $i++) {
+            for ($i=0; $i < count($sanitizedParams->getIntArray('reminder_value', ['default' => []])); $i++) {
                 $rows[$i]['reminder_value'] = $sanitizedParams->getIntArray('reminder_value')[$i];
                 $rows[$i]['reminder_type'] = $sanitizedParams->getIntArray('reminder_type')[$i];
                 $rows[$i]['reminder_option'] = $sanitizedParams->getIntArray('reminder_option')[$i];

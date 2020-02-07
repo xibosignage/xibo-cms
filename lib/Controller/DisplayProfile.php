@@ -186,8 +186,8 @@ class DisplayProfile extends Base
             // Load the config
             $profile->load([
                 'loadConfig' => in_array('config', $embed),
-                'loadCommands' => in_array('commands', $embed),
-            ]);
+                'loadCommands' => in_array('commands', $embed)
+            ], $request);
 
             if (in_array('configWithDefault', $embed)) {
                 $profile->includeProperty('configDefault');
@@ -342,7 +342,7 @@ class DisplayProfile extends Base
     public function editForm(Request $request, Response $response, $id)
     {
         // Create a form out of the config object.
-        $displayProfile = $this->displayProfileFactory->getById($id);
+        $displayProfile = $this->displayProfileFactory->getById($id, $request);
 
         // Check permissions
         if ($this->getUser($request)->userTypeId != 1 && $this->getUser($request)->userId != $displayProfile->userId) {
@@ -375,7 +375,7 @@ class DisplayProfile extends Base
         }
 
         // Get a list of unassigned Commands
-        $unassignedCommands = array_udiff($this->commandFactory->query(), $displayProfile->commands, function($a, $b) {
+        $unassignedCommands = array_udiff($this->commandFactory->query(null, [], $request), $displayProfile->commands, function($a, $b) {
             /** @var \Xibo\Entity\Command $a */
             /** @var \Xibo\Entity\Command $b */
             return $a->getId() - $b->getId();
@@ -450,12 +450,13 @@ class DisplayProfile extends Base
     public function edit(Request $request, Response $response, $id)
     {
         // Create a form out of the config object.
-        $displayProfile = $this->displayProfileFactory->getById($id);
+        $displayProfile = $this->displayProfileFactory->getById($id, $request);
 
         $parsedParams = $this->getSanitizer($request->getParams());
 
-        if ($this->getUser($request)->userTypeId != 1 && $this->getUser($request)->userId != $displayProfile->userId)
+        if ($this->getUser($request)->userTypeId != 1 && $this->getUser($request)->userId != $displayProfile->userId) {
             throw new AccessDeniedException(__('You do not have permission to edit this profile'));
+        }
 
         $displayProfile->name = $parsedParams->getString('name');
         $displayProfile->isDefault = $parsedParams->getCheckbox('isDefault');
@@ -464,15 +465,16 @@ class DisplayProfile extends Base
         $this->editConfigFields($displayProfile, null, $request);
 
         // Capture and update commands
-        foreach ($this->commandFactory->query() as $command) {
+        foreach ($this->commandFactory->query(null, [], $request) as $command) {
             /* @var \Xibo\Entity\Command $command */
             if ($parsedParams->getString('commandString_' . $command->commandId) != null) {
                 // Set and assign the command
                 $command->commandString = $parsedParams->getString('commandString_' . $command->commandId);
-                $command->validationString = $parsedParams->getString('validationString_' . $command->commandId, null);
-                $displayProfile->assignCommand($command);
+                $command->validationString = $parsedParams->getString('validationString_' . $command->commandId);
+
+                $displayProfile->assignCommand($command, $request);
             } else {
-                $displayProfile->unassignCommand($command);
+                $displayProfile->unassignCommand($command, $request);
             }
         }
 

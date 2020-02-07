@@ -146,7 +146,7 @@ class Command extends Base
             'code' => $sanitzedParams->getString('code')
         ];
 
-        $commands = $this->commandFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $commands = $this->commandFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request), $request);
 
         foreach ($commands as $command) {
             /* @var \Xibo\Entity\Command $command */
@@ -233,7 +233,7 @@ class Command extends Base
      */
     public function editForm(Request $request, Response $response, $id)
     {
-        $command = $this->commandFactory->getById($id);
+        $command = $this->commandFactory->getById($id, $request);
 
         if (!$this->getUser($request)->checkEditable($command)) {
             throw new AccessDeniedException();
@@ -262,7 +262,7 @@ class Command extends Base
      */
     public function deleteForm(Request $request, Response $response, $id)
     {
-        $command = $this->commandFactory->getById($id);
+        $command = $this->commandFactory->getById($id, $request);
 
         if (!$this->getUser($request)->checkDeleteable($command)) {
             throw new AccessDeniedException();
@@ -400,7 +400,7 @@ class Command extends Base
     public function edit(Request $request, Response $response, $id)
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
-        $command = $this->commandFactory->getById($id);
+        $command = $this->commandFactory->getById($id, $request);
 
         if (!$this->getUser($request)->checkEditable($command)) {
             throw new AccessDeniedException();
@@ -454,7 +454,7 @@ class Command extends Base
      */
     public function delete(Request $request, Response $response, $id)
     {
-        $command = $this->commandFactory->getById($id);
+        $command = $this->commandFactory->getById($id, $request);
 
         if (!$this->getUser($request)->checkDeleteable($command)) {
             throw new AccessDeniedException();

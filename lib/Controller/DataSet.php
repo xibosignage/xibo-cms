@@ -1044,8 +1044,8 @@ class DataSet extends Base
             new DataSetUploadHandler($options);
 
         } catch (\Exception $e) {
-            // We must not issue an error, the file upload return should have the error object already TODO
-            $this->getApp()->commit = false;
+            // We must not issue an error, the file upload return should have the error object already
+            $this->getState()->setCommitState(false);
         }
 
         $this->setNoOutput(true);

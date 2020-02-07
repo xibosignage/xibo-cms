@@ -715,7 +715,7 @@ class Stats extends Base
             // Library Size in Bytes
             $params = [];
             $sql = 'SELECT IFNULL(SUM(FileSize), 0) AS SumSize, type FROM `media` WHERE 1 = 1 ';
-            $this->mediaFactory->viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId');
+            $this->mediaFactory->viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId', [], $request);
             $sql .= ' GROUP BY type ';
 
             $sth = $this->store->getConnection()->prepare($sql);

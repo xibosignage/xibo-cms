@@ -1767,8 +1767,7 @@ class Display extends Base
                             $this->getDate()->getLocalDate($display->lastAccessed));
 
                         // Add to system
-                        $notification = $this->notificationFactory->createSystemNotification($subject, $body,
-                            $this->getDate()->parse());
+                        $notification = $this->notificationFactory->createSystemNotification($subject, $body, $this->getDate()->parse());
 
                         // Add in any displayNotificationGroups, with permissions
                         foreach ($this->userGroupFactory->getDisplayNotificationGroups($display->displayGroupId) as $group) {

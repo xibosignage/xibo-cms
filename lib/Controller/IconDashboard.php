@@ -25,6 +25,7 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -45,10 +46,11 @@ class IconDashboard extends Base
      * @param \Xibo\Service\HelpServiceInterface $help
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
+     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
     }
 
     public function displayPage(Request $request, Response $response)

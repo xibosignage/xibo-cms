@@ -2093,7 +2093,7 @@ class DisplayGroup extends Base
         $this->getState()->template = 'displaygroup-form-command';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
-            'commands' => $this->commandFactory->query()
+            'commands' => $this->commandFactory->query(null, [], $request)
         ]);
 
         return $this->render($request, $response);
@@ -2146,7 +2146,7 @@ class DisplayGroup extends Base
             throw new AccessDeniedException();
         }
 
-        $command = $this->commandFactory->getById($sanitizedParams->getInt('commandId'));
+        $command = $this->commandFactory->getById($sanitizedParams->getInt('commandId'), $request);
         $displays = $this->displayFactory->getByDisplayGroupId($id);
 
         $this->playerAction->sendAction($displays, (new CommandAction())->setCommandCode($command->code));

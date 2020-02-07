@@ -100,6 +100,8 @@ class Maintenance extends Base
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
      * @param PlayerVersionFactory $playerVersionFactory
+     * @param Twig $view
+     * @param ContainerInterface $container
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $taskFactory, $mediaFactory, $layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory, $playerVersionFactory, Twig $view, ContainerInterface $container)
     {
@@ -120,6 +122,12 @@ class Maintenance extends Base
      * Run Maintenance through the WEB portal
      * @param Request $request
      * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws ControllerNotImplemented
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      */
     public function run(Request $request, Response $response)
     {
@@ -184,6 +192,9 @@ class Maintenance extends Base
     /**
      * Run task
      * @param $class
+     * @param Request $request
+     * @param Response $response
+     * @throws \Xibo\Exception\NotFoundException
      */
     private function runTask($class, Request $request, Response $response)
     {
@@ -256,7 +267,7 @@ class Maintenance extends Base
         $this->getLog()->debug('Library Location: ' . $library);
 
         // Remove temporary files
-        $this->getApp()->container->get('\Xibo\Controller\Library')->removeTempFiles();
+        $this->container->get('\Xibo\Controller\Library')->removeTempFiles();
 
         $media = [];
         $unusedMedia = [];
@@ -509,12 +520,12 @@ class Maintenance extends Base
         // Send via Apache X-Sendfile header?
         if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Apache') {
             header("X-Sendfile: $zipFile");
-            $this->getApp()->halt(200);
+            //$this->getApp()->halt(200);
         }
         // Send via Nginx X-Accel-Redirect?
         if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Nginx') {
             header("X-Accel-Redirect: /download/temp/" . basename($zipFile));
-            $this->getApp()->halt(200);
+            //$this->getApp()->halt(200);
         }
 
         // Return the file with PHP

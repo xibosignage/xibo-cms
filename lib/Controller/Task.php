@@ -474,10 +474,10 @@ class Task extends Base
 
             // Record the start time
             $start = time();
-// TODO
+
             $taskClass
                 ->setSanitizer($this->getSanitizer($request->getParams()))
-                ->setUser($this->getUser())
+                ->setUser($this->getUser($request))
                 ->setConfig($this->getConfig())
                 ->setLogger($this->getLog())
                 ->setDate($this->getDate())

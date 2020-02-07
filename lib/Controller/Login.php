@@ -110,7 +110,7 @@ class Login extends Base
     public function loginForm(Request $request, Response $response)
     {
         // Sanitize the body
-        $sanitizedRequestBody = $this->getSanitizer($request->getParsedBody());
+        $sanitizedRequestBody = $this->getSanitizer($request->getParams());
 
         // Check to see if the user has provided a special token
         $nonce = $sanitizedRequestBody->getString('nonce');
@@ -488,15 +488,24 @@ class Login extends Base
 
     /**
      * 2FA Auth required
-     * @throws \Xibo\Exception\XiboException
-     * @throws \RobThree\Auth\TwoFactorAuthException
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      * @throws \PHPMailer\PHPMailer\Exception
+     * @throws \RobThree\Auth\TwoFactorAuthException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function twoFactorAuthForm()
+    public function twoFactorAuthForm(Request $request, Response $response)
     {
         if (!isset($_SESSION['tfaUsername'])) {
-            $this->getApp()->flash('login_message', __('Session has expired, please log in again'));
-            $this->getApp()->redirectTo('login');
+            $this->flash->addMessageNow('login_message', __('Session has expired, please log in again'));
+            return $response->withRedirect('login');
         }
 
         $user = $this->userFactory->getByName($_SESSION['tfaUsername']);
@@ -566,32 +575,37 @@ class Login extends Base
             if (!$mail->send()) {
                 throw new ConfigurationException('Unable to send two factor code to ' . $user->email);
             } else {
-                $this->getApp()->flash('login_message',
+                $this->flash->addMessage('login_message',
                     __('Two factor code email has been sent to your email address'));
             }
 
             // Audit Log
             $this->getLog()->audit('User', $user->userId, 'Two Factor Code email sent', [
-                'IPAddress' => $this->getApp()->request()->getIp(),
-                'UserAgent' => $this->getApp()->request()->getUserAgent()
+                'IPAddress' => $request->getAttribute('ip_address'),
+                'UserAgent' => $request->getHeader('User-Agent')
             ]);
 
         }
 
         // Template
         $this->getState()->template = 'tfa';
+
+        return $this->render($request, $response);
     }
 
     /**
-     * @throws ConfigurationException
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
      * @throws \RobThree\Auth\TwoFactorAuthException
      */
-    public function twoFactorAuthValidate()
+    public function twoFactorAuthValidate(Request $request, Response $response)
     {
         $user = $this->userFactory->getByName($_SESSION['tfaUsername']);
         $result = false;
         $updatedCodes = [];
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if (isset($_POST['code'])) {
             $issuerSettings = $this->getConfig()->getSetting('TWOFACTOR_ISSUER');
@@ -606,9 +620,9 @@ class Login extends Base
             $tfa = new TwoFactorAuth($issuer);
 
             if ($user->twoFactorTypeId === 1 && $user->email !== '') {
-                $result = $tfa->verifyCode($user->twoFactorSecret, $this->getSanitizer()->getString('code'), 8);
+                $result = $tfa->verifyCode($user->twoFactorSecret, $sanitizedParams->getString('code'), 8);
             } else {
-                $result = $tfa->verifyCode($user->twoFactorSecret, $this->getSanitizer()->getString('code'), 2);
+                $result = $tfa->verifyCode($user->twoFactorSecret, $sanitizedParams->getString('code'), 2);
             }
         } elseif (isset($_POST['recoveryCode'])) {
             // get the array of recovery codes, go through them and try to match provided code
@@ -616,12 +630,12 @@ class Login extends Base
 
             foreach (json_decode($codes) as $code) {
                 // if the provided recovery code matches one stored in the database, we want to log in the user
-                if ($this->getSanitizer()->string($code) === $this->getSanitizer()->getString('recoveryCode')) {
+                if ($sanitizedParams->getString($code) === $sanitizedParams->getString('recoveryCode')) {
                     $result = true;
                 }
 
-                if ($this->getSanitizer()->string($code) !== $this->getSanitizer()->getString('recoveryCode')) {
-                    $updatedCodes[] = $this->getSanitizer()->string($code);
+                if ($sanitizedParams->getString($code) !== $sanitizedParams->getString('recoveryCode')) {
+                    $updatedCodes[] = $sanitizedParams->getString($code);
                 }
 
             }
@@ -638,7 +652,7 @@ class Login extends Base
             $this->getLog()->setUserId($user->userId);
 
             // Overwrite our stored user with this new object.
-            $this->getApp()->user = $user;
+           // $this->getApp()->user = $user;
 
             // Switch Session ID's
             $session = $this->session;
@@ -648,8 +662,8 @@ class Login extends Base
 
             // Audit Log
             $this->getLog()->audit('User', $user->userId, 'Login Granted', [
-                'IPAddress' => $this->getApp()->request()->getIp(),
-                'UserAgent' => $this->getApp()->request()->getUserAgent()
+                'IPAddress' => $request->getAttribute('ip_address'),
+                'UserAgent' => $request->getHeader('User-Agent')
             ]);
 
             $this->setNoOutput(true);
@@ -657,11 +671,11 @@ class Login extends Base
             //unset the session tfaUsername
             unset($_SESSION['tfaUsername']);
 
-            $this->getApp()->redirectTo('home');
+            return $response->withRedirect('home');
         } else {
             $this->getLog()->error('Authentication code incorrect, redirecting to login page');
-            $this->getApp()->flash('login_message', __('Authentication code incorrect'));
-            $this->getApp()->redirectTo('login');
+            $this->flash->addMessageNow('login_message', __('Authentication code incorrect'));
+            return $response->withRedirect('login');
         }
     }
 }

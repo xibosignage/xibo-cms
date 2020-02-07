@@ -225,7 +225,7 @@ class Layout extends Base
         // Get the parent layout if it's editable
         if ($layout->isEditable()) {
             // Get the Layout using the Draft ID
-            $layout = $this->layoutFactory->getByParentId($id);
+            $layout = $this->layoutFactory->getByParentId($id, $request);
         }
 
         // Work out our resolution
@@ -408,7 +408,7 @@ class Layout extends Base
         $this->getLog()->debug('Layout Added');
 
         // automatically checkout the new layout for edit
-        $this->checkout($request,$response,$layout->layoutId);
+        $this->checkout($request, $response, $layout->layoutId);
 
         // Return
         $this->getState()->hydrate([
@@ -1533,6 +1533,15 @@ class Layout extends Base
 
     /**
      * Displays an Add/Edit form
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     function addForm(Request $request, Response $response)
     {

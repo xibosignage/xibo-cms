@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
@@ -127,6 +128,9 @@ class Module extends Base
     /** @var PlayerVersionFactory  */
     private $playerVersionFactory;
 
+    /** @var ContainerInterface */
+    private $container;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -151,7 +155,7 @@ class Module extends Base
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $moduleFactory, $playlistFactory, $mediaFactory, $permissionFactory, $userGroupFactory, $widgetFactory, $transitionFactory, $regionFactory, $layoutFactory, $displayGroupFactory, $widgetAudioFactory, $displayFactory, $scheduleFactory, $dataSetFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $moduleFactory, $playlistFactory, $mediaFactory, $permissionFactory, $userGroupFactory, $widgetFactory, $transitionFactory, $regionFactory, $layoutFactory, $displayGroupFactory, $widgetAudioFactory, $displayFactory, $scheduleFactory, $dataSetFactory, Twig $view, ContainerInterface $container)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
@@ -170,6 +174,7 @@ class Module extends Base
         $this->displayFactory = $displayFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->dataSetFactory = $dataSetFactory;
+        $this->container = $container;
     }
 
     /**
@@ -383,7 +388,7 @@ class Module extends Base
 
         // Install all files
         /** @var Library $library */
-        $library->installAllModuleFiles();
+        $this->container->get('\Xibo\Controller\Library')->installAllModuleFiles();
 
         // Successful
         $this->getState()->hydrate([
@@ -490,7 +495,7 @@ class Module extends Base
 
         // All modules should be capable of autoload
         $module = $this->moduleFactory->createForInstall($moduleDetails->class);
-        $module->setUser($this->getUser());
+        $module->setUser($this->getUser($request));
         $module->installOrUpdate($this->moduleFactory);
 
         $this->getLog()->notice('Module Installed: ' . $module->getModuleType());
