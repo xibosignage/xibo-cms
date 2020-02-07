@@ -338,11 +338,11 @@ class DisplayGroupFactory extends BaseFactory
         if ($this->getSanitizer()->getString('displayGroup', $filterBy) != null) {
             $terms = explode(',', $this->getSanitizer()->getString('displayGroup', $filterBy));
 
-            $useRegex = false;
-            if ($this->getSanitizer()->getCheckbox('useRegex') == 1) {
-                $useRegex = true;
+            $useRegexForName = false;
+            if ($this->getSanitizer()->getCheckbox('useRegexForName') == 1) {
+                $useRegexForName = true;
             }
-            $this->nameFilter('displaygroup', 'displayGroup', $terms, $body, $params, $useRegex);
+            $this->nameFilter('displaygroup', 'displayGroup', $terms, $body, $params, $useRegexForName);
         }
 
         // Tags

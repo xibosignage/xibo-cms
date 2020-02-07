@@ -227,7 +227,7 @@ class DisplayGroup extends Base
             'dynamicCriteria' => $this->getSanitizer()->getString('dynamicCriteria'),
             'tags' => $this->getSanitizer()->getString('tags'),
             'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
-            'useRegex' => $this->getSanitizer()->getCheckbox('useRegex'),
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'isDisplaySpecific' => $this->getSanitizer()->getInt('isDisplaySpecific'),
             'displayGroupIdMembers' => $this->getSanitizer()->getInt('displayGroupIdMembers'),
             'userId' => $this->getSanitizer()->getInt('userId'),

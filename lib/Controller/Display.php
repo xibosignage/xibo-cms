@@ -503,6 +503,7 @@ class Display extends Base
             'tags' => $this->getSanitizer()->getString('tags'),
             'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
             'showTags' => true,
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'clientAddress' => $this->getSanitizer()->getString('clientAddress'),
             'mediaInventoryStatus' => $this->getSanitizer()->getInt('mediaInventoryStatus'),
             'loggedIn' => $this->getSanitizer()->getInt('loggedIn'),
