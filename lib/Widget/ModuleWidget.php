@@ -883,12 +883,15 @@ abstract class ModuleWidget implements ModuleInterface
      * Render a template and return the results
      * @param $data
      * @param string $template
-     * @return mixed
+     * @param Response $response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      */
     protected function renderTemplate($data, $template = 'get-resource', Response $response)
     {
         // Get the Twig Engine
-        return $this->view->render($response, $template . '.twig', $data);
+        $this->view->render($response, $template . '.twig', $data);
     }
 
     /**
@@ -1218,7 +1221,7 @@ abstract class ModuleWidget implements ModuleInterface
                     $template['fileName'] = '';
                     $template['image'] = '';
                 }
-$this->getLog()->debug('templates avail ' . json_encode($template));
+
                 $this->module->settings['templates'][] = $template;
             }
         }
@@ -1457,7 +1460,7 @@ $this->getLog()->debug('templates avail ' . json_encode($template));
                     $this->clearMedia();
 
                     // Generate the resource
-                    $resource = $this->getResource($request, $response);
+                    $resource = $this->getResource($request->withAttribute('displayId', $displayId), $response);
 
                     // If the resource is false, then don't cache it for as long (most likely an error)
                     if ($resource === false)
@@ -1649,7 +1652,7 @@ $this->getLog()->debug('templates avail ' . json_encode($template));
     protected function finaliseGetResource($templateName = 'get-resource', Response $response)
     {
         $this->data['javaScript'] = '<script type="text/javascript">var options = ' . $this->data['options'] . '; var items = ' . $this->data['items'] . ';</script>' . PHP_EOL . $this->data['javaScript'];
-        $this->renderTemplate($this->data, $templateName, $response);
+        return $this->renderTemplate($this->data, $templateName, $response);
     }
 
     /**

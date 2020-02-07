@@ -169,7 +169,8 @@ interface ModuleInterface
 
     /**
      * Get Resource
-     * @param int $displayId The displayId we're requesting for, or 0 for preview
+     * @param Request $request
+     * @param Response $response
      * @return string
      */
     public function getResource(Request $request, Response $response);

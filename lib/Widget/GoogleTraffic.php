@@ -311,7 +311,7 @@ class GoogleTraffic extends ModuleWidget
         // Include some vendor items
         $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
 
-        $this->renderTemplate([
+        return $this->renderTemplate([
             'viewPortWidth' => ($isPreview) ? $this->region->width : '[[ViewPortWidth]]',
             'apiKey' => $this->getSetting('apiKey'),
             'javaScript' => $javaScriptContent,

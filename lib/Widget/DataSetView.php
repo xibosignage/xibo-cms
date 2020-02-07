@@ -563,7 +563,7 @@ class DataSetView extends ModuleWidget
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        $this->renderTemplate($data, 'get-resource', $response);
+        return $this->renderTemplate($data, 'get-resource', $response);
     }
 
     /**

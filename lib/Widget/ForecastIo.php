@@ -682,7 +682,7 @@ class ForecastIo extends ModuleWidget
         $data = [];
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $isPreview = ($sanitizedParams->getCheckbox('preview') == 1);
-$this->getLog()->debug('FORECASAT GET RESOURCE ISPREVIEW IS ' . json_encode($isPreview));
+
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
         
@@ -812,7 +812,7 @@ $this->getLog()->debug('FORECASAT GET RESOURCE ISPREVIEW IS ' . json_encode($isP
         $data['javaScript'] = $javaScriptContent;
 
         // Return that content.
-        $this->renderTemplate($data, 'get-resource', $response);
+        return $this->renderTemplate($data, 'get-resource', $response);
     }
 
     /** @inheritdoc */

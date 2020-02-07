@@ -302,7 +302,7 @@ class Clock extends ModuleWidget
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
         // Return that content.
-        $this->renderTemplate($data, $template, $response);
+        return $this->renderTemplate($data, $template, $response);
     }
 
     /** @inheritdoc */

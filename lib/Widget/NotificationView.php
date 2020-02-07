@@ -337,7 +337,7 @@ class NotificationView extends ModuleWidget
         // Replace the Head Content with our generated java script
         $data['javaScript'] = $javaScriptContent;
 
-        $this->renderTemplate($data, 'get-resource', $response);
+        return $this->renderTemplate($data, 'get-resource', $response);
     }
 
     /** @inheritdoc */
