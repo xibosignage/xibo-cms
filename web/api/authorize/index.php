@@ -22,9 +22,12 @@
 
 use Monolog\Logger;
 use Monolog\Processor\UidProcessor;
+use Nyholm\Psr7\Factory\Psr17Factory;
+use Slim\Http\Factory\DecoratedResponseFactory;
 use Xibo\Factory\ContainerFactory;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Storage\UserEntity;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/../../..'));
@@ -71,7 +74,26 @@ $app->add(new \Xibo\Middleware\State($app));
 
 $app->addRoutingMiddleware();
 $app->setBasePath('/api/authorize');
+
+// Define Custom Error Handler
+$customErrorHandler = function (Request $request, Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($app) {
+    $nyholmFactory = new Psr17Factory();
+    $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
+    /** @var Response $response */
+    $response = $decoratedResponseFactory->createResponse($exception->getCode());
+    $app->getContainer()->get('state')->setCommitState(false);
+
+    return $response->withJson([
+        'error' => $exception->getMessage(),
+       // 'traceString' => $exception->getTraceAsString(),
+       // 'trace' => $exception->getTrace(),
+        'code' => $exception->getCode()
+    ]);
+};
+
+
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
+$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
 /* Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
     $app->container->get('\Xibo\Controller\Error')->handler($e);
@@ -86,12 +108,13 @@ $app->notFound(function () use ($app) {
 
 // Auth Routes
 $app->get('/', function(Request $request, Response $response) use ($app) {
-
-    $authParams = $app->getContainer()->get('server')->getGrantType('authorization_code')->checkAuthorizeParams();
-
+    /** @var \League\OAuth2\Server\AuthorizationServer $server */
+    $server = $app->getContainer()->get('server');
+    $authRequest = $server->validateAuthorizationRequest($request);
+    $app->getContainer()->get('session')->set('authParams', $authRequest);
     // Redirect the user to the UI - save the auth params in the session.
-    $app->getContainer()->get('session')->set('authParams', $authParams);
-
+    //$app->getContainer()->get('session')->set('authParams', $authParams);
+    //$app->redirect(str_replace('/api/authorize/', '/application/authorize', $app->request()->getPath()));
     // We know we are at /api/authorize, so convert that to /application/authorize
     return $response->withRedirect('/application/authorize');
 
@@ -101,15 +124,15 @@ $app->get('/', function(Request $request, Response $response) use ($app) {
 $app->post('/access_token', function(Request $request, Response $response) use ($app) {
 
     $app->getContainer()->get('logService')->debug('Request for access token using grant_type: %s', $request->getParam('grant_type'));
+    $server = $app->getContainer()->get('server');
 
-    $token = $app->getContainer()->get('server')->issueAccessToken();
-
-    $app->getContainer()->get('logService')->debug('Issued token: %s', $token);
-
-    // Issue an access token
-    return $response->withJson($token);
-
-    // Exceptions are caught by our error controller automatically.
+    try {
+        // Try to respond to the request
+        return $server->respondToAccessTokenRequest($request, $response);
+    } catch (\League\OAuth2\Server\Exception\OAuthServerException $exception) {
+        // All instances of OAuthServerException can be formatted into a HTTP response
+        return $exception->generateHttpResponse($response);
+    }
 });
 
 // Run app

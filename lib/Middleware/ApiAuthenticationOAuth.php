@@ -23,6 +23,7 @@
 
 namespace Xibo\Middleware;
 
+use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\ResourceServer;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -30,7 +31,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
-use Slim\Routing\RouteContext;
+use Xibo\Storage\AccessTokenRepository;
 
 class ApiAuthenticationOAuth implements Middleware
 {
@@ -42,60 +43,49 @@ class ApiAuthenticationOAuth implements Middleware
         $this->app = $app;
     }
 
+    /**
+     * @param Request $request
+     * @param RequestHandler $handler
+     * @return Response
+     * @throws OAuthServerException
+     * @throws \Xibo\Exception\NotFoundException
+     */
     public function process(Request $request, RequestHandler $handler): Response
     {
-        $app = $this->app;
-        $container = $app->getContainer();
+        $userFactory = $this->app->getContainer()->get('userFactory');
+        /* @var \Xibo\Entity\User $user */
+        $user = null;
+        // Setup the authorization server
 
-        $container->set('server', function (ContainerInterface $container) {
+        $this->app->getContainer()->set('server', function (ContainerInterface $container) {
             // oAuth Resource
-            $sessionStorage = new \Xibo\Storage\ApiSessionStorage($container->get('store'));
-            $accessTokenStorage = new \Xibo\Storage\ApiAccessTokenStorage($container->get('store'));
-            $clientStorage = new \Xibo\Storage\ApiClientStorage($container->get('store'));
-            $scopeStorage = new \Xibo\Storage\ApiScopeStorage($container->get('store'));
+            $logger = $container->get('logger');
+            $apiKeyPaths = $container->get('configService')->apiKeyPaths;
+            $encryptionKey = $apiKeyPaths['publicKeyPath'];
+            $accessTokenRepository = new AccessTokenRepository($logger);
 
-            $server = new \League\OAuth2\Server\ResourceServer(
-                $sessionStorage,
-                $accessTokenStorage,
-                $clientStorage,
-                $scopeStorage
+            $server = new ResourceServer(
+                $accessTokenRepository,
+                $encryptionKey
             );
 
             return $server;
         });
 
-        // Validate we are a valid auth
-        /* @var ResourceServer $server */
-        $server = $container->get('server');
+        /** @var ResourceServer $server */
+        $server =  $this->app->getContainer()->get('server');
+        $validatedRequest = $server->validateAuthenticatedRequest($request);
+        $userId = $validatedRequest->getAttribute('oauth_user_id');
 
-        $server->isValidRequest(false);
+        $user = $userFactory->getById($userId);
 
-        /* @var \Xibo\Entity\User $user */
-        $user = null;
-
-        // What type of access has been requested?
-        if ($server->getAccessToken()->getSession()->getOwnerType() == 'user') {
-            $user = $container->get('userFactory')->getById($server->getAccessToken()->getSession()->getOwnerId());
-        } else {
-            $user = $container->get('userFactory')->loadByClientId($server->getAccessToken()->getSession()->getOwnerId());
-        }
-
-        $user->setChildAclDependencies($container->get('userGroupFactory'),$container->get('pageFactory'));
+        $user->setChildAclDependencies($this->app->getContainer()->get('userGroupFactory'), $this->app->getContainer()->get('pageFactory'));
 
         $user->load();
 
-        $newRequest = $request->withAttribute('currentUser', $user);
-        $newerRequest = $newRequest->withAttribute('name', 'API');
+        $newRequest = $validatedRequest->withAttribute('currentUser', $user)
+                                       ->withAttribute('name', 'API');
 
-        // Get the current route pattern
-        $routeContext = RouteContext::fromRequest($request);
-        $route = $routeContext->getRoute();
-        $resource = $route->getPattern();
-
-        // Do they have permission?
-        $user->routeAuthentication($resource, $request->getMethod(), $server->getAccessToken()->getScopes());
-
-        // Call the next middleware
-        return $handler->handle($newerRequest);
+        return $handler->handle($newRequest);
     }
 }

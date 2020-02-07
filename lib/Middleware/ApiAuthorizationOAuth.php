@@ -23,13 +23,16 @@
 
 namespace Xibo\Middleware;
 
-
+use League\OAuth2\Server\Grant\AuthCodeGrant;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
+use Xibo\Storage\AuthCodeRepository;
+use Xibo\Storage\RefreshTokenRepository;
+
 class ApiAuthorizationOAuth implements Middleware
 {
     /* @var App $app */
@@ -47,26 +50,32 @@ class ApiAuthorizationOAuth implements Middleware
 
         // DI in the server
         $container->set('server', function(ContainerInterface $container) {
-            $server = new \League\OAuth2\Server\AuthorizationServer;
-            // oAuth Resource
-            $server->setSessionStorage(new \Xibo\Storage\ApiSessionStorage($container->get('store')));
-            $server->setAccessTokenStorage(new \Xibo\Storage\ApiAccessTokenStorage($container->get('store')));
-            $server->setRefreshTokenStorage(new \Xibo\Storage\ApiRefreshTokenStorage($container->get('store')));
-            $server->setClientStorage(new \Xibo\Storage\ApiClientStorage($container->get('store')));
-            $server->setScopeStorage(new \Xibo\Storage\ApiScopeStorage($container->get('store')));
-            $server->setAuthCodeStorage(new \Xibo\Storage\ApiAuthCodeStorage($container->get('store')));
+            $apiKeyPaths = $container->get('configService')->apiKeyPaths;
 
-            // Allow auth code grant
-            $authCodeGrant = new \League\OAuth2\Server\Grant\AuthCodeGrant();
-            $server->addGrantType($authCodeGrant);
+            $privateKey = $apiKeyPaths['privateKeyPath'];
+            $encryptionKey = $apiKeyPaths['publicKeyPath'];
 
-            // Allow client credentials grant
-            $clientCredentialsGrant = new \League\OAuth2\Server\Grant\ClientCredentialsGrant();
-            $server->addGrantType($clientCredentialsGrant);
+            $server = new \League\OAuth2\Server\AuthorizationServer(
+                new \Xibo\Storage\ApiClientStorage($container->get('store'), $container->get('logService')),
+                new \Xibo\Storage\AccessTokenRepository($container->get('logService')),
+                new \Xibo\Storage\ScopeRepository(),
+                $privateKey,
+                $encryptionKey
+            );
 
-            // Add refresh tokens
-            $refreshTokenGrant = new \League\OAuth2\Server\Grant\RefreshTokenGrant();
-            $server->addGrantType($refreshTokenGrant);
+            $server->enableGrantType(
+                new \League\OAuth2\Server\Grant\ClientCredentialsGrant(),
+                new \DateInterval('PT1H')
+            );
+
+            $server->enableGrantType(
+                new AuthCodeGrant(
+                    new AuthCodeRepository(),
+                    new RefreshTokenRepository(),
+                    new \DateInterval('PT10M')
+                ),
+                new \DateInterval('PT1H')
+            );
 
             // Default scope
             $server->setDefaultScope('all');

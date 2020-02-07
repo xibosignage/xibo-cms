@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (ApiClientStorage.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,12 +23,10 @@
 
 namespace Xibo\Storage;
 
-use League\OAuth2\Server\Entity\ClientEntity;
-use League\OAuth2\Server\Entity\SessionEntity;
-use League\OAuth2\Server\Storage\AbstractStorage;
-use League\OAuth2\Server\Storage\ClientInterface;
+use League\OAuth2\Server\Repositories\ClientRepositoryInterface;
+use Monolog\Logger;
 
-class ApiClientStorage extends AbstractStorage implements ClientInterface
+class ApiClientStorage implements ClientRepositoryInterface
 {
     /**
      * @var StorageServiceInterface
@@ -35,15 +34,22 @@ class ApiClientStorage extends AbstractStorage implements ClientInterface
     private $store;
 
     /**
+     * @var Logger
+     */
+    private $logger;
+
+    /**
      * ApiAccessTokenStorage constructor.
      * @param StorageServiceInterface $store
      */
-    public function __construct($store)
+    public function __construct($store, $logger)
     {
-        if (!$store instanceof StorageServiceInterface)
+        if (!$store instanceof StorageServiceInterface) {
             throw new \RuntimeException('Invalid $store');
+        }
 
         $this->store = $store;
+        $this->logger = $logger;
     }
 
     /**
@@ -54,6 +60,68 @@ class ApiClientStorage extends AbstractStorage implements ClientInterface
     {
         return $this->store;
     }
+
+    /**
+     * Get Store
+     * @return Logger
+     */
+    protected function getLogger()
+    {
+        return $this->logger;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getClientEntity($clientIdentifier)
+    {
+        $sql = '
+            SELECT oauth_clients.*
+              FROM oauth_clients
+             WHERE oauth_clients.id = :clientId
+        ';
+
+        $params = [
+            'clientId' => $clientIdentifier
+        ];
+
+        $result = $this->getStore()->select($sql, $params);
+
+        if ($result[0] === null) {
+            $this->getLogger()->debug('Unable to find ' . $clientIdentifier);
+            return null;
+        }
+
+        $this->getLogger()->debug('getClientEntity for ' . $clientIdentifier . ', found ' . var_export($result[0], true));
+        if ($result[0]['authCode'] == 1) {
+            $result[0]['isConfidential'] = true;
+        }
+        return (new ClientEntity())->hydrate($result[0], ['stringProperties' => ['id']]);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function validateClient($clientIdentifier, $clientSecret, $grantType)
+    {
+
+        $client = $this->getClientEntity($clientIdentifier);
+        $this->getLogger()->debug('validateClient for ' . $clientIdentifier . ' secret ' . $clientSecret . ' and hash ' . $client->getHash());
+
+        if ($client === null) {
+            return false;
+        }
+
+        if (
+            $client->isConfidential() === true
+            && password_verify($clientSecret, $client->getHash()) === false
+        ) {
+            return false;
+        }
+
+        return true;
+    }
+
 
     /**
      * {@inheritdoc}

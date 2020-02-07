@@ -28,12 +28,13 @@ use Nyholm\Psr7\Factory\Psr17Factory;
 use Slim\Http\Factory\DecoratedResponseFactory;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Storage\AccessTokenRepository;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/../..'));
 
-error_reporting(1);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 
 require PROJECT_ROOT . '/vendor/autoload.php';
 
@@ -82,16 +83,19 @@ $customErrorHandler = function (Request $request, Throwable $exception, bool $di
     $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
     /** @var Response $response */
     $response = $decoratedResponseFactory->createResponse($exception->getCode());
-    $request->getUri();
+    $app->getContainer()->get('state')->setCommitState(false);
+
     return $response->withJson([
+        'success' => false,
         'error' => $exception->getMessage(),
-        'code' => $exception->getCode()
+        'httpStatus' => $exception->getCode(),
+        'data' => []
     ]);
 };
 
 // Add Error Middleware
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
-//$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
+$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
 /*
 // Handle additional Middleware
 \Xibo\Middleware\State::setMiddleWare($app);

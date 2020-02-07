@@ -21,6 +21,8 @@
  */
 namespace Xibo\Controller;
 
+use League\OAuth2\Server\RequestTypes\AuthorizationRequest;
+use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use League\OAuth2\Server\AuthorizationServer;
@@ -45,7 +47,10 @@ use Xibo\Storage\ApiAuthCodeStorage;
 use Xibo\Storage\ApiClientStorage;
 use Xibo\Storage\ApiScopeStorage;
 use Xibo\Storage\ApiSessionStorage;
+use Xibo\Storage\AuthCodeRepository;
+use Xibo\Storage\RefreshTokenRepository;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Storage\UserEntity;
 
 /**
  * Class Applications
@@ -77,6 +82,9 @@ class Applications extends Base
     /** @var  UserFactory */
     private $userFactory;
 
+    /** @var ContainerInterface */
+    private $container;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -90,9 +98,12 @@ class Applications extends Base
      * @param StorageServiceInterface $store
      * @param ApplicationFactory $applicationFactory
      * @param ApplicationRedirectUriFactory $applicationRedirectUriFactory
+     * @param $applicationScopeFactory
      * @param UserFactory $userFactory
+     * @param Twig $view
+     * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $store, $applicationFactory, $applicationRedirectUriFactory, $applicationScopeFactory, $userFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $store, $applicationFactory, $applicationRedirectUriFactory, $applicationScopeFactory, $userFactory, Twig $view, ContainerInterface $container)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
@@ -102,6 +113,7 @@ class Applications extends Base
         $this->applicationRedirectUriFactory = $applicationRedirectUriFactory;
         $this->applicationScopeFactory = $applicationScopeFactory;
         $this->userFactory = $userFactory;
+        $this->container = $container;
     }
 
     /**
@@ -196,7 +208,7 @@ class Applications extends Base
             'authParams' => $authParams
         ]);
 
-        $this->render($request, $response);
+       return $this->render($request, $response);
     }
 
     /**
@@ -204,48 +216,63 @@ class Applications extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \League\OAuth2\Server\Exception\InvalidGrantException
+     * @throws \Exception
      */
     public function authorize(Request $request, Response $response)
     {
-        $sanitizedQueryParams = $this->getSanitizer($request->getParams());
         // Pull authorize params from our session
-        if (!$authParams = $this->session->get('authParams'))
+        if (!$authParams = $this->session->get('authParams')) {
             throw new \InvalidArgumentException(__('Authorisation Parameters missing from session.'));
+        }
+
+        $sanitizedQueryParams = $this->getSanitizer($request->getParams());
+
+        // get auth server
+        /** @var AuthorizationRequest $authRequest */
+        $authRequest = $this->session->get('authParams');
+
+        $apiKeyPaths = $this->getConfig()->apiKeyPaths;
+
+        $privateKey = $apiKeyPaths['privateKeyPath'];
+        $encryptionKey = $apiKeyPaths['publicKeyPath'];
+
+        $server = new AuthorizationServer(
+            new ApiClientStorage($this->container->get('store'), $this->container->get('logService')),
+            new \Xibo\Storage\AccessTokenRepository($this->container->get('logService')),
+            new \Xibo\Storage\ScopeRepository(),
+            $privateKey,
+            $encryptionKey
+        );
+
+        $server->enableGrantType(
+            new AuthCodeGrant(
+                new AuthCodeRepository(),
+                new RefreshTokenRepository(),
+                new \DateInterval('PT10M')
+            ),
+            new \DateInterval('PT1H')
+        );
+
+        // Default scope
+        $server->setDefaultScope('all');
 
         // We are authorized
         if ($sanitizedQueryParams->getString('authorization') === 'Approve') {
 
-            // Create a server
-            $server = new AuthorizationServer();
+            $authRequest->setAuthorizationApproved(true);
 
-            $server->setSessionStorage(new ApiSessionStorage($this->store));
-            $server->setAccessTokenStorage(new ApiAccessTokenStorage($this->store));
-            $server->setClientStorage(new ApiClientStorage($this->store));
-            $server->setScopeStorage(new ApiScopeStorage($this->store));
-            $server->setAuthCodeStorage(new ApiAuthCodeStorage($this->store));
+            // get oauth User Entity and set the UserId to the current web userId
+            $userEntity = new UserEntity();
+            $userEntity->userId = $this->getUser($request)->userId;
+            $authRequest->setUser($userEntity);
 
-            $authCodeGrant = new AuthCodeGrant();
-            $server->addGrantType($authCodeGrant);
-
-            // TODO: Add scopes element to $authParams based on the selections granted in the form
-
-            // Authorize the request
-            $redirectUri = $server->getGrantType('authorization_code')->newAuthorizeRequest('user', $this->getUser($request)->userId, $authParams);
+            // Redirect back to the home page
+            return $server->completeAuthorizationRequest($authRequest, $response);
         }
         else {
-            $error = new \League\OAuth2\Server\Exception\AccessDeniedException();
-            $error->redirectUri = $authParams['redirect_uri'];
-
-            $redirectUri = RedirectUri::make($authParams['redirect_uri'], [
-                'error' => $error->errorType,
-                'message' => $error->getMessage()
-            ]);
+            $authRequest->setAuthorizationApproved(false);
+            return $server->completeAuthorizationRequest($authRequest, $response);
         }
-
-        $this->getLog()->debug('Redirect URL is %s', $redirectUri);
-
-        return $response->withRedirect($redirectUri, 302);
     }
 
     /**
