@@ -430,3 +430,7 @@ $app->get('/tag/view', ['\Xibo\Controller\Tag','displayPage'])->setName('tag.vie
 $app->get('/tag/form/add', ['\Xibo\Controller\Tag','addForm'])->setName('tag.add.form');
 $app->get('/tag/form/edit/{id}', ['\Xibo\Controller\Tag','editForm'])->setName('tag.edit.form');
 $app->get('/tag/form/delete/{id}', ['\Xibo\Controller\Tag','deleteForm'])->setName('tag.delete.form');
+
+// Errors
+$app->get('/notFound', ['\Xibo\Controller\Error', 'notFoundPage'])->setName('error.notFound');
+$app->get('/error', ['\Xibo\Controller\Error', 'errorPage'])->setName('error');

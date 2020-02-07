@@ -24,6 +24,7 @@ use Monolog\Logger;
 use Monolog\Processor\UidProcessor;
 use Psr\Container\ContainerInterface;
 use Slim\Views\TwigMiddleware;
+use Xibo\Exception\UpgradePendingException;
 use Xibo\Factory\ContainerFactory;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Slim\Http\Factory\DecoratedResponseFactory;
@@ -74,7 +75,6 @@ $container->set('logger', function (ContainerInterface $container) {
 // Create a Slim application
 $app = \DI\Bridge\Slim\Bridge::create($container);
 
-
 // Config
 $app->config = $container->get('configService');
 $app->router = $app->getRouteCollector()->getRouteParser();
@@ -83,10 +83,10 @@ $app->router = $app->getRouteCollector()->getRouteParser();
 // Middleware (onion, outside inwards and then out again - i.e. the last one is first and last);
 //
 $twigMiddleware = TwigMiddleware::createFromContainer($app);
-$app->add(new \Xibo\Middleware\Log($app));
 $app->add(new RKA\Middleware\IpAddress(true, []));
 $app->add(new \Xibo\Middleware\Actions($app));
 $app->add(new \Xibo\Middleware\Theme($app));
+$app->add(new \Xibo\Middleware\Log($app));
 $app->add(new \Xibo\Middleware\WebAuthentication($app));
 $app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\State($app));
@@ -120,16 +120,26 @@ $customErrorHandler = function (Request $request, Throwable $exception, bool $di
     /** @var Response $response */
     $response = $decoratedResponseFactory->createResponse($exception->getCode());
 
-    return $response->withJson([
-        'error' => $exception->getMessage(),
-        'code' => $exception->getCode()
-    ]);
+    if ($exception->getCode() == 404) {
+        $app->getContainer()->get('logger')->debug(sprintf('Page Not Found. %s', $request->getUri()->getPath()));
+        return $response->withRedirect('/notFound');
+    } else {
+        $app->getContainer()->get('session')->set('exceptionMessage', $exception->getMessage());
+        $app->getContainer()->get('session')->set('exceptionCode', $exception->getCode());
+        $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($exception)));
+
+        if ($exception instanceof UpgradePendingException) {
+            $exceptionClass = 'upgrade-in-progress-page';
+        }
+
+        $app->getContainer()->get('session')->set('exceptionClass', $exceptionClass);
+        return $response->withRedirect('/error');
+    }
 };
 
 // Add Error Middleware
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
-// TODO rewrite and try to use our errorHandler here
-//$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
+$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
 
 // All application routes
 require PROJECT_ROOT . '/lib/routes-web.php';

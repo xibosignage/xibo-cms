@@ -28,8 +28,9 @@
         <div class="widget-body">
             <div class="row">
                 <div class="col-md-12">
-                    {{ flash.globalError }}
-                    {{ flash.message }}
+                    {% if error != "" %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                    {% endif %}
                 </div>
             </div>
         </div>

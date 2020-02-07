@@ -57,22 +57,18 @@
         .form-signin .checkbox {
             margin-bottom: 10px;
         }
-        .form-signin input[type="text"],
-        .form-signin input[type="password"] {
-            font-size: 16px;
-            height: auto;
-            margin-bottom: 15px;
-            padding: 7px 9px;
-        }
 
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="form-signin text-center" action="{{ url_for("login") }}">
+    <div class="form-signin text-center">
         <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img src="{{ theme.uri("img/xibologo.png") }}"></a></p>
 
-        <p>{% trans "Sorry we could not find that page. Please check your URL or press back in your browser" %}</p>
+        <p>{% trans "Sorry we could not find that page." %}</p>
+        <p>{% trans "Please press the button below to go to your homepage or press back in your browser" %}</p>
+        <a class="btn btn-info" href="{{ url_for("home") }}">{% trans "Home" %}</a>
+
     </div>
 
     <p class="text-center">{% trans %}Version {{ version }}{% endtrans %}

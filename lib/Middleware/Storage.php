@@ -54,7 +54,7 @@ class Storage implements Middleware
         $container = $app->getContainer();
 
         $app->startTime = microtime(true);
-        $app->commit = true;
+        //$app->commit = true;
 
         // Configure storage
       //  self::setStorage($container);
@@ -65,8 +65,7 @@ class Storage implements Middleware
         // Are we in a transaction coming out of the stack?
         if ($container->get('store')->getConnection()->inTransaction()) {
             // We need to commit or rollback? Default is commit
-            // TODO need to handle this without $app->commit
-            if ($app->commit) {
+            if ($container->get('state')->getCommitState()) {
                 $container->get('store')->commitIfNecessary();
             } else {
                 $container->get('logService')->debug('Storage rollback.');

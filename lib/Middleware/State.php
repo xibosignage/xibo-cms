@@ -41,6 +41,7 @@ use Xibo\Helper\NullSession;
 use Xibo\Helper\Session;
 use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\HelpService;
 use Xibo\Service\ReportService;
 use Xibo\Twig\TwigMessages;
 
@@ -325,7 +326,7 @@ class State implements Middleware
 
     /**
      * Configure the Cache
-     * @param Container $container
+     * @param ContainerInterface $container
      * @param ConfigServiceInterface $configService
      * @param \PSR\Log\LoggerInterface $logWriter
      */
@@ -377,7 +378,8 @@ class State implements Middleware
                     $c->get('applicationRedirectUriFactory'),
                     $c->get('applicationScopeFactory'),
                     $c->get('userFactory'),
-                    $c->get('view')
+                    $c->get('view'),
+                    $c
                 );
             },
             '\Xibo\Controller\AuditLog' => function(ContainerInterface $c) {
@@ -584,8 +586,8 @@ class State implements Middleware
                     $c->get('view')
                 );
             },
-            '\Xibo\Controller\Error' => function(ContainerInterface $c, App $app) {
-                $controller =  new \Xibo\Controller\Error(
+            '\Xibo\Controller\Error' => function(ContainerInterface $c) {
+                return new \Xibo\Controller\Error(
                     $c->get('logService'),
                     $c->get('sanitizerService'),
                     $c->get('state'),
@@ -593,9 +595,9 @@ class State implements Middleware
                     $c->get('helpService'),
                     $c->get('dateService'),
                     $c->get('configService'),
-                    $c->get('view')
+                    $c->get('view'),
+                    $c
                 );
-                return $controller->setApp($app);
             },
             '\Xibo\Controller\Fault' => function(ContainerInterface $c) {
                 return new \Xibo\Controller\Fault(
@@ -633,7 +635,8 @@ class State implements Middleware
                     $c->get('user'),
                     $c->get('helpService'),
                     $c->get('dateService'),
-                    $c->get('configService')
+                    $c->get('configService'),
+                    $c->get('view')
                 );
             },
             '\Xibo\Controller\Layout' => function(ContainerInterface $c) {

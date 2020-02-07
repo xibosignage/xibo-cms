@@ -87,7 +87,7 @@ class WebAuthentication implements Middleware
                 $user->setChildAclDependencies($container->get('userGroupFactory'), $container->get('pageFactory'));
 
                 // Load the user
-                $user->load(false, $request);
+                $user->load(false);
 
                 // Configure the log service with the logged in user id
                 $container->get('logService')->setUserId($user->userId);
@@ -97,13 +97,16 @@ class WebAuthentication implements Middleware
 
                 // We are authenticated, override with the populated user object
                  // $app->user = $user;
-                $newRequest = $request->withAttribute('currentUser', $user);
+                $newRequest = $request->withAttribute('currentUser', $user)
+                                      ->withAttribute('name', 'web');
 
                 return $handler->handle($newRequest);
             } else {
                 // TODO Store the current route so we can come back to it after login
-                //  $app->flash('priorRoute', $request->getUri());
-                $request->withAttribute('currentUser', $user);
+                //  $app->flash('priorRoute', $app->request()->getRootUri() . $app->request()->getResourceUri());
+                $app->getContainer()->get('flash')->addMessage('priorRoute', $request->getUri() . $resource);
+                $request->withAttribute('currentUser', $user)
+                        ->withAttribute('name', 'web');
                 $app->getContainer()->get('logger')->debug('not in public routes, expired, should redirect to login ');
                 if ($user->hasIdentity()) {
                     $user->touch();
@@ -126,7 +129,6 @@ class WebAuthentication implements Middleware
             }
         } else {
             $app->public = true;
-            $app->getContainer()->get('logger')->debug('PUBLIC ROUTE');
 
             // If we are expired and come from ping/clock, then we redirect
             if ($container->get('session')->isExpired() && ($resource == '/login/ping' || $resource == 'clock')) {

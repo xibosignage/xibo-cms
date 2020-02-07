@@ -486,4 +486,15 @@ class Session implements \SessionHandlerInterface
             'userId' => $userId
         ]);
     }
+
+    public static function unSet($key, $secondKey = NULL)
+    {
+        if ($secondKey != NULL) {
+            if (isset($_SESSION[$key][$secondKey]))
+                unset($_SESSION[$key][$secondKey]);
+        } else {
+            if (isset($_SESSION[$key]))
+                unset($_SESSION[$key]);
+        }
+    }
 }
