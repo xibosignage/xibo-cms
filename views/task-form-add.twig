@@ -37,7 +37,7 @@
     <div class="row">
         <div class="col-md-12">
             <form id="taskAdd" class="XiboForm form-horizontal" method="post" action="{{ url_for("task.add") }}"
-                    data-next-form-url="{{ url_for("task.edit.form") }}">
+                    data-next-form-url="{{ url_for("task.edit.form", {id:':id'}) }}">
 
                 {% set title %}{% trans "Task" %}{% endset %}
                 {% set helpText %}{% trans "Select the task you would like to run" %}{% endset %}
