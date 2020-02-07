@@ -216,24 +216,29 @@ class Campaign implements \JsonSerializable
         if ($this->campaignId == null || $this->loaded)
             return;
 
-        if ($this->layoutFactory == null)
+        if ($this->layoutFactory == null) {
             throw new \RuntimeException('Cannot load campaign with all objects without first calling setChildObjectDependencies');
+        }
 
         // Permissions
-        if ($options['loadPermissions'])
+        if ($options['loadPermissions']) {
             $this->permissions = $this->permissionFactory->getByObjectId('Campaign', $this->campaignId);
+        }
 
         // Layouts
-        if ($options['loadLayouts'])
+        if ($options['loadLayouts']) {
             $this->layouts = $this->layoutFactory->getByCampaignId($this->campaignId, false);
-            
+        }
+
         // Load all tags
-        if ($options['loadTags'])
+        if ($options['loadTags']) {
             $this->tags = $this->tagFactory->loadByCampaignId($this->campaignId);
+        }
 
         // Events
-        if ($options['loadEvents'])
+        if ($options['loadEvents']) {
             $this->events = $this->scheduleFactory->getByCampaignId($this->campaignId);
+        }
 
         $this->loaded = true;
     }
@@ -243,8 +248,9 @@ class Campaign implements \JsonSerializable
      */
     public function validate()
     {
-        if (!v::stringType()->notEmpty()->validate($this->campaign))
+        if (!v::stringType()->notEmpty()->validate($this->campaign)) {
             throw new InvalidArgumentException(__('Name cannot be empty'), 'name');
+        }
     }
     
     
@@ -451,7 +457,7 @@ class Campaign implements \JsonSerializable
 
         $found = false;
         foreach ($this->layouts as $existingLayout) {
-            if ($existingLayout->getId() === $layout->getId() && $existingLayout->displayOrder === $layout->displayOrder) {
+            if ($existingLayout->getId() === $layout->getId() && $existingLayout->displayOrder === $layout->displayOrder && $this->isLayoutSpecific !== 1) {
                 $found = true;
                 break;
             }
@@ -583,8 +589,9 @@ class Campaign implements \JsonSerializable
     private function linkLayouts()
     {
         // Don't do anything if we don't have any layouts
-        if (count($this->layouts) <= 0)
+        if (count($this->layouts) <= 0) {
             return;
+        }
 
         // Sort the layouts by their display order
         usort($this->layouts, function($a, $b) {
@@ -646,8 +653,9 @@ class Campaign implements \JsonSerializable
             $notify = $this->displayFactory->getDisplayNotifyService();
 
             // Should we collect immediately
-            if ($options['collectNow'])
+            if ($options['collectNow']) {
                 $notify->collectNow();
+            }
 
             // Notify
             $notify->notifyByCampaignId($this->campaignId);
