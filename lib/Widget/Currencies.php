@@ -18,6 +18,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Template strings to be translated, that will be used to replace tags in the ||tag|| format
+ * __('RATE')
  */
 namespace Xibo\Widget;
 
@@ -748,6 +751,10 @@ class Currencies extends AlphaVantageBase
         // Run through each item and substitute with the template
         $mainTemplate = $this->parseLibraryReferences($isPreview, $mainTemplate, $request);
         $itemTemplate = $this->parseLibraryReferences($isPreview, $itemTemplate, $request);
+
+        // Parse translations
+        $mainTemplate = $this->parseTranslations($mainTemplate);
+        $itemTemplate = $this->parseTranslations($itemTemplate);
         
         $renderedItems = [];
         
@@ -860,7 +867,7 @@ class Currencies extends AlphaVantageBase
     public function getCacheDuration()
     {
         $cachePeriod = $this->getSetting('cachePeriod', 3600);
-        $updateInterval = $this->getSetting('updateInterval', 3600);
+        $updateInterval = $this->getSetting('updateInterval', 60) * 60;
 
         return max($cachePeriod, $updateInterval);
     }

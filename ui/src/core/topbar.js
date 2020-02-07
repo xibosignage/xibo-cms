@@ -271,9 +271,9 @@ Topbar.prototype.updateLayoutStatus = function() {
 
     const iconCodes = {
         '1': 'check',
-        '2': 'question',
+        '2': 'exclamation',
         '3': 'cogs',
-        '': 'exclamation'
+        '': 'times'
     };
 
     // Create title and description

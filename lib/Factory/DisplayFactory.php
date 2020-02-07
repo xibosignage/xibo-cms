@@ -224,7 +224,8 @@ class DisplayFactory extends BaseFactory
                   `display`.newCmsAddress,
                   `display`.newCmsKey,
                   `display`.orientation,
-                  `display`.resolution
+                  `display`.resolution,
+                  `display`.commercialLicence
               ';
 
         if ($parsedBody->getCheckbox('showTags') === 1) {
@@ -479,6 +480,12 @@ class DisplayFactory extends BaseFactory
                     $members[] = $displayId;
                 }
             }
+        }
+
+        // filter by commercial licence
+        if ($this->getSanitizer()->getInt('commercialLicence', $filterBy) !== null) {
+            $body .= ' AND display.commercialLicence = :commercialLicence ';
+            $params['commercialLicence'] = $this->getSanitizer()->getInt('commercialLicence', $filterBy);
         }
 
         // Sorting?

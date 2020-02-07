@@ -1,0 +1,7 @@
+{
+    "title": "Countdown Module",
+    "author": "Xibo Signage Ltd",
+    "description": "A module for displaying a Countdown timer.",
+    "name": "countdown",
+    "class": "Xibo\\Widget\\Countdown"
+}

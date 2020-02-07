@@ -5,8 +5,10 @@ on:
     branches:
       - master
       - develop
+      - release22
+      - release23
   release:
-    types: [created]
+    types: [published]
 
 jobs:
   build:
@@ -63,7 +65,7 @@ jobs:
           data: ''
       - name: Deploy to Staging
         uses: joelwmale/webhook-action@1.0.0
-        if: github.ref == 'refs/heads/release22'
+        if: github.ref == 'refs/heads/release23'
         env:
           WEBHOOK_URL: ${{ secrets.WEBHOOK_STAGING_URL }}
           data: ''

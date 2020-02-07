@@ -170,7 +170,7 @@ class RequiredFileFactory extends BaseFactory
      * @param $path
      * @return RequiredFile
      */
-    public function createForMedia($displayId, $mediaId, $size, $path)
+    public function createForMedia($displayId, $mediaId, $size, $path, $released)
     {
         try {
             $requiredFile = $this->getByDisplayAndMedia($displayId, $mediaId);
@@ -184,6 +184,7 @@ class RequiredFileFactory extends BaseFactory
         $requiredFile->itemId = $mediaId;
         $requiredFile->size = $size;
         $requiredFile->path = $path;
+        $requiredFile->released = $released;
         return $requiredFile;
     }
 }

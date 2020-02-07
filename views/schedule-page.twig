@@ -93,7 +93,7 @@
                         checked
                     {% endif %}
                 >
-                <label for="showAll">Show All</label>
+                <label for="showAll">{% trans "Show All" %}</label>
             </div>
 
             <div class="progress pull-right"><span id="calendar-progress"></span></div>
@@ -112,6 +112,12 @@
                 <span class="fa fa-step-forward"></span>
             </div>
         </div> 
+
+        <div class="col-sm-12 cal-event-loader" style="display:none;">
+            <span class="alert alert-info col-xs-12">
+                <i class="fa fa-spin fa-spinner"></i>&nbsp;{% trans "Events loading..." %}
+            </span> 
+        </div> 
     </div> 
     <div class="row">
         <div id="CalendarContainer" data-event-source="{{ url_for("schedule.calendar.data") }}" data-agenda-link="{{ url_for("schedule.events", {id: ':id'}) }}" data-calendar-type="{{ settings.CALENDAR_TYPE }}" class="col-sm-12">
@@ -129,7 +135,7 @@
                     <li class="event-special"><span class="fa fa-repeat"></span> {% trans "Recurring" %}</li>
                     <li class="event-inverse"><span class="fa fa-lock"></span> {% trans "View Permission Only" %}</li>
                     <li class="event-command"><span class="fa fa-wrench"></span> {% trans "Command" %}</li>
-                    <li class="event-interrupt"><span class="fa fa-exclamation"></span> {% trans "Interrupt" %}</li>
+                    <li class="event-interrupt"><span class="fa fa-hand-paper"></span> {% trans "Interrupt" %}</li>
                     <li class="event-geo-location"><span class="fa fa-map-marker"></span> {% trans "Geo Location" %}</li>
                 </ul>
             </div>
@@ -273,7 +279,7 @@
                     }
 
                     if (event.event.eventTypeId == 4) {
-                        eventIcon = "fa-exclamation";
+                        eventIcon = "fa-hand-paper";
                     }
 
                     if (event.event.isGeoAware === 1) {
@@ -323,6 +329,11 @@
         <script type="text/x-handlebars-template" id="calendar-template-month-day">
             <div class="cal-month-day <%= cls %>">
                 <span class="pull-right" data-cal-date="<%= data_day %>" data-cal-view="day" data-toggle="tooltip" title="<%= tooltip %>"><%= day %></span>
+
+                <% if (events.length > 0) { %>
+                    <span class="cal-month-day-number-events label label-info" data-toggle="tooltip" title="{% endraw %}{% trans "Number of events" %}{% raw %}"><%= events.length %></span>
+                <% } %>
+
                 <% if (events.length > 0) { %>
                 <div class="events-list" data-cal-start="<%= start %>" data-cal-end="<%= end %>">
                     <% _.each(events, function(event) { %>
@@ -370,7 +381,7 @@
                     }
 
                     if (event.event.eventTypeId == 4) {
-                        eventIcon = "fa-exclamation";
+                        eventIcon = "fa-hand-paper";
                     }
 
                     if (event.event.isGeoAware === 1) {
@@ -457,7 +468,7 @@
             }
 
             if (event.event.eventTypeId == 4) {
-                eventIcon = "fa-exclamation";
+                eventIcon = "fa-hand-paper";
             }
 
             if (event.event.isGeoAware === 1) {
@@ -620,6 +631,10 @@
                             <% } else if (layouts.type == 4) { %>
                                 {% endverbatim %}{% trans "Interrupt Layouts" %}{% verbatim %}
                             <% } %>
+                            
+                            <span class="pull-right badge" title="{% endraw %}{% trans "Number of Layouts" %}{% raw %}" data-toggle="tooltip" data-placement="top">
+                                <%= layouts.length %>
+                            </span>
                         </th>
                     </tr>
                     {% endverbatim %}

@@ -127,7 +127,6 @@ $app->get('/layout/status/{id}', ['\Xibo\Controller\Layout','status'])->setName(
 // Layout Import
 //$app->map(['HEAD'],'/layout/import', ['\Xibo\Controller\Library','add');
 $app->post('/layout/import', ['\Xibo\Controller\Layout','import'])->setName('layout.import');
-$app->post('/layout/{id}/upgrade', ['\Xibo\Controller\Layout','upgrade'])->setName('layout.upgrade');
 // Tagging
 $app->post('/layout/{id}/tag', ['\Xibo\Controller\Layout','tag'])->setName('layout.tag');
 $app->post('/layout/{id}/untag', ['\Xibo\Controller\Layout','untag'])->setName('layout.untag');
@@ -153,6 +152,8 @@ $app->put('/playlist/{id}', ['\Xibo\Controller\Playlist','edit'])->setName('play
 $app->delete('/playlist/{id}', ['\Xibo\Controller\Playlist','delete'])->setName('playlist.delete');
 $app->post('/playlist/copy/{id}', ['\Xibo\Controller\Playlist','copy'])->setName('playlist.copy');
 $app->put('/playlist/setenablestat/{id}', ['\Xibo\Controller\Playlist','setEnableStat'])->setName('playlist.setenablestat');
+$app->get('/playlist/usage/{id}', ['\Xibo\Controller\Playlist','usage'])->setName('playlist.usage');
+$app->get('/playlist/usage/layouts/{id}', ['\Xibo\Controller\Playlist','usageLayouts'])->setName('playlist.usage.layouts');
 
 // Widgets Order
 $app->get('/playlist/widget', ['\Xibo\Controller\Playlist','widgetGrid'])->setName('playlist.widget.search');

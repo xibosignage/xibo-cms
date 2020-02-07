@@ -240,7 +240,8 @@
                                             { name: "data-search-term", value: "layout" },
                                             { name: "data-search-term-tags", value: "tags" },
                                             { name: "data-id-property", value: "layoutId" },
-                                            { name: "data-text-property", value: "layout" }
+                                            { name: "data-text-property", value: "layout" },
+                                            { name: "data-filter-options", value: '{"retired":"0"}' }
                                         ] %}
                                         {{ forms.dropdown("DEFAULT_LAYOUT", "single", title, defaultLayout.layoutId, [defaultLayout], "layoutId", "layout", helpText, "pagedSelect", "", "", "", attributes) }}
                                     {% else %}

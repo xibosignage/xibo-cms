@@ -579,6 +579,10 @@ class Stocks extends AlphaVantageBase
         // Run through each item and substitute with the template
         $mainTemplate = $this->parseLibraryReferences($isPreview, $mainTemplate, $request);
         $itemTemplate = $this->parseLibraryReferences($isPreview, $itemTemplate, $request);
+
+        // Parse translations
+        $mainTemplate = $this->parseTranslations($mainTemplate);
+        $itemTemplate = $this->parseTranslations($itemTemplate);
         
         $renderedItems = [];
         
@@ -684,7 +688,7 @@ class Stocks extends AlphaVantageBase
     public function getCacheDuration()
     {
         $cachePeriod = $this->getSetting('cachePeriod', 3600);
-        $updateInterval = $this->getSetting('updateInterval', 3600);
+        $updateInterval = $this->getSetting('updateInterval', 60) * 60;
 
         return max($cachePeriod, $updateInterval);
     }

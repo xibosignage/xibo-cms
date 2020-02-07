@@ -55,6 +55,7 @@ interface ReportServiceInterface
     /**
      * Get report by report name
      * @param string $reportName
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function getReportByName($reportName);
 
@@ -108,7 +109,7 @@ interface ReportServiceInterface
      * @param int $userId
      * @return array
      */
-    public function runReport($reportName, $filterCriteria, $userId, Request $request);
+    public function runReport($reportName, $filterCriteria, $userId, Request $request = null);
 
     /**
      * Get report email template twig file name

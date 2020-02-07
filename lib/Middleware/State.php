@@ -870,7 +870,10 @@ class State implements Middleware
                     $c->get('userGroupFactory'),
                     $c->get('userFactory'),
                     $c->get('tagFactory'),
-                    $c->get('view')
+                    $c->get('view'),
+                    $c->get('layoutFactory'),
+                    $c->get('displayFactory'),
+                    $c->get('scheduleFactory')
                 );
             },
             '\Xibo\Controller\Preview' => function(ContainerInterface $c) {
@@ -1129,7 +1132,8 @@ class State implements Middleware
                     $c->get('playerVersionFactory'),
                     $c->get('playlistFactory'),
                     $c->get('view'),
-                    $c
+                    $c,
+                    $c->get('dataSetFactory')
                 );
             },
             '\Xibo\Controller\UserGroup' => function(ContainerInterface $c) {

@@ -29,9 +29,9 @@ use Phinx\Wrapper\TextWrapper;
  */
 class Environment
 {
-    public static $WEBSITE_VERSION_NAME = '3.0.0-pre-alpha';
+    public static $WEBSITE_VERSION_NAME = '3.0.0-alpha';
     public static $XMDS_VERSION = '5';
-    public static $XLF_VERSION = '2';
+    public static $XLF_VERSION = 3;
     public static $VERSION_REQUIRED = '7.0.8';
     public static $VERSION_UNSUPPORTED = '8.0';
 

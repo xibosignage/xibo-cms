@@ -1,0 +1,10 @@
+{
+    "id": "countdown3",
+    "value": "Detailed Table",
+    "template": "<table>\n    <tr class=\"main-header\">\n        <td colspan=\"2\">||Years||</td>\n    </tr>\n    <tr>\n        <td colspan=\"2\">[YY]</td>\n    </tr>\n\n    <tr class=\"header\">\n        <td>||Months||</td>\n        <td>||Weeks||</td>\n    </tr>\n    <tr>\n        <td>[MM]</td>\n        <td>[WW]</td>\n    </tr>\n\n    <tr class=\"header\">\n        <td>||Days||</td>\n        <td>||Total Hours||</td>\n    </tr>\n    <tr>\n        <td>[DD]</td>\n        <td>[hha]</td>\n    </tr>\n\n    <tr class=\"header\">\n        <td>||Total Minutes||</td>\n        <td>||Total Seconds||</td>\n    </tr>\n    <tr>\n        <td>[mma]</td>\n        <td>[ssa]</td>\n    </tr>\n</table>",
+    "css": "table {  \n    color: #333;\n    font-family: Helvetica, Arial, sans-serif;\n    width: 600px;\n    height: 400px;\n    border-collapse: collapse; border-spacing: 0;\n    }\n\ntd, th { border: 1px solid #CCC; height: 30px;    }\n\ntd {  \n    background: #ececec;\n    text-align: center;\n    }\n\ntr.header td {  \n    background: #d7d7d7;\n    font-weight: bolder;\n    }\n\ntr.main-header td {  \n    background: #747474;\n    color: #f1f1f1;\n    font-weight: bolder;\n    }",
+    "widgetOriginalWidth": "600",
+    "widgetOriginalHeight": "400",
+    "image": "modules/countdown/template-thumbs/countdown3.png",
+    "defaultVisualEditor": false
+}

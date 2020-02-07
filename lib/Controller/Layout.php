@@ -53,6 +53,7 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
+use Xibo\Widget\ModuleWidget;
 
 /**
  * Class Layout
@@ -1315,11 +1316,11 @@ class Layout extends Base
 
             switch ($layout->status) {
 
-                case 1:
+                case ModuleWidget::$STATUS_VALID:
                     $layout->statusDescription = __('This Layout is ready to play');
                     break;
 
-                case 2:
+                case ModuleWidget::$STATUS_PLAYER:
                     $layout->statusDescription = __('There are items on this Layout that can only be assessed by the Display');
                     break;
 
@@ -2059,12 +2060,12 @@ class Layout extends Base
 
         switch ($layout->status) {
 
-            case 1:
+            case ModuleWidget::$STATUS_VALID:
                 $status = __('This Layout is ready to play');
                 break;
 
-            case 2:
-                $status = __('There are items on this Layout that can only be assessed by the client');
+            case ModuleWidget::$STATUS_PLAYER:
+                $status = __('There are items on this Layout that can only be assessed by the Display');
                 break;
 
             case 3:
@@ -2250,7 +2251,8 @@ class Layout extends Base
             'image_versions' => array(),
             'accept_file_types' => '/\.zip$/i',
             'libraryLimit' => $libraryLimit,
-            'libraryQuotaFull' => ($libraryLimit > 0 && $libraryController->libraryUsage() > $libraryLimit)
+            'libraryQuotaFull' => ($libraryLimit > 0 && $libraryController->libraryUsage() > $libraryLimit),
+            'request' => $request
         );
 
         $this->setNoOutput(true);
@@ -2259,137 +2261,6 @@ class Layout extends Base
         new LayoutUploadHandler($options);
 
         return $response;
-    }
-
-    /**
-     * Upgrade Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     */
-    public function upgradeForm(Request $request, Response $response, $id)
-    {
-        $layout = $this->layoutFactory->getById($id);
-
-        if (!$this->getUser($request)->checkEditable($layout))
-            throw new AccessDeniedException();
-
-        $this->getState()->template = 'layout-form-upgrade';
-        $this->getState()->setData([
-            'layout' => $layout,
-            'resolutions' => $this->resolutionFactory->query(null, ['enabled' => 1])
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Upgrade Layout
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
-     */
-    public function upgrade(Request $request, Response $response, $id)
-    {
-        $layout = $this->layoutFactory->loadById($id);
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-
-        if (!$this->getUser($request)->checkEditable($layout)) {
-            throw new AccessDeniedException();
-        }
-
-        // Resolution
-        $resolution = $this->resolutionFactory->getById($sanitizedParams->getInt('resolutionId'));
-        $scaleContent = ($sanitizedParams->getCheckbox('scaleContent') == 1);
-
-        // Upgrade the Layout
-        $ratio = min($resolution->width / $layout->width, $resolution->height / $layout->height);
-
-        // Set the widget and height on layouts/regions
-        $layout->width = $layout->width * $ratio;
-        $layout->height = $layout->height * $ratio;
-
-        foreach ($layout->regions as $region) {
-            /* @var \Xibo\Entity\Region $region */
-            $region->width = $region->width * $ratio;
-            $region->height = $region->height * $ratio;
-            $region->top = $region->top * $ratio;
-            $region->left = $region->left * $ratio;
-
-            if ($scaleContent) {
-                // We need to get every widget that might have some date/time related stuff on it
-                // pull out the widget content
-                // run a regex over it to try and adjust its size
-                $saveRequired = false;
-                foreach ($region->getPlaylist()->widgets as $widget) {
-                    foreach ($widget->widgetOptions as $widgetOption) {
-
-                        if ($widgetOption->option == 'text' ||
-                            $widgetOption->option == 'styleSheet' ||
-                            $widgetOption->option == 'css' ||
-                            $widgetOption->option == 'embedHtml' ||
-                            $widgetOption->option == 'embedScript' ||
-                            $widgetOption->option == 'embedStyle'
-                        ) {
-
-                            // Replace widths
-                            $widgetOption->value = preg_replace_callback(
-                                '/width:(.*?)/',
-                                function ($matches) use ($ratio) {
-                                    return "width:" . $matches[1] * $ratio;
-                                }, $widgetOption->value);
-
-                            // Replace heights
-                            $widgetOption->value = preg_replace_callback(
-                                '/height:(.*?)/',
-                                function ($matches) use ($ratio) {
-                                    return "height:" . $matches[1] * $ratio;
-                                }, $widgetOption->value);
-
-                            // Replace fonts
-                            $widgetOption->value = preg_replace_callback(
-                                '/font-size:(.*?)px;/',
-                                function ($matches) use ($ratio) {
-                                    return "font-size:" . $matches[1] * $ratio . "px;";
-                                }, $widgetOption->value);
-
-                            $saveRequired = true;
-                        }
-                    }
-                }
-
-                if ($saveRequired)
-                    $region->getPlaylist()->save();
-            }
-        }
-
-        $layout->schemaVersion = Environment::$XLF_VERSION;
-        $layout->save(['validate' => false, 'notify' => $scaleContent, 'saveTags' => false]);
-
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Upgraded %s'), $layout->layout)
-        ]);
-
-        return $this->render($request, $response);
     }
 
     /**

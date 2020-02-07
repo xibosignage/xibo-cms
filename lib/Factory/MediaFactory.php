@@ -214,7 +214,7 @@ class MediaFactory extends BaseFactory
             $media->isRemote = false;
             $media->urlDownload = true;
             $media->extension = $requestOptions['extension'];
-            $media->enableStat = $this->config->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
+            $media->enableStat = $requestOptions['enableStat'];
         }
 
         $this->getLog()->debug('Queue download of: ' . $uri . ', current mediaId for this download is ' . $media->mediaId . '.');
@@ -422,7 +422,7 @@ class MediaFactory extends BaseFactory
      */
     public function getByOwnerId($ownerId)
     {
-        return $this->query(null, array('disableUserCheck' => 1, 'ownerId' => $ownerId));
+        return $this->query(null, array('disableUserCheck' => 1, 'ownerId' => $ownerId, 'isEdited' => 1));
     }
 
     /**

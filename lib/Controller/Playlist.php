@@ -32,11 +32,14 @@ use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
+use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserFactory;
@@ -99,6 +102,15 @@ class Playlist extends Base
     /** @var TagFactory */
     private $tagFactory;
 
+    /** @var LayoutFactory */
+    private $layoutFactory;
+
+    /** @var DisplayFactory */
+    private $displayFactory;
+
+    /** @var ScheduleFactory */
+    private $scheduleFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -119,9 +131,12 @@ class Playlist extends Base
      * @param UserFactory $userFactory
      * @param TagFactory $tagFactory
      * @param Twig $view
+     * @param LayoutFactory $layoutFactory
+     * @param DisplayFactory $displayFactory
+     * @param ScheduleFactory $scheduleFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playlistFactory, $regionFactory, $mediaFactory, $permissionFactory,
-        $transitionFactory, $widgetFactory, $moduleFactory, $userGroupFactory, $userFactory, $tagFactory, Twig $view)
+        $transitionFactory, $widgetFactory, $moduleFactory, $userGroupFactory, $userFactory, $tagFactory, Twig $view, $layoutFactory, $displayFactory, $scheduleFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
@@ -135,6 +150,9 @@ class Playlist extends Base
         $this->userGroupFactory = $userGroupFactory;
         $this->userFactory = $userFactory;
         $this->tagFactory = $tagFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->displayFactory = $displayFactory;
+        $this->scheduleFactory = $scheduleFactory;
     }
 
     /**
@@ -405,6 +423,14 @@ class Playlist extends Base
                     'text' => __('Permissions')
                 ];
             }
+
+            $playlist->buttons[] = ['divider' => true];
+
+            $playlist->buttons[] = array(
+                'id' => 'usage_report_button',
+                'url' => $this->urlFor($request,'playlist.usage.form', ['id' => $playlist->playlistId]),
+                'text' => __('Usage Report')
+            );
         }
 
         $this->getState()->recordsTotal = $this->playlistFactory->countLast();
@@ -1364,6 +1390,230 @@ class Playlist extends Base
             'message' => __('Order Changed'),
             'data' => $playlist
         ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Playlist Usage Report Form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
+    public function usageForm(Request $request, Response $response, $id)
+    {
+        $playlist = $this->playlistFactory->getById($id);
+
+        if (!$this->getUser($request)->checkViewable($playlist)) {
+            throw new AccessDeniedException();
+        }
+
+        $this->getState()->template = 'playlist-form-usage';
+        $this->getState()->setData([
+            'playlist' => $playlist
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @SWG\Get(
+     *  path="/playlist/usage/{playlistId}",
+     *  operationId="playlistUsageReport",
+     *  tags={"playlist"},
+     *  summary="Get Playlist Item Usage Report",
+     *  description="Get the records for the playlist item usage report",
+     * @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The Playlist Id",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *     response=200,
+     *     description="successful operation"
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
+    public function usage(Request $request, Response $response, $id)
+    {
+        $playlist = $this->playlistFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        if (!$this->getUser($request)->checkViewable($playlist)) {
+            throw new AccessDeniedException();
+        }
+
+        // Get a list of displays that this playlistId is used on
+        $displays = [];
+        $displayIds = [];
+
+        // have we been provided with a date/time to restrict the scheduled events to?
+        $playlistDate = $sanitizedParams->getDate('playlistEventDate');
+
+        if ($playlistDate !== null) {
+            // Get a list of scheduled events that this playlistId is used on, based on the date provided
+            $toDate = $playlistDate->copy()->addDay();
+
+            $events = $this->scheduleFactory->query(null, [
+                'futureSchedulesFrom' => $playlistDate->format('U'),
+                'futureSchedulesTo' => $toDate->format('U'),
+                'playlistId' => $id
+            ]);
+        } else {
+            // All scheduled events for this playlistId
+            $events = $this->scheduleFactory->query(null, [
+                'playlistId' => $id
+            ]);
+        }
+
+        // Total records returned from the schedules query
+        $totalRecords = $this->scheduleFactory->countLast();
+
+        foreach ($events as $row) {
+            /* @var \Xibo\Entity\Schedule $row */
+
+            // Generate this event
+            // Assess the date?
+            if ($playlistDate !== null) {
+                try {
+                    $scheduleEvents = $row->getEvents($playlistDate, $toDate);
+                } catch (XiboException $e) {
+                    $this->getLog()->error('Unable to getEvents for ' . $row->eventId);
+                    continue;
+                }
+
+                // Skip events that do not fall within the specified days
+                if (count($scheduleEvents) <= 0)
+                    continue;
+
+                $this->getLog()->debug('EventId ' . $row->eventId . ' as events: ' . json_encode($scheduleEvents));
+            }
+
+            // Load the display groups
+            $row->load();
+
+            foreach ($row->displayGroups as $displayGroup) {
+                foreach ($this->displayFactory->getByDisplayGroupId($displayGroup->displayGroupId) as $display) {
+
+                    if (in_array($display->displayId, $displayIds)) {
+                        continue;
+                    }
+
+                    $displays[] = $display;
+                    $displayIds = $display->displayId;
+
+                }
+            }
+        }
+
+        if ($this->isApi($request) && $displays == []) {
+            $displays = [
+                'data' =>__('Specified Playlist item is not in use.')];
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $totalRecords;
+        $this->getState()->setData($displays);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @SWG\Get(
+     *  path="/playlist/usage/layouts/{playlistId}",
+     *  operationId="playlistUsageLayoutsReport",
+     *  tags={"playlist"},
+     *  summary="Get Playlist Item Usage Report for Layouts",
+     *  description="Get the records for the playlist item usage report for Layouts",
+     * @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The Playlist Id",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *     response=200,
+     *     description="successful operation"
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
+    public function usageLayouts(Request $request, Response $response, $id)
+    {
+        $playlist = $this->playlistFactory->getById($id);
+
+        if (!$this->getUser($request)->checkViewable($playlist)) {
+            throw new AccessDeniedException();
+        }
+
+        $layouts = $this->layoutFactory->query(null, ['playlistId' => $id], $request);
+
+        if (!$this->isApi($request)) {
+            foreach ($layouts as $layout) {
+                $layout->includeProperty('buttons');
+
+                // Add some buttons for this row
+                if ($this->getUser()->checkEditable($layout)) {
+                    // Design Button
+                    $layout->buttons[] = array(
+                        'id' => 'layout_button_design',
+                        'linkType' => '_self', 'external' => true,
+                        'url' => $this->urlFor($request,'layout.designer', array('id' => $layout->layoutId)),
+                        'text' => __('Design')
+                    );
+                }
+
+                // Preview
+                $layout->buttons[] = array(
+                    'id' => 'layout_button_preview',
+                    'linkType' => '_blank',
+                    'external' => true,
+                    'url' => $this->urlFor($request,'layout.preview', ['id' => $layout->layoutId]),
+                    'text' => __('Preview Layout')
+                );
+            }
+        }
+
+        if ($this->isApi($request) && $layouts == []) {
+            $layouts = [
+                'data' =>__('Specified Playlist item is not in use.')
+            ];
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $this->layoutFactory->countLast();
+        $this->getState()->setData($layouts);
 
         return $this->render($request, $response);
     }

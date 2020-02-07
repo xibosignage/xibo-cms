@@ -278,7 +278,7 @@ class ReportService implements ReportServiceInterface
     /**
      * @inheritdoc
      */
-    public function runReport($reportName, $filterCriteria, $userId, Request $request)
+    public function runReport($reportName, $filterCriteria, $userId, Request $request = null)
     {
         $this->log->debug('Run the report to get results');
 
@@ -288,11 +288,11 @@ class ReportService implements ReportServiceInterface
 
         // Set userId
         $object->setUserId($userId);
-$user = $this->container->get('userFactory')->getById($userId);
+        $user = $this->container->get('userFactory')->getById($userId);
         $filterCriteria = json_decode($filterCriteria, true);
 
         // Retrieve the result array
-        return $object->getResults($filterCriteria, $request->withAttribute('currentUser', $user));
+        return $object->getResults($filterCriteria, (isset($request)) ? $request->withAttribute('currentUser', $user) : []);
     }
 
     /**

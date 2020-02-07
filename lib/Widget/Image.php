@@ -279,10 +279,10 @@ class Image extends ModuleWidget
     {
         if ($this->getMedia()->released == 0) {
             $this->statusMessage = __('%s is pending conversion', $this->getMedia()->name);
-            return self::$STATUS_INVALID;
+            return self::$STATUS_PLAYER;
         } elseif ($this->getMedia()->released == 2) {
             $this->statusMessage = __('%s is too large, please replace it', $this->getMedia()->name);
-            return self::$STATUS_INVALID;
+            throw new InvalidArgumentException(__('%s is too large, please replace it', $this->getMedia()->name), 'name');
         }
 
         if (!v::intType()->min(1, true)->validate($this->getDuration())) {

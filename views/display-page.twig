@@ -94,6 +94,7 @@
 
                                     {% set title %}{% trans "Display Profile" %}{% endset %}
                                     {{ inline.dropdown("displayProfileId", "single", title, "", [{displayProfileId:null, name:""}]|merge(displayProfiles), "displayProfileId", "name") }}
+
                                 </div>
 
                                 <div class="tab-pane" id="filter-advanced">
@@ -145,6 +146,20 @@
                                         { optionid: "portrait", option: portrait}
                                     ] %}
                                     {{ inline.dropdown("orientation", "single", title, "", options, "optionid", "option") }}
+
+                                    {% set title %}{% trans "Commercial Licence" %}{% endset %}
+                                    {% set licensed %}{% trans "Licensed fully" %}{% endset %}
+                                    {% set trial %}{% trans "Trial" %}{% endset %}
+                                    {% set notLinceced %}{% trans "Not licenced" %}{% endset %}
+                                    {% set notApplicable %}{% trans "Not applicable" %}{% endset %}
+                                    {% set options = [
+                                        { optionid: "", option: "" },
+                                        { optionid: "1", option: licensed},
+                                        { optionid: "2", option: trial},
+                                        { optionid: "0", option: notLinceced},
+                                        { optionid: "3", option: notApplicable}
+                                    ] %}
+                                    {{ inline.dropdown("commercialLicence", "single", title, "", options, "optionid", "option") }}
                                 </div>
                             </div>
                         </form>
@@ -177,11 +192,14 @@
                                 <th>{% trans "IP Address" %}</th>
                                 <th>{% trans "Mac Address" %}</th>
                                 <th>{% trans "Timezone" %}</th>
+                                <th>{% trans "Latitude" %}</th>
+                                <th>{% trans "Longitude" %}</th>
                                 <th>{% trans "Screen shot?" %}</th>
                                 <th>{% trans "Thumbnail" %}</th>
                                 <th>{% trans "Bandwidth Limit" %}</th>
                                 <th>{% trans "Last Command" %}</th>
                                 <th>{% trans "XMR Registered" %}</th>
+                                <th>{% trans "Commercial Licence" %}</th>
                                 <th>{% trans "Row Menu" %}</th>
                             </tr>
                         </thead>
@@ -358,6 +376,8 @@
                     {"data": "clientAddress", "visible": false},
                     {"data": "macAddress"},
                     {"data": "timeZone", "visible": false},
+                    {"data": "latitude", "visible": false},
+                    {"data": "longitude", "visible": false},
                     {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false, "name": "screenShotRequested"},
                     {
                         "name": "thumbnail",
@@ -416,6 +436,29 @@
                                 icon = "fa-times";
 
                             return "<span class='fa " + icon + "'></span>";
+                        },
+                        "visible": false
+                    },
+                    {
+                        "data": "commercialLicence",
+                        "render": function (data, type, row) {
+                            if (type != "display")
+                                return data;
+
+                            var icon = "";
+                            if (data == 3) {
+                                return "N/A";
+                            } else {
+                                if (data == 1) {
+                                    icon = "fa-check";
+                                } else if (data == 0) {
+                                    icon = "fa-times";
+                                } else if (data == 2) {
+                                    icon = "fa-clock-o";
+                                }
+
+                                return "<span class='fa " + icon + "' title='" + (row.commercialLicenceDescription) + "'></span>";
+                            }
                         },
                         "visible": false
                     },

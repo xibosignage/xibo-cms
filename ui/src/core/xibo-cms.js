@@ -124,6 +124,14 @@ function XiboInitialise(scope) {
             $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
         }, 500);
         
+        // Prevent enter key to submit form
+        $(this).find(".XiboFilter form").on('keydown', function(event) {
+            if(event.keyCode == 13) {
+                event.preventDefault();
+                return false;
+            }
+        });
+        
         // Bind the filter form
         $(this).find(".XiboFilter form input").on("keyup",  filterRefresh);
         $(this).find(".XiboFilter form input, .XiboFilter form select").on("change", filterRefresh);
@@ -740,7 +748,10 @@ function dataTableConfigureRefresh(gridId, table, refresh) {
     });
 }
 
-function dataTableAddButtons(table, filter, allButtons = true) {
+function dataTableAddButtons(table, filter, allButtons) {
+
+    allButtons = (allButtons === undefined) ? true : allButtons;
+
     if (allButtons) {
         var colVis = new $.fn.dataTable.Buttons(table, {
             buttons: [

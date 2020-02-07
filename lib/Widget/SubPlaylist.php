@@ -221,8 +221,17 @@ class SubPlaylist extends ModuleWidget
         foreach ($subPlaylistId as $playlistId) {
             $i++;
 
-            if ($playlistId == '')
+            if ($playlistId == '') {
                 continue;
+            }
+
+            if ($spots[$i] < 0) {
+                throw new InvalidArgumentException(__('Number of spots must be empty, 0 or a positive number'), 'subPlaylistIdSpots');
+            }
+
+            if ($spotLength[$i] < 0) {
+                throw new InvalidArgumentException(__('Spot length must be empty, 0 or a positive number'), 'subPlaylistIdSpotLength');
+            }
 
             // Map the stop code received to the stop ref (if there is one)
             $subPlaylistOptions[$playlistId] = [

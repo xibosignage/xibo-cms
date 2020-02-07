@@ -41,7 +41,6 @@ use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\Widget\SubPlaylist;
 
 /**
  * Class LayoutFactory
@@ -286,6 +285,28 @@ class LayoutFactory extends BaseFactory
         return intval($row[0]['campaignId']);
     }
 
+
+    /**
+     * Get layout by layout history
+     * @param int $layoutId
+     * @return Layout
+     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function getByLayoutHistory($layoutId)
+    {
+        // Get a Layout by its Layout HistoryId
+        $layouts = $this->query(null, array('disableUserCheck' => 1, 'layoutHistoryId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
+
+        if (count($layouts) <= 0) {
+            throw new NotFoundException(\__('Layout not found'));
+        }
+
+        // Set our layout
+        return $layouts[0];
+    }
+
     /**
      * Get latest layoutId by CampaignId from layout history
      * @param int campaignId
@@ -424,7 +445,7 @@ class LayoutFactory extends BaseFactory
      */
     public function getByBackgroundImageId($backgroundImageId)
     {
-        return $this->query(null, ['disableUserCheck' => 1, 'backgroundImageId' => $backgroundImageId]);
+        return $this->query(null, ['disableUserCheck' => 1, 'backgroundImageId' => $backgroundImageId, 'showDrafts' => 1]);
     }
 
     /**
@@ -520,25 +541,7 @@ class LayoutFactory extends BaseFactory
                 $widget->fromDt = ($mediaNode->getAttribute('fromDt') === '') ? Widget::$DATE_MIN : $mediaNode->getAttribute('fromDt');
                 $widget->toDt = ($mediaNode->getAttribute('toDt') === '') ? Widget::$DATE_MAX : $mediaNode->getAttribute('toDt');
 
-                $minSubYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MIN))->subYear()->format('U');
-                $minAddYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MIN))->addYear()->format('U');
-                $maxSubYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MAX))->subYear()->format('U');
-                $maxAddYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MAX))->addYear()->format('U');
-
-                // convert the date string to a unix timestamp, if the layout xlf does not contain dates, then set it to the $DATE_MIN / $DATE_MAX which are already unix timestamps, don't attempt to convert them
-                // we need to check if provided from and to dates are within $DATE_MIN +- year to avoid issues with CMS Instances in different timezones https://github.com/xibosignage/xibo/issues/1934
-
-                if ($widget->fromDt === Widget::$DATE_MIN || ($this->getDate()->parse($widget->fromDt)->format('U') > $minSubYear && $this->getDate()->parse($widget->fromDt)->format('U') < $minAddYear) ) {
-                    $widget->fromDt = Widget::$DATE_MIN;
-                } else {
-                    $widget->fromDt = $this->getDate()->parse($widget->fromDt)->format('U');
-                }
-
-                if ($widget->toDt === Widget::$DATE_MAX || ($this->getDate()->parse($widget->toDt)->format('U') > $maxSubYear && $this->getDate()->parse($widget->toDt)->format('U') < $maxAddYear) ) {
-                    $widget->toDt = Widget::$DATE_MAX;
-                } else {
-                    $widget->toDt = $this->getDate()->parse($widget->toDt)->format('U');
-                }
+                $this->setWidgetExpiryDatesOrDefault($widget);
 
                 $this->getLog()->debug('Adding Widget to object model. ' . $widget);
 
@@ -673,12 +676,13 @@ class LayoutFactory extends BaseFactory
      * @param null $layout
      * @param null $playlistJson
      * @param null $nestedPlaylistJson
+     * @param Request $request
      * @return array
+     * @throws DuplicateEntityException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Exception\DuplicateEntityException
      */
-    public function loadByJson($layoutJson, $layout = null, $playlistJson, $nestedPlaylistJson)
+    public function loadByJson($layoutJson, $layout = null, $playlistJson, $nestedPlaylistJson, Request $request)
     {
         $this->getLog()->debug('Loading Layout by JSON');
 
@@ -703,6 +707,8 @@ class LayoutFactory extends BaseFactory
         $layout->backgroundColor = $layoutJson['layoutDefinitions']['backgroundColor'];
         $layout->backgroundzIndex = (int)$layoutJson['layoutDefinitions']['backgroundzIndex'];
 
+        // Nested Playlists are Playlists which exist below the first level of Playlists in Sub-Playlist Widgets
+        // we need to import and save them first.
         if ($nestedPlaylistJson != null) {
             $this->getLog()->debug('Layout import, creating nested Playlists from JSON, there are ' . count($nestedPlaylistJson) . ' Playlists to create');
 
@@ -712,16 +718,8 @@ class LayoutFactory extends BaseFactory
 
                 $oldIds[] = $newPlaylist->playlistId;
                 $widgets[$newPlaylist->playlistId] = $newPlaylist->widgets;
-                $newPlaylist->playlistId = null;
-                $newPlaylist->widgets = [];
 
-                // try to save with the name from import, if it already exists add "imported -"  to the name
-                try {
-                    $newPlaylist->save();
-                } catch (DuplicateEntityException $e) {
-                    $newPlaylist->name = 'imported - ' . $newPlaylist->name;
-                    $newPlaylist->save();
-                }
+                $this->setOwnerAndSavePlaylist($newPlaylist, $request);
 
                 $newIds[] = $newPlaylist->playlistId;
             }
@@ -785,25 +783,7 @@ class LayoutFactory extends BaseFactory
                 $widget->fromDt = ($mediaNode['fromDt'] === '') ? Widget::$DATE_MIN : $mediaNode['fromDt'];
                 $widget->toDt = ($mediaNode['toDt'] === '') ? Widget::$DATE_MAX : $mediaNode['toDt'];
 
-                $minSubYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MIN))->subYear()->format('U');
-                $minAddYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MIN))->addYear()->format('U');
-                $maxSubYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MAX))->subYear()->format('U');
-                $maxAddYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MAX))->addYear()->format('U');
-
-                // convert the date string to a unix timestamp, if the layout xlf does not contain dates, then set it to the $DATE_MIN / $DATE_MAX which are already unix timestamps, don't attempt to convert them
-                // we need to check if provided from and to dates are within $DATE_MIN +- year to avoid issues with CMS Instances in different timezones https://github.com/xibosignage/xibo/issues/1934
-
-                if ($widget->fromDt === Widget::$DATE_MIN || ($this->getDate()->parse($widget->fromDt)->format('U') > $minSubYear && $this->getDate()->parse($widget->fromDt)->format('U') < $minAddYear) ) {
-                    $widget->fromDt = Widget::$DATE_MIN;
-                } else {
-                    $widget->fromDt = $this->getDate()->parse($widget->fromDt)->format('U');
-                }
-
-                if ($widget->toDt === Widget::$DATE_MAX || ($this->getDate()->parse($widget->toDt)->format('U') > $maxSubYear && $this->getDate()->parse($widget->toDt)->format('U') < $maxAddYear) ) {
-                    $widget->toDt = Widget::$DATE_MAX;
-                } else {
-                    $widget->toDt = $this->getDate()->parse($widget->toDt)->format('U');
-                }
+                $this->setWidgetExpiryDatesOrDefault($widget);
 
                 $this->getLog()->debug('Adding Widget to object model. ' . $widget);
 
@@ -819,6 +799,7 @@ class LayoutFactory extends BaseFactory
                 //
                 // Get all widget options
                 //
+                $layoutSubPlaylistId = null;
                 foreach ($mediaNode['widgetOptions'] as $optionsNode) {
 
                     if ($optionsNode['option'] == 'subPlaylistOptions') {
@@ -871,7 +852,7 @@ class LayoutFactory extends BaseFactory
                     $widget->assignAudio($widgetAudio);
                 }
 
-                // subplaylist widgets with Playlists
+                // Sub-Playlist widgets with Playlists
                 if ($widget->type == 'subplaylist') {
 
                     $layoutSubPlaylistIds = [];
@@ -882,19 +863,18 @@ class LayoutFactory extends BaseFactory
                     foreach ($playlistJson as $playlistDetail) {
 
                         $newPlaylist = $this->playlistFactory->createEmpty()->hydrate($playlistDetail);
-                        if (in_array($newPlaylist->playlistId, $layoutSubPlaylistId)) {
-                            $oldIds[] = $newPlaylist->playlistId;
-                            $widgets[$newPlaylist->playlistId] = $newPlaylist->widgets;
-                            $newPlaylist->playlistId = null;
-                            $newPlaylist->widgets = [];
 
-                            // try to save with the name from import, if it already exists add "imported - "  to the name
-                            try {
-                                $newPlaylist->save();
-                            } catch (DuplicateEntityException $e) {
-                                $newPlaylist->name = 'imported - ' . $newPlaylist->name;
-                                $newPlaylist->save();
-                            }
+                        // Check to see if it matches our Sub-Playlist widget config
+                        if (in_array($newPlaylist->playlistId, $layoutSubPlaylistId)) {
+
+                            // Store the oldId to swap permissions later
+                            $oldIds[] = $newPlaylist->playlistId;
+
+                            // Store the Widgets on the Playlist
+                            $widgets[$newPlaylist->playlistId] = $newPlaylist->widgets;
+
+                            // Save a new Playlist and capture the Id
+                            $this->setOwnerAndSavePlaylist($newPlaylist, $request);
 
                             $newIds[] = $newPlaylist->playlistId;
                         }
@@ -977,10 +957,15 @@ class LayoutFactory extends BaseFactory
      * @param bool $useExistingDataSets
      * @param bool $importDataSetData
      * @param \Xibo\Controller\Library $libraryController
+     * @param Request $request
      * @return Layout
+     * @throws DuplicateEntityException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      * @throws XiboException
+     * @throws \Xibo\Exception\ConfigurationException
      */
-    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $libraryController)
+    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $libraryController, Request $request)
     {
         $this->getLog()->debug('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName);
 
@@ -1011,7 +996,7 @@ class LayoutFactory extends BaseFactory
                 $nestedPlaylistDetails = json_decode($nestedPlaylistDetails, true);
             }
 
-            $jsonResults = $this->loadByJson($layoutDetails, null, $playlistDetails, $nestedPlaylistDetails);
+            $jsonResults = $this->loadByJson($layoutDetails, null, $playlistDetails, $nestedPlaylistDetails, $request);
             $layout = $jsonResults[0];
             $playlists = $jsonResults[1];
 
@@ -1052,7 +1037,7 @@ class LayoutFactory extends BaseFactory
         if (isset($layoutDetails['regions']) && count($layoutDetails['regions']) > 0) {
             $this->getLog()->debug('Updating region names according to layout.json');
             foreach ($layout->regions as $region) {
-                if (array_key_exists($region->tempId, $layoutDetails['regions'])) {
+                if (array_key_exists($region->tempId, $layoutDetails['regions']) && !empty($layoutDetails['regions'][$region->tempId])) {
                     $region->name = $layoutDetails['regions'][$region->tempId];
                     $region->regionPlaylist->name = $layoutDetails['regions'][$region->tempId];
                 }
@@ -1309,7 +1294,7 @@ class LayoutFactory extends BaseFactory
                     // We want to add the dataset we have as a new dataset.
                     // we will need to make sure we clear the ID's and save it
                     $existingDataSet = clone $dataSet;
-                    $existingDataSet->userId = $this->getUser()->userId;
+                    $existingDataSet->userId = $this->getUser($request)->userId;
                     $existingDataSet->save();
 
                     // Do we need to add data
@@ -1500,7 +1485,7 @@ class LayoutFactory extends BaseFactory
                 $playlistWidget->playlistId = $playlistId;
                 $playlistWidget->widgetId = null;
                 $playlistWidget->type = $widgetsDetail['type'];
-                $playlistWidget->ownerId = $widgetsDetail['ownerId'];
+                $playlistWidget->ownerId = $playlist->ownerId;
                 $playlistWidget->displayOrder = $widgetsDetail['displayOrder'];
                 $playlistWidget->duration = $widgetsDetail['duration'];
                 $playlistWidget->useDuration = $widgetsDetail['useDuration'];
@@ -1732,8 +1717,10 @@ class LayoutFactory extends BaseFactory
                   FROM `lkwidgetmedia`
                     INNER JOIN `widget`
                     ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                    INNER JOIN `lkplaylistplaylist`
+                    ON `widget`.playlistId = `lkplaylistplaylist`.childId
                     INNER JOIN `playlist`
-                    ON `playlist`.playlistId = `widget`.playlistId
+                    ON `lkplaylistplaylist`.parentId = `playlist`.playlistId
                     INNER JOIN `region`
                     ON `region`.regionId = `playlist`.regionId
                  WHERE `lkwidgetmedia`.mediaId = :mediaId
@@ -1751,8 +1738,10 @@ class LayoutFactory extends BaseFactory
                   FROM `lkwidgetmedia`
                     INNER JOIN `widget`
                     ON `widget`.widgetId = `lkwidgetmedia`.widgetId
+                    INNER JOIN `lkplaylistplaylist`
+                    ON `widget`.playlistId = `lkplaylistplaylist`.childId
                     INNER JOIN `playlist`
-                    ON `playlist`.playlistId = `widget`.playlistId
+                    ON `lkplaylistplaylist`.parentId = `playlist`.playlistId
                     INNER JOIN `region`
                     ON `region`.regionId = `playlist`.regionId
                     INNER JOIN `media` 
@@ -1763,6 +1752,14 @@ class LayoutFactory extends BaseFactory
             ';
 
             $params['mediaLike'] = '%' . $parsedFilter->getString('mediaLike') . '%';
+        }
+
+        // LayoutHistoryID
+        if ($this->getSanitizer()->getInt('layoutHistoryId', $filterBy) !== null) {
+            $body .= '
+                INNER JOIN `layouthistory`
+                ON `layouthistory`.layoutId = `layout`.layoutId
+            ';
         }
 
         $body .= " WHERE 1 = 1 ";
@@ -1852,6 +1849,11 @@ class LayoutFactory extends BaseFactory
             $params['ownerCampaignId'] = $parsedFilter->getInt('ownerCampaignId', ['default' => 0]);
         }
 
+        if ($parsedFilter->getInt('layoutHistoryId') !== null) {
+            $body .= " AND `layouthistory`.layoutId = :layoutHistoryId ";
+            $params['layoutHistoryId'] = $parsedFilter->getInt('layoutHistoryId', ['default' => 0]);
+        }
+
         // Get by regionId
         if ($parsedFilter->getInt('regionId') !== null) {
             // Join Campaign back onto it again
@@ -1924,13 +1926,13 @@ class LayoutFactory extends BaseFactory
 
         // PlaylistID
         if ($parsedFilter->getInt('playlistId', ['default' => 0]) != 0) {
-            $body .= ' AND layout.layoutId IN (
-                SELECT DISTINCT `region`.layoutId
-                   FROM `playlist`
-                    INNER JOIN `region`
-                    ON `region`.regionId = `playlist`.regionId
-                 WHERE `playlist`.playlistId = :playlistId
-                )
+            $body .= ' AND layout.layoutId IN (SELECT DISTINCT `region`.layoutId
+                    FROM `lkplaylistplaylist`
+                      INNER JOIN `playlist`
+                      ON `playlist`.playlistId = `lkplaylistplaylist`.parentId
+                      INNER JOIN `region`
+                      ON `region`.regionId = `playlist`.regionId
+                   WHERE `lkplaylistplaylist`.childId = :playlistId )
             ';
 
             $params['playlistId'] = $parsedFilter->getInt('playlistId', ['default' => 0]);
@@ -2021,5 +2023,58 @@ class LayoutFactory extends BaseFactory
         }
 
         return $entries;
+    }
+
+    /**
+     * @param \Xibo\Entity\Widget $widget
+     * @return \Xibo\Entity\Widget
+     */
+    private function setWidgetExpiryDatesOrDefault($widget)
+    {
+        $minSubYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MIN))->subYear()->format('U');
+        $minAddYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MIN))->addYear()->format('U');
+        $maxSubYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MAX))->subYear()->format('U');
+        $maxAddYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MAX))->addYear()->format('U');
+
+        // convert the date string to a unix timestamp, if the layout xlf does not contain dates, then set it to the $DATE_MIN / $DATE_MAX which are already unix timestamps, don't attempt to convert them
+        // we need to check if provided from and to dates are within $DATE_MIN +- year to avoid issues with CMS Instances in different timezones https://github.com/xibosignage/xibo/issues/1934
+
+        if ($widget->fromDt === Widget::$DATE_MIN || ($this->getDate()->parse($widget->fromDt)->format('U') > $minSubYear && $this->getDate()->parse($widget->fromDt)->format('U') < $minAddYear)) {
+            $widget->fromDt = Widget::$DATE_MIN;
+        } else {
+            $widget->fromDt = $this->getDate()->parse($widget->fromDt)->format('U');
+        }
+
+        if ($widget->toDt === Widget::$DATE_MAX || ($this->getDate()->parse($widget->toDt)->format('U') > $maxSubYear && $this->getDate()->parse($widget->toDt)->format('U') < $maxAddYear)) {
+            $widget->toDt = Widget::$DATE_MAX;
+        } else {
+            $widget->toDt = $this->getDate()->parse($widget->toDt)->format('U');
+        }
+
+        return $widget;
+    }
+
+    /**
+     * @param \Xibo\Entity\Playlist $newPlaylist
+     * @param Request $request
+     * @return \Xibo\Entity\Playlist
+     * @throws DuplicateEntityException
+     * @throws InvalidArgumentException
+     */
+    private function setOwnerAndSavePlaylist($newPlaylist, Request $request)
+    {
+        // try to save with the name from import, if it already exists add "imported - "  to the name
+        try {
+            // The new Playlist should be owned by the importing user
+            $newPlaylist->ownerId = $this->getUser($request)->getId();
+            $newPlaylist->playlistId = null;
+            $newPlaylist->widgets = [];
+            $newPlaylist->save();
+        } catch (DuplicateEntityException $e) {
+            $newPlaylist->name = 'imported - ' . $newPlaylist->name;
+            $newPlaylist->save();
+        }
+
+        return $newPlaylist;
     }
 }

@@ -113,7 +113,6 @@ $app->get('/layout/form/discard/{id}', ['\Xibo\Controller\Layout','discardForm']
 $app->get('/layout/form/retire/{id}', ['\Xibo\Controller\Layout','retireForm'])->setName('layout.retire.form');
 $app->get('/layout/form/unretire/{id}', ['\Xibo\Controller\Layout','unretireForm'])->setName('layout.unretire.form');
 $app->get('/layout/form/setenablestat/{id}', ['\Xibo\Controller\Layout','setEnableStatForm'])->setName('layout.setenablestat.form');
-$app->get('/layout/form/upgrade/{id}', ['\Xibo\Controller\Layout','upgradeForm'])->setName('layout.upgrade.form');
 $app->get('/layout/form/export/{id}', ['\Xibo\Controller\Layout','exportForm'])->setName('layout.export.form');
 $app->get('/layout/form/campaign/assign/{id}', ['\Xibo\Controller\Layout','assignToCampaignForm'])->setName('layout.assignTo.campaign.form');
 
@@ -134,6 +133,7 @@ $app->get('/playlist/form/copy/{id}', ['\Xibo\Controller\Playlist','copyForm'])-
 $app->get('/playlist/form/delete/{id}', ['\Xibo\Controller\Playlist','deleteForm'])->setName('playlist.delete.form');
 $app->get('/playlist/form/timeline/{id}', ['\Xibo\Controller\Playlist','timelineForm'])->setName('playlist.timeline.form');
 $app->get('/playlist/form/setenablestat/{id}', ['\Xibo\Controller\Playlist','setEnableStatForm'])->setName('playlist.setenablestat.form');
+$app->get('/playlist/form/usage/{id}', ['\Xibo\Controller\Playlist','usageForm'])->setName('playlist.usage.form');
 
 // Designer
 $app->get('/playlist/form/library/assign/{id}', ['\Xibo\Controller\Playlist','libraryAssignForm'])->setName('playlist.library.assign.form');

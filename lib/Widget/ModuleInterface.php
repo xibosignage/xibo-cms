@@ -174,4 +174,16 @@ interface ModuleInterface
      * @return string
      */
     public function getResource(Request $request, Response $response);
+
+    /**
+     * Check if status message is not empty
+     * @return bool
+     */
+    public function hasStatusMessage();
+
+    /**
+     * Gets the Module status message
+     * @return string
+     */
+    public function getStatusMessage();
 }

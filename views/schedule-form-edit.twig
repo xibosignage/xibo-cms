@@ -72,11 +72,6 @@
                         ] %}
                         {{ forms.dropdown("eventTypeId", "single", title, event.eventTypeId, eventTypes, "id", "label", helpText) }}
 
-                        <div class="interrupt-control">
-                            {% set message = "Only one Interrupt Layout will show at the same time. If the Schedule for a Player resolves to more than one, then the Interrupt shown will depend on Priority and Display Order."|trans %}
-                            {{ forms.message(message, "alert alert-info") }}
-                        </div>
-
                         {% set title %}{% trans "Display" %}{% endset %}
                         {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
                         {% set attributes = [
@@ -233,7 +228,7 @@
 
                     <div class="tab-pane" id="geoSchedule">
                         {% set title %}{% trans "Geo Schedule?" %}{% endset %}
-                        {% set helpText %}{% trans "Should this event be location aware? Enable this checkbox and select an area on the map below" %}{% endset %}
+                        {% set helpText %}{% trans "Should this event be location aware? Enable this checkbox and select an area by drawing a polygon or rectangle layer on the map below." %}{% endset %}
                         {{ forms.checkbox("isGeoAware", title, event.isGeoAware, helpText, "") }}
 
                         <div id="geoScheduleMap" style="height: 500px; width: 100%" class="hidden"></div>

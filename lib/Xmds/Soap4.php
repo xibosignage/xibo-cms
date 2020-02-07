@@ -521,6 +521,25 @@ class Soap4 extends Soap
         $this->display->storageTotalSpace = $sanitizedStatus->getInt('totalSpace', ['default' => $this->display->storageTotalSpace]);
         $this->display->lastCommandSuccess = $sanitizedStatus->getCheckbox('lastCommandSuccess');
         $this->display->deviceName = $sanitizedStatus->getString('deviceName', ['default' => $this->display->deviceName]);
+        $commercialLicenceString = $sanitizedStatus->getString('licenceResult',['default' => null]);
+
+        // Commercial Licence Check,  0 - Not licensed, 1 - licensed, 2 - trial licence, 3 - not applicable
+        if (!empty($commercialLicenceString)) {
+            if ($commercialLicenceString === 'Licensed fully') {
+                $commercialLicence = 1;
+            } elseif ($commercialLicenceString === 'Trial') {
+                $commercialLicence = 2;
+            } else {
+                $commercialLicence = 0;
+            }
+
+            $this->display->commercialLicence = $commercialLicence;
+        }
+
+        // commercial licence not applicable for Windows and Linux players.
+        if (in_array($this->display->clientType, ['windows', 'linux'])) {
+            $this->display->commercialLicence = 3;
+        }
 
         if ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1 && $this->display->hasPropertyChanged('deviceName')) {
             $this->display->display = $this->display->deviceName;
@@ -560,6 +579,15 @@ class Soap4 extends Soap
             // Determine the orientation
             $this->display->orientation = ($width >= $height) ? 'landscape' : 'portrait';
             $this->display->resolution = $width . 'x' . $height;
+        }
+
+        // Lat/Long
+        $latitude = $sanitizedStatus->getDouble('latitude', ['default' => null]);
+        $longitude = $sanitizedStatus->getDouble('longitude', ['default' => null]);
+
+        if ($latitude != null && $longitude != null) {
+            $this->display->latitude = $latitude;
+            $this->display->longitude = $longitude;
         }
 
         // Touch the display record

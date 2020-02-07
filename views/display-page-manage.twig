@@ -126,6 +126,7 @@
                             <th>{% trans "Size" %}</th>
                             <th>{% trans "Complete" %}</th>
                             <th>{% trans "Downloaded" %}</th>
+                            <th>{% trans "Released" %}</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -140,6 +141,9 @@
                                         <span class="fa {% if item.complete == 1 %}fa-check{% else %}fa-download{% endif %}"></span>
                                     </td>
                                     <td>{{ item.bytesRequested|byteFormat }}</td>
+                                    <td>
+                                        <span class="fa {% if item.released == 1 %}fa-check{% elseif item.released == 0  %}fa-cogs{% elseif item.released == 2  %}fa-times{% endif %}"></span>
+                                    </td>
                                 </tr>
                             {% endfor %}
                         </tbody>

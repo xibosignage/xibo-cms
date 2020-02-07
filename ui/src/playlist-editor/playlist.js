@@ -200,6 +200,7 @@ Playlist.prototype.addElement = function(droppable, draggable, addToPosition = n
 
                 // The new selected object
                 pE.selectedObject.id = 'widget_' + res.data.widgetId;
+                pE.selectedObject.type = 'widget';
 
                 // Behavior if successful 
                 toastr.success(res.message);
@@ -307,6 +308,7 @@ Playlist.prototype.addMedia = function(media, addToPosition = null) {
 
         // The new selected object
         pE.selectedObject.id = 'widget_' + res.data.newWidgets[0].widgetId;
+        pE.selectedObject.type = 'widget';
 
         // Behavior if successful
         toastr.success(res.message);
@@ -343,9 +345,6 @@ Playlist.prototype.deleteElement = function(elementType, elementId, options = nu
     return pE.manager.removeAllChanges(pE.selectedObject.type, pE.selectedObject[pE.selectedObject.type + 'Id']).then((res) => {
 
         pE.common.hideLoadingScreen();
-
-        // Unselect selected object before deleting
-        pE.selectObject(null, true);
 
         // Create a delete type change, upload it but don't add it to the history array
         return pE.manager.addChange(

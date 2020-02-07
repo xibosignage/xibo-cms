@@ -1183,7 +1183,7 @@ class Schedule implements \JsonSerializable
                     $start->setTimeFromTimeString($exception['start']);
                     $end->setTimeFromTimeString($exception['end']);
 
-                    if ($start > $end)
+                    if ($start >= $end)
                         $end->addDay();
 
                     $this->getLog()->debug('Found exception Start and end time for dayPart exception is ' . $exception['start'] . ' - ' . $exception['end']);
@@ -1197,7 +1197,7 @@ class Schedule implements \JsonSerializable
                 $start->setTimeFromTimeString($dayPart->startTime);
                 $end->setTimeFromTimeString($dayPart->endTime);
 
-                if ($start > $end) {
+                if ($start >= $end) {
                     $this->getLog()->debug('Start is ahead of end - adding a day to the end date');
                     $end->addDay();
                 }

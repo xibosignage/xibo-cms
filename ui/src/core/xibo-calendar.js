@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,6 +25,8 @@ var events = [];
 let mymap;
 
 $(document).ready(function() {
+
+    var getJsonRequestControl = null;
 
     // Set a listener for popover clicks
     //  http://stackoverflow.com/questions/11703093/how-to-dismiss-a-twitter-bootstrap-popover-by-clicking-outside
@@ -108,7 +110,12 @@ $(document).ready(function() {
 
                     $('#calendar-progress').addClass('fa fa-cog fa-spin');
 
-                    $.getJSON(url, params)
+                    // If there is already a request, abort it
+                    if(getJsonRequestControl) {
+                        getJsonRequestControl.abort();
+                    }
+
+                    getJsonRequestControl = $.getJSON(url, params)
                         .done(function(data) {
                             events = data.result;
 
@@ -159,8 +166,10 @@ $(document).ready(function() {
                             
                             calendar._render();
 
-                            toastr.error(translations.failure);
-                            console.error(res);
+                            if(res.statusText != 'abort') {
+                                toastr.error(translations.failure);
+                                console.error(res);
+                            }
                         });
                 } else {
                     
@@ -294,7 +303,12 @@ $(document).ready(function() {
                         $('#calendar-progress').removeClass('fa fa-cog fa-spin');
                     } else {
                         // 3 - make request to get the data for the events
-                        $.getJSON(url, params)
+                        
+                        // If there is already a request, abort it
+                        if(getJsonRequestControl) {
+                            getJsonRequestControl.abort();
+                        }
+                        getJsonRequestControl = $.getJSON(url, params)
                             .done(function(data) {
                                 
                                 if(!jQuery.isEmptyObject(data.data) && data.data.events != undefined && data.data.events.length > 0){
@@ -312,13 +326,15 @@ $(document).ready(function() {
 
                                 $('#calendar-progress').removeClass('fa fa-cog fa-spin');
                             })
-                            .fail(function(data) {
+                            .fail(function(res) {
                                 // Deal with the failed request
 
                                 if (done != undefined)
                                     done();
                                 
-                                events['errorMessage'] = 'request_failed';
+                                if(res.statusText != 'abort') {
+                                    events['errorMessage'] = 'request_failed';
+                                }
                                 
                                 calendar._render();
                                 
@@ -330,6 +346,8 @@ $(document).ready(function() {
                 
             },
             onAfterEventsLoad: function(events) {
+                $('.cal-event-loader').hide();
+
                 if(!events) {
                     return;
                 }
@@ -339,6 +357,7 @@ $(document).ready(function() {
                 // Show time slider on agenda view and call the calendar view on slide stop event
                 if (this.options.view == 'agenda') {
                     $('.cal-event-time-bar').show();
+                    $('.cal-event-loader').show();
 
                     const $timePicker = $('#timePicker');
                     
@@ -1171,6 +1190,14 @@ let generateGeoMap = function () {
         }
     });
 
+    let drawControlEditOnly = new L.Control.Draw({
+        position: 'topright',
+        draw: false,
+        edit: {
+            featureGroup: drawnItems
+        }
+    });
+
     mymap.addControl(drawControl);
 
     // add search Control - allows searching by country/city and automatically moves map to that location
@@ -1200,6 +1227,10 @@ let generateGeoMap = function () {
         json = layer.toGeoJSON();
 
         $('#geoLocation').val(JSON.stringify(json));
+
+        // disable adding new polygons
+        mymap.removeControl(drawControl);
+        mymap.addControl(drawControlEditOnly);
     });
 
     // update the hidden field geoJson with new coordinates
@@ -1222,6 +1253,12 @@ let generateGeoMap = function () {
             $('#geoLocation').val('');
             drawnItems.removeLayer(layer);
         });
+
+        // re-enable adding new polygons
+        if (drawnItems.getLayers().length === 0) {
+            mymap.removeControl(drawControlEditOnly);
+            mymap.addControl(drawControl);
+        }
     });
 
     // if we are editing an event with existing Geo JSON, make sure we load it and add the layer to the map
@@ -1235,6 +1272,11 @@ let generateGeoMap = function () {
 
         function onEachFeature(feature, layer) {
             drawnItems.addLayer(layer);
+            mymap.fitBounds(layer.getBounds());
         }
+
+        // disable adding new polygons
+        mymap.removeControl(drawControl);
+        mymap.addControl(drawControlEditOnly);
     }
 };

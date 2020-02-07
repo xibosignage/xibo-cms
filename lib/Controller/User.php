@@ -39,6 +39,7 @@ use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\CampaignFactory;
+use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -139,6 +140,9 @@ class User extends Base
     /** @var ContainerInterface */
     private $container;
 
+    /** @var DataSetFactory */
+    private $dataSetFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -166,10 +170,11 @@ class User extends Base
      * @param PlaylistFactory $playlistFactory
      * @param Twig $view
      * @param ContainerInterface $container
+     * @param DataSetFactory $dataSetFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userFactory,
                                 $userTypeFactory, $userGroupFactory, $pageFactory, $permissionFactory,
-                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory, Twig $view, ContainerInterface $container)
+                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory, Twig $view, ContainerInterface $container, $dataSetFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
@@ -190,6 +195,7 @@ class User extends Base
         $this->playerVersionFactory = $playerVersionFactory;
         $this->playlistFactory = $playlistFactory;
         $this->container = $container;
+        $this->dataSetFactory = $dataSetFactory;
     }
 
     /**
@@ -939,7 +945,7 @@ class User extends Base
 
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
-        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory, $this->playerVersionFactory, $this->playlistFactory);
+        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory, $this->playerVersionFactory, $this->playlistFactory, $this->dataSetFactory);
 
         if ($sanitizedParams->getCheckbox('deleteAllItems') != 1) {
 
@@ -1141,14 +1147,6 @@ class User extends Base
         $user->twoFactorTypeId = $sanitizedParams->getInt('twoFactorTypeId');
         $code = $sanitizedParams->getString('code');
         $recoveryCodes = $sanitizedParams->getArray('twoFactorRecoveryCodes');
-
-        if ($user->isSuperAdmin()) {
-            $user->showContentFrom = $sanitizedParams->getInt('showContentFrom');
-        }
-
-        if (!$user->isSuperAdmin() && $sanitizedParams->getInt('showContentFrom') == 2) {
-            throw new InvalidArgumentException(__('Option available only for Super Admins'), 'showContentFrom');
-        }
 
         if ($recoveryCodes != null || $recoveryCodes != []) {
             $user->twoFactorRecoveryCodes = json_decode($sanitizedParams->getArray('twoFactorRecoveryCodes'));
@@ -1544,6 +1542,7 @@ class User extends Base
             'permissions' => $currentPermissions,
             'canSetOwner' => $object->canChangeOwner(),
             'owners' => $this->userFactory->query(),
+            'object' => $object,
             'help' => [
                 'permissions' => $this->getHelp()->link('Campaign', 'Permissions')
             ]
@@ -2137,6 +2136,15 @@ class User extends Base
         $this->getUser($request)->setOptionValue('navigationMenuPosition', $parsedParams->getString('navigationMenuPosition'));
         $this->getUser($request)->setOptionValue('useLibraryDuration', $parsedParams->getCheckbox('useLibraryDuration'));
         $this->getUser($request)->setOptionValue('showThumbnailColumn', $parsedParams->getCheckbox('showThumbnailColumn'));
+
+        if ($this->getUser($request)->isSuperAdmin()) {
+            $this->getUser($request)->showContentFrom = $parsedParams->getInt('showContentFrom');
+        }
+
+        if (!$this->getUser($request)->isSuperAdmin() && $parsedParams->getInt('showContentFrom') == 2) {
+            throw new InvalidArgumentException(__('Option available only for Super Admins'), 'showContentFrom');
+        }
+
         $this->getUser($request)->save();
 
         // Return

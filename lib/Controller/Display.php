@@ -544,7 +544,8 @@ class Display extends Base
             'loggedIn' => $parsedQueryParams->getInt('loggedIn'),
             'lastAccessed' => ($parsedQueryParams->getDate('lastAccessed') != null) ? $parsedQueryParams->getDate('lastAccessed')->format('U') : null,
             'displayGroupIdMembers' => $parsedQueryParams->getInt('displayGroupIdMembers'),
-            'orientation' => $parsedQueryParams->getString('orientation')
+            'orientation' => $parsedQueryParams->getString('orientation'),
+            'commercialLicence' => $parsedQueryParams->getInt('commercialLicence')
         ];
 
         // Get a list of displays
@@ -621,6 +622,20 @@ class Display extends Base
 
                 default:
                     $display->statusDescription = __('Unknown Display Status');
+            }
+
+            // Commercial Licence
+            switch ($display->commercialLicence) {
+                case 1:
+                    $display->commercialLicenceDescription = __('Display is fully licensed');
+                    break;
+
+                case 2:
+                    $display->commercialLicenceDescription = __('Display is on a trial licence');
+                    break;
+
+                default:
+                    $display->commercialLicenceDescription = __('Display is not licensed');
             }
 
             // Thumbnail
@@ -709,7 +724,15 @@ class Display extends Base
                     $display->buttons[] = array(
                         'id' => 'display_button_checkLicence',
                         'url' => $this->urlFor($request,'display.licencecheck.form', ['id' => $display->displayId]),
-                        'text' => __('Check Licence')
+                        'text' => __('Check Licence'),
+                        'multi-select' => true,
+                        'dataAttributes' => array(
+                            array('name' => 'commit-url', 'value' => $this->urlFor($request,'display.licencecheck', ['id' => $display->displayId])),
+                            array('name' => 'commit-method', 'value' => 'put'),
+                            array('name' => 'id', 'value' => 'display_button_checkLicence'),
+                            array('name' => 'text', 'value' => __('Check Licence')),
+                            array('name' => 'rowtitle', 'value' => $display->display)
+                        )
                     );
                 }
 
@@ -2134,7 +2157,8 @@ class Display extends Base
     }
 
     /**
-     * Request ScreenShot form
+     * Check commercial licence form
+     *
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -2163,6 +2187,8 @@ class Display extends Base
     }
 
     /**
+     * Check commercial licence
+     *
      * @SWG\Put(
      *  summary="Licence Check",
      *  path="/display/licenceCheck/{displayId}",

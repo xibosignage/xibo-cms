@@ -1,0 +1,33 @@
+<div class="multi-delete-modal container-fluid">
+    <div class="col-sm-12 ">
+        <p>{{ mainMessage }}</p>
+    </div>
+        
+    {{#each objectArray}}
+        <div class="multi-delete-element row" data-id="{{objectId}}" data-type="{{objectType}}">
+            {{#if hasMedia}}
+                <div class="col-sm-3">
+                    [{{objectId}}] {{objectName}}:
+                </div>
+
+                {{#unless dataUsed}}
+                    <div class="col-sm-9">
+                        <div class="checkbox">
+                            <label for="deleteMedia{{objectId}}" title="{{ ../trans.deleteMediaFromLibraryTitle }}" accesskey="">
+                                <input type="checkbox" id="deleteMedia{{objectId}}" class="deleteMedia" name="deleteMedia{{objectId}}">
+                                {{ ../trans.deleteMediaFromLibraryTitle }}
+                            </label>
+                        </div>
+                        <span class="help-block">{{ ../trans.deleteMediaFromLibraryMessage }}</span>
+                    </div>
+                {{else}}
+                    <div class="col-sm-9">
+                        {{ ../trans.infoDeleteMessage }}
+                    </div>
+                {{/unless}}
+            {{else}}
+
+            {{/if}}
+        </div>
+    {{/each}}
+</div>

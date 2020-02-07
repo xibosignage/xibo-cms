@@ -245,6 +245,7 @@ Navigator.prototype.renderNavbar = function() {
 
             // Reload with the new added element
             lD.selectedObject.id = 'region_' + res.data.regionId;
+            lD.selectedObject.type = 'region';
             lD.reloadData(lD.layout, true);
         }).catch((error) => { // Fail/error
 

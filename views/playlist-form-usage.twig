@@ -1,0 +1,115 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+#}
+
+{% set randomId = random() %}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+{% import "inline.twig" as inline %}
+
+{% block formTitle %}
+    {% set playlistName = playlist.name %}
+    {% trans %}Usage Report for {{ playlistName }}{% endtrans %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Close" %}, XiboDialogClose()
+{% endblock %}
+
+{% block callBack %}usageFormOpen{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#displays" role="tab" data-toggle="tab"><span>{% trans "Displays" %}</span></a></li>
+                <li><a href="#layouts" role="tab" data-toggle="tab"><span>{% trans "Layouts" %}</span></a></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane active" id="displays">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <p class="alert alert-info">
+                                {% trans %}If the playlist is used in scheduled events it is shown below. To restrict to a specific time enter a date in the filter below.{% endtrans %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="XiboGrid" id="{{ random() }}" data-grid-name="usageReport">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="XiboFilter">
+                                    <div class="FilterDiv" id="Filter">
+                                        <form class="form-inline" id="usageReportForm">
+                                            {% set title %}{% trans "Date" %}{% endset %}
+                                            <input type="hidden" name="playlistEventDate" id="playlistEventDate" />
+                                            <div class="input-group">
+                                                <span class="input-group-addon">{{ title }}</span>
+                                                <input class="form-control" name="playlistEventDateLink" type="text" id="playlistEventDateLink" data-link-field="playlistEventDate" data-link-format="yyyy-mm-dd hh:ii:ss" readonly/>
+                                                <span id="dateClearButton" class="input-group-addon" role="button">X</span>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <table id="usageReportTable" class="table table-bordered membersTable" data-playlist-id="{{ playlist.playlistId }}">
+                                    <thead>
+                                        <tr>
+                                            <th>{% trans "ID" %}</th>
+                                            <th>{% trans "Display" %}</th>
+                                            <th>{% trans "Description" %}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane" id="layouts">
+                    <div class="XiboGrid" id="{{ random() }}" data-grid-name="usageReportLayouts">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <table id="usageReportLayoutsTable" class="table table-bordered" data-playlist-id="{{ playlist.playlistId }}">
+                                    <thead>
+                                    <tr>
+                                        <th>{% trans "ID" %}</th>
+                                        <th>{% trans "Layout" %}</th>
+                                        <th>{% trans "Description" %}</th>
+                                        <th></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

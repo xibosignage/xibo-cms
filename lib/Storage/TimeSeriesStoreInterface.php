@@ -55,10 +55,15 @@ interface TimeSeriesStoreInterface
     public function setDependencies($logger, $date, $layoutFactory = null, $campaignFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null);
 
     /**
-     * Add statistics
+     * Process and add a single statdata to array
      * @param $statData array
      */
     public function addStat($statData);
+
+    /**
+     * Write statistics to DB
+     */
+    public function addStatFinalize();
 
     /**
      * Get the earliest date

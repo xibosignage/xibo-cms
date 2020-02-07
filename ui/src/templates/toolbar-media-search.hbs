@@ -1,4 +1,4 @@
-<div id="media-search-controls-{{menuIndex}}" class="media-search-controls drag-handle clearfix" data-toggle="tooltip" title="{{trans.window.drag}}">
+<div id="media-search-controls-{{menuIndex}}" class="media-search-controls drag-handle clearfix">
     {{#each menuObj.content}}
         <div id="media-search-tab-{{@index}}" class="media-search-tab {{#eq @index ../menuObj.selectedTab}}active{{/eq}}" data-tab="{{@index}}">
             <span id="tab-name-{{@index}}" class="media-tab-name">{{name}}</span>
@@ -9,7 +9,7 @@
         </div>
     {{/each}}
 
-    <a class="btn-window btn-window-new-tab" data-toggle="tooltip" title="{{trans.window.minimise}}"
+    <a class="btn-window btn-window-new-tab" data-toggle="tooltip" title="{{trans.window.newTab}}"
         data-menu="{{menuIndex}}">
         <i class="fa fa-plus"></i>    
     </a>

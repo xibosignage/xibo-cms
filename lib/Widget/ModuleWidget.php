@@ -72,9 +72,10 @@ use Xibo\Storage\StorageServiceInterface;
  */
 abstract class ModuleWidget implements ModuleInterface
 {
-    protected static $STATUS_INVALID = 0;
-    protected static $STATUS_VALID = 1;
-    protected static $STATUS_PLAYER = 2;
+
+    public static $STATUS_VALID = 1;
+    public static $STATUS_PLAYER = 2;
+    public static $STATUS_INVALID = 4;
 
     /**
      * @var App
@@ -683,6 +684,24 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
+     * Check if status message is not empty
+     * @return bool
+     */
+    final public function hasStatusMessage()
+    {
+        return !empty($this->statusMessage);
+    }
+
+    /**
+     * Gets the Module status message
+     * @return string
+     */
+    final public function getStatusMessage()
+    {
+        return $this->statusMessage;
+    }
+
+    /**
      * @param Event $event
      * @return $this
      */
@@ -1125,7 +1144,7 @@ abstract class ModuleWidget implements ModuleInterface
         if ($sendFileMode == 'Apache') {
             // Send via Apache X-Sendfile header?
             $headers['X-Sendfile'] = $libraryPath;
-        } else if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Nginx') {
+        } else if ($sendFileMode == 'Nginx') {
             // Send via Nginx X-Accel-Redirect?
             $headers['X-Accel-Redirect'] = '/download/' . $media->storedAs;
         }
@@ -1786,8 +1805,33 @@ abstract class ModuleWidget implements ModuleInterface
     protected function urlFor(Request $request, $route, $data = [], $params = [])
     {
         $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-        $this->getLog()->debug('ROUTE IS ' . $route . ' DATA is ' . json_encode($data) . ' THE PARMS ARE  ' . json_encode($params) . ' THE URL STREING IS ' . $routeParser->urlFor($route, $data, $params) ) ;
         return $routeParser->urlFor($route, $data, $params);
+    }
+
+   /**
+     * Parse for any translation references
+     * @param string $content containing translation references in ||tag||.
+     * @param string $tokenRegEx
+     * @return string The Parsed Content
+     */
+    final protected function parseTranslations($content, $tokenRegEx = '/\|\|.*?\|\|/')
+    {
+        $parsedContent = $content;
+        $matches = '';
+        preg_match_all($tokenRegEx, $content, $matches);
+
+        foreach ($matches[0] as $sub) {
+            // Parse out the translateTag
+            $translateTag = str_replace('||', '', $sub);
+
+            // We have a valid translateTag to substitute
+            $replace = __($translateTag);
+
+            // Substitute the replacement we have found (it might be '')
+            $parsedContent = str_replace($sub, $replace, $parsedContent);
+        }
+
+        return $parsedContent;
     }
 
     //</editor-fold>

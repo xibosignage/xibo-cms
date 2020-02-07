@@ -388,15 +388,16 @@ class ScheduleFactory extends BaseFactory
 
         // Restrict to mediaId - meaning layout schedules of which the layouts contain the selected mediaId
         if ($parsedFilter->getInt('mediaId') !== null) {
-            //TODO: handle sub-playlists
             $sql .= '
                 AND schedule.campaignId IN (
                     SELECT `lkcampaignlayout`.campaignId
                       FROM `lkwidgetmedia`
                        INNER JOIN `widget`
                        ON `widget`.widgetId = `lkwidgetmedia`.widgetId
-                       INNER JOIN `playlist`
-                       ON `playlist`.playlistId = `widget`.playlistId
+                       INNER JOIN `lkplaylistplaylist`
+                        ON `widget`.playlistId = `lkplaylistplaylist`.childId
+                        INNER JOIN `playlist`
+                        ON `lkplaylistplaylist`.parentId = `playlist`.playlistId
                        INNER JOIN `region`
                        ON `region`.regionId = `playlist`.regionId
                        INNER JOIN layout
@@ -413,6 +414,30 @@ class ScheduleFactory extends BaseFactory
                 )
             ';
             $params['mediaId'] = $parsedFilter->getInt('mediaId');
+        }
+
+        // Restrict to playlistId - meaning layout schedules of which the layouts contain the selected playlistId
+        if ($parsedFilter->getInt('playlistId') !== null) {
+
+            $sql .= '
+                AND schedule.campaignId IN (
+                    SELECT `lkcampaignlayout`.campaignId
+                      FROM `lkplaylistplaylist` 
+                        INNER JOIN `playlist`
+                        ON `lkplaylistplaylist`.parentId = `playlist`.playlistId
+                       INNER JOIN `region`
+                       ON `region`.regionId = `playlist`.regionId
+                       INNER JOIN layout
+                       ON layout.LayoutID = region.layoutId
+                       INNER JOIN `lkcampaignlayout`
+                       ON lkcampaignlayout.layoutId = layout.layoutId
+                     WHERE `lkplaylistplaylist`.childId = :playlistId
+                     
+                )
+            ';
+
+            $params['playlistId'] = $parsedFilter->getInt('playlistId');
+
         }
 
         // Sorting?

@@ -35,6 +35,11 @@ class TimeSeriesMySQLResults implements TimeSeriesResultsInterface
     private $object;
 
     /**
+     * Total number of stats
+     */
+    public $totalCount;
+
+    /**
      * @inheritdoc
      */
     public function __construct($stmtObject = null)
@@ -54,6 +59,7 @@ class TimeSeriesMySQLResults implements TimeSeriesResultsInterface
             $entry = [];
 
             // Read the columns
+            $entry['id'] = $row['statId'];
             $entry['type'] = $row['type'];
             $entry['start'] = $row['start'];
             $entry['end'] = $row['end'];
@@ -68,6 +74,7 @@ class TimeSeriesMySQLResults implements TimeSeriesResultsInterface
             $entry['widgetId'] = $row['widgetId'];
             $entry['mediaId'] = $row['mediaId'];
             $entry['statDate'] = $row['statDate'];
+            $entry['engagements'] = isset($row['engagements']) ? json_decode($row['engagements']) : [];
 
             $rows[] = $entry;
         }
@@ -76,9 +83,20 @@ class TimeSeriesMySQLResults implements TimeSeriesResultsInterface
 
     }
 
+    /**
+     * @inheritdoc
+     */
     public function getNextRow()
     {
         return $this->object->fetch(\PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getTotalCount()
+    {
+        return $this->totalCount;
     }
 
 }

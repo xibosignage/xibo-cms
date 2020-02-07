@@ -18,6 +18,17 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * 
+ * Template strings to be translated, that will be used to replace tags in the ||tag|| format
+ * __('Wind')
+ * __('Humidity')
+ * __('Feels Like')
+ * __('Right now')
+ * __('Pressure')
+ * __('Visibility')
+ * __('TODAY')
+ * __('RIGHT NOW')
  */
 namespace Xibo\Widget;
 
@@ -660,9 +671,13 @@ class ForecastIo extends ModuleWidget
 
     /**
      * Get Resource
-     * @param int $displayId
+     * @param Request $request
+     * @param Response $response
      * @return mixed
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      */
     public function getResource(Request $request, Response $response)
     {
@@ -713,6 +728,10 @@ class ForecastIo extends ModuleWidget
         // Parse library references
         $body = $this->parseLibraryReferences($isPreview, $body, $request);
         $dailyTemplate = $this->parseLibraryReferences($isPreview, $dailyTemplate, $request);
+
+        // Parse translations
+        $body = $this->parseTranslations($body);
+        $dailyTemplate = $this->parseTranslations($dailyTemplate);
         
         // Provide the background images to the templates styleSheet
         $styleSheet = $this->makeSubstitutions([
@@ -894,8 +913,8 @@ class ForecastIo extends ModuleWidget
     /** @inheritdoc */
     public function getCacheDuration()
     {
-        $cachePeriod = $this->getSetting('cachePeriod', 60);
-        $updateInterval = $this->getOption('updateInterval', 60);
+        $cachePeriod = $this->getSetting('cachePeriod', 3600);
+        $updateInterval = $this->getOption('updateInterval', 60) * 60;
 
         return max($cachePeriod, $updateInterval);
     }

@@ -22,15 +22,13 @@
 
 namespace Xibo\Storage;
 
+use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
-use MongoDB\Driver\Exception\AuthenticationException;
-use MongoDB\Driver\Exception\ConnectionException;
-use MongoDB\Driver\Exception\ConnectionTimeoutException;
-use MongoDB\Driver\Exception\ExecutionTimeoutException;
 use Xibo\Exception\GeneralException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -61,6 +59,14 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     private $table = 'stat';
 
     private $periodTable = 'period';
+
+    // Keep all stats in this array after processing
+    private $stats = [];
+
+    private $mediaItems = [];
+    private $widgets = [];
+    private $layouts = [];
+    private $displayGroups = [];
 
     /** @var  MediaFactory */
     protected $mediaFactory;
@@ -119,140 +125,233 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function addStat($statData)
     {
-        foreach ($statData as $k => $stat) {
 
-            $statData[$k]['statDate'] = new UTCDateTime($statData[$k]['statDate']->format('U') * 1000);
-            $statData[$k]['start'] = new UTCDateTime($statData[$k]['fromDt']->format('U') * 1000);
-            unset($statData[$k]['fromDt']);
+        // We need to transform string date to UTC date
+        $statData['statDate'] = new UTCDateTime($statData['statDate']->format('U') * 1000);
 
-            $statData[$k]['end'] = new UTCDateTime($statData[$k]['toDt']->format('U') * 1000);
-            unset($statData[$k]['toDt']);
+        // In mongo collection we save fromDt/toDt as start/end
+        // and tag as eventName
+        // so we unset fromDt/toDt/tag from individual stats array
+        $statData['start'] = new UTCDateTime($statData['fromDt']->format('U') * 1000);
+        $statData['end'] = new UTCDateTime($statData['toDt']->format('U') * 1000);
+        $statData['eventName'] = $statData['tag'];
+        unset($statData['fromDt']);
+        unset($statData['toDt']);
+        unset($statData['tag']);
 
-            $statData[$k]['eventName'] = $statData[$k]['tag'];
-            unset($statData[$k]['tag']);
+        unset($statData['scheduleId']);
 
-            unset($statData[$k]['scheduleId']);
+        // Make an empty array to collect layout/media/display tags into
+        $tagFilter = [];
 
-            // Make an empty array to collect tags into
-            $tagFilter = [];
+        // Media name
+        $mediaName = null;
+        if (!empty($statData['mediaId'])) {
 
-            // Media name
-            $mediaName = null;
-            if (!empty($stat['mediaId'])) {
+            if (array_key_exists($statData['mediaId'], $this->mediaItems)) {
+
+                $media = $this->mediaItems[$statData['mediaId']];
+
+            } else {
+
                 try {
-                    $media = $this->mediaFactory->getById($stat['mediaId']);
+                    $media = $this->mediaFactory->getById($statData['mediaId']);
+
+                    // Cache media
+                    $this->mediaItems[$statData['mediaId']] = $media;
+
                 } catch (NotFoundException $error) {
                     // Media not found ignore and log the stat
-                    $this->log->error('Media not found. Media Id: '. $stat['mediaId'] .',Layout Id: '. $stat['layoutId']
-                        .', FromDT: '.$statData[$k]['start'].', ToDt: '.$statData[$k]['end'].', Type: '.$stat['type']
-                        .', Duration: '.$stat['duration'] .', Count '.$stat['count']);
+                    $this->log->error('Media not found. Media Id: '. $statData['mediaId'] .',Layout Id: '. $statData['layoutId']
+                        .', FromDT: '.$statData['start'].', ToDt: '.$statData['end'].', Type: '.$statData['type']
+                        .', Duration: '.$statData['duration'] .', Count '.$statData['count']);
 
-                    // unset($statData[$k]);
-                    continue;
+                    return;
                 }
-                $mediaName = $media->name; //dont remove used later
-                $statData[$k]['mediaName'] = $mediaName;
-                $tagFilter['media'] = explode(',', $media->tags);
             }
 
-            // Widget name
-            if (!empty($stat['widgetId'])) {
+            $mediaName = $media->name; //dont remove used later
+            $mediaTags = $media->tags;
+            $statData['mediaName'] = $mediaName;
+
+            if (isset($mediaTags)) {
+                $arrayOfTags = explode(',', $mediaTags);
+                for ($i=0; $i<count($arrayOfTags); $i++) {
+                    if (isset($arrayOfTags[$i]) ) {
+
+                        if (!empty($arrayOfTags[$i]))
+                            $tagFilter['media'][$i]['tag'] = $arrayOfTags[$i];
+                    }
+                }
+            }
+        }
+
+        // Widget name
+        if (!empty($statData['widgetId'])) {
+
+            if (array_key_exists($statData['widgetId'], $this->widgets)) {
+
+                $widget = $this->widgets[$statData['widgetId']];
+
+            } else {
+
                 try {
-                    $widget = $this->widgetFactory->getById($stat['widgetId']);
-                } catch (NotFoundException $error) {
+                    $widget = $this->widgetFactory->getById($statData['widgetId']);
+
+                    // Cache widget
+                    $this->widgets[$statData['widgetId']] = $widget;
+
+                } catch (\Exception $error) {
                     // Widget not found, ignore and log the stat
-                    $this->log->error('Widget not found. Widget Id: '. $stat['widgetId'] .',Layout Id: '. $stat['layoutId']
-                        .', FromDT: '.$statData[$k]['start'].', ToDt: '.$statData[$k]['end'].', Type: '.$stat['type']
-                        .', Duration: '.$stat['duration'] .', Count '.$stat['count']);
+                    $this->log->error('Widget not found. Widget Id: '. $statData['widgetId'] .',Layout Id: '. $statData['layoutId']
+                        .', FromDT: '.$statData['start'].', ToDt: '.$statData['end'].', Type: '.$statData['type']
+                        .', Duration: '.$statData['duration'] .', Count '.$statData['count']);
 
-                    // unset($statData[$k]);
-                    continue;
-                }
-
-                if($widget != null) {
-                    $widget->load();
-                    $widgetName = isset($mediaName) ? $mediaName : $widget->getOptionValue('name', $widget->type);
-                    $statData[$k]['widgetName'] = $widgetName;
+                    return;
                 }
             }
 
-            // Display name
-            try {
-                $display = $this->displayFactory->getById($stat['displayId']); //TODO what if you dont find the displayId
-            } catch (NotFoundException $error) {
-                // Display not found, ignore and log the stat
-                $this->log->error('Display not found. Display Id: '. $stat['displayId'] .',Layout Id: '. $stat['layoutId']
-                    .', FromDT: '.$statData[$k]['start'].', ToDt: '.$statData[$k]['end'].', Type: '.$stat['type']
-                    .', Duration: '.$stat['duration'] .', Count '.$stat['count']);
+            if($widget != null) {
+                $widget->load();
+                $widgetName = isset($mediaName) ? $mediaName : $widget->getOptionValue('name', $widget->type);
 
-                // unset($statData[$k]);
-                continue;
+                // SET widgetName
+                $statData['widgetName'] = $widgetName;
             }
 
-            $statData[$k]['displayName'] = $display->display;
+        }
 
-            // Layout data
-            $layoutName = null;
-            $layoutTags = null;
+        // Layout data
+        $layoutName = null;
+        $layoutTags = null;
 
-            if ($stat['type'] != 'event') {
+        // For a type "event" we have layoutid 0 so is campaignId
+        // otherwise we should try and resolve the campaignId
+        $campaignId = 0;
+        if ($statData['type'] != 'event') {
+            if (array_key_exists($statData['layoutId'], $this->layouts)) {
+                $layout = $this->layouts[$statData['layoutId']];
+            } else {
 
                 try {
-                    $layout = $this->layoutFactory->getByParentCampaignId($stat['campaignId']);
 
-                    $this->log->debug('Found layout : '. $stat['layoutId']);
+                    // Get the layout campaignId - this can give us a campaignId of a layoutId which id was replaced when draft to published
+                    $layout = $this->layoutFactory->getByLayoutHistory($statData['layoutId']);
 
-                    $campaignId = $layout->campaignId;
-                    $layoutName = $layout->layout;
-                    $layoutTags = $layout->tags;
+                    $this->log->debug('Found layout : '. $statData['layoutId']);
 
-                    // Get layout Campaign ID
-                    $statData[$k]['campaignId'] = (int) $campaignId;
-
-                    // Layout tags
-                    $tagFilter['layout'] = $layoutTags;
+                    // Cache layout
+                    $this->layouts[$statData['layoutId']] = $layout;
 
                 } catch (NotFoundException $error) {
                     // All we can do here is log
                     // we shouldn't ever get in this situation because the campaignId we used above will have
                     // already been looked up in the layouthistory table.
-                    $this->log->alert('Error processing statistic into MongoDB. Layout not found. Stat is: ' . json_encode($stat));
+                    $this->log->alert('Error processing statistic into MongoDB. Layout not found. Stat is: ' . json_encode($statData));
+                    return;
+                } catch (XiboException $error) {
+                    $this->log->error('Layout not found. Layout Id: '. $statData['layoutId']);
+                    return;
                 }
-
             }
 
-            $statData[$k]['layoutName'] = $layoutName;
+            $campaignId = (int) $layout->campaignId;
+            $layoutName = $layout->layout;
+            $layoutTags = $layout->tags;
 
-            // Display tags
-            try {
-                $arrayOfTags = array_filter(explode(',', $this->displayGroupFactory->getById($display->displayGroupId)->tags));
-                $arrayOfTagValues = array_filter(explode(',', $this->displayGroupFactory->getById($display->displayGroupId)->tagValues));
-
-                for ($i=0; $i<count($arrayOfTags); $i++) {
-                    if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
-                        $tagFilter['dg'][$i]['tag'] = $arrayOfTags[$i];
-                        $tagFilter['dg'][$i]['val'] = $arrayOfTagValues[$i];
-                    } else {
-                        $tagFilter['dg'][$i]['tag'] = $arrayOfTags[$i];
-                    }
-                }
-            } catch (NotFoundException $notFoundException) {
-                $this->log->alert('Error processing statistic into MongoDB. Display not found. Stat is: ' . json_encode($stat));
-                // TODO: need to remove the record?
-                continue;
-            }
-
-            // TagFilter array
-            $statData[$k]['tagFilter'] = $tagFilter;
         }
 
-        // Insert statistics
-        $collection = $this->client->selectCollection($this->config['database'], $this->table);
-        try {
-            $collection->insertMany($statData);
+        // Get layout Campaign ID
+        $statData['campaignId'] = $campaignId;
 
-        } catch (\MongoDB\Exception\RuntimeException $e) {
-            $this->log->error($e->getMessage());
+        $statData['layoutName'] = $layoutName;
+
+        // Layout tags
+        if (isset($layoutTags)) {
+            $arrayOfTags = explode(',', $layoutTags);
+            for ($i=0; $i<count($arrayOfTags); $i++) {
+                if (isset($arrayOfTags[$i]) ) {
+
+                    if (!empty($arrayOfTags[$i]))
+                        $tagFilter['layout'][$i]['tag'] = $arrayOfTags[$i];
+                }
+            }
+        }
+
+
+        // Display
+        $display = $statData['display'];
+
+        // Display ID
+        $statData['displayId'] = $display->displayId;
+        unset($statData['display']);
+
+        // Display name
+        $statData['displayName'] = $display->display;
+
+        $arrayOfTags = array_filter(explode(',', $display->tags));
+        $arrayOfTagValues = array_filter(explode(',', $display->tagValues));
+
+        for ($i=0; $i<count($arrayOfTags); $i++) {
+            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
+                $tagFilter['dg'][$i]['tag'] = $arrayOfTags[$i];
+                $tagFilter['dg'][$i]['val'] = $arrayOfTagValues[$i];
+            } else {
+                $tagFilter['dg'][$i]['tag'] = $arrayOfTags[$i];
+            }
+        }
+
+        // Display tags
+        if (array_key_exists($display->displayGroupId, $this->displayGroups)) {
+            $displayGroup = $this->displayGroups[$display->displayGroupId];
+        } else {
+
+            try {
+
+                $displayGroup = $this->displayGroupFactory->getById($display->displayGroupId);
+
+                // Cache displaygroup
+                $this->displayGroups[$display->displayGroupId] = $displayGroup;
+
+            } catch (NotFoundException $notFoundException) {
+                $this->log->error('Display group not found');
+                return;
+            }
+
+        }
+
+        $arrayOfTags = array_filter(explode(',', $displayGroup->tags));
+        $arrayOfTagValues = array_filter(explode(',', $displayGroup->tagValues));
+        for ($i=0; $i<count($arrayOfTags); $i++) {
+            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
+                $tagFilter['dg'][$i]['tag'] = $arrayOfTags[$i];
+                $tagFilter['dg'][$i]['val'] = $arrayOfTagValues[$i];
+            } else {
+                $tagFilter['dg'][$i]['tag'] = $arrayOfTags[$i];
+            }
+        }
+
+        // TagFilter array
+        $statData['tagFilter'] = $tagFilter;
+
+        $this->stats[] = $statData;
+
+    }
+
+    /** @inheritdoc */
+    public function addStatFinalize()
+    {
+        // Insert statistics
+        if (count($this->stats) > 0) {
+            $collection = $this->client->selectCollection($this->config['database'], $this->table);
+
+            try {
+                $collection->insertMany($this->stats);
+
+            } catch (\MongoDB\Exception\RuntimeException $e) {
+                $this->log->error($e->getMessage());
+                throw new \MongoDB\Exception\RuntimeException($e->getMessage());
+            }
         }
 
         // Create a period collection if it doesnot exist
@@ -272,6 +371,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
         }
+
     }
 
     /** @inheritdoc */
@@ -308,24 +408,16 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
         $statDate = isset($filterBy['statDate']) ? $filterBy['statDate'] : null;
 
-        if ($statDate == null) {
-
-            // Check whether fromDt and toDt are provided
-            if (($fromDt == null) && ($toDt == null)) {
-                throw new InvalidArgumentException(__("Either fromDt/toDt or statDate should be provided"), 'fromDt/toDt/statDate');
+        // In the case of user switches from mysql to mongo - laststatId were saved as integer
+        if (isset($filterBy['statId'])) {
+            if (is_numeric($filterBy['statId'])) {
+                throw new InvalidArgumentException(__('Invalid statId provided'), 'statId');
             }
-
-            if ($fromDt == null) {
-                throw new InvalidArgumentException(__("Fromdt cannot be null"), 'fromDt');
-            }
-
-            if ($toDt == null) {
-                throw new InvalidArgumentException(__("Todt cannot be null"), 'toDt');
+            else {
+                $statId = $filterBy['statId'];
             }
         } else {
-            if (($fromDt != null) || ($toDt != null)) {
-                throw new InvalidArgumentException(__("Either fromDt/toDt or statDate should be provided"), 'fromDt/toDt/statDate');
-            }
+            $statId = null;
         }
 
         $type = isset($filterBy['type']) ? $filterBy['type'] : null;
@@ -348,9 +440,17 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             $toDt = new UTCDateTime($toDt->format('U')*1000);
             $match['$match']['start'] = [ '$lte' => $toDt];
-        } else { // statDate Filter
+        }
+
+        // statDate Filter
+        // get the next stats from the given date
+        if ($statDate != null) {
             $statDate = new UTCDateTime($statDate->format('U')*1000);
             $match['$match']['statDate'] = [ '$gte' => $statDate];
+        }
+
+        if (!empty($statId)) {
+            $match['$match']['_id'] = [ '$gt' => new ObjectId($statId)];
         }
 
         // Displays Filter
@@ -418,6 +518,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                $match,
                [
                    '$project' => [
+                       'id'=> '$_id',
                        'type'=> 1,
                        'start'=> 1,
                        'end'=> 1,
@@ -432,16 +533,17 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                        'widgetId'=> 1,
                        'mediaId'=> 1,
                        'statDate'=> 1,
+                       'engagements'=> 1,
                    ]
                ],
            ];
 
-           if ($start !== null && $length !== null) {
-               $query[]['$skip'] =  $start;
-               $query[]['$limit'] = $length;
-           }
+            if ($start !== null && $length !== null) {
+                $query[]['$skip'] =  $start;
+                $query[]['$limit'] = $length;
+            }
 
-           $cursor = $collection->aggregate($query);
+            $cursor = $collection->aggregate($query);
 
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
@@ -449,8 +551,28 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
         $result = new TimeSeriesMongoDbResults($cursor);
 
-        return $result;
+        // Get total
+        try {
+            $totalQuery = [
+                $match,
+                [
+                    '$group' => [
+                        '_id'=> null,
+                        'count' => ['$sum' => 1],
+                    ]
+                ],
+            ];
+            $totalCursor = $collection->aggregate($totalQuery);
 
+        } catch (\MongoDB\Exception\RuntimeException $e) {
+            $this->log->error($e->getMessage());
+        }
+        $totalCount = $totalCursor->toArray();
+
+        // Total
+        $result->totalCount = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
+
+        return $result;
     }
 
     /** @inheritdoc */

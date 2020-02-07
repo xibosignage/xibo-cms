@@ -166,6 +166,17 @@ class DataSetFactory extends BaseFactory
     }
 
     /**
+     * @param $userId
+     * @return DataSet[]
+     */
+    public function getByOwnerId($userId)
+    {
+        $dataSets = $this->query(null, ['disableUserCheck' => 1, 'userId' => $userId]);
+
+        return $dataSets;
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[DataSet]

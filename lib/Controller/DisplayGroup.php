@@ -255,7 +255,8 @@ class DisplayGroup extends Base
             'exactTags' => $parsedQueryParams->getCheckbox('exactTags'),
             'isDisplaySpecific' => $parsedQueryParams->getInt('isDisplaySpecific'),
             'displayGroupIdMembers' => $parsedQueryParams->getInt('displayGroupIdMembers'),
-            'userId' => $parsedQueryParams->getInt('userId')
+            'userId' => $parsedQueryParams->getInt('userId'),
+            'isDynamic' => $parsedQueryParams->getInt('isDynamic'),
         ];
 
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
@@ -671,6 +672,7 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
         $parsedRequestParams = $this->getSanitizer($request->getParams());
+        $preEditIsDynamic = $displayGroup->getOriginalValue('isDynamic');
 
         if (!$this->getUser($request)->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
@@ -683,6 +685,26 @@ class DisplayGroup extends Base
         $displayGroup->isDynamic = $parsedRequestParams->getCheckbox('isDynamic');
         $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteria') : null;
         $displayGroup->dynamicCriteriaTags = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteriaTags') : null;
+
+        // if we have changed the type from dynamic to non-dynamic or other way around, clear display/dg members
+        if ($preEditIsDynamic != $displayGroup->isDynamic) {
+            $this->getLog()->debug('Display Group Id ' . $displayGroup->displayGroupId . ' switched is dynamic from ' . $preEditIsDynamic . ' To ' . $displayGroup->isDynamic . ' Clearing members for this Display Group.');
+            // get an array of assigned displays
+            $membersDisplays = $this->displayFactory->getByDisplayGroupId($id);
+
+            // get an array of assigned display groups
+            $membersDisplayGroups = $this->displayGroupFactory->getByParentId($id);
+
+            // unassign Displays
+            foreach ($membersDisplays as $display) {
+                $displayGroup->unassignDisplay($display);
+            }
+
+            // unassign Display Groups
+            foreach ($membersDisplayGroups as $dg) {
+                $displayGroup->unassignDisplayGroup($dg);
+            }
+        }
 
         $displayGroup->save();
 

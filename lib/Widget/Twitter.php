@@ -529,11 +529,11 @@ class Twitter extends TwitterBase
 
             // We need to search for it
             if (!$token = $this->getToken())
-                return false;
+                return [];
 
             // We have the token, make a tweet
             if (!$data = $this->searchApi($token, $searchTerm, $this->getOption('language'), $this->getOption('resultType'), $geoCode, $this->getOption('tweetCount', 15)))
-                return false;
+                return [];
 
             // Cache it
             $cache->set($data);
@@ -543,6 +543,9 @@ class Twitter extends TwitterBase
 
         // Get the template
         $template = $this->parseLibraryReferences($isPreview, $template, $request);
+
+        // Parse translations
+        $template = $this->parseTranslations($template);
 
         // Parse the text template
         $matches = '';

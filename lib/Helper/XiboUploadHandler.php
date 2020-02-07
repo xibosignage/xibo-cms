@@ -139,6 +139,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $controller->getDispatcher()->dispatch(LibraryReplaceEvent::$NAME, new LibraryReplaceEvent($module, $media, $oldMedia));
 
                 $media->enableStat = $oldMedia->enableStat;
+                $media->expires = $this->options['expires'];
 
                 // Save
                 $media->save(['oldMedia' => $oldMedia]);
@@ -293,6 +294,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 if ($media->enableStat == null) {
                     $media->enableStat = $controller->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
                 }
+
+                $media->expires = $this->options['expires'];
 
                 // Save
                 $media->save();
