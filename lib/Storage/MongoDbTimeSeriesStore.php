@@ -388,15 +388,16 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 ]
             ])->toArray();
 
+            if(count($earliestDate) > 0) {
+                return [
+                    'minDate' => $earliestDate[0]['minDate']->toDateTime()->format('U')
+                ];
+            }
+
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
         }
 
-        if(count($earliestDate) > 0) {
-            return [
-                'minDate' => $earliestDate[0]['minDate']->toDateTime()->format('U')
-            ];
-        }
         return [];
     }
 
@@ -513,6 +514,29 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         }
 
         $collection = $this->client->selectCollection($this->config['database'], $this->table);
+
+
+        // Get total
+        $total = 0;
+        try {
+            $totalQuery = [
+                $match,
+                [
+                    '$group' => [
+                        '_id'=> null,
+                        'count' => ['$sum' => 1],
+                    ]
+                ],
+            ];
+            $totalCursor = $collection->aggregate($totalQuery);
+
+            $totalCount = $totalCursor->toArray();
+            $total = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
+
+        } catch (\MongoDB\Exception\RuntimeException $e) {
+            $this->log->error($e->getMessage());
+        }
+
         try {
             $query = [
                 $match,
@@ -533,12 +557,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                         'widgetId'=> 1,
                         'mediaId'=> 1,
                         'statDate'=> 1,
+                        'engagements'=> 1,
                     ]
                 ],
             ];
-
-            // Sort by id (statId) - we must sort before we do pagination as mongo stat has descending order indexing on start/end
-            $query[]['$sort'] = ['id'=> 1];
 
             if ($start !== null && $length !== null) {
                 $query[]['$skip'] =  $start;
@@ -547,32 +569,15 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             $cursor = $collection->aggregate($query);
 
-        } catch (\MongoDB\Exception\RuntimeException $e) {
-            $this->log->error($e->getMessage());
-        }
+            $result = new TimeSeriesMongoDbResults($cursor);
 
-        $result = new TimeSeriesMongoDbResults($cursor);
-
-        // Get total
-        try {
-            $totalQuery = [
-                $match,
-                [
-                    '$group' => [
-                        '_id'=> null,
-                        'count' => ['$sum' => 1],
-                    ]
-                ],
-            ];
-            $totalCursor = $collection->aggregate($totalQuery);
+            // Total
+            $result->totalCount = $total;
 
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
+            throw new GeneralException($e->getMessage());
         }
-        $totalCount = $totalCursor->toArray();
-
-        // Total
-        $result->totalCount = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
 
         return $result;
     }

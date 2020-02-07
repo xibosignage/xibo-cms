@@ -244,6 +244,7 @@ class SummaryReport implements ReportInterface
     public function generateSavedReportName($filterCriteria)
     {
 
+        $saveAs = '';
         if ($filterCriteria['type'] == 'layout') {
             try {
                 $layout = $this->layoutFactory->getById($filterCriteria['layoutId']);
