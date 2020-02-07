@@ -149,12 +149,12 @@ class WebAuthentication implements Middleware
 
                     return $response->withJson($state->asJson());
                 } else {
-                    return $handler->handle($request)->withStatus(302)->withHeader('Location', $routeParser->urlFor('login'));
+                    return $handler->handle($request->withAttribute('name', 'web'))->withStatus(302)->withHeader('Location', $routeParser->urlFor('login'));
                 }
             }
         }
 
-        return $handler->handle($request->withAttribute('currentUser', $user));
+        return $handler->handle($request->withAttribute('currentUser', $user)->withAttribute('name', 'web'));
     }
 
     private function isAjax(Request $request)

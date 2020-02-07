@@ -114,9 +114,10 @@ class State implements Middleware
             if ($container->get('configService')->getSetting('INSTANCE_SUSPENDED') == 1)
                 throw new InstanceSuspendedException();
 
-            // Get to see if upgrade is pending
-            if (Environment::migrationPending())
+            // Get to see if upgrade is pending, we don't want to throw this when we are on error page, causes redirect problems with error handler.
+            if (Environment::migrationPending() && $request->getUri()->getPath() != '/error') {
                 throw new UpgradePendingException();
+            }
 
             // Reset the ETAGs for GZIP
             $requestEtag = $request->getHeader('IF_NONE_MATCH');
@@ -184,7 +185,9 @@ class State implements Middleware
             '/sssp_dl.wgt',
             '/playersoftware/:nonce/sssp_dl.wgt',
             '/playersoftware/:nonce/sssp_config.xml',
-            '/tfa'
+            '/tfa',
+            '/error',
+            '/notFound'
         ];
 
         // Setup the translations for gettext

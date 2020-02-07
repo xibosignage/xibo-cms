@@ -165,6 +165,12 @@ class Error extends Base
         //$handled = $this->handledError($e);
         $message = $this->container->get('session')->get('exceptionMessage');
 
+        // redirect to homepage (or login), if we are visiting this page with no errors to show
+        // mostly for post phinx upgrade refresh.
+        if (!$message) {
+            return $response->withRedirect('/');
+        }
+
         // TODO make sure all relevant cases have their names set (web and api do), at the moment only web entry point is set to use this function.
         switch ($request->getAttribute('name')) {
 
