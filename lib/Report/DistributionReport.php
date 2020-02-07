@@ -257,7 +257,6 @@ class DistributionReport implements ReportInterface
     /** @inheritdoc */
     public function generateSavedReportName($filterCriteria)
     {
-        $saveAs = '';
         if ($filterCriteria['type'] == 'layout') {
             try {
                 $layout = $this->layoutFactory->getById($filterCriteria['layoutId']);
@@ -271,20 +270,23 @@ class DistributionReport implements ReportInterface
 
             }
 
-            $saveAs = ucfirst($filterCriteria['filter']). ' report for Layout '. $layout->layout;
+            $saveAs = __(ucfirst($filterCriteria['filter']). ' report for') . ' Layout '. $layout->layout;
 
 
         } else if ($filterCriteria['type'] == 'media') {
             try {
                 $media = $this->mediaFactory->getById($filterCriteria['mediaId']);
-                $saveAs = ucfirst($filterCriteria['filter']). ' report for Media '. $media->name;
+                $saveAs = __(ucfirst($filterCriteria['filter']). ' report for') . ' Media '. $media->name;
 
             } catch (NotFoundException $error) {
-                $saveAs = 'Media not found';
+                $saveAs = 'Media ' . __('Not Found');
             }
 
         } else if ($filterCriteria['type'] == 'event') {
-            $saveAs = ucfirst($filterCriteria['filter']). ' report for Event '. $filterCriteria['eventTag'];
+            $saveAs = __(ucfirst($filterCriteria['filter']). ' report for') . ' Event '. $filterCriteria['eventTag'];
+
+        } else {
+            $saveAs = __(ucfirst($filterCriteria['filter']). ' report for') . ' Type '. $filterCriteria['type'];
         }
 
         if (!empty($filterCriteria['displayId'])) {
@@ -295,7 +297,7 @@ class DistributionReport implements ReportInterface
                 $saveAs .= ' (Display: '. $displayName . ')';
 
             } catch (NotFoundException $error){
-                $saveAs .= ' (DisplayId: Not Found )';
+                $saveAs .= ' (DisplayId: ' . __('Not Found') . ' )';
             }
         }
 

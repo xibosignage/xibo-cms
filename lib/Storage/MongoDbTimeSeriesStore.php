@@ -576,7 +576,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
-            throw new GeneralException($e->getMessage());
+            throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
         }
 
         return $result;
