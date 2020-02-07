@@ -307,8 +307,8 @@ class Soap4 extends Soap
         $fileId = $sanitizer->getInt('fileId');
         $fileType = $sanitizer->getString('fileType');
         // TODO Sanitizer :booms: here
-       // $chunkOffset = $sanitizer->getDouble('chunkOffset');
-       // $chunkSize = $sanitizer->getd('chunkSize');
+        $chunkOffset = $sanitizer->getInt('chunkOffset');
+        $chunkSize = $sanitizer->getString('chunkSize');
 
         $this->getLog()->debug('GET FILE  GET ' . ' hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: ' . $fileType . ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize);
         $libraryLocation = $this->getConfig()->getSetting("LIBRARY_LOCATION");
@@ -460,9 +460,10 @@ class Soap4 extends Soap
      * @param string $serverKey
      * @param string $hardwareKey
      * @param int $layoutId
-     * @param string $regionId
-     * @param string $mediaId
+     * @param int $regionId
+     * @param int $mediaId
      * @return mixed
+     * @throws NotFoundException
      * @throws \SoapFault
      */
     function GetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId)
@@ -476,6 +477,7 @@ class Soap4 extends Soap
      * @param string $hardwareKey
      * @param string $status
      * @return bool
+     * @throws NotFoundException
      * @throws \SoapFault
      */
     public function NotifyStatus($serverKey, $hardwareKey, $status)
@@ -551,8 +553,8 @@ class Soap4 extends Soap
         }
 
         // Resolution
-        $width = $this->getSanitizer()->getInt('width', null, $status);
-        $height = $this->getSanitizer()->getInt('height', null, $status);
+        $width = $sanitizedStatus->getInt('width');
+        $height = $sanitizedStatus->getInt('height');
 
         if ($width != null && $height != null) {
             // Determine the orientation
@@ -584,9 +586,13 @@ class Soap4 extends Soap
     {
         $this->logProcessor->setRoute('SubmitScreenShot');
 
+        $sanitizer = $this->getSanitizer([
+            'serverKey' => $serverKey,
+            'hardwareKey' => $hardwareKey,
+        ]);
         // Sanitize
-        $serverKey = $this->getSanitizer()->string($serverKey);
-        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $serverKey = $sanitizer->getString('serverKey');
+        $hardwareKey = $sanitizer->getString('hardwareKey');
 
         $screenShotFmt = "jpg";
         $screenShotMime = "image/jpeg";

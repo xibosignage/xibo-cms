@@ -1770,11 +1770,11 @@ class Soap
     }
 
     /**
-     * @param $serverKey
-     * @param $hardwareKey
-     * @param $layoutId
-     * @param $regionId
-     * @param $mediaId
+     * @param string $serverKey
+     * @param string $hardwareKey
+     * @param integer $layoutId
+     * @param integer $regionId
+     * @param integer $mediaId
      * @return mixed
      * @throws NotFoundException
      * @throws \SoapFault
@@ -1800,8 +1800,9 @@ class Soap
         $serverKey = $sanitizer->getString('serverKey');
         $hardwareKey = $sanitizer->getString('hardwareKey');
         $layoutId = $sanitizer->getInt('layoutId');
-        $regionId =$sanitizer->getString('regionId');
-        $mediaId = $sanitizer->getString('mediaId');
+        $regionId = $sanitizer->getInt('regionId');
+        $mediaId = $sanitizer->getInt('mediaId');
+
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
