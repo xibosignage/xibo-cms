@@ -291,24 +291,24 @@ class BaseFactory
                 if (substr($searchName, 0, 1) == '-') {
                     if ($i == 1) {
                         $body .= " AND ( $tableAndColumn NOT RLIKE (:search$i) ";
-                        $params['search' . $i] = isset($useRegex) ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
+                        $params['search' . $i] = $useRegex ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
                     } elseif ( (count($filteredNames) > 1 && $filteredNames[$j] != $searchName) || strpos($searchNames[$i-1], '-') !== false ) {
                         $body .= " AND $tableAndColumn NOT RLIKE (:search$i) ";
-                        $params['search' . $i] = isset($useRegex) ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
+                        $params['search' . $i] = $useRegex ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
                     } else {
                         $body .= " OR $tableAndColumn NOT RLIKE (:search$i) ";
-                        $params['search' . $i] = isset($useRegex) ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
+                        $params['search' . $i] = $useRegex ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
                     }
                 } else {
                     if ($i === 1) {
                         $body .= " AND ( $tableAndColumn RLIKE (:search$i) ";
-                        $params['search' . $i] = isset($useRegex) ? $searchName : preg_quote($searchName);
+                        $params['search' . $i] = $useRegex ? $searchName : preg_quote($searchName);
                     } elseif (count($filteredNames) > 1 && $filteredNames[$j] != $searchName) {
                         $body .= " AND $tableAndColumn RLIKE (:search$i) ";
-                        $params['search' . $i] = isset($useRegex) ? $searchName : preg_quote($searchName);
+                        $params['search' . $i] = $useRegex ? $searchName : preg_quote($searchName);
                     } else {
                         $body .= " OR  $tableAndColumn RLIKE (:search$i) ";
-                        $params['search' . $i] = isset($useRegex) ? $searchName : preg_quote($searchName);
+                        $params['search' . $i] = $useRegex ? $searchName : preg_quote($searchName);
                     }
                 }
             }
