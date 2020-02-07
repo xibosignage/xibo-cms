@@ -315,12 +315,12 @@ class LayoutFactory extends BaseFactory
      * @return Layout
      * @throws NotFoundException
      */
-    public function getByParentId($layoutId)
+    public function getByParentId($layoutId, Request $request = null)
     {
         if ($layoutId == 0)
             throw new NotFoundException();
 
-        $layouts = $this->query(null, array('disableUserCheck' => 1, 'parentId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
+        $layouts = $this->query(null, array('disableUserCheck' => 1, 'parentId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1), $request);
 
         if (count($layouts) <= 0) {
             throw new NotFoundException(__('Layout not found'));

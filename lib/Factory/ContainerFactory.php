@@ -164,7 +164,7 @@ class ContainerFactory
             'pool' => function(ContainerInterface $c) {
                 $drivers = [];
 
-                $c->get('configService')->setDependencies($c->get('store'), 'http://192.168.0.15/');
+                $c->get('configService')->setDependencies($c->get('store'), 'http://localhost/');
 
                 if ($c->get('configService')->getCacheDrivers() != null && is_array($c->get('configService')->getCacheDrivers())) {
                     $drivers = $c->get('configService')->getCacheDrivers();

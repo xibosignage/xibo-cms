@@ -111,11 +111,11 @@ class CampaignFactory extends BaseFactory
      * @return Campaign
      * @throws NotFoundException
      */
-    public function getById($campaignId)
+    public function getById($campaignId, Request $request = null)
     {
         $this->getLog()->debug('CampaignFactory getById(%d)', $campaignId);
 
-        $campaigns = $this->query(null, array('disableUserCheck' => 1, 'campaignId' => $campaignId, 'isLayoutSpecific' => -1, 'excludeTemplates' => -1));
+        $campaigns = $this->query(null, array('disableUserCheck' => 1, 'campaignId' => $campaignId, 'isLayoutSpecific' => -1, 'excludeTemplates' => -1), [], $request);
 
         if (count($campaigns) <= 0) {
             $this->getLog()->debug('Campaign not found with ID %d', $campaignId);
