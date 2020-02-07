@@ -21,6 +21,7 @@
  */
 namespace Xibo\Factory;
 
+use Slim\Http\ServerRequest as Request;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\DisplayProfile;
 use Xibo\Exception\NotFoundException;
@@ -88,17 +89,18 @@ class DisplayProfileFactory extends BaseFactory
      * @return DisplayProfile
      * @throws NotFoundException
      */
-    public function getById($displayProfileId)
+    public function getById($displayProfileId, Request $request = null)
     {
         $profiles = $this->query(null, ['disableUserCheck' => 1, 'displayProfileId' => $displayProfileId]);
 
-        if (count($profiles) <= 0)
+        if (count($profiles) <= 0) {
             throw new NotFoundException();
+        }
 
         $profile = $profiles[0];
         /* @var DisplayProfile $profile */
 
-        $profile->load();
+        $profile->load([], $request);
         return $profile;
     }
 

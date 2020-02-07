@@ -8,7 +8,7 @@
 
 namespace Xibo\Factory;
 
-
+use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Command;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
@@ -63,12 +63,13 @@ class CommandFactory extends BaseFactory
      * @return Command
      * @throws NotFoundException
      */
-    public function getById($commandId)
+    public function getById($commandId, Request $request = null)
     {
-        $commands = $this->query(null, ['commandId' => $commandId]);
+        $commands = $this->query(null, ['commandId' => $commandId], $request);
 
-        if (count($commands) <= 0)
+        if (count($commands) <= 0) {
             throw new NotFoundException();
+        }
 
         return $commands[0];
     }
@@ -77,25 +78,27 @@ class CommandFactory extends BaseFactory
      * @param $displayProfileId
      * @return array[Command]
      */
-    public function getByDisplayProfileId($displayProfileId)
+    public function getByDisplayProfileId($displayProfileId, Request $request = null)
     {
-        return $this->query(null, ['displayProfileId' => $displayProfileId]);
+        return $this->query(null, ['displayProfileId' => $displayProfileId], $request);
     }
 
     /**
      * @param array $sortOrder
      * @param array $filterBy
+     * @param Request|null $request
      * @return array
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query($sortOrder = null, $filterBy = [], Request $request = null)
     {
         $sanitizedFilter = $this->getSanitizer($filterBy);
         $entries = [];
 
-        if ($sortOrder == null)
+        if ($sortOrder == null) {
             $sortOrder = ['command'];
+        }
 
-        $params = array();
+        $params = [];
         $select = 'SELECT `command`.commandId, `command`.command, `command`.code, `command`.description, `command`.userId ';
 
         if ($sanitizedFilter->getInt('displayProfileId') !== null) {
@@ -128,7 +131,7 @@ class CommandFactory extends BaseFactory
 
         $body .= ' WHERE 1 = 1 ';
 
-        $this->viewPermissionSql('Xibo\Entity\Command', $body, $params, 'command.commandId', 'command.userId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\Command', $body, $params, 'command.commandId', 'command.userId', $filterBy, $request);
 
         if ($sanitizedFilter->getInt('commandId') !== null) {
             $body .= ' AND `command`.commandId = :commandId ';
