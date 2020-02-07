@@ -264,9 +264,9 @@ class BaseFactory
      * @param array $terms An Array exploded by "," of the search names
      * @param string $body Current SQL body passed by reference
      * @param array $params Array of parameters passed by reference
-     * @param bool $regex flag to match against a regex pattern
+     * @param bool $useRegex flag to match against a regex pattern
      */
-    public function nameFilter($tableName, $tableColumn, $terms, &$body, &$params, $regex = false)
+    public function nameFilter($tableName, $tableColumn, $terms, &$body, &$params, $useRegex = false)
     {
         $i = 0;
         $j = 0;
@@ -291,24 +291,24 @@ class BaseFactory
                 if (substr($searchName, 0, 1) == '-') {
                     if ($i == 1) {
                         $body .= " AND ( $tableAndColumn NOT RLIKE (:search$i) ";
-                        $params['search' . $i] = empty($regex) ? preg_quote(ltrim(($searchName), '-')) : ltrim(($searchName), '-');
+                        $params['search' . $i] = isset($useRegex) ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
                     } elseif ( (count($filteredNames) > 1 && $filteredNames[$j] != $searchName) || strpos($searchNames[$i-1], '-') !== false ) {
                         $body .= " AND $tableAndColumn NOT RLIKE (:search$i) ";
-                        $params['search' . $i] = empty($regex) ? preg_quote(ltrim(($searchName), '-')) : ltrim(($searchName), '-');
+                        $params['search' . $i] = isset($useRegex) ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
                     } else {
                         $body .= " OR $tableAndColumn NOT RLIKE (:search$i) ";
-                        $params['search' . $i] = empty($regex) ? preg_quote(ltrim(($searchName), '-')) : ltrim(($searchName), '-');
+                        $params['search' . $i] = isset($useRegex) ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
                     }
                 } else {
                     if ($i === 1) {
                         $body .= " AND ( $tableAndColumn RLIKE (:search$i) ";
-                        $params['search' . $i] = empty($regex) ? preg_quote($searchName) : $searchName;
+                        $params['search' . $i] = isset($useRegex) ? $searchName : preg_quote($searchName);
                     } elseif (count($filteredNames) > 1 && $filteredNames[$j] != $searchName) {
                         $body .= " AND $tableAndColumn RLIKE (:search$i) ";
-                        $params['search' . $i] = empty($regex) ? preg_quote($searchName) : $searchName;
+                        $params['search' . $i] = isset($useRegex) ? $searchName : preg_quote($searchName);
                     } else {
                         $body .= " OR  $tableAndColumn RLIKE (:search$i) ";
-                        $params['search' . $i] = empty($regex) ? preg_quote($searchName) : $searchName;
+                        $params['search' . $i] = isset($useRegex) ? $searchName : preg_quote($searchName);
                     }
                 }
             }
@@ -321,9 +321,8 @@ class BaseFactory
      * @param string $operator exactTags passed from factory, determines if the search is LIKE or =
      * @param string $body Current SQL body passed by reference
      * @param array $params Array of parameters passed by reference
-     * @param bool $regex flag to match against a regex pattern
      */
-    public function tagFilter($tags, $operator, &$body, &$params, $regex = false)
+    public function tagFilter($tags, $operator, &$body, &$params)
     {
         $i = 0;
 

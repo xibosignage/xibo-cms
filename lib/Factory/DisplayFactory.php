@@ -315,10 +315,7 @@ class DisplayFactory extends BaseFactory
         if ($this->getSanitizer()->getString('display', $filterBy) != null) {
             $terms = explode(',', $this->getSanitizer()->getString('display', $filterBy));
 
-            $useRegexForName = false;
-            if ($this->getSanitizer()->getCheckbox('useRegexForName') == 1) {
-                $useRegexForName = true;
-            }
+            $useRegexForName = ($this->getSanitizer()->getCheckbox('useRegexForName') == 1) ? true : false;
             $this->nameFilter('display', 'display', $terms, $body, $params, $useRegexForName);
         }
 
