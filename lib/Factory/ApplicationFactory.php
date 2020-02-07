@@ -56,9 +56,12 @@ class ApplicationFactory extends BaseFactory
      */
     public function create()
     {
+        $stripped = '';
         $application = $this->createEmpty();
         // Make and ID/Secret
-        $application->secret = SecureKey::generate(254);
+        $bytes = openssl_random_pseudo_bytes(254, $strong);
+        $stripped .= str_replace(['/', '+', '='], '', base64_encode($bytes));
+        $application->secret = substr($stripped, 0, 254);
         // Assign this user
         $application->userId = $this->getUser()->userId;
         return $application;

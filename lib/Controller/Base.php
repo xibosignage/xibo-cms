@@ -150,7 +150,7 @@ class Base
      * Get the Application State
      * @return \Xibo\Helper\ApplicationState
      */
-    protected function getState()
+    public function getState()
     {
         return $this->state;
     }
