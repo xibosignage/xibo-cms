@@ -108,7 +108,7 @@ else
 
 
 // Handle additional Middleware
-//\Xibo\Middleware\State::setMiddleWare($app);
+\Xibo\Middleware\State::setMiddleWare($app);
 //
 // End Middleware
 //

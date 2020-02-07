@@ -290,7 +290,7 @@
                 searchDelay: 3000,
                 "order": [[1, "asc"]],
                 ajax: {
-                    "url": "{{ urlFor("playlist.usage") }}".replace(":id", $("#usageReportTable").data().playlistId),
+                    "url": "{{ url_for("playlist.usage", {id:':id'}) }}".replace(":id", $("#usageReportTable").data().playlistId),
                     "data": function(dataDisplay) {
                         $.extend(dataDisplay, $(dialog).find("#usageReportForm").serializeObject());
                         return dataDisplay;
@@ -331,7 +331,7 @@
                 searchDelay: 3000,
                 "order": [[1, "asc"]],
                 ajax: {
-                    "url": "{{ urlFor("playlist.usage.layouts") }}".replace(":id", $("#usageReportLayoutsTable").data().playlistId)
+                    "url": "{{ url_for("playlist.usage.layouts", {id:':id'}) }}".replace(":id", $("#usageReportLayoutsTable").data().playlistId)
                 },
                 "columns": [
                     { "data": "layoutId"},

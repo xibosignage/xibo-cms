@@ -483,9 +483,9 @@ class DisplayFactory extends BaseFactory
         }
 
         // filter by commercial licence
-        if ($this->getSanitizer()->getInt('commercialLicence', $filterBy) !== null) {
+        if ($parsedBody->getInt('commercialLicence') !== null) {
             $body .= ' AND display.commercialLicence = :commercialLicence ';
-            $params['commercialLicence'] = $this->getSanitizer()->getInt('commercialLicence', $filterBy);
+            $params['commercialLicence'] = $parsedBody->getInt('commercialLicence');
         }
 
         // Sorting?

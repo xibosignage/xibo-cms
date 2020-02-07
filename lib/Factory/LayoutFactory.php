@@ -1755,7 +1755,7 @@ class LayoutFactory extends BaseFactory
         }
 
         // LayoutHistoryID
-        if ($this->getSanitizer()->getInt('layoutHistoryId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('layoutHistoryId') !== null) {
             $body .= '
                 INNER JOIN `layouthistory`
                 ON `layouthistory`.layoutId = `layout`.layoutId

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -31,7 +31,7 @@ $app->get('/', function (Request $request, Response $response) use ($app) {
     /* @var \Xibo\Entity\User $user */
     $user = $request->getAttribute('currentUser');
     $app->user = $user;
-    $app->getContainer()->get('logger')->debug('Showing the homepage: %s', [$user->homePageId]);
+    $app->getContainer()->get('logger')->debug('Showing the homepage: ' . [$user->homePageId]);
     /** @var \Xibo\Entity\Page $page */
     $page = $app->getContainer()->get('pageFactory')->getById($user->homePageId);
 

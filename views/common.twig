@@ -72,7 +72,7 @@
                     type: 'PUT'
                 },
                 discard: {
-                    url: "{{ urlFor("layout.discard") }}",
+                    url: "{{ url_for("layout.discard", {id: ':id'}) }}",
                     type: 'PUT'
                 },
                 list: {
@@ -97,7 +97,7 @@
                     type: 'GET'
                 },
                 discardForm: {
-                    url: "{{ urlFor("layout.discard.form") }}",
+                    url: "{{ url_for("layout.discard.form", {id: ':id'}) }}",
                     type: 'GET'
                 }
             },

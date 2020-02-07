@@ -678,7 +678,8 @@ class Module extends Base
         }
 
         $templates = [];
-        if (in_array($module->getModuleType(), ['forecastio', 'ticker', 'twitter','twittermetro', 'currencies', 'stocks', 'datasetview'])) {
+        // TODO this is a bit silly at this point, we need a more clever to do this.
+        if (in_array($module->getModuleType(), ['forecastio', 'ticker', 'twitter','twittermetro', 'currencies', 'stocks', 'datasetview', 'countdown'])) {
             $templates = $module->templatesAvailable(true, $request);
         }
 
