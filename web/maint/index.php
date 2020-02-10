@@ -25,7 +25,6 @@ use Monolog\Processor\UidProcessor;
 use Psr\Container\ContainerInterface;
 use Slim\Views\TwigMiddleware;
 use Xibo\Factory\ContainerFactory;
-use Xibo\Service\ConfigService;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/../..'));
@@ -61,6 +60,7 @@ $container->set('logger', function (ContainerInterface $container) {
 });
 
 $app = \DI\Bridge\Slim\Bridge::create($container);
+$app->setBasePath(\Xibo\Middleware\State::determineBasePath());
 
 // Config
 $app->configService = $container->get('configService');

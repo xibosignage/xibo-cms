@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -19,8 +19,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-
 namespace Xibo\Middleware;
 
 use League\OAuth2\Server\Grant\AuthCodeGrant;
@@ -33,16 +31,29 @@ use Slim\App as App;
 use Xibo\Storage\AuthCodeRepository;
 use Xibo\Storage\RefreshTokenRepository;
 
+/**
+ * Class ApiAuthorizationOAuth
+ * @package Xibo\Middleware
+ */
 class ApiAuthorizationOAuth implements Middleware
 {
     /* @var App $app */
     private $app;
 
+    /**
+     * ApiAuthorizationOAuth constructor.
+     * @param $app
+     */
     public function __construct($app)
     {
         $this->app = $app;
     }
 
+    /**
+     * @param \Psr\Http\Message\ServerRequestInterface $request
+     * @param \Psr\Http\Server\RequestHandlerInterface $handler
+     * @return \Psr\Http\Message\ResponseInterface
+     */
     public function process(Request $request, RequestHandler $handler): Response
     {
         $app = $this->app;
@@ -53,7 +64,7 @@ class ApiAuthorizationOAuth implements Middleware
             $apiKeyPaths = $container->get('configService')->apiKeyPaths;
 
             $privateKey = $apiKeyPaths['privateKeyPath'];
-            $encryptionKey = $apiKeyPaths['publicKeyPath'];
+            $encryptionKey = $apiKeyPaths['encryptionKey'];
 
             $server = new \League\OAuth2\Server\AuthorizationServer(
                 new \Xibo\Storage\ApiClientStorage($container->get('store'), $container->get('logService')),
