@@ -70,8 +70,12 @@ class ScheduleDayPartTest extends LocalWebTestCase
         // calculate a few hours either side of now
         $now = Date::now()->startOfHour()->subHour();
 
-        $this->dayPart = (new XiboDaypart($this->getEntityProvider()))
-            ->create(Random::generateString(5), '', $now->format('H:i'), $now->addHours(5)->format('H:i'));
+        $this->dayPart = (new XiboDaypart($this->getEntityProvider()))->create(
+            Random::generateString(5),
+            '',
+            $now->format('H:i'),
+            $now->copy()->addHours(5)->format('H:i')
+        );
 
         $this->getLogger()->debug('Finished Setup');
     }
