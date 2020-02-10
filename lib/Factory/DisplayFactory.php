@@ -314,7 +314,9 @@ class DisplayFactory extends BaseFactory
         // Filter by Display Name?
         if ($this->getSanitizer()->getString('display', $filterBy) != null) {
             $terms = explode(',', $this->getSanitizer()->getString('display', $filterBy));
-            $this->nameFilter('display', 'display', $terms, $body, $params);
+
+            $useRegexForName = ($this->getSanitizer()->getCheckbox('useRegexForName') == 1) ? true : false;
+            $this->nameFilter('display', 'display', $terms, $body, $params, $useRegexForName);
         }
 
         if ($this->getSanitizer()->getString('macAddress', $filterBy) != '') {
