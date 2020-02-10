@@ -22,14 +22,12 @@
 
 namespace Xibo\Middleware;
 
-use DI\Container;
-use Monolog\Logger;
 use Psr\Container\ContainerInterface;
-use Slim\App;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Slim\App;
 use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 use Stash\Driver\Composite;
@@ -37,11 +35,8 @@ use Stash\Pool;
 use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\UpgradePendingException;
 use Xibo\Helper\Environment;
-use Xibo\Helper\NullSession;
-use Xibo\Helper\Session;
 use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\HelpService;
 use Xibo\Service\ReportService;
 use Xibo\Twig\TwigMessages;
 
@@ -149,13 +144,14 @@ class State implements Middleware
 
     /**
      * @param App $app
+     * @param \Psr\Http\Message\ServerRequestInterface $request
      */
     public static function setState(App $app, Request $request)
     {
         $container = $app->getContainer();
 
         // Set the root Uri
-        State::setRootUri($app, $request);
+        State::setRootUri($app);
 
         // Set the config dependencies
         $container->get('configService')->setDependencies($container->get('store'), $app->rootUri);
@@ -291,40 +287,45 @@ class State implements Middleware
     /**
      * Set the Root URI
      * @param App $app
-     * @param Request $request
      */
-    public static function setRootUri(App $app, Request $request)
+    public static function setRootUri(App $app)
     {
         // Set the root Uri
-        $app->rootUri = $request->getUri()->getScheme() . '://' . $request->getUri()->getHost() . '/';
+        $basePath = self::determineBasePath();
 
         // Static source, so remove index.php from the path
         // this should only happen if rewrite is disabled
-        $app->rootUri = str_replace('/index.php', '', $app->rootUri);
-        $app->rootUri = str_replace('/api', '', $app->rootUri);
-        $app->rootUri = str_replace('/api/authorize', '', $app->rootUri);
+        $basePath = str_replace('/index.php', '', $basePath);
 
-        // TODO names from request getAtrribute need to set them in auth
-/*
-        switch ($app->getName()) {
+        // Replace out all of the entrypoints to get back to the root
+        $basePath = str_replace('/api/authorize', '', $basePath);
+        $basePath = str_replace('/api', '', $basePath);
+        $basePath = str_replace('/maintenance', '', $basePath);
+        $basePath = str_replace('/install', '', $basePath);
 
-            case 'install':
-                $app->rootUri = str_replace('/install', '', $app->rootUri);
-                break;
-
-            case 'api':
-                $app->rootUri = str_replace('/api', '', $app->rootUri);
-                break;
-
-            case 'auth':
-                $app->rootUri = str_replace('/api/authorize', '', $app->rootUri);
-                break;
-
-            case 'maintenance':
-                $app->rootUri = str_replace('/maintenance', '', $app->rootUri);
-                break;
+        // Handle an empty (we always have our root with reference to `/`
+        if ($basePath == null) {
+            $basePath = '/';
         }
-*/
+
+        $app->rootUri = $basePath;
+    }
+
+    /**
+     * Determine the Base Path
+     * @return mixed|string|string[]
+     */
+    public static function determineBasePath()
+    {
+        $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+        $uri = (string) parse_url('http://a' . $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+        if (stripos($uri, $_SERVER['SCRIPT_NAME']) === 0) {
+            return $_SERVER['SCRIPT_NAME'];
+        } else if ($scriptDir !== '/' && stripos($uri, $scriptDir) === 0) {
+            return $scriptDir;
+        } else {
+            return '';
+        }
     }
 
     /**

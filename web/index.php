@@ -22,14 +22,14 @@
 
 use Monolog\Logger;
 use Monolog\Processor\UidProcessor;
-use Psr\Container\ContainerInterface;
-use Slim\Views\TwigMiddleware;
-use Xibo\Exception\UpgradePendingException;
-use Xibo\Factory\ContainerFactory;
 use Nyholm\Psr7\Factory\Psr17Factory;
+use Psr\Container\ContainerInterface;
 use Slim\Http\Factory\DecoratedResponseFactory;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Slim\Views\TwigMiddleware;
+use Xibo\Exception\UpgradePendingException;
+use Xibo\Factory\ContainerFactory;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
@@ -49,6 +49,11 @@ if (!file_exists('settings.php')) {
         // We can't do anything here - no install app and no settings file.
         die('Not configured');
     }
+}
+
+// Check that the cache folder if writeable - if it isn't we're in big trouble
+if (!is_writable(PROJECT_ROOT . '/cache')) {
+    die('Installation Error: Cannot write files into the Cache Folder');
 }
 
 // Create the container for dependency injection.
@@ -74,6 +79,7 @@ $container->set('logger', function (ContainerInterface $container) {
 
 // Create a Slim application
 $app = \DI\Bridge\Slim\Bridge::create($container);
+$app->setBasePath(\Xibo\Middleware\State::determineBasePath());
 
 // Config
 $app->config = $container->get('configService');

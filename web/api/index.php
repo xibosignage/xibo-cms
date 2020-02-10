@@ -22,13 +22,11 @@
 
 use Monolog\Logger;
 use Monolog\Processor\UidProcessor;
-use Xibo\Factory\ContainerFactory;
-use Xibo\Service\ConfigService;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Slim\Http\Factory\DecoratedResponseFactory;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Storage\AccessTokenRepository;
+use Xibo\Factory\ContainerFactory;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/../..'));
@@ -63,7 +61,7 @@ $container->set('logger', function () {
 
 // Create a Slim application
 $app = \DI\Bridge\Slim\Bridge::create($container);
-$app->setBasePath('/api');
+$app->setBasePath(\Xibo\Middleware\State::determineBasePath());
 
 // Config
 $app->config = $container->get('configService');

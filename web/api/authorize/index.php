@@ -24,10 +24,9 @@ use Monolog\Logger;
 use Monolog\Processor\UidProcessor;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Slim\Http\Factory\DecoratedResponseFactory;
-use Xibo\Factory\ContainerFactory;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Storage\UserEntity;
+use Xibo\Factory\ContainerFactory;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/../../..'));
@@ -73,7 +72,7 @@ $app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\State($app));
 
 $app->addRoutingMiddleware();
-$app->setBasePath('/api/authorize');
+$app->setBasePath(\Xibo\Middleware\State::determineBasePath());
 
 // Define Custom Error Handler
 $customErrorHandler = function (Request $request, Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($app) {
