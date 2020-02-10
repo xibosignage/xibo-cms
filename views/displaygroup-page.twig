@@ -155,6 +155,7 @@
         let displayTable;
         let criteria;
         let criteriaTag;
+        let useRegexForName;
 
         function setDeleteMultiSelectFormOpen(dialog) {
             $(dialog).find('.save-button').prop('disabled', false);
@@ -206,6 +207,7 @@
 
                 criteria = $(dialog).find("input[name=dynamicCriteria]").val();
                 criteriaTag = $(dialog).find("input[name=dynamicCriteriaTags]").val();
+                useRegexForName = $(dialog).find("input[name=useRegexForName]").val();
 
                 if (criteria === "" && criteriaTag === "") {
                     if (displayTable != null) {
@@ -232,7 +234,7 @@
                             "data": function (d) {
                                 //console.log(criteria);
                                 //console.log(criteriaTag);
-                                $.extend(d, {display: criteria, tags: criteriaTag});
+                                $.extend(d, {display: criteria, tags: criteriaTag, useRegexForName: useRegexForName});
                             }
                         },
                         "columns": [
