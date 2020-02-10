@@ -68,7 +68,9 @@ class ScheduleDayPartTest extends LocalWebTestCase
 
         // Create a Day Part
         // calculate a few hours either side of now
-        $now = Date::now()->startOfHour()->subHour();
+        // must be tomorrow
+        // must not cross the day boundary
+        $now = Date::now()->startOfDay()->addDay()->addHour();
 
         $this->dayPart = (new XiboDaypart($this->getEntityProvider()))->create(
             Random::generateString(5),
@@ -101,7 +103,7 @@ class ScheduleDayPartTest extends LocalWebTestCase
     {
         // Our CMS is in GMT
         // Create a schedule one hours time in my player timezone
-        $date = Date::now()->setTime(0,0,0);
+        $date = Date::now()->addDay()->setTime(0,0,0);
 
         $this->getLogger()->debug('Event start will be at: ' . $date->format('Y-m-d H:i:s'));
 
