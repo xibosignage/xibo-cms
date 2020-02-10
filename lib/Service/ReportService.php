@@ -22,6 +22,7 @@
 
 namespace Xibo\Service;
 
+use Nyholm\Psr7\ServerRequest;
 use Slim\Http\ServerRequest as Request;
 use Psr\Container\ContainerInterface;
 use Xibo\Exception\NotFoundException;
@@ -291,8 +292,12 @@ class ReportService implements ReportServiceInterface
         $user = $this->container->get('userFactory')->getById($userId);
         $filterCriteria = json_decode($filterCriteria, true);
 
+        if ($request == null) {
+            $request = new Request(new ServerRequest('GET', PROJECT_ROOT . '/xtr'));
+        }
+
         // Retrieve the result array
-        return $object->getResults($filterCriteria, (isset($request)) ? $request->withAttribute('currentUser', $user) : []);
+        return $object->getResults($filterCriteria, $request->withAttribute('currentUser', $user));
     }
 
     /**

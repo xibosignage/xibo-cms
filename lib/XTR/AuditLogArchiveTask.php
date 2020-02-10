@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2017 Spring Signage Ltd
- * (StatsArchiveTask.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -31,11 +46,15 @@ class AuditLogArchiveTask implements TaskInterface
     /** @var MediaFactory */
     private $mediaFactory;
 
+    /** @var  \Xibo\Helper\SanitizerService */
+    private $sanitizerService;
+
     /** @inheritdoc */
     public function setFactories($container)
     {
         $this->mediaFactory = $container->get('mediaFactory');
         $this->userFactory = $container->get('userFactory');
+        $this->sanitizerService = $container->get('sanitizerService');
         return $this;
     }
 
@@ -52,7 +71,7 @@ class AuditLogArchiveTask implements TaskInterface
 
             // Delete all audit log messages older than 1 month
             $this->store->update('DELETE FROM `auditlog` WHERE logDate < :logDate', [
-                'logDate' => $this->date->parse()->subMonth(1)->setTime(0, 0, 0)->format('U')
+                'logDate' => $this->date->parse()->subMonth()->setTime(0, 0, 0)->format('U')
             ]);
 
         } else {
@@ -73,7 +92,7 @@ class AuditLogArchiveTask implements TaskInterface
 
             // Take the earliest date and roll forward until the current time
             /** @var Date $now */
-            $now = $this->date->parse()->subMonth(1)->setTime(0, 0, 0);
+            $now = $this->date->parse()->subMonth()->setTime(0, 0, 0);
             $i = 0;
 
             while ($earliestDate < $now && $i <= $maxPeriods) {
@@ -83,7 +102,7 @@ class AuditLogArchiveTask implements TaskInterface
 
                 // Push forward
                 $fromDt = $earliestDate->copy();
-                $earliestDate->addMonth(1);
+                $earliestDate->addMonth();
 
                 $this->exportAuditLogToLibrary($fromDt, $earliestDate);
                 $this->store->commitIfNecessary();
@@ -132,15 +151,16 @@ class AuditLogArchiveTask implements TaskInterface
 
         // Do some post processing
         foreach ($records as $row) {
+            $sanitizedRow = $this->getSanitizer($row);
             // Read the columns
             fputcsv($out, [
-                $this->sanitizer->int($row['logId']),
-                $this->sanitizer->int($row['logDate']),
-                $this->sanitizer->int($row['userId']),
-                $this->sanitizer->string($row['message']),
-                $this->sanitizer->string($row['entity']),
-                $this->sanitizer->int($row['entityId']),
-                $this->sanitizer->string($row['objectAfter'])
+                $sanitizedRow->getInt('logId'),
+                $sanitizedRow->getInt('logDate'),
+                $sanitizedRow->getInt('userId'),
+                $sanitizedRow->getString('message'),
+                $sanitizedRow->getString('entity'),
+                $sanitizedRow->getInt('entityId'),
+                $sanitizedRow->getString('objectAfter')
             ]);
         }
 

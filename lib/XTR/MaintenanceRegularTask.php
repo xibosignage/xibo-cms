@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
- * (MaintenanceRegularTask.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -52,6 +67,9 @@ class MaintenanceRegularTask implements TaskInterface
     /** @var ModuleFactory */
     private $moduleFactory;
 
+    /** @var  \Xibo\Helper\SanitizerService */
+    private $sanitizerService;
+
     /** @inheritdoc */
     public function setFactories($container)
     {
@@ -64,6 +82,7 @@ class MaintenanceRegularTask implements TaskInterface
         $this->layoutFactory = $container->get('layoutFactory');
         $this->playlistFactory = $container->get('playlistFactory');
         $this->moduleFactory = $container->get('moduleFactory');
+        $this->sanitizerService = $container->get('sanitizerService');
         return $this;
     }
 
@@ -132,12 +151,14 @@ class MaintenanceRegularTask implements TaskInterface
                     $update = $dbh->prepare('UPDATE `display` SET licensed = 0 WHERE displayId = :displayId');
 
                     foreach ($displays as $display) {
+                        $sanitizedDisplay = $this->getSanitizer($display);
 
                         // If we are down to 0 difference, then stop
-                        if ($difference == 0)
+                        if ($difference == 0) {
                             break;
+                        }
 
-                        $this->appendRunMessage(sprintf(__('Disabling %s'), $this->sanitizer->string($display['display'])));
+                        $this->appendRunMessage(sprintf(__('Disabling %s'), $sanitizedDisplay->getString('display')));
                         $update->execute(['displayId' => $display['displayId']]);
 
                         $this->log->audit('Display', $display['displayId'], 'Regular Maintenance unauthorised display due to max number of slots exceeded.', ['display' => $display['display']]);
@@ -260,7 +281,9 @@ class MaintenanceRegularTask implements TaskInterface
 
         $results = $this->store->select('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', []);
 
-        $size = $this->sanitizer->int($results[0]['SumSize']);
+        $sanitizedResults = $this->getSanitizer($results);
+
+        $size = $sanitizedResults->getInt('SumSize');
 
         if ($size >= $libraryLimit) {
             // Create a notification if we don't already have one today for this display.
@@ -309,13 +332,14 @@ class MaintenanceRegularTask implements TaskInterface
         ]);
 
         foreach ($items as $item) {
+            $sanitizedItem = $this->getSanitizer($item);
             // Create a notification if we don't already have one today for this display.
-            $subject = sprintf(__('%s is downloading %d files too many times'), $this->sanitizer->string($item['display']), $this->sanitizer->int($item['countFiles']));
+            $subject = sprintf(__('%s is downloading %d files too many times'), $sanitizedItem->getString('display'), $sanitizedItem->getInt('countFiles'));
             $date = $this->date->parse();
 
             if (count($this->notificationFactory->getBySubjectAndDate($subject, $this->date->getLocalDate($date->startOfDay(), 'U'), $this->date->getLocalDate($date->addDay(1)->startOfDay(), 'U'))) <= 0) {
 
-                $body = sprintf(__('Please check the bandwidth graphs and display status for %s to investigate the issue.'), $this->sanitizer->string($item['display']));
+                $body = sprintf(__('Please check the bandwidth graphs and display status for %s to investigate the issue.'), $sanitizedItem->getString('display'));
 
                 $notification = $this->notificationFactory->createSystemNotification(
                     $subject,
