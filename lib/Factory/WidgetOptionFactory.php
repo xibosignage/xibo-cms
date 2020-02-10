@@ -87,12 +87,13 @@ class WidgetOptionFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        $entries = array();
+        $sanitizedFilter = $this->getSanitizer($filterBy);
+        $entries = [];
 
         $sql = 'SELECT * FROM `widgetoption` WHERE widgetId = :widgetId';
 
         foreach ($this->getStore()->select($sql, [
-            'widgetId' => $this->getSanitizer()->getInt('widgetId', $filterBy)
+            'widgetId' => $sanitizedFilter->getInt('widgetId')
         ]) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row);
         }

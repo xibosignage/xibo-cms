@@ -1,10 +1,24 @@
 {#
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #}
 
 {% set randomId = random() %}
@@ -34,10 +48,10 @@
             <div id="{{ randomId }}" class="div-horizontal controlDiv"
                  data-param="displayId"
                  data-param-unassign="unassignDisplayId"
-                 data-url="{{ urlFor("displayGroup.assign.display", {id: displayGroup.displayGroupId}) }}"
+                 data-url="{{ url_for("displayGroup.assign.display", {id: displayGroup.displayGroupId}) }}"
                  data-groups-param="displayGroupId"
                  data-groups-param-unassign="unassignDisplayGroupId"
-                 data-groups-url="{{ urlFor("displayGroup.assign.displayGroup", {id: displayGroup.displayGroupId}) }}"
+                 data-groups-url="{{ url_for("displayGroup.assign.displayGroup", {id: displayGroup.displayGroupId}) }}"
             >
                 <ul class="nav nav-tabs" role="tablist">
                     <li class="active"><a href="#displayTab" role="tab" data-toggle="tab"><span>{% trans "Displays" %}</span></a></li>
@@ -118,7 +132,7 @@
                                 {% if group.displayGroup == displayGroup.displayGroup %}
                                     <li><strong>{{ group.displayGroup }}</strong></li>
                                 {% else %}
-                                    <li><a class="XiboFormButton" href="{{ urlFor("displayGroup.members.form", {"id": group.displayGroupId}) }}">{{ group.displayGroup }}</a></li>
+                                    <li><a class="XiboFormButton" href="{{ url_for("displayGroup.members.form", {"id": group.displayGroupId}) }}">{{ group.displayGroup }}</a></li>
                                 {% endif %}
                             {% endfor %}
                         </ul>

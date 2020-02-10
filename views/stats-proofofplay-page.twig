@@ -33,11 +33,11 @@
             <div class="widget content">
                 <div class="widget-body">
                     <div class="widget-icon green">
-                        <a class="XiboFormButton btns" href="{{ urlFor("stats.export.form") }}"> <i class="fa fa-external-link"></i></a>
+                        <a class="XiboFormButton btns" href="{{ url_for("stats.export.form") }}"> <i class="fa fa-external-link"></i></a>
                     </div>
                     <div class="widget-content">
                         <div class="report-title">{% trans "Proof of play" %}</div>
-                        <div class="comment"><a class="XiboFormButton btns" href="{{ urlFor("stats.export.form") }}">{% trans "Export" %}</a></div>
+                        <div class="comment"><a class="XiboFormButton btns" href="{{ url_for("stats.export.form") }}">{% trans "Export" %}</a></div>
                     </div>
                     <div class="clearfix"></div>
                 </div>
@@ -54,7 +54,7 @@
                             </div>
                             <div class="widget-content">
                                 <div class="report-title">  {{ report.description }}  </div>
-                                <div class="comment"><a href="{{ urlFor("report.form", {name: report.name}) }}">{{ report.type }}</a></div>
+                                <div class="comment"><a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.type }}</a></div>
                             </div>
                             <div class="clearfix"></div>
                         </div>

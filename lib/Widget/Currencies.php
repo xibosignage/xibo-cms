@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2014-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,7 +19,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  *
- * 
  * Template strings to be translated, that will be used to replace tags in the ||tag|| format
  * __('RATE')
  */
@@ -29,6 +29,8 @@ use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 
 /**
  * Class Currencies
@@ -102,17 +104,21 @@ class Currencies extends AlphaVantageBase
      * Process any module settings
      * @throws InvalidArgumentException
      */
-    public function settings()
+    public function settings(Request $request, Response $response)
     {
-        $apiKey = $this->getSanitizer()->getString('apiKey');
-        $cachePeriod = $this->getSanitizer()->getInt('cachePeriod', 14400);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $apiKey = $sanitizedParams->getString('apiKey');
+        $cachePeriod = $sanitizedParams->getInt('cachePeriod', ['default' => 14400]);
 
         if ($this->module->enabled != 0) {
-            if ($apiKey == '')
+            if ($apiKey == '') {
                 throw new InvalidArgumentException(__('Missing API Key'), 'apiKey');
+            }
 
-            if ($cachePeriod < 3600)
+            if ($cachePeriod < 3600) {
                 throw new InvalidArgumentException(__('Cache Period must be 3600 or greater for this Module'), 'cachePeriod');
+            }
         }
 
         $this->module->settings['apiKey'] = $apiKey;
@@ -321,37 +327,39 @@ class Currencies extends AlphaVantageBase
      *
      * @throws \Xibo\Exception\XiboException
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('base', $this->getSanitizer()->getString('base', ''));
-        $this->setOption('items', $this->getSanitizer()->getString('items'));
-        $this->setOption('effect', $this->getSanitizer()->getString('effect'));
-        $this->setOption('speed', $this->getSanitizer()->getInt('speed'));
-        $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
-        $this->setOption('noRecordsMessage', $this->getSanitizer()->getString('noRecordsMessage'));
-        $this->setOption('dateFormat', $this->getSanitizer()->getString('dateFormat'));
-        $this->setOption('reverseConversion', $this->getSanitizer()->getCheckbox('reverseConversion'));
-        $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
-        $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
-        $this->setOption('durationIsPerPage', $this->getSanitizer()->getCheckbox('durationIsPerPage'));
-        $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
-        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' =>  $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('base', $sanitizedParams->getString('base', ['default' => '']));
+        $this->setOption('items', $sanitizedParams->getString('items'));
+        $this->setOption('effect', $sanitizedParams->getString('effect'));
+        $this->setOption('speed', $sanitizedParams->getInt('speed'));
+        $this->setOption('backgroundColor', $sanitizedParams->getString('backgroundColor'));
+        $this->setOption('noRecordsMessage', $sanitizedParams->getString('noRecordsMessage'));
+        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat'));
+        $this->setOption('reverseConversion', $sanitizedParams->getCheckbox('reverseConversion'));
+        $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 60]));
+        $this->setOption('templateId', $sanitizedParams->getString('templateId'));
+        $this->setOption('durationIsPerPage', $sanitizedParams->getCheckbox('durationIsPerPage'));
+        $this->setRawNode('javaScript', $request->getParam('javaScript', ''));
+        $this->setOption('overrideTemplate', $sanitizedParams->getCheckbox('overrideTemplate'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
 
         if ($this->getOption('overrideTemplate') == 1) {
-            $this->setRawNode('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', null)));
-            $this->setOption('mainTemplate_advanced', $this->getSanitizer()->getCheckbox('mainTemplate_advanced'));
+            $this->setRawNode('mainTemplate', $request->getParam('mainTemplate', $request->getParam('mainTemplate', null)));
+            $this->setOption('mainTemplate_advanced', $sanitizedParams->getCheckbox('mainTemplate_advanced'));
             
-            $this->setRawNode('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', $this->getSanitizer()->getParam('itemTemplate', null)));
-            $this->setOption('itemTemplate_advanced', $this->getSanitizer()->getCheckbox('itemTemplate_advanced'));
+            $this->setRawNode('itemTemplate', $request->getParam('itemTemplate', $request->getParam('itemTemplate', null)));
+            $this->setOption('itemTemplate_advanced', $sanitizedParams->getCheckbox('itemTemplate_advanced'));
             
-            $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', $this->getSanitizer()->getParam('styleSheet', null)));
-            $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
-            $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
-            $this->setOption('maxItemsPerPage', $this->getSanitizer()->getInt('maxItemsPerPage', 4));
+            $this->setRawNode('styleSheet', $request->getParam('styleSheet', $request->getParam('styleSheet', null)));
+            $this->setOption('widgetOriginalWidth', $sanitizedParams->getInt('widgetOriginalWidth'));
+            $this->setOption('widgetOriginalHeight', $sanitizedParams->getInt('widgetOriginalHeight'));
+            $this->setOption('maxItemsPerPage', $sanitizedParams->getInt('maxItemsPerPage', ['default' => 4]));
         }
 
         // Save the widget
@@ -364,10 +372,11 @@ class Currencies extends AlphaVantageBase
      *  PLEASE NOTE: This method does not cache results directly as the AlphaVantageBase class handles caching individual
      *  requests.
      *  This request uses a combination of AlphaVantage and Fixer.IO
+     * @param Request $request
      * @return array|bool an array of results. false if an invalid value is returned.
      * @throws ConfigurationException
      */
-    protected function getResults()
+    protected function getResults(Request $request)
     {
         // Does this require a reversed conversion?
         $reverseConversion = ($this->getOption('reverseConversion', 0) == 1);
@@ -388,7 +397,7 @@ class Currencies extends AlphaVantageBase
         $itemTemplate = null;
 
         if ($this->getOption('overrideTemplate') == 0) {
-            $template = $this->getTemplateById($this->getOption('templateId'));
+            $template = $this->getTemplateById($this->getOption('templateId'), $request);
             
             if (isset($template)) {
                 $itemTemplate = $template['item'];
@@ -488,7 +497,7 @@ class Currencies extends AlphaVantageBase
      * @param $baseCurrency
      * @return mixed
      */
-    private function makeSubstitutions($data, $source, $baseCurrency)
+    private function makeSubstitutions($data, $source, $baseCurrency, Request $request)
     {
         // Replace all matches.
         $matches = '';
@@ -509,7 +518,7 @@ class Currencies extends AlphaVantageBase
             $replace = str_replace('[', '', str_replace(']', '', $sub));
             $replacement = 'NULL';
             
-            $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
+            $isPreview = ($this->getSanitizer($request->getParams())->getCheckbox('preview') == 1);
             
             // Match that in the array
             if (isset($data[$replace])) {
@@ -586,7 +595,7 @@ class Currencies extends AlphaVantageBase
                             // Tag this layout with this file
                             $this->assignMedia($file->mediaId);
                             
-                            $replacement = $this->getFileUrl($file);
+                            $replacement = $this->getFileUrl($file, null, $request);
                             
                             break;
                             
@@ -688,19 +697,21 @@ class Currencies extends AlphaVantageBase
     }
 
     /** @inheritdoc */
-    public function getTab($tab)
+    public function getTab($tab, Request $request)
     {
-        if (!$data = $this->getResults())
+        if (!$data = $this->getResults($request)) {
             throw new NotFoundException(__('No data returned, please check error log.'));
+        }
 
         return ['results' => $data[0]];
     }
 
     /** @inheritdoc */
-    public function getResource($displayId = 0)
-    {        
+    public function getResource(Request $request, Response $response)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         $data = [];
-        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
+        $isPreview = ($sanitizedParams->getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
@@ -710,13 +721,13 @@ class Currencies extends AlphaVantageBase
         $durationIsPerItem = $this->getOption('durationIsPerItem', 1);
 
         // Generate a JSON string of items.
-        if (!$items = $this->getResults()) {
+        if (!$items = $this->getResults($request)) {
             return '';
         }
 
         if( $this->getOption('overrideTemplate') == 0 ) {
             
-            $template = $this->getTemplateById($this->getOption('templateId'));
+            $template = $this->getTemplateById($this->getOption('templateId'), $request);
             
             if (isset($template)) {
                 $mainTemplate = $template['main'];
@@ -732,14 +743,14 @@ class Currencies extends AlphaVantageBase
             $mainTemplate = $this->getRawNode('mainTemplate');
             $itemTemplate = $this->getRawNode('itemTemplate');
             $styleSheet = $this->getRawNode('styleSheet', '');
-            $widgetOriginalWidth = $this->getSanitizer()->int($this->getOption('widgetOriginalWidth'));
-            $widgetOriginalHeight = $this->getSanitizer()->int($this->getOption('widgetOriginalHeight'));
-            $maxItemsPerPage = $this->getSanitizer()->int($this->getOption('maxItemsPerPage'));
+            $widgetOriginalWidth = $sanitizedParams->getInt($this->getOption('widgetOriginalWidth'));
+            $widgetOriginalHeight = $sanitizedParams->getInt($this->getOption('widgetOriginalHeight'));
+            $maxItemsPerPage = $sanitizedParams->getInt($this->getOption('maxItemsPerPage'));
         }
         
         // Run through each item and substitute with the template
-        $mainTemplate = $this->parseLibraryReferences($isPreview, $mainTemplate);
-        $itemTemplate = $this->parseLibraryReferences($isPreview, $itemTemplate);
+        $mainTemplate = $this->parseLibraryReferences($isPreview, $mainTemplate, $request);
+        $itemTemplate = $this->parseLibraryReferences($isPreview, $itemTemplate, $request);
 
         // Parse translations
         $mainTemplate = $this->parseTranslations($mainTemplate);
@@ -750,10 +761,10 @@ class Currencies extends AlphaVantageBase
         $base = $this->getOption('base');
 
         foreach ($items as $item) {
-            $renderedItems[] = $this->makeSubstitutions($item, $itemTemplate, $base);
+            $renderedItems[] = $this->makeSubstitutions($item, $itemTemplate, $base, $request);
         }        
 
-        $options = array(
+        $options = [
             'type' => $this->getModuleType(),
             'fx' => $this->getOption('effect', 'none'),
             'speed' => $this->getOption('speed', 500),
@@ -765,7 +776,7 @@ class Currencies extends AlphaVantageBase
             'widgetDesignWidth' => $widgetOriginalWidth,
             'widgetDesignHeight'=> $widgetOriginalHeight,
             'maxItemsPerPage' => $maxItemsPerPage
-        );
+        ];
 
         $itemsPerPage = $options['maxItemsPerPage'];
         $pages = count($renderedItems);
@@ -776,14 +787,14 @@ class Currencies extends AlphaVantageBase
         $data['controlMeta'] = '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $totalDuration . ' -->';
 
         // Get the JavaScript node
-        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
+        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''), $request);
 
         // Replace the head content
         $headContent = '';
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
-        <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . (($isPreview) ? $this->urlFor($request,'library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
+        <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css', null, $request)  . '" rel="stylesheet" media="screen">';
         
         $backgroundColor = $this->getOption('backgroundColor');
         if ($backgroundColor != '') {
@@ -793,10 +804,10 @@ class Currencies extends AlphaVantageBase
         }
         
         // Add the CSS if it isn't empty, and replace the wallpaper
-        $css = $this->makeSubstitutions([], $styleSheet, '');
+        $css = $this->makeSubstitutions([], $styleSheet, '', $request);
 
         if ($css != '') {
-            $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css) . '</style>';
+            $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css, $request) . '</style>';
         }
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
@@ -804,13 +815,13 @@ class Currencies extends AlphaVantageBase
         $data['head'] = $headContent;
 
         // Add some scripts to the JavaScript Content
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
 
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js', null, $request) . '"></script>';
 
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-finance-render.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-finance-render.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js', null, $request) . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
@@ -825,24 +836,29 @@ class Currencies extends AlphaVantageBase
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        return $this->renderTemplate($data);
+        return $this->renderTemplate($data, 'get-resource', $response);
     }
 
     /** @inheritdoc */
     public function isValid()
     {
-        if ($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null))
+        if ($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null)) {
             throw new InvalidArgumentException(__('Please choose a template'), 'templateId');
+        }
 
-        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0) {
             throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
+        }
 
         // Validate for the items field
-        if ($this->getOption('items') == '')
-            throw new InvalidArgumentException(__('Please provide a comma separated list of symbols in the items field.'), 'items');
+        if ($this->getOption('items') == '') {
+            throw new InvalidArgumentException(__('Please provide a comma separated list of symbols in the items field.'),
+                'items');
+        }
 
-        if ($this->getOption('base') == '')
+        if ($this->getOption('base') == '') {
             throw new InvalidArgumentException(__('Please provide a symbols in the base field.'), 'base');
+        }
 
         return self::$STATUS_VALID;
     }

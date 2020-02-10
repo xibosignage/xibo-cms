@@ -21,6 +21,7 @@
  */
 namespace Xibo\Factory;
 
+use Slim\Http\ServerRequest as Request;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\DisplayProfile;
 use Xibo\Exception\NotFoundException;
@@ -88,17 +89,18 @@ class DisplayProfileFactory extends BaseFactory
      * @return DisplayProfile
      * @throws NotFoundException
      */
-    public function getById($displayProfileId)
+    public function getById($displayProfileId, Request $request = null)
     {
         $profiles = $this->query(null, ['disableUserCheck' => 1, 'displayProfileId' => $displayProfileId]);
 
-        if (count($profiles) <= 0)
+        if (count($profiles) <= 0) {
             throw new NotFoundException();
+        }
 
         $profile = $profiles[0];
         /* @var DisplayProfile $profile */
 
-        $profile->load();
+        $profile->load([], $request);
         return $profile;
     }
 
@@ -153,7 +155,8 @@ class DisplayProfileFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        $profiles = array();
+        $profiles = [];
+        $parsedFilter = $this->getSanitizer($filterBy);
 
         if ($sortOrder === null)
             $sortOrder = ['name'];
@@ -164,28 +167,28 @@ class DisplayProfileFactory extends BaseFactory
 
             $body = ' FROM `displayprofile` WHERE 1 = 1 ';
 
-            if ($this->getSanitizer()->getInt('displayProfileId', $filterBy) !== null) {
+            if ($parsedFilter->getInt('displayProfileId') !== null) {
                 $body .= ' AND displayProfileId = :displayProfileId ';
-                $params['displayProfileId'] = $this->getSanitizer()->getInt('displayProfileId', $filterBy);
+                $params['displayProfileId'] = $parsedFilter->getInt('displayProfileId');
             }
 
-            if ($this->getSanitizer()->getInt('isDefault', $filterBy) !== null) {
+            if ($parsedFilter->getInt('isDefault') !== null) {
                 $body .= ' AND isDefault = :isDefault ';
-                $params['isDefault'] = $this->getSanitizer()->getInt('isDefault', $filterBy);
+                $params['isDefault'] = $parsedFilter->getInt('isDefault');
             }
 
             // Filter by DisplayProfile Name?
-            if ($this->getSanitizer()->getString('displayProfile', $filterBy) != null) {
-                $terms = explode(',', $this->getSanitizer()->getString('displayProfile', $filterBy));
+            if ($parsedFilter->getString('displayProfile') != null) {
+                $terms = explode(',', $parsedFilter->getString('displayProfile'));
                 $this->nameFilter('displayprofile', 'name', $terms, $body, $params);
             }
 
-            if ($this->getSanitizer()->getString('type', $filterBy) != null) {
+            if ($parsedFilter->getString('type') != null) {
                 $body .= ' AND type = :type ';
-                $params['type'] = $this->getSanitizer()->getString('type', $filterBy);
+                $params['type'] = $parsedFilter->getString('type');
             }
 
-            if ($this->getSanitizer()->getInt('commandId', $filterBy) !== null) {
+            if ($parsedFilter->getInt('commandId') !== null) {
                 $body .= '
                     AND `displayprofile`.displayProfileId IN (
                         SELECT `lkcommanddisplayprofile`.displayProfileId
@@ -194,7 +197,7 @@ class DisplayProfileFactory extends BaseFactory
                     )
                 ';
 
-                $params['commandId'] = $this->getSanitizer()->getInt('commandId', $filterBy);
+                $params['commandId'] = $parsedFilter->getInt('commandId');
             }
 
             // Sorting?
@@ -204,8 +207,8 @@ class DisplayProfileFactory extends BaseFactory
 
             $limit = '';
             // Paging
-            if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-                $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+            if ($filterBy !== null && $parsedFilter->getInt('start') !== null && $parsedFilter->getInt('length') !== null) {
+                $limit = ' LIMIT ' . intval($parsedFilter->getInt('start'), 0) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
             }
 
             $sql = $select . $body . $order . $limit;

@@ -88,11 +88,12 @@ class RegionOptionFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        $entries = array();
+        $entries = [];
+        $sanitizedFilter = $this->getSanitizer($filterBy);
 
         $sql = 'SELECT * FROM `regionoption` WHERE regionId = :regionId';
 
-        foreach ($this->getStore()->select($sql, array('regionId' => $this->getSanitizer()->getInt('regionId', $filterBy))) as $row) {
+        foreach ($this->getStore()->select($sql, array('regionId' => $sanitizedFilter->getInt('regionId'))) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row);
         }
 

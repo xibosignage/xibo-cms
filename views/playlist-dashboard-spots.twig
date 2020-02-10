@@ -1,5 +1,6 @@
 {#
- * Copyright (C) 2019 Xibo Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -17,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #}
 {% extends "form-base.twig" %}
 
@@ -50,7 +52,7 @@
                         <div class="col-md-2">
                             {% if widget.viewble %}
                                 {% if widget.module.getModule().type == 'image' %}
-                                    {% set downloadUrl = urlFor("library.download", {id: widget.getPrimaryMediaId()}) %}
+                                    {% set downloadUrl = url_for("library.download", {id: widget.getPrimaryMediaId()}) %}
                                     <a class="img-replace" data-toggle="lightbox" data-type="image" href="{{ downloadUrl }}?preview=1">
                                         <img src='{{downloadUrl}}?preview=1&width=50&height=50&cache=1' style='max-height: 50px; max-width: 50px;'/>
                                     </a>
@@ -87,7 +89,7 @@
                         </div>
                         <div class="col-md-1">
                             {% if widget.deletable == 1 and currentUser.routeViewable("/playlist") and widget.module.getModule().regionSpecific == 0 %}
-                                <a class="XiboFormButton btns" title="{% trans "Delete" %}" href="{{ urlFor("playlist.module.widget.delete.form", {id: widget.widgetId}) }}">
+                                <a class="XiboFormButton btns" title="{% trans "Delete" %}" href="{{ url_for("playlist.module.widget.delete.form", {id: widget.widgetId}) }}">
                                     <i class="fa fa-lg fa-trash" aria-hidden="true" style="padding:8px 0 8px; color:#d9534f;"></i>
                                 </a>
                             {% endif %}
@@ -109,8 +111,8 @@
                                  data-button-type="add"
                                  data-widget-id=""
                                  data-playlist-id="{{ playlist.playlistId }}"
-                                 data-widget-preview="{{ urlFor("library.download") }}?preview=1"
-                                 data-widget-del="{{ urlFor("playlist.module.widget.delete.form") }}"
+                                 data-widget-preview="{{ url_for("library.download") }}?preview=1"
+                                 data-widget-del="{{ url_for("playlist.module.widget.delete.form", {id:':id'}) }}"
                                  data-route-viewable="{{ currentUser.routeViewable("/playlist")  }}">
                                 {% if loop.first %}
                                     <button class="btn btn-block btn-success spot-action-button">{% trans "Add" %}</button>

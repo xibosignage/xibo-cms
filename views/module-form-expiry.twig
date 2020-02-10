@@ -35,7 +35,7 @@
 
     <div class="row">
         <div class="col-md-12">
-            <form id="widgetExpiryForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.expiry", {id: module.widget.widgetId}) }}">
+            <form id="widgetExpiryForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.expiry", {id: module.widget.widgetId}) }}">
                 {% set title %}{% trans "Start Time" %}{% endset %}
                 {% set helpText %}{% trans "Select the start time for this widget" %}{% endset %}
                 {{ forms.dateTime("fromDt", title, fromDt, helpText, "starttime-control") }}

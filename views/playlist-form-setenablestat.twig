@@ -1,7 +1,8 @@
 {#
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2019 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -17,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 #}
 
@@ -37,7 +37,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="playlistSetEnableStatForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("playlist.setenablestat", {input: "enableStat", id: playlist.playlistId}) }}">
+            <form id="playlistSetEnableStatForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("playlist.setenablestat", {input: "enableStat", id: playlist.playlistId}) }}">
                 {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
                 {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Playlist." %}{% endset %}
 

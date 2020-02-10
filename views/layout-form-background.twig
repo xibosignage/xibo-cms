@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -39,7 +39,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="layoutEditForm" class="form-horizontal" method="put" action="{{ urlFor("layout.edit.background", {id: layout.layoutId}) }}">
+            <form id="layoutEditForm" class="form-horizontal" method="put" action="{{ url_for("layout.edit.background", {id: layout.layoutId}) }}">
                 {% set title %}{% trans "Background Colour" %}{% endset %}
                 {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
                 {{ forms.input("backgroundColor", title, layout.backgroundColor, helpText) }}
@@ -48,7 +48,7 @@
                     { name: "data-allow-clear", value: "true" },
                     { name: "data-placeholder--id", value: null },
                     { name: "data-placeholder--value", value: "" },
-                    { name: "data-search-url", value: urlFor("library.search") },
+                    { name: "data-search-url", value: url_for("library.search") },
                     { name: "data-search-term", value: "media" },
                     { name: "data-search-term-tags", value: "tags" },
                     { name: "data-width", value: "100%" },
@@ -69,7 +69,7 @@
                         <span>{% trans "No Background Image" %}</span>
                     </div>
             
-                    <img id="bg_image_image" data-url="{{ urlFor("library.download") }}?preview=1&width=200&height=100" alt="{% trans "Background thumbnail" %}" />
+                    <img id="bg_image_image" data-url="{{ url_for("library.download") }}?preview=1&width=200&height=100" alt="{% trans "Background thumbnail" %}" />
                 </div>
 
                 <div class="row background-image-fields background-image-add-button text-center">

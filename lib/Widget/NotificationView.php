@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2017 Spring Signage Ltd
- * (NotificationView.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -11,7 +26,8 @@ namespace Xibo\Widget;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\NotificationFactory;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 /**
  * Class NotificationView
  * @package Xibo\Widget
@@ -137,24 +153,30 @@ class NotificationView extends ModuleWidget
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Exception\ValueTooLargeException
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('age', $this->getSanitizer()->getInt('age'));
-        $this->setOption('effect', $this->getSanitizer()->getString('effect'));
-        $this->setOption('speed', $this->getSanitizer()->getInt('speed'));
-        $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
-        $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
-        $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', null));        
-        $this->setOption('noDataMessage_advanced', $this->getSanitizer()->getCheckbox('noDataMessage_advanced'));
-        $this->setRawNode('template', $this->getSanitizer()->getParam('template', null));
-        $this->setRawNode('template_advanced', $this->getSanitizer()->getParam('template_advanced', null));
-        $this->setRawNode('embedStyle', $this->getSanitizer()->getParam('embedStyle', null));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('age', $sanitizedParams->getInt('age'));
+        $this->setOption('effect', $sanitizedParams->getString('effect'));
+        $this->setOption('speed', $sanitizedParams->getInt('speed'));
+        $this->setOption('durationIsPerItem', $sanitizedParams->getCheckbox('durationIsPerItem'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
+        $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 60]));
+        $this->setRawNode('noDataMessage', $request->getParam('noDataMessage', null));
+        $this->setOption('noDataMessage_advanced', $sanitizedParams->getCheckbox('noDataMessage_advanced'));
+        $this->setRawNode('template', $request->getParam('template', null));
+        $this->setRawNode('template_advanced', $request->getParam('template_advanced', null));
+        $this->setRawNode('embedStyle', $request->getParam('embedStyle', null));
 
         $this->saveWidget();
     }
@@ -162,8 +184,9 @@ class NotificationView extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
-        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration()))
+        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration())) {
             throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
+        }
 
         // Can't be sure because the client does the rendering
         return self::$STATUS_PLAYER;
@@ -174,15 +197,16 @@ class NotificationView extends ModuleWidget
      */
     private function getNotificationFactory()
     {
-        return $this->getApp()->container->get('notificationFactory');
+        return $this->container->get('notificationFactory');
     }
 
     /**
      * @param $isPreview
      * @param $displayId
+     * @param Request $request
      * @return array
      */
-    private function getNotifications($isPreview, $displayId = null)
+    private function getNotifications($isPreview, $displayId = null, Request $request)
     {
         // Date format
         $dateFormat = $this->getOption('dateFormat', $this->getConfig()->getSetting('DATE_FORMAT'));
@@ -198,13 +222,13 @@ class NotificationView extends ModuleWidget
         if ($isPreview)
             $notifications = $this->getNotificationFactory()->query(['releaseDt DESC', 'createDt DESC', 'subject'], [
                 'releaseDt' => ($age === 0) ? null : $this->getDate()->parse()->subMinutes($age)->format('U'),
-                'userId' => $this->getUser()->userId
-            ]);
+                'userId' => $this->getUser($request)->userId
+            ], $request);
         else
             $notifications = $this->getNotificationFactory()->query(['releaseDt DESC', 'createDt DESC', 'subject'], [
                 'releaseDt' => ($age === 0) ? null : $this->getDate()->parse()->subMinutes($age)->format('U'),
                 'displayId' => $displayId
-            ]);
+            ], $request);
 
         $this->getLog()->debug('There are ' . count($notifications) . ' to render.');
 
@@ -250,33 +274,34 @@ class NotificationView extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         // Behave exactly like the client.
         $data = [];
-        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
+        $isPreview = ($this->getSanitizer($request->getParams())->getCheckbox('preview') == 1);
+        $displayId = $request->getAttribute('displayId', 0);
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
         // Items
-        $items = $this->getNotifications($isPreview, $displayId);
+        $items = $this->getNotifications($isPreview, $displayId, $request);
 
         // Include some vendor items
-        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js') . '"></script>';// Need the marquee plugin?
+        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js', null, $request) . '"></script>';// Need the marquee plugin?
 
         $effect = $this->getOption('effect');
         if (stripos($effect, 'marquee') !== false)
-            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.marquee.min.js') . '"></script>';
+            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.marquee.min.js', null, $request) . '"></script>';
 
         // Need the cycle plugin?
         if ($effect != 'none')
-            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
+            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js', null, $request) . '"></script>';
 
         // Get the Style Sheet
-        $styleSheetContent = $this->parseLibraryReferences($isPreview, $this->getRawNode('embedStyle', null));
+        $styleSheetContent = $this->parseLibraryReferences($isPreview, $this->getRawNode('embedStyle', null), $request);
 
         // Set some options
         $options = array(
@@ -301,7 +326,7 @@ class NotificationView extends ModuleWidget
         $javaScriptContent .= '</script>';
 
         // Add our fonts.css file
-        $headContent = '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
+        $headContent = '<link href="' . (($isPreview) ? $this->urlFor($request,'library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
         $data['head'] = $headContent;
@@ -312,7 +337,7 @@ class NotificationView extends ModuleWidget
         // Replace the Head Content with our generated java script
         $data['javaScript'] = $javaScriptContent;
 
-        return $this->renderTemplate($data);
+        return $this->renderTemplate($data, 'get-resource', $response);
     }
 
     /** @inheritdoc */

@@ -486,7 +486,7 @@ class User implements \JsonSerializable
                 return $userOption;
         }
 
-        $this->getLog()->debug('UserOption %s not found', $option);
+        $this->getLog()->debug(sprintf('UserOption %s not found', $option));
 
         throw new NotFoundException('User Option not found');
     }
@@ -662,7 +662,7 @@ class User implements \JsonSerializable
         if ($this->userGroupFactory == null)
             throw new \RuntimeException('Cannot load user without first calling setUserGroupFactory');
 
-        $this->getLog()->debug('Loading %d. All Objects = %d', $this->userId, $all);
+        $this->getLog()->debug(sprintf('Loading %d. All Objects = %d', $this->userId, $all));
 
         $this->groups = $this->userGroupFactory->getByUserId($this->userId);
 

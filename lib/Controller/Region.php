@@ -1,14 +1,31 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (Region.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
 namespace Xibo\Controller;
 
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Entity\Permission;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\InvalidArgumentException;
@@ -21,6 +38,7 @@ use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -74,7 +92,7 @@ class Region extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -88,11 +106,11 @@ class Region extends Base
      * @param ModuleFactory $moduleFactory
      * @param LayoutFactory $layoutFactory
      * @param UserGroupFactory $userGroupFactory
+     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $regionFactory, $widgetFactory, $permissionFactory,
-                                $transitionFactory, $moduleFactory, $layoutFactory, $userGroupFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $regionFactory, $widgetFactory, $permissionFactory, $transitionFactory, $moduleFactory, $layoutFactory, $userGroupFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->session = $session;
         $this->regionFactory = $regionFactory;
@@ -106,14 +124,22 @@ class Region extends Base
 
     /**
      * Edit Form
-     * @param int $regionId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function editForm($regionId)
+    public function editForm(Request $request, Response $response, $id)
     {
-        $region = $this->regionFactory->getById($regionId);
+        $region = $this->regionFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($region))
+        if (!$this->getUser($request)->checkEditable($region))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'region-form-edit';
@@ -123,18 +149,28 @@ class Region extends Base
             'transitions' => $this->transitionData(),
             'help' => $this->getHelp()->link('Region', 'Edit')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Delete Form
-     * @param int $regionId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function deleteForm($regionId)
+    public function deleteForm(Request $request, Response $response, $id)
     {
-        $region = $this->regionFactory->getById($regionId);
+        $region = $this->regionFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($region))
+        if (!$this->getUser($request)->checkDeleteable($region))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'region-form-delete';
@@ -143,12 +179,24 @@ class Region extends Base
             'layout' => $this->layoutFactory->getById($region->layoutId),
             'help' => $this->getHelp()->link('Region', 'Delete')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Add a region
-     * @param int $layoutId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/region/{id}",
      *  operationId="regionAdd",
@@ -202,17 +250,19 @@ class Region extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function add($layoutId)
+    public function add(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout)) {
             throw new AccessDeniedException();
+        }
 
-        if (!$layout->isChild())
+        if (!$layout->isChild()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
 
         $layout->load([
             'loadPlaylists' => true,
@@ -223,11 +273,11 @@ class Region extends Base
 
         // Add a new region
         $region = $this->regionFactory->create(
-            $this->getUser()->userId, $layout->layout . '-' . (count($layout->regions) + 1),
-            $this->getSanitizer()->getInt('width', 250),
-            $this->getSanitizer()->getInt('height', 250),
-            $this->getSanitizer()->getInt('top', 50),
-            $this->getSanitizer()->getInt('left', 50)
+            $this->getUser($request)->userId, $layout->layout . '-' . (count($layout->regions) + 1),
+            $sanitizedParams->getInt('width', ['default' => 250]),
+            $sanitizedParams->getInt('height', ['default' => 250]),
+            $sanitizedParams->getInt('top', ['default' => 50]),
+            $sanitizedParams->getInt('left', ['default' => 50])
         );
 
         $layout->regions[] = $region;
@@ -251,7 +301,7 @@ class Region extends Base
             $this->getLog()->debug('Applying default permissions');
 
             // Apply the default permissions
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
@@ -264,11 +314,23 @@ class Region extends Base
             'id' => $region->regionId,
             'data' => $region
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
-     * @param int $regionId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/region/{id}",
      *  operationId="regionEdit",
@@ -352,38 +414,40 @@ class Region extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function edit($regionId)
+    public function edit(Request $request, Response $response, $id)
     {
-        $region = $this->regionFactory->getById($regionId);
+        $region = $this->regionFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($region))
+        if (!$this->getUser($request)->checkEditable($region)) {
             throw new AccessDeniedException();
+        }
 
         // Check that this Regions Layout is in an editable state
         $layout = $this->layoutFactory->getById($region->layoutId);
 
-        if (!$layout->isChild())
+        if (!$layout->isChild()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
 
         // Load before we save
         $region->load();
 
-        $region->name = $this->getSanitizer()->getString('name');
-        $region->width = $this->getSanitizer()->getDouble('width');
-        $region->height = $this->getSanitizer()->getDouble('height');
-        $region->top = $this->getSanitizer()->getDouble('top');
-        $region->left = $this->getSanitizer()->getDouble('left');
-        $region->zIndex = $this->getSanitizer()->getInt('zIndex');
+        $region->name = $sanitizedParams->getString('name');
+        $region->width = $sanitizedParams->getDouble('width');
+        $region->height = $sanitizedParams->getDouble('height');
+        $region->top = $sanitizedParams->getDouble('top');
+        $region->left = $sanitizedParams->getDouble('left');
+        $region->zIndex = $sanitizedParams->getInt('zIndex');
 
         // Loop
-        $region->setOptionValue('loop', $this->getSanitizer()->getCheckbox('loop'));
+        $region->setOptionValue('loop', $sanitizedParams->getCheckbox('loop'));
 
         // Transitions
-        $region->setOptionValue('transitionType', $this->getSanitizer()->getString('transitionType'));
-        $region->setOptionValue('transitionDuration', $this->getSanitizer()->getInt('transitionDuration'));
-        $region->setOptionValue('transitionDirection', $this->getSanitizer()->getString('transitionDirection'));
+        $region->setOptionValue('transitionType', $sanitizedParams->getString('transitionType'));
+        $region->setOptionValue('transitionDuration', $sanitizedParams->getInt('transitionDuration'));
+        $region->setOptionValue('transitionDirection', $sanitizedParams->getString('transitionDirection'));
 
         // Save
         $region->save();
@@ -402,12 +466,24 @@ class Region extends Base
             'id' => $region->regionId,
             'data' => $region
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Delete a region
-     * @param int $regionId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Delete(
      *  path="/region/{regionId}",
      *  operationId="regionDelete",
@@ -427,13 +503,12 @@ class Region extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function delete($regionId)
+    public function delete(Request $request, Response $response, $id)
     {
-        $region = $this->regionFactory->getById($regionId);
+        $region = $this->regionFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($region))
+        if (!$this->getUser($request)->checkDeleteable($region))
             throw new AccessDeniedException();
 
         // Check that this Regions Layout is in an editable state
@@ -449,13 +524,24 @@ class Region extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $region->name)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Update Positions
-     * @param int $layoutId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
      * @throws NotFoundException
-     *
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/region/position/all/{layoutId}",
      *  operationId="regionPositionAll",
@@ -486,31 +572,33 @@ class Region extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    function positionAll($layoutId)
+    function positionAll(Request $request, Response $response, $id)
     {
         // Create the layout
-        $layout = $this->layoutFactory->loadById($layoutId);
+        $layout = $this->layoutFactory->loadById($id);
 
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout)) {
             throw new AccessDeniedException();
+        }
 
         // Check that this Layout is a Draft
-        if (!$layout->isChild())
+        if (!$layout->isChild()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
 
         // Pull in the regions and convert them to stdObjects
-        $regions = $this->getSanitizer()->getParam('regions', null);
+        $regions = $request->getParam('regions', null);
 
-        if ($regions == null)
+        if ($regions == null) {
             throw new \InvalidArgumentException(__('No regions present'));
+        }
 
         $regions = json_decode($regions);
 
         // Go through each region and update the region in the layout we have
         foreach ($regions as $newCoordinates) {
-
+            $sanitizedParams = $this->getSanitizer($newCoordinates);
             // Check that the properties we are expecting do actually exist
             if (!property_exists($newCoordinates, 'regionid'))
                 throw new \InvalidArgumentException(__('Missing regionid property'));
@@ -527,20 +615,21 @@ class Region extends Base
             if (!property_exists($newCoordinates, 'height'))
                 throw new \InvalidArgumentException(__('Missing height property'));
 
-            $regionId = $this->getSanitizer()->int($newCoordinates->regionid);
+            $regionId = $sanitizedParams->getInt($newCoordinates->regionid);
 
             // Load the region
             $region = $layout->getRegion($regionId);
 
             // Check Permissions
-            if (!$this->getUser()->checkEditable($region))
+            if (!$this->getUser($request)->checkEditable($region)) {
                 throw new AccessDeniedException();
+            }
 
             // New coordinates
-            $region->top = $this->getSanitizer()->double($newCoordinates->top);
-            $region->left = $this->getSanitizer()->double($newCoordinates->left);
-            $region->width = $this->getSanitizer()->double($newCoordinates->width);
-            $region->height = $this->getSanitizer()->double($newCoordinates->height);
+            $region->top = $sanitizedParams->getDouble($newCoordinates->top);
+            $region->left = $sanitizedParams->getDouble($newCoordinates->left);
+            $region->width = $sanitizedParams->getDouble($newCoordinates->width);
+            $region->height = $sanitizedParams->getDouble($newCoordinates->height);
             $this->getLog()->debug('Set ' . $region);
         }
 
@@ -554,25 +643,38 @@ class Region extends Base
             'id' => $layout->layoutId,
             'data' => $layout
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Represents the Preview inside the Layout Designer
-     * @param int $regionId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function preview($regionId)
+    public function preview(Request $request, Response $response, $id)
     {
-        $widgetId = $this->getSanitizer()->getInt('widgetId', null);
-        $seqGiven = $this->getSanitizer()->getInt('seq', 1);
-        $seq = $this->getSanitizer()->getInt('seq', 1);
-        $width = $this->getSanitizer()->getDouble('width', 0);
-        $height = $this->getSanitizer()->getDouble('height', 0);
-        $scaleOverride = $this->getSanitizer()->getDouble('scale_override', 0);
+        $sanitizedQuery = $this->getSanitizer($request->getParams());
+
+        $widgetId = $sanitizedQuery->getInt('widgetId', ['default' => null]);
+        $seqGiven = $sanitizedQuery->getInt('seq', ['default' => 1]);
+        $seq = $sanitizedQuery->getInt('seq', ['default' => 1]);
+        $width = $sanitizedQuery->getDouble('width', ['default' => 0]);
+        $height = $sanitizedQuery->getDouble('height', ['default' => 0]);
+        $scaleOverride = $sanitizedQuery->getDouble('scale_override', ['default' => 0]);
 
         // Load our region
         try {
-            $region = $this->regionFactory->getById($regionId);
+            $region = $this->regionFactory->getById($id);
             $region->load();
 
             if ($widgetId !== null) {
@@ -610,7 +712,7 @@ class Region extends Base
             $module = $this->moduleFactory->createWithWidget($widget, $region);
 
             $this->getState()->extra['empty'] = false;
-            $this->getState()->html = $module->preview($width, $height, $scaleOverride);
+            $this->getState()->html = $module->preview($width, $height, $scaleOverride, $request);
             $this->getState()->extra['type'] = $widget->type;
             $this->getState()->extra['duration'] = $widget->calculatedDuration;
             $this->getState()->extra['number_items'] = $countWidgets;
@@ -629,6 +731,8 @@ class Region extends Base
             $this->getState()->extra['empty'] = true;
             $this->getState()->extra['text'] = __('Please correct the error with this Widget');
         }
+
+        return $this->render($request, $response);
     }
 
     /**

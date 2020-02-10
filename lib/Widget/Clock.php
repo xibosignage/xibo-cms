@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2015-2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,7 +24,8 @@ namespace Xibo\Widget;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Helper\Translate;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 class Clock extends ModuleWidget
 {
     public $codeSchemaVersion = 1;
@@ -138,22 +139,27 @@ class Clock extends ModuleWidget
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Exception\ValueTooLargeException
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // You must also provide a duration (all media items must provide this field)
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setOption('theme', $this->getSanitizer()->getInt('themeId', 1));
-        $this->setOption('clockTypeId', $this->getSanitizer()->getInt('clockTypeId', 1));
-        $this->setOption('offset', $this->getSanitizer()->getString('offset', 0));
-        $this->setRawNode('format', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('format', '')));
-        $this->setOption('ta_text_advanced', $this->getSanitizer()->getCheckbox('ta_text_advanced'));
-        $this->setOption('showSeconds', $this->getSanitizer()->getCheckbox('showSeconds'));
-        $this->setOption('clockFace', $this->getSanitizer()->getString('clockFace'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setOption('theme', $sanitizedParams->getInt('themeId', ['default' => 1]));
+        $this->setOption('clockTypeId', $sanitizedParams->getInt('clockTypeId', ['default' => 1]));
+        $this->setOption('offset', $sanitizedParams->getString('offset', ['default' => 0]));
+        $this->setRawNode('format', $request->getParam('ta_text', $request->getParam('format', '')));
+        $this->setOption('ta_text_advanced', $sanitizedParams->getCheckbox('ta_text_advanced'));
+        $this->setOption('showSeconds', $sanitizedParams->getCheckbox('showSeconds'));
+        $this->setOption('clockFace', $sanitizedParams->getString('clockFace'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
 
         $this->isValid();
 
@@ -177,18 +183,19 @@ class Clock extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         $template = null;
         $data = [];
-        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
+        $isPreview = ($sanitizedParams->getCheckbox('preview') == 1);
 
         // After body content
         $options = [
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => intval($this->getSanitizer()->getDouble('width')),
-            'previewHeight' => intval($this->getSanitizer()->getDouble('height'))
+            'previewWidth' => intval($sanitizedParams->getDouble('width')),
+            'previewHeight' => intval($sanitizedParams->getDouble('height'))
         ];
 
         // Clock Type
@@ -209,8 +216,8 @@ class Clock extends ModuleWidget
                 $data['offset'] = $this->getOption('offset', 0);
 
                 // After body content
-                $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
-                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js') . '"></script>';
+                $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
+                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js', null, $request) . '"></script>';
 
                 // Replace the After body Content
                 $data['javaScript'] = $javaScriptContent;
@@ -235,9 +242,9 @@ class Clock extends ModuleWidget
                 // Replace all the subs
                 $data['body'] = $format;
 
-                $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
-                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js') . '"></script>';
-                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
+                $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
+                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js', null, $request) . '"></script>';
+                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js', null, $request) . '"></script>';
                 $javaScriptContent .= '<script type="text/javascript">
                     var locale = "' . Translate::GetJsLocale() . '";
                     var options = ' . json_encode($options) . ';
@@ -260,7 +267,7 @@ class Clock extends ModuleWidget
                 $data['javaScript'] = $javaScriptContent;
 
                 // Add our fonts.css file
-                $headContent  = '<link href = "' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
+                $headContent  = '<link href = "' . (($isPreview) ? $this->urlFor($request,'library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
                 $headContent .= '<style type = "text/css" > ' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
                 $data['head'] = $headContent;
@@ -279,8 +286,8 @@ class Clock extends ModuleWidget
                 $data['showSeconds'] = $this->getOption('showSeconds', 1);
 
                 // After body content
-                $javaScriptContent  = '<script type = "text/javascript" src = "' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '" ></script > ';
-                $javaScriptContent .= '<script type = "text/javascript" src = "' . $this->getResourceUrl('vendor/flipclock.min.js') . '" ></script > ';
+                $javaScriptContent  = '<script type = "text/javascript" src = "' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '" ></script > ';
+                $javaScriptContent .= '<script type = "text/javascript" src = "' . $this->getResourceUrl('vendor/flipclock.min.js', null, $request) . '" ></script > ';
 
                 // Replace the After body Content
                 $data['javaScript'] = $javaScriptContent;
@@ -295,7 +302,7 @@ class Clock extends ModuleWidget
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
 
         // Return that content.
-        return $this->renderTemplate($data, $template);
+        return $this->renderTemplate($data, $template, $response);
     }
 
     /** @inheritdoc */

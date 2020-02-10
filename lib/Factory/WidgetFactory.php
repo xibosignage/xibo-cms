@@ -226,12 +226,15 @@ class WidgetFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        if ($sortOrder == null)
-            $sortOrder = array('displayOrder');
+        if ($sortOrder == null) {
+            $sortOrder = ['displayOrder'];
+        }
 
-        $entries = array();
+        $sanitizedFilter = $this->getSanitizer($filterBy);
 
-        $params = array();
+        $entries = [];
+
+        $params = [];
         $select = '
           SELECT widget.widgetId,
               widget.playlistId,
@@ -268,7 +271,7 @@ class WidgetFactory extends BaseFactory
             ON `playlist`.playlistId = `widget`.playlistId
         ';
 
-        if ($this->getSanitizer()->getInt('showWidgetsFrom', $filterBy) === 1) {
+        if ($sanitizedFilter->getInt('showWidgetsFrom') === 1) {
             $body .= '
                     INNER JOIN `region`
                         ON `region`.regionId = `playlist`.regionId
@@ -277,44 +280,44 @@ class WidgetFactory extends BaseFactory
             ';
         }
 
-        if ($this->getSanitizer()->getInt('mediaId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('mediaId') !== null) {
             $body .= '
                 INNER JOIN `lkwidgetmedia`
                 ON `lkwidgetmedia`.widgetId = widget.widgetId
                     AND `lkwidgetmedia`.mediaId = :mediaId
             ';
-            $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
+            $params['mediaId'] = $sanitizedFilter->getInt('mediaId');
         }
 
         $body .= ' WHERE 1 = 1 ';
 
-        if ($this->getSanitizer()->getInt('showWidgetsFrom', $filterBy) === 1) {
+        if ($sanitizedFilter->getInt('showWidgetsFrom') === 1) {
             $body .= ' AND layout.parentId IS NOT NULL ';
         }
 
-        if ($this->getSanitizer()->getInt('showWidgetsFrom', $filterBy) === 2) {
+        if ($sanitizedFilter->getInt('showWidgetsFrom') === 2) {
             $body .= ' AND playlist.regionId IS NULL ';
         }
 
         // Permissions
         $this->viewPermissionSql('Xibo\Entity\Widget', $body, $params, 'widget.widgetId', 'widget.ownerId', $filterBy);
 
-        if ($this->getSanitizer()->getInt('playlistId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('playlistId') !== null) {
             $body .= ' AND `widget`.playlistId = :playlistId';
-            $params['playlistId'] = $this->getSanitizer()->getInt('playlistId', $filterBy);
+            $params['playlistId'] = $sanitizedFilter->getInt('playlistId');
         }
 
-        if ($this->getSanitizer()->getInt('widgetId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('widgetId') !== null) {
             $body .= ' AND `widget`.widgetId = :widgetId';
-            $params['widgetId'] = $this->getSanitizer()->getInt('widgetId', $filterBy);
+            $params['widgetId'] = $sanitizedFilter->getInt('widgetId');
         }
 
-        if ($this->getSanitizer()->getString('type', $filterBy) !== null) {
+        if ($sanitizedFilter->getString('type') !== null) {
             $body .= ' AND `widget`.type = :type';
-            $params['type'] = $this->getSanitizer()->getString('type', $filterBy);
+            $params['type'] = $sanitizedFilter->getString('type');
         }
 
-        if ($this->getSanitizer()->getString('layout', $filterBy) !== null) {
+        if ($sanitizedFilter->getString('layout') !== null) {
             $body .= ' AND widget.widgetId IN (
                 SELECT widgetId
                   FROM `widget`
@@ -326,10 +329,10 @@ class WidgetFactory extends BaseFactory
                     ON `layout`.layoutId = `region`.layoutId
                  WHERE layout.layout LIKE :layout
             )';
-            $params['layout'] = '%' . $this->getSanitizer()->getString('layout', $filterBy) . '%';
+            $params['layout'] = '%' . $sanitizedFilter->getString('layout') . '%';
         }
 
-        if ($this->getSanitizer()->getString('region', $filterBy) !== null) {
+        if ($sanitizedFilter->getString('region') !== null) {
             $body .= ' AND widget.widgetId IN (
                 SELECT widgetId
                   FROM `widget`
@@ -339,10 +342,10 @@ class WidgetFactory extends BaseFactory
                     ON `region`.regionId = `playlist`.regionId
                  WHERE region.name LIKE :region
             )';
-            $params['region'] = '%' . $this->getSanitizer()->getString('region', $filterBy) . '%';
+            $params['region'] = '%' . $sanitizedFilter->getString('region') . '%';
         }
 
-        if ($this->getSanitizer()->getString('media', $filterBy) !== null) {
+        if ($sanitizedFilter->getString('media') !== null) {
             $body .= ' AND widget.widgetId IN (
                 SELECT widgetId
                   FROM `lkwidgetmedia`
@@ -350,12 +353,12 @@ class WidgetFactory extends BaseFactory
                     ON `media`.mediaId = `lkwidgetmedia`.mediaId
                  WHERE media.name LIKE :media
             )';
-            $params['media'] = '%' . $this->getSanitizer()->getString('media', $filterBy) . '%';
+            $params['media'] = '%' . $sanitizedFilter->getString('media') . '%';
         }
 
         // Playlist Like
-        if ($this->getSanitizer()->getString('playlist', $filterBy) != '') {
-            $terms = explode(',', $this->getSanitizer()->getString('playlist', $filterBy));
+        if ($sanitizedFilter->getString('playlist') != '') {
+            $terms = explode(',', $sanitizedFilter->getString('playlist'));
             $this->nameFilter('playlist', 'name', $terms, $body, $params);
         }
 
@@ -366,8 +369,8 @@ class WidgetFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         // The final statements

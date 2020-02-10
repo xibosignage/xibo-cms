@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -37,7 +37,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="displayGroupCopyForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("displayGroup.copy", {id: displayGroup.displayGroupId}) }}">
+            <form id="displayGroupCopyForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("displayGroup.copy", {id: displayGroup.displayGroupId}) }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Display Profile" %}{% endset %}
                 {% set name %}{{ displayGroup.displayGroup }} 2{% endset %}

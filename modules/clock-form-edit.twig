@@ -1,7 +1,8 @@
 {#
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2012-2016 Spring Signage Ltd - http://www.springsignage.com
  *
  * This file is part of Xibo.
  *
@@ -35,7 +36,7 @@
             <li><a href="#editorTab" class="digital-control-group" role="tab" data-toggle="tab"><span>{% trans "Editor" %}</span></a></li>
         </ul>
         <div class="col-md-12">
-            <form id="clockFormEdit" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+            <form id="clockFormEdit" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="generalTab">
                         {% set title %}{% trans "Name" %}{% endset %}

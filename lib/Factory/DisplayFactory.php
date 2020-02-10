@@ -22,6 +22,8 @@
 
 namespace Xibo\Factory;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Display;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
@@ -142,8 +144,10 @@ class DisplayFactory extends BaseFactory
      * @param array $filterBy
      * @return Display[]
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query($sortOrder = null, $filterBy = [], Request $request = null)
     {
+        $parsedBody = $this->getSanitizer($filterBy);
+
         if ($sortOrder === null)
             $sortOrder = ['display'];
 
@@ -171,8 +175,8 @@ class DisplayFactory extends BaseFactory
 
         $functionPrefix = ($version === null || version_compare($version, '5.6.1', '>=')) ? 'ST_' : '';
 
-        $entries = array();
-        $params = array();
+        $entries = [];
+        $params = [];
         $select = '
               SELECT display.displayId,
                   display.display,
@@ -224,7 +228,7 @@ class DisplayFactory extends BaseFactory
                   `display`.commercialLicence
               ';
 
-        if ($this->getSanitizer()->getCheckbox('showTags', $filterBy) === 1) {
+        if ($parsedBody->getCheckbox('showTags') === 1) {
             $select .= ', 
                 (
                   SELECT GROUP_CONCAT(DISTINCT tag) 
@@ -260,117 +264,118 @@ class DisplayFactory extends BaseFactory
             ';
 
         // Restrict to members of a specific display group
-        if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
+        if ($parsedBody->getInt('displayGroupId') !== null) {
             $body .= '
                 INNER JOIN `lkdisplaydg` othergroups
                 ON othergroups.displayId = `display`.displayId
                     AND othergroups.displayGroupId = :displayGroupId
             ';
 
-            $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
+            $params['displayGroupId'] = $parsedBody->getInt('displayGroupId');
         }
 
         $body .= ' WHERE 1 = 1 ';
 
-        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'displaygroup.displayGroupId', null, $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'displaygroup.displayGroupId', null, $filterBy, $request);
 
         // Filter by Display ID?
-        if ($this->getSanitizer()->getInt('displayId', $filterBy) !== null) {
+        if ($parsedBody->getInt('displayId') !== null) {
             $body .= ' AND display.displayid = :displayId ';
-            $params['displayId'] = $this->getSanitizer()->getInt('displayId', $filterBy);
+            $params['displayId'] = $parsedBody->getInt('displayId');
         }
 
         // Display Profile
-        if ($this->getSanitizer()->getInt('displayProfileId', $filterBy) !== null) {
-            if ($this->getSanitizer()->getInt('displayProfileId', $filterBy) == -1) {
+        if ($parsedBody->getInt('displayProfileId') !== null) {
+            if ($parsedBody->getInt('displayProfileId') == -1) {
                 $body .= ' AND IFNULL(displayProfileId, 0) = 0 ';
             } else {
-                $displayProfileSelected = $this->displayProfileFactory->getById($this->getSanitizer()->getInt('displayProfileId', $filterBy));
+                $displayProfileSelected = $this->displayProfileFactory->getById($parsedBody->getInt('displayProfileId'));
                 $displayProfileDefault = $this->displayProfileFactory->getDefaultByType($displayProfileSelected->type);
 
                 $body .= ' AND (`display`.displayProfileId = :displayProfileId OR (IFNULL(displayProfileId, :displayProfileDefaultId) = :displayProfileId AND display.client_type = :displayProfileType ) ) ';
 
-                $params['displayProfileId'] = $this->getSanitizer()->getInt('displayProfileId', $filterBy);
+                $params['displayProfileId'] = $parsedBody->getInt('displayProfileId');
                 $params['displayProfileDefaultId'] = $displayProfileDefault->displayProfileId;
                 $params['displayProfileType'] = $displayProfileDefault->type;
             }
         }
 
         // Filter by Wake On LAN
-        if ($this->getSanitizer()->getInt('wakeOnLan', $filterBy) !== null) {
+        if ($parsedBody->getInt('wakeOnLan') !== null) {
             $body .= ' AND display.wakeOnLan = :wakeOnLan ';
-            $params['wakeOnLan'] = $this->getSanitizer()->getInt('wakeOnLan', $filterBy);
+            $params['wakeOnLan'] = $parsedBody->getInt('wakeOnLan');
         }
 
         // Filter by Licence?
-        if ($this->getSanitizer()->getString('license', $filterBy) != null) {
+        if ($parsedBody->getString('license') != null) {
             $body .= ' AND display.license = :license ';
-            $params['license'] = $this->getSanitizer()->getString('license', $filterBy);
+            $params['license'] = $parsedBody->getString('license');
         }
         
         // Filter by authorised?
-        if ($this->getSanitizer()->getInt('authorised', -1, $filterBy) != -1) {
+        if ($parsedBody->getInt('authorised', ['default' => -1]) != -1) {
             $body .= ' AND display.licensed = :authorised ';
-            $params['authorised'] = $this->getSanitizer()->getInt('authorised', $filterBy);
+            $params['authorised'] = $parsedBody->getInt('authorised');
         }
 
         // Filter by Display Name?
-        if ($this->getSanitizer()->getString('display', $filterBy) != null) {
-            $terms = explode(',', $this->getSanitizer()->getString('display', $filterBy));
+        if ($parsedBody->getString('display') != null) {
+            $terms = explode(',', $parsedBody->getString('display'));
             $this->nameFilter('display', 'display', $terms, $body, $params);
         }
 
-        if ($this->getSanitizer()->getString('macAddress', $filterBy) != '') {
+        if ($parsedBody->getString('macAddress') != '') {
             $body .= ' AND display.macaddress LIKE :macAddress ';
-            $params['macAddress'] = '%' . $this->getSanitizer()->getString('macAddress', $filterBy) . '%';
+            $params['macAddress'] = '%' . $parsedBody->getString('macAddress') . '%';
         }
 
-        if ($this->getSanitizer()->getString('clientAddress', $filterBy) != '') {
+        if ($parsedBody->getString('clientAddress') != '') {
             $body .= ' AND display.clientaddress LIKE :clientAddress ';
-            $params['clientAddress'] = '%' . $this->getSanitizer()->getString('clientAddress', $filterBy) . '%';
+            $params['clientAddress'] = '%' . $parsedBody->getString('clientAddress') . '%';
         }
 
-        if ($this->getSanitizer()->getString('clientVersion', $filterBy) != '') {
+        if ($parsedBody->getString('clientVersion') != '') {
             $body .= ' AND display.client_version LIKE :clientVersion ';
-            $params['clientVersion'] = '%' . $this->getSanitizer()->getString('clientVersion', $filterBy) . '%';
+            $params['clientVersion'] = '%' . $parsedBody->getString('clientVersion') . '%';
         }
 
-        if ($this->getSanitizer()->getString('clientType', $filterBy) != '') {
+        if ($parsedBody->getString('clientType') != '') {
             $body .= ' AND display.client_type = :clientType ';
-            $params['clientType'] = $this->getSanitizer()->getString('clientType', $filterBy);
+            $params['clientType'] = $parsedBody->getString('clientType');
         }
 
-        if ($this->getSanitizer()->getString('clientCode', $filterBy) != '') {
+        if ($parsedBody->getString('clientCode') != '') {
             $body .= ' AND display.client_code LIKE :clientCode ';
-            $params['clientCode'] = '%' . $this->getSanitizer()->getString('clientCode', $filterBy) . '%';
+            $params['clientCode'] = '%' . $parsedBody->getString('clientCode') . '%';
         }
 
-        if ($this->getSanitizer()->getString('orientation', $filterBy) != '') {
+        if ($parsedBody->getString('orientation', $filterBy) != '') {
             $body .= ' AND display.orientation = :orientation ';
-            $params['orientation'] = $this->getSanitizer()->getString('orientation', $filterBy);
+            $params['orientation'] = $parsedBody->getString('orientation', $filterBy);
         }
 
-        if ($this->getSanitizer()->getInt('mediaInventoryStatus', $filterBy) != '') {
-            if ($this->getSanitizer()->getInt('mediaInventoryStatus', $filterBy) === -1) {
+        if ($parsedBody->getInt('mediaInventoryStatus', $filterBy) != '') {
+            if ($parsedBody->getInt('mediaInventoryStatus', $filterBy) === -1) {
+
                 $body .= ' AND display.mediaInventoryStatus <> 1 ';
             } else {
                 $body .= ' AND display.mediaInventoryStatus = :mediaInventoryStatus ';
-                $params['mediaInventoryStatus'] = $this->getSanitizer()->getInt('mediaInventoryStatus', $filterBy);
+                $params['mediaInventoryStatus'] = $parsedBody->getInt('mediaInventoryStatus');
             }
         }
 
-        if ($this->getSanitizer()->getInt('loggedIn', -1, $filterBy) != -1) {
+        if ($parsedBody->getInt('loggedIn', ['default' => -1]) != -1) {
             $body .= ' AND display.loggedIn = :loggedIn ';
-            $params['loggedIn'] = $this->getSanitizer()->getInt('loggedIn', $filterBy);
+            $params['loggedIn'] = $parsedBody->getInt('loggedIn');
         }
 
-        if ($this->getSanitizer()->getInt('lastAccessed', $filterBy) !== null) {
+        if ($parsedBody->getDate('lastAccessed', ['dateFormat' => 'U']) !== null) {
             $body .= ' AND display.lastAccessed > :lastAccessed ';
-            $params['lastAccessed'] = $this->getSanitizer()->getInt('lastAccessed', $filterBy);
+            $params['lastAccessed'] = $parsedBody->getDate('lastAccessed',['dateFormat' => 'U'])->format('U');
         }
 
         // Exclude a group?
-        if ($this->getSanitizer()->getInt('exclude_displaygroupid', $filterBy) !== null) {
+        if ($parsedBody->getInt('exclude_displaygroupid') !== null) {
             $body .= " AND display.DisplayID NOT IN ";
             $body .= "       (SELECT display.DisplayID ";
             $body .= "       FROM    display ";
@@ -378,11 +383,11 @@ class DisplayFactory extends BaseFactory
             $body .= "               ON      lkdisplaydg.DisplayID = display.DisplayID ";
             $body .= "   WHERE  lkdisplaydg.DisplayGroupID   = :excludeDisplayGroupId ";
             $body .= "       )";
-            $params['excludeDisplayGroupId'] = $this->getSanitizer()->getInt('exclude_displaygroupid', $filterBy);
+            $params['excludeDisplayGroupId'] = $parsedBody->getInt('exclude_displaygroupid');
         }
 
         // Media ID - direct assignment
-        if ($this->getSanitizer()->getInt('mediaId', $filterBy) !== null) {
+        if ($parsedBody->getInt('mediaId') !== null) {
 
             $body .= '
                 AND display.displayId IN (
@@ -420,13 +425,13 @@ class DisplayFactory extends BaseFactory
                 )
             ';
 
-            $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
+            $params['mediaId'] = $parsedBody->getInt('mediaId');
         }
 
         // Tags
-        if ($this->getSanitizer()->getString('tags', $filterBy) != '') {
+        if ($parsedBody->getString('tags') != '') {
 
-            $tagFilter = $this->getSanitizer()->getString('tags', $filterBy);
+            $tagFilter = $parsedBody->getString('tags');
 
             if (trim($tagFilter) === '--no-tag') {
                 $body .= ' AND `displaygroup`.displaygroupId NOT IN (
@@ -437,7 +442,7 @@ class DisplayFactory extends BaseFactory
                     )
                 ';
             } else {
-                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+                $operator = $parsedBody->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
 
                 $body .= " AND `displaygroup`.displaygroupId IN (
                 SELECT `lktagdisplaygroup`.displaygroupId
@@ -452,11 +457,11 @@ class DisplayFactory extends BaseFactory
         }
 
         // run the special query to help sort by displays already assigned to this display group, we want to run it only if we're sorting by member column.
-        if ($this->getSanitizer()->getInt('displayGroupIdMembers', $filterBy) !== null && ($sortOrder == ['`member`'] || $sortOrder == ['`member` DESC'] )) {
+        if ($parsedBody->getInt('displayGroupIdMembers') !== null && ($sortOrder == ['`member`'] || $sortOrder == ['`member` DESC'] )) {
             $members = [];
             foreach ($this->getStore()->select($select . $body, $params) as $row) {
-                $displayId = $this->getSanitizer()->int($row['displayId']);
-                $displayGroupId = $this->getSanitizer()->getInt('displayGroupIdMembers', $filterBy);
+                $displayId = $parsedBody->getInt($row['displayId']);
+                $displayGroupId = $parsedBody->getInt('displayGroupIdMembers');
 
                 if ($this->getStore()->exists('SELECT display.display, display.displayId, displaygroup.displayGroupId
                                                     FROM display
@@ -478,9 +483,9 @@ class DisplayFactory extends BaseFactory
         }
 
         // filter by commercial licence
-        if ($this->getSanitizer()->getInt('commercialLicence', $filterBy) !== null) {
+        if ($parsedBody->getInt('commercialLicence') !== null) {
             $body .= ' AND display.commercialLicence = :commercialLicence ';
-            $params['commercialLicence'] = $this->getSanitizer()->getInt('commercialLicence', $filterBy);
+            $params['commercialLicence'] = $parsedBody->getInt('commercialLicence');
         }
 
         // Sorting?
@@ -508,8 +513,8 @@ class DisplayFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $parsedBody->getInt('start') !== null && $parsedBody->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($parsedBody->getInt('start', ['default' => 0]), 0) . ', ' . $parsedBody->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

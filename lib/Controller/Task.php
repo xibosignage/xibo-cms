@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2016-2018 Spring Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -21,6 +21,11 @@
  */
 
 namespace Xibo\Controller;
+
+use Psr\Container\ContainerInterface;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
@@ -31,6 +36,7 @@ use Xibo\Factory\TaskFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserNotificationFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -78,10 +84,13 @@ class Task extends Base
     /** @var  UserNotificationFactory */
     private $userNotificationFactory;
 
+    /** ContainerInterface */
+    private $container;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -99,9 +108,9 @@ class Task extends Base
      * @param NotificationFactory $notificationFactory
      * @param UserNotificationFactory $userNotificationFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $pool, $taskFactory, $userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $mediaFactory, $notificationFactory, $userNotificationFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $pool, $taskFactory, $userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $mediaFactory, $notificationFactory, $userNotificationFactory, Twig $view, ContainerInterface $container)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
         $this->taskFactory = $taskFactory;
         $this->store = $store;
         $this->timeSeriesStore = $timeSeriesStore;
@@ -113,36 +122,55 @@ class Task extends Base
         $this->mediaFactory = $mediaFactory;
         $this->notificationFactory = $notificationFactory;
         $this->userNotificationFactory = $userNotificationFactory;
+        $this->container = $container;
     }
 
     /**
      * Display Page
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function displayPage()
+    public function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'task-page';
+
+        return $this->render($request, $response);
     }
 
     /**
      * Grid
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function grid()
+    public function grid(Request $request, Response $response)
     {
-        $tasks = $this->taskFactory->query($this->gridRenderSort(), $this->gridRenderFilter());
+        $tasks = $this->taskFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([], $request));
 
         foreach ($tasks as $task) {
             /** @var \Xibo\Entity\Task $task */
 
             $task->nextRunDt = $task->nextRunDate();
 
-            if ($this->isApi())
+            if ($this->isApi($request))
                 continue;
 
             $task->includeProperty('buttons');
 
             $task->buttons[] = array(
                 'id' => 'task_button_run.now',
-                'url' => $this->urlFor('task.runNow.form', ['id' => $task->taskId]),
+                'url' => $this->urlFor($request,'task.runNow.form', ['id' => $task->taskId]),
                 'text' => __('Run Now')
             );
 
@@ -153,14 +181,14 @@ class Task extends Base
             // Edit Button
             $task->buttons[] = array(
                 'id' => 'task_button_edit',
-                'url' => $this->urlFor('task.edit.form', ['id' => $task->taskId]),
+                'url' => $this->urlFor($request,'task.edit.form', ['id' => $task->taskId]),
                 'text' => __('Edit')
             );
 
             // Delete Button
             $task->buttons[] = array(
                 'id' => 'task_button_delete',
-                'url' => $this->urlFor('task.delete.form', ['id' => $task->taskId]),
+                'url' => $this->urlFor($request,'task.delete.form', ['id' => $task->taskId]),
                 'text' => __('Delete')
             );
         }
@@ -168,12 +196,22 @@ class Task extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->taskFactory->countLast();
         $this->getState()->setData($tasks);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Add form
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function addForm()
+    public function addForm(Request $request, Response $response)
     {
         // Provide a list of possible task classes by searching for .task file in /tasks and /custom
         $data = ['tasksAvailable' => []];
@@ -194,17 +232,30 @@ class Task extends Base
 
         $this->getState()->template = 'task-form-add';
         $this->getState()->setData($data);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Add
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function add()
+    public function add(Request $request, Response $response)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
         $task = $this->taskFactory->create();
-        $task->name = $this->getSanitizer()->getString('name');
-        $task->configFile = $this->getSanitizer()->getString('file');
-        $task->schedule = $this->getSanitizer()->getString('schedule');
+        $task->name = $sanitizedParams->getString('name');
+        $task->configFile = $sanitizedParams->getString('file');
+        $task->schedule = $sanitizedParams->getString('schedule');
         $task->status = \Xibo\Entity\Task::$STATUS_IDLE;
         $task->lastRunStatus = 0;
         $task->isActive = 0;
@@ -219,37 +270,62 @@ class Task extends Base
             'id' => $task->taskId,
             'data' => $task
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edit Form
-     * @param $taskId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function editForm($taskId)
+    public function editForm(Request $request, Response $response, $id)
     {
-        $task = $this->taskFactory->getById($taskId);
+        $task = $this->taskFactory->getById($id);
         $task->setClassAndOptions();
 
         $this->getState()->template = 'task-form-edit';
         $this->getState()->setData([
             'task' => $task
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
-     * @param $taskId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function edit($taskId)
+    public function edit(Request $request, Response $response, $id)
     {
-        $task = $this->taskFactory->getById($taskId);
+        $task = $this->taskFactory->getById($id);
+
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
         $task->setClassAndOptions();
-        $task->name = $this->getSanitizer()->getString('name');
-        $task->schedule = $this->getSanitizer()->getString('schedule');
-        $task->isActive = $this->getSanitizer()->getCheckbox('isActive');
+        $task->name = $sanitizedParams->getString('name');
+        $task->schedule = $sanitizedParams->getString('schedule');
+        $task->isActive = $sanitizedParams->getCheckbox('isActive');
 
         // Loop through each option and see if a new value is provided
         foreach ($task->options as $option => $value) {
-            $provided = $this->getSanitizer()->getString($option);
+            $provided = $sanitizedParams->getString($option);
 
             if ($provided !== null) {
                 $this->getLog()->debug('Setting ' . $option . ' to ' . $provided);
@@ -268,28 +344,50 @@ class Task extends Base
             'id' => $task->taskId,
             'data' => $task
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Delete Form
-     * @param $taskId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function deleteForm($taskId)
+    public function deleteForm(Request $request, Response $response, $id)
     {
-        $task = $this->taskFactory->getById($taskId);
+        $task = $this->taskFactory->getById($id);
 
         $this->getState()->template = 'task-form-delete';
         $this->getState()->setData([
             'task' => $task
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
-     * @param $taskId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function delete($taskId)
+    public function delete(Request $request, Response $response, $id)
     {
-        $task = $this->taskFactory->getById($taskId);
+        $task = $this->taskFactory->getById($id);
         $task->delete();
 
         // Return
@@ -297,28 +395,50 @@ class Task extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $task->name)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Delete Form
-     * @param $taskId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function runNowForm($taskId)
+    public function runNowForm(Request $request, Response $response, $id)
     {
-        $task = $this->taskFactory->getById($taskId);
+        $task = $this->taskFactory->getById($id);
 
         $this->getState()->template = 'task-form-run-now';
         $this->getState()->setData([
             'task' => $task
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
-     * @param $taskId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function runNow($taskId)
+    public function runNow(Request $request, Response $response, $id)
     {
-        $task = $this->taskFactory->getById($taskId);
+        $task = $this->taskFactory->getById($id);
         $task->runNow = 1;
         $task->save();
 
@@ -327,16 +447,18 @@ class Task extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Run Now set on %s'), $task->name)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * @param $taskId
      * @throws \Exception
      */
-    public function run($taskId)
+    public function run(Request $request, Response $response, $id)
     {
         // Get this task
-        $task = $this->taskFactory->getById($taskId);
+        $task = $this->taskFactory->getById($id);
 
         // Set to running
         $this->getLog()->debug('Running Task ' . $task->name . ' [' . $task->taskId . '], Class = ' . $task->class);
@@ -354,15 +476,15 @@ class Task extends Base
             $start = time();
 
             $taskClass
-                ->setSanitizer($this->getSanitizer())
-                ->setUser($this->getUser())
+                ->setSanitizer($this->getSanitizer($request->getParams()))
+                ->setUser($this->getUser($request))
                 ->setConfig($this->getConfig())
                 ->setLogger($this->getLog())
                 ->setDate($this->getDate())
                 ->setPool($this->pool)
                 ->setStore($this->store)
                 ->setTimeSeriesStore($this->timeSeriesStore)
-                ->setFactories($this->getApp()->container)
+                ->setFactories($this->container)
                 ->setTask($task)
                 ->run();
 
@@ -397,6 +519,7 @@ class Task extends Base
 
         // No output
         $this->setNoOutput(true);
+        return $this->render($request, $response);
     }
 
     /**
@@ -404,7 +527,7 @@ class Task extends Base
      *  continue polling until there aren't any more to run
      *  allow for multiple polls to run at the same time
      */
-    public function poll()
+    public function poll(Request $request, Response $response)
     {
         $this->getLog()->debug('XTR poll started');
 
@@ -459,7 +582,7 @@ class Task extends Base
                     // Pass to run.
                     try {
                         // Run is isolated
-                        $this->run($taskId);
+                        $this->run($request,$response,$taskId);
 
                         // Set to idle
                         $this->store->update($updateSth, ['taskId' => $taskId, 'status' => \Xibo\Entity\Task::$STATUS_IDLE], 'xtr', true);
@@ -498,6 +621,9 @@ class Task extends Base
         }
 
         $this->getLog()->debug('XTR poll stopped');
+        // No output
+        $this->setNoOutput(true);
+        return $this->render($request, $response);
     }
 
     private function pollProcessTimeouts()

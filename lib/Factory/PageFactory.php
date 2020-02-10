@@ -22,7 +22,7 @@
 
 namespace Xibo\Factory;
 
-
+use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Page;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
@@ -102,6 +102,8 @@ class PageFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
+        $parsedBody = $this->getSanitizer($filterBy);
+
         if ($sortOrder == null)
             $sortOrder = ['name'];
 
@@ -112,18 +114,18 @@ class PageFactory extends BaseFactory
         // Logged in user view permissions
         $this->viewPermissionSql('Xibo\Entity\Page', $sql, $params, 'pageId', null, $filterBy);
 
-        if ($this->getSanitizer()->getString('name', $filterBy) != null) {
-            $params['name'] = $this->getSanitizer()->getString('name', $filterBy);
+        if ($parsedBody->getString('name') != null) {
+            $params['name'] = $parsedBody->getString('name');
             $sql .= ' AND `name` = :name ';
         }
 
-        if ($this->getSanitizer()->getInt('pageId', $filterBy) !== null) {
-            $params['pageId'] = $this->getSanitizer()->getString('pageId', $filterBy);
+        if ($parsedBody->getInt('pageId') !== null) {
+            $params['pageId'] = $parsedBody->getInt('pageId');
             $sql .= ' AND `pageId` = :pageId ';
         }
 
-        if ($this->getSanitizer()->getInt('asHome', $filterBy) !== null) {
-            $params['asHome'] = $this->getSanitizer()->getString('asHome', $filterBy);
+        if ($parsedBody->getInt('asHome') !== null) {
+            $params['asHome'] = $parsedBody->getInt('asHome');
             $sql .= ' AND `asHome` = :asHome ';
         }
 

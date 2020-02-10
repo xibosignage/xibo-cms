@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,7 +23,8 @@ namespace Xibo\Widget;
 
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlayerVersionFactory;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 /**
  * Class PlayerSoftware
  * @package Xibo\Widget
@@ -64,15 +65,15 @@ class PlayerSoftware extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         // Non-editable
     }
 
     /** @inheritdoc */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
-        $this->download();
+        $this->download($request, $response);
     }
 
     /** @inheritdoc */
@@ -82,15 +83,7 @@ class PlayerSoftware extends ModuleWidget
         return 1;
     }
 
-    /**
-     * @return PlayerVersionFactory
-     */
-    private function getPlayerVersionFactory()
-    {
-        return $this->getApp()->container->get('playerVersionFactory');
-    }
-
-    public function postProcess($media)
+    public function postProcess($media, PlayerVersionFactory $factory = null)
     {
         $version = '';
         $code = null;
@@ -155,7 +148,7 @@ class PlayerSoftware extends ModuleWidget
             $type = 'sssp';
         }
 
-        return $this->getPlayerVersionFactory()->create($type, $version, $code, $media->mediaId, $playerShowVersion);
+        return $factory->create($type, $version, $code, $media->mediaId, $playerShowVersion);
     }
 
     public function getValidExtensions()

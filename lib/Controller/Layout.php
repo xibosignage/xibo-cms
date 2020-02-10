@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -21,7 +21,11 @@
  */
 namespace Xibo\Controller;
 
+use Psr\Container\ContainerInterface;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Parsedown;
+use Slim\Views\Twig;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
@@ -44,6 +48,7 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\Environment;
 use Xibo\Helper\LayoutUploadHandler;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -111,10 +116,13 @@ class Layout extends Base
     /** @var  DisplayGroupFactory */
     private $displayGroupFactory;
 
+    /** ContainerInterface */
+    private  $container;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -131,10 +139,13 @@ class Layout extends Base
      * @param MediaFactory $mediaFactory
      * @param DataSetFactory $dataSetFactory
      * @param CampaignFactory $campaignFactory
+     * @param $displayGroupFactory
+     * @param Twig $view
+     * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory, $campaignFactory, $displayGroupFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory, $campaignFactory, $displayGroupFactory, Twig $view, ContainerInterface $container)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->session = $session;
         $this->userFactory = $userFactory;
@@ -148,6 +159,7 @@ class Layout extends Base
         $this->dataSetFactory = $dataSetFactory;
         $this->campaignFactory = $campaignFactory;
         $this->displayGroupFactory = $displayGroupFactory;
+        $this->container = $container;
     }
 
     /**
@@ -168,33 +180,53 @@ class Layout extends Base
 
     /**
      * Displays the Layout Page
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function displayPage()
+    function displayPage(Request $request, Response $response)
     {
         // Call to render the template
         $this->getState()->template = 'layout-page';
         $this->getState()->setData([
             'users' => $this->userFactory->query(),
             'groups' => $this->userGroupFactory->query(),
-            'displayGroups' => $this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1])
+            'displayGroups' => $this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1], $request)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Display the Layout Designer
-     * @param int $layoutId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function displayDesigner($layoutId)
+    public function displayDesigner(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->loadById($layoutId);
+        $layout = $this->layoutFactory->loadById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout))
             throw new AccessDeniedException();
 
         // Get the parent layout if it's editable
         if ($layout->isEditable()) {
             // Get the Layout using the Draft ID
-            $layout = $this->layoutFactory->getByParentId($layoutId);
+            $layout = $this->layoutFactory->getByParentId($id, $request);
         }
 
         // Work out our resolution
@@ -211,9 +243,9 @@ class Layout extends Base
             'layout' => $layout,
             'resolution' => $resolution,
             'isTemplate' => $isTemplate,
-            'zoom' => $this->getSanitizer()->getDouble('zoom', $this->getUser()->getOptionValue('defaultDesignerZoom', 1)),
+            'zoom' => $sanitizedParams->getDouble('zoom', ['default' => $this->getUser($request)->getOptionValue('defaultDesignerZoom', 1)]),
             'users' => $this->userFactory->query(),
-            'modules' => array_map(function($element) use ($moduleFactory) { 
+            'modules' => array_map(function($element) use ($moduleFactory) {
                     $module = $moduleFactory->createForInstall($element->class);
                     $module->setModule($element);
                     return $module;
@@ -223,6 +255,8 @@ class Layout extends Base
         // Call the render the template
         $this->getState()->template = 'layout-designer-page';
         $this->getState()->setData($data);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -273,16 +307,27 @@ class Layout extends Base
      *  )
      * )
      *
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function add()
+    function add(Request $request, Response $response)
     {
-        $name = $this->getSanitizer()->getString('name');
-        $description = $this->getSanitizer()->getString('description');
-        $templateId = $this->getSanitizer()->getInt('layoutId');
-        $resolutionId = $this->getSanitizer()->getInt('resolutionId');
-        $enableStat = $this->getSanitizer()->getCheckbox('enableStat');
-        $autoApplyTransitions = $this->getSanitizer()->getCheckbox('autoApplyTransitions');
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $name = $sanitizedParams->getString('name');
+        $description = $sanitizedParams->getString('description');
+        $templateId = $sanitizedParams->getInt('layoutId');
+        $resolutionId = $sanitizedParams->getInt('resolutionId');
+        $enableStat = $sanitizedParams->getCheckbox('enableStat');
+        $autoApplyTransitions = $sanitizedParams->getCheckbox('autoApplyTransitions');
 
         $template = null;
 
@@ -299,19 +344,19 @@ class Layout extends Base
             $layout->description = $description;
 
             // Create some tags (overwriting the old ones)
-            $layout->tags = $this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags'));
+            $layout->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
 
             // Set the owner
-            $layout->setOwner($this->getUser()->userId);
+            $layout->setOwner($this->getUser($request)->userId);
 
             // Ensure we have Playlists for each region
             foreach ($layout->regions as $region) {
                 // Set the ownership of this region to the user creating from template
-                $region->setOwner($this->getUser()->userId, true);
+                $region->setOwner($this->getUser($request)->userId, true);
             }
         }
         else {
-            $layout = $this->layoutFactory->createFromResolution($resolutionId, $this->getUser()->userId, $name, $description, $this->getSanitizer()->getString('tags'));
+            $layout = $this->layoutFactory->createFromResolution($resolutionId, $this->getUser($request)->userId, $name, $description, $sanitizedParams->getString('tags'));
         }
 
         // Set layout enableStat flag
@@ -324,7 +369,7 @@ class Layout extends Base
         $layout->save();
 
         // Permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), 'Xibo\\Entity\\Campaign', $layout->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+        foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), 'Xibo\\Entity\\Campaign', $layout->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
             /* @var Permission $permission */
             $permission->save();
         }
@@ -340,21 +385,21 @@ class Layout extends Base
                 $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
             }
 
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
 
             $playlist = $region->getPlaylist();
 
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
 
             foreach ($playlist->widgets as $widget) {
                 /* @var Widget $widget */
-                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+                foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                     /* @var Permission $permission */
                     $permission->save();
                 }
@@ -364,7 +409,7 @@ class Layout extends Base
         $this->getLog()->debug('Layout Added');
 
         // automatically checkout the new layout for edit
-        $this->checkout($layout->layoutId);
+        $this->checkout($request, $response, $layout->layoutId);
 
         // Return
         $this->getState()->hydrate([
@@ -373,12 +418,24 @@ class Layout extends Base
             'id' => $layout->layoutId,
             'data' => $layout
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edit Layout
-     * @param int $layoutId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/layout/{layoutId}",
      *  operationId="layoutEdit",
@@ -433,14 +490,12 @@ class Layout extends Base
      *  )
      * )
      *
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws XiboException
      */
-    function edit($layoutId)
+    function edit(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
         $isTemplate = false;
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // check if we're dealing with the template
         $currentTags = explode(',', $layout->tags);
@@ -451,7 +506,7 @@ class Layout extends Base
         }
 
         // Make sure we have permission
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout))
             throw new AccessDeniedException();
 
         // Make sure we're not a draft
@@ -459,13 +514,13 @@ class Layout extends Base
             throw new InvalidArgumentException(__('Cannot edit Layout properties on a Draft'), 'layoutId');
         }
 
-        $layout->layout = $this->getSanitizer()->getString('name');
-        $layout->description = $this->getSanitizer()->getString('description');
-        $layout->replaceTags($this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags')));
-        $layout->retired = $this->getSanitizer()->getCheckbox('retired');
-        $layout->enableStat = $this->getSanitizer()->getCheckbox('enableStat');
+        $layout->layout = $sanitizedParams->getString('name');
+        $layout->description = $sanitizedParams->getString('description');
+        $layout->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+        $layout->retired = $sanitizedParams->getCheckbox('retired');
+        $layout->enableStat = $sanitizedParams->getCheckbox('enableStat');
 
-        $tags = $this->getSanitizer()->getString('tags');
+        $tags = $sanitizedParams->getString('tags');
         $tagsArray = explode(',', $tags);
 
         if (!$isTemplate) {
@@ -491,12 +546,24 @@ class Layout extends Base
             'id' => $layout->layoutId,
             'data' => $layout
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edit Layout Background
-     * @param int $layoutId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/layout/background/{layoutId}",
      *  operationId="layoutEditBackground",
@@ -544,28 +611,28 @@ class Layout extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    function editBackground($layoutId)
+    function editBackground(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Make sure we have permission
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout))
             throw new AccessDeniedException();
 
         // Check that this Layout is a Draft
         if (!$layout->isChild())
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
 
-        $layout->backgroundColor = $this->getSanitizer()->getString('backgroundColor');
-        $layout->backgroundImageId = $this->getSanitizer()->getInt('backgroundImageId');
-        $layout->backgroundzIndex = $this->getSanitizer()->getInt('backgroundzIndex');
-        $layout->autoApplyTransitions = $this->getSanitizer()->getCheckbox('autoApplyTransitions');
+        $layout->backgroundColor = $sanitizedParams->getString('backgroundColor');
+        $layout->backgroundImageId = $sanitizedParams->getInt('backgroundImageId');
+        $layout->backgroundzIndex = $sanitizedParams->getInt('backgroundzIndex');
+        $layout->autoApplyTransitions = $sanitizedParams->getCheckbox('autoApplyTransitions');
 
         // Resolution
         $saveRegions = false;
-        $resolution = $this->resolutionFactory->getById($this->getSanitizer()->getInt('resolutionId'));
+        $resolution = $this->resolutionFactory->getById($sanitizedParams->getInt('resolutionId'));
 
         if ($layout->width != $resolution->width || $layout->height != $resolution->height) {
             $saveRegions = true;
@@ -588,17 +655,28 @@ class Layout extends Base
             'id' => $layout->layoutId,
             'data' => $layout
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Delete Layout Form
-     * @param int $layoutId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function deleteForm($layoutId)
+    function deleteForm(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($layout))
+        if (!$this->getUser($request)->checkDeleteable($layout))
             throw new AccessDeniedException(__('You do not have permissions to delete this layout'));
 
         $data = [
@@ -610,19 +688,31 @@ class Layout extends Base
 
         $this->getState()->template = 'layout-form-delete';
         $this->getState()->setData($data);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Retire Layout Form
-     * @param int $layoutId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function retireForm($layoutId)
+    public function retireForm(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
 
         // Make sure we have permission
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+        }
 
         $data = [
             'layout' => $layout,
@@ -633,12 +723,24 @@ class Layout extends Base
 
         $this->getState()->template = 'layout-form-retire';
         $this->getState()->setData($data);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Deletes a layout
-     * @param int $layoutId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Delete(
      *  path="/layout/{layoutId}",
      *  operationId="layoutDelete",
@@ -658,18 +760,19 @@ class Layout extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    function delete($layoutId)
+    function delete(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->loadById($layoutId);
+        $layout = $this->layoutFactory->loadById($id);
 
-        if (!$this->getUser()->checkDeleteable($layout))
+        if (!$this->getUser($request)->checkDeleteable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to delete this layout'));
+        }
 
         // Make sure we're not a draft
-        if ($layout->isChild())
+        if ($layout->isChild()) {
             throw new InvalidArgumentException(__('Cannot delete Layout from its Draft, delete the parent'), 'layoutId');
+        }
 
         $layout->delete();
 
@@ -678,12 +781,24 @@ class Layout extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $layout->layout)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Retires a layout
-     * @param int $layoutId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/layout/retire/{layoutId}",
      *  operationId="layoutRetire",
@@ -703,18 +818,19 @@ class Layout extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    function retire($layoutId)
+    function retire(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+        }
 
         // Make sure we're not a draft
-        if ($layout->isChild())
+        if ($layout->isChild()) {
             throw new InvalidArgumentException(__('Cannot modify Layout from its Draft'), 'layoutId');
+        }
 
         $layout->retired = 1;
         $layout->save([
@@ -729,20 +845,31 @@ class Layout extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Retired %s'), $layout->layout)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Unretire Layout Form
-     * @param int $layoutId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function unretireForm($layoutId)
+    public function unretireForm(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
 
         // Make sure we have permission
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+        }
 
         $data = [
             'layout' => $layout,
@@ -751,12 +878,25 @@ class Layout extends Base
 
         $this->getState()->template = 'layout-form-unretire';
         $this->getState()->setData($data);
+
+        return $this->render($request, $response);
+
     }
 
     /**
      * Unretires a layout
-     * @param int $layoutId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/layout/unretire/{layoutId}",
      *  operationId="layoutUnretire",
@@ -776,18 +916,19 @@ class Layout extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    function unretire($layoutId)
+    function unretire(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+        }
 
         // Make sure we're not a draft
-        if ($layout->isChild())
+        if ($layout->isChild()) {
             throw new InvalidArgumentException(__('Cannot modify Layout from its Draft'), 'layoutId');
+        }
 
         $layout->retired = 0;
         $layout->save([
@@ -803,12 +944,24 @@ class Layout extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Unretired %s'), $layout->layout)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Set Enable Stats Collection of a layout
-     * @param int $layoutId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/layout/setenablestat/{layoutId}",
      *  operationId="layoutSetEnableStat",
@@ -835,20 +988,22 @@ class Layout extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    function setEnableStat($layoutId)
+    function setEnableStat(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+        }
 
         // Make sure we're not a draft
-        if ($layout->isChild())
+        if ($layout->isChild()) {
             throw new InvalidArgumentException(__('Cannot modify Layout from its Draft'), 'layoutId');
+        }
 
-        $enableStat = $this->getSanitizer()->getCheckbox('enableStat');
+        $enableStat = $sanitizedParams->getCheckbox('enableStat');
 
         $layout->enableStat = $enableStat;
         $layout->save(['saveTags' => false]);
@@ -858,20 +1013,31 @@ class Layout extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('For Layout %s Enable Stats Collection is set to %s'), $layout->layout, ($layout->enableStat == 1) ? __('On') : __('Off'))
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Set Enable Stat Form
-     * @param int $layoutId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function setEnableStatForm($layoutId)
+    public function setEnableStatForm(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
 
         // Make sure we have permission
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+        }
 
         $data = [
             'layout' => $layout,
@@ -880,6 +1046,8 @@ class Layout extends Base
 
         $this->getState()->template = 'layout-form-setenablestat';
         $this->getState()->setData($data);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -978,15 +1146,24 @@ class Layout extends Base
      *  )
      * )
      *
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function grid()
+    function grid(Request $request, Response $response)
     {
         $this->getState()->template = 'grid';
 
+        $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
         // Should we parse the description into markdown
-        $showDescriptionId = $this->getSanitizer()->getInt('showDescriptionId');
+        $showDescriptionId = $parsedQueryParams->getInt('showDescriptionId');
 
         // We might need to embed some extra content into the response if the "Show Description"
         // is set to media listing
@@ -994,25 +1171,25 @@ class Layout extends Base
             $embed = ['regions', 'playlists', 'widgets'];
         } else {
             // Embed?
-            $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+            $embed = ($parsedQueryParams->getString('embed') != null) ? explode(',', $parsedQueryParams->getString('embed')) : [];
         }
 
         // Get all layouts
-        $layouts = $this->layoutFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
-            'layout' => $this->getSanitizer()->getString('layout'),
-            'userId' => $this->getSanitizer()->getInt('userId'),
-            'retired' => $this->getSanitizer()->getInt('retired'),
-            'tags' => $this->getSanitizer()->getString('tags'),
-            'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
-            'filterLayoutStatusId' => $this->getSanitizer()->getInt('layoutStatusId'),
-            'layoutId' => $this->getSanitizer()->getInt('layoutId'),
-            'parentId' => $this->getSanitizer()->getInt('parentId'),
-            'showDrafts' => $this->getSanitizer()->getInt('showDrafts'),
-            'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
-            'mediaLike' => $this->getSanitizer()->getString('mediaLike'),
-            'publishedStatusId' => $this->getSanitizer()->getInt('publishedStatusId'),
-            'activeDisplayGroupId' => $this->getSanitizer()->getInt('activeDisplayGroupId')
-        ]));
+        $layouts = $this->layoutFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+            'layout' => $parsedQueryParams->getString('layout'),
+            'userId' => $parsedQueryParams->getInt('userId'),
+            'retired' => $parsedQueryParams->getInt('retired'),
+            'tags' => $parsedQueryParams->getString('tags'),
+            'exactTags' => $parsedQueryParams->getCheckbox('exactTags'),
+            'filterLayoutStatusId' => $parsedQueryParams->getInt('layoutStatusId'),
+            'layoutId' => $parsedQueryParams->getInt('layoutId'),
+            'parentId' => $parsedQueryParams->getInt('parentId'),
+            'showDrafts' => $parsedQueryParams->getInt('showDrafts'),
+            'ownerUserGroupId' => $parsedQueryParams->getInt('ownerUserGroupId'),
+            'mediaLike' => $parsedQueryParams->getString('mediaLike'),
+            'publishedStatusId' => $parsedQueryParams->getInt('publishedStatusId'),
+            'activeDisplayGroupId' => $parsedQueryParams->getInt('activeDisplayGroupId')
+        ], $request), $request);
 
         foreach ($layouts as $layout) {
             /* @var \Xibo\Entity\Layout $layout */
@@ -1064,13 +1241,13 @@ class Layout extends Base
 
                     if (in_array('permissions', $embed)) {
                         // Augment with editable flag
-                        $widget->isEditable = $this->getUser()->checkEditable($widget);
+                        $widget->isEditable = $this->getUser($request)->checkEditable($widget);
 
                         // Augment with deletable flag
-                        $widget->isDeletable = $this->getUser()->checkDeleteable($widget);
+                        $widget->isDeletable = $this->getUser($request)->checkDeleteable($widget);
 
                         // Augment with permissions flag
-                        $widget->isPermissionsModifiable = $this->getUser()->checkPermissionsModifyable($widget);
+                        $widget->isPermissionsModifiable = $this->getUser($request)->checkPermissionsModifyable($widget);
                     }
 
                     if (in_array('widget_validity', $embed)) {
@@ -1086,19 +1263,19 @@ class Layout extends Base
                 foreach ($layout->regions as $region) {
                     if (in_array('permissions', $embed)) {
                         // Augment with editable flag
-                        $region->isEditable = $this->getUser()->checkEditable($region);
+                        $region->isEditable = $this->getUser($request)->checkEditable($region);
 
                          // Augment with deletable flag
-                        $region->isDeletable = $this->getUser()->checkDeleteable($region);
+                        $region->isDeletable = $this->getUser($request)->checkDeleteable($region);
 
                         // Augment with permissions flag
-                        $region->isPermissionsModifiable = $this->getUser()->checkPermissionsModifyable($region);
+                        $region->isPermissionsModifiable = $this->getUser($request)->checkPermissionsModifyable($region);
                     }
                 }
 
             }
 
-            if ($this->isApi())
+            if ($this->isApi($request))
                 continue;
 
             $layout->includeProperty('buttons');
@@ -1107,7 +1284,7 @@ class Layout extends Base
             $layout->thumbnail = '';
 
             if ($layout->backgroundImageId != 0) {
-                $download = $this->urlFor('layout.download.background', ['id' => $layout->layoutId]) . '?preview=1' . '&backgroundImageId=' . $layout->backgroundImageId;
+                $download = $this->urlFor($request,'layout.download.background', ['id' => $layout->layoutId]) . '?preview=1' . '&backgroundImageId=' . $layout->backgroundImageId;
                 $layout->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56" /></i></a>';
             }
 
@@ -1134,7 +1311,7 @@ class Layout extends Base
                 }
 
                 // provide our layout object to a template to render immediately
-                $layout->descriptionFormatted = $this->renderTemplateToString('layout-page-grid-widgetlist', $layout);
+                $layout->descriptionFormatted = $this->renderTemplateToString('layout-page-grid-widgetlist', $layout, $response);
             }
 
             switch ($layout->status) {
@@ -1170,15 +1347,15 @@ class Layout extends Base
             $layout->publishedStatusFailed = __('Publish failed ');
 
             // Check if user has view permissions to the schedule now page - for layout designer to show/hide Schedule Now button
-            $layout->scheduleNowPermission = $this->getUser()->routeViewable('/schedulenow/form/now/:from/:id');
+            $layout->scheduleNowPermission = $this->getUser($request)->routeViewable('/schedulenow/form/now/:from/:id');
 
             // Add some buttons for this row
-            if ($this->getUser()->checkEditable($layout)) {
+            if ($this->getUser($request)->checkEditable($layout)) {
                 // Design Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_design',
                     'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor('layout.designer', array('id' => $layout->layoutId)),
+                    'url' => $this->urlFor($request,'layout.designer', array('id' => $layout->layoutId)),
                     'text' => __('Design')
                 );
 
@@ -1189,13 +1366,13 @@ class Layout extends Base
 
                     $layout->buttons[] = array(
                         'id' => 'layout_button_publish',
-                        'url' => $this->urlFor('layout.publish.form', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request,'layout.publish.form', ['id' => $layout->layoutId]),
                         'text' => __('Publish')
                     );
 
                     $layout->buttons[] = array(
                         'id' => 'layout_button_discard',
-                        'url' => $this->urlFor('layout.discard.form', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request,'layout.discard.form', ['id' => $layout->layoutId]),
                         'text' => __('Discard')
                     );
 
@@ -1206,7 +1383,7 @@ class Layout extends Base
                     // Checkout Button
                     $layout->buttons[] = array(
                         'id' => 'layout_button_checkout',
-                        'url' => $this->urlFor('layout.checkout.form', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request,'layout.checkout.form', ['id' => $layout->layoutId]),
                         'text' => __('Checkout')
                     );
 
@@ -1219,25 +1396,25 @@ class Layout extends Base
                 'id' => 'layout_button_preview',
                 'linkType' => '_blank',
                 'external' => true,
-                'url' => $this->urlFor('layout.preview', ['id' => $layout->layoutId]),
+                'url' => $this->urlFor($request,'layout.preview', ['id' => $layout->layoutId]),
                 'text' => __('Preview Layout')
             );
 
             $layout->buttons[] = ['divider' => true];
 
             // Schedule Now
-            if ($this->getUser()->routeViewable('/schedulenow/form/now/:from/:id') === true) {
+            if ($this->getUser($request)->routeViewable('/schedulenow/form/now/:from/:id') === true) {
                 $layout->buttons[] = array(
                     'id' => 'layout_button_schedulenow',
-                    'url' => $this->urlFor('schedulenow.now.form', ['id' => $layout->campaignId, 'from' => 'Campaign']),
+                    'url' => $this->urlFor($request,'schedulenow.now.form', ['id' => $layout->campaignId, 'from' => 'Campaign']),
                     'text' => __('Schedule Now')
                 );
             }
             // Assign to Campaign
-            if ($this->getUser()->routeViewable('/campaign')) {
+            if ($this->getUser($request)->routeViewable('/campaign')) {
                 $layout->buttons[] = array(
                     'id' => 'layout_button_assignTo_campaign',
-                    'url' => $this->urlFor('layout.assignTo.campaign.form', ['id' => $layout->layoutId]),
+                    'url' => $this->urlFor($request,'layout.assignTo.campaign.form', ['id' => $layout->layoutId]),
                     'text' => __('Assign to Campaign')
                 );
             }
@@ -1245,19 +1422,19 @@ class Layout extends Base
             $layout->buttons[] = ['divider' => true];
 
             // Only proceed if we have edit permissions
-            if ($this->getUser()->checkEditable($layout)) {
+            if ($this->getUser($request)->checkEditable($layout)) {
 
                 // Edit Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_edit',
-                    'url' => $this->urlFor('layout.edit.form', ['id' => $layout->layoutId]),
+                    'url' => $this->urlFor($request,'layout.edit.form', ['id' => $layout->layoutId]),
                     'text' => __('Edit')
                 );
 
                 // Copy Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_copy',
-                    'url' => $this->urlFor('layout.copy.form', ['id' => $layout->layoutId]),
+                    'url' => $this->urlFor($request,'layout.copy.form', ['id' => $layout->layoutId]),
                     'text' => __('Copy')
                 );
 
@@ -1265,11 +1442,11 @@ class Layout extends Base
                 if ($layout->retired == 0) {
                     $layout->buttons[] = array(
                         'id' => 'layout_button_retire',
-                        'url' => $this->urlFor('layout.retire.form', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request,'layout.retire.form', ['id' => $layout->layoutId]),
                         'text' => __('Retire'),
                         'multi-select' => true,
                         'dataAttributes' => array(
-                            array('name' => 'commit-url', 'value' => $this->urlFor('layout.retire', ['id' => $layout->layoutId])),
+                            array('name' => 'commit-url', 'value' => $this->urlFor($request,'layout.retire', ['id' => $layout->layoutId])),
                             array('name' => 'commit-method', 'value' => 'put'),
                             array('name' => 'id', 'value' => 'layout_button_retire'),
                             array('name' => 'text', 'value' => __('Retire')),
@@ -1279,21 +1456,21 @@ class Layout extends Base
                 } else {
                     $layout->buttons[] = array(
                         'id' => 'layout_button_unretire',
-                        'url' => $this->urlFor('layout.unretire.form', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request,'layout.unretire.form', ['id' => $layout->layoutId]),
                         'text' => __('Unretire'),
                     );
                 }
 
                 // Extra buttons if have delete permissions
-                if ($this->getUser()->checkDeleteable($layout)) {
+                if ($this->getUser($request)->checkDeleteable($layout)) {
                     // Delete Button
                     $layout->buttons[] = array(
                         'id' => 'layout_button_delete',
-                        'url' => $this->urlFor('layout.delete.form', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request,'layout.delete.form', ['id' => $layout->layoutId]),
                         'text' => __('Delete'),
                         'multi-select' => true,
                         'dataAttributes' => array(
-                            array('name' => 'commit-url', 'value' => $this->urlFor('layout.delete', ['id' => $layout->layoutId])),
+                            array('name' => 'commit-url', 'value' => $this->urlFor($request,'layout.delete', ['id' => $layout->layoutId])),
                             array('name' => 'commit-method', 'value' => 'delete'),
                             array('name' => 'id', 'value' => 'layout_button_delete'),
                             array('name' => 'text', 'value' => __('Delete')),
@@ -1305,11 +1482,11 @@ class Layout extends Base
                 // Set Enable Stat
                 $layout->buttons[] = array(
                     'id' => 'layout_button_setenablestat',
-                    'url' => $this->urlFor('layout.setenablestat.form', ['id' => $layout->layoutId]),
+                    'url' => $this->urlFor($request,'layout.setenablestat.form', ['id' => $layout->layoutId]),
                     'text' => __('Enable stats collection?'),
                     'multi-select' => true,
                     'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor('layout.setenablestat', ['id' => $layout->layoutId])),
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'layout.setenablestat', ['id' => $layout->layoutId])),
                         array('name' => 'commit-method', 'value' => 'put'),
                         array('name' => 'id', 'value' => 'layout_button_setenablestat'),
                         array('name' => 'text', 'value' => __('Enable stats collection?')),
@@ -1320,11 +1497,11 @@ class Layout extends Base
 
                 $layout->buttons[] = ['divider' => true];
 
-                if ($this->getUser()->routeViewable('template') && !$layout->isEditable()) {
+                if ($this->getUser($request)->routeViewable('template') && !$layout->isEditable()) {
                     // Save template button
                     $layout->buttons[] = array(
                         'id' => 'layout_button_save_template',
-                        'url' => $this->urlFor('template.from.layout.form', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request,'template.from.layout.form', ['id' => $layout->layoutId]),
                         'text' => __('Save Template')
                     );
                 }
@@ -1332,16 +1509,16 @@ class Layout extends Base
                 // Export Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_export',
-                    'url' => $this->urlFor('layout.export.form', ['id' => $layout->layoutId]),
+                    'url' => $this->urlFor($request,'layout.export.form', ['id' => $layout->layoutId]),
                     'text' => __('Export')
                 );
 
                 // Extra buttons if we have modify permissions
-                if ($this->getUser()->checkPermissionsModifyable($layout)) {
+                if ($this->getUser($request)->checkPermissionsModifyable($layout)) {
                     // Permissions button
                     $layout->buttons[] = array(
                         'id' => 'layout_button_permissions',
-                        'url' => $this->urlFor('user.permissions.form', ['entity' => 'Campaign', 'id' => $layout->campaignId]),
+                        'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Campaign', 'id' => $layout->campaignId]),
                         'text' => __('Permissions')
                     );
                 }
@@ -1351,12 +1528,23 @@ class Layout extends Base
         // Store the table rows
         $this->getState()->recordsTotal = $this->layoutFactory->countLast();
         $this->getState()->setData($layouts);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Displays an Add/Edit form
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function addForm()
+    function addForm(Request $request, Response $response)
     {
         $this->getState()->template = 'layout-form-add';
         $this->getState()->setData([
@@ -1364,17 +1552,27 @@ class Layout extends Base
             'resolutions' => $this->resolutionFactory->query(['resolution']),
             'help' => $this->getHelp()->link('Layout', 'Add')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edit form
-     * @param int $layoutId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function editForm($layoutId)
+    function editForm(Request $request, Response $response, $id)
     {
         // Get the layout
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
 
         $tags = '';
 
@@ -1391,7 +1589,7 @@ class Layout extends Base
         }
 
         // Check Permissions
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'layout-form-edit';
@@ -1400,27 +1598,38 @@ class Layout extends Base
             'tags' => $tags,
             'help' => $this->getHelp()->link('Layout', 'Edit')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edit form
-     * @param int $layoutId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function editBackgroundForm($layoutId)
+    function editBackgroundForm(Request $request, Response $response, $id)
     {
         // Get the layout
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check Permissions
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout))
             throw new AccessDeniedException();
             
         // Edits always happen on Drafts, get the draft Layout using the Parent Layout ID
         $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
 
         // If we have a background image, output it
-        $backgroundId = $this->getSanitizer()->getInt('backgroundOverride', $layout->backgroundImageId);
+        $backgroundId = $sanitizedParams->getInt('backgroundOverride', ['default' => $layout->backgroundImageId]);
         $backgrounds = ($backgroundId != null) ? [$this->mediaFactory->getById($backgroundId)] : [];
 
         $this->getState()->template = 'layout-form-background';
@@ -1432,19 +1641,30 @@ class Layout extends Base
             'backgrounds' => $backgrounds,
             'help' => $this->getHelp()->link('Layout', 'Edit')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Copy layout form
-     * @param int $layoutId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function copyForm($layoutId)
+    public function copyForm(Request $request, Response $response, $id)
     {
         // Get the layout
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($layout))
+        if (!$this->getUser($request)->checkViewable($layout))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'layout-form-copy';
@@ -1452,11 +1672,25 @@ class Layout extends Base
             'layout' => $layout,
             'help' => $this->getHelp()->link('Layout', 'Copy')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Copies a layout
-     * @param int $layoutId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\DuplicateEntityException
      *
      * @SWG\Post(
      *  path="/layout/copy/{layoutId}",
@@ -1504,15 +1738,15 @@ class Layout extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function copy($layoutId)
+    public function copy(Request $request, Response $response, $id)
     {
         // Get the layout
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($layout))
+        if (!$this->getUser($request)->checkViewable($layout))
             throw new AccessDeniedException();
 
         // Make sure we're not a draft
@@ -1539,20 +1773,20 @@ class Layout extends Base
             }
         }
 
-        $layout->layout = $this->getSanitizer()->getString('name');
-        $layout->description = $this->getSanitizer()->getString('description');
+        $layout->layout = $sanitizedParams->getString('name');
+        $layout->description = $sanitizedParams->getString('description');
         $layout->replaceTags($this->tagFactory->tagsFromString($tags));
-        $layout->setOwner($this->getUser()->userId, true);
+        $layout->setOwner($this->getUser($request)->userId, true);
 
         // Copy the media on the layout and change the assignments.
         // https://github.com/xibosignage/xibo/issues/1283
-        if ($this->getSanitizer()->getCheckbox('copyMediaFiles') == 1) {
+        if ($sanitizedParams->getCheckbox('copyMediaFiles') == 1) {
             foreach ($layout->getWidgets() as $widget) {
                 // Copy the media
                     if ( $widget->type === 'image' || $widget->type === 'video' || $widget->type === 'pdf' || $widget->type === 'powerpoint' || $widget->type === 'audio' ) {
                         $oldMedia = $this->mediaFactory->getById($widget->getPrimaryMediaId());
                         $media = clone $oldMedia;
-                        $media->setOwner($this->getUser()->userId);
+                        $media->setOwner($this->getUser($request)->userId);
                         $media->save();
 
                         $widget->unassignMedia($oldMedia->mediaId);
@@ -1567,7 +1801,7 @@ class Layout extends Base
             if ($layout->backgroundImageId != 0) {
                 $oldMedia = $this->mediaFactory->getById($layout->backgroundImageId);
                 $media = clone $oldMedia;
-                $media->setOwner($this->getUser()->userId);
+                $media->setOwner($this->getUser($request)->userId);
                 $media->save();
 
                 $layout->backgroundImageId = $media->mediaId;
@@ -1587,28 +1821,28 @@ class Layout extends Base
         }
 
         // Permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), 'Xibo\\Entity\\Campaign', $layout->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+        foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), 'Xibo\\Entity\\Campaign', $layout->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
             /* @var Permission $permission */
             $permission->save();
         }
 
         foreach ($layout->regions as $region) {
             /* @var Region $region */
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
 
             $playlist = $region->getPlaylist();
             /* @var Playlist $playlist */
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
 
             foreach ($playlist->widgets as $widget) {
                 /* @var Widget $widget */
-                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+                foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                     /* @var Permission $permission */
                     $permission->save();
                 }
@@ -1622,6 +1856,8 @@ class Layout extends Base
             'id' => $layout->layoutId,
             'data' => $layout
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1653,24 +1889,35 @@ class Layout extends Base
      *  )
      * )
      *
-     * @param $layoutId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function tag($layoutId)
+    public function tag(Request $request, Response $response, $id)
     {
         // Edit permission
         // Get the layout
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check Permissions
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout))
             throw new AccessDeniedException();
 
         // Make sure we're not a draft
         if ($layout->isChild())
             throw new InvalidArgumentException('Cannot manage tags on a Draft Layout', 'layoutId');
 
-        $tags = $this->getSanitizer()->getStringArray('tag');
+        $tags = $sanitizedParams->getArray('tag');
 
         if (count($tags) <= 0)
             throw new \InvalidArgumentException(__('No tags to assign'));
@@ -1687,6 +1934,8 @@ class Layout extends Base
             'id' => $layout->layoutId,
             'data' => $layout
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -1718,24 +1967,35 @@ class Layout extends Base
      *  )
      * )
      *
-     * @param $layoutId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function untag($layoutId)
+    public function untag(Request $request, Response $response, $id)
     {
         // Edit permission
         // Get the layout
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check Permissions
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout))
             throw new AccessDeniedException();
 
         // Make sure we're not a draft
         if ($layout->isChild())
             throw new InvalidArgumentException('Cannot manage tags on a Draft Layout', 'layoutId');
 
-        $tags = $this->getSanitizer()->getStringArray('tag');
+        $tags = $sanitizedParams->getArray('tag');
 
         if (count($tags) <= 0)
             throw new InvalidArgumentException(__('No tags to unassign'), 'tag');
@@ -1752,12 +2012,24 @@ class Layout extends Base
             'id' => $layout->layoutId,
             'data' => $layout
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Layout Status
-     * @param int $layoutId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Get(
      *  path="/layout/status/{layoutId}",
      *  operationId="layoutStatus",
@@ -1778,11 +2050,11 @@ class Layout extends Base
      *  )
      * )
      */
-    public function status($layoutId)
+    public function status(Request $request, Response $response, $id)
     {
         // Get the layout
         /* @var \Xibo\Entity\Layout $layout */
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
 
         $layout->xlfToDisk();
 
@@ -1805,7 +2077,7 @@ class Layout extends Base
         }
 
         // We want a different return depending on whether we are arriving through the API or WEB routes
-        if ($this->isApi()) {
+        if ($this->isApi($request)) {
 
             $this->getState()->hydrate([
                 'httpStatus' => 200,
@@ -1826,19 +2098,31 @@ class Layout extends Base
             $this->getState()->success = true;
             $this->session->refreshExpiry = false;
         }
+
+        return $this->render($request, $response);
     }
 
     /**
      * Export Form
-     * @param $layoutId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function exportForm($layoutId)
+    public function exportForm(Request $request, Response $response, $id)
     {
         // Get the layout
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($layout))
+        if (!$this->getUser($request)->checkViewable($layout))
             throw new AccessDeniedException();
 
         // Make sure we're not a draft
@@ -1850,32 +2134,40 @@ class Layout extends Base
         $this->getState()->setData([
             'layout' => $layout
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
-     * @param int $layoutId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      * @throws XiboException
      */
-    public function export($layoutId)
+    public function export(Request $request, Response $response, $id)
     {
         $this->setNoOutput(true);
 
         // Get the layout
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($layout))
+        if (!$this->getUser($request)->checkViewable($layout))
             throw new AccessDeniedException();
 
         // Make sure we're not a draft
-        if ($layout->isChild())
+        if ($layout->isChild()) {
             throw new InvalidArgumentException('Cannot manage tags on a Draft Layout', 'layoutId');
+        }
 
         // Make sure our file name is reasonable
         $layoutName = preg_replace('/[^a-z0-9]+/', '-', strtolower($layout->layout));
 
         $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/export_' . $layoutName . '.zip';
-        $layout->toZip($this->dataSetFactory, $fileName, ['includeData' => ($this->getSanitizer()->getCheckbox('includeData')== 1)]);
+        $layout->toZip($this->dataSetFactory, $fileName, ['includeData' => ($sanitizedParams->getCheckbox('includeData')== 1)]);
 
         if (ini_get('zlib.output_compression')) {
             ini_set('zlib.output_compression', 'Off');
@@ -1889,12 +2181,13 @@ class Layout extends Base
         // Send via Apache X-Sendfile header?
         if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Apache') {
             header("X-Sendfile: $fileName");
-            $this->getApp()->halt(200);
+            $response->withStatus(200);
         }
         // Send via Nginx X-Accel-Redirect?
         if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Nginx') {
             header("X-Accel-Redirect: /download/temp/" . basename($fileName));
-            $this->getApp()->halt(200);
+            //$this->getApp()->halt(200);
+            $response->withStatus(200);
         }
 
         // Return the file with PHP
@@ -1922,16 +2215,18 @@ class Layout extends Base
      *      type="file",
      *      required=true
      *   ),
-     *  @SWG\Response(
+     * @SWG\Response(
      *      response=200,
      *      description="successful operation"
      *  )
      * )
      *
-     * @throws XiboException
-     * @throws \Exception
+     * @param Request $request
+     * @param Response $response
+     * @return Response
+     * @throws \Xibo\Exception\ConfigurationException
      */
-    public function import()
+    public function import(Request $request, Response $response)
     {
         $this->getLog()->debug('Import Layout');
 
@@ -1942,46 +2237,58 @@ class Layout extends Base
 
         // Make sure there is room in the library
         /** @var Library $libraryController */
-        $libraryController = $this->getApp()->container->get('\Xibo\Controller\Library')->setApp($this->getApp());
+        $libraryController = $this->container->get('\Xibo\Controller\Library');
         $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
 
         $options = array(
-            'userId' => $this->getUser()->userId,
+            'userId' => $this->getUser($request)->userId,
             'controller' => $this,
             'libraryController' => $libraryController,
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
-            'script_url' => $this->urlFor('layout.import'),
-            'upload_url' => $this->urlFor('layout.import'),
+            'script_url' => $this->urlFor($request,'layout.import'),
+            'upload_url' => $this->urlFor($request,'layout.import'),
             'image_versions' => array(),
             'accept_file_types' => '/\.zip$/i',
             'libraryLimit' => $libraryLimit,
-            'libraryQuotaFull' => ($libraryLimit > 0 && $libraryController->libraryUsage() > $libraryLimit)
+            'libraryQuotaFull' => ($libraryLimit > 0 && $libraryController->libraryUsage() > $libraryLimit),
+            'request' => $request
         );
 
         $this->setNoOutput(true);
 
         // Hand off to the Upload Handler provided by jquery-file-upload
         new LayoutUploadHandler($options);
+
+        return $response;
     }
 
     /**
      * Gets a file from the library
-     * @param int $layoutId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
-     * @throws AccessDeniedException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function downloadBackground($layoutId)
+    public function downloadBackground(Request $request, Response $response, $id)
     {
-        $this->getLog()->debug('Layout Download background request for layoutId ' . $layoutId);
+        $this->getLog()->debug('Layout Download background request for layoutId ' . $id);
 
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
 
-        if (!$this->getUser()->checkViewable($layout))
+        if (!$this->getUser($request)->checkViewable($layout)) {
             throw new AccessDeniedException();
+        }
 
-        if ($layout->backgroundImageId == null)
+        if ($layout->backgroundImageId == null) {
             throw new NotFoundException();
+        }
 
         // This media may not be viewable, but we won't check it because the user has permission to view the
         // layout that it is assigned to.
@@ -1990,26 +2297,38 @@ class Layout extends Base
         // Make a media module
         $widget = $this->moduleFactory->createWithMedia($media);
 
-        if ($widget->getModule()->regionSpecific == 1)
+        if ($widget->getModule()->regionSpecific == 1) {
             throw new NotFoundException('Cannot download non-region specific module');
+        }
 
-        $widget->getResource(0);
+        $widget->getResource($request, $response);
 
         $this->setNoOutput(true);
+        return $this->render($request, $response);
     }
 
     /**
      * Assign to Campaign Form
-     * @param $layoutId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function assignToCampaignForm($layoutId)
+    public function assignToCampaignForm(Request $request, Response $response, $id)
     {
         // Get the layout
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($layout))
+        if (!$this->getUser($request)->checkViewable($layout)) {
             throw new AccessDeniedException();
+        }
 
         // Render the form
         $this->getState()->template = 'layout-form-assign-to-campaign';
@@ -2017,25 +2336,38 @@ class Layout extends Base
             'layout' => $layout,
             'campaigns' => $this->campaignFactory->query()
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Checkout Layout Form
-     * @param int $layoutId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function checkoutForm($layoutId)
+    public function checkoutForm(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
 
         // Make sure we have permission
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+        }
 
         $data = ['layout' => $layout];
 
         $this->getState()->template = 'layout-form-checkout';
         $this->getState()->setData($data);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -2061,20 +2393,32 @@ class Layout extends Base
      *  )
      * )
      *
-     * @param int $layoutId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function checkout($layoutId)
+    public function checkout(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
 
         // Make sure we have permission
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+        }
 
         // Can't checkout a Layout which can already be edited
-        if ($layout->isEditable())
+        if ($layout->isEditable()) {
             throw new InvalidArgumentException(__('Layout is already checked out'), 'statusId');
+        }
 
         // Load the Layout
         $layout->load();
@@ -2149,25 +2493,38 @@ class Layout extends Base
             'message' => sprintf(__('Checked out %s'), $layout->layout),
             'data' => $draft
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Publish Layout Form
-     * @param int $layoutId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function publishForm($layoutId)
+    public function publishForm(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
 
         // Make sure we have permission
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+        }
 
         $data = ['layout' => $layout];
 
         $this->getState()->template = 'layout-form-publish';
         $this->getState()->setData($data);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -2207,17 +2564,28 @@ class Layout extends Base
      *  )
      * )
      *
-     * @param $layoutId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function publish($layoutId)
+    public function publish(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->getById($layoutId);
-        $publishDate = $this->getSanitizer()->getDate('publishDate');
-        $publishNow = $this->getSanitizer()->getCheckbox('publishNow');
+        $layout = $this->layoutFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $publishDate = $sanitizedParams->getDate('publishDate');
+        $publishNow = $sanitizedParams->getCheckbox('publishNow');
 
         // Make sure we have permission
-        if (!$this->getUser()->checkEditable($layout)) {
+        if (!$this->getUser($request)->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
         }
 
@@ -2229,7 +2597,7 @@ class Layout extends Base
         // We want to take the draft layout, and update the campaign links to point to the draft, then remove the
         // parent.
         if ($publishNow || (isset($publishDate) && $publishDate->format('U') <  $this->getDate()->getLocalDate(null, 'U')) ) {
-            $draft = $this->layoutFactory->getByParentId($layoutId);
+            $draft = $this->layoutFactory->getByParentId($id);
             $draft->publishDraft();
             $draft->load();
 
@@ -2251,25 +2619,37 @@ class Layout extends Base
                 'data' => $layout
             ]);
         }
+        return $this->render($request, $response);
     }
 
     /**
      * Discard Layout Form
-     * @param int $layoutId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function discardForm($layoutId)
+    public function discardForm(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
 
         // Make sure we have permission
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+        }
 
         $data = ['layout' => $layout];
 
         $this->getState()->template = 'layout-form-discard';
         $this->getState()->setData($data);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -2295,24 +2675,34 @@ class Layout extends Base
      *  )
      * )
      *
-     * @param $layoutId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function discard($layoutId)
+    public function discard(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->getById($id);
 
         // Make sure we have permission
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser($request)->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+        }
 
         // Make sure the Layout is checked out to begin with
-        if (!$layout->isEditable())
+        if (!$layout->isEditable()) {
             throw new InvalidArgumentException(__('Layout is not checked out'), 'statusId');
+        }
 
-        $draft = $this->layoutFactory->getByParentId($layoutId);
+        $draft = $this->layoutFactory->getByParentId($id);
         $draft->discardDraft();
 
         // The parent is no longer a draft
@@ -2324,5 +2714,7 @@ class Layout extends Base
             'message' => sprintf(__('Discarded %s'), $draft->layout),
             'data' => $layout
         ]);
+
+        return $this->render($request, $response);
     }
 }

@@ -1,14 +1,32 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (Maintenance.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
 namespace Xibo\Controller;
 
-
+use Psr\Container\ContainerInterface;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Entity\Task;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
@@ -21,6 +39,7 @@ use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TaskFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -60,10 +79,13 @@ class Maintenance extends Base
     /** @var  PlayerVersionFactory */
     private $playerVersionFactory;
 
+    /** @var ContainerInterface */
+    private $container;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -78,10 +100,12 @@ class Maintenance extends Base
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
      * @param PlayerVersionFactory $playerVersionFactory
+     * @param Twig $view
+     * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $taskFactory, $mediaFactory, $layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory, $playerVersionFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $taskFactory, $mediaFactory, $layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory, $playerVersionFactory, Twig $view, ContainerInterface $container)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
         $this->taskFactory = $taskFactory;
         $this->store = $store;
         $this->mediaFactory = $mediaFactory;
@@ -91,12 +115,21 @@ class Maintenance extends Base
         $this->displayFactory = $displayFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->playerVersionFactory = $playerVersionFactory;
+        $this->container = $container;
     }
 
     /**
      * Run Maintenance through the WEB portal
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws ControllerNotImplemented
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      */
-    public function run()
+    public function run(Request $request, Response $response)
     {
         // Output HTML Headers
         print '<html>';
@@ -106,13 +139,14 @@ class Maintenance extends Base
         print '  </head>';
         print '<body>';
 
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Should the Scheduled Task script be running at all?
         if ($this->getConfig()->getSetting("MAINTENANCE_ENABLED") == "Off") {
             print "<h1>" . __("Maintenance Disabled") . "</h1>";
             print __("Maintenance tasks are disabled at the moment. Please enable them in the &quot;Settings&quot; dialog.");
 
         } else {
-            $quick = ($this->getSanitizer()->getCheckbox('quick') == 1);
+            $quick = ($sanitizedParams->getCheckbox('quick') == 1);
 
             // Set defaults that don't match on purpose!
             $key = 1;
@@ -124,19 +158,19 @@ class Maintenance extends Base
                 $key = $this->getConfig()->getSetting("MAINTENANCE_KEY");
 
                 // Get key from arguments
-                $pKey = $this->getSanitizer()->getString('key');
+                $pKey = $sanitizedParams->getString('key');
             }
 
             if (($aKey == $key) || ($pKey == $key) || ($this->getConfig()->getSetting("MAINTENANCE_ENABLED")=="On")) {
 
                 // Are we full maintenance?
                 if (!$quick) {
-                    $this->runTask('MaintenanceDailyTask');
+                    $this->runTask('MaintenanceDailyTask', $request, $response);
                 }
 
                 // Always run quick tasks
-                $this->runTask('MaintenanceRegularTask');
-                $this->runTask('EmailNotificationsTask');
+                $this->runTask('MaintenanceRegularTask', $request, $response);
+                $this->runTask('EmailNotificationsTask', $request, $response);
             }
             else {
                 print __("Maintenance key invalid.");
@@ -151,17 +185,22 @@ class Maintenance extends Base
 
         // No output
         $this->setNoOutput(true);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Run task
      * @param $class
+     * @param Request $request
+     * @param Response $response
+     * @throws \Xibo\Exception\NotFoundException
      */
-    private function runTask($class)
+    private function runTask($class, Request $request, Response $response)
     {
         /** @var \Xibo\Controller\Task $taskController */
-        $taskController = $this->getApp()->container->get('\Xibo\Controller\Task');
-        $taskController->setApp($this->getApp());
+        $taskController = $this->container->get('\Xibo\Controller\Task');
+        //$taskController->setApp($this->getApp());
 
         $task = $this->taskFactory->getByClass('\Xibo\XTR\\' . $class);
 
@@ -171,7 +210,7 @@ class Maintenance extends Base
 
         } else {
             // Hand off to the task controller
-            $taskController->run($task->taskId);
+            $taskController->run($request, $response, $task->taskId);
 
             // Echo the task output
             $task = $this->taskFactory->getById($task->taskId);
@@ -181,23 +220,44 @@ class Maintenance extends Base
 
     /**
      * Tidy Library Form
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws ControllerNotImplemented
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      */
-    public function tidyLibraryForm()
+    public function tidyLibraryForm(Request $request, Response $response)
     {
         $this->getState()->template = 'maintenance-form-tidy';
         $this->getState()->setData([
             'help' => $this->getHelp()->link('Settings', 'TidyLibrary')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Tidies up the library
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws ControllerNotImplemented
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function tidyLibrary()
+    public function tidyLibrary(Request $request, Response $response)
     {
-        $tidyOldRevisions = $this->getSanitizer()->getCheckbox('tidyOldRevisions');
-        $cleanUnusedFiles = $this->getSanitizer()->getCheckbox('cleanUnusedFiles');
-        $tidyGenericFiles = $this->getSanitizer()->getCheckbox('tidyGenericFiles');
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $tidyOldRevisions = $sanitizedParams->getCheckbox('tidyOldRevisions');
+        $cleanUnusedFiles = $sanitizedParams->getCheckbox('cleanUnusedFiles');
+        $tidyGenericFiles = $sanitizedParams->getCheckbox('tidyGenericFiles');
 
         if ($this->getConfig()->getSetting('SETTING_LIBRARY_TIDY_ENABLED') != 1)
             throw new AccessDeniedException(__('Sorry this function is disabled.'));
@@ -207,11 +267,11 @@ class Maintenance extends Base
         $this->getLog()->debug('Library Location: ' . $library);
 
         // Remove temporary files
-        $this->getApp()->container->get('\Xibo\Controller\Library')->removeTempFiles();
+        $this->container->get('\Xibo\Controller\Library')->removeTempFiles();
 
-        $media = array();
-        $unusedMedia = array();
-        $unusedRevisions = array();
+        $media = [];
+        $unusedMedia = [];
+        $unusedRevisions = [];
 
         // DataSets with library images
         $dataSetSql = '
@@ -255,14 +315,14 @@ class Maintenance extends Base
 
             $first = true;
             foreach ($dataSets as $dataSet) {
-
+            $sanitizedDataSet = $this->getSanitizer($dataSet);
                 if (!$first)
                     $sql .= ' UNION ALL ';
 
                 $first = false;
 
-                $dataSetId = $this->getSanitizer()->getInt('dataSetId', $dataSet);
-                $heading = $this->getSanitizer()->getString('heading', $dataSet);
+                $dataSetId = $sanitizedDataSet->getInt('dataSetId');
+                $heading = $sanitizedDataSet->getString('heading');
 
                 $sql .= ' SELECT `' . $heading . '` AS mediaId FROM `dataset_' . $dataSetId . '`';
             }
@@ -278,8 +338,9 @@ class Maintenance extends Base
 
         foreach ($this->store->select($sql, []) as $row) {
             $media[$row['storedAs']] = $row;
+            $sanitizedRow = $this->getSanitizer($row);
 
-            $type = $this->getSanitizer()->getString('type', $row);
+            $type = $sanitizedRow->getString('type');
 
             // Ignore any module files or fonts
             if ($type == 'module' || $type == 'font' || $type == 'playersoftware' || ($type == 'genericfile' && $tidyGenericFiles != 1))
@@ -355,29 +416,48 @@ class Maintenance extends Base
                 'tidied' => $i
             ]
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Export Form
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws ControllerNotImplemented
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      */
-    public function exportForm()
+    public function exportForm(Request $request, Response $response)
     {
-        if ($this->getUser()->userTypeId != 1)
+        if ($this->getUser($request)->userTypeId != 1) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'maintenance-form-export';
+
+        return $this->render($request, $response);
     }
 
     /**
      * Backup the Database
+     * @param Request $request
+     * @param Response $response
      * @throws ConfigurationException
      * @throws ControllerNotImplemented
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      */
-    public function export()
+    public function export(Request $request, Response $response)
     {
         // Check we can run mysql
-        if (!function_exists('exec'))
+        if (!function_exists('exec')) {
             throw new ControllerNotImplemented(__('Exec is not available.'));
+        }
 
         // Global database variables to seed into exec
         global $dbhost;
@@ -440,12 +520,12 @@ class Maintenance extends Base
         // Send via Apache X-Sendfile header?
         if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Apache') {
             header("X-Sendfile: $zipFile");
-            $this->getApp()->halt(200);
+            //$this->getApp()->halt(200);
         }
         // Send via Nginx X-Accel-Redirect?
         if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Nginx') {
             header("X-Accel-Redirect: /download/temp/" . basename($zipFile));
-            $this->getApp()->halt(200);
+            //$this->getApp()->halt(200);
         }
 
         // Return the file with PHP
@@ -455,6 +535,7 @@ class Maintenance extends Base
         readfile($zipFile);
 
         $this->setNoOutput(true);
+        $this->render($request, $response);
         exit;
     }
 }

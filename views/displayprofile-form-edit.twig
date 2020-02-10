@@ -61,19 +61,19 @@
 {% block formHtml %}
     {# Output the relevant form depending on the display profile player type #}
     {% if displayProfile.getClientType() == "android" %}
-        {% include "displayprofile-form-edit-android.twig" %}
+        {{ include('displayprofile-form-edit-android.twig') }}
     {% elseif displayProfile.getClientType() == "windows" %}
-        {% include "displayprofile-form-edit-windows.twig" %}
+        {{ include('displayprofile-form-edit-windows.twig') }}
     {% elseif displayProfile.getClientType() == "linux" %}
-        {% include "displayprofile-form-edit-linux.twig" %}
+        {{ include('displayprofile-form-edit-linux.twig') }}
     {% elseif displayProfile.getClientType() == "lg" or displayProfile.getClientType() == "sssp"  %}
-        {% include "displayprofile-form-edit-soc.twig" %}
+        {{ include('displayprofile-form-edit-soc.twig') }}
     {% else %}
         {% set message %}{% trans "This is an unknown type of Player and there are no special settings for it." %}{% endset %}
         {{ forms.message(message) }}
 
-        {% include "displayprofile-form-edit-common-fields.twig" %}
+        {{ include('displayprofile-form-edit-common-fields.twig') }}
     {% endif %}
 
-    {% include "displayprofile-form-edit-javascript.twig" %}
+    {{ include('displayprofile-form-edit-javascript.twig') }}
 {% endblock %}

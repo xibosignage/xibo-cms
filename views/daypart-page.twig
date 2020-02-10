@@ -1,7 +1,8 @@
 {#
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2012-2016 Spring Signage Ltd - http://www.springsignage.com
  *
  * This file is part of Xibo.
  *
@@ -17,8 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
- * (daypart-page.twig)
  */
 #}
 {% extends "authed.twig" %}
@@ -26,7 +25,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ urlFor("daypart.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Daypart" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ url_for("daypart.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Daypart" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -73,7 +72,7 @@
                 $.ajax({
                     type: "GET",
                     async: false,
-                    url: "{{ urlFor("user.pref") }}?preference=daypartGrid",
+                    url: "{{ url_for("user.pref") }}?preference=daypartGrid",
                     dataType: 'json',
                     success: function (json) {
                         try {
@@ -90,7 +89,7 @@
             stateSaveCallback: function (settings, data) {
                 $.ajax({
                     type: "POST",
-                    url: "{{ urlFor("user.pref") }}",
+                    url: "{{ url_for("user.pref") }}",
                     data: {
                         preference: [{
                             option: "daypartGrid",
@@ -103,7 +102,7 @@
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
             ajax: {
-                "url": "{{ urlFor("daypart.search") }}",
+                "url": "{{ url_for("daypart.search") }}",
                 "data": function(d) {
                     $.extend(d, $("#dayparts").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                 }
@@ -212,7 +211,7 @@
             }
         });
     </script>
-    {% raw %}
+    {% verbatim %}
     <script type="text/x-handlebars-template" id="dayPartExceptionsTemplate">
         <div class="form-group">
             <div class="col-sm-3">
@@ -236,5 +235,5 @@
             </div>
         </div>
     </script>
-    {% endraw %}
+    {% endverbatim %}
 {% endblock %}

@@ -637,13 +637,13 @@
             hasSeenNewUserWizard = 1;
 
             $.ajax({
-                url: '{{ urlFor("welcome.wizard.seen") }}',
+                url: '{{ url_for("welcome.wizard.seen") }}',
                 type: 'PUT'
             });
         } else {
             // Set the new user wizard flag to 0
             $.ajax({
-                url: '{{ urlFor("welcome.wizard.unseen") }}',
+                url: '{{ url_for("welcome.wizard.unseen") }}',
                 type: 'POST'
             });
 

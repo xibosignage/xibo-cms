@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -19,7 +20,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Widget;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 /**
  * Class Flash
  * @package Xibo\Widget
@@ -35,28 +37,31 @@ class Flash extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function editForm()
+    public function editForm(Request $request, Response $response)
     {
         return 'generic-form-edit';
     }
 
     /** @inheritdoc */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
         $this->saveWidget();
     }
 
     /** @inheritdoc */
-    public function preview($width, $height, $scaleOverride = 0)
+    public function preview($width, $height, $scaleOverride = 0, Request $request)
     {
-        if ($this->module->previewEnabled == 0)
-            return parent::preview($width, $height, $scaleOverride);
+        if ($this->module->previewEnabled == 0) {
+            return parent::preview($width, $height, $scaleOverride, $request);
+        }
 
-        $url = $this->getApp()->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]);
+        $url = $this->urlFor($request,'module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]);
 
         return '<object width="' . $width . '" height="' . $height . '">
             <param name="movie" value="' . $url . '"></param>
@@ -75,12 +80,14 @@ class Flash extends ModuleWidget
 
     /**
      * Get Resource
-     * @param int $displayId
+     * @param Request $request
+     * @param Response $response
      * @return mixed
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
-        $this->download();
+        $this->download($request, $response);
     }
 
     /** @inheritdoc */

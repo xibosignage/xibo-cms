@@ -88,11 +88,12 @@ class ScheduleExclusionFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        $entries = array();
+        $entries = [];
+        $sanitizedFilter = $this->getSanitizer($filterBy);
 
         $sql = 'SELECT * FROM `scheduleexclusions` WHERE eventId = :eventId';
 
-        foreach ($this->getStore()->select($sql, array('eventId' => $this->getSanitizer()->getInt('eventId', $filterBy))) as $row) {
+        foreach ($this->getStore()->select($sql, array('eventId' => $sanitizedFilter->getInt('eventId'))) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row);
         }
 

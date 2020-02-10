@@ -36,7 +36,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="reportScheduleAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("reportschedule.add") }}">
+            <form id="reportScheduleAddForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("reportschedule.add") }}">
 
                 {{ forms.hidden("hiddenFields", hiddenFields) }}
                 {{ forms.hidden("reportName", reportName) }}
@@ -72,7 +72,7 @@
                     { name: "data-allow-clear", value: "true" },
                     { name: "data-placeholder--id", value: null },
                     { name: "data-placeholder--value", value: "" },
-                    { name: "data-search-url", value: urlFor("display.search") },
+                    { name: "data-search-url", value: url_for("display.search") },
                     { name: "data-search-term", value: "display" },
                     { name: "data-search-term-tags", value: "tags" },
                     { name: "data-id-property", value: "displayId" },

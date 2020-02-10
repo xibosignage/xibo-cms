@@ -10,8 +10,8 @@ namespace Xibo\Twig;
 
 
 use Xibo\Helper\ByteFormatter;
-
-class ByteFormatterTwigExtension extends \Twig_Extension
+use Twig\Extension\AbstractExtension;
+class ByteFormatterTwigExtension extends AbstractExtension
 {
     public function getName()
     {
@@ -21,7 +21,7 @@ class ByteFormatterTwigExtension extends \Twig_Extension
     public function getFilters()
     {
         return array(
-            new \Twig_SimpleFilter('byteFormat', array($this, 'byteFormat'))
+            new \Twig\TwigFilter('byteFormat', array($this, 'byteFormat'))
         );
     }
 

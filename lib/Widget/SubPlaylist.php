@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,7 +24,8 @@ namespace Xibo\Widget;
 use Xibo\Entity\Widget;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 /**
  * Class Playlist
  * @package Xibo\Widget
@@ -68,12 +69,13 @@ class SubPlaylist extends ModuleWidget
 
     /**
      * Extra data for the Form rendering
+     * @param $userId
      * @return array
      */
-    public function getExtra()
+    public function getExtra($userId)
     {
         return [
-            'playlists' => $this->getAssignablePlaylists(),
+            'playlists' => $this->getAssignablePlaylists($userId),
             'subPlaylistId' => $this->getAssignedPlaylistIds(),
             'subPlaylistOptions'=> $this->getSubPlaylistOptions()
         ];
@@ -90,6 +92,7 @@ class SubPlaylist extends ModuleWidget
     /**
      * @param int[] $playlistIds
      * @return $this
+     * @throws \Xibo\Exception\ValueTooLargeException
      */
     protected function setAssignedPlaylistIds($playlistIds)
     {
@@ -189,23 +192,28 @@ class SubPlaylist extends ModuleWidget
      *  )
      * )
      *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
      * @throws InvalidArgumentException
+     * @throws \Xibo\Exception\ValueTooLargeException
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         // Set some dud durations
         $this->setDuration(10);
         $this->setUseDuration(0);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Options
-        $this->setOption('arrangement', $this->getSanitizer()->getString('arrangement'));
-        $this->setOption('remainder', $this->getSanitizer()->getString('remainder'));
+        $this->setOption('arrangement', $sanitizedParams->getString('arrangement'));
+        $this->setOption('remainder', $sanitizedParams->getString('remainder'));
 
         // Get the list of playlists
-        $subPlaylistId = $this->getSanitizer()->getIntArray('subPlaylistId');
-        $spots = $this->getSanitizer()->getStringArray('subPlaylistIdSpots');
-        $spotLength = $this->getSanitizer()->getStringArray('subPlaylistIdSpotLength');
-        $spotFill = $this->getSanitizer()->getStringArray('subPlaylistIdSpotFill');
+        $subPlaylistId = $sanitizedParams->getIntArray('subPlaylistId', ['default' => []]);
+        $spots = $sanitizedParams->getArray('subPlaylistIdSpots');
+        $spotLength = $sanitizedParams->getArray('subPlaylistIdSpotLength');
+        $spotFill = $sanitizedParams->getArray('subPlaylistIdSpotFill');
 
         // Make up a companion setting which maps the playlistIds to the options
         $subPlaylistOptions = [];
@@ -239,8 +247,9 @@ class SubPlaylist extends ModuleWidget
         $existingSubPlaylistId = $this->getAssignedPlaylistIds();
 
         // Validation
-        if (count($subPlaylistId) < 1)
+        if (count($subPlaylistId) < 1) {
             throw new InvalidArgumentException(__('Please select at least 1 Playlist to embed'), 'subPlaylistId');
+        }
 
         // Set the new list
         $this->setAssignedPlaylistIds($subPlaylistId);
@@ -306,9 +315,9 @@ class SubPlaylist extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function delete()
+    public function delete(Request $request, Response $response, $id)
     {
-        parent::delete();
+        parent::delete($request, $response, $id);
 
         $subPlaylistIds = $this->getAssignedPlaylistIds();
 
@@ -329,7 +338,7 @@ class SubPlaylist extends ModuleWidget
     /**
      * @inheritdoc
      */
-    public function preview($width, $height, $scaleOverride = 0)
+    public function preview($width, $height, $scaleOverride = 0, Request $request)
     {
         // Output a summary
         $resolvedWidgets = $this->getSubPlaylistResolvedWidgets();
@@ -688,7 +697,7 @@ class SubPlaylist extends ModuleWidget
     /**
      * @inheritdoc
      */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         return '';
     }

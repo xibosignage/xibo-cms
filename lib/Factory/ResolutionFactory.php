@@ -124,8 +124,11 @@ class ResolutionFactory extends BaseFactory
 
     public function query($sortOrder = null, $filterBy = [])
     {
-        if ($sortOrder === null)
+        $parsedFilter = $this->getSanitizer($filterBy);
+
+        if ($sortOrder === null) {
             $sortOrder = ['resolution'];
+        }
 
         $entities = array();
 
@@ -147,50 +150,52 @@ class ResolutionFactory extends BaseFactory
            WHERE 1 = 1
         ';
 
-        if ($this->getSanitizer()->getInt('enabled', -1, $filterBy) != -1) {
+        if ($parsedFilter->getInt('enabled', ['default' => -1]) != -1) {
             $body .= ' AND enabled = :enabled ';
-            $params['enabled'] = $this->getSanitizer()->getInt('enabled', $filterBy);
+            $params['enabled'] = $parsedFilter->getInt('enabled');
         }
 
-        if ($this->getSanitizer()->getInt('resolutionId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('resolutionId') !== null) {
             $body .= ' AND resolutionId = :resolutionId ';
-            $params['resolutionId'] = $this->getSanitizer()->getInt('resolutionId', $filterBy);
+            $params['resolutionId'] = $parsedFilter->getInt('resolutionId');
         }
 
-        if ($this->getSanitizer()->getString('resolution', $filterBy) != null) {
+        if ($parsedFilter->getString('resolution') != null) {
             $body .= ' AND resolution = :resolution ';
-            $params['resolution'] = $this->getSanitizer()->getString('resolution', $filterBy);
+            $params['resolution'] = $parsedFilter->getString('resolution');
         }
 
-        if ($this->getSanitizer()->getInt('width', $filterBy) !== null) {
+        if ($parsedFilter->getDouble('width') !== null) {
             $body .= ' AND intended_width = :width ';
-            $params['width'] = $this->getSanitizer()->getInt('width', $filterBy);
+            $params['width'] = $parsedFilter->getDouble('width');
         }
 
-        if ($this->getSanitizer()->getInt('height', $filterBy) !== null) {
+        if ($parsedFilter->getDouble('height') !== null) {
             $body .= ' AND intended_height = :height ';
-            $params['height'] = $this->getSanitizer()->getInt('height', $filterBy);
+            $params['height'] = $parsedFilter->getDouble('height');
         }
 
-        if ($this->getSanitizer()->getInt('designerWidth', $filterBy) !== null) {
+        if ($parsedFilter->getDouble('designerWidth') !== null) {
             $body .= ' AND width = :designerWidth ';
-            $params['designerWidth'] = $this->getSanitizer()->getInt('designerWidth', $filterBy);
+            $params['designerWidth'] = $parsedFilter->getDouble('designerWidth');
         }
 
-        if ($this->getSanitizer()->getInt('designerHeight', $filterBy) !== null) {
+        if ($parsedFilter->getDouble('designerHeight') !== null) {
             $body .= ' AND height = :designerHeight ';
-            $params['designerHeight'] = $this->getSanitizer()->getInt('designerHeight', $filterBy);
+            $params['designerHeight'] = $parsedFilter->getDouble('designerHeight');
         }
 
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
+
+        if (is_array($sortOrder)) {
             $order .= ' ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . $this->getSanitizer()->getInt('start', 0) . ', ' . $this->getSanitizer()->getInt('length', 10);
+        if ($filterBy !== null && $parsedFilter->getInt('start') !== null && $parsedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0]) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
         }
 
         // The final statements

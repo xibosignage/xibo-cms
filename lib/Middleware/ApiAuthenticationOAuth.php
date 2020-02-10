@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
- * This file (ApiAuthenticationOAuth.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,63 +23,69 @@
 
 namespace Xibo\Middleware;
 
+use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\ResourceServer;
-use Slim\Middleware;
+use Psr\Container\ContainerInterface;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\MiddlewareInterface as Middleware;
+use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Slim\App as App;
+use Xibo\Storage\AccessTokenRepository;
 
-class ApiAuthenticationOAuth extends Middleware
+class ApiAuthenticationOAuth implements Middleware
 {
-    public function call()
+    /* @var App $app */
+    private $app;
+
+    public function __construct($app)
     {
-        $app = $this->app;
+        $this->app = $app;
+    }
 
-        // oAuth Resource
-        $sessionStorage = new \Xibo\Storage\ApiSessionStorage($app->store);
-        $accessTokenStorage = new \Xibo\Storage\ApiAccessTokenStorage($app->store);
-        $clientStorage = new \Xibo\Storage\ApiClientStorage($app->store);
-        $scopeStorage = new \Xibo\Storage\ApiScopeStorage($app->store);
+    /**
+     * @param Request $request
+     * @param RequestHandler $handler
+     * @return Response
+     * @throws OAuthServerException
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function process(Request $request, RequestHandler $handler): Response
+    {
+        $userFactory = $this->app->getContainer()->get('userFactory');
+        /* @var \Xibo\Entity\User $user */
+        $user = null;
+        // Setup the authorization server
 
-        $server = new \League\OAuth2\Server\ResourceServer(
-            $sessionStorage,
-            $accessTokenStorage,
-            $clientStorage,
-            $scopeStorage
-        );
+        $this->app->getContainer()->set('server', function (ContainerInterface $container) {
+            // oAuth Resource
+            $logger = $container->get('logger');
+            $apiKeyPaths = $container->get('configService')->apiKeyPaths;
+            $encryptionKey = $apiKeyPaths['publicKeyPath'];
+            $accessTokenRepository = new AccessTokenRepository($logger);
 
-        // DI in the server
-        $app->server = $server;
+            $server = new ResourceServer(
+                $accessTokenRepository,
+                $encryptionKey
+            );
 
-        $isAuthorised = function() use ($app) {
-            // Validate we are a valid auth
-            /* @var ResourceServer $server */
-            $server = $this->app->server;
+            return $server;
+        });
 
-            $server->isValidRequest(false);
+        /** @var ResourceServer $server */
+        $server =  $this->app->getContainer()->get('server');
+        $validatedRequest = $server->validateAuthenticatedRequest($request);
+        $userId = $validatedRequest->getAttribute('oauth_user_id');
 
-            /* @var \Xibo\Entity\User $user */
-            $user = null;
+        $user = $userFactory->getById($userId);
 
-            // What type of access has been requested?
-            if ($server->getAccessToken()->getSession()->getOwnerType() == 'user')
-                $user = $app->userFactory->getById($server->getAccessToken()->getSession()->getOwnerId());
-            else
-                $user = $app->userFactory->loadByClientId($server->getAccessToken()->getSession()->getOwnerId());
+        $user->setChildAclDependencies($this->app->getContainer()->get('userGroupFactory'), $this->app->getContainer()->get('pageFactory'));
 
-            $user->setChildAclDependencies($app->userGroupFactory, $app->pageFactory);
+        $user->load();
 
-            $user->load();
+        $newRequest = $validatedRequest->withAttribute('currentUser', $user)
+                                       ->withAttribute('name', 'API');
 
-            $this->app->user = $user;
-
-            // Get the current route pattern
-            $resource = $app->router->getCurrentRoute()->getPattern();
-
-            // Do they have permission?
-            $this->app->user->routeAuthentication($resource, $app->request()->getMethod(), $server->getAccessToken()->getScopes());
-        };
-
-        $app->hook('slim.before.dispatch', $isAuthorised);
-
-        // Call the next middleware
-        $this->next->call();
+        return $handler->handle($newRequest);
     }
 }

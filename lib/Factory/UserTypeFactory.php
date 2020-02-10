@@ -63,10 +63,11 @@ class UserTypeFactory extends BaseFactory
      * @return array[Transition]
      * @throws NotFoundException
      */
-    public function query($sortOrder = ['userType'], $filterBy = null)
+    public function query($sortOrder = ['userType'], $filterBy = [])
     {
-        $entries = array();
-        $params = array();
+        $entries = [];
+        $params = [];
+        $sanitizedFilter = $this->getSanitizer($filterBy);
 
         try {
             $sql = '
@@ -75,13 +76,13 @@ class UserTypeFactory extends BaseFactory
              WHERE 1 = 1
             ';
 
-            if ($this->getSanitizer()->getInt('userOnly', $filterBy) !== null) {
+            if ($sanitizedFilter->getInt('userOnly') !== null) {
                 $sql .= ' AND `userTypeId` = 3 ';
             }
 
-            if ($this->getSanitizer()->getString('userType', $filterBy) !== null) {
+            if ($sanitizedFilter->getString('userType') !== null) {
                 $sql .= ' AND userType = :userType ';
-                $params['userType'] = $this->getSanitizer()->getString('userType', $filterBy);
+                $params['userType'] = $sanitizedFilter->getString('userType');
             }
 
             // Sorting?

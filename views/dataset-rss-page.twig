@@ -25,7 +25,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add RSS" %}" href="{{ urlFor("dataSet.rss.add.form", {id: dataSet.dataSetId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add RSS" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add RSS" %}" href="{{ url_for("dataSet.rss.add.form", {id: dataSet.dataSetId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add RSS" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -76,7 +76,7 @@
                 $.ajax({
                     type: "GET",
                     async: false,
-                    url: "{{ urlFor("user.pref") }}?preference=dataSetRssGrid",
+                    url: "{{ url_for("user.pref") }}?preference=dataSetRssGrid",
                     dataType: 'json',
                     success: function (json) {
                         try {
@@ -93,7 +93,7 @@
             stateSaveCallback: function (settings, data) {
                 $.ajax({
                     type: "POST",
-                    url: "{{ urlFor("user.pref") }}",
+                    url: "{{ url_for("user.pref") }}",
                     data: {
                         preference: [{
                             option: "dataSetColumnGrid",
@@ -106,7 +106,7 @@
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
             ajax: {
-                "url": "{{ urlFor("dataSet.rss.search", {id: dataSet.dataSetId}) }}",
+                "url": "{{ url_for("dataSet.rss.search", {id: dataSet.dataSetId}) }}",
                 "data": function(d) {
                     $.extend(d, $("#datasets").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                 }
@@ -121,7 +121,7 @@
                         if (type !== "display")
                             return "";
 
-                        var url = window.location.origin + "{{ urlFor("dataSet.rss.feed") }}".replace(':psk', data.psk);
+                        var url = window.location.origin + "{{ url_for("dataSet.rss.feed") }}".replace(':psk', data.psk);
 
                         return "<a href=\"" + url + "\" target=\"_blank\">" + url + "</a>";
                     }
@@ -309,7 +309,7 @@
         });
     </script>
 
-    {% raw %}
+    {% verbatim %}
         <script type="text/x-handlebars-template" id="dataSetViewOrderClauseTemplate">
             <div class="form-group">
                 <label class="col-sm-1 control-label" for="orderClause[]">{{ title }}</label>
@@ -375,5 +375,5 @@
             </div>
         </script>
 
-    {% endraw %}
+    {% endverbatim %}
 {% endblock %}

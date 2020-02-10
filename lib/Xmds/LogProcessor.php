@@ -8,6 +8,7 @@
 
 namespace Xibo\Xmds;
 
+use Monolog\Logger;
 use Slim\Log;
 
 /**
@@ -16,7 +17,7 @@ use Slim\Log;
  */
 class LogProcessor
 {
-    /** @var  Log */
+    /** @var  Logger */
     private $log;
     private $displayId;
     private $route;
@@ -25,7 +26,8 @@ class LogProcessor
 
     /**
      * Log Processor
-     * @param Log $log
+     * @param Logger $log
+     * @param $uid
      * @param string $method
      */
     public function __construct($log, $uid, $method = 'POST')

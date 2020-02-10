@@ -1,7 +1,8 @@
 {#
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -35,7 +36,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="displayAuthoriseForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("display.authorise", {id: display.displayId}) }}">
+            <form id="displayAuthoriseForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("display.authorise", {id: display.displayId}) }}">
                 {% if display.licensed == 1 %}
                     {% set message %}{% trans "Are you sure you want to de-authorise this Display?" %}{% endset %}
                 {% else %}

@@ -1,7 +1,8 @@
 {#
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -18,14 +19,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-This is the template for the campaign page
 #}
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Campaign" %}" href="{{ urlFor("campaign.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i>  {% trans "Add Campaign" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Campaign" %}" href="{{ url_for("campaign.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i>  {% trans "Add Campaign" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -87,7 +87,7 @@ This is the template for the campaign page
                 $.ajax({
                     type: "GET",
                     async: false,
-                    url: "{{ urlFor("user.pref") }}?preference=campaignGrid",
+                    url: "{{ url_for("user.pref") }}?preference=campaignGrid",
                     dataType: 'json',
                     success: function (json) {
                         try {
@@ -104,7 +104,7 @@ This is the template for the campaign page
             stateSaveCallback: function (settings, data) {
                 $.ajax({
                     type: "POST",
-                    url: "{{ urlFor("user.pref") }}",
+                    url: "{{ url_for("user.pref") }}",
                     data: {
                         preference: [{
                             option: "campaignGrid",
@@ -117,7 +117,7 @@ This is the template for the campaign page
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
             ajax: {
-                url: "{{ urlFor("campaign.search") }}",
+                url: "{{ url_for("campaign.search") }}",
                 "data": function(d) {
                     $.extend(d, $("#campaigns").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                 }
@@ -171,7 +171,7 @@ This is the template for the campaign page
                     $.ajax({
                         type: "GET",
                         async: false,
-                        url: "{{ urlFor("user.pref") }}?preference=campaignLayoutAssignGrid",
+                        url: "{{ url_for("user.pref") }}?preference=campaignLayoutAssignGrid",
                         dataType: 'json',
                         success: function (json) {
                             try {
@@ -188,7 +188,7 @@ This is the template for the campaign page
                 stateSaveCallback: function (settings, data) {
                     $.ajax({
                         type: "POST",
-                        url: "{{ urlFor("user.pref") }}",
+                        url: "{{ url_for("user.pref") }}",
                         data: {
                             preference: [{
                                 option: "campaignLayoutAssignGrid",
@@ -201,7 +201,7 @@ This is the template for the campaign page
                 "order": [[ 0, "asc"]],
                 "filter": false,
                 ajax: {
-                    url: "{{ urlFor("layout.search") }}",
+                    url: "{{ url_for("layout.search") }}",
                     "data": function(d) {
                         $.extend(d, $layoutAssignments.closest(".XiboGrid").find(".layoutAssignFilterOptions form").serializeObject());
                     }

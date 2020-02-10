@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2014-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -17,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 namespace Xibo\Widget;
 
@@ -29,7 +29,8 @@ use Xibo\Entity\Media;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 /**
  * Class Twitter
  * @package Xibo\Widget
@@ -133,26 +134,31 @@ class Twitter extends TwitterBase
      * Process any module settings
      * @throws InvalidArgumentException
      */
-    public function settings()
+    public function settings(Request $request, Response $response)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Process any module settings you asked for.
-        $apiKey = $this->getSanitizer()->getString('apiKey');
-        $apiSecret = $this->getSanitizer()->getString('apiSecret');
-        $cachePeriod = $this->getSanitizer()->getInt('cachePeriod', 300);
-        $cachePeriodImages = $this->getSanitizer()->getInt('cachePeriodImages', 24);
+        $apiKey = $sanitizedParams->getString('apiKey');
+        $apiSecret = $sanitizedParams->getString('apiSecret');
+        $cachePeriod = $sanitizedParams->getInt('cachePeriod', ['default' => 300]);
+        $cachePeriodImages = $sanitizedParams->getInt('cachePeriodImages', ['default' => 24]);
 
         if ($this->module->enabled != 0) {
-            if ($apiKey == '')
+            if ($apiKey == '') {
                 throw new InvalidArgumentException(__('Missing API Key'), 'apiKey');
+            }
 
-            if ($apiSecret == '')
+            if ($apiSecret == '') {
                 throw new InvalidArgumentException(__('Missing API Secret'), 'apiSecret');
+            }
 
-            if ($cachePeriod <= 0)
+            if ($cachePeriod <= 0) {
                 throw new InvalidArgumentException(__('Cache period must be a positive number'), 'cachePeriod');
+            }
 
-            if ($cachePeriodImages <= 0)
+            if ($cachePeriodImages <= 0) {
                 throw new InvalidArgumentException(__('Image cache period must be a positive number'), 'cachePeriodImages');
+            }
         }
 
         $this->module->settings['apiKey'] = $apiKey;
@@ -398,41 +404,43 @@ class Twitter extends TwitterBase
      *
      * @throws \Xibo\Exception\XiboException
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
-        $this->setOption('searchTerm', $this->getSanitizer()->getString('searchTerm'));
-        $this->setOption('language', $this->getSanitizer()->getString('language'));
-        $this->setOption('effect', $this->getSanitizer()->getString('effect'));
-        $this->setOption('speed', $this->getSanitizer()->getInt('speed'));
-        $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
-        $this->setOption('noTweetsMessage', $this->getSanitizer()->getString('noTweetsMessage'));
-        $this->setOption('dateFormat', $this->getSanitizer()->getString('dateFormat'));
-        $this->setOption('resultType', $this->getSanitizer()->getString('resultType'));
-        $this->setOption('tweetDistance', $this->getSanitizer()->getInt('tweetDistance'));
-        $this->setOption('tweetCount', $this->getSanitizer()->getInt('tweetCount'));
-        $this->setOption('removeUrls', $this->getSanitizer()->getCheckbox('removeUrls'));
-        $this->setOption('removeMentions', $this->getSanitizer()->getCheckbox('removeMentions'));
-        $this->setOption('removeHashtags', $this->getSanitizer()->getCheckbox('removeHashtags'));
-        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
-        $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
-        $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
-        $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
-        $this->setOption('itemsPerPage', $this->getSanitizer()->getInt('itemsPerPage', 5));
-        $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
+        $this->setOption('searchTerm', $sanitizedParams->getString('searchTerm'));
+        $this->setOption('language', $sanitizedParams->getString('language'));
+        $this->setOption('effect', $sanitizedParams->getString('effect'));
+        $this->setOption('speed', $sanitizedParams->getInt('speed'));
+        $this->setOption('backgroundColor', $sanitizedParams->getString('backgroundColor'));
+        $this->setOption('noTweetsMessage', $sanitizedParams->getString('noTweetsMessage'));
+        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat'));
+        $this->setOption('resultType', $sanitizedParams->getString('resultType'));
+        $this->setOption('tweetDistance', $sanitizedParams->getInt('tweetDistance'));
+        $this->setOption('tweetCount', $sanitizedParams->getInt('tweetCount'));
+        $this->setOption('removeUrls', $sanitizedParams->getCheckbox('removeUrls'));
+        $this->setOption('removeMentions', $sanitizedParams->getCheckbox('removeMentions'));
+        $this->setOption('removeHashtags', $sanitizedParams->getCheckbox('removeHashtags'));
+        $this->setOption('overrideTemplate', $sanitizedParams->getCheckbox('overrideTemplate'));
+        $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 60]));
+        $this->setOption('templateId', $sanitizedParams->getString('templateId'));
+        $this->setOption('durationIsPerItem', $sanitizedParams->getCheckbox('durationIsPerItem'));
+        $this->setOption('itemsPerPage', $sanitizedParams->getInt('itemsPerPage', ['default' => 5]));
+        $this->setRawNode('javaScript', $request->getParam('javaScript', ''));
 
         if ($this->getOption('overrideTemplate') == 1) {
-            $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
-            $this->setOption('ta_text_advanced', $this->getSanitizer()->getCheckbox('ta_text_advanced'));
-            $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('styleSheet', null)));
-            $this->setOption('resultContent', $this->getSanitizer()->getString('resultContent'));
+            $this->setRawNode('template', $request->getParam('ta_text', $request->getParam('template', null)));
+            $this->setOption('ta_text_advanced', $sanitizedParams->getCheckbox('ta_text_advanced'));
+            $this->setRawNode('styleSheet', $request->getParam('ta_css', $request->getParam('styleSheet', null)));
+            $this->setOption('resultContent', $sanitizedParams->getString('resultContent'));
 
-            $this->setOption('widgetOriginalPadding', $this->getSanitizer()->getInt('widgetOriginalPadding'));
-            $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
-            $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
+            $this->setOption('widgetOriginalPadding', $sanitizedParams->getInt('widgetOriginalPadding'));
+            $this->setOption('widgetOriginalWidth', $sanitizedParams->getInt('widgetOriginalWidth'));
+            $this->setOption('widgetOriginalHeight', $sanitizedParams->getInt('widgetOriginalHeight'));
         }
 
         // Save the widget
@@ -446,7 +454,7 @@ class Twitter extends TwitterBase
      * @return array|false
      * @throws \Xibo\Exception\XiboException
      */
-    protected function getTwitterFeed($displayId = 0, $isPreview = true)
+    protected function getTwitterFeed($displayId = 0, $isPreview = true, Request $request)
     {
         // Do we need to add a geoCode?
         $geoCode = '';
@@ -469,7 +477,7 @@ class Twitter extends TwitterBase
         
         if( $this->getOption('overrideTemplate') == 0 ) {
             
-            $tmplt = $this->getTemplateById($this->getOption('templateId'));
+            $tmplt = $this->getTemplateById($this->getOption('templateId'), $request);
             
             if (isset($tmplt)) {
                 $template = $tmplt['template'];
@@ -534,7 +542,7 @@ class Twitter extends TwitterBase
         }
 
         // Get the template
-        $template = $this->parseLibraryReferences($isPreview, $template);
+        $template = $this->parseLibraryReferences($isPreview, $template, $request);
 
         // Parse translations
         $template = $this->parseTranslations($template);
@@ -576,7 +584,7 @@ class Twitter extends TwitterBase
         $emoji = new Client(new Ruleset());
         $emoji->imageType = 'png';
         $emoji->sprites = true;
-        $emoji->imagePathPNG = $this->getResourceUrl('emojione/emojione.sprites.png');
+        $emoji->imagePathPNG = $this->getResourceUrl('emojione/emojione.sprites.png', null, $request);
 
         // Get the date format to apply
         $dateFormat = $this->getOption('dateFormat', $this->getConfig()->getSetting('DATE_FORMAT'));
@@ -671,7 +679,7 @@ class Twitter extends TwitterBase
                             $file = $this->mediaFactory->queueDownload('twitter_' . $tweet->user->id, $tweet->user->profile_image_url, $expires);
 
                             $replace = ($isPreview)
-                                ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
+                                ? '<img src="' . $this->urlFor($request,'library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                                 : '<img src="' . $file->storedAs . '"  />';
                         }
                         break;
@@ -691,7 +699,7 @@ class Twitter extends TwitterBase
                                 $file = $this->mediaFactory->queueDownload('twitter_photo_' . $tweet->user->id . '_' . $mediaObject->id_str, $photoUrl, $expires);
 
                                 $replace = ($isPreview)
-                                    ? '<img src="' . $this->getApp()->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
+                                    ? '<img src="' . $this->urlFor($request,'library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                                     : '<img src="' . $file->storedAs . '"  />';
                             }
                         }
@@ -699,12 +707,12 @@ class Twitter extends TwitterBase
                         
                     case 'TwitterLogoWhite':
                         //Get the Twitter logo image file path
-                        $replace = $this->getResourceUrl('twitter/twitter_white.png');
+                        $replace = $this->getResourceUrl('twitter/twitter_white.png', null, $request);
                         break;
                         
                     case 'TwitterLogoBlue':
                         //Get the Twitter logo image file path
-                        $replace = $this->getResourceUrl('twitter/twitter_blue.png');
+                        $replace = $this->getResourceUrl('twitter/twitter_blue.png', null, $request);
                         break;
 
                     default:
@@ -732,7 +740,7 @@ class Twitter extends TwitterBase
     }
 
     /** @inheritdoc */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         // Make sure we are set up correctly
         if ($this->getSetting('apiKey') == '' || $this->getSetting('apiSecret') == '') {
@@ -741,7 +749,10 @@ class Twitter extends TwitterBase
         }
 
         $data = [];
-        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $displayId = $request->getAttribute('displayId', 0);
+
+        $isPreview = ($sanitizedParams->getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
@@ -754,7 +765,7 @@ class Twitter extends TwitterBase
         
         if( $this->getOption('overrideTemplate') == 0 ) {
             
-            $template = $this->getTemplateById($this->getOption('templateId'));
+            $template = $this->getTemplateById($this->getOption('templateId'), $request);
             
             if (isset($template)) {
                 $css = $template['css'];
@@ -766,14 +777,14 @@ class Twitter extends TwitterBase
             
         } else {
             $css = $this->getRawNode('styleSheet', '');
-            $widgetOriginalWidth = $this->getSanitizer()->int($this->getOption('widgetOriginalWidth'));
-            $widgetOriginalHeight = $this->getSanitizer()->int($this->getOption('widgetOriginalHeight'));
-            $widgetOriginalPadding = $this->getSanitizer()->int($this->getOption('widgetOriginalPadding'));
+            $widgetOriginalWidth = $sanitizedParams->getInt($this->getOption('widgetOriginalWidth'));
+            $widgetOriginalHeight = $sanitizedParams->getInt($this->getOption('widgetOriginalHeight'));
+            $widgetOriginalPadding = $sanitizedParams->getInt($this->getOption('widgetOriginalPadding'));
             $resultContent = $this->getOption('resultContent');
         }
 
         // Generate a JSON string of substituted items.
-        $items = $this->getTwitterFeed($displayId, $isPreview);
+        $items = $this->getTwitterFeed($displayId, $isPreview, $request);
 
         // Return empty string if there are no items to show.
         if (count($items) == 0) {
@@ -792,7 +803,7 @@ class Twitter extends TwitterBase
             'widgetDesignPadding' => $widgetOriginalPadding,
             'widgetDesignWidth' => $widgetOriginalWidth,
             'widgetDesignHeight'=> $widgetOriginalHeight,
-            'itemsPerPage' => $this->getSanitizer()->int($this->getOption('itemsPerPage', 5))
+            'itemsPerPage' => $sanitizedParams->getInt($this->getOption('itemsPerPage', 5))
         );
 
         // Work out how many pages we will be showing.
@@ -811,13 +822,13 @@ class Twitter extends TwitterBase
         $headContent = '';
 
         // Get the JavaScript node
-        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
+        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''), $request);
 
         // Add our fonts.css file
         $headContent .= '
-            <link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
-            <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">
-            <link href="' . $this->getResourceUrl('emojione/emojione.sprites.css')  . '" rel="stylesheet" media="screen">
+            <link href="' . (($isPreview) ? $this->urlFor($request,'library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
+            <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css', null, $request)  . '" rel="stylesheet" media="screen">
+            <link href="' . $this->getResourceUrl('emojione/emojione.sprites.css', null, $request)  . '" rel="stylesheet" media="screen">
         ';
 
         $backgroundColor = $this->getOption('backgroundColor');
@@ -829,7 +840,7 @@ class Twitter extends TwitterBase
         
         // Add the CSS if it isn't empty
         if ($css != '') {
-            $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css) . '</style>';
+            $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css, $request) . '</style>';
         }
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
@@ -837,15 +848,15 @@ class Twitter extends TwitterBase
         $data['head'] = $headContent;
 
         // Add some scripts to the JavaScript Content
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
 
         // Need the cycle plugin?
         if ($this->getOption('effect') != 'none')
-            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
+            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js', null, $request) . '"></script>';
 
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js', null, $request) . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
@@ -859,7 +870,7 @@ class Twitter extends TwitterBase
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        return $this->renderTemplate($data);
+        return $this->renderTemplate($data, 'get-resource', $response);
     }
 
     /** @inheritdoc */

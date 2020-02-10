@@ -1,5 +1,6 @@
 {#
- * Copyright (C) 2015-2018 Xibo Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -17,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #}
 {% extends "form-base.twig" %}
 {% import "forms.twig" as forms %}
@@ -50,7 +52,7 @@
             <li><a href="#cachingTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
         </ul>
         <div class="col-md-12">
-            <form id="dataSetTickerForm2" class="XiboForm form-horizontal" data-form-step="2" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+            <form id="dataSetTickerForm2" class="XiboForm form-horizontal" data-form-step="2" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}
@@ -218,8 +220,8 @@
                                         <select id="ckeditor_library_select3"
                                                 class="ckeditor_library_select form-control"
                                                 data-linked-to="ta_text"
-                                                data-search-url="{{ urlFor("library.search") }}"
-                                                data-image-url="{{ urlFor("library.download") }}?preview=1">
+                                                data-search-url="{{ url_for("library.search") }}"
+                                                data-image-url="{{ url_for("library.download") }}?preview=1">
                                         </select>
                                     </div>
                                 </div>

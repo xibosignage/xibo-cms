@@ -56,9 +56,12 @@ class ApplicationFactory extends BaseFactory
      */
     public function create()
     {
+        $stripped = '';
         $application = $this->createEmpty();
         // Make and ID/Secret
-        $application->secret = SecureKey::generate(254);
+        $bytes = openssl_random_pseudo_bytes(254, $strong);
+        $stripped .= str_replace(['/', '+', '='], '', base64_encode($bytes));
+        $application->secret = substr($stripped, 0, 254);
         // Assign this user
         $application->userId = $this->getUser()->userId;
         return $application;
@@ -122,8 +125,10 @@ class ApplicationFactory extends BaseFactory
 
     public function query($sortOrder = null, $filterBy = [])
     {
-        $entries = array();
-        $params = array();
+        $sanitizedFilter = $this->getSanitizer($filterBy);
+
+        $entries = [];
+        $params = [];
 
         $select = '
             SELECT `oauth_clients`.id AS `key`,
@@ -140,7 +145,7 @@ class ApplicationFactory extends BaseFactory
         
         $body .= " INNER JOIN `user` ON `user`.userId = `oauth_clients`.userId ";
 
-        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('userId') !== null) {
 
             $select .= '
                 , `oauth_auth_codes`.expire_time AS expires
@@ -154,20 +159,20 @@ class ApplicationFactory extends BaseFactory
                 ON `oauth_auth_codes`.session_id = `oauth_sessions`.id
             ';
 
-            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
+            $params['userId'] = $sanitizedFilter->getInt('userId');
         }
 
         $body .= ' WHERE 1 = 1 ';
 
 
-        if ($this->getSanitizer()->getString('clientId', $filterBy) != null) {
+        if ($sanitizedFilter->getString('clientId') != null) {
             $body .= ' AND `oauth_clients`.id = :clientId ';
-            $params['clientId'] = $this->getSanitizer()->getString('clientId', $filterBy);
+            $params['clientId'] = $sanitizedFilter->getString('clientId');
         }
 
-        if ($this->getSanitizer()->getString('name', $filterBy) != null) {
+        if ($sanitizedFilter->getString('name') != null) {
             $body .= ' AND `oauth_clients`.name = :name';
-            $params['name'] = $this->getSanitizer()->getString('name', $filterBy);
+            $params['name'] = $sanitizedFilter->getString('name');
         }
 
         // Sorting?
@@ -177,8 +182,8 @@ class ApplicationFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         // The final statements

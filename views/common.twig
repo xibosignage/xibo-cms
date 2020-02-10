@@ -9,13 +9,13 @@
         const serverMode = "{{ settings.SERVER_MODE }}";
         let playlistRegionColouring =  "{{ settings.REGION_OPTIONS_COLOURING }}";
         let libraryUpload = {{ libraryUpload|json_encode|raw }};
-        var librarySearchUrl = "{{ urlFor("library.search") }}";
-        var libraryAddUrl = "{{ urlFor("library.add") }}";
-        var imageDownloadUrl = "{{ urlFor("library.download") }}?preview=1";
+        var librarySearchUrl = "{{ url_for("library.search") }}";
+        var libraryAddUrl = "{{ url_for("library.add") }}";
+        var imageDownloadUrl = "{{ url_for("library.download") }}?preview=1";
         var uploadFormUpdateAllDefault = {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %};
         var uploadFormDeleteOldDefault = {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %};
         var tooltipDelay = {'show': 250, 'hide': 0};
-        var playlistEditorUrl = "{{ urlFor("playlist.timeline.form") }}";
+        var playlistEditorUrl = "{{ url_for("playlist.timeline.form", {id:':id'}) }}";
         
         // Save navbar position
         var navbarPosition = 'vertical';
@@ -40,198 +40,194 @@
         let urlsForApi = {
             layout: {
                 designer: {
-                    url: "{{ urlFor("layout.designer") }}",
+                    url: "{{ url_for("layout.designer", {id: ':id'}) }}",
                     type: 'GET'
                 },
                 get: {
-                    url: "{{ urlFor("layout.search") }}",
+                    url: "{{ url_for("layout.search") }}",
                     type: 'GET'
                 },
                 getForm: {
-                    url: "{{ urlFor("layout.background.form") }}",
+                    url: "{{ url_for("layout.background.form", {id: ':id'}) }}",
                     type: 'GET'
                 },
                 saveForm: {
-                    url: "{{ urlFor("layout.edit.background") }}",
+                    url: "{{ url_for("layout.edit.background", {id: ':id'}) }}",
                     type: 'PUT'
                 },
                 downloadBackground: {
-                    url: "{{ urlFor("layout.download.background") }}",
+                    url: "{{ url_for("layout.download.background", {id: ':id'}) }}",
                     type: 'GET'
                 },
                 preview: {
-                    url: "{{ urlFor("layout.preview") }}",
+                    url: "{{ url_for("layout.preview", {id: ':id'}) }}",
                     type: 'GET'
                 },
                 checkout: {
-                    url: "{{ urlFor("layout.checkout") }}",
+                    url: "{{ url_for("layout.checkout", {id: ':id'}) }}",
                     type: 'PUT'
-                }, 
+                },
                 publish: {
-                    url: "{{ urlFor("layout.publish") }}",
+                    url: "{{ url_for("layout.publish", {id: ':id'}) }}",
                     type: 'PUT'
                 },
                 discard: {
-                    url: "{{ urlFor("layout.discard") }}",
+                    url: "{{ url_for("layout.discard", {id: ':id'}) }}",
                     type: 'PUT'
                 },
                 list: {
-                    url: "{{ urlFor("layout.view") }}"
+                    url: "{{ url_for("layout.view") }}"
                 },
                 status: {
-                    url: "{{ urlFor("layout.status") }}"
+                    url: "{{ url_for("layout.status", {id: ':id'}) }}"
                 },
                 designer: {
-                    url: "{{ urlFor("layout.designer") }}"
+                    url: "{{ url_for("layout.designer", {id: ':id'}) }}"
                 },
                 schedule: {
-                    url: "{{ urlFor("schedulenow.now.form", {from: 'Campaign'}) }}",
+                    url: "{{ url_for("schedulenow.now.form", {from: 'Campaign', id: ':id'}) }}",
                     type: 'GET'
                 },
                 saveTemplate: {
-                    url: "{{ urlFor("template.from.layout.form") }}",
+                    url: "{{ url_for("template.from.layout.form", {id: ':id'}) }}",
                     type: 'GET'
                 },
                 publishForm: {
-                    url: "{{ urlFor("layout.publish.form") }}",
+                    url: "{{ url_for("layout.publish.form", {id: ':id'}) }}",
                     type: 'GET'
                 },
                 discardForm: {
-                    url: "{{ urlFor("layout.discard.form") }}",
+                    url: "{{ url_for("layout.discard.form", {id: ':id'}) }}",
                     type: 'GET'
                 }
             },
             region: {
                 transform: {
-                    url: "{{ urlFor("region.position.all") }}",
+                    url: "{{ url_for("region.position.all", {id: ':id'}) }}",
                     type: 'PUT',
                     useMainObjectId: true
                 },
                 getForm: {
-                    url: "{{ urlFor("region.edit.form") }}",
+                    url: "{{ url_for("region.edit.form", {id: ':id'}) }}",
                     type: 'GET'
                 },
                 saveForm: {
-                    url: "{{ urlFor("region.edit") }}",
+                    url: "{{ url_for("region.edit", {id: ':id'}) }}",
                     type: 'PUT'
                 },
                 create: {
-                    url: "{{ urlFor("region.add") }}",
+                    url: "{{ url_for("region.add", {id: ':id'}) }}",
                     type: 'POST',
                     useMainObjectId: true
                 },
                 delete: {
-                    url: "{{ urlFor("region.delete") }}",
+                    url: "{{ url_for("region.delete", {id: ':id'}) }}",
                     type: 'DELETE'
                 },
                 preview: {
-                    url: "{{ urlFor("region.preview") }}",
+                    url: "{{ url_for("region.preview", {id: ':id'}) }}",
                     type: 'GET'
                 },
                 getPermissions:  {
-                    url: "{{ urlFor("user.permissions.form", {entity: 'Region'}) }}",
+                    url: "{{ url_for("user.permissions.form", {entity: 'Region', id: ':id'}) }}",
                     type: 'GET'
                 }
             },
             widget: {
                 getForm: {
-                    url: "{{ urlFor("module.widget.edit.form") }}",
+                    url: "{{ url_for("module.widget.edit.form", {id: ':id'}) }}",
                     type: 'GET'
                 },
                 saveForm: {
-                    url: "{{ urlFor("module.widget.edit") }}",
+                    url: "{{ url_for("module.widget.edit", {id: ':id'}) }}",
                     type: 'PUT'
                 },
                 preview: {
-                    url: "{{ urlFor("region.preview") }}",
+                    url: "{{ url_for("region.preview", {id: ':id'}) }}",
                     type: 'GET'
                 },
-                add: {
-                    url: "{{ urlFor("module.widget.add") }}",
-                    type: 'POST'
-                },
                 delete: {
-                    url: "{{ urlFor("module.widget.delete") }}",
+                    url: "{{ url_for("module.widget.delete", {id: ':id'}) }}",
                     type: 'DELETE'
                 },
                 getAudio: {
-                    url: "{{ urlFor("module.widget.audio.form") }}",
+                    url: "{{ url_for("module.widget.audio.form", {id: ':id'}) }}",
                     type: 'GET'
                 },
                 saveAudio:  {
-                    url: "{{ urlFor("module.widget.audio") }}",
+                    url: "{{ url_for("module.widget.audio", {id: ':id'}) }}",
                     type: 'PUT'
                 },
                 getExpiry: {
-                    url: "{{ urlFor("module.widget.expiry.form") }}",
+                    url: "{{ url_for("module.widget.expiry.form", {id: ':id'}) }}",
                     type: 'GET'
                 },
                 saveExpiry:  {
-                    url: "{{ urlFor("module.widget.expiry") }}",
+                    url: "{{ url_for("module.widget.expiry", {id: ':id'}) }}",
                     type: 'PUT'
                 },
                 getTransition: {
-                    url: "{{ urlFor("module.widget.transition.edit.form") }}",
+                    url: "{{ url_for("module.widget.transition.edit.form", {id: ':id', type: ':type'}) }}",
                     type: 'GET'
                 },
                 saveTransition:  {
-                    url: "{{ urlFor("module.widget.transition.edit") }}",
+                    url: "{{ url_for("module.widget.transition.edit", {id: ':id', type: ':type'}) }}",
                     type: 'PUT'
                 },
                 getPermissions:  {
-                    url: "{{ urlFor("user.permissions.form", {entity: 'Widget'}) }}",
+                    url: "{{ url_for("user.permissions.form", {entity: 'Widget', id: ':id'}) }}",
                     type: 'GET'
                 }
             },
             library: {
                 get: {
-                    url: "{{ urlFor("library.search") }}",
+                    url: "{{ url_for("library.search") }}",
                     type: 'GET'
                 }
             },
             playlist: {
                 get: {
-                    url: "{{ urlFor("playlist.search") }}",
+                    url: "{{ url_for("playlist.search") }}",
                     type: 'GET'
                 },
                 getForm: {
-                    url: "{{ urlFor("playlist.edit.form") }}",
+                    url: "{{ url_for("playlist.edit.form", {id: ':id'}) }}",
                     type: 'GET'
                 },
                 addMedia: {
-                    url: "{{ urlFor("playlist.library.assign") }}",
+                    url: "{{ url_for("playlist.library.assign", {id: ':id'}) }}",
                     type: 'POST'
                 },
                 addWidget: {
-                    url: "{{ urlFor("module.widget.add") }}",
+                    url: "{{ url_for("module.widget.add", {type: ':type', id: ':id'}) }}",
                     type: 'POST'
                 },
                 preview: {
-                    url: "{{ urlFor("region.preview") }}",
+                    url: "{{ url_for("region.preview", {id: ':id'}) }}",
                     type: 'GET'
                 },
                 order: {
-                    url: "{{ urlFor("playlist.order") }}",
+                    url: "{{ url_for("playlist.order", {id: ':id'}) }}",
                     type: 'POST'
                 }
             },
             user: {
                 getPref: {
-                    url: "{{ urlFor("user.pref") }}",
+                    url: "{{ url_for("user.pref") }}",
                     type: 'GET'
                 },
                 savePref: {
-                    url: "{{ urlFor("user.pref") }}",
+                    url: "{{ url_for("user.pref") }}",
                     type: 'POST'
                 },
                 permissions: {
-                    url: "{{ urlFor("user.permissions.form") }}",
+                    url: "{{ url_for("user.permissions.form", {entity: ':entity', id: ':id'}) }}",
                     type: 'GET'
                 }
             },
             media: {
                 isUsed: {
-                    url: "{{ urlFor("library.isused") }}",
+                    url: "{{ url_for("library.isused", {id: ':id'}) }}",
                     type: 'GET'
                 }
             }

@@ -1,8 +1,23 @@
 {#
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
 
@@ -14,10 +29,8 @@
 {% endblock %}
 
 {% block formButtons %}
-    {% trans "Get Results" %}, formHelpers.requestTab("results"| "{{ urlFor("module.widget.tab.form", {tab: "results", id: module.widget.widgetId}) }}")
+    {% trans "Get Results" %}, formHelpers.requestTab("results"| "{{ url_for("module.widget.tab.form", {tab: "results", id: module.widget.widgetId}) }}")
 {% endblock %}
-
-{% block extra %}{{ module.templatesAvailable()|json_encode|raw }}{% endblock %}
 
 {% block formHtml %}
     <div class="row">
@@ -41,7 +54,7 @@
             <li><a href="#results" role="tab" data-toggle="tab"><span>{% trans "Results" %}</span></a></li>
         </ul>
         <div class="col-md-12">
-            <form id="currenciesEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+            <form id="currenciesEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
                  <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}
@@ -135,7 +148,7 @@
                     <div class="tab-pane" id="templatePreset">
                         {% set title %}{% trans "Template" %}{% endset %}
                         {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
-                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), module.templatesAvailable(), "id", "value", helptext, "template-selector-control selectPicker selectPickerWithImage", null, null, null, [{ name: "data-minimum-results-for-search", value: "Infinity" },{ name: "data-width", value: "100%" }], null, "image") }}
+                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), templatesAvailable, "id", "value", helptext, "template-selector-control selectPicker selectPickerWithImage", null, null, null, [{ name: "data-minimum-results-for-search", value: "Infinity" },{ name: "data-width", value: "100%" }], null, "image") }}
 
                         {% set title %}{% trans "Override the template?" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}

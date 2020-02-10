@@ -1,6 +1,6 @@
 {#
-/*
- * Copyright (C) 2019 Xibo Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -27,7 +27,7 @@
     {% trans "Edit Sub-Playlist" %}
 {% endblock %}
 
-{% block extra %}{{ module.getExtra()|json_encode|raw }}{% endblock %}
+{% block extra %}{{ module.getExtra(currentUser.userId)|json_encode|raw }}{% endblock %}
 
 {% block formHtml %}
     <div class="row">
@@ -36,7 +36,7 @@
             <li><a href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
         </ul>
         <div class="col-md-12">
-            <form id="subPlaylistForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+            <form id="subPlaylistForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set helpText %}{% trans "Please select one or more Playlists to embed. If selecting more than one use the Configuration tab to adjust how each Playlist is combined." %}{% endset %}

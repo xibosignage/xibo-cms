@@ -1,25 +1,42 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (DataSetData.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
 namespace Xibo\Controller;
 
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 //use Xibo\Entity\DataSetColumn;
+use Slim\Views\Twig;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 
 /**
  * Class DataSetData
@@ -36,7 +53,7 @@ class DataSetData extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -44,10 +61,11 @@ class DataSetData extends Base
      * @param ConfigServiceInterface $config
      * @param DataSetFactory $dataSetFactory
      * @param MediaFactory $mediaFactory
+     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $dataSetFactory, $mediaFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $dataSetFactory, $mediaFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->dataSetFactory = $dataSetFactory;
         $this->mediaFactory = $mediaFactory;
@@ -55,15 +73,25 @@ class DataSetData extends Base
 
     /**
      * Display Page
-     * @param $dataSetId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function displayPage($dataSetId)
+    public function displayPage(Request $request, Response $response, $id)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser($request)->checkEditable($dataSet)) {
             throw new AccessDeniedException();
-
+        }
+        
         // Load data set
         $dataSet->load();
 
@@ -71,12 +99,22 @@ class DataSetData extends Base
         $this->getState()->setData([
             'dataSet' => $dataSet
         ]);
+        
+        return $this->render($request, $response);
     }
 
     /**
      * Grid
-     * @param $dataSetId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Get(
      *  path="/dataset/data/{dataSetId}",
      *  operationId="dataSetData",
@@ -96,34 +134,36 @@ class DataSetData extends Base
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
      */
-    public function grid($dataSetId)
+    public function grid(Request $request, Response $response, $id)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser($request)->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
+        
+        $sorting = $this->gridRenderSort($request);
 
-        $sorting = $this->gridRenderSort();
-
-        if ($sorting != null)
+        if ($sorting != null) {
             $sorting = implode(',', $sorting);
-
+        }
+        
         // Filter criteria
         $filter = '';
         foreach ($dataSet->getColumn() as $column) {
             /* @var \Xibo\Entity\DataSetColumn $column */
             if ($column->dataSetColumnTypeId == 1) {
-                if ($this->getSanitizer()->getString($column->heading) != null) {
-                    $filter .= 'AND ' . $column->heading . ' LIKE \'%' . $this->getSanitizer()->getString($column->heading) . '%\' ';
+                if ($sanitizedParams->getString($column->heading) != null) {
+                    $filter .= 'AND ' . $column->heading . ' LIKE \'%' . $sanitizedParams->getString($column->heading) . '%\' ';
                 }
             }
         }
         $filter = trim($filter, 'AND');
 
         // Work out the limits
-        $filter = $this->gridRenderFilter(['filter' => $this->getSanitizer()->getParam('filter', $filter)]);
+        $filter = $this->gridRenderFilter(['filter' => $request->getParam('filter', $filter)], $request);
 
         try {
             $data = $dataSet->getData([
@@ -147,31 +187,55 @@ class DataSetData extends Base
 
         // Set this dataSet as being active
         $dataSet->setActive();
+        
+        return $this->render($request, $response);
     }
 
     /**
      * Add Form
-     * @param int $dataSetId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function addForm($dataSetId)
+    public function addForm(Request $request, Response $response, $id)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser($request)->checkEditable($dataSet)) {
             throw new AccessDeniedException();
-
+        }
+        
         $dataSet->load();
 
         $this->getState()->template = 'dataset-data-form-add';
         $this->getState()->setData([
             'dataSet' => $dataSet
         ]);
+        
+        return $this->render($request, $response);
     }
 
     /**
      * Add
-     * @param int $dataSetId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\DuplicateEntityException
      * @SWG\Post(
      *  path="/dataset/data/{dataSetId}",
      *  operationId="dataSetDataAdd",
@@ -203,14 +267,15 @@ class DataSetData extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function add($dataSetId)
+    public function add(Request $request, Response $response, $id)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser($request)->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
 
         $row = [];
 
@@ -222,19 +287,19 @@ class DataSetData extends Base
                 // Sanitize accordingly
                 if ($column->dataTypeId == 2) {
                     // Number
-                    $value = $this->getSanitizer()->getDouble('dataSetColumnId_' . $column->dataSetColumnId);
+                    $value = $sanitizedParams->getDouble('dataSetColumnId_' . $column->dataSetColumnId);
                 }
                 else if ($column->dataTypeId == 3) {
                     // Date
-                    $value = $this->getDate()->getLocalDate($this->getSanitizer()->getDate('dataSetColumnId_' . $column->dataSetColumnId));
+                    $value = $this->getDate()->getLocalDate($sanitizedParams->getDate('dataSetColumnId_' . $column->dataSetColumnId));
                 }
                 else if ($column->dataTypeId == 5) {
                     // Media Id
-                    $value = $this->getSanitizer()->getInt('dataSetColumnId_' . $column->dataSetColumnId);
+                    $value = $sanitizedParams->getInt('dataSetColumnId_' . $column->dataSetColumnId);
                 }
                 else {
                     // String
-                    $value = $this->getSanitizer()->getString('dataSetColumnId_' . $column->dataSetColumnId);
+                    $value = $sanitizedParams->getString('dataSetColumnId_' . $column->dataSetColumnId);
                 }
 
                 $row[$column->heading] = $value;
@@ -259,20 +324,31 @@ class DataSetData extends Base
                 'id' => $rowId
             ]
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edit Form
-     * @param $dataSetId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
      * @param $rowId
-     * @throws \Xibo\Exception\XiboException
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function editForm($dataSetId, $rowId)
+    public function editForm(Request $request, Response $response, $id, $rowId)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser($request)->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
 
         $dataSet->load();
 
@@ -287,7 +363,7 @@ class DataSetData extends Base
                         $row['__images'][$dataSetColumn->dataSetColumnId] = $this->mediaFactory->getById($row[$dataSetColumn->heading]);
                     }
                 } catch (NotFoundException $notFoundException) {
-                    $this->getLog()->debug('DataSet ' . $dataSetId . ' references an image that no longer exists. ID is ' . $row[$dataSetColumn->heading]);
+                    $this->getLog()->debug('DataSet ' . $id . ' references an image that no longer exists. ID is ' . $row[$dataSetColumn->heading]);
                 }
             }
         }
@@ -297,13 +373,26 @@ class DataSetData extends Base
             'dataSet' => $dataSet,
             'row' => $row
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edit Row
-     * @param int $dataSetId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
      * @param int $rowId
      *
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\DuplicateEntityException
      * @SWG\Put(
      *  path="/dataset/data/{dataSetId}/{rowId}",
      *  operationId="dataSetDataEdit",
@@ -337,14 +426,15 @@ class DataSetData extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function edit($dataSetId, $rowId)
+    public function edit(Request $request, Response $response, $id, $rowId)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser($request)->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
 
         $existingRow = $dataSet->getData(['id' => $rowId])[0];
         $row = [];
@@ -352,12 +442,12 @@ class DataSetData extends Base
         // Expect input for each value-column
         foreach ($dataSet->getColumn() as $column) {
             /* @var \Xibo\Entity\DataSetColumn $column */
-            $existingValue = $this->getSanitizer()->getParam($column->heading, null, $existingRow);
+            $existingValue = $request->getParam($column->heading, null);
 
             if ($column->dataSetColumnTypeId == 1) {
 
                 // Pull out the value
-                $value = $this->getSanitizer()->getParam('dataSetColumnId_' . $column->dataSetColumnId, null, null, false);
+                $value = $request->getParam('dataSetColumnId_' . $column->dataSetColumnId, null);
 
                 $this->getLog()->debug('Value is: ' . var_export($value, true) . ', existing value is ' . var_export($existingValue, true));
 
@@ -367,7 +457,7 @@ class DataSetData extends Base
                     if ($value === null)
                         $value = $existingValue;
 
-                    $value = $this->getSanitizer()->double($value);
+                    $value = $sanitizedParams->getDouble($value);
                 }
                 else if ($column->dataTypeId == 3) {
                     // Date
@@ -382,7 +472,7 @@ class DataSetData extends Base
                 else if ($column->dataTypeId == 5) {
                     // Media Id
                     if (isset($value)) {
-                        $value = $this->getSanitizer()->int($value);
+                        $value = $sanitizedParams->getInt($value);
                     } else {
                         $value = null;
                     }
@@ -392,7 +482,7 @@ class DataSetData extends Base
                     if ($value === null)
                         $value = $existingValue;
 
-                    $value = $this->getSanitizer()->string($value);
+                    $value = $sanitizedParams->getString($value);
                 }
 
                 $row[$column->heading] = $value;
@@ -416,19 +506,31 @@ class DataSetData extends Base
                 'id' => $rowId
             ]
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Delete Form
-     * @param int $dataSetId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
      * @param int $rowId
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function deleteForm($dataSetId, $rowId)
+    public function deleteForm(Request $request, Response $response, $id, $rowId)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser($request)->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
 
         $dataSet->load();
 
@@ -437,15 +539,26 @@ class DataSetData extends Base
             'dataSet' => $dataSet,
             'row' => $dataSet->getData(['id' => $rowId])[0]
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Delete Row
-     * @param $dataSetId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
      * @param $rowId
      *
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
      * @throws NotFoundException
-     *
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\DuplicateEntityException
      * @SWG\Delete(
      *  path="/dataset/data/{dataSetId}/{rowId}",
      *  operationId="dataSetDataDelete",
@@ -472,12 +585,13 @@ class DataSetData extends Base
      *  )
      * )
      */
-    public function delete($dataSetId, $rowId)
+    public function delete(Request $request, Response $response, $id, $rowId)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser($request)->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
 
         if (empty($dataSet->getData(['id' => $rowId])[0])) {
             throw new NotFoundException(__('row not found'), 'dataset');
@@ -495,5 +609,7 @@ class DataSetData extends Base
             'message' => __('Deleted Row'),
             'id' => $rowId
         ]);
+
+        return $this->render($request, $response);
     }
 }

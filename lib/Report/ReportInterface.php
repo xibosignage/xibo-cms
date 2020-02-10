@@ -23,6 +23,10 @@
 namespace Xibo\Report;
 
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Psr\Container\ContainerInterface;
+
 /**
  * Interface ReportInterface
  * @package Xibo\Report
@@ -31,10 +35,10 @@ interface ReportInterface
 {
     /**
      * Set factories
-     * @param \Slim\Helper\Set $container
+     * @param ContainerInterface $container
      * @return $this
      */
-    public function setFactories($container);
+    public function setFactories(ContainerInterface $container);
 
     /**
      * Return the twig file name of the report form
@@ -57,15 +61,16 @@ interface ReportInterface
 
     /**
      * Populate form title and hidden fields
+     * @param Request $request
      * @return array
      */
-    public function getReportScheduleFormData();
+    public function getReportScheduleFormData(Request $request);
 
     /**
      * Set Report Schedule form data
      * @return array
      */
-    public function setReportScheduleFormData();
+    public function setReportScheduleFormData(Request $request);
 
     /**
      * Generate saved report name
@@ -87,5 +92,5 @@ interface ReportInterface
      * @param $filterCriteria
      * @return array
      */
-    public function getResults($filterCriteria);
+    public function getResults($filterCriteria, Request $request);
 }

@@ -33,6 +33,8 @@
  */
 namespace Xibo\Widget;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Respect\Validation\Validator as v;
 use Xibo\Exception\InvalidArgumentException;
 
@@ -219,33 +221,39 @@ class Countdown extends ModuleWidget
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Exception\ValueTooLargeException
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
         // You must also provide a duration (all media items must provide this field)
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
 
-        $this->setOption('countdownType', $this->getSanitizer()->getInt('countdownType', 1));
-        $this->setOption('countdownDuration', $this->getSanitizer()->getString('countdownDuration', 0));
-        $this->setOption('countdownWarningDuration', $this->getSanitizer()->getString('countdownWarningDuration', 0));
-        $this->setOption('countdownDate', $this->getSanitizer()->getDate('countdownDate'));
-        $this->setOption('countdownWarningDate', $this->getSanitizer()->getDate('countdownWarningDate'));
+        $this->setOption('countdownType', $sanitizedParams->getInt('countdownType', ['default' => 1]));
+        $this->setOption('countdownDuration', $sanitizedParams->getString('countdownDuration', ['default' => 0]));
+        $this->setOption('countdownWarningDuration', $sanitizedParams->getString('countdownWarningDuration', ['default' => 0]));
+        $this->setOption('countdownDate', $sanitizedParams->getDate('countdownDate'));
+        $this->setOption('countdownWarningDate', $sanitizedParams->getDate('countdownWarningDate'));
 
-        $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
-        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
+        $this->setOption('templateId', $sanitizedParams->getString('templateId'));
+        $this->setOption('overrideTemplate', $sanitizedParams->getCheckbox('overrideTemplate'));
 
         if ($this->getOption('overrideTemplate') == 1) {
-            $this->setRawNode('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', $this->getSanitizer()->getParam('mainTemplate', null)));
-            $this->setOption('mainTemplate_advanced', $this->getSanitizer()->getCheckbox('mainTemplate_advanced'));
+            $this->setRawNode('mainTemplate', $request->getParam('mainTemplate', $request->getParam('mainTemplate', null)));
+            $this->setOption('mainTemplate_advanced', $sanitizedParams->getCheckbox('mainTemplate_advanced'));
 
-            $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', $this->getSanitizer()->getParam('styleSheet', null)));
+            $this->setRawNode('styleSheet', $request->getParam('styleSheet', $request->getParam('styleSheet', null)));
 
-            $this->setOption('widgetOriginalWidth', $this->getSanitizer()->getInt('widgetOriginalWidth'));
-            $this->setOption('widgetOriginalHeight', $this->getSanitizer()->getInt('widgetOriginalHeight'));
+            $this->setOption('widgetOriginalWidth', $sanitizedParams->getInt('widgetOriginalWidth'));
+            $this->setOption('widgetOriginalHeight', $sanitizedParams->getInt('widgetOriginalHeight'));
         }
 
         $this->isValid();
@@ -255,11 +263,12 @@ class Countdown extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         $data = [];
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
+        $isPreview = ($sanitizedParams->getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
@@ -269,7 +278,7 @@ class Countdown extends ModuleWidget
 
         if($this->getOption('overrideTemplate') == 0) {
             
-            $template = $this->getTemplateById($this->getOption('templateId'));
+            $template = $this->getTemplateById($this->getOption('templateId'), $request);
             
             if (isset($template)) {
                 $mainTemplate = $template['template'];
@@ -281,12 +290,12 @@ class Countdown extends ModuleWidget
         } else {
             $mainTemplate = $this->getRawNode('mainTemplate');
             $styleSheet = $this->getRawNode('styleSheet', '');
-            $widgetOriginalWidth = $this->getSanitizer()->int($this->getOption('widgetOriginalWidth'));
-            $widgetOriginalHeight = $this->getSanitizer()->int($this->getOption('widgetOriginalHeight'));
+            $widgetOriginalWidth = $sanitizedParams->getInt($this->getOption('widgetOriginalWidth'));
+            $widgetOriginalHeight = $sanitizedParams->getInt($this->getOption('widgetOriginalHeight'));
         }
 
         // Run through each item and substitute with the template
-        $mainTemplate = $this->parseLibraryReferences($isPreview, $mainTemplate);
+        $mainTemplate = $this->parseLibraryReferences($isPreview, $mainTemplate, $request);
 
         // Make subsitutions
         $mainTemplate = $this->makeSubstitutions($mainTemplate);
@@ -312,12 +321,12 @@ class Countdown extends ModuleWidget
         $headContent = '';
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
-        <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . (($isPreview) ? $this->urlFor($request,'library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
+        <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css', null, $request)  . '" rel="stylesheet" media="screen">';
         
         // Add the CSS if it isn't empty, and replace the wallpaper
         if ($styleSheet != '') {
-            $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $styleSheet) . '</style>';
+            $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $styleSheet, $request) . '</style>';
         }
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
@@ -325,11 +334,11 @@ class Countdown extends ModuleWidget
         $data['head'] = $headContent;
 
         // Add some scripts to the JavaScript Content
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-countdown-render.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-countdown-render.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js', null, $request) . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
@@ -342,7 +351,7 @@ class Countdown extends ModuleWidget
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        return $this->renderTemplate($data);
+        return $this->renderTemplate($data, 'get-resource', $response);
     }
 
 

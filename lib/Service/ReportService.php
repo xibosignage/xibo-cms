@@ -22,6 +22,9 @@
 
 namespace Xibo\Service;
 
+use Nyholm\Psr7\ServerRequest;
+use Slim\Http\ServerRequest as Request;
+use Psr\Container\ContainerInterface;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Storage\StorageServiceInterface;
@@ -34,9 +37,9 @@ use Xibo\Storage\TimeSeriesStoreInterface;
 class ReportService implements ReportServiceInterface
 {
     /**
-     * @var \Slim\Slim
+     * @var ContainerInterface
      */
-    public $app;
+    public $container;
 
     /**
      * @var \Xibo\Helper\ApplicationState
@@ -80,9 +83,9 @@ class ReportService implements ReportServiceInterface
     /**
      * @inheritdoc
      */
-    public function __construct($app, $state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer, $savedReportFactory)
+    public function __construct($container, $state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer, $savedReportFactory)
     {
-        $this->app = $app;
+        $this->container = $container;
         $this->state = $state;
         $this->store = $store;
         $this->timeSeriesStore = $timeSeriesStore;
@@ -182,7 +185,7 @@ class ReportService implements ReportServiceInterface
             $this->date,
             $this->sanitizer);
 
-        $object->setFactories($this->app->container);
+        $object->setFactories($this->container);
 
         return $object;
 
@@ -191,7 +194,7 @@ class ReportService implements ReportServiceInterface
     /**
      * @inheritdoc
      */
-    public function getReportScheduleFormData($reportName)
+    public function getReportScheduleFormData($reportName, Request $request)
     {
         $this->log->debug('Populate form title and hidden fields');
 
@@ -200,13 +203,13 @@ class ReportService implements ReportServiceInterface
         $object = $this->createReportObject($className);
 
         // Populate form title and hidden fields
-        return $object->getReportScheduleFormData();
+        return $object->getReportScheduleFormData($request);
     }
 
     /**
      * @inheritdoc
      */
-    public function setReportScheduleFormData($reportName)
+    public function setReportScheduleFormData($reportName, Request $request)
     {
         $this->log->debug('Set Report Schedule form data');
 
@@ -215,7 +218,7 @@ class ReportService implements ReportServiceInterface
         $object = $this->createReportObject($className);
 
         // Set Report Schedule form data
-        return $object->setReportScheduleFormData();
+        return $object->setReportScheduleFormData($request);
     }
 
     /**
@@ -276,7 +279,7 @@ class ReportService implements ReportServiceInterface
     /**
      * @inheritdoc
      */
-    public function runReport($reportName, $filterCriteria, $userId)
+    public function runReport($reportName, $filterCriteria, $userId, Request $request = null)
     {
         $this->log->debug('Run the report to get results');
 
@@ -286,11 +289,15 @@ class ReportService implements ReportServiceInterface
 
         // Set userId
         $object->setUserId($userId);
-
+        $user = $this->container->get('userFactory')->getById($userId);
         $filterCriteria = json_decode($filterCriteria, true);
 
+        if ($request == null) {
+            $request = new Request(new ServerRequest('GET', PROJECT_ROOT . '/xtr'));
+        }
+
         // Retrieve the result array
-        return $object->getResults($filterCriteria);
+        return $object->getResults($filterCriteria, $request->withAttribute('currentUser', $user));
     }
 
     /**

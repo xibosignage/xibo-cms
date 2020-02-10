@@ -39,7 +39,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="scheduleRecurrenceDeleteForm" class="form-horizontal" method="delete" action="{{ urlFor("schedule.recurrence.delete", {"id": event.eventId}) }}">
+            <form id="scheduleRecurrenceDeleteForm" class="form-horizontal" method="delete" action="{{ url_for("schedule.recurrence.delete", {"id": event.eventId}) }}">
                 {% set message %}{% trans "Are you sure you want to delete this recurring event? Clicking Yes will delete this event from <b>all</b> displays." %}{% endset %}
                 {{ forms.message(message) }}
 

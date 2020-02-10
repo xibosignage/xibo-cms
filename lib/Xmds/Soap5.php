@@ -37,29 +37,44 @@ class Soap5 extends Soap4
     {
         $this->logProcessor->setRoute('RegisterDisplay');
 
+        $sanitized = $this->getSanitizer([
+            'serverKey' => $serverKey,
+            'hardwareKey' => $hardwareKey,
+            'displayName' => $displayName,
+            'clientType' => $clientType,
+            'clientVersion' => $clientVersion,
+            'clientCode' => $clientCode,
+            'operatingSystem' => $operatingSystem,
+            'macAddress' => $macAddress,
+            'xmrChannel' => $xmrChannel,
+            'xmrPubKey' => $xmrPubKey
+        ]);
+
         // Sanitize
-        $serverKey = $this->getSanitizer()->string($serverKey);
-        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
-        $displayName = $this->getSanitizer()->string($displayName);
-        $clientType = $this->getSanitizer()->string($clientType);
-        $clientVersion = $this->getSanitizer()->string($clientVersion);
-        $clientCode = $this->getSanitizer()->int($clientCode);
-        $macAddress = $this->getSanitizer()->string($macAddress);
+        $serverKey = $sanitized->getString('serverKey');
+        $hardwareKey = $sanitized->getString('hardwareKey');
+        $displayName = $sanitized->getString('displayName');
+        $clientType = $sanitized->getString('clientType');
+        $clientVersion = $sanitized->getString('clientVersion');
+        $clientCode = $sanitized->getInt('clientCode');
+        $macAddress = $sanitized->getString('macAddress');
         $clientAddress = $this->getIp();
-        $xmrChannel = $this->getSanitizer()->string($xmrChannel);
-        $xmrPubKey = trim($this->getSanitizer()->string($xmrPubKey));
+        $xmrChannel = $sanitized->getString('xmrChannel');
+        $xmrPubKey = trim($sanitized->getString('xmrPubKey'));
 
         if ($xmrPubKey != '' && !str_contains($xmrPubKey, 'BEGIN PUBLIC KEY')) {
             $xmrPubKey = "-----BEGIN PUBLIC KEY-----\n" . $xmrPubKey . "\n-----END PUBLIC KEY-----\n";
         }
 
         // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
+        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
             throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
+        }
 
         // Check the Length of the hardwareKey
-        if (strlen($hardwareKey) > 40)
+        if (strlen($hardwareKey) > 40) {
             throw new \SoapFault('Sender', 'The Hardware Key you sent was too long. Only 40 characters are allowed (SHA1).');
+        }
 
         // Return an XML formatted string
         $return = new \DOMDocument('1.0');

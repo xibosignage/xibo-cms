@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2018 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -17,11 +18,11 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
- * (Calendar.php)
  */
 namespace Xibo\Widget;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use ICal\ICal;
@@ -292,53 +293,55 @@ class Calendar extends ModuleWidget
      *
      * @inheritdoc
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('customInterval', $this->getSanitizer()->getString('customInterval'));
-        $this->setOption('eventLabelNow', $this->getSanitizer()->getString('eventLabelNow'));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('uri', urlencode($sanitizedParams->getString('uri')));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('customInterval', $sanitizedParams->getString('customInterval'));
+        $this->setOption('eventLabelNow', $sanitizedParams->getString('eventLabelNow'));
 
         // Other options
-        $this->setOption('dateFormat', $this->getSanitizer()->getString('dateFormat'));
-        $this->setOption('numItems', $this->getSanitizer()->getInt('numItems'));
-        $this->setOption('itemsPerPage', $this->getSanitizer()->getInt('itemsPerPage'));
-        $this->setOption('effect', $this->getSanitizer()->getString('effect'));
-        $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
-        $this->setOption('itemsSideBySide', $this->getSanitizer()->getCheckbox('itemsSideBySide'));
-        $this->setOption('useCurrentTemplate', $this->getSanitizer()->getCheckbox('useCurrentTemplate'));
+        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat'));
+        $this->setOption('numItems', $sanitizedParams->getInt('numItems'));
+        $this->setOption('itemsPerPage', $sanitizedParams->getInt('itemsPerPage'));
+        $this->setOption('effect', $sanitizedParams->getString('effect'));
+        $this->setOption('durationIsPerItem', $sanitizedParams->getCheckbox('durationIsPerItem'));
+        $this->setOption('itemsSideBySide', $sanitizedParams->getCheckbox('itemsSideBySide'));
+        $this->setOption('useCurrentTemplate', $sanitizedParams->getCheckbox('useCurrentTemplate'));
 
-        $this->setOption('excludeCurrent', $this->getSanitizer()->getCheckbox('excludeCurrent'));
-        $this->setOption('excludeAllDay', $this->getSanitizer()->getCheckbox('excludeAllDay'));
-        $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
+        $this->setOption('excludeCurrent', $sanitizedParams->getCheckbox('excludeCurrent'));
+        $this->setOption('excludeAllDay', $sanitizedParams->getCheckbox('excludeAllDay'));
+        $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 120]));
 
-        $this->setRawNode('template', $this->getSanitizer()->getParam('template', null));
-        $this->setOption('template_advanced', $this->getSanitizer()->getCheckbox('template_advanced'));
+        $this->setRawNode('template', $request->getParam('template', null));
+        $this->setOption('template_advanced', $sanitizedParams->getCheckbox('template_advanced'));
 
-        $this->setRawNode('currentEventTemplate', $this->getSanitizer()->getParam('currentEventTemplate', null));
-        $this->setOption('currentEventTemplate_advanced', $this->getSanitizer()->getCheckbox('currentEventTemplate_advanced'));
+        $this->setRawNode('currentEventTemplate', $request->getParam('currentEventTemplate', null));
+        $this->setOption('currentEventTemplate_advanced', $sanitizedParams->getCheckbox('currentEventTemplate_advanced'));
 
-        $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', null)));
-        $this->setOption('noDataMessage_advanced', $this->getSanitizer()->getCheckbox('noDataMessage_advanced'));
+        $this->setRawNode('noDataMessage', $request->getParam('noDataMessage', $request->getParam('noDataMessage', null)));
+        $this->setOption('noDataMessage_advanced', $sanitizedParams->getCheckbox('noDataMessage_advanced'));
 
-        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', $this->getSanitizer()->getParam('styleSheet', null)));
+        $this->setRawNode('styleSheet', $request->getParam('styleSheet', $request->getParam('styleSheet', null)));
 
-        $this->setOption('useEventTimezone', $this->getSanitizer()->getCheckbox('useEventTimezone'));
-        $this->setOption('useCalendarTimezone', $this->getSanitizer()->getCheckbox('useCalendarTimezone'));
-        $this->setOption('windowsFormatCalendar', $this->getSanitizer()->getCheckbox('windowsFormatCalendar'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
+        $this->setOption('useEventTimezone', $sanitizedParams->getCheckbox('useEventTimezone'));
+        $this->setOption('useCalendarTimezone', $sanitizedParams->getCheckbox('useCalendarTimezone'));
+        $this->setOption('windowsFormatCalendar', $sanitizedParams->getCheckbox('windowsFormatCalendar'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
 
         $this->isValid();
         $this->saveWidget();
     }
 
     /** @inheritdoc */
-    public function getResource($displayId)
+    public function getResource(Request $request, Response $response)
     {
         // Construct the response HTML
-        $this->initialiseGetResource()->appendViewPortWidth($this->region->width);
+        $this->initialiseGetResource($request, $response)->appendViewPortWidth($this->region->width);
 
         // Get the template and start making the body
         $template = $this->getRawNode('template', '');
@@ -346,9 +349,9 @@ class Calendar extends ModuleWidget
         $styleSheet = $this->getRawNode('styleSheet', '');
 
         // Parse library references first as its more efficient
-        $template = $this->parseLibraryReferences($this->isPreview(), $template);
-        $currentEventTemplate = $this->parseLibraryReferences($this->isPreview(), $currentEventTemplate);
-        $styleSheet = $this->parseLibraryReferences($this->isPreview(), $styleSheet);
+        $template = $this->parseLibraryReferences($this->isPreview(), $template, $request);
+        $currentEventTemplate = $this->parseLibraryReferences($this->isPreview(), $currentEventTemplate, $request);
+        $styleSheet = $this->parseLibraryReferences($this->isPreview(), $styleSheet, $request);
 
         // Get the feed URL contents from cache or source
         $items = $this->parseFeed($this->getFeed(), $template, $currentEventTemplate);
@@ -406,12 +409,12 @@ class Calendar extends ModuleWidget
 
         // Include some vendor items and javascript
         $this
-            ->appendJavaScriptFile('vendor/jquery-1.11.1.min.js')
-            ->appendJavaScriptFile('vendor/moment.js')
-            ->appendJavaScriptFile('xibo-layout-scaler.js')
-            ->appendJavaScriptFile('xibo-image-render.js')
-            ->appendJavaScriptFile('xibo-text-render.js')
-            ->appendFontCss()
+            ->appendJavaScriptFile('vendor/jquery-1.11.1.min.js', $request)
+            ->appendJavaScriptFile('vendor/moment.js', $request)
+            ->appendJavaScriptFile('xibo-layout-scaler.js', $request)
+            ->appendJavaScriptFile('xibo-image-render.js', $request)
+            ->appendJavaScriptFile('xibo-text-render.js', $request)
+            ->appendFontCss($request)
             ->appendCss($headContent)
             ->appendCss($styleSheet)
             ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
@@ -463,13 +466,13 @@ class Calendar extends ModuleWidget
 
         // Need the marquee plugin?
         if (stripos($effect, 'marquee') !== false)
-            $this->appendJavaScriptFile('vendor/jquery.marquee.min.js');
+            $this->appendJavaScriptFile('vendor/jquery.marquee.min.js', $request);
 
         // Need the cycle plugin?
         if ($effect != 'none')
-            $this->appendJavaScriptFile('vendor/jquery-cycle-2.1.6.min.js');
+            $this->appendJavaScriptFile('vendor/jquery-cycle-2.1.6.min.js', $request);
 
-        return $this->finaliseGetResource();
+        $this->finaliseGetResource('get-resource', $response);
     }
 
     /**

@@ -10,7 +10,9 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\User;
-use Xibo\Service\FactoryServiceInterface;
+use Xibo\Helper\SanitizerService;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -38,7 +40,7 @@ class BaseFactory
     private $log;
 
     /**
-     * @var SanitizerServiceInterface
+     * @var SanitizerService
      */
     private $sanitizerService;
 
@@ -101,20 +103,25 @@ class BaseFactory
 
     /**
      * Get Sanitizer
-     * @return SanitizerServiceInterface
+     * @param $array
+     * @return \Xibo\Support\Sanitizer\SanitizerInterface
      */
-    protected function getSanitizer()
+    protected function getSanitizer($array)
     {
-        return $this->sanitizerService;
+        return $this->sanitizerService->getSanitizer($array);
     }
 
     /**
      * Get User
      * @return User
      */
-    public function getUser()
+    public function getUser(Request $request = null)
     {
-        return $this->user;
+            if (isset($request)) {
+                $this->user = $request->getAttribute('currentUser');
+            }
+
+            return $this->user;
     }
 
     /**
@@ -144,24 +151,25 @@ class BaseFactory
      * @param null $ownerColumn
      * @param array $filterBy
      */
-    public function viewPermissionSql($entity, &$sql, &$params, $idColumn, $ownerColumn = null, $filterBy = [])
+    public function viewPermissionSql($entity, &$sql, &$params, $idColumn, $ownerColumn = null, $filterBy = [], Request $request = null)
     {
-        $checkUserId = $this->getSanitizer()->getInt('userCheckUserId', $filterBy);
+        $parsedBody = $this->getSanitizer($filterBy);
+        $checkUserId = $parsedBody->getInt('userCheckUserId');
 
         if ($checkUserId !== null) {
-            $this->getLog()->debug('Checking permissions against a specific user: %d', $checkUserId);
+            $this->getLog()->debug(sprintf('Checking permissions against a specific user: %d', $checkUserId));
             $user = $this->getUserFactory()->getById($checkUserId);
         }
         else {
-            $user = $this->getUser();
+            $user = $this->getUser($request);
 
             if ($user !== null)
-                $this->getLog()->debug('Checking permissions against the logged in user: ID: %d, Name: %s, UserType: %d', $user->userId, $user->userName, $user->userTypeId);
+                $this->getLog()->debug(sprintf('Checking permissions against the logged in user: ID: %d, Name: %s, UserType: %d', $user->userId, $user->userName, $user->userTypeId));
         }
 
         $permissionSql = '';
 
-        if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0 && ($user->userTypeId != 1 && $user->userTypeId != 4)) {
+        if ($parsedBody->getCheckbox('disableUserCheck') == 0 && ($user->userTypeId != 1 && $user->userTypeId != 4)) {
             $permissionSql .= '
               AND (' . $idColumn . ' IN (
                 SELECT `permission`.objectId

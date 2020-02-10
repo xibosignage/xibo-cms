@@ -26,8 +26,8 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="btns" href="{{ urlFor("stats.proofofplay.view") }}"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Back to dashboard" %}</a></li>
-        <li class="btn btn-info btn-xs"><a class="btns" href="{{ urlFor("savedreport.view") }}"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="btns" href="{{ url_for("stats.proofofplay.view") }}"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Back to dashboard" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -120,7 +120,7 @@
                     $.ajax({
                         type: "GET",
                         async: false,
-                        url: "{{ urlFor("user.pref") }}?preference=reportscheduleGrid",
+                        url: "{{ url_for("user.pref") }}?preference=reportscheduleGrid",
                         dataType: 'json',
                         success: function (json) {
                             try {
@@ -137,7 +137,7 @@
                 stateSaveCallback: function (settings, data) {
                     $.ajax({
                         type: "POST",
-                        url: "{{ urlFor("user.pref") }}",
+                        url: "{{ url_for("user.pref") }}",
                         data: {
                             preference: [{
                                 option: "reportscheduleGrid",
@@ -150,7 +150,7 @@
                 searchDelay: 3000,
                 "order": [[ 1, "asc"]],
                 ajax: {
-                    "url": "{{ urlFor("reportschedule.search") }}",
+                    "url": "{{ url_for("reportschedule.search") }}",
                     "data": function(d) {
                         $.extend(d, $("#reportschedules").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }

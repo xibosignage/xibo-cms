@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,7 +22,8 @@
 namespace Xibo\Widget;
 
 use Xibo\Factory\ModuleFactory;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 /**
  * Class Spacer
  * @package Xibo\Widget
@@ -122,15 +123,20 @@ class Spacer extends ModuleWidget
      *  )
      * )
      *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
      * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws \Xibo\Exception\ValueTooLargeException
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Set the properties specific to this module
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
 
         $this->saveWidget();
     }
@@ -145,11 +151,11 @@ class Spacer extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         // Construct the response HTML
-        $this->initialiseGetResource()->appendViewPortWidth($this->region->width);
-        return $this->finaliseGetResource();
+        $this->initialiseGetResource($request, $response)->appendViewPortWidth($this->region->width);
+        $this->finaliseGetResource('get-resource', $response);
     }
 
     /** @inheritdoc */

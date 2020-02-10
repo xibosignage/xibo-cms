@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -19,7 +20,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Widget;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 /**
  * Class GenericFile
  * @package Xibo\Widget
@@ -27,7 +29,7 @@ namespace Xibo\Widget;
 class GenericFile extends ModuleWidget
 {
     /** @inheritdoc */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
         // Non-editable
     }
@@ -39,7 +41,7 @@ class GenericFile extends ModuleWidget
      * @param int $scaleOverride The Scale Override
      * @return string The Rendered Content
      */
-    public function preview($width, $height, $scaleOverride = 0)
+    public function preview($width, $height, $scaleOverride = 0, Request $request = null)
     {
         // Videos are never previewed in the browser.
         return $this->previewIcon();
@@ -47,16 +49,17 @@ class GenericFile extends ModuleWidget
 
     /**
      * Get Resource
-     * @param int $displayId
-     * @return mixed
+     * @param Request $request
+     * @param Response $response
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         if (ini_get('zlib.output_compression')) {
             ini_set('zlib.output_compression', 'Off');
         }
 
-        $this->download();
+        $this->download($request, $response);
     }
 
     /**

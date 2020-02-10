@@ -1,26 +1,47 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (Error.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
 namespace Xibo\Controller;
 
 use League\OAuth2\Server\Exception\OAuthException;
+use Psr\Container\ContainerInterface;
+use Slim\Views\Twig;
+use Throwable;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\FormExpiredException;
 use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\TokenExpiredException;
 use Xibo\Exception\UpgradePendingException;
+use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Environment;
-use Xibo\Helper\Translate;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
+use Xibo\Service\HelpServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 
 /**
  * Class Error
@@ -28,199 +49,26 @@ use Xibo\Service\SanitizerServiceInterface;
  */
 class Error extends Base
 {
+
+    /** @var ContainerInterface */
+   private $container;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
+     * @param Twig $view
+     * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config)
+    public function __construct(LogServiceInterface $log, SanitizerService $sanitizerService, ApplicationState $state, \Xibo\Entity\User $user, HelpServiceInterface $help, DateServiceInterface $date, ConfigServiceInterface $config, Twig $view, ContainerInterface $container)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
-    }
-
-    /**
-     * @throws ConfigurationException
-     * @throws \Slim\Exception\Stop
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     */
-    public function notFound()
-    {
-        $app = $this->getApp();
-
-        // Not found controller happens outside the normal middleware stack for some reason
-        // Setup the translations for gettext
-        Translate::InitLocale($this->getConfig());
-
-        // Configure the locale for date/time
-        if (Translate::GetLocale(2) != '')
-            $this->getDate()->setLocale(Translate::GetLocale(2));
-        
-        $this->getLog()->debug('Page Not Found. %s', $app->request()->getResourceUri());
-
-        $message = __('Page not found');
-
-        // Different action depending on the app name
-        switch ($app->getName()) {
-
-            case 'web':
-
-                // Set up theme
-                \Xibo\Middleware\Theme::setTheme($app);
-
-                if ($app->request()->isAjax()) {
-                    $this->getState()->hydrate([
-                        'success' => false,
-                        'message' => $message,
-                        'template' => ''
-                    ]);
-                }
-                else {
-                    $app->flashNow('globalError', $message);
-                    $this->getState()->template = 'not-found';
-                }
-
-                $this->render();
-
-                break;
-
-            case 'auth':
-            case 'api':
-            case 'test':
-
-                $this->getState()->hydrate([
-                    'httpStatus' => 404,
-                    'success' => false,
-                    'message' => $message
-                ]);
-
-                $this->render();
-
-                break;
-
-            case 'console':
-            case 'maint':
-
-                // Render the error page.
-                echo $message;
-
-                $app->stop();
-                break;
-        }
-    }
-
-    /**
-     * @param \Exception $e
-     * @throws ConfigurationException
-     * @throws \Slim\Exception\Stop
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     */
-    public function handler(\Exception $e)
-    {
-        $app = $this->getApp();
-        $handled = $this->handledError($e);
-        $app->commit = false;
-
-        if ($handled) {
-            $this->getLog()->debug($e->getMessage() . $e->getTraceAsString());
-        }
-        else {
-            // Log the full error
-            $this->getLog()->debug($e->getMessage() . $e->getTraceAsString());
-            $this->getLog()->error($e->getMessage() . ' Exception Type: ' . get_class($e));
-        }
-
-        // Different action depending on the app name
-        switch ($app->getName()) {
-
-            case 'web':
-
-                $message = ($handled) ? $e->getMessage() : __('Unexpected Error, please contact support.');
-
-                // Just in case our theme has not been set by the time the exception was raised.
-                $this->getState()->setData([
-                    'theme' => $this->getConfig(),
-                    'version' => Environment::$WEBSITE_VERSION_NAME
-                ]);
-
-                if ($app->request()->isAjax()) {
-                    $this->getState()->hydrate([
-                        'success' => false,
-                        'message' => $message,
-                        'template' => ''
-                    ]);
-                }
-                else {
-                    // Template depending on whether one exists for the type of exception
-                    // get the exception class
-                    $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($e)));
-
-                    // An upgrade might be pending
-                    if ($e instanceof UpgradePendingException)
-                        $exceptionClass = 'upgrade-in-progress-page';
-
-                    $this->getLog()->debug('Loading error template ' . $exceptionClass);
-
-                    if (file_exists(PROJECT_ROOT . '/views/' . $exceptionClass . '.twig')) {
-                        $this->getState()->template = $exceptionClass;
-                    } else {
-                        $this->getState()->template = 'error';
-                    }
-
-                    $app->flashNow('globalError', $message);
-                }
-
-                $this->render();
-
-                break;
-
-            case 'auth':
-            case 'api':
-
-                $status = 500;
-
-                if ($e instanceof OAuthException) {
-                    $status = $e->httpStatusCode;
-
-                    foreach ($e->getHttpHeaders() as $header) {
-                        $app->response()->header($header);
-                    }
-                }
-                else if ($e instanceof \InvalidArgumentException) {
-                    $status = 422;
-                }
-                else if (property_exists(get_class($e), 'httpStatusCode')) {
-                    $status = $e->httpStatusCode;
-                }
-
-                $this->getState()->hydrate([
-                    'httpStatus' => $status,
-                    'success' => false,
-                    'message' => (($handled) ? __($e->getMessage()) : __('Unexpected Error, please contact support.')),
-                    'data' => (method_exists($e, 'getErrorData')) ? $e->getErrorData() : []
-                ]);
-
-                $this->render();
-
-                break;
-
-            case 'console':
-            case 'maint':
-
-                // Render the error page.
-                if ($handled) {
-                    echo $e->getMessage();
-                }
-                else
-                    echo __('Unknown Error');
-
-                $app->stop();
-                break;
-        }
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->container = $container;
     }
 
     /**
@@ -241,5 +89,154 @@ class Error extends Base
             || $e instanceof UpgradePendingException
             || $e instanceof TokenExpiredException
         );
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
+    public function notFoundPage(Request $request, Response $response)
+    {
+        $message = __('Not found');
+
+        // TODO make sure all relevant cases have their names set (web and api do), at the moment only web entry point is set to use this function.
+        switch ($request->getAttribute('name')) {
+
+            case 'web':
+
+                if ($request->isXhr()) {
+                    $this->getState()->hydrate([
+                        'success' => false,
+                        'message' => $message,
+                        'template' => ''
+                    ]);
+                }
+                else {
+                    $this->getState()->template = 'not-found';
+                }
+
+                return $this->render($request, $response);
+
+                break;
+
+            case 'auth':
+            case 'API':
+            case 'test':
+
+                $this->getState()->hydrate([
+                    'httpStatus' => 404,
+                    'success' => false,
+                    'message' => $message
+                ]);
+
+                return $this->render($request, $response);
+
+                break;
+
+            case 'console':
+            case 'maint':
+
+                // Render the error page.
+                echo $message;
+
+                //$app->stop();
+                break;
+        }
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
+    public function errorPage(Request $request, Response $response)
+    {
+        //$handled = $this->handledError($e);
+        $message = $this->container->get('session')->get('exceptionMessage');
+
+        // redirect to homepage (or login), if we are visiting this page with no errors to show
+        // mostly for post phinx upgrade refresh.
+        if (!$message) {
+            return $response->withRedirect('/');
+        }
+
+        // TODO make sure all relevant cases have their names set (web and api do), at the moment only web entry point is set to use this function.
+        switch ($request->getAttribute('name')) {
+
+            case 'web':
+                // Just in case our theme has not been set by the time the exception was raised.
+                $this->getState()->setData([
+                    'theme' => $this->getConfig(),
+                    'version' => Environment::$WEBSITE_VERSION_NAME
+                ]);
+
+                if ($request->isXhr()) {
+                    $this->getState()->hydrate([
+                        'success' => false,
+                        'message' => $message,
+                        'template' => ''
+                    ]);
+                }
+                else {
+                    // Template depending on whether one exists for the type of exception
+                    // get the exception class
+                    $exceptionClass = $this->container->get('session')->get('exceptionClass');
+
+                    $this->getLog()->debug('Loading error template ' . $exceptionClass);
+
+                    if (file_exists(PROJECT_ROOT . '/views/' . $exceptionClass . '.twig')) {
+                        $this->getState()->template = $exceptionClass;
+                    } else {
+                        $this->getState()->template = 'error';
+                    }
+
+                    $this->getState()->setData([
+                        'error' => $message
+                    ]);
+                }
+
+                $this->container->get('session')->unSet('exceptionMessage');
+                $this->container->get('session')->unSet('exceptionClass');
+                $this->container->get('session')->unSet('exceptionCode');
+                $this->getState()->setCommitState(false);
+
+                return $this->render($request, $response);
+
+                break;
+
+            case 'auth':
+            case 'API':
+
+                $this->getState()->hydrate([
+                    'httpStatus' => $this->container->get('session')->get('exceptionCode'),
+                    'success' => false,
+                    'message' => $message,
+                    'data' => []
+                ]);
+
+                return $this->render($request, $response);
+
+                break;
+
+            case 'console':
+            case 'maint':
+
+                // Render the error page.
+                echo $message;
+
+                //$app->stop();
+                break;
+        }
     }
 }

@@ -39,7 +39,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="reportScheduleFormSubmit" class="XiboForm form-horizontal" method="put" action="{{ urlFor("reportschedule.edit", {id: reportSchedule.reportScheduleId}) }}">
+            <form id="reportScheduleFormSubmit" class="XiboForm form-horizontal" method="put" action="{{ url_for("reportschedule.edit", {id: reportSchedule.reportScheduleId}) }}">
 
                 {% set title %}{% trans "Schedule Name" %}{% endset %}
                 {{ forms.input("name", title, reportSchedule.name) }}

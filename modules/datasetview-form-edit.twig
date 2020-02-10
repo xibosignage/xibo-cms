@@ -1,7 +1,8 @@
 {#
-/*
- * Xibo - Digital Signage - https://www.xibo.org.uk
- * Copyright (C) 2012-2019 Xibo Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  *
  * This file is part of Xibo.
  *
@@ -51,7 +52,7 @@
             <li><a href="#cachingTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
         </ul>
         <div class="col-md-12">
-            <form id="dataSetViewEditForm2" class="XiboForm form-horizontal" data-form-step="2" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+            <form id="dataSetViewEditForm2" class="XiboForm form-horizontal" data-form-step="2" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}
@@ -130,7 +131,7 @@
 
                         {% set title %}{% trans "Template" %}{% endset %}
                         {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
-                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), module.templatesAvailable(), "id", "value", helpText, "template-selector-control") }}
+                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), templatesAvailable, "id", "value", helpText, "template-selector-control") }}
 
                         {% set title %}{% trans "Override the template?" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
@@ -155,7 +156,7 @@
 
                         {% set title %}{% trans "Font" %}{% endset %}
                         {% set attributes = [
-                            { name: "data-search-url", value: urlFor("library.font.list") },
+                            { name: "data-search-url", value: url_for("library.font.list") },
                             { name: "data-value", value: module.getOption("fontFamily") }
                         ] %}
                         {% set helpText %}{% trans "Select a custom font - leave empty to use the default font." %}{% endset %}

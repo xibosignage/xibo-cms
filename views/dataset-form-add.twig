@@ -1,10 +1,10 @@
 {#
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015-2018 Spring Signage Ltd
- * contributions by LukyLuke aka Lukas Zurschmiede - https://github.com/LukyLuke
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * (dataset-form-add.twig) This file is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -46,7 +46,7 @@
                 <li class="tabForRemoteDataSet"><a href="#data" role="tab" data-toggle="tab"><span>{% trans "Data" %}</span></a></li>
                 <li class="tabForRemoteDataSet"><a href="#params" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
-            <form id="dataSetAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("dataSet.add") }}">
+            <form id="dataSetAddForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("dataSet.add") }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}

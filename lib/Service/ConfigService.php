@@ -77,6 +77,7 @@ class ConfigService implements ConfigServiceInterface
     public $cacheDrivers = null;
     public $timeSeriesStore = null;
     public $cacheNamespace = 'Xibo';
+    public $apiKeyPaths = null;
 
     /**
      * Theme Specific Config
@@ -231,6 +232,9 @@ class ConfigService implements ConfigServiceInterface
 
         if (isset($cacheNamespace))
             $config->cacheNamespace = $cacheNamespace;
+
+        if (isset($apiKeyPaths))
+            $config->apiKeyPaths = $apiKeyPaths;
 
         // Set this as the global config
         return $config;

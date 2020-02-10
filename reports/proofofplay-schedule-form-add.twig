@@ -38,7 +38,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="proofofplayScheduleAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("reportschedule.add") }}">
+            <form id="proofofplayScheduleAddForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("reportschedule.add") }}">
 
                 {{ forms.hidden("hiddenFields", hiddenFields) }}
                 {{ forms.hidden("reportName", reportName) }}
@@ -67,7 +67,7 @@
                     { name: "data-allow-clear", value: "true" },
                     { name: "data-placeholder--id", value: null },
                     { name: "data-placeholder--value", value: "" },
-                    { name: "data-search-url", value: urlFor("display.search") },
+                    { name: "data-search-url", value: url_for("display.search") },
                     { name: "data-search-term", value: "display" },
                     { name: "data-search-term-tags", value: "tags" },
                     { name: "data-default-values", value: displayId },
@@ -81,7 +81,7 @@
                     { name: "data-allow-clear", value: "true" },
                     { name: "data-placeholder--id", value: null },
                     { name: "data-placeholder--value", value: "" },
-                    { name: "data-search-url", value: urlFor("layout.search") },
+                    { name: "data-search-url", value: url_for("layout.search") },
                     { name: "data-search-term", value: "layout" },
                     { name: "data-search-term-tags", value: "tags" },
                     { name: "data-id-property", value: "layoutId" },
@@ -96,7 +96,7 @@
                     { name: "data-allow-clear", value: "true" },
                     { name: "data-placeholder--id", value: null },
                     { name: "data-placeholder--value", value: "" },
-                    { name: "data-search-url", value: urlFor("library.search") },
+                    { name: "data-search-url", value: url_for("library.search") },
                     { name: "data-search-term", value: "media" },
                     { name: "data-search-term-tags", value: "tags" },
                     { name: "data-id-property", value: "mediaId" },

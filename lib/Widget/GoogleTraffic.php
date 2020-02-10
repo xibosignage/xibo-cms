@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2016-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -25,7 +26,8 @@ use Respect\Validation\Validator as v;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\ModuleFactory;
-
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 /**
  * Class GoogleTraffic
  * @package Xibo\Widget
@@ -98,29 +100,33 @@ class GoogleTraffic extends ModuleWidget
 
     /**
      * Process any module settings
+     * @param Request $request
+     * @param Response $response
      * @throws InvalidArgumentException
      */
-    public function settings()
+    public function settings(Request $request, Response $response)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Process any module settings you asked for.
-        $apiKey = $this->getSanitizer()->getString('apiKey');
+        $apiKey = $sanitizedParams->getString('apiKey');
 
         if ($this->module->enabled != 0) {
-            if ($apiKey == '')
+            if ($apiKey == '') {
                 throw new InvalidArgumentException(__('Missing API Key'), 'apiKey');
+            }
         }
 
         $this->module->settings['apiKey'] = $apiKey;
 
         // Minimum duration
-        $this->module->settings['minDuration'] = $this->getSanitizer()->getInt('minDuration');
+        $this->module->settings['minDuration'] = $sanitizedParams->getInt('minDuration');
 
         // Validate that the default duration isn't lower that the min duration
         if ($this->module->settings['minDuration'] > $this->module->defaultDuration)
             throw new InvalidArgumentException(__('Please set your default duration higher than your minimum'), 'defaultDuration');
 
         // Should we reset all widgets?
-        if ($this->getSanitizer()->getCheckbox('resetAllWidgets') == 1) {
+        if ($sanitizedParams->getCheckbox('resetAllWidgets') == 1) {
             $this->getStore()->update('UPDATE `widget` SET duration = :duration WHERE type = :type AND useDuration = 1', [
                 'type' => 'googletraffic',
                 'duration' => $this->module->settings['minDuration']
@@ -209,18 +215,24 @@ class GoogleTraffic extends ModuleWidget
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Exception\ValueTooLargeException
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
-        $this->setOption('useDisplayLocation', $this->getSanitizer()->getCheckbox('useDisplayLocation'));
-        $this->setOption('longitude', $this->getSanitizer()->getDouble('longitude'));
-        $this->setOption('latitude', $this->getSanitizer()->getDouble('latitude'));
-        $this->setOption('zoom', $this->getSanitizer()->getInt('zoom'));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
+        $this->setOption('useDisplayLocation', $sanitizedParams->getCheckbox('useDisplayLocation'));
+        $this->setOption('longitude', $sanitizedParams->getDouble('longitude'));
+        $this->setOption('latitude', $sanitizedParams->getDouble('latitude'));
+        $this->setOption('zoom', $sanitizedParams->getInt('zoom'));
 
         $this->isValid();
 
@@ -231,19 +243,23 @@ class GoogleTraffic extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
-        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0) {
             throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
+        }
 
-        if ($this->getOption('zoom') == '')
+        if ($this->getOption('zoom') == '') {
             throw new InvalidArgumentException(__('Please enter a zoom level'), 'zoom');
+        }
 
         if ($this->getOption('useDisplayLocation') == 0) {
             // Validate lat/long
-            if (!v::latitude()->validate($this->getOption('latitude')))
+            if (!v::latitude()->validate($this->getOption('latitude'))) {
                 throw new InvalidArgumentException(__('The latitude entered is not valid.'), 'latitude');
+            }
 
-            if (!v::longitude()->validate($this->getOption('longitude')))
+            if (!v::longitude()->validate($this->getOption('longitude'))) {
                 throw new InvalidArgumentException(__('The longitude entered is not valid.'), 'longitude');
+            }
         }
 
         // Check the duration against the minDuration setting
@@ -255,13 +271,15 @@ class GoogleTraffic extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         // Behave exactly like the client.
-        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
+        $isPreview = ($this->getSanitizer($request->getParams())->getCheckbox('preview') == 1);
+        $displayId = $request->getAttribute('displayId', 0);
 
-        if ($this->getSetting('apiKey') == '')
+        if ($this->getSetting('apiKey') == '') {
             throw new ConfigurationException(__('Module not configured. Missing API Key.'));
+        }
 
         // Get the lat/long
         $defaultLat = $this->getConfig()->getSetting('DEFAULT_LAT');
@@ -291,7 +309,7 @@ class GoogleTraffic extends ModuleWidget
         }
 
         // Include some vendor items
-        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
 
         return $this->renderTemplate([
             'viewPortWidth' => ($isPreview) ? $this->region->width : '[[ViewPortWidth]]',
@@ -300,7 +318,7 @@ class GoogleTraffic extends ModuleWidget
             'lat' => $defaultLat,
             'long' => $defaultLong,
             'zoom' => $this->getOption('zoom', 12)
-        ], 'google-traffic-get-resource');
+        ], 'google-traffic-get-resource', $response);
     }
 
     /** @inheritdoc */

@@ -21,6 +21,8 @@
  */
 
 namespace Xibo\XTR;
+
+use Slim\Views\Twig;
 use Xibo\Controller\Library;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\NotificationFactory;
@@ -30,8 +32,6 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\ReportServiceInterface;
-use Slim\View;
-use Slim\Slim;
 
 
 /**
@@ -42,7 +42,7 @@ class ReportScheduleTask implements TaskInterface
 {
     use TaskTrait;
 
-    /** @var View */
+    /** @var Twig */
     private $view;
 
     /** @var DateServiceInterface */
@@ -101,11 +101,8 @@ class ReportScheduleTask implements TaskInterface
      */
     private function runReportSchedule()
     {
-
-        // Make sure the library exists
         Library::ensureLibraryExists($this->config->getSetting('LIBRARY_LOCATION'));
-
-        $reportSchedules = $this->reportScheduleFactory->query(null, ['isActive' => 1]);
+        $reportSchedules = $this->reportScheduleFactory->query(null, ['isActive' => 1, 'disableUserCheck' => 1]);
 
         // Get list of ReportSchedule
         foreach($reportSchedules as $reportSchedule) {
@@ -123,7 +120,7 @@ class ReportScheduleTask implements TaskInterface
                 }
 
                 // execute the report
-                $rs = $this->reportScheduleFactory->getById($reportSchedule->reportScheduleId);
+                $rs = $this->reportScheduleFactory->getById($reportSchedule->reportScheduleId, 1);
                 $rs->previousRunDt = $rs->lastRunDt;
                 $rs->lastRunDt = time();
 
@@ -223,7 +220,7 @@ class ReportScheduleTask implements TaskInterface
 
             // Save PDF attachment
             ob_start();
-            $this->view->display($emailTemplate,
+            echo $this->view->fetch($emailTemplate,
                 [
                     'header' => $report->description,
                     'logo' => $this->config->uri('img/xibologo.png', true),

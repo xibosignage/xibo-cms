@@ -1,5 +1,6 @@
 {#
- * Copyright (C) 2015-2018 Xibo Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -17,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #}
 {% extends "form-base.twig" %}
 {% import "forms.twig" as forms %}
@@ -25,7 +27,6 @@
     {% trans "Edit Ticker" %}
 {% endblock %}
 
-{% block extra %}{{ module.getExtra()|json_encode|raw }}{% endblock %}
 
 {% block formHtml %}
     <div class="row">
@@ -48,7 +49,7 @@
             <li><a href="#cacheTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
         </ul>
         <div class="col-md-12">
-            <form id="tickerEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+            <form id="tickerEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}
@@ -84,7 +85,7 @@
                     <div class="tab-pane" id="configurationTab">
                         {% set title %}{% trans "Feed URL" %}{% endset %}
                         {% set helpText %}{% trans "The Link for the RSS feed" %}{% endset %}
-                        {{ forms.input("uri", title, module.getOption("uri")|url_decode, helpText, "feed-fields") }}
+                        {{ forms.input("uri", title, module.getOption("uri"), helpText, "feed-fields") }}
 
                         {% set title %}{% trans "Number of Items" %}{% endset %}
                         {% set helpText %}{% trans "The Number of RSS items you want to display" %}{% endset %}
@@ -218,7 +219,7 @@
 
                         {% set title %}{% trans "Template" %}{% endset %}
                         {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
-                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId", "title-only"), module.templatesAvailable(), "id", "value", helptext, "template-selector-control selectPicker selectPickerWithImage", null, null, null, [{ name: "data-minimum-results-for-search", value: "Infinity" },{ name: "data-width", value: "100%" }], null, "image") }}
+                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId", "title-only"), templatesAvailable, "id", "value", helptext, "template-selector-control selectPicker selectPickerWithImage", null, null, null, [{ name: "data-minimum-results-for-search", value: "Infinity" },{ name: "data-width", value: "100%" }], null, "image") }}
 
                         {% set title %}{% trans "Override the template?" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
@@ -291,8 +292,8 @@
                                         <select id="ckeditor_library_select2"
                                                 class="ckeditor_library_select form-control"
                                                 data-linked-to="ta_text"
-                                                data-search-url="{{ urlFor("library.search") }}"
-                                                data-image-url="{{ urlFor("library.download") }}?preview=1">
+                                                data-search-url="{{ url_for("library.search") }}"
+                                                data-image-url="{{ url_for("library.download") }}?preview=1">
                                         </select>
                                     </div>
                                 </div>

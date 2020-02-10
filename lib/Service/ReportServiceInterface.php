@@ -22,6 +22,7 @@
 
 namespace Xibo\Service;
 
+use Slim\Http\ServerRequest as Request;
 use Slim\Slim;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Report\ReportInterface;
@@ -76,14 +77,14 @@ interface ReportServiceInterface
      * @param string $reportName
      * @return array
      */
-    public function getReportScheduleFormData($reportName);
+    public function getReportScheduleFormData($reportName, Request $request);
 
     /**
      * Set Report Schedule form data
      * @param string $reportName
      * @return array
      */
-    public function setReportScheduleFormData($reportName);
+    public function setReportScheduleFormData($reportName, Request $request);
 
     /**
      * Generate saved report name
@@ -108,7 +109,7 @@ interface ReportServiceInterface
      * @param int $userId
      * @return array
      */
-    public function runReport($reportName, $filterCriteria, $userId);
+    public function runReport($reportName, $filterCriteria, $userId, Request $request = null);
 
     /**
      * Get report email template twig file name

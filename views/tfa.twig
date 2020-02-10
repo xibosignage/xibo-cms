@@ -12,7 +12,7 @@
     <!-- Import CSS bundle from dist -->
     <script src="{{ theme.rootUri() }}dist/style.bundle.min.js"></script>
 
-    <!-- Copyright 2006-2019 Spring Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
+    <!-- Copyright 2006-2020 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
     <style type="text/css">
         body {
             padding-top: 40px;
@@ -52,7 +52,7 @@
 </head>
 <body>
 <div class="container">
-        <form id="login-form" class="form-signin text-center" action="{{ urlFor("tfa.auth.validate") }}" method="post">
+        <form id="login-form" class="form-signin text-center" action="{{ url_for("tfa.auth.validate") }}" method="post">
             <input name="priorRoute" type="hidden" value="{{ flash.priorRoute }}" />
             <input type="hidden" name="{{ csrfKey }}" value="{{ csrfToken }}" />
             <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ theme.uri("img/xibologo.png") }}"></a></p>
@@ -69,7 +69,7 @@
             <p><a href="#" id="recovery-form-toggle">{% trans "Use Recovery Code instead?" %}</a></p>
         </form>
 
-    <form id="recovery-form" class="form-signin text-center hidden" action="{{ urlFor("tfa.auth.validate") }}" method="post">
+    <form id="recovery-form" class="form-signin text-center hidden" action="{{ url_for("tfa.auth.validate") }}" method="post">
         <input type="hidden" name="{{ csrfKey }}" value="{{ csrfToken }}" />
         <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ theme.uri("img/xibologo.png") }}"></a></p>
 

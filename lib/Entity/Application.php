@@ -224,7 +224,11 @@ class Application implements \JsonSerializable
 
     public function resetKeys()
     {
-        $this->secret = SecureKey::generate(254);
+        $stripped = '';
+        // Make and ID/Secret
+        $bytes = openssl_random_pseudo_bytes(254, $strong);
+        $stripped .= str_replace(['/', '+', '='], '', base64_encode($bytes));
+        $this->secret =  substr($stripped, 0, 254);
         $this->deleteTokens();
     }
 
@@ -239,7 +243,11 @@ class Application implements \JsonSerializable
 
     private function add()
     {
-        $this->key = SecureKey::generate();
+        $stripped = '';
+        // Make and ID/Secret
+        $bytes = openssl_random_pseudo_bytes(40, $strong);
+        $stripped .= str_replace(['/', '+', '='], '', base64_encode($bytes));
+        $this->key = substr($stripped, 0, 40);
 
         // Simple Insert for now
         $this->getStore()->insert('

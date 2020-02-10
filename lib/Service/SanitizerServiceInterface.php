@@ -9,7 +9,7 @@
 namespace Xibo\Service;
 
 
-use Slim\Http\Request;
+use Slim\Http\ServerRequest as Request ;
 
 /**
  * Interface SanitizerServiceInterface

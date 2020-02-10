@@ -1,17 +1,31 @@
 {#
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #}
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a Display via user_code displayed on the Player screen" %}" href="{{ urlFor("display.addViaCode.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Display (Code)" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a Display via user_code displayed on the Player screen" %}" href="{{ url_for("display.addViaCode.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Display (Code)" %}</a></li>
         <li class="btn btn-success btn-xs"><a class="btns" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
     </ul>
 {% endblock %}
@@ -211,7 +225,7 @@
                     $.ajax({
                         type: "GET",
                         async: false,
-                        url: "{{ urlFor("user.pref") }}?preference=displayGrid",
+                        url: "{{ url_for("user.pref") }}?preference=displayGrid",
                         dataType: 'json',
                         success: function (json) {
                             try {
@@ -228,7 +242,7 @@
                 stateSaveCallback: function (settings, data) {
                     $.ajax({
                         type: "POST",
-                        url: "{{ urlFor("user.pref") }}",
+                        url: "{{ url_for("user.pref") }}",
                         data: {
                             preference: [{
                                 option: "displayGrid",
@@ -241,7 +255,7 @@
                 searchDelay: 3000,
                 order: [[1, "asc"]],
                 ajax: {
-                    "url": "{{ urlFor("display.search") }}",
+                    "url": "{{ url_for("display.search") }}",
                     "data": function (dataToSend) {
                         //make a new object so as not to destroy the input.
                         var data = {};
@@ -496,7 +510,7 @@
             console.log('Multi-select form opened for default layout');
 
             // Inject a list of layouts into the form, in a drop down.
-            var $select = $('<select name="layoutId" class="form-control" data-search-url="{{ urlFor("layout.search") }}" data-search-term="layout" data-search-term-tags="tags" data-id-property="layoutId" data-text-property="layout">');
+            var $select = $('<select name="layoutId" class="form-control" data-search-url="{{ url_for("layout.search") }}" data-search-term="layout" data-search-term-tags="tags" data-id-property="layoutId" data-text-property="layout">');
             $select.on('change', function() {
                 console.log('Setting commit data to ' + $(this).val());
                 dialog.data().commitData = {layoutId: $(this).val()};

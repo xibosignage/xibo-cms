@@ -73,9 +73,11 @@ class WidgetAudioFactory extends BaseFactory
     public function query($sortOrder = null, $filterBy = [])
     {
         $entries = [];
+        $sanitizedFilter = $this->getSanitizer($filterBy);
+
         $sql = 'SELECT `mediaId`, `widgetId`, `volume`, `loop` FROM `lkwidgetaudio` WHERE widgetId = :widgetId AND mediaId <> 0 ';
 
-        foreach ($this->getStore()->select($sql, ['widgetId' => $this->getSanitizer()->getInt('widgetId', $filterBy)]) as $row) {
+        foreach ($this->getStore()->select($sql, ['widgetId' => $sanitizedFilter->getInt('widgetId')]) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['duration']]);
         }
 

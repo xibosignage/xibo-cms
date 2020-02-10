@@ -22,6 +22,7 @@
 
 namespace Xibo\Factory;
 
+use Slim\Http\ServerRequest as Request;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Entity\User;
@@ -88,13 +89,13 @@ class ReportScheduleFactory extends BaseFactory
      * @return ReportSchedule
      * @throws NotFoundException
      */
-    public function getById($reportScheduleId)
+    public function getById($reportScheduleId, $disableUserCheck = 0, Request $request = null)
     {
 
         if ($reportScheduleId == 0)
             throw new NotFoundException();
 
-        $reportSchedules = $this->query(null, ['reportScheduleId' => $reportScheduleId]);
+        $reportSchedules = $this->query(null, ['reportScheduleId' => $reportScheduleId, 'disableUserCheck' => $disableUserCheck], $request);
 
         if (count($reportSchedules) <= 0) {
             throw new NotFoundException(\__('Report Schedule not found'));
@@ -109,11 +110,13 @@ class ReportScheduleFactory extends BaseFactory
      * @param array $filterBy
      * @return ReportSchedule[]
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query($sortOrder = null, $filterBy = [], Request $request = null)
     {
-        if ($sortOrder == null)
+        if ($sortOrder == null) {
             $sortOrder = ['name'];
-
+        }
+        
+        $sanitizedFilter = $this->getSanitizer($filterBy);
         $entries = [];
         $params = [];
         $select = '
@@ -140,42 +143,42 @@ class ReportScheduleFactory extends BaseFactory
         $body .= " WHERE 1 = 1 ";
 
         // View Permissions
-        if ($this->getUser()->userTypeId != 1) {
-            $this->viewPermissionSql('Xibo\Entity\ReportSchedule', $body, $params, '`reportschedule`.reportScheduleId', '`reportschedule`.userId', $filterBy);
+        if ($this->getUser($request)->userTypeId != 1) {
+            $this->viewPermissionSql('Xibo\Entity\ReportSchedule', $body, $params, '`reportschedule`.reportScheduleId', '`reportschedule`.userId', $filterBy, $request);
         }
 
         // Like
-        if ($this->getSanitizer()->getString('name', $filterBy) != '') {
-            $terms = explode(',', $this->getSanitizer()->getString('name', $filterBy));
+        if ($sanitizedFilter->getString('name') != '') {
+            $terms = explode(',', $sanitizedFilter->getString('name'));
             $this->nameFilter('reportschedule', 'name', $terms, $body, $params);
         }
 
-        if ($this->getSanitizer()->getInt('reportScheduleId', 0, $filterBy) != 0) {
-            $params['reportScheduleId'] = $this->getSanitizer()->getInt('reportScheduleId', 0,  $filterBy);
+        if ($sanitizedFilter->getInt('reportScheduleId', ['default' => 0]) != 0) {
+            $params['reportScheduleId'] = $sanitizedFilter->getInt('reportScheduleId', ['default' => 0]);
             $body .= " AND reportschedule.reportScheduleId = :reportScheduleId ";
         }
 
         // Owner filter
-        if ($this->getSanitizer()->getInt('userId', 0, $filterBy) != 0) {
+        if ($sanitizedFilter->getInt('userId', ['default' => 0]) != 0) {
             $body .= " AND reportschedule.userid = :userId ";
-            $params['userId'] = $this->getSanitizer()->getInt('userId', 0, $filterBy);
+            $params['userId'] = $sanitizedFilter->getInt('userId', ['default' => 0]);
         }
 
-        if ( $this->getSanitizer()->getCheckbox('onlyMySchedules') == 1) {
+        if ( $sanitizedFilter->getCheckbox('onlyMySchedules') == 1) {
             $body .= ' AND reportschedule.userid = :currentUserId ';
-            $params['currentUserId'] = $this->getUser()->userId;
+            $params['currentUserId'] = $this->getUser($request)->userId;
         }
 
         // Report Name
-        if ($this->getSanitizer()->getString('reportName', $filterBy) != '') {
+        if ($sanitizedFilter->getString('reportName') != '') {
             $body .= " AND reportschedule.reportName = :reportName ";
-            $params['reportName'] = $this->getSanitizer()->getString('reportName',  $filterBy);
+            $params['reportName'] = $sanitizedFilter->getString('reportName');
         }
 
         // isActive
-        if ($this->getSanitizer()->getInt('isActive', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('isActive') !== null) {
             $body .= " AND reportschedule.isActive = :isActive ";
-            $params['isActive'] = $this->getSanitizer()->getInt('isActive', $filterBy);
+            $params['isActive'] = $sanitizedFilter->getInt('isActive');
         }
 
         // Sorting?
@@ -185,8 +188,8 @@ class ReportScheduleFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

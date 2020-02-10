@@ -1,13 +1,30 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
- * (Audio.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
 namespace Xibo\Widget;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 
 class Audio extends ModuleWidget
 {
@@ -90,24 +107,27 @@ class Audio extends ModuleWidget
      *  )
      * )
      */
-    public function edit()
+    public function edit(Request $request, Response $response, $id)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Set the properties specific to this module
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('mute', $sanitizedParams->getCheckbox('mute'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
 
         // Only loop if the duration is > 0
         if ($this->getUseDuration() == 0 || $this->getDuration() == 0) {
             $this->setDuration(0);
             $this->setOption('loop', 0);
         } else {
-            $this->setOption('loop', $this->getSanitizer()->getCheckbox('loop'));
+            $this->setOption('loop', $sanitizedParams->getCheckbox('loop'));
         }
 
         $this->saveWidget();
+
+        //return $response;
     }
 
     /**
@@ -117,7 +137,7 @@ class Audio extends ModuleWidget
      * @param int $scaleOverride
      * @return string
      */
-    public function previewAsClient($width, $height, $scaleOverride = 0)
+    public function previewAsClient($width, $height, $scaleOverride = 0, Request $request)
     {
         return $this->previewIcon();
     }
@@ -127,16 +147,18 @@ class Audio extends ModuleWidget
      * @param $fileName
      * @return int
      */
-    public function determineDuration($fileName = null)
+    public function determineDuration($fileName = null, Request $request = null)
     {
         // If we don't have a file name, then we use the default duration of 0 (end-detect)
-        if ($fileName === null)
+        if ($fileName === null) {
             return 0;
+        }
 
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         $this->getLog()->debug('Determine Duration from %s', $fileName);
         $info = new \getID3();
         $file = $info->analyze($fileName);
-        return intval($this->getSanitizer()->getDouble('playtime_seconds', 0, $file));
+        return intval($sanitizedParams->getDouble('playtime_seconds', ['default' => 0]));
     }
 
     /**
@@ -153,7 +175,7 @@ class Audio extends ModuleWidget
      * @param int $displayId
      * @return mixed
      */
-    public function getResource($displayId = 0)
+    public function getResource(Request $request, Response $response)
     {
         $this->download();
     }

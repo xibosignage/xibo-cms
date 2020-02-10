@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2019 Xibo Signage Ltd
  *
- * This file (api.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,46 +20,81 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use Xibo\Service\ConfigService;
+use Monolog\Logger;
+use Monolog\Processor\UidProcessor;
+use Nyholm\Psr7\Factory\Psr17Factory;
+use Slim\Http\Factory\DecoratedResponseFactory;
+use Xibo\Factory\ContainerFactory;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Xibo\Storage\UserEntity;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/../../..'));
 
-error_reporting(0);
-ini_set('display_errors', 0);
+error_reporting(1);
+ini_set('display_errors', 1);
 
 require PROJECT_ROOT . '/vendor/autoload.php';
 
 if (!file_exists(PROJECT_ROOT . '/web/settings.php'))
     die('Not configured');
 
-// Create a logger
-$logger = new \Xibo\Helper\AccessibleMonologWriter(array(
-    'name' => 'AUTH',
-    'handlers' => array(
-        new \Xibo\Helper\DatabaseLogHandler()
-    ),
-    'processors' => array(
-        new \Xibo\Helper\LogProcessor(),
-        new \Monolog\Processor\UidProcessor(7)
-    )
-), false);
+// Create the container for dependency injection.
+try {
+    $container = ContainerFactory::create();
+} catch (Exception $e) {
+    die($e->getMessage());
+}
 
-$app = new \RKA\Slim(array(
-    'debug' => false,
-    'log.writer' => $logger
-));
-$app->setName('auth');
+$container->set('logger', function () {
+    $logger = new Logger('API');
+
+    $uidProcessor = new UidProcessor();
+    // db
+    $dbhandler  =  new \Xibo\Helper\DatabaseLogHandler();
+
+    $logger->pushProcessor($uidProcessor);
+    $logger->pushHandler($dbhandler);
+
+    return $logger;
+});
+
+// Create a Slim application
+$app = \DI\Bridge\Slim\Bridge::create($container);
 
 // Config
-$app->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
+$app->config = $container->get('configService');
+$routeParser = $app->getRouteCollector()->getRouteParser();
+// Config
+$app->add(new \Xibo\Middleware\Log($app));
+$app->add(new \Xibo\Middleware\ApiAuthorizationOAuth($app));
+$app->add(new \Xibo\Middleware\Storage($app));
+$app->add(new \Xibo\Middleware\State($app));
 
-$app->add(new \Xibo\Middleware\ApiAuthorizationOAuth());
-$app->add(new \Xibo\Middleware\State());
-$app->add(new \Xibo\Middleware\Storage());
-$app->view(new \Xibo\Middleware\ApiView());
+$app->addRoutingMiddleware();
+$app->setBasePath('/api/authorize');
 
-// Configure the Slim error handler
+// Define Custom Error Handler
+$customErrorHandler = function (Request $request, Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($app) {
+    $nyholmFactory = new Psr17Factory();
+    $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
+    /** @var Response $response */
+    $response = $decoratedResponseFactory->createResponse($exception->getCode());
+    $app->getContainer()->get('state')->setCommitState(false);
+
+    return $response->withJson([
+        'error' => $exception->getMessage(),
+       // 'traceString' => $exception->getTraceAsString(),
+       // 'trace' => $exception->getTrace(),
+        'code' => $exception->getCode()
+    ]);
+};
+
+
+$errorMiddleware = $app->addErrorMiddleware(true, true, true);
+$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
+/* Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
     $app->container->get('\Xibo\Controller\Error')->handler($e);
 });
@@ -68,33 +104,35 @@ $app->notFound(function () use ($app) {
     $app->container->get('\Xibo\Controller\Error')->notFound();
 });
 
+*/
+
 // Auth Routes
-$app->get('/', function() use ($app) {
-
-    $authParams = $app->server->getGrantType('authorization_code')->checkAuthorizeParams();
-
+$app->get('/', function(Request $request, Response $response) use ($app) {
+    /** @var \League\OAuth2\Server\AuthorizationServer $server */
+    $server = $app->getContainer()->get('server');
+    $authRequest = $server->validateAuthorizationRequest($request);
+    $app->getContainer()->get('session')->set('authParams', $authRequest);
     // Redirect the user to the UI - save the auth params in the session.
-    $app->session->set('authParams', $authParams);
+    //$app->getContainer()->get('session')->set('authParams', $authParams);
+    //$app->redirect(str_replace('/api/authorize/', '/application/authorize', $app->request()->getPath()));
+    // We know we are at /api/authorize, so convert that to /application/authorize
+    return $response->withRedirect('/application/authorize');
 
-    // We know we are at /api/authorize, so convert that to /application/authorise
-    $app->redirect(str_replace('/api/authorize/', '/application/authorize', $app->request()->getPath()));
-
-})->name('home');
+})->setName('home');
 
 // Access Token
-$app->post('/access_token', function() use ($app) {
+$app->post('/access_token', function(Request $request, Response $response) use ($app) {
 
-    $app->logService->debug('Request for access token using grant_type: %s', $app->request()->post('grant_type'));
+    $app->getContainer()->get('logService')->debug('Request for access token using grant_type: %s', $request->getParam('grant_type'));
+    $server = $app->getContainer()->get('server');
 
-    $token = json_encode($app->server->issueAccessToken());
-
-    $app->logService->debug('Issued token: %s', $token);
-
-    // Issue an access token
-    $app->response->header('Content-Type', 'application/json');
-    $app->halt(200, $token);
-
-    // Exceptions are caught by our error controller automatically.
+    try {
+        // Try to respond to the request
+        return $server->respondToAccessTokenRequest($request, $response);
+    } catch (\League\OAuth2\Server\Exception\OAuthServerException $exception) {
+        // All instances of OAuthServerException can be formatted into a HTTP response
+        return $exception->generateHttpResponse($response);
+    }
 });
 
 // Run app

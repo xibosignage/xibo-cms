@@ -1,17 +1,31 @@
 {#
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #}
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Display Group" %}" href="{{ urlFor("displayGroup.add.form") }}"> <i class="fa fa-desktop" aria-hidden="true"></i> {% trans "Add Display Group" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Display Group" %}" href="{{ url_for("displayGroup.add.form") }}"> <i class="fa fa-desktop" aria-hidden="true"></i> {% trans "Add Display Group" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -35,7 +49,7 @@
                                 { name: "data-allow-clear", value: "true" },
                                 { name: "data-placeholder--id", value: null },
                                 { name: "data-placeholder--value", value: "" },
-                                { name: "data-search-url", value: urlFor("display.search") },
+                                { name: "data-search-url", value: url_for("display.search") },
                                 { name: "data-search-term", value: "display" },
                                 { name: "data-search-term-tags", value: "tags" },
                                 { name: "data-id-property", value: "displayId" },
@@ -93,7 +107,7 @@
                 $.ajax({
                     type: "GET",
                     async: false,
-                    url: "{{ urlFor("user.pref") }}?preference=displayGroupGrid",
+                    url: "{{ url_for("user.pref") }}?preference=displayGroupGrid",
                     dataType: 'json',
                     success: function (json) {
                         try {
@@ -110,7 +124,7 @@
             stateSaveCallback: function (settings, data) {
                 $.ajax({
                     type: "POST",
-                    url: "{{ urlFor("user.pref") }}",
+                    url: "{{ url_for("user.pref") }}",
                     data: {
                         preference: [{
                             option: "displayGroupGrid",
@@ -123,7 +137,7 @@
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
             ajax: {
-                "url": "{{ urlFor("displayGroup.search") }}",
+                "url": "{{ url_for("displayGroup.search") }}",
                 "data": function(d) {
                     $.extend(d, $("#displaygroups").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                 }
@@ -228,7 +242,7 @@
                         searchDelay: 3000,
                         "order": [[1, "asc"]],
                         ajax: {
-                            "url": "{{ urlFor("display.search") }}",
+                            "url": "{{ url_for("display.search") }}",
                             "data": function (d) {
                                 //console.log(criteria);
                                 //console.log(criteriaTag);
@@ -285,7 +299,7 @@
                 searchDelay: 3000,
                 "order": [[1, "asc"]],
                 ajax: {
-                    "url": "{{ urlFor("display.search") }}",
+                    "url": "{{ url_for("display.search") }}",
                     "data": function(dataDisplay) {
                         $.extend(dataDisplay, $(dialog).find("#displayForm").serializeObject());
                         return dataDisplay;
@@ -360,7 +374,7 @@
                 searchDelay: 3000,
                 "order": [[1, "asc"]],
                 ajax: {
-                    "url": "{{ urlFor("displayGroup.search") }}",
+                    "url": "{{ url_for("displayGroup.search") }}",
                     "data": function(dataGroup) {
                         $.extend(dataGroup, $("#displaysGroupsMembersTable").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                         return dataGroup;

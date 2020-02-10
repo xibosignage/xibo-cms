@@ -142,11 +142,13 @@ class TagFactory extends BaseFactory
 
         $row = $tags[0];
         $tag = $this->createEmpty();
-        $tag->tagId = $this->getSanitizer()->int($row['tagId']);
-        $tag->tag = $this->getSanitizer()->string($row['tag']);
-        $tag->isSystem = $this->getSanitizer()->int($row['isSystem']);
-        $tag->isRequired = $this->getSanitizer()->int($row['isRequired']);
-        $tag->options = $this->getSanitizer()->string($row['options']);
+        $sanitizedRow = $this->getSanitizer($row);
+
+        $tag->tagId = $sanitizedRow->getInt('tagId');
+        $tag->tag = $sanitizedRow->getString('tag');
+        $tag->isSystem = $sanitizedRow->getInt('isSystem');
+        $tag->isRequired = $sanitizedRow->getInt('isRequired');
+        $tag->options = $sanitizedRow->getString('options');
 
         return $tag;
     }
@@ -163,13 +165,15 @@ class TagFactory extends BaseFactory
         $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options, lktaglayout.value FROM `tag` INNER JOIN `lktaglayout` ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = :layoutId';
 
         foreach ($this->getStore()->select($sql, ['layoutId' => $layoutId]) as $row) {
+            $sanitizedRow = $this->getSanitizer($row);
+
             $tag = $this->createEmpty();
-            $tag->tagId = $this->getSanitizer()->int($row['tagId']);
-            $tag->tag = $this->getSanitizer()->string($row['tag']);
-            $tag->isSystem = $this->getSanitizer()->int($row['isSystem']);
-            $tag->isRequired = $this->getSanitizer()->int($row['isRequired']);
-            $tag->options = $this->getSanitizer()->string($row['options']);
-            $tag->value = $this->getSanitizer()->string($row['value']);
+            $tag->tagId = $sanitizedRow->getInt('tagId');
+            $tag->tag = $sanitizedRow->getString('tag');
+            $tag->isSystem = $sanitizedRow->getInt('isSystem');
+            $tag->isRequired = $sanitizedRow->getInt('isRequired');
+            $tag->options = $sanitizedRow->getString('options');
+            $tag->value = $sanitizedRow->getString('value');
 
             $tags[] = $tag;
         }
@@ -189,13 +193,15 @@ class TagFactory extends BaseFactory
         $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options, lktagplaylist.value FROM `tag` INNER JOIN `lktagplaylist` ON lktagplaylist.tagId = tag.tagId WHERE lktagplaylist.playlistId = :playlistId';
 
         foreach ($this->getStore()->select($sql, array('playlistId' => $playlistId)) as $row) {
+            $sanitizedRow = $this->getSanitizer($row);
+
             $tag = $this->createEmpty();
-            $tag->tagId = $this->getSanitizer()->int($row['tagId']);
-            $tag->tag = $this->getSanitizer()->string($row['tag']);
-            $tag->isSystem = $this->getSanitizer()->int($row['isSystem']);
-            $tag->isRequired = $this->getSanitizer()->int($row['isRequired']);
-            $tag->options = $this->getSanitizer()->string($row['options']);
-            $tag->value = $this->getSanitizer()->string($row['value']);
+            $tag->tagId = $sanitizedRow->getInt('tagId');
+            $tag->tag = $sanitizedRow->getString('tag');
+            $tag->isSystem = $sanitizedRow->getInt('isSystem');
+            $tag->isRequired = $sanitizedRow->getInt('isRequired');
+            $tag->options = $sanitizedRow->getString('options');
+            $tag->value = $sanitizedRow->getString('value');
 
             $tags[] = $tag;
         }
@@ -215,13 +221,15 @@ class TagFactory extends BaseFactory
         $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options, lktagcampaign.value FROM `tag` INNER JOIN `lktagcampaign` ON lktagcampaign.tagId = tag.tagId WHERE lktagcampaign.campaignId = :campaignId';
 
         foreach ($this->getStore()->select($sql, array('campaignId' => $campaignId)) as $row) {
+            $sanitizedRow = $this->getSanitizer($row);
+
             $tag = $this->createEmpty();
-            $tag->tagId = $this->getSanitizer()->int($row['tagId']);
-            $tag->tag = $this->getSanitizer()->string($row['tag']);
-            $tag->isSystem = $this->getSanitizer()->int($row['isSystem']);
-            $tag->isRequired = $this->getSanitizer()->int($row['isRequired']);
-            $tag->options = $this->getSanitizer()->string($row['options']);
-            $tag->value = $this->getSanitizer()->string($row['value']);
+            $tag->tagId = $sanitizedRow->getInt('tagId');
+            $tag->tag = $sanitizedRow->getString('tag');
+            $tag->isSystem = $sanitizedRow->getInt('isSystem');
+            $tag->isRequired = $sanitizedRow->getInt('isRequired');
+            $tag->options = $sanitizedRow->getString('options');
+            $tag->value = $sanitizedRow->getString('value');
 
             $tags[] = $tag;
         }
@@ -241,13 +249,15 @@ class TagFactory extends BaseFactory
         $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options, lktagmedia.value FROM `tag` INNER JOIN `lktagmedia` ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = :mediaId';
 
         foreach ($this->getStore()->select($sql, array('mediaId' => $mediaId)) as $row) {
+            $sanitizedRow = $this->getSanitizer($row);
+
             $tag = $this->createEmpty();
-            $tag->tagId = $this->getSanitizer()->int($row['tagId']);
-            $tag->tag = $this->getSanitizer()->string($row['tag']);
-            $tag->isSystem = $this->getSanitizer()->int($row['isSystem']);
-            $tag->isRequired = $this->getSanitizer()->int($row['isRequired']);
-            $tag->options = $this->getSanitizer()->string($row['options']);
-            $tag->value = $this->getSanitizer()->string($row['value']);
+            $tag->tagId = $sanitizedRow->getInt('tagId');
+            $tag->tag = $sanitizedRow->getString('tag');
+            $tag->isSystem = $sanitizedRow->getInt('isSystem');
+            $tag->isRequired = $sanitizedRow->getInt('isRequired');
+            $tag->options = $sanitizedRow->getString('options');
+            $tag->value = $sanitizedRow->getString('value');
 
             $tags[] = $tag;
         }
@@ -267,13 +277,15 @@ class TagFactory extends BaseFactory
         $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options, lktagdisplaygroup.value FROM `tag` INNER JOIN `lktagdisplaygroup` ON lktagdisplaygroup.tagId = tag.tagId WHERE lktagdisplaygroup.displayGroupId = :displayGroupId';
 
         foreach ($this->getStore()->select($sql, array('displayGroupId' => $displayGroupId)) as $row) {
+            $sanitizedRow = $this->getSanitizer($row);
+
             $tag = $this->createEmpty();
-            $tag->tagId = $this->getSanitizer()->int($row['tagId']);
-            $tag->tag = $this->getSanitizer()->string($row['tag']);
-            $tag->isSystem = $this->getSanitizer()->int($row['isSystem']);
-            $tag->isRequired = $this->getSanitizer()->int($row['isRequired']);
-            $tag->options = $this->getSanitizer()->string($row['options']);
-            $tag->value = $this->getSanitizer()->string($row['value']);
+            $tag->tagId = $sanitizedRow->getInt('tagId');
+            $tag->tag = $sanitizedRow->getString('tag');
+            $tag->isSystem = $sanitizedRow->getInt('isSystem');
+            $tag->isRequired = $sanitizedRow->getInt('isRequired');
+            $tag->options = $sanitizedRow->getString('options');
+            $tag->value = $sanitizedRow->getString('value');
 
             $tags[] = $tag;
         }
@@ -324,9 +336,11 @@ class TagFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        if ($sortOrder == null)
+        if ($sortOrder == null) {
             $sortOrder = ['tagId DESC'];
+        }
 
+        $sanitizedFilter = $this->getSanitizer($filterBy);
         $entries = [];
         $params = [];
         $order = '';
@@ -340,50 +354,51 @@ class TagFactory extends BaseFactory
 
         $body .= ' WHERE 1 = 1 ';
 
-        if ($this->getSanitizer()->getString('tagId', $filterBy) != null) {
+        if ($sanitizedFilter->getInt('tagId') != null) {
             $body .= " AND `tag`.tagId = :tagId ";
-            $params['tagId'] = $this->getSanitizer()->getString('tagId', 0, $filterBy);
+            $params['tagId'] = $sanitizedFilter->getInt('tagId');
         }
 
-        if ($this->getSanitizer()->getInt('notTagId', 0, $filterBy) != 0) {
+        if ($sanitizedFilter->getInt('notTagId', ['default' => 0]) != 0) {
             $body .= " AND tag.tagId <> :notTagId ";
-            $params['notTagId'] = $this->getSanitizer()->getInt('notTagId', 0, $filterBy);
+            $params['notTagId'] = $sanitizedFilter->getInt('notTagId');
         }
 
-        if ($this->getSanitizer()->getString('tag', $filterBy) != '') {
-            $terms = explode(',', $this->getSanitizer()->getString('tag', $filterBy));
+        if ($sanitizedFilter->getString('tag') != null) {
+            $terms = explode(',', $sanitizedFilter->getString('tag'));
             $this->nameFilter('tag', 'tag', $terms, $body, $params);
         }
 
-        if ($this->getSanitizer()->getString('tagExact', $filterBy) != '') {
+        if ($sanitizedFilter->getString('tagExact') != null) {
             $body.= " AND tag.tag = :exact ";
-            $params['exact'] = $this->getSanitizer()->getString('tagExact', $filterBy);
+            $params['exact'] = $sanitizedFilter->getString('tagExact');
         }
 
         //isSystem filter, by default hide tags with isSystem flag
-        if ($this->getSanitizer()->getInt('isSystem', 0, $filterBy) === 1) {
+        if ($sanitizedFilter->getCheckbox('isSystem') === 1) {
             $body .= " AND `tag`.isSystem = 1 ";
         } else {
             $body .= " AND `tag`.isSystem = 0 ";
         }
 
         // isRequired filter, by default hide tags with isSystem flag
-        if ($this->getSanitizer()->getInt('isRequired', $filterBy) != 0) {
+        if ($sanitizedFilter->getCheckbox('isRequired') != 0) {
             $body .= " AND `tag`.isRequired = :isRequired ";
-            $params['isRequired'] = $this->getSanitizer()->getInt('isRequired', $filterBy);
+            $params['isRequired'] = $sanitizedFilter->getCheckbox('isRequired');
         }
 
-        if ($this->getSanitizer()->getInt('haveOptions', 0, $filterBy) === 1) {
+        if ($sanitizedFilter->getCheckbox('haveOptions') === 1) {
             $body .= " AND `tag`.options IS NOT NULL";
         }
 
         // Sorting?
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $order = ' ORDER BY ' . implode(',', $sortOrder);
+        }
 
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

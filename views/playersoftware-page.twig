@@ -1,24 +1,24 @@
 {#
 /**
-* Copyright (C) 2018 Xibo Signage Ltd
-*
-* Xibo - Digital Signage - http://www.xibo.org.uk
-*
-* This file is part of Xibo.
-*
-* Xibo is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* any later version.
-*
-* Xibo is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #}
 
 {% extends "authed.twig" %}
@@ -98,7 +98,7 @@
                     $.ajax({
                         type: "GET",
                         async: false,
-                        url: "{{ urlFor("user.pref") }}?preference=playerSoftwareGrid",
+                        url: "{{ url_for("user.pref") }}?preference=playerSoftwareGrid",
                         dataType: 'json',
                         success: function (json) {
                             try {
@@ -115,7 +115,7 @@
                 stateSaveCallback: function (settings, data) {
                     $.ajax({
                         type: "POST",
-                        url: "{{ urlFor("user.pref") }}",
+                        url: "{{ url_for("user.pref") }}",
                         data: {
                             preference: [{
                                 option: "playerSoftwareGrid",
@@ -128,7 +128,7 @@
                 searchDelay: 3000,
                 "order": [[2, "asc"]],
                 ajax: {
-                    "url": "{{ urlFor("playersoftware.search") }}",
+                    "url": "{{ url_for("playersoftware.search") }}",
                     "data": function (d) {
                         $.extend(d, $("#playerSoftwareItems").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }
@@ -206,7 +206,7 @@
                 }
             }).on('shown.bs.modal', function() {
                 // Configure the upload form
-                var url = "{{ urlFor("library.add") }}";
+                var url = "{{ url_for("library.add") }}";
                 var form = $(this).find("form");
                 var options = {
                     url: url,
