@@ -108,12 +108,12 @@
                                     {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
 
                                     <div class="form-group ">
-                                        <label class="control-label" title="" for="display" accesskey="">Display Name</label>
+                                        <label class="control-label" title="" for="display" accesskey="">{% trans "Display Name" %}</label>
                                         <div>
                                             <div class="input-group">
                                                 <input class="form-control" name="display" type="text" id="display" value="">
                                                 <span class="input-group-addon">
-                                                    <input title="Use Regex?" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                                    <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
                                                 </span>
                                             </div>
                                         </div>
