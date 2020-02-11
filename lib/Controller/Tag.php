@@ -196,6 +196,7 @@ class Tag extends Base
         $filter = [
             'tagId' => $this->getSanitizer()->getInt('tagId'),
             'tag' => $this->getSanitizer()->getString('tag'),
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'isSystem' => $this->getSanitizer()->getCheckbox('isSystem'),
             'isRequired' => $this->getSanitizer()->getCheckbox('isRequired'),
             'haveOptions' => $this->getSanitizer()->getCheckbox('haveOptions')

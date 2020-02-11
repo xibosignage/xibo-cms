@@ -277,6 +277,7 @@ class User extends Base
             'userId' => $this->getSanitizer()->getInt('userId'),
             'userTypeId' => $this->getSanitizer()->getInt('userTypeId'),
             'userName' => $this->getSanitizer()->getString('userName'),
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'retired' => $this->getSanitizer()->getInt('retired')
         ];
 

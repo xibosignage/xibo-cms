@@ -24,8 +24,19 @@
                 <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline" onsubmit="return false">
-                            {% set title %}{% trans "Name" %}{% endset %}
-                            {{ inline.input("dataSet", title) }}
+
+                            <div class="form-group ">
+                                <label class="control-label" title="" for="dataSet" accesskey="">Name</label>
+                                <div>
+                                    <div class="input-group">
+                                        <input class="form-control" name="dataSet" type="text" id="dataSet" value="">
+
+                                        <span class="input-group-addon">
+                                            <input title="Use Regex?" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </form>
                     </div>
                 </div>

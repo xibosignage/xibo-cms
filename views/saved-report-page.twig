@@ -39,8 +39,18 @@
                 <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {% set title %}{% trans "Name" %}{% endset %}
-                            {{ inline.input("saveAs", title) }}
+
+                            <div class="form-group ">
+                                <label class="control-label" title="" for="saveAs" accesskey="">Name</label>
+                                <div>
+                                    <div class="input-group">
+                                        <input class="form-control" name="saveAs" type="text" id="saveAs" value="">
+                                        <span class="input-group-addon">
+                                            <input title="Use Regex?" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
 
                             {% set title %}{% trans "Owner" %}{% endset %}
                             {% set helpText %}{% trans "Show items owned by the selected User." %}{% endset %}

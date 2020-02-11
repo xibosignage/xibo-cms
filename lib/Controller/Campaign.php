@@ -169,6 +169,7 @@ class Campaign extends Base
         $filter = [
             'campaignId' => $this->getSanitizer()->getInt('campaignId'),
             'name' => $this->getSanitizer()->getString('name'),
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'tags' => $this->getSanitizer()->getString('tags'),
             'hasLayouts' => $this->getSanitizer()->getInt('hasLayouts'),
             'isLayoutSpecific' => $this->getSanitizer()->getInt('isLayoutSpecific'),
