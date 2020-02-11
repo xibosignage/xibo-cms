@@ -33,8 +33,17 @@
                                     {% set title %}{% trans "ID" %}{% endset %}
                                     {{ inline.number("displayId", title) }}
 
-                                    {% set title %}{% trans "Name" %}{% endset %}
-                                    {{ inline.input("display", title) }}
+                                    <div class="form-group ">
+                                        <label class="control-label" title="" for="display" accesskey="">{% trans "Name" %}</label>
+                                        <div>
+                                            <div class="input-group">
+                                                <input class="form-control" name="display" type="text" id="display" value="">
+                                                <span class="input-group-addon">
+                                                    <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     {% set title %}{% trans "Status" %}{% endset %}
                                     {% set check %}{% trans "Up to date" %}{% endset %}
@@ -69,11 +78,9 @@
                                     {{ inline.dropdown("authorised", "single", title, "", options, "optionid", "option") }}
 
                                     {% set title %}{% trans "Tags" %}{% endset %}
+                                    {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
                                     {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                                    {{ inline.inputWithTags("tags", title, null, helpText) }}
-
-                                    {% set title %}{% trans "Exact match?" %}{% endset %}
-                                    {{ inline.checkbox("exactTags", title) }}
+                                    {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
 
                                     {% set title %}{% trans "Display Group" %}{% endset %}
                                     {{ inline.dropdown("displayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup") }}

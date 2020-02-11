@@ -138,6 +138,7 @@ class DayPart extends Base
         $filter = [
             'dayPartId' => $this->getSanitizer()->getInt('dayPartId'),
             'name' => $this->getSanitizer()->getString('name'),
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'isAlways' => $this->getSanitizer()->getInt('isAlways'),
             'isCustom' => $this->getSanitizer()->getInt('isCustom')
         ];

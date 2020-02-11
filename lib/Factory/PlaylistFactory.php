@@ -306,7 +306,7 @@ class PlaylistFactory extends BaseFactory
         // Playlist Like
         if ($this->getSanitizer()->getString('name', $filterBy) != '') {
             $terms = explode(',', $this->getSanitizer()->getString('name', $filterBy));
-            $this->nameFilter('playlist', 'name', $terms, $body, $params);
+            $this->nameFilter('playlist', 'name', $terms, $body, $params, ($this->getSanitizer()->getCheckbox('useRegexForName') == 1));
         }
 
         // Playlist exact name

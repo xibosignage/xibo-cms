@@ -177,7 +177,7 @@ class DisplayProfileFactory extends BaseFactory
             // Filter by DisplayProfile Name?
             if ($this->getSanitizer()->getString('displayProfile', $filterBy) != null) {
                 $terms = explode(',', $this->getSanitizer()->getString('displayProfile', $filterBy));
-                $this->nameFilter('displayprofile', 'name', $terms, $body, $params);
+                $this->nameFilter('displayprofile', 'name', $terms, $body, $params, ($this->getSanitizer()->getCheckbox('useRegexForName') == 1));
             }
 
             if ($this->getSanitizer()->getString('type', $filterBy) != null) {

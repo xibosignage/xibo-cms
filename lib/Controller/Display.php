@@ -493,6 +493,7 @@ class Display extends Base
         $filter = [
             'displayId' => $this->getSanitizer()->getInt('displayId'),
             'display' => $this->getSanitizer()->getString('display'),
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'macAddress' => $this->getSanitizer()->getString('macAddress'),
             'license' => $this->getSanitizer()->getString('hardwareKey'),
             'displayGroupId' => $this->getSanitizer()->getInt('displayGroupId'),

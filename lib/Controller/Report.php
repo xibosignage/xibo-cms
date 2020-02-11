@@ -120,6 +120,7 @@ class Report extends Base
     {
         $reportSchedules = $this->reportScheduleFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'name' => $this->getSanitizer()->getString('name'),
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'userId' => $this->getSanitizer()->getInt('userId'),
             'reportScheduleId' => $this->getSanitizer()->getInt('reportScheduleId'),
             'reportName' => $this->getSanitizer()->getString('reportName')
@@ -549,6 +550,7 @@ class Report extends Base
     {
         $savedReports = $this->savedReportFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'saveAs' => $this->getSanitizer()->getString('saveAs'),
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'userId' => $this->getSanitizer()->getInt('userId'),
             'reportName' => $this->getSanitizer()->getString('reportName')
         ]));
