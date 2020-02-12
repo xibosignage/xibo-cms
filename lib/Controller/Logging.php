@@ -105,6 +105,7 @@ class Logging extends Base
             'runNo' => $this->getSanitizer()->getString('runNo'),
             'message' => $this->getSanitizer()->getString('message'),
             'display' => $this->getSanitizer()->getString('display'),
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'displayGroupId' => $this->getSanitizer()->getInt('displayGroupId'),
         ]));
 

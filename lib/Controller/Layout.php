@@ -1000,6 +1000,7 @@ class Layout extends Base
         // Get all layouts
         $layouts = $this->layoutFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'layout' => $this->getSanitizer()->getString('layout'),
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'userId' => $this->getSanitizer()->getInt('userId'),
             'retired' => $this->getSanitizer()->getInt('retired'),
             'tags' => $this->getSanitizer()->getString('tags'),

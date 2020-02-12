@@ -159,7 +159,7 @@ class SavedReportFactory extends BaseFactory
         // Like
         if ($this->getSanitizer()->getString('saveAs', $filterBy) != '') {
             $terms = explode(',', $this->getSanitizer()->getString('saveAs', $filterBy));
-            $this->nameFilter('saved_report', 'saveAs', $terms, $body, $params);
+            $this->nameFilter('saved_report', 'saveAs', $terms, $body, $params, ($this->getSanitizer()->getCheckbox('useRegexForName') == 1));
         }
 
         if ($this->getSanitizer()->getInt('savedReportId', -1, $filterBy) != -1) {

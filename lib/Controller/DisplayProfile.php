@@ -146,6 +146,7 @@ class DisplayProfile extends Base
         $filter = [
             'displayProfileId' => $this->getSanitizer()->getInt('displayProfileId'),
             'displayProfile' => $this->getSanitizer()->getString('displayProfile'),
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'type' => $this->getSanitizer()->getString('type')
         ];
 

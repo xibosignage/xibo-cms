@@ -236,6 +236,7 @@ class Playlist extends Base
         // Playlists
         $playlists = $this->playlistFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'name' => $this->getSanitizer()->getString('name'),
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'userId' => $this->getSanitizer()->getInt('userId'),
             'tags' => $this->getSanitizer()->getString('tags'),
             'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),

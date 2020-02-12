@@ -97,14 +97,8 @@
             <div class="btn slider-step-btn time-picker-step-btn" data-step="1">
                 <span class="fa fa-step-forward"></span>
             </div>
-        </div> 
-
-        <div class="col-sm-12 cal-event-loader" style="display:none;">
-            <span class="alert alert-info col-xs-12">
-                <i class="fa fa-spin fa-spinner"></i>&nbsp;{% trans "Events loading..." %}
-            </span> 
-        </div> 
-    </div> 
+        </div>
+    </div>
     <div class="row">
         <div id="CalendarContainer" data-event-source="{{ urlFor("schedule.calendar.data") }}" data-agenda-link="{{ urlFor("schedule.events") }}" data-calendar-type="{{ settings.CALENDAR_TYPE }}" class="col-sm-12">
             <div id="Calendar"></div>
@@ -525,7 +519,7 @@
                 <div class="panel with-nav-tabs panel-default agenda-panel">
                 
                     <!-- Tab Panel -->
-                    <% if (typeof agenda.displayGroupList != 'undefined' && agenda.displayGroupList.length > 0) { %>
+                    <% if (typeof agenda.displayGroupList != 'undefined' && agenda.displayGroupList.length > 1) { %>
                         <div class="panel-heading">
                                 <ul class="nav nav-tabs">
                                     <% _.each(agenda.displayGroupList, function(displayGroup){ %>
@@ -560,6 +554,8 @@
                        <div class="text-danger text-center">
                            <% if (agenda.errorMessage == 'display_not_selected') { %>
                                <p>{% trans "Display not selected!" %}</p>
+                           <% } else if (agenda.errorMessage == 'all_displays_selected') { %>
+                               <p>{% trans "Show All option does not work for this filter, one or more specific Display/Display Group need to be selected!" %}</p>
                            <% } else if (agenda.errorMessage == 'no_events') { %>
                                <p>{% trans "No events for the chosen Display/Display Group on the selected date!" %}</p>    
                            <% } else  if (agenda.errorMessage == 'request_failed') { %>

@@ -147,6 +147,7 @@ class DataSet extends Base
         $filter = [
             'dataSetId' => $this->getSanitizer()->getInt('dataSetId'),
             'dataSet' => $this->getSanitizer()->getString('dataSet'),
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'code' => $this->getSanitizer()->getString('code'),
         ];
 

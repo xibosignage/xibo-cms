@@ -73,14 +73,14 @@ $(document).ready(function() {
 
                 var calendarOptions = $("#CalendarContainer").data();               
 
+                // Append display groups and layouts
+                let isShowAll = $('#showAll').is(':checked');
+
+                // Enable or disable the display list according to whether show all is selected
+                // we do this before we serialise because serialising a disabled list gives nothing
+                $('#DisplayList').prop('disabled', isShowAll);
+
                 if (this.options.view !== 'agenda') {
-
-                    // Append display groups and layouts
-                    let isShowAll = $('#showAll').is(':checked');
-
-                    // Enable or disable the display list according to whether show all is selected
-                    // we do this before we serialise because serialising a disabled list gives nothing
-                    $('#DisplayList').prop('disabled', isShowAll);
 
                     // Serialise
                     var displayGroups = $('#DisplayList').serialize();
@@ -108,12 +108,12 @@ $(document).ready(function() {
                         "to": this.options.position.end.getTime()
                     };
 
-                    $('#calendar-progress').addClass('fa fa-cog fa-spin');
-
                     // If there is already a request, abort it
                     if(getJsonRequestControl) {
                         getJsonRequestControl.abort();
                     }
+
+                    $('#calendar-progress').addClass('fa fa-cog fa-spin');
 
                     getJsonRequestControl = $.getJSON(url, params)
                         .done(function(data) {
@@ -172,40 +172,13 @@ $(document).ready(function() {
                             }
                         });
                 } else {
-                    
+
                     // Get selected display groups
                     var selectedDisplayGroup = $('.cal-context').data().selectedTab;
                     var displayGroupsList = [];
                     var chooseAllDisplays = false;
 
-                    if($('#showAll').is(':checked')) {
-                        $('#DisplayList').prop('disabled', true);
-
-                        $.ajax({
-                            type: 'GET',
-                            url: $('#showAll').attr("data-search-url") + '?isDisplaySpecific=-1',
-                            success: function(data) {
-
-                                let displays = data.data;
-                                $.each(displays, function(index, value) {
-
-                                    displayGroupsList.push({
-                                        id: value.displayGroupId,
-                                        name: value.displayGroup,
-                                        isDisplaySpecific: value.isDisplaySpecific
-                                    });
-
-                                    if(typeof selectedDisplayGroup == 'undefined') {
-                                        selectedDisplayGroup = value.displayGroupId;
-                                    }
-                                });
-
-                            }
-                        });
-
-                        // return true;
-
-                    } else {
+                    if(!isShowAll) {
 
                         $('#DisplayList').prop('disabled', false);
 
@@ -257,9 +230,7 @@ $(document).ready(function() {
                     // Populate the events array via AJAX
                     var params = {
                         "date": dateSelected.format(systemDateFormat)
-                    }
-                    
-                    $('#calendar-progress').addClass('fa fa-cog fa-spin');
+                    };
                     
                     // if the result are empty create a empty object and reset the results
                     if(jQuery.isEmptyObject(events['results'])){
@@ -279,35 +250,40 @@ $(document).ready(function() {
                     // Clean cache/results if its requested by the options
                     if (calendar.options['clearCache'] == true) {
                         events['results'] = {}; 
-                    }        
-                        
-                    // 1 - if there are no displaygroups selected
-                    if ($('#DisplayList').val() == null) {
-                        
+                    }
+                    
+                    // If there is already a request, abort it
+                    if(getJsonRequestControl) {
+                        getJsonRequestControl.abort();
+                    }
+
+                    // 0 - If all is selected, force the user to specify the displaygroups
+                    if(isShowAll) {
+                        events['errorMessage'] = 'all_displays_selected';
+
+                        if(done != undefined)
+                            done();
+
+                        calendar._render();
+                    } else if($('#DisplayList').val() == null || Array.isArray($('#DisplayList').val()) && $('#DisplayList').val().length == 0) {
+                        // 1 - if there are no displaygroups selected
                         events['errorMessage'] = 'display_not_selected';
                         
                         if (done != undefined)
                             done();
                             
                         calendar._render();
-                        
-                        $('#calendar-progress').removeClass('fa fa-cog fa-spin');
-                        
                     } else if(!jQuery.isEmptyObject(events['results'][selectedDisplayGroup]) && events['results'][selectedDisplayGroup]['request_date'] == params.date) {
                         // 2 - Use cache if the element was already saved for the requested date
                         if (done != undefined)
                             done();
                             
                         calendar._render();
-
-                        $('#calendar-progress').removeClass('fa fa-cog fa-spin');
                     } else {
+
+                        $('#calendar-progress').addClass('fa fa-cog fa-spin');
+
                         // 3 - make request to get the data for the events
-                        
-                        // If there is already a request, abort it
-                        if(getJsonRequestControl) {
-                            getJsonRequestControl.abort();
-                        }
                         getJsonRequestControl = $.getJSON(url, params)
                             .done(function(data) {
                                 
@@ -346,7 +322,14 @@ $(document).ready(function() {
                 
             },
             onAfterEventsLoad: function(events) {
-                $('.cal-event-loader').hide();
+                if(this.options.view == 'agenda') {
+                    // When agenda panel is ready, turn tables into datatables with paging
+                    $('.agenda-panel').ready(function() {
+                        $('#layouts').dataTable({
+                            "searching": false
+                        });
+                    });
+                }
 
                 if(!events) {
                     return;
@@ -357,7 +340,6 @@ $(document).ready(function() {
                 // Show time slider on agenda view and call the calendar view on slide stop event
                 if (this.options.view == 'agenda') {
                     $('.cal-event-time-bar').show();
-                    $('.cal-event-loader').show();
 
                     const $timePicker = $('#timePicker');
                     

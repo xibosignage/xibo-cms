@@ -517,6 +517,7 @@ class Library extends Base
         $mediaList = $this->mediaFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'mediaId' => $this->getSanitizer()->getInt('mediaId'),
             'name' => $this->getSanitizer()->getString('media'),
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'nameExact' => $this->getSanitizer()->getString('nameExact'),
             'type' => $this->getSanitizer()->getString('type'),
             'tags' => $this->getSanitizer()->getString('tags'),

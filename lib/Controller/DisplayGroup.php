@@ -222,6 +222,7 @@ class DisplayGroup extends Base
         $filter = [
             'displayGroupId' => $this->getSanitizer()->getInt('displayGroupId'),
             'displayGroup' => $this->getSanitizer()->getString('displayGroup'),
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'displayId' => $this->getSanitizer()->getInt('displayId'),
             'nestedDisplayId' => $this->getSanitizer()->getInt('nestedDisplayId'),
             'dynamicCriteria' => $this->getSanitizer()->getString('dynamicCriteria'),
