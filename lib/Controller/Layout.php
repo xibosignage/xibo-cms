@@ -42,7 +42,6 @@ use Xibo\Factory\ResolutionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
-use Xibo\Helper\Environment;
 use Xibo\Helper\LayoutUploadHandler;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -968,6 +967,13 @@ class Layout extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="campaignId",
+     *      in="formData",
+     *      description="Get all Layouts for a given campaignId",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1012,7 +1018,8 @@ class Layout extends Base
             'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
             'mediaLike' => $this->getSanitizer()->getString('mediaLike'),
             'publishedStatusId' => $this->getSanitizer()->getInt('publishedStatusId'),
-            'activeDisplayGroupId' => $this->getSanitizer()->getInt('activeDisplayGroupId')
+            'activeDisplayGroupId' => $this->getSanitizer()->getInt('activeDisplayGroupId'),
+            'campaignId' => $this->getSanitizer()->getInt('campaignId'),
         ]));
 
         foreach ($layouts as $layout) {
