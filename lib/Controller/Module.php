@@ -53,7 +53,6 @@ use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
@@ -1351,7 +1350,7 @@ class Module extends Base
 
         if ($module->getModule()->regionSpecific == 0) {
             // Non region specific module - no caching required as this is only ever called via preview.
-            echo $module->getResource($request, $response);
+            $response = $module->getResource($request, $response);
         } else {
             // Region-specific module, need to handle caching and locking.
             echo $module->getResourceOrCache($request, $response);

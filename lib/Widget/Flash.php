@@ -22,6 +22,7 @@
 namespace Xibo\Widget;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+
 /**
  * Class Flash
  * @package Xibo\Widget
@@ -87,7 +88,7 @@ class Flash extends ModuleWidget
      */
     public function getResource(Request $request, Response $response)
     {
-        $this->download($request, $response);
+        return $this->download($request, $response);;
     }
 
     /** @inheritdoc */

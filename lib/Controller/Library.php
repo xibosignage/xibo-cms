@@ -21,14 +21,14 @@
  */
 namespace Xibo\Controller;
 
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Mimey\MimeTypes;
+use Respect\Validation\Validator as v;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
-use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -63,7 +63,6 @@ use Xibo\Helper\XiboUploadHandler;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
@@ -1429,7 +1428,7 @@ class Library extends Base
         if ($widget->getModule()->regionSpecific == 1)
             throw new NotFoundException('Cannot download region specific module');
 
-        $widget->getResource($request, $response);
+        $response = $widget->getResource($request, $response);
 
         $this->setNoOutput(true);
 

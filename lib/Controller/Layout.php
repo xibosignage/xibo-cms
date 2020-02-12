@@ -21,10 +21,10 @@
  */
 namespace Xibo\Controller;
 
+use Parsedown;
 use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Parsedown;
 use Slim\Views\Twig;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Playlist;
@@ -46,13 +46,11 @@ use Xibo\Factory\ResolutionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
-use Xibo\Helper\Environment;
 use Xibo\Helper\LayoutUploadHandler;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Widget\ModuleWidget;
 
 /**
@@ -2301,7 +2299,7 @@ class Layout extends Base
             throw new NotFoundException('Cannot download non-region specific module');
         }
 
-        $widget->getResource($request, $response);
+        $response = $widget->getResource($request, $response);
 
         $this->setNoOutput(true);
         return $this->render($request, $response);

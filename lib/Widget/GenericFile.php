@@ -22,6 +22,7 @@
 namespace Xibo\Widget;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+
 /**
  * Class GenericFile
  * @package Xibo\Widget
@@ -59,7 +60,7 @@ class GenericFile extends ModuleWidget
             ini_set('zlib.output_compression', 'Off');
         }
 
-        $this->download($request, $response);
+        return $this->download($request, $response);;
     }
 
     /**

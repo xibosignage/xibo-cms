@@ -23,11 +23,11 @@ namespace Xibo\Widget;
 
 
 use Respect\Validation\Validator as v;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\XiboException;
-use Xibo\Factory\ModuleFactory;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Exception\InvalidArgumentException;
+use Xibo\Factory\ModuleFactory;
+
 /**
  * Class HtmlPackage
  * @package Xibo\Widget
@@ -209,6 +209,6 @@ class HtmlPackage extends ModuleWidget
         $this->getLog()->debug('HTML Package Module: GetResource for ' . $this->getMediaId());
 
         // At the moment there is no preview for this module, as such we only need to send the .htz archive to the player.
-        $this->download($request, $response);
+        return $this->download($request, $response);;
     }
 }

@@ -191,7 +191,7 @@ class Video extends ModuleWidget
     /** @inheritdoc */
     public function getResource(Request $request, Response $response)
     {
-        $this->download($request, $response);
+        return $this->download($request, $response);;
     }
 
     /** @inheritdoc */

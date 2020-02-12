@@ -22,7 +22,6 @@
 
 namespace Xibo\Controller;
 
-use setasign\Fpdi\PdfParser\Filter\Ascii85;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
@@ -45,7 +44,6 @@ use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 
 /**
 * Class PlayerSoftware
@@ -486,7 +484,7 @@ class PlayerSoftware extends Base
 
             // Create a widget from media and call getResource on it
             $widget = $this->moduleFactory->createWithMedia($media);
-            $widget->getResource($request, $response);
+            $response = $widget->getResource($request, $response);
 
         } else {
             $response->withStatus(404);
@@ -588,7 +586,7 @@ class PlayerSoftware extends Base
             $media = $this->mediaFactory->getById($mediaId);
             // Create a widget from media and call getResource on it
             $widget = $this->moduleFactory->createWithMedia($media);
-            $widget->getResource($request, $response);
+            $response = $widget->getResource($request, $response);
         } else {
             $response->withStatus(404);
             return $response;

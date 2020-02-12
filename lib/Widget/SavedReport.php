@@ -22,9 +22,10 @@
 
 namespace Xibo\Widget;
 
-use Xibo\Factory\ModuleFactory;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Factory\ModuleFactory;
+
 /**
  * Class SavedReport
  * @package Xibo\Widget
@@ -98,7 +99,7 @@ class SavedReport extends ModuleWidget
             ini_set('zlib.output_compression', 'Off');
         }
 
-        $this->download($request, $response);
+        return $this->download($request, $response);;
     }
 
     /**
