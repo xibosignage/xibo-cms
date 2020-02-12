@@ -511,6 +511,10 @@ class SubPlaylist extends ModuleWidget
 
                 // Update our count of expanded widgets to be the spots
                 $countExpanded = $spots;
+
+            } else if ($countExpanded <= 0) {
+                // No spots required and no content in this list.
+                continue;
             }
 
             // first watermark
@@ -558,7 +562,7 @@ class SubPlaylist extends ModuleWidget
         $lastTakeIndices = [];
 
         // Arrangement first
-        if ($arrangement === 'even') {
+        if ($arrangement === 'even' && $smallestListCount > 0) {
             // Evenly distributed by round robin
             $arrangement = 'roundrobin';
 
