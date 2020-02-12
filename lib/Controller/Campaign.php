@@ -154,6 +154,13 @@ class Campaign extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="embed",
+     *      in="formData",
+     *      description="Embed related data such as layouts, permissions, tags and events",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -163,6 +170,7 @@ class Campaign extends Base
      *      )
      *  )
      * )
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function grid()
     {
@@ -180,10 +188,22 @@ class Campaign extends Base
             'totalDuration' => $this->getSanitizer()->getInt('totalDuration', 1),
         ];
 
+        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+
         $campaigns = $this->campaignFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter), $options);
 
         foreach ($campaigns as $campaign) {
             /* @var \Xibo\Entity\Campaign $campaign */
+
+            if (count($embed) > 0) {
+                $campaign->setChildObjectDependencies($this->layoutFactory);
+                $campaign->load([
+                    'loadPermissions' => in_array('permissions', $embed),
+                    'loadLayouts' => in_array('layouts', $embed),
+                    'loadTags' => in_array('tags', $embed),
+                    'loadEvents' => in_array('events', $embed)
+                ]);
+            }
 
             if ($this->isApi())
                 break;

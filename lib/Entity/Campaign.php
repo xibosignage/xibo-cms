@@ -86,7 +86,7 @@ class Campaign implements \JsonSerializable
     /**
      * @var Layout[]
      */
-    private $layouts = [];
+    public $layouts = [];
 
     /**
      * @var Permission[]
