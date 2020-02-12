@@ -1075,7 +1075,8 @@ class User implements \JsonSerializable
      * @param $route string
      * @param $method string
      * @param $scopes array[ScopeEntity]
-     * @throws AccessDeniedException if the user doesn't have access
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function routeAuthentication($route, $method = null, $scopes = null)
     {
@@ -1113,8 +1114,8 @@ class User implements \JsonSerializable
         if ($this->pageFactory == null)
             throw new ConfigurationException('routeViewable called before user object has been initialised');
 
-        // Super-admins get all routes
-        if ($this->userTypeId == 1)
+        // Super-admins and DOOH users get all routes
+        if ($this->isSuperAdmin())
             return true;
 
         // All users have access to the logout page
@@ -1159,7 +1160,7 @@ class User implements \JsonSerializable
     public function countViewable($routes)
     {
         // Shortcut for super admins.
-        if ($this->userTypeId == 1) {
+        if ($this->isSuperAdmin()) {
             return count($routes);
         }
 
@@ -1231,7 +1232,7 @@ class User implements \JsonSerializable
         $this->checkObjectCompatibility($object);
 
         // Admin users
-        if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId()) {
+        if ($this->isSuperAdmin() || $this->userId == $object->getOwnerId()) {
             return $this->permissionFactory->getFullPermissions();
         }
 
@@ -1254,6 +1255,7 @@ class User implements \JsonSerializable
      * Check the given object is viewable
      * @param object $object
      * @return bool
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function checkViewable($object)
     {
@@ -1261,7 +1263,7 @@ class User implements \JsonSerializable
         $this->checkObjectCompatibility($object);
 
         // Admin users
-        if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId() || $this->userTypeId == 4)
+        if ($this->isSuperAdmin() || $this->userId == $object->getOwnerId())
             return true;
 
         // Group Admins
@@ -1283,6 +1285,7 @@ class User implements \JsonSerializable
      * Check the given object is editable
      * @param object $object
      * @return bool
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function checkEditable($object)
     {
@@ -1290,7 +1293,7 @@ class User implements \JsonSerializable
         $this->checkObjectCompatibility($object);
 
         // Admin users
-        if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId() || $this->userTypeId == 4)
+        if ($this->isSuperAdmin() || $this->userId == $object->getOwnerId())
             return true;
 
         // Group Admins
@@ -1312,6 +1315,7 @@ class User implements \JsonSerializable
      * Check the given object is delete-able
      * @param object $object
      * @return bool
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function checkDeleteable($object)
     {
@@ -1319,6 +1323,7 @@ class User implements \JsonSerializable
         $this->checkObjectCompatibility($object);
 
         // Admin users
+        // Note here that the DOOH user isn't allowed to outright delete other users things
         if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId())
             return true;
 
@@ -1341,6 +1346,7 @@ class User implements \JsonSerializable
      * Check the given objects permissions are modify-able
      * @param object $object
      * @return bool
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function checkPermissionsModifyable($object)
     {
@@ -1348,6 +1354,7 @@ class User implements \JsonSerializable
         $this->checkObjectCompatibility($object);
 
         // Admin users
+        // Note here that the DOOH user isn't allowed to outright change permissions on  other users things
         if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId())
             return true;
         // Group Admins
@@ -1373,7 +1380,7 @@ class User implements \JsonSerializable
      */
     public function isSuperAdmin()
     {
-        return ($this->getUserTypeId() == 1);
+        return ($this->userTypeId == 1 || $this->userTypeId == 4);
     }
 
     /**
@@ -1382,7 +1389,7 @@ class User implements \JsonSerializable
      */
     public function isGroupAdmin()
     {
-       return ($this->getUserTypeId() == 2);
+       return ($this->userTypeId == 2);
     }
 
     /**
