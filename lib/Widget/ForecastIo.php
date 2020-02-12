@@ -451,7 +451,7 @@ class ForecastIo extends ModuleWidget
                      'widgetOriginalWidth' => intval($this->getOption('widgetOriginalWidth')),
                      'widgetOriginalHeight' => intval($this->getOption('widgetOriginalHeight')),
                      'image' => 'preview-image'
-                 ])
+                 ], JSON_PRETTY_PRINT)
              ];
          } else {
              return [];
