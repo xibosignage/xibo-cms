@@ -1134,6 +1134,13 @@ class Layout extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="campaignId",
+     *      in="formData",
+     *      description="Get all Layouts for a given campaignId",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1186,7 +1193,8 @@ class Layout extends Base
             'ownerUserGroupId' => $parsedQueryParams->getInt('ownerUserGroupId'),
             'mediaLike' => $parsedQueryParams->getString('mediaLike'),
             'publishedStatusId' => $parsedQueryParams->getInt('publishedStatusId'),
-            'activeDisplayGroupId' => $parsedQueryParams->getInt('activeDisplayGroupId')
+            'activeDisplayGroupId' => $parsedQueryParams->getInt('activeDisplayGroupId'),
+            'campaignId' => $parsedQueryParams->getInt('campaignId'),
         ], $request), $request);
 
         foreach ($layouts as $layout) {
