@@ -37,6 +37,7 @@
         // New wizard tour
         tour = window.tour = new Tour({
             debug: false,
+            storage: window.sessionStorage,
             onEnd: function () {
                 setNewUserWizardState();
             },
@@ -164,21 +165,13 @@
                     template: next_template
                 }, { // 12
                     title: "",
-                    content: "{% trans "This is the Layout Navigator, which shows the layout structure. By default this has one empty region added. Think of regions as placeholders for your content." %}",
-                    element: "#layout-navigator",
-                    placement: "top",
-                    delay: {show: 1500, hide: 100},
-                    backdrop: true,
-                    template: next_template
-                }, {
-                    title: "",
                     content: "{% trans "This is the <b>Layout Timeline</b>, which shows the total layout duration as well as the duration of assigned media." %}",
                     element: "#timeline-container",
                     placement: "top",
                     delay: 100,
                     backdrop: true,
                     template: next_template
-                }, { // 14
+                }, { // 13
                     title: "",
                     content: "{% trans "This is the <b>Toolbar</b>, used to interact with the layout designer." %}",
                     element: "#layout-editor-toolbar nav",
@@ -189,11 +182,11 @@
                 }, {
                     title: "",
                     content: "{% trans "Let's start by opening the Navigator edit mode. Click on the edit button." %}",
-                    element: "#layout-navigator #edit-btn",
-                    placement: "bottom",
+                    element: "#layout-viewer-navbar #navigator-edit-btn",
+                    placement: "top",
                     reflex: true,
                     template: no_nav_template
-                }, { // 16
+                }, { // 15
                     title: "",
                     content: "{% trans "Click anywhere inside the region to edit it" %}",
                     element: '#layout-navigator div[data-type="region"]',
@@ -209,21 +202,21 @@
                     delay: 200,
                     reflex: "mouseup",
                     template: no_nav_template
-                }, { // 18
+                }, { // 17
                     title: "",
                     content: "{% trans "When you are happy with your positioning, click save to save changes." %}",
-                    element: "#layout-navigator  #save-btn",
+                    element: "#properties-panel button[data-action='save']",
                     placement: "left",
                     reflex: true,
                     template: no_nav_template
                 }, { 
                     title: "",
-                    content: "{% trans "Click close to go back to the main editor." %}",
-                    element: "#layout-navigator  #close-btn",
-                    placement: "left",
+                    content: "{% trans "Click back to go back to the main editor." %}",
+                    element: "#layout-navigator #close-btn",
+                    placement: "right",
                     reflex: true,
                     template: no_nav_template
-                }, { // 20
+                }, { // 19
                     title: "",
                     container: '#layout-editor',
                     content: "{% trans "You will now have an empty region that has been resized and positioned on a black background. Let's add some content!" %}",
@@ -234,28 +227,46 @@
                     onShown: function (tour) {
                         // If we have a widget already, got to the properties step
                         if ($('#layout-timeline .designer-widget').length > 0) {
-                            tour.goTo(25);
+                            tour.goTo(24);
                         }
                     }
-                }, { // 21
+                }, { // 20
                     title: "",
                     content: "{% trans "Use the Toolbar tabs to select <b>Widgets</b>" %}",
-                    element: "#layout-editor-toolbar #btn-menu-1",
+                    element: "#layout-editor-toolbar #btn-menu-2",
                     placement: "top",
                     reflex: true,
                     template: no_nav_template
                 }, {
                     title: "",
                     content: "{% trans "These are the widgets you can add. Find the <b>Text</b> widget using the right and left buttons." %}",
-                    element: "#layout-editor-toolbar #content-1 .toolbar-pane-content",
+                    element: "#layout-editor-toolbar #content-2 .toolbar-pane-content",
                     placement: "top",
                     template: next_template
-                }, { // 23
+                }, { // 22
                     title: "",
                     content: "{% trans "Add by <b>dragging</b> the widget to a region, or clicking on the <b>plus button</b> and click on the target region. Click <b>Next</b> after adding the widget." %}",
                     element: '#layout-editor-toolbar .toolbar-card[data-sub-type="text"]',
                     placement: "top",
-                    template: next_template
+                    template: next_template,
+                    onShown: function (tour) {
+                        // Check if the text widget is into view
+                        function isScrolledIntoView(elem, parent) {
+                            var parentViewLeft = $(parent).offset().left;
+                            var parentViewRight = parentViewLeft + $(parent).width();
+
+                            var elemLeft = $(elem).offset().left;
+                            var elemRight = elemLeft + $(elem).width();
+
+                            return ((elemRight <= parentViewRight) && (elemLeft >= parentViewLeft));
+                        }
+
+                        // Go back if the element isn't still visible
+                        if (!isScrolledIntoView('#layout-editor-toolbar .toolbar-card[data-sub-type="text"]', '.toolbar-pane-content-container')){
+                            tour.goTo(21);
+                        }
+                    },
+                    next: 23
                 }, {
                     title: "",
                     content: "{% trans "The Layout Timeline will now show that the Text widget has been added." %}",
@@ -266,11 +277,11 @@
                     onShown: function (tour) {
                         // If we don't have widget yet, got to the add step
                         if ($('#layout-timeline .designer-widget').length === 0) {
-                            tour.goTo(21);
+                            tour.goTo(20);
                         }
                     },
-                    next: 25
-                }, { // 25
+                    next: 24
+                }, { // 24
                     title: "",
                     content: "{% trans "Click on the widget in the Layout Timeline!" %}",
                     element: '#layout-timeline .designer-widget',
@@ -285,12 +296,12 @@
                     onShown: function (tour) {
                         // If properties panel is not the right one, go to previous step
                         if ($('#properties-panel .form-title-widget').length === 0) {
-                            tour.goTo(25);
+                            tour.goTo(24);
                         }
                     },
                     reflex: true,
                     delay: 1000
-                }, { // 27
+                }, { // 26
                     title: "",
                     content: "{% trans "Add and format your text. The thin red line is showing your region border. Ensure that when you are editing, your text remains within these guidelines." %}",
                     element: '#layout-viewer .viewer-element ',
@@ -304,7 +315,7 @@
                     placement: "right",
                     template: next_template,
                     delay: 500
-                }, { // 29
+                }, { // 28
                     title: "",
                     content: "{% trans "Give an optional name to this widget." %}",
                     element: '#properties-panel input#name',
@@ -319,7 +330,7 @@
                     template: no_nav_template,
                     reflex: true,
                     delay: 500
-                }, { // 31
+                }, { // 30
                     title: "",
                     content: "{% trans "Let’s override the default time to 30 seconds." %}",
                     element: '#properties-panel input#duration',
@@ -338,10 +349,10 @@
                     onShown: function (tour) {
                         // If the input duration is not visible, go back to the checkbox step
                         if (!$('#properties-panel input#duration').is(":visible")) {
-                            tour.goTo(30);
+                            tour.goTo(29);
                         }
                     }
-                }, { // 33
+                }, { // 32
                     title: "",
                     content: "{% trans "The Region Timeline will now show the new updated duration for this Text widget." %}",
                     element: '#layout-timeline .designer-widget .widgetLabel .widgetDuration',
@@ -356,7 +367,7 @@
                     template: no_nav_template,
                     reflex: "mousedown",
                     delay: 500
-                }, { // 35
+                }, { // 34
                     title: "",
                     content: "{% trans "Edit options for the layout will open in the Layout Editor." %}",
                     element: '#properties-panel',
@@ -366,7 +377,7 @@
                     onShown: function (tour) {
                         // If properties panel is not the right one, go to previous step
                         if ($('#properties-panel #layoutEditForm').length === 0) {
-                            tour.goTo(34);
+                            tour.goTo(33);
                         }
                     }
                 }, {
@@ -402,28 +413,30 @@
                 }, {
                     title: "",
                     content: "{% trans "Select <b>Actions</b> to see the publish option." %}",
-                    element: '#layout-editor-toolbar .navbar-submenu a',
-                    placement: "top",
+                    element: '#layout-editor-topbar #actionsSubmenu a',
+                    placement: "bottom",
                     reflex: true,
                     template: no_nav_template
                 }, { // 40
                     title: "",
                     content: "{% trans "Click on the <b>Publish</b> button to open the form." %}",
-                    element: '#layout-editor-toolbar #publishLayout',
-                    placement: "top",
+                    element: '#layout-editor-topbar #publishLayout',
+                    placement: "bottom",
                     reflex: true,
                     delay: 500,
                     template: no_nav_template
                 }, {
-                    element: '.bootbox button[data-bb-handler="done"]',
+                    element: '.bootbox button[data-bb-handler="Publish"]',
                     reflex: true,
                     placement: "bottom",
+                    container: '.bootbox',
                     title: "",
                     content: "{% trans "Press <b>Publish</b>." %}",
                     template: no_nav_template,
                     delay: 500
                 }, { // 42
                     title: "",
+                    element: '.welcome-screen-modal .modal-dialog',
                     content: "{% trans "Your layout is now ready to be scheduled to displays / display groups!" %}",
                     orphan: true,
                     placement: "bottom",
@@ -459,21 +472,21 @@
                     content: "{% trans "This is the layout designer screen where you will add and configure content. By default, your layout is in read-only mode, and needs to be checked out, to enable editing." %}",
                     template: next_template
                 }, {
-                    element: '#layout-editor-toolbar #actionsSubmenu',
+                    element: '#layout-editor-topbar #actionsSubmenu',
                     reflex: true,
-                    placement: "top",
+                    placement: "bottom",
                     title: "",
                     content: "{% trans "Click to open the Actions sub-menu!" %}",
                     template: no_nav_template,
                     delay:  200,
                     onShown: function (tour) {
                         // If we don't have checked  out the layout yet, got to the checkout step
-                        if (!$('#read-only-message').is(":visible")) { //TODO: Change this to the new checkout
-                            tour.goTo(5);
+                        if (!$('#read-only-message').is(":visible")) {
+                            tour.goTo(4);
                         }
                     }
                 }, {
-                    element: '#layout-editor-toolbar #actionsSubmenu #checkoutLayout',
+                    element: '#layout-editor-topbar #actionsSubmenu #checkoutLayout',
                     reflex: true,
                     placement: "left",
                     title: "",
@@ -505,34 +518,25 @@
                     delay: 100,
                     backdrop: true,
                     template: next_template
-                }, {
-                    title: "",
-                    content: "{% trans "This is the Layout Navigator, which shows the layout structure. Think of regions as placeholders for your content." %}",
-                    element: "#layout-navigator",
-                    placement: "top",
-                    delay: 100,
-                    backdrop: true,
-                    template: next_template
                 }, { 
                     title: "",
                     content: "{% trans "Let's open the Navigator edit mode. Click on the edit button." %}",
-                    element: "#layout-navigator #edit-btn",
+                    element: "#layout-viewer-navbar #navigator-edit-btn",
                     placement: "top",
                     reflex: true,
                     delay: 500,
                     template: no_nav_template
                 }, {
-                    container: '#layout-navigator',
-                    orphan: true,
+                    element: '#layout-navigator',
                     delay: 500,
-                    placement: "auto",
+                    placement: "bottom",
                     title: "",
                     content: "{% trans "This is the Navigator edit mode, where you can edit regions and change their properties." %}",
                     template: next_template
                 }, {
                     title: "",
-                    content: "{% trans "Click close to go back to the main editor." %}",
-                    element: "#layout-navigator  #close-btn",
+                    content: "{% trans "Click back to go back to the main editor." %}",
+                    element: "#layout-navigator #close-btn",
                     placement: "top",
                     reflex: true,
                     template: no_nav_template
@@ -555,29 +559,29 @@
                 }, {
                     title: "",
                     content: "{% trans "Use the Toolbar tabs to select <b>Widgets</b>" %}",
-                    element: "#layout-editor-toolbar #btn-menu-1",
+                    element: "#layout-editor-toolbar #btn-menu-2",
                     placement: "top",
                     reflex: true,
                     template: no_nav_template
                 }, {
                     title: "",
                     content: "{% trans "These are the widgets you can add." %}",
-                    element: "#layout-editor-toolbar #content-1 .toolbar-pane-content",
+                    element: "#layout-editor-toolbar #content-2 .toolbar-pane-content",
                     placement: "top",
                     delay: 100,
                     template: next_template
                 }, {
                     title: "",
                     content: "{% trans "You can take a look at how your layout will look on your displays by clicking on the Play button on the Preview window." %}",
-                    element: '#layout-viewer #play-btn',
+                    element: '#layout-viewer-navbar #play-btn',
                     placement: "right",
                     delay: 500,
                     template: next_template
                 }, {
                     title: "",
-                    element: '#layout-editor-toolbar #publishLayout',
+                    element: '#layout-editor-topbar #actionsSubmenu',
                     content: "{% trans "When happy with your layout you will need to publish before being able to schedule to displays." %}",
-                    placement: "top",
+                    placement: "bottom",
                     template: next_template,
                     delay: 500
                 }, {
