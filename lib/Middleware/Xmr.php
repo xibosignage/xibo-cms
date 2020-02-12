@@ -1,11 +1,24 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
- * (Xmr.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-
 namespace Xibo\Middleware;
 
 use Psr\Http\Message\ResponseInterface as Response;
@@ -20,12 +33,18 @@ use Xibo\Service\PlayerActionService;
 /**
  * Class Xmr
  * @package Xibo\Middleware
+ *
+ * NOTE: This must be the very last layer in the onion
  */
 class Xmr implements Middleware
 {
     /* @var App $app */
     private $app;
 
+    /**
+     * Xmr constructor.
+     * @param $app
+     */
     public function __construct($app)
     {
         $this->app = $app;
@@ -41,12 +60,18 @@ class Xmr implements Middleware
     {
         $app = $this->app;
 
+        // Start
         self::setXmr($app);
 
+        // Pass along the request
+        $response = $handler->handle($request);
+
         // Finish
+        // this must happen at the very end of the request
         self::finish($app);
 
-        return $handler->handle($request);
+        // Return the response to the browser
+        return $response;
     }
 
     /**
@@ -84,7 +109,11 @@ class Xmr implements Middleware
     {
         // Player Action Helper
         $app->getContainer()->set('playerActionService', function() use ($app, $triggerPlayerActions) {
-            return new PlayerActionService($app->getContainer()->get('configService'), $app->getContainer()->get('logService'), $triggerPlayerActions);
+            return new PlayerActionService(
+                $app->getContainer()->get('configService'),
+                $app->getContainer()->get('logService'),
+                $triggerPlayerActions
+            );
         });
 
         // Register the display notify service
