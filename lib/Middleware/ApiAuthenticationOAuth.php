@@ -72,8 +72,19 @@ class ApiAuthenticationOAuth extends Middleware
             // Get the current route pattern
             $resource = $app->router->getCurrentRoute()->getPattern();
 
-            // Do they have permission?
-            $this->app->user->routeAuthentication($resource, $app->request()->getMethod(), $server->getAccessToken()->getScopes());
+            // Allow public routes
+            if (!in_array($resource, $app->publicRoutes)) {
+                $app->public = false;
+
+                // Do they have permission?
+                $this->app->user->routeAuthentication(
+                    $resource,
+                    $app->request()->getMethod(),
+                    $server->getAccessToken()->getScopes()
+                );
+            } else {
+                $app->public = true;
+            }
         };
 
         $app->hook('slim.before.dispatch', $isAuthorised);
