@@ -388,15 +388,16 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 ]
             ])->toArray();
 
+            if(count($earliestDate) > 0) {
+                return [
+                    'minDate' => $earliestDate[0]['minDate']->toDateTime()->format('U')
+                ];
+            }
+
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
         }
 
-        if(count($earliestDate) > 0) {
-            return [
-                'minDate' => $earliestDate[0]['minDate']->toDateTime()->format('U')
-            ];
-        }
         return [];
     }
 
@@ -513,45 +514,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         }
 
         $collection = $this->client->selectCollection($this->config['database'], $this->table);
-        try {
-           $query = [
-               $match,
-               [
-                   '$project' => [
-                       'id'=> '$_id',
-                       'type'=> 1,
-                       'start'=> 1,
-                       'end'=> 1,
-                       'layout'=> '$layoutName',
-                       'display'=> '$displayName',
-                       'media'=> '$mediaName',
-                       'tag'=> '$eventName',
-                       'duration'=> '$duration',
-                       'count'=> '$count',
-                       'displayId'=> 1,
-                       'layoutId'=> 1,
-                       'widgetId'=> 1,
-                       'mediaId'=> 1,
-                       'statDate'=> 1,
-                       'engagements'=> 1,
-                   ]
-               ],
-           ];
 
-            if ($start !== null && $length !== null) {
-                $query[]['$skip'] =  $start;
-                $query[]['$limit'] = $length;
-            }
-
-            $cursor = $collection->aggregate($query);
-
-        } catch (\MongoDB\Exception\RuntimeException $e) {
-            $this->log->error($e->getMessage());
-        }
-
-        $result = new TimeSeriesMongoDbResults($cursor);
 
         // Get total
+        $total = 0;
         try {
             $totalQuery = [
                 $match,
@@ -564,13 +530,57 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             ];
             $totalCursor = $collection->aggregate($totalQuery);
 
+            $totalCount = $totalCursor->toArray();
+            $total = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
+
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
         }
-        $totalCount = $totalCursor->toArray();
 
-        // Total
-        $result->totalCount = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
+        try {
+            $query = [
+                $match,
+                [
+                    '$project' => [
+                        'id'=> '$_id',
+                        'type'=> 1,
+                        'start'=> 1,
+                        'end'=> 1,
+                        'layout'=> '$layoutName',
+                        'display'=> '$displayName',
+                        'media'=> '$mediaName',
+                        'tag'=> '$eventName',
+                        'duration'=> '$duration',
+                        'count'=> '$count',
+                        'displayId'=> 1,
+                        'layoutId'=> 1,
+                        'widgetId'=> 1,
+                        'mediaId'=> 1,
+                        'statDate'=> 1,
+                        'engagements'=> 1,
+                    ]
+                ],
+            ];
+
+            // Sort by id (statId) - we must sort before we do pagination as mongo stat has descending order indexing on start/end
+            $query[]['$sort'] = ['id'=> 1];
+
+            if ($start !== null && $length !== null) {
+                $query[]['$skip'] =  $start;
+                $query[]['$limit'] = $length;
+            }
+
+            $cursor = $collection->aggregate($query);
+
+            $result = new TimeSeriesMongoDbResults($cursor);
+
+            // Total
+            $result->totalCount = $total;
+
+        } catch (\MongoDB\Exception\RuntimeException $e) {
+            $this->log->error($e->getMessage());
+            throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
+        }
 
         return $result;
     }
