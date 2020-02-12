@@ -56,6 +56,7 @@ class ApiAuthenticationOAuth implements Middleware
      * @return Response
      * @throws OAuthServerException
      * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Exception\ConfigurationException
      */
     public function process(Request $request, RequestHandler $handler): Response
     {
@@ -85,6 +86,8 @@ class ApiAuthenticationOAuth implements Middleware
         $userFactory = $this->app->getContainer()->get('userFactory');
 
         // What type of Access Token to we have? Client Credentials or AuthCode
+        // client_credentials grants are issued with the correct oauth_user_id in the token, so we don't need to
+        // distinguish between them here! nice!
         $userId = $validatedRequest->getAttribute('oauth_user_id');
 
         $user = $userFactory->getById($userId);
@@ -99,8 +102,8 @@ class ApiAuthenticationOAuth implements Middleware
         $resource = $route->getPattern();
 
         // Allow public routes
-        if (!in_array($resource, $this->app->publicRoutes)) {
-            $this->app->public = false;
+        if (!in_array($resource, $validatedRequest->getAttribute('publicRoutes', []))) {
+            $request = $request->withAttribute('public', false);
 
             // Do they have permission?
             $user->routeAuthentication(
@@ -109,7 +112,7 @@ class ApiAuthenticationOAuth implements Middleware
                 $validatedRequest->getAttribute('oauth_scopes')
             );
         } else {
-            $this->app->public = true;
+            $validatedRequest = $validatedRequest->withAttribute('public', true);
         }
 
         $newRequest = $validatedRequest->withAttribute('currentUser', $user)
