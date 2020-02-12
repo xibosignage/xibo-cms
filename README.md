@@ -121,7 +121,7 @@ On Linux you can generate a RSA key pair using the following steps:
 ```shell script
 openssl genrsa -out private.key 2048
 openssl rsa -in private.key -pubout -out public.key
-chown 600 public.key
+chmod 600 public.key
 ```
 
 The encryption key should be 32 random bytes, you can generate one using the below:

@@ -9,10 +9,9 @@
 namespace Xibo\Factory;
 
 
+use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\User;
 use Xibo\Helper\SanitizerService;
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -169,7 +168,7 @@ class BaseFactory
 
         $permissionSql = '';
 
-        if ($parsedBody->getCheckbox('disableUserCheck') == 0 && ($user->userTypeId != 1 && $user->userTypeId != 4)) {
+        if ($parsedBody->getCheckbox('disableUserCheck') == 0 && (!$user->isSuperAdmin())) {
             $permissionSql .= '
               AND (' . $idColumn . ' IN (
                 SELECT `permission`.objectId
