@@ -86,15 +86,15 @@ jQuery.fn.extend({
                 if(t.total <= 0) {
                     $(clock).removeClass('warning').addClass('finished');
                     clearInterval(timeinterval);
-                    yearsSpan.html('00');
-                    monthsSpan.html('00');
-                    daysSpan.html('00');
+                    yearsSpan.html('0');
+                    monthsSpan.html('0');
+                    daysSpan.html('0');
                     hoursSpan.html('00');
                     minutesSpan.html('00');
                     secondsSpan.html('00');
-                    hoursAllSpan.html('00');
-                    minutesAllSpan.html('00');
-                    secondsAllSpan.html('00');
+                    hoursAllSpan.html('0');
+                    minutesAllSpan.html('0');
+                    secondsAllSpan.html('0');
                 }
             }
 
@@ -159,7 +159,7 @@ jQuery.fn.extend({
                 warningDuration = options.countdownWarningDate;
             }
             // Get warning date
-            let warningDate = (warningDuration == 0 || warningDuration == '') ? false : getDate(warningDuration);
+            let warningDate = (warningDuration == 0 || warningDuration == '' || warningDuration == null) ? false : getDate(warningDuration);
 
             // Append template to the preview
             $("#content").append(body);

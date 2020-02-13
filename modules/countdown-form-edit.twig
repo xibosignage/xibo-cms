@@ -98,11 +98,11 @@
                         {{ forms.dateTime("countdownDate", title, module.getOption("countdownDate"), helpText, "date-group") }}
 
                         {% set title %}{% trans "Warning Duration" %}{% endset %}
-                        {% set helpText %}{% trans "The duration to show the countdown as a warning." %}{% endset %}
+                        {% set helpText %}{% trans "The countdown will show in a warning mode from the end duration entered." %}{% endset %}
                         {{ forms.input("countdownWarningDuration", title, module.getOption("countdownWarningDuration"), helpText, "duration-group widget-duration-group") }}
 
                         {% set title %}{% trans "Warning Date" %}{% endset %}
-                        {% set helpText %}{% trans "Select the target date to show the warning message." %}{% endset %}
+                        {% set helpText %}{% trans "The countdown will show in a warning mode from the warning date entered." %}{% endset %}
                         {{ forms.dateTime("countdownWarningDate", title, module.getOption("countdownWarningDate"), helpText, "date-group") }}
                     </div>
 
