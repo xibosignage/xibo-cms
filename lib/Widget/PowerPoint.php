@@ -20,13 +20,18 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Widget;
+
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 
+/**
+ * Class PowerPoint
+ * @package Xibo\Widget
+ */
 class PowerPoint extends ModuleWidget
 {
     /** @inheritdoc */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -35,10 +40,12 @@ class PowerPoint extends ModuleWidget
         $this->setOption('name', $sanitizedParams->getString('name'));
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
         $this->saveWidget();
+
+        return $response;
     }
 
     /**
-     * Javascript functions for the layout designer
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -54,32 +61,24 @@ class PowerPoint extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function editForm(Request $request, Response $response)
+    public function editForm(Request $request)
     {
         return 'generic-form-edit';
     }
 
     /**
-     * Override previewAsClient
-     * @param float $width
-     * @param float $height
-     * @param int $scaleOverride
-     * @return string
+     * @inheritDoc
      */
-    public function previewAsClient($width, $height, $scaleOverride = 0, Request $request)
+    public function previewAsClient($width, $height, $scaleOverride = 0)
     {
         return $this->previewIcon();
     }
 
     /**
-     * Get Resource
-     * @param Request $request
-     * @param Response $response
-     * @return mixed
-     * @throws \Xibo\Exception\NotFoundException
+     * @inheritDoc
      */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {
-        return $this->download($request, $response);;
+        return '';
     }
 }

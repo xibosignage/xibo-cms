@@ -21,13 +21,12 @@
  */
 namespace Xibo\Widget;
 
-
 use Respect\Validation\Validator as v;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Factory\ModuleFactory;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Exception\ConfigurationException;
+use Xibo\Exception\InvalidArgumentException;
+
 /**
  * Class GoogleTraffic
  * @package Xibo\Widget
@@ -44,7 +43,7 @@ class GoogleTraffic extends ModuleWidget
     }
 
     /**
-     * Javascript functions for the layout designer
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -52,8 +51,7 @@ class GoogleTraffic extends ModuleWidget
     }
 
     /**
-     * Install or Update this module
-     * @param ModuleFactory $moduleFactory
+     * @inheritDoc
      */
     public function installOrUpdate($moduleFactory)
     {
@@ -83,15 +81,15 @@ class GoogleTraffic extends ModuleWidget
     }
 
     /**
-     * Install Files
+     * @inheritDoc
      */
-    public function InstallFiles()
+    public function installFiles()
     {
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
     }
 
     /**
-     * Form for updating the module settings
+     * @inheritDoc
      */
     public function settingsForm()
     {
@@ -99,12 +97,9 @@ class GoogleTraffic extends ModuleWidget
     }
 
     /**
-     * Process any module settings
-     * @param Request $request
-     * @param Response $response
-     * @throws InvalidArgumentException
+     * @inheritDoc
      */
-    public function settings(Request $request, Response $response)
+    public function settings(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Process any module settings you asked for.
@@ -135,6 +130,8 @@ class GoogleTraffic extends ModuleWidget
             // Dump the cache to force a re-cache of all the API keys
             $this->dumpCacheForModule();
         }
+
+        return $response;
     }
 
     /**
@@ -215,13 +212,9 @@ class GoogleTraffic extends ModuleWidget
      *  )
      * )
      *
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @throws InvalidArgumentException
-     * @throws \Xibo\Exception\ValueTooLargeException
+     * @inheritDoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -238,6 +231,8 @@ class GoogleTraffic extends ModuleWidget
 
         // Save the widget
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
@@ -271,12 +266,8 @@ class GoogleTraffic extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {
-        // Behave exactly like the client.
-        $isPreview = ($this->getSanitizer($request->getParams())->getCheckbox('preview') == 1);
-        $displayId = $request->getAttribute('displayId', 0);
-
         if ($this->getSetting('apiKey') == '') {
             throw new ConfigurationException(__('Module not configured. Missing API Key.'));
         }
@@ -291,7 +282,9 @@ class GoogleTraffic extends ModuleWidget
 
                 $display = $this->displayFactory->getById($displayId);
 
-                if ($display->latitude != '' && $display->longitude != '' && v::latitude()->validate($display->latitude) && v::longitude()->validate($display->longitude)) {
+                if ($display->latitude != '' && $display->longitude != ''
+                    && v::latitude()->validate($display->latitude) && v::longitude()->validate($display->longitude)
+                ) {
                     $defaultLat = $display->latitude;
                     $defaultLong = $display->longitude;
                 } else {
@@ -304,21 +297,22 @@ class GoogleTraffic extends ModuleWidget
         }
 
         if (!v::longitude()->validate($defaultLong) || !v::latitude()->validate($defaultLat)) {
-            $this->getLog()->error('Traffic widget configured with incorrect lat/long. WidgetId is ' . $this->getWidgetId() . ', Lat is ' . $defaultLat . ', Lng is ' . $defaultLong);
+            $this->getLog()->error('Traffic widget configured with incorrect lat/long. WidgetId is ' . $this->getWidgetId()
+                . ', Lat is ' . $defaultLat . ', Lng is ' . $defaultLong);
             return false;
         }
 
         // Include some vendor items
-        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
+        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
 
         return $this->renderTemplate([
-            'viewPortWidth' => ($isPreview) ? $this->region->width : '[[ViewPortWidth]]',
+            'viewPortWidth' => ($this->isPreview()) ? $this->region->width : '[[ViewPortWidth]]',
             'apiKey' => $this->getSetting('apiKey'),
             'javaScript' => $javaScriptContent,
             'lat' => $defaultLat,
             'long' => $defaultLong,
             'zoom' => $this->getOption('zoom', 12)
-        ], 'google-traffic-get-resource', $response);
+        ], 'google-traffic-get-resource');
     }
 
     /** @inheritdoc */

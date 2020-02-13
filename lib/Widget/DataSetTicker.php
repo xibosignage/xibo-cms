@@ -22,11 +22,11 @@
 namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
 
 /**
  * Class DataSetTicker
@@ -35,7 +35,7 @@ use Slim\Http\ServerRequest as Request;
 class DataSetTicker extends ModuleWidget
 {
     /**
-     * Install Files
+     * @inheritDoc
      */
     public function installFiles()
     {
@@ -117,7 +117,7 @@ class DataSetTicker extends ModuleWidget
     }
 
     /** @inheritdoc @override */
-    public function editForm(Request $request, Response $response)
+    public function editForm(Request $request)
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Do we have a step provided?
@@ -345,7 +345,7 @@ class DataSetTicker extends ModuleWidget
      *
      * @inheritdoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Do we have a step provided?
@@ -356,7 +356,7 @@ class DataSetTicker extends ModuleWidget
             $dataSetId = $sanitizedParams->getInt('dataSetId');
 
             // Do we already have a DataSet?
-            if($this->hasDataSet() && $dataSetId != $this->getOption('dataSetId')) {
+            if ($this->hasDataSet() && $dataSetId != $this->getOption('dataSetId')) {
                 // Reset the fields that are dependent on the dataSetId
                 //$this->setOption('columns', '');
             }
@@ -369,7 +369,7 @@ class DataSetTicker extends ModuleWidget
             }
 
             // Check we have permission to use this DataSetId
-            if (!$this->getUser($request)->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId')))) {
+            if (!$this->getUser()->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId')))) {
                 throw new InvalidArgumentException(__('You do not have permission to use that dataset'), 'dataSetId');
             }
 
@@ -454,15 +454,13 @@ class DataSetTicker extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {
         // Load in the template
         $data = [];
-        $isPreview = ($this->getSanitizer($request->getParams())->getCheckbox('preview') == 1);
-        $displayId = $request->getAttribute('displayId', 0);
 
         // Replace the View Port Width?
-        $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
+        $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
 
         // Information from the Module
         $itemsSideBySide = $this->getOption('itemsSideBySide', 0);
@@ -477,13 +475,13 @@ class DataSetTicker extends ModuleWidget
         $css = $this->getRawNode('css', '');
         
         // Parse library references on the template
-        $text = $this->parseLibraryReferences($isPreview, $text, $request);
+        $text = $this->parseLibraryReferences($this->isPreview(), $text);
 
         // Parse library references on the CSS Node
-        $css = $this->parseLibraryReferences($isPreview, $css, $request);
+        $css = $this->parseLibraryReferences($this->isPreview(), $css);
 
         // Get the JavaScript node
-        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''), $request);
+        $javaScript = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', ''));
 
         // Handle older layouts that have a direction node but no effect node
         $oldDirection = $this->getOption('direction', 'none');
@@ -510,7 +508,7 @@ class DataSetTicker extends ModuleWidget
         );
 
         // Generate a JSON string of substituted items.
-        $items = $this->getDataSetItems($displayId, $text, $request);
+        $items = $this->getDataSetItems($displayId, $text);
 
         // Return empty string if there are no items to show.
         if (count($items) == 0) {
@@ -560,26 +558,26 @@ class DataSetTicker extends ModuleWidget
         }
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . (($isPreview) ? $this->urlFor($request,'library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . (($this->isPreview()) ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
         // Replace the Head Content with our generated javascript
         $data['head'] = $headContent;
 
         // Add some scripts to the JavaScript Content
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
 
         // Need the marquee plugin?
         if (stripos($effect, 'marquee') !== false)
-            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.marquee.min.js', null, $request) . '"></script>';
+            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.marquee.min.js') . '"></script>';
 
         // Need the cycle plugin?
         if ($effect != 'none')
-            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js', null, $request) . '"></script>';
+            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
 
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
@@ -593,7 +591,7 @@ class DataSetTicker extends ModuleWidget
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        return $this->renderTemplate($data, 'get-resource', $response);
+        return $this->renderTemplate($data);
     }
 
     /**
@@ -601,7 +599,7 @@ class DataSetTicker extends ModuleWidget
      * @param $text
      * @return array
      */
-    private function getDataSetItems($displayId, $text, Request $request)
+    private function getDataSetItems($displayId, $text)
     {
         // Extra fields for data sets
         $dataSetId = $this->getOption('dataSetId');
@@ -780,7 +778,7 @@ class DataSetTicker extends ModuleWidget
                             // Download the image, alter the replace to wrap in an image tag
                             $file = $this->mediaFactory->queueDownload('ticker_dataset_' . md5($dataSetId . $mappings[$header]['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)), $expires);
 
-                            $replace = '<img src="' . $this->getFileUrl($file, 'image', $request) . '"/>';
+                            $replace = '<img src="' . $this->getFileUrl($file, 'image') . '"/>';
 
                         } else if ($mappings[$header]['dataTypeId'] == 5) {
                             // Library Image
@@ -792,7 +790,7 @@ class DataSetTicker extends ModuleWidget
                                     // Tag this layout with this file
                                     $this->assignMedia($file->mediaId);
 
-                                    $replace = '<img src="' . $this->getFileUrl($file, 'image', $request) . '" />';
+                                    $replace = '<img src="' . $this->getFileUrl($file, 'image') . '" />';
                                 } else {
                                     $replace = '';
                                 }
@@ -840,9 +838,9 @@ class DataSetTicker extends ModuleWidget
             throw new InvalidArgumentException(__('Please select a DataSet'), 'dataSetId');
 
         // Check we have permission to use this DataSetId
-        // FIXME: Call to a member function checkViewable() on null
-        //if (!$this->getUser()->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId'))))
-            //throw new InvalidArgumentException(__('You do not have permission to use that dataset'), 'dataSetId');
+        if (!$this->getUser()->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId')))) {
+            throw new InvalidArgumentException(__('You do not have permission to use that dataset'), 'dataSetId');
+        }
 
         if ($this->widget->widgetId != 0) {
             // Some extra edit validation

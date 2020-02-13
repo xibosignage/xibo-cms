@@ -30,12 +30,13 @@ use PicoFeed\Parser\Item;
 use PicoFeed\PicoFeedException;
 use PicoFeed\Reader\Reader;
 use Respect\Validation\Validator as v;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Stash\Invalidation;
 use Xibo\Controller\Library;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Helper\Environment;
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
+
 /**
  * Class Ticker
  * @package Xibo\Widget
@@ -43,7 +44,7 @@ use Slim\Http\ServerRequest as Request;
 class Ticker extends ModuleWidget
 {
     /**
-     * Install Files
+     * @inheritDoc
      */
     public function installFiles()
     {
@@ -64,7 +65,7 @@ class Ticker extends ModuleWidget
     }
 
     /**
-     * Form for updating the module settings
+     * @inheritDoc
      */
     public function settingsForm()
     {
@@ -72,13 +73,9 @@ class Ticker extends ModuleWidget
     }
 
     /**
-     * Process any module settings
-     * @param Request $request
-     * @param Response $response
-     * @return string[]
-     * @throws InvalidArgumentException
+     * @inheritDoc
      */
-    public function settings(Request $request, Response $response)
+    public function settings(Request $request, Response $response): Response
     {
         $updateIntervalImages = $this->getSanitizer($request->getParams())->getInt('updateIntervalImages', 240);
 
@@ -90,17 +87,16 @@ class Ticker extends ModuleWidget
 
         $this->module->settings['updateIntervalImages'] = $updateIntervalImages;
 
-        return $this->module->settings;
+        return $response;
     }
 
     /**
-     * Get Extra content for the form
-     * @return array
+     * @inheritDoc
      */
-    public function getExtra(Request $request)
+    public function getExtra()
     {
         return [
-            'templates' => $this->templatesAvailable(true, $request),
+            'templates' => $this->templatesAvailable(true),
         ];
     }
 
@@ -331,9 +327,10 @@ class Ticker extends ModuleWidget
      *
      * @inheritdoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
+
         // Other properties
         $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
         $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
@@ -380,17 +377,18 @@ class Ticker extends ModuleWidget
         // Save the widget
         $this->isValid();
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {
         // Load in the template
         $data = [];
-        $isPreview = ($this->getSanitizer($request->getParams())->getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
-        $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
+        $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
 
         // Information from the Module
         $itemsSideBySide = $this->getOption('itemsSideBySide', 0);
@@ -408,7 +406,7 @@ class Ticker extends ModuleWidget
         // Get CSS and HTML template from the original template or from the input field
         if ($this->getOption('overrideTemplate') == 0) {
             // Feed tickers without override set.
-            $template = $this->getTemplateById($this->getOption('templateId', 'title-only'), $request);
+            $template = $this->getTemplateById($this->getOption('templateId', 'title-only'));
             
             if (isset($template)) {
                 $text = $template['template'];
@@ -424,16 +422,16 @@ class Ticker extends ModuleWidget
         }
         
         // Parse library references on the template
-        $text = $this->parseLibraryReferences($isPreview, $text, $request);
+        $text = $this->parseLibraryReferences($this->isPreview(), $text);
         
         // Parse translations
         $text = $this->parseTranslations($text);
 
         // Parse library references on the CSS Node
-        $css = $this->parseLibraryReferences($isPreview, $css, $request);
+        $css = $this->parseLibraryReferences($this->isPreview(), $css);
 
         // Get the JavaScript node
-        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''), $request);
+        $javaScript = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', ''));
 
         // Handle older layouts that have a direction node but no effect node
         $oldDirection = $this->getOption('direction', 'none');
@@ -461,7 +459,7 @@ class Ticker extends ModuleWidget
         );
 
         // Generate a JSON string of substituted items.
-        $items = $this->getRssItems($text, $request);
+        $items = $this->getRssItems($text);
 
         // Return empty string if there are no items to show.
         if (count($items) == 0) {
@@ -513,26 +511,26 @@ class Ticker extends ModuleWidget
         }
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . (($isPreview) ? $this->urlFor($request,'library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . (($this->isPreview()) ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
         // Replace the Head Content with our generated javascript
         $data['head'] = $headContent;
 
         // Add some scripts to the JavaScript Content
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
 
         // Need the marquee plugin?
         if (stripos($effect, 'marquee') !== false)
-            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.marquee.min.js', null, $request) . '"></script>';
+            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.marquee.min.js') . '"></script>';
 
         // Need the cycle plugin?
         if ($effect != 'none')
-            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js', null, $request) . '"></script>';
+            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
 
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
@@ -545,7 +543,7 @@ class Ticker extends ModuleWidget
 
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
-        return $this->renderTemplate($data, 'get-resource', $response);
+        return $this->renderTemplate($data);
     }
 
     /**
@@ -553,7 +551,7 @@ class Ticker extends ModuleWidget
      * @return array|mixed|null
      * @throws \Xibo\Exception\ConfigurationException
      */
-    private function getRssItems($text, Request $request)
+    private function getRssItems($text)
     {
         $items = [];
 
@@ -772,7 +770,7 @@ class Ticker extends ModuleWidget
                             // Grab the profile image
                             $file = $this->mediaFactory->queueDownload('ticker_' . md5($this->getOption('url') . $link), $link, $expiresImage);
 
-                            $replace = '<img src="' . $this->getFileUrl($file, 'image', $request) . '" ' . $attribute . ' />';
+                            $replace = '<img src="' . $this->getFileUrl($file, 'image') . '" ' . $attribute . ' />';
                         }
                     } else {
                         // Our namespace is not "image". Which means we are a normal text substitution using a namespace/attribute
@@ -839,7 +837,7 @@ class Ticker extends ModuleWidget
                                     // Grab the image
                                     $file = $this->mediaFactory->queueDownload('ticker_' . md5($this->getOption('url') . $link), $link, $expiresImage);
 
-                                    $replace = '<img src="' . $this->getFileUrl($file, 'image', $request) . '"/>';
+                                    $replace = '<img src="' . $this->getFileUrl($file, 'image') . '"/>';
                                 } else {
                                     $this->getLog()->debug('No image found for image tag using getEnclosureUrl');
                                 }

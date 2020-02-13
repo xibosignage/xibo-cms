@@ -86,9 +86,9 @@ class ApplicationState
 
     /**
      * Response JSON
-     * @return string JSON String
+     * @return array
      */
-    public function asJson()
+    public function asArray()
     {
         // Construct the Response
         $response = array();
@@ -112,7 +112,15 @@ class ApplicationState
         $response['extra'] = $this->extra;
         $response['data'] = $this->data;
 
-        return json_encode($response);
+        return $response;
+    }
+
+    /**
+     * @return false|string
+     */
+    public function asJson()
+    {
+        return json_encode($this->asArray());
     }
 
     /**

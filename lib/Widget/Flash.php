@@ -19,7 +19,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 namespace Xibo\Widget;
+
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 
@@ -29,7 +31,6 @@ use Slim\Http\ServerRequest as Request;
  */
 class Flash extends ModuleWidget
 {
-
     /** @inheritdoc */
     public function layoutDesignerJavaScript()
     {
@@ -38,13 +39,13 @@ class Flash extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function editForm(Request $request, Response $response)
+    public function editForm(Request $request)
     {
         return 'generic-form-edit';
     }
 
     /** @inheritdoc */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -56,13 +57,13 @@ class Flash extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function preview($width, $height, $scaleOverride = 0, Request $request)
+    public function preview($width, $height, $scaleOverride = 0)
     {
         if ($this->module->previewEnabled == 0) {
-            return parent::preview($width, $height, $scaleOverride, $request);
+            return parent::preview($width, $height, $scaleOverride);
         }
 
-        $url = $this->urlFor($request,'module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]);
+        $url = $this->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]);
 
         return '<object width="' . $width . '" height="' . $height . '">
             <param name="movie" value="' . $url . '"></param>
@@ -81,14 +82,12 @@ class Flash extends ModuleWidget
 
     /**
      * Get Resource
-     * @param Request $request
-     * @param Response $response
+     * @param int $displayId
      * @return mixed
-     * @throws \Xibo\Exception\NotFoundException
      */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {
-        return $this->download($request, $response);;
+        return '';
     }
 
     /** @inheritdoc */

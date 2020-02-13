@@ -23,7 +23,6 @@ namespace Xibo\Widget;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlayerVersionFactory;
 
 /**
@@ -35,8 +34,7 @@ class PlayerSoftware extends ModuleWidget
     public $codeSchemaVersion = 1;
 
     /**
-     * Install or Update this module
-     * @param ModuleFactory $moduleFactory
+     * @inheritDoc
      */
     public function installOrUpdate($moduleFactory)
     {
@@ -66,15 +64,16 @@ class PlayerSoftware extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         // Non-editable
+        return $response;
     }
 
     /** @inheritdoc */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {
-        return $this->download($request, $response);;
+        return '';
     }
 
     /** @inheritdoc */
@@ -84,6 +83,7 @@ class PlayerSoftware extends ModuleWidget
         return 1;
     }
 
+    /** @inheritDoc */
     public function postProcess($media, PlayerVersionFactory $factory = null)
     {
         $version = '';
@@ -152,6 +152,9 @@ class PlayerSoftware extends ModuleWidget
         return $factory->create($type, $version, $code, $media->mediaId, $playerShowVersion);
     }
 
+    /**
+     * @inheritDoc
+     */
     public function getValidExtensions()
     {
         return $this->module->validExtensions;

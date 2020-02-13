@@ -19,15 +19,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 namespace Xibo\Widget;
 
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use ICal\ICal;
 use Jenssegers\Date\Date;
 use Respect\Validation\Validator as v;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Stash\Invalidation;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
@@ -271,14 +272,14 @@ class Calendar extends ModuleWidget
      *      type="integer",
      *      required=false
      *   ),
-     *          *  @SWG\Parameter(
+     *  @SWG\Parameter(
      *      name="useCalendarTimezone",
      *      in="formData",
      *      description="A flag (0,1), Should we use Calendar Timezone?",
      *      type="integer",
      *      required=false
      *   ),
-     *          *  @SWG\Parameter(
+     *  @SWG\Parameter(
      *      name="windowsFormatCalendar",
      *      in="formData",
      *      description="Does the calendar feed come from Windows - if unsure leave unselected.",
@@ -293,7 +294,7 @@ class Calendar extends ModuleWidget
      *
      * @inheritdoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -337,11 +338,15 @@ class Calendar extends ModuleWidget
         $this->saveWidget();
     }
 
-    /** @inheritdoc */
-    public function getResource(Request $request, Response $response)
+    /** @inheritdoc
+     * @throws \Xibo\Exception\ConfigurationException
+     */
+    public function getResource($displayId = 0)
     {
         // Construct the response HTML
-        $this->initialiseGetResource($request, $response)->appendViewPortWidth($this->region->width);
+        $this
+            ->initialiseGetResource()
+            ->appendViewPortWidth($this->region->width);
 
         // Get the template and start making the body
         $template = $this->getRawNode('template', '');
@@ -349,9 +354,9 @@ class Calendar extends ModuleWidget
         $styleSheet = $this->getRawNode('styleSheet', '');
 
         // Parse library references first as its more efficient
-        $template = $this->parseLibraryReferences($this->isPreview(), $template, $request);
-        $currentEventTemplate = $this->parseLibraryReferences($this->isPreview(), $currentEventTemplate, $request);
-        $styleSheet = $this->parseLibraryReferences($this->isPreview(), $styleSheet, $request);
+        $template = $this->parseLibraryReferences($this->isPreview(), $template);
+        $currentEventTemplate = $this->parseLibraryReferences($this->isPreview(), $currentEventTemplate);
+        $styleSheet = $this->parseLibraryReferences($this->isPreview(), $styleSheet);
 
         // Get the feed URL contents from cache or source
         $items = $this->parseFeed($this->getFeed(), $template, $currentEventTemplate);
@@ -409,12 +414,12 @@ class Calendar extends ModuleWidget
 
         // Include some vendor items and javascript
         $this
-            ->appendJavaScriptFile('vendor/jquery-1.11.1.min.js', $request)
-            ->appendJavaScriptFile('vendor/moment.js', $request)
-            ->appendJavaScriptFile('xibo-layout-scaler.js', $request)
-            ->appendJavaScriptFile('xibo-image-render.js', $request)
-            ->appendJavaScriptFile('xibo-text-render.js', $request)
-            ->appendFontCss($request)
+            ->appendJavaScriptFile('vendor/jquery-1.11.1.min.js')
+            ->appendJavaScriptFile('vendor/moment.js')
+            ->appendJavaScriptFile('xibo-layout-scaler.js')
+            ->appendJavaScriptFile('xibo-image-render.js')
+            ->appendJavaScriptFile('xibo-text-render.js')
+            ->appendFontCss()
             ->appendCss($headContent)
             ->appendCss($styleSheet)
             ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
@@ -466,13 +471,13 @@ class Calendar extends ModuleWidget
 
         // Need the marquee plugin?
         if (stripos($effect, 'marquee') !== false)
-            $this->appendJavaScriptFile('vendor/jquery.marquee.min.js', $request);
+            $this->appendJavaScriptFile('vendor/jquery.marquee.min.js');
 
         // Need the cycle plugin?
         if ($effect != 'none')
-            $this->appendJavaScriptFile('vendor/jquery-cycle-2.1.6.min.js', $request);
+            $this->appendJavaScriptFile('vendor/jquery-cycle-2.1.6.min.js');
 
-        $this->finaliseGetResource('get-resource', $response);
+        return $this->finaliseGetResource();
     }
 
     /**

@@ -24,6 +24,7 @@ namespace Xibo\Controller;
 use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
@@ -314,8 +315,8 @@ class Module extends Base
     public function settings(Request $request, Response $response, $id)
     {
         // Can we edit?
-        $moduleConfigLocked = ($this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 1 || $this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked');
-
+        $moduleConfigLocked = ($this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 1
+            || $this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked');
 
         $sanitizedPrams = $this->getSanitizer($request->getParams());
 
@@ -332,7 +333,7 @@ class Module extends Base
         $module->installFiles();
 
         // Get the settings (may throw an exception)
-        $module->settings($request, $response);
+        $response = $module->settings($request, $response);
 
         // Save
         $module->getModule()->save();
@@ -679,11 +680,11 @@ class Module extends Base
         $templates = [];
         // TODO this is a bit silly at this point, we need a more clever to do this.
         if (in_array($module->getModuleType(), ['forecastio', 'ticker', 'twitter','twittermetro', 'currencies', 'stocks', 'datasetview', 'countdown'])) {
-            $templates = $module->templatesAvailable(true, $request);
+            $templates = $module->templatesAvailable();
         }
 
         // Pass to view
-        $this->getState()->template = $module->editForm($request, $response);
+        $this->getState()->template = $module->editForm($request);
         $this->getState()->setData($module->setTemplateData([
             'module' => $module,
             'media' => $media,
@@ -733,7 +734,7 @@ class Module extends Base
         $module->setSaveEvent(new WidgetEditEvent($module));
 
         // Call Module Edit
-        $module->edit($request, $response, $id);
+        $response = $module->edit($request, $response);
 
         // Successful
         $this->getState()->hydrate([
@@ -840,7 +841,7 @@ class Module extends Base
         $module->setUser($this->getUser($request));
 
         // Call Module Delete
-        $module->delete($request, $response, $id);
+        $response = $module->delete($request, $response);
 
         // Call Widget Delete
         $module->widget->delete();
@@ -1345,18 +1346,31 @@ class Module extends Base
         if (!$this->getUser($request)->checkViewable($module->widget)) {
             throw new AccessDeniedException();
         }
+
+        $params = $this->getSanitizer($request->getParams());
+
         // Call module GetResource
-        $module->setUser($this->getUser($request));
+        $module
+            ->setUser($this->getUser($request))
+            ->setPreview(
+                true,
+                RouteContext::fromRequest($request)->getRouteParser(),
+                $params->getDouble('width'),
+                $params->getDouble('height')
+            )
+        ;
 
         if ($module->getModule()->regionSpecific == 0) {
             // Non region specific module - no caching required as this is only ever called via preview.
-            $response = $module->getResource($request, $response);
+            $resource = $module->getResource();
         } else {
             // Region-specific module, need to handle caching and locking.
-            echo $module->getResourceOrCache($request, $response);
+            $resource = $module->getResourceOrCache();
         }
 
         $this->setNoOutput(true);
+        $response->getBody()->write($resource);
+
         return $this->render($request, $response);
     }
 

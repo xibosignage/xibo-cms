@@ -19,13 +19,14 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 namespace Xibo\Widget;
+
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Widget;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
+
 /**
  * Class Playlist
  * @package Xibo\Widget
@@ -68,9 +69,7 @@ class SubPlaylist extends ModuleWidget
     }
 
     /**
-     * Extra data for the Form rendering
-     * @param $userId
-     * @return array
+     * @inheritDoc
      */
     public function getExtra($userId)
     {
@@ -192,13 +191,9 @@ class SubPlaylist extends ModuleWidget
      *  )
      * )
      *
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @throws InvalidArgumentException
-     * @throws \Xibo\Exception\ValueTooLargeException
+     * @inheritDoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         // Set some dud durations
         $this->setDuration(10);
@@ -312,12 +307,14 @@ class SubPlaylist extends ModuleWidget
 
         // Save the widget
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
-    public function delete(Request $request, Response $response, $id)
+    public function delete(Request $request, Response $response): Response
     {
-        parent::delete($request, $response, $id);
+        $response = parent::delete($request, $response);
 
         $subPlaylistIds = $this->getAssignedPlaylistIds();
 
@@ -333,23 +330,24 @@ class SubPlaylist extends ModuleWidget
                 'childId' => $subPlaylistId
             ]);
         }
+
+        return $response;
     }
 
     /**
      * @inheritdoc
      */
-    public function preview($width, $height, $scaleOverride = 0, Request $request)
+    public function preview($width, $height, $scaleOverride = 0)
     {
         // Output a summary
         $resolvedWidgets = $this->getSubPlaylistResolvedWidgets();
 
-        $output = '
+        return '
             <div style="text-align:center;">
                 <i alt="' . __($this->module->name) . ' thumbnail" class="fa module-preview-icon module-icon-' . __($this->module->type) . '"></i>
                 <br/>
                 ' . __('%d Widgets / %d seconds', count($resolvedWidgets), $this->getSubPlaylistResolvedDuration()) . '
             </div>';
-        return $output;
     }
 
     /**
@@ -701,7 +699,7 @@ class SubPlaylist extends ModuleWidget
     /**
      * @inheritdoc
      */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {
         return '';
     }

@@ -19,6 +19,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 namespace Xibo\Widget;
 
 use Intervention\Image\Exception\NotReadableException;
@@ -41,11 +42,11 @@ class Image extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function settings(Request $request, Response $response)
+    public function settings(Request $request, Response $response): Response
     {
-        parent::settings($request, $response);
-
         $this->module->settings['defaultScaleTypeId'] = $this->getSanitizer($request->getParams())->getString('defaultScaleTypeId');
+
+        return parent::settings($request, $response);
     }
 
     /** @inheritdoc */
@@ -56,9 +57,8 @@ class Image extends ModuleWidget
         $this->setOption('scaleType', $this->getSetting('defaultScaleTypeId', 'center'));
     }
 
-
     /**
-     * Javascript functions for the layout designer
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -142,9 +142,9 @@ class Image extends ModuleWidget
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
+     * @inheritDoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Set the properties specific to Images
@@ -158,19 +158,21 @@ class Image extends ModuleWidget
 
         $this->isValid();
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
-    public function preview($width, $height, $scaleOverride = 0, Request $request)
+    public function preview($width, $height, $scaleOverride = 0)
     {
         if ($this->module->previewEnabled == 0)
-            return parent::preview($width, $height, $scaleOverride, $request);
+            return parent::preview($width, $height, $scaleOverride);
 
         $proportional = ($this->getOption('scaleType') == 'stretch') ? 0 : 1;
         $align = $this->getOption('align', 'center');
         $vAlign = $this->getOption('valign', 'middle');
 
-        $url = $this->urlFor($request,'module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]) . '?preview=1&width=' . $width . '&height=' . $height . '&proportional=' . $proportional . '&mediaId=' . $this->getMediaId();
+        $url = $this->urlFor('library.download', ['regionId' => $this->region->regionId, 'id' => $this->getMediaId()]) . '?preview=1&width=' . $width . '&height=' . $height . '&proportional=' . $proportional;
 
         // Show the image - scaled to the aspect ratio of this region (get from GET)
         return '<div style="display:table; width:100%; height: ' . $height . 'px">
@@ -180,8 +182,8 @@ class Image extends ModuleWidget
         </div>';
     }
 
-    /** @inheritdoc */
-    public function getResource(Request $request, Response $response)
+    /** @inheritDoc */
+    public function download(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getQueryParams());
         $this->getLog()->debug('Image Module: GetResource for ' . $this->getMediaId());
@@ -270,11 +272,11 @@ class Image extends ModuleWidget
             return $response;
         } else {
             // Download the file
-            return $this->download($request, $response);;
+            return $this->download($request, $response);
         }
     }
 
-    /** @inheritdoc */
+    /** @inheritDoc */
     public function isValid()
     {
         if ($this->getMedia()->released == 0) {
@@ -290,5 +292,13 @@ class Image extends ModuleWidget
         }
 
         return self::$STATUS_VALID;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getResource($displayId = 0)
+    {
+        return '';
     }
 }

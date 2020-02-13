@@ -22,11 +22,11 @@
 namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
 
 /**
  * Class DataSetView
@@ -35,7 +35,7 @@ use Slim\Http\ServerRequest as Request;
 class DataSetView extends ModuleWidget
 {
     /**
-     * Install Modules Files
+     * @inheritDoc
      */
     public function installFiles()
     {
@@ -156,7 +156,7 @@ class DataSetView extends ModuleWidget
     }
 
     /** @inheritdoc @override */
-    public function editForm(Request $request, Response $response)
+    public function editForm(Request $request)
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Do we have a step provided?
@@ -170,7 +170,7 @@ class DataSetView extends ModuleWidget
     }
 
     /**
-     * * @SWG\Put(
+     * @SWG\Put(
      *  path="/playlist/widget/{widgetId}?dataSetView",
      *  operationId="widgetDataSetViewEdit",
      *  tags={"widget"},
@@ -332,7 +332,7 @@ class DataSetView extends ModuleWidget
      *
      * @inheritdoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Do we have a step provided?
@@ -357,7 +357,7 @@ class DataSetView extends ModuleWidget
             }
 
             // Check we have permission to use this DataSetId
-            if (!$this->getUser($request)->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId')))) {
+            if (!$this->getUser()->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId')))) {
                 throw new InvalidArgumentException(__('You do not have permission to use that dataset'), 'dataSetId');
             }
 
@@ -454,32 +454,26 @@ class DataSetView extends ModuleWidget
 
         // Save the widget
         $this->saveWidget();
+
+        return $response;
     }
 
     /**
-     * GetResource
-     * Return the rendered resource to be used by the client (or a preview)
-     * for displaying this content.
-     * @param integer $displayId If this comes from a real client, this will be the display id.
-     * @return mixed
+     * @inheritDoc
      */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-        $displayId = $request->getParam('displayId', 0);
-
         // Load in the template
         $data = [];
-        $isPreview = ($sanitizedParams->getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
-        $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
+        $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
     
         // Get CSS from the original template or from the input field
         $styleSheet = '';
         if ($this->getOption('overrideTemplate', 1) == 0) {
             
-            $template = $this->getTemplateById($this->getOption('templateId'), $request);
+            $template = $this->getTemplateById($this->getOption('templateId'));
             
             if (isset($template))
                 $styleSheet = $template['css'];
@@ -489,7 +483,7 @@ class DataSetView extends ModuleWidget
         }
         
         // Get the embedded HTML out of RAW
-        $styleSheet = $this->parseLibraryReferences($isPreview, $styleSheet, $request);
+        $styleSheet = $this->parseLibraryReferences($this->isPreview(), $styleSheet);
 
         // If we have some options then add them to the end of the style sheet
         if ($this->getOption('backgroundColor') != '') {
@@ -509,7 +503,7 @@ class DataSetView extends ModuleWidget
         }
 
         // Get the JavaScript node
-        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''), $request);
+        $javaScript = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', ''));
 
         $duration = $this->getCalculatedDurationForGetResource();
         $durationIsPerItem = $this->getOption('durationIsPerPage', 1);
@@ -525,7 +519,7 @@ class DataSetView extends ModuleWidget
         );
 
         // Generate the table
-        $table = $this->dataSetTableHtml($displayId, $isPreview, $request);
+        $table = $this->dataSetTableHtml($displayId);
 
         // Work out how many pages we will be showing.
         $pages = $table['countPages'];
@@ -537,7 +531,7 @@ class DataSetView extends ModuleWidget
         $data['controlMeta'] = '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $totalDuration . ' -->';
 
         // Add our fonts.css file
-        $headContent = '<link href="' . (($isPreview) ? $this->urlFor($request,'library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
+        $headContent = '<link href="' . (($this->isPreview()) ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
         $headContent .= '<style type="text/css">' . $styleSheet . '</style>';
 
@@ -545,12 +539,12 @@ class DataSetView extends ModuleWidget
         $data['body'] = $table['html'];
 
         // Build some JS nodes
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js', null, $request) . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
 
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-dataset-render.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-dataset-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
@@ -563,16 +557,15 @@ class DataSetView extends ModuleWidget
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        return $this->renderTemplate($data, 'get-resource', $response);
+        return $this->renderTemplate($data);
     }
 
     /**
      * Get the Data Set Table
      * @param int $displayId
-     * @param bool $isPreview
      * @return array
      */
-    private function dataSetTableHtml($displayId = 0, $isPreview = true, Request $request)
+    private function dataSetTableHtml($displayId = 0)
     {
         // Show a preview of the data set table output.
         $dataSetId = $this->getOption('dataSetId');
@@ -791,8 +784,8 @@ class DataSetView extends ModuleWidget
                         // Grab the external image
                         $file = $this->mediaFactory->queueDownload('datasetview_' . md5($dataSetId . $mapping['dataSetColumnId'] . $replace), str_replace(' ', '%20', htmlspecialchars_decode($replace)), $expires);
 
-                        $replace = ($isPreview)
-                            ? '<img src="' . $this->urlFor($request,'library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
+                        $replace = ($this->isPreview())
+                            ? '<img src="' . $this->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                             : '<img src="' . $file->storedAs . '" />';
 
                     } else if ($mapping['dataTypeId'] == 5) {
@@ -810,8 +803,8 @@ class DataSetView extends ModuleWidget
                             continue;
                         }
 
-                        $replace = ($isPreview)
-                            ? '<img src="' . $this->urlFor($request,'library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
+                        $replace = ($this->isPreview())
+                            ? '<img src="' . $this->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                             : '<img src="' . $file->storedAs . '" />';
                     }
 

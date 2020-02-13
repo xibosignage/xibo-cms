@@ -30,37 +30,36 @@ use Slim\Http\ServerRequest as Request;
 class GenericFile extends ModuleWidget
 {
     /** @inheritdoc */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
-        // Non-editable
+        return $response;
     }
 
     /**
-     * Preview code for a module
-     * @param int $width
-     * @param int $height
-     * @param int $scaleOverride The Scale Override
-     * @return string The Rendered Content
+     * @inheritDoc
      */
-    public function preview($width, $height, $scaleOverride = 0, Request $request = null)
+    public function preview($width, $height, $scaleOverride = 0)
     {
         // Videos are never previewed in the browser.
         return $this->previewIcon();
     }
 
     /**
-     * Get Resource
-     * @param Request $request
-     * @param Response $response
-     * @throws \Xibo\Exception\NotFoundException
+     * @inheritDoc
      */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
+    {
+        return '';
+    }
+
+    /** @inheritDoc */
+    public function download(Request $request, Response $response): Response
     {
         if (ini_get('zlib.output_compression')) {
             ini_set('zlib.output_compression', 'Off');
         }
 
-        return $this->download($request, $response);;
+        return parent::download($request, $response);
     }
 
     /**

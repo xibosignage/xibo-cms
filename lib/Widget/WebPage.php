@@ -22,16 +22,16 @@
 namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
-use Xibo\Exception\InvalidArgumentException;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Exception\InvalidArgumentException;
+
 /**
  * Class WebPage
  * @package Xibo\Widget
  */
 class WebPage extends ModuleWidget
 {
-
     /** @inheritdoc */
     public function layoutDesignerJavaScript()
     {
@@ -153,9 +153,9 @@ class WebPage extends ModuleWidget
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
+     * @inheritDoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -176,29 +176,28 @@ class WebPage extends ModuleWidget
         // Save the widget
         $this->isValid();
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
-    public function preview($width, $height, $scaleOverride = 0, Request $request)
+    public function preview($width, $height, $scaleOverride = 0)
     {
         // If we are opening the web page natively on the device, then we cannot offer a preview
         if ($this->getOption('modeid') == 1)
             return $this->previewIcon();
 
-        return parent::preview($width, $height, $scaleOverride, $request);
+        return parent::preview($width, $height, $scaleOverride);
     }
 
     /** @inheritdoc */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {
         // Load in the template
         $data = [];
 
         // Replace the View Port Width?
-        $isPreview = ($this->getSanitizer($request->getParams())->getCheckbox('preview') == 1);
-
-        // Replace the View Port Width?
-        $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
+        $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
 
         // Work out the url
         $url = urldecode($this->getOption('uri'));
@@ -228,9 +227,9 @@ class WebPage extends ModuleWidget
         $data['body'] = '<iframe id="iframe" scrolling="no" frameborder="0" src="' . $url . '"></iframe>';
 
         // After body content
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-webpage-render.js', null, $request) . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-webpage-render.js') . '"></script>';
         $javaScriptContent .= '<script>
             var options = ' . json_encode($options) . '
             $(document).ready(function() {
@@ -242,7 +241,7 @@ class WebPage extends ModuleWidget
         // Replace the After body Content
         $data['javaScript'] = $javaScriptContent;
 
-        return $this->renderTemplate($data, 'get-resource', $response);
+        return $this->renderTemplate($data);
     }
 
     /** @inheritdoc */

@@ -105,7 +105,7 @@ class Module implements \JsonSerializable
 
     /**
      * @SWG\Property(description="An array of additional module specific settings")
-     * @var string[]
+     * @var array
      */
     public $settings = [];
 

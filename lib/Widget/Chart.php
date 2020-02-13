@@ -23,13 +23,16 @@
 namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\ModuleFactory;
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
 
+/**
+ * Class Chart
+ * @package Xibo\Widget
+ */
 class Chart extends ModuleWidget
 {
     public $codeSchemaVersion = 1;
@@ -44,8 +47,7 @@ class Chart extends ModuleWidget
     }
     
     /**
-     * Install or Update this module
-     * @param ModuleFactory $moduleFactory
+     * @inheritdoc
      * @Override
      */
     public function installOrUpdate($moduleFactory)
@@ -106,14 +108,14 @@ class Chart extends ModuleWidget
     }
 
     /**
-     * Process any module settings
-     * @return array An array of the processed settings.
+     * @inheritDoc
      * @override
      */
-    public function settings(Request $request, Response $response)
+    public function settings(Request $request, Response $response): Response
     {
         $this->module->settings['defaultColors'] = explode(',', $this->getSanitizer($request->getParams())->getString('defaultColors'));
-        return $this->module->settings;
+
+        return $response;
     }
 
     /**
@@ -231,7 +233,7 @@ class Chart extends ModuleWidget
     }
 
     /** @inheritdoc @override */
-    public function editForm(Request $request, Response $response)
+    public function editForm(Request $request)
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Do we have a step provided?
@@ -429,14 +431,9 @@ class Chart extends ModuleWidget
      *  )
      * )
      *
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws \Xibo\Exception\ValueTooLargeException
+     * @inheritDoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         // Do we have a step provided?
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -462,14 +459,14 @@ class Chart extends ModuleWidget
             }
 
             // Check we have permission to use this DataSetId
-            if (!$this->getUser($request)->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId')))) {
+            if (!$this->getUser()->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId')))) {
                 throw new InvalidArgumentException(__('You do not have permission to use that dataset'), 'dataSetId');
             }
 
         } else {
 
             // Check we have permission to use this DataSetId
-            if (!$this->getUser($request)->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId')))) {
+            if (!$this->getUser()->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId')))) {
                 throw new InvalidArgumentException(__('You do not have permission to use that DataSet'), 'dataSetId');
             }
 
@@ -567,21 +564,22 @@ class Chart extends ModuleWidget
         }
 
         $this->saveWidget();
+
+        return $response;
     }
 
     /**
      * @inheritdoc
      * @override
      */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {
-        $displayId = $request->getQueryParam('displayId');
         $containerId = 'graph-' . $displayId;
 
         $this->getLog()->debug('Render graph for widgetId: ' . $this->getWidgetId() . ' and displayId: ' . $displayId);
 
         // Replace the View Port Width if we are in Preview-Mode
-        $data['viewPortWidth'] = ($this->getSanitizer($request->getParams())->getCheckbox('preview') == 1) ? $this->region->width : '[[ViewPortWidth]]';
+        $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
 
         // Options XIBO needs for rendering - see JavaScript at the end of this function
         $options = array(
@@ -606,10 +604,10 @@ class Chart extends ModuleWidget
         ';
 
         // After body content - mostly XIBO-Stuff for scaling and so on
-        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/Chart.min.js', null, $request) . '"></script>';
+        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/Chart.min.js') . '"></script>';
 
         // Get data
         $chartData = $this->getChartData($displayId);
@@ -636,7 +634,7 @@ class Chart extends ModuleWidget
         // Replace the After body Content
         $data['body'] .= $javaScriptContent;
 
-        return $this->renderTemplate($data, 'get-resource', $response);
+        return $this->renderTemplate($data);
     }
 
     /**

@@ -20,14 +20,14 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Factory\NotificationFactory;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Exception\InvalidArgumentException;
+use Xibo\Factory\NotificationFactory;
+
 /**
  * Class NotificationView
  * @package Xibo\Widget
@@ -35,7 +35,7 @@ use Slim\Http\ServerRequest as Request;
 class NotificationView extends ModuleWidget
 {
     /**
-     * Install Files
+     * @inheritDoc
      */
     public function installFiles()
     {
@@ -47,7 +47,7 @@ class NotificationView extends ModuleWidget
     }
 
     /**
-     * @return string
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -132,7 +132,7 @@ class NotificationView extends ModuleWidget
      *      description="The transition speed of the selected effect in milliseconds (1000 = normal)",
      *      type="integer",
      *      required=false
-     *   ),     *
+     *   ),
      *  @SWG\Parameter(
      *      name="durationIsPerItem",
      *      in="formData",
@@ -153,13 +153,9 @@ class NotificationView extends ModuleWidget
      *  )
      * )
      *
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @throws InvalidArgumentException
-     * @throws \Xibo\Exception\ValueTooLargeException
+     * @inheritDoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -179,6 +175,8 @@ class NotificationView extends ModuleWidget
         $this->setRawNode('embedStyle', $request->getParam('embedStyle', null));
 
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
@@ -203,10 +201,9 @@ class NotificationView extends ModuleWidget
     /**
      * @param $isPreview
      * @param $displayId
-     * @param Request $request
      * @return array
      */
-    private function getNotifications($isPreview, $displayId = null, Request $request)
+    private function getNotifications($isPreview, $displayId = null)
     {
         // Date format
         $dateFormat = $this->getOption('dateFormat', $this->getConfig()->getSetting('DATE_FORMAT'));
@@ -222,13 +219,13 @@ class NotificationView extends ModuleWidget
         if ($isPreview)
             $notifications = $this->getNotificationFactory()->query(['releaseDt DESC', 'createDt DESC', 'subject'], [
                 'releaseDt' => ($age === 0) ? null : $this->getDate()->parse()->subMinutes($age)->format('U'),
-                'userId' => $this->getUser($request)->userId
-            ], $request);
+                'userId' => $this->getUser()->userId
+            ]);
         else
             $notifications = $this->getNotificationFactory()->query(['releaseDt DESC', 'createDt DESC', 'subject'], [
                 'releaseDt' => ($age === 0) ? null : $this->getDate()->parse()->subMinutes($age)->format('U'),
                 'displayId' => $displayId
-            ], $request);
+            ]);
 
         $this->getLog()->debug('There are ' . count($notifications) . ' to render.');
 
@@ -274,34 +271,32 @@ class NotificationView extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {
         // Behave exactly like the client.
         $data = [];
-        $isPreview = ($this->getSanitizer($request->getParams())->getCheckbox('preview') == 1);
-        $displayId = $request->getAttribute('displayId', 0);
 
         // Replace the View Port Width?
-        $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
+        $data['viewPortWidth'] = ($this->isPreview()) ? $this->region->width : '[[ViewPortWidth]]';
 
         // Items
-        $items = $this->getNotifications($isPreview, $displayId, $request);
+        $items = $this->getNotifications($this->isPreview(), $displayId);
 
         // Include some vendor items
-        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js', null, $request) . '"></script>';// Need the marquee plugin?
+        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js') . '"></script>';// Need the marquee plugin?
 
         $effect = $this->getOption('effect');
         if (stripos($effect, 'marquee') !== false)
-            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.marquee.min.js', null, $request) . '"></script>';
+            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.marquee.min.js') . '"></script>';
 
         // Need the cycle plugin?
         if ($effect != 'none')
-            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js', null, $request) . '"></script>';
+            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
 
         // Get the Style Sheet
-        $styleSheetContent = $this->parseLibraryReferences($isPreview, $this->getRawNode('embedStyle', null), $request);
+        $styleSheetContent = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('embedStyle', null));
 
         // Set some options
         $options = array(
@@ -326,7 +321,7 @@ class NotificationView extends ModuleWidget
         $javaScriptContent .= '</script>';
 
         // Add our fonts.css file
-        $headContent = '<link href="' . (($isPreview) ? $this->urlFor($request,'library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
+        $headContent = '<link href="' . (($this->isPreview()) ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
         $data['head'] = $headContent;
@@ -337,7 +332,7 @@ class NotificationView extends ModuleWidget
         // Replace the Head Content with our generated java script
         $data['javaScript'] = $javaScriptContent;
 
-        return $this->renderTemplate($data, 'get-resource', $response);
+        return $this->renderTemplate($data);
     }
 
     /** @inheritdoc */
@@ -354,7 +349,9 @@ class NotificationView extends ModuleWidget
         ]);
 
         // Get the release date from the notification returned
-        $widgetModifiedDt = (count($notifications) > 0) ? $this->getDate()->parse($notifications[0]->releaseDt, 'U') : $widgetModifiedDt;
+        $widgetModifiedDt = (count($notifications) > 0)
+            ? $this->getDate()->parse($notifications[0]->releaseDt, 'U')
+            : $widgetModifiedDt;
 
         return $widgetModifiedDt;
     }

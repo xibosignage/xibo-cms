@@ -32,13 +32,14 @@ use Xibo\Exception\NotFoundException;
 class Font extends ModuleWidget
 {
     /** @inheritdoc */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         // Non-editable
+        return $response;
     }
 
     /**
-     * Install some fonts
+     * @inheritDoc
      */
     public function installFiles()
     {
@@ -72,7 +73,7 @@ class Font extends ModuleWidget
     }
 
     /**
-     * Form for updating the module settings
+     * @inheritDoc
      */
     public function settingsForm()
     {
@@ -80,19 +81,15 @@ class Font extends ModuleWidget
     }
 
     /**
-     * Process any module settings
-     * @param Request $request
-     * @param Response $response
-     * @throws InvalidArgumentException
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\DuplicateEntityException
-     * @throws \Xibo\Exception\XiboException
+     * @inheritDoc
      */
-    public function settings(Request $request, Response $response)
+    public function settings(Request $request, Response $response): Response
     {
         if ($this->getSanitizer($request->getParams())->getCheckbox('rebuildFonts') == 1) {
             $this->container->get('\Xibo\Controller\Library')->installFonts(['invalidateCache' => true], $request);
         }
+
+        return $response;
     }
 
     /**
@@ -132,26 +129,18 @@ class Font extends ModuleWidget
     }
 
     /**
-     * Preview code for a module
-     * @param int $width
-     * @param int $height
-     * @param int $scaleOverride The Scale Override
-     * @return string The Rendered Content
+     * @inheritDoc
      */
-    public function preview($width, $height, $scaleOverride = 0, Request $request = null)
+    public function preview($width, $height, $scaleOverride = 0)
     {
         // Never previewed in the browser.
         return $this->previewIcon();
     }
 
-    /**
-     * Get Resource
-     * @param int $displayId
-     * @return mixed
-     */
-    public function getResource(Request $request, Response $response)
+    /** @inheritDoc */
+    public function getResource($displayId = 0)
     {
-        return $this->download($request, $response);;
+        return '';
     }
 
     /**
