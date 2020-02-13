@@ -36,24 +36,45 @@ interface ModuleInterface
 {
     /**
      * Add Widget
-     * @return mixed
-     * @throws XiboException
+     * @param \Slim\Http\ServerRequest $request
+     * @param \Slim\Http\Response $response
+     * @return Response
+     * @throws \Xibo\Exception\XiboException
      */
-    public function add();
+    public function add(Request $request, Response $response): Response;
 
     /**
      * Edit Widget
-     * @return mixed
-     * @throws XiboException
+     * @param \Slim\Http\ServerRequest $request
+     * @param \Slim\Http\Response $response
+     * @return \Slim\Http\Response
+     * @throws \Xibo\Exception\XiboException
      */
-    public function edit(Request $request, Response $response, $id);
+    public function edit(Request $request, Response $response): Response;
 
     /**
      * Delete Widget
-     * @return mixed
-     * @throws XiboException
+     * @param \Slim\Http\ServerRequest $request
+     * @param \Slim\Http\Response $response
+     * @return Response
      */
-    public function delete(Request $request, Response $response, $id);
+    public function delete(Request $request, Response $response): Response;
+
+    /**
+     * Module Settings
+     * @param \Slim\Http\ServerRequest $request
+     * @param \Slim\Http\Response $response
+     * @return mixed
+     */
+    public function settings(Request $request, Response $response): Response;
+
+    /**
+     * Download
+     * @param Request $request
+     * @param Response $response
+     * @return Response
+     */
+    public function download(Request $request, Response $response): Response;
 
     /**
      * Return the name of the media as input by the user
@@ -73,7 +94,7 @@ interface ModuleInterface
      * @param string $tab
      * @return mixed
      */
-    public function getTab($tab, Request $request);
+    public function getTab($tab);
 
     /**
      * Preview this module
@@ -82,12 +103,12 @@ interface ModuleInterface
      * @param int $scaleOverride
      * @return mixed
      */
-    public function preview($width, $height, $scaleOverride = 0, Request $request);
+    public function preview($width, $height, $scaleOverride = 0);
 
     /**
      * Is the Module Valid?
      * @return int (1 = Yes, 2 = Player Dependent)
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws XiboException
      */
     public function isValid();
 
@@ -103,12 +124,6 @@ interface ModuleInterface
      * @return mixed
      */
     public function installModule();
-
-    /**
-     * Module Settings
-     * @return mixed
-     */
-    public function settings(Request $request, Response $response);
 
     /**
      * Get the Modified Date of this Widget
@@ -165,15 +180,15 @@ interface ModuleInterface
      * @return string
      * @throws XiboException
      */
-    public function getResourceOrCache(Request $request, Response $response);
+    public function getResourceOrCache($displayId);
 
     /**
      * Get Resource
-     * @param Request $request
-     * @param Response $response
-     * @return Response|string
+     * @param int $displayId The displayId we're requesting for, or 0 for preview
+     * @return string|false
+     * @throws \Xibo\Exception\ConfigurationException
      */
-    public function getResource(Request $request, Response $response);
+    public function getResource($displayId = 0);
 
     /**
      * Check if status message is not empty

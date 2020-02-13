@@ -22,14 +22,20 @@
 namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Helper\Translate;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Exception\InvalidArgumentException;
+use Xibo\Helper\Translate;
+
+/**
+ * Class Clock
+ * @package Xibo\Widget
+ */
 class Clock extends ModuleWidget
 {
     public $codeSchemaVersion = 1;
 
+    /** @inheritDoc */
     public function installFiles()
     {
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
@@ -39,9 +45,7 @@ class Clock extends ModuleWidget
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
     }
 
-    /**
-     * Javascript functions for the layout designer
-     */
+    /** @inheritDoc */
     public function layoutDesignerJavaScript()
     {
         return 'clock-designer-javascript';
@@ -139,13 +143,9 @@ class Clock extends ModuleWidget
      *  )
      * )
      *
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @throws InvalidArgumentException
-     * @throws \Xibo\Exception\ValueTooLargeException
+     * @inheritDoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // You must also provide a duration (all media items must provide this field)
@@ -165,6 +165,8 @@ class Clock extends ModuleWidget
 
         // Save the widget
         $this->saveWidget();
+
+        return $response;
     }
 
     /**
@@ -183,19 +185,17 @@ class Clock extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {
-        $sanitizedParams = $this->getSanitizer($request->getParams());
         $template = null;
         $data = [];
-        $isPreview = ($sanitizedParams->getCheckbox('preview') == 1);
 
         // After body content
         $options = [
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => intval($sanitizedParams->getDouble('width')),
-            'previewHeight' => intval($sanitizedParams->getDouble('height'))
+            'previewWidth' => intval($this->getPreviewWidth()),
+            'previewHeight' => intval($this->getPreviewHeight())
         ];
 
         // Clock Type
@@ -216,8 +216,8 @@ class Clock extends ModuleWidget
                 $data['offset'] = $this->getOption('offset', 0);
 
                 // After body content
-                $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
-                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js', null, $request) . '"></script>';
+                $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js') . '"></script>';
 
                 // Replace the After body Content
                 $data['javaScript'] = $javaScriptContent;
@@ -242,9 +242,9 @@ class Clock extends ModuleWidget
                 // Replace all the subs
                 $data['body'] = $format;
 
-                $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
-                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js', null, $request) . '"></script>';
-                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js', null, $request) . '"></script>';
+                $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js') . '"></script>';
+                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
                 $javaScriptContent .= '<script type="text/javascript">
                     var locale = "' . Translate::GetJsLocale() . '";
                     var options = ' . json_encode($options) . ';
@@ -267,7 +267,7 @@ class Clock extends ModuleWidget
                 $data['javaScript'] = $javaScriptContent;
 
                 // Add our fonts.css file
-                $headContent  = '<link href = "' . (($isPreview) ? $this->urlFor($request,'library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
+                $headContent  = '<link href = "' . ($this->isPreview() ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
                 $headContent .= '<style type = "text/css" > ' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
                 $data['head'] = $headContent;
@@ -286,8 +286,8 @@ class Clock extends ModuleWidget
                 $data['showSeconds'] = $this->getOption('showSeconds', 1);
 
                 // After body content
-                $javaScriptContent  = '<script type = "text/javascript" src = "' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '" ></script > ';
-                $javaScriptContent .= '<script type = "text/javascript" src = "' . $this->getResourceUrl('vendor/flipclock.min.js', null, $request) . '" ></script > ';
+                $javaScriptContent  = '<script type = "text/javascript" src = "' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '" ></script > ';
+                $javaScriptContent .= '<script type = "text/javascript" src = "' . $this->getResourceUrl('vendor/flipclock.min.js') . '" ></script > ';
 
                 // Replace the After body Content
                 $data['javaScript'] = $javaScriptContent;
@@ -299,10 +299,10 @@ class Clock extends ModuleWidget
         $data['options'] = json_encode($options);
 
         // Replace the View Port Width?
-        $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
+        $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
 
         // Return that content.
-        return $this->renderTemplate($data, $template, $response);
+        return $this->renderTemplate($data, $template);
     }
 
     /** @inheritdoc */

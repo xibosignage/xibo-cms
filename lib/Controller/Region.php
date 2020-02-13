@@ -25,6 +25,7 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 use Xibo\Entity\Permission;
 use Xibo\Exception\AccessDeniedException;
@@ -43,7 +44,6 @@ use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 
 /**
  * Class Region
@@ -711,8 +711,16 @@ class Region extends Base
             // Output a preview
             $module = $this->moduleFactory->createWithWidget($widget, $region);
 
+            // We need to make a route parser
+            $this->getState()->html = $module
+                ->setPreview(
+                    true,
+                    RouteContext::fromRequest($request)->getRouteParser(),
+                    $width, $height
+                )
+                ->preview($width, $height, $scaleOverride);
+
             $this->getState()->extra['empty'] = false;
-            $this->getState()->html = $module->preview($width, $height, $scaleOverride, $request);
             $this->getState()->extra['type'] = $widget->type;
             $this->getState()->extra['duration'] = $widget->calculatedDuration;
             $this->getState()->extra['number_items'] = $countWidgets;

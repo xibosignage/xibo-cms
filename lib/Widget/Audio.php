@@ -20,18 +20,19 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Widget;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 
+/**
+ * Class Audio
+ * @package Xibo\Widget
+ */
 class Audio extends ModuleWidget
 {
 
-    /**
-     * Javascript functions for the layout designer
-     */
+    /** @inheritDoc */
     public function layoutDesignerJavaScript()
     {
         // We use the same javascript as the data set view designer
@@ -106,8 +107,10 @@ class Audio extends ModuleWidget
      *      )
      *  )
      * )
+     *
+     * @inheritDoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Set the properties specific to this module
@@ -137,7 +140,7 @@ class Audio extends ModuleWidget
      * @param int $scaleOverride
      * @return string
      */
-    public function previewAsClient($width, $height, $scaleOverride = 0, Request $request)
+    public function previewAsClient($width, $height, $scaleOverride = 0)
     {
         return $this->previewIcon();
     }
@@ -146,38 +149,34 @@ class Audio extends ModuleWidget
      * Determine duration
      * @param $fileName
      * @return int
+     * @throws \getid3_exception
      */
-    public function determineDuration($fileName = null, Request $request = null)
+    public function determineDuration($fileName = null)
     {
         // If we don't have a file name, then we use the default duration of 0 (end-detect)
         if ($fileName === null) {
             return 0;
         }
 
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-        $this->getLog()->debug('Determine Duration from %s', $fileName);
+        $this->getLog()->debug('Determine Duration from ' . $fileName);
         $info = new \getID3();
         $file = $info->analyze($fileName);
-        return intval($sanitizedParams->getDouble('playtime_seconds', ['default' => 0]));
+
+        $file = $this->getSanitizer($file);
+        return intval($file->getString('playtime_seconds', ['default' => 0]));
     }
 
-    /**
-     * Set default widget options
-     */
+    /** @inheritDoc */
     public function setDefaultWidgetOptions()
     {
         parent::setDefaultWidgetOptions();
         $this->setOption('mute', $this->getSetting('defaultMute', 0));
     }
 
-    /**
-     * Get Resource
-     * @param int $displayId
-     * @return mixed
-     */
-    public function getResource(Request $request, Response $response)
+    /** @inheritDoc */
+    public function getResource($displayId = 0)
     {
-        $this->download();
+
     }
 
     /** @inheritdoc */

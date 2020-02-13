@@ -21,13 +21,13 @@
  */
 namespace Xibo\Widget;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
-use Xibo\Factory\ModuleFactory;
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
+
 /**
  * Class Stocks
  * @package Xibo\Widget
@@ -37,8 +37,7 @@ class Stocks extends AlphaVantageBase
     public $codeSchemaVersion = 1;
 
     /**
-     * Install or Update this module
-     * @param ModuleFactory $moduleFactory
+     * @inheritDoc
      */
     public function installOrUpdate($moduleFactory)
     {
@@ -68,7 +67,7 @@ class Stocks extends AlphaVantageBase
     }
 
     /**
-     * Install Files
+     * @inheritDoc
      */
     public function installFiles()
     {
@@ -79,9 +78,8 @@ class Stocks extends AlphaVantageBase
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
     }
 
-
     /**
-     * Javascript functions for the layout designer
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -89,7 +87,7 @@ class Stocks extends AlphaVantageBase
     }
 
     /**
-     * Form for updating the module settings
+     * @inheritDoc
      */
     public function settingsForm()
     {
@@ -97,13 +95,9 @@ class Stocks extends AlphaVantageBase
     }
 
     /**
-     * Process any module settings
-     * @param Request $request
-     * @param Response $response
-     * @return string[]
-     * @throws InvalidArgumentException
+     * @inheritDoc
      */
-    public function settings(Request $request, Response $response)
+    public function settings(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $apiKey = $sanitizedParams->getString('apiKey');
@@ -121,7 +115,7 @@ class Stocks extends AlphaVantageBase
         $this->module->settings['cachePeriod'] = $cachePeriod;
 
         // Return an array of the processed settings.
-        return $this->module->settings;
+        return $response;
     }
 
     /**
@@ -279,13 +273,9 @@ class Stocks extends AlphaVantageBase
      *  )
      * )
      *
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @throws InvalidArgumentException
-     * @throws \Xibo\Exception\ValueTooLargeException
+     * @inheritDoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -317,6 +307,8 @@ class Stocks extends AlphaVantageBase
         // Save the widget
         $this->isValid();
         $this->saveWidget();
+
+        return $response;
     }
 
     /**
@@ -400,7 +392,7 @@ class Stocks extends AlphaVantageBase
      * @param $source
      * @return mixed
      */
-    private function makeSubstitutions($data, $source, Request $request)
+    private function makeSubstitutions($data, $source)
     {
         // Replace all matches.
         $matches = '';
@@ -410,8 +402,6 @@ class Stocks extends AlphaVantageBase
         foreach ($matches[0] as $sub) {
             $replace = str_replace('[', '', str_replace(']', '', $sub));
             $replacement = 'NULL';
-            
-            $isPreview = ($this->getSanitizer($request->getParams())->getCheckbox('preview') == 1);
             
             // Match that in the array
             if ( isset($data[$replace]) ){
@@ -518,14 +508,9 @@ class Stocks extends AlphaVantageBase
     }
 
     /**
-     * Get Tab
-     * @param $tab
-     * @param Request $request
-     * @return array
-     * @throws ConfigurationException
-     * @throws NotFoundException
+     * @inheritDoc
      */
-    public function getTab($tab, Request $request)
+    public function getTab($tab)
     {
         if (!$data = $this->getResults()) {
             throw new NotFoundException(__('No data returned, please check error log.'));
@@ -535,14 +520,12 @@ class Stocks extends AlphaVantageBase
     }
 
     /** @inheritdoc */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {        
         $data = [];
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-        $isPreview = ($sanitizedParams->getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
-        $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
+        $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
 
         // Information from the Module        
         $duration = $this->getCalculatedDurationForGetResource();
@@ -555,7 +538,7 @@ class Stocks extends AlphaVantageBase
         
         if( $this->getOption('overrideTemplate') == 0 ) {
             
-            $template = $this->getTemplateById($this->getOption('templateId'), $request);
+            $template = $this->getTemplateById($this->getOption('templateId'));
             
             if (isset($template)) {
                 $mainTemplate = $template['main'];
@@ -571,14 +554,14 @@ class Stocks extends AlphaVantageBase
             $mainTemplate = $this->getRawNode('mainTemplate');
             $itemTemplate = $this->getRawNode('itemTemplate');
             $styleSheet = $this->getRawNode('styleSheet', '');
-            $widgetOriginalWidth = $sanitizedParams->getInt($this->getOption('widgetOriginalWidth'));
-            $widgetOriginalHeight = $sanitizedParams->getInt($this->getOption('widgetOriginalHeight'));
-            $maxItemsPerPage = $sanitizedParams->getInt($this->getOption('maxItemsPerPage'));
+            $widgetOriginalWidth = intval($this->getOption('widgetOriginalWidth'));
+            $widgetOriginalHeight = intval($this->getOption('widgetOriginalHeight'));
+            $maxItemsPerPage = intval($this->getOption('maxItemsPerPage'));
         }
 
         // Run through each item and substitute with the template
-        $mainTemplate = $this->parseLibraryReferences($isPreview, $mainTemplate, $request);
-        $itemTemplate = $this->parseLibraryReferences($isPreview, $itemTemplate, $request);
+        $mainTemplate = $this->parseLibraryReferences($this->isPreview(), $mainTemplate);
+        $itemTemplate = $this->parseLibraryReferences($this->isPreview(), $itemTemplate);
 
         // Parse translations
         $mainTemplate = $this->parseTranslations($mainTemplate);
@@ -587,7 +570,7 @@ class Stocks extends AlphaVantageBase
         $renderedItems = [];
         
         foreach ($items as $item) {
-            $renderedItems[] = $this->makeSubstitutions($item, $itemTemplate, $request);
+            $renderedItems[] = $this->makeSubstitutions($item, $itemTemplate);
         }        
 
         $options = [
@@ -613,14 +596,14 @@ class Stocks extends AlphaVantageBase
         $data['controlMeta'] = '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $totalDuration . ' -->';
 
         // Get the JavaScript node
-        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''), $request);
+        $javaScript = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', ''));
 
         // Replace the head content
         $headContent = '';
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . (($isPreview) ? $this->urlFor($request,'library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
-        <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css', null, $request)  . '" rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . (($this->isPreview()) ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
+        <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
         
         $backgroundColor = $this->getOption('backgroundColor');
         if ($backgroundColor != '') {
@@ -630,10 +613,10 @@ class Stocks extends AlphaVantageBase
         }
         
         // Add the CSS if it isn't empty, and replace the wallpaper
-        $css = $this->makeSubstitutions([], $styleSheet, $request);
+        $css = $this->makeSubstitutions([], $styleSheet);
 
         if ($css != '') {
-            $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css, $request) . '</style>';
+            $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($this->isPreview(), $css) . '</style>';
         }
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
@@ -641,13 +624,13 @@ class Stocks extends AlphaVantageBase
         $data['head'] = $headContent;
 
         // Add some scripts to the JavaScript Content
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
 
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
 
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-finance-render.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-finance-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
@@ -662,13 +645,15 @@ class Stocks extends AlphaVantageBase
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        return $this->renderTemplate($data, 'get-resource', $response);
+        return $this->renderTemplate($data);
     }
 
     /** @inheritdoc */
     public function isValid()
     {
-        if ($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null)) {
+        if ($this->getOption('overrideTemplate') == 0
+            && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null)
+        ) {
             throw new InvalidArgumentException(__('Please choose a template'), 'templateId');
         }
 

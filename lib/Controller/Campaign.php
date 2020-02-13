@@ -936,9 +936,9 @@ class Campaign extends Base
                                   'duration' => $layout->duration,
                                   'previewOptions' => [
                                       'getXlfUrl' => $this->urlFor($request,'layout.getXlf', ['id' => $layout->layoutId]),
-                                      'getResourceUrl' => $this->urlFor($request,'module.getResource'),
+                                      'getResourceUrl' => $this->urlFor($request,'module.getResource', ['regionId' => ':regionId', 'id' => ':id']),
                                       'libraryDownloadUrl' => $this->urlFor($request,'library.download'),
-                                      'layoutBackgroundDownloadUrl' => $this->urlFor($request,'layout.download.background'),
+                                      'layoutBackgroundDownloadUrl' => $this->urlFor($request,'layout.download.background', ['id' => ':id']),
                                       'loaderUrl' => $this->getConfig()->uri('img/loader.gif')]
                                  ];
         }

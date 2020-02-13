@@ -26,13 +26,12 @@ use Mimey\MimeTypes;
 use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\App;
-use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
 use Stash\Item;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Twig\Error\Error;
 use Xibo\Entity\Media;
 use Xibo\Entity\User;
 use Xibo\Event\Event;
@@ -72,15 +71,9 @@ use Xibo\Storage\StorageServiceInterface;
  */
 abstract class ModuleWidget implements ModuleInterface
 {
-
     public static $STATUS_VALID = 1;
     public static $STATUS_PLAYER = 2;
     public static $STATUS_INVALID = 4;
-
-    /**
-     * @var App
-     */
-    private $app;
 
     /**
      * @var \Xibo\Entity\Module $module
@@ -118,6 +111,18 @@ abstract class ModuleWidget implements ModuleInterface
 
     /** @var Event */
     private $saveEvent;
+
+    /** @var bool Is this a preview */
+    private $isPreview = false;
+
+    /** @var \Slim\Interfaces\RouteParserInterface */
+    private $routeParser;
+
+    /** @var double The Preview Width */
+    private $previewWidth;
+
+    /** @var double The Preview Height */
+    private $previewHeight;
 
     //<editor-fold desc="Injected Factory Classes and Services ">
 
@@ -272,12 +277,31 @@ abstract class ModuleWidget implements ModuleInterface
      * @param LayoutFactory $layoutFactory
      * @param WidgetFactory $widgetFactory
      * @param DisplayGroupFactory $displayGroupFactory
+     * @return $this
      */
     public function setChildObjectDependencies($layoutFactory, $widgetFactory, $displayGroupFactory)
     {
         $this->layoutFactory = $layoutFactory;
         $this->widgetFactory = $widgetFactory;
         $this->displayGroupFactory = $displayGroupFactory;
+        return $this;
+    }
+
+    /**
+     * Set whether we are preview or not
+     * @param $isPreview
+     * @param \Slim\Interfaces\RouteParserInterface $routeParser
+     * @param double $previewWidth
+     * @param double $previewHeight
+     * @return $this
+     */
+    public function setPreview($isPreview, $routeParser, $previewWidth, $previewHeight)
+    {
+        $this->isPreview = $isPreview;
+        $this->routeParser = $routeParser;
+        $this->previewWidth = $previewWidth;
+        $this->previewHeight = $previewHeight;
+        return $this;
     }
 
     /**
@@ -425,15 +449,19 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * Set User
      * @param User $user
+     * @return $this
      */
     final public function setUser($user)
     {
         $this->user = $user;
+        return $this;
     }
 
     /**
      * Set the duration
      * @param int $duration
+     * @return $this
+     * @throws \Xibo\Exception\InvalidArgumentException
      */
     final protected function setDuration($duration)
     {
@@ -443,15 +471,18 @@ abstract class ModuleWidget implements ModuleInterface
         }
 
         $this->widget->duration = $duration;
+        return $this;
     }
 
     /**
      * Set the duration
      * @param int $useDuration
+     * @return $this
      */
     final protected function setUseDuration($useDuration)
     {
         $this->widget->useDuration = $useDuration;
+        return $this;
     }
 
     /**
@@ -504,12 +535,8 @@ abstract class ModuleWidget implements ModuleInterface
      * Get User
      * @return User
      */
-    final protected function getUser(Request $request)
+    final protected function getUser()
     {
-        if (isset($request)) {
-            $this->user = $request->getAttribute('currentUser');
-        }
-
         return $this->user;
     }
 
@@ -625,6 +652,7 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * @return array
      * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Exception\XiboException
      */
     final public function getMediaTags()
     {
@@ -655,7 +683,7 @@ abstract class ModuleWidget implements ModuleInterface
                 return $this->getMedia()->duration;
             }
             catch (NotFoundException $e) {
-                $this->getLog()->error('Tried to get real duration from a widget without media. widgetId: %d', $this->getWidgetId());
+                $this->getLog()->error('Tried to get real duration from a widget without media. widgetId: ' . $this->getWidgetId());
                 // Do nothing - drop out
             }
         } else if ($this->widget->duration === null && $this->module !== null) {
@@ -726,18 +754,20 @@ abstract class ModuleWidget implements ModuleInterface
         $this->widget->calculateDuration($this)->save();
     }
 
-    /** @inheritdoc */
-    final public function add()
+    /** @inheritDoc */
+    final public function add(Request $request, Response $response): Response
     {
         // Set the default widget options for this widget and save.
         $this->setDefaultWidgetOptions();
         $this->setOption('upperLimit', 0);
         $this->setOption('lowerLimit', 0);
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
-    public function delete(Request $request, Response $response, $id)
+    public function delete(Request $request, Response $response): Response
     {
         $cachePath = $this->getConfig()->getSetting('LIBRARY_LOCATION')
             . 'widget'
@@ -768,6 +798,7 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * Get Name
      * @return string
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function getName()
     {
@@ -793,12 +824,12 @@ abstract class ModuleWidget implements ModuleInterface
      * @param int [Optional] $scaleOverride
      * @return string
      */
-    public function preview($width, $height, $scaleOverride = 0, Request $request)
+    public function preview($width, $height, $scaleOverride = 0)
     {
         if ($this->module->previewEnabled == 0)
             return $this->previewIcon();
 
-        return $this->previewAsClient($width, $height, $scaleOverride, $request);
+        return $this->previewAsClient($width, $height, $scaleOverride);
     }
 
     /**
@@ -817,12 +848,12 @@ abstract class ModuleWidget implements ModuleInterface
      * @param int [Optional] $scaleOverride
      * @return string
      */
-    public function previewAsClient($width, $height, $scaleOverride = 0, Request $request)
+    public function previewAsClient($width, $height, $scaleOverride = 0)
     {
         $widthPx = $width . 'px';
         $heightPx = $height . 'px';
 
-        $url = $this->urlFor($request,'module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]);
+        $url = $this->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]);
 
         return '<iframe scrolling="no" src="' . $url . '?raw=true&preview=true" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
     }
@@ -833,7 +864,7 @@ abstract class ModuleWidget implements ModuleInterface
      * @return mixed
      * @throws ControllerNotImplemented
      */
-    public function getTab($tab, Request $request)
+    public function getTab($tab)
     {
         throw new ControllerNotImplemented();
     }
@@ -844,17 +875,16 @@ abstract class ModuleWidget implements ModuleInterface
      * @param string|null $type
      * @return string
      */
-    protected function getFileUrl($file, $type = null, Request $request)
+    protected function getFileUrl($file, $type = null)
     {
-        $isPreview = ($this->getSanitizer($request->getParams())->getCheckbox('preview') == 1);
         $params = ['id' => $file->mediaId];
 
         if ($type !== null) {
             $params['type'] = $type;
         }
 
-        if ($isPreview) {
-            return $this->urlFor($request,'library.download', $params) . '?preview=1"';
+        if ($this->isPreview()) {
+            return $this->urlFor('library.download', $params) . '?preview=1"';
         } else {
             $url = $file->storedAs;
         }
@@ -868,9 +898,9 @@ abstract class ModuleWidget implements ModuleInterface
      * @param string|null $type
      * @return string
      */
-    protected function getResourceUrl($uri, $type = null, Request $request)
+    protected function getResourceUrl($uri, $type = null)
     {
-        $isPreview = ($this->getSanitizer($request->getParams())->getCheckbox('preview') == 1);
+        $isPreview = $this->isPreview();
 
         // Local clients store all files in the root of the library
         $uri = basename($uri);
@@ -885,7 +915,7 @@ abstract class ModuleWidget implements ModuleInterface
                     $params['type'] = $type;
                 }
 
-                return $this->urlFor($request,'library.download', $params) . '?preview=1';
+                return $this->urlFor('library.download', $params) . '?preview=1';
 
             } catch (NotFoundException $notFoundException) {
                 $this->getLog()->info('Widget referencing a resource that doesnt exist: ' . $this->getModuleType() . ' for ' . $uri);
@@ -902,15 +932,17 @@ abstract class ModuleWidget implements ModuleInterface
      * Render a template and return the results
      * @param $data
      * @param string $template
-     * @param Response $response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
+     * @return string
+     * @throws \Xibo\Exception\ConfigurationException
      */
-    protected function renderTemplate($data, $template = 'get-resource', Response $response)
+    protected function renderTemplate($data, $template = 'get-resource')
     {
         // Get the Twig Engine
-        $this->view->render($response, $template . '.twig', $data);
+        try {
+            return $this->view->fetch($template . '.twig', $data);
+        } catch (Error $exception) {
+            throw new ConfigurationException(__('Problem with template'));
+        }
     }
 
     /**
@@ -1005,11 +1037,11 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
-     * Process any module settings
+     * @inheritDoc
      */
-    public function settings(Request $request, Response $response)
+    public function settings(Request $request, Response $response): Response
     {
-
+        return $response;
     }
 
     /**
@@ -1032,8 +1064,10 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Default view for edit form
+     * @param Request $request
+     * @return string
      */
-    public function editForm(Request $request, Response $response)
+    public function editForm(Request $request)
     {
         return $this->getModuleType() . '-form-edit';
     }
@@ -1100,7 +1134,7 @@ abstract class ModuleWidget implements ModuleInterface
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
      */
-    protected function download(Request $request, Response $response)
+    public function download(Request $request, Response $response): Response
     {
         $media = $this->mediaFactory->getById($this->getMediaId());
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1178,7 +1212,7 @@ abstract class ModuleWidget implements ModuleInterface
      * @param string $tokenRegEx
      * @return string The Parsed Content
      */
-    protected function parseLibraryReferences($isPreview, $content, Request $request, $tokenRegEx = '/\[.*?\]/')
+    protected function parseLibraryReferences($isPreview, $content, $tokenRegEx = '/\[.*?\]/')
     {
         $parsedContent = $content;
         $matches = '';
@@ -1200,13 +1234,13 @@ abstract class ModuleWidget implements ModuleInterface
                 $this->assignMedia($entry->mediaId);
 
                 // We have a valid mediaId to substitute
-                $replace = ($isPreview) ? $this->urlFor($request,'library.download', ['id' => $entry->mediaId]) . '?preview=1' : $entry->storedAs;
+                $replace = ($isPreview) ? $this->urlFor('library.download', ['id' => $entry->mediaId]) . '?preview=1' : $entry->storedAs;
 
                 // Substitute the replacement we have found (it might be '')
                 $parsedContent = str_replace($sub, $replace, $parsedContent);
             }
             catch (NotFoundException $e) {
-                $this->getLog()->info('Reference to Unknown mediaId %d', $mediaId);
+                $this->getLog()->info('Reference to Unknown mediaId ' . $mediaId);
             }
         }
 
@@ -1218,7 +1252,7 @@ abstract class ModuleWidget implements ModuleInterface
      * @param bool $loadImage Should the image URL be loaded?
      * @return array
      */
-    public function templatesAvailable($loadImage = true, Request $request)
+    public function templatesAvailable($loadImage = true)
     {
         if (!isset($this->module->settings['templates'])) {
 
@@ -1234,7 +1268,10 @@ abstract class ModuleWidget implements ModuleInterface
 
                     if ($loadImage) {
                         // Find the URL to the module file representing this template image
-                        $template['image'] = $this->urlFor($request,'module.getTemplateImage', ['type' => $this->module->type, 'templateId' => $template['id']]);
+                        $template['image'] = $this->urlFor('module.getTemplateImage', [
+                            'type' => $this->module->type,
+                            'templateId' => $template['id']
+                        ]);
                     }
                 } else {
                     $template['fileName'] = '';
@@ -1251,11 +1288,11 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * Get by Template Id
      * @param int $templateId
-     * @return array|null
+     * @return string
      */
-    public function getTemplateById($templateId, Request $request)
+    public function getTemplateById($templateId)
     {
-        $templates = $this->templatesAvailable(false, $request);
+        $templates = $this->templatesAvailable(false);
         $template = null;
 
         if (count($templates) <= 0)
@@ -1286,9 +1323,9 @@ abstract class ModuleWidget implements ModuleInterface
      * @param int $templateId
      * @throws NotFoundException
      */
-    public function getTemplateImage($templateId, Request $request)
+    public function getTemplateImage($templateId)
     {
-        $template = $this->getTemplateById($templateId, $request);
+        $template = $this->getTemplateById($templateId);
 
         if ($template === null || !isset($template['fileName']) || $template['fileName'] == '')
             throw new NotFoundException();
@@ -1332,6 +1369,7 @@ abstract class ModuleWidget implements ModuleInterface
      * Post-processing
      *  this is run after the media item has been created and before it is saved.
      * @param Media $media
+     * @param \Xibo\Factory\PlayerVersionFactory|null $factory
      */
     public function postProcess($media, PlayerVersionFactory $factory = null)
     {
@@ -1414,9 +1452,8 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /** @inheritdoc */
-    public final function getResourceOrCache(Request $request, Response $response)
+    public final function getResourceOrCache($displayId = 0)
     {
-        $displayId = $request->getAttribute('displayId', 0);
         $this->getLog()->debug('getResourceOrCache for displayId ' . $displayId . ' and widgetId ' . $this->getWidgetId());
 
         // End game - we will return this.
@@ -1479,7 +1516,7 @@ abstract class ModuleWidget implements ModuleInterface
                     $this->clearMedia();
 
                     // Generate the resource
-                    $resource = $this->getResource($request->withAttribute('displayId', $displayId), $response);
+                    $resource = $this->getResource($displayId);
 
                     // If the resource is false, then don't cache it for as long (most likely an error)
                     if ($resource === false)
@@ -1640,11 +1677,9 @@ abstract class ModuleWidget implements ModuleInterface
      * Initialise getResource
      * @return $this
      */
-    protected function initialiseGetResource(Request $request, Response $response)
+    protected function initialiseGetResource()
     {
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-
-        $this->data['isPreview'] = ($sanitizedParams->getCheckbox('preview') == 1);
+        $this->data['isPreview'] = $this->isPreview();
         $this->data['javaScript'] = '';
         $this->data['styleSheet'] = '';
         $this->data['head'] = '';
@@ -1660,18 +1695,42 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function isPreview()
     {
-        return $this->data['isPreview'];
+        return $this->isPreview;
+    }
+
+    /**
+     * Get preview width
+     * @return float
+     */
+    protected function getPreviewWidth()
+    {
+        return $this->previewWidth;
+    }
+
+    /**
+     * Get preview height
+     * @return float
+     */
+    protected function getPreviewHeight()
+    {
+        return $this->previewHeight;
     }
 
     /**
      * Finalise getResource
      * @param string $templateName an optional template name
      * @return string the rendered template
+     * @throws \Xibo\Exception\ConfigurationException
      */
-    protected function finaliseGetResource($templateName = 'get-resource', Response $response)
+    protected function finaliseGetResource($templateName = 'get-resource')
     {
         $this->data['javaScript'] = '<script type="text/javascript">var options = ' . $this->data['options'] . '; var items = ' . $this->data['items'] . ';</script>' . PHP_EOL . $this->data['javaScript'];
-        return $this->renderTemplate($this->data, $templateName, $response);
+
+        try {
+            return $this->renderTemplate($this->data, $templateName);
+        } catch (Error $e) {
+            throw new ConfigurationException(__('Problem with template'));
+        }
     }
 
     /**
@@ -1689,9 +1748,9 @@ abstract class ModuleWidget implements ModuleInterface
      * Append Font CSS
      * @return $this
      */
-    protected function appendFontCss(Request $request)
+    protected function appendFontCss()
     {
-        $this->data['styleSheet'] .= '<link href="' . (($this->isPreview()) ? $this->urlFor($request,'library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen" />' . PHP_EOL;
+        $this->data['styleSheet'] .= '<link href="' . (($this->isPreview()) ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen" />' . PHP_EOL;
         return $this;
     }
 
@@ -1700,9 +1759,9 @@ abstract class ModuleWidget implements ModuleInterface
      * @param string $uri The URI, according to whether this is a CMS preview or not
      * @return $this
      */
-    protected function appendCssFile($uri, Request $request)
+    protected function appendCssFile($uri)
     {
-        $this->data['styleSheet'] .= '<link href="' . $this->getResourceUrl($uri, null, $request) . '" rel="stylesheet" media="screen" />' . PHP_EOL;
+        $this->data['styleSheet'] .= '<link href="' . $this->getResourceUrl($uri) . '" rel="stylesheet" media="screen" />' . PHP_EOL;
         return $this;
     }
 
@@ -1728,9 +1787,9 @@ abstract class ModuleWidget implements ModuleInterface
      * @param string $uri
      * @return $this
      */
-    protected function appendJavaScriptFile($uri, Request $request)
+    protected function appendJavaScriptFile($uri)
     {
-        $this->data['javaScript'] .= '<script type="text/javascript" src="' . $this->getResourceUrl($uri, null, $request) . '"></script>' . PHP_EOL;
+        $this->data['javaScript'] .= '<script type="text/javascript" src="' . $this->getResourceUrl($uri) . '"></script>' . PHP_EOL;
         return $this;
     }
 
@@ -1796,16 +1855,14 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Get Url For Route
-     * @param Request $request
      * @param string $route
      * @param array $data
      * @param array $params
      * @return string
      */
-    protected function urlFor(Request $request, $route, $data = [], $params = [])
+    protected function urlFor($route, $data = [], $params = [])
     {
-        $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-        return $routeParser->urlFor($route, $data, $params);
+        return ($this->isPreview()) ? $this->routeParser->urlFor($route, $data, $params) : '';
     }
 
    /**

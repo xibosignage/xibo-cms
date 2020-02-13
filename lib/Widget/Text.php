@@ -21,10 +21,11 @@
  */
 namespace Xibo\Widget;
 
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Helper\Translate;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Exception\InvalidArgumentException;
+use Xibo\Helper\Translate;
+
 /**
  * Class Text
  * @package Xibo\Widget
@@ -32,7 +33,7 @@ use Slim\Http\ServerRequest as Request;
 class Text extends ModuleWidget
 {
     /**
-     * Install Files
+     * @inheritDoc
      */
     public function installFiles()
     {
@@ -46,7 +47,7 @@ class Text extends ModuleWidget
     }
 
     /**
-     * Javascript functions for the layout designer
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -152,9 +153,9 @@ class Text extends ModuleWidget
      *  )
      * )
      *
-     * @throws InvalidArgumentException
+     * @inheritDoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -174,22 +175,24 @@ class Text extends ModuleWidget
         // Save the widget
         $this->isValid();
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {
         // Start building the template
         $this
-            ->initialiseGetResource($request, $response)
+            ->initialiseGetResource()
             ->appendViewPortWidth($this->region->width)
-            ->appendJavaScriptFile('vendor/jquery-1.11.1.min.js',  $request)
-            ->appendJavaScriptFile('xibo-layout-scaler.js', $request)
-            ->appendJavaScriptFile('xibo-text-render.js', $request)
-            ->appendJavaScriptFile('xibo-image-render.js', $request)
-            ->appendFontCss($request)
+            ->appendJavaScriptFile('vendor/jquery-1.11.1.min.js')
+            ->appendJavaScriptFile('xibo-layout-scaler.js')
+            ->appendJavaScriptFile('xibo-text-render.js')
+            ->appendJavaScriptFile('xibo-image-render.js')
+            ->appendFontCss()
             ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
-            ->appendJavaScript($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', ''), $request))
+            ->appendJavaScript($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', '')))
         ;
 
         // Handle older layouts that have a direction node but no effect node
@@ -216,7 +219,7 @@ class Text extends ModuleWidget
         ]);
 
         // Pull out our text
-        $text = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('text', null), $request);
+        $text = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('text', null));
 
         // See if we need to replace out any [clock] or [date] tags
         $clock = false;
@@ -258,15 +261,15 @@ class Text extends ModuleWidget
 
         // Need the marquee plugin?
         if (stripos($effect, 'marquee') !== false)
-            $this->appendJavaScriptFile('vendor/jquery.marquee.min.js', $request);
+            $this->appendJavaScriptFile('vendor/jquery.marquee.min.js');
 
         // Need the cycle plugin?
         if ($effect != 'none')
-            $this->appendJavaScriptFile('vendor/jquery-cycle-2.1.6.min.js', $request);
+            $this->appendJavaScriptFile('vendor/jquery-cycle-2.1.6.min.js');
 
         // Do we need to include moment?
         if ($clock)
-            $this->appendJavaScriptFile('vendor/moment.js', $request);
+            $this->appendJavaScriptFile('vendor/moment.js');
 
         // Finalise some JavaScript to run.
         $javaScriptContent = '$(document).ready(function() { ';
@@ -294,7 +297,7 @@ class Text extends ModuleWidget
             $this->appendCss('body { background-color: ' . $this->getOption('backgroundColor') . '; }');
         }
 
-        $this->finaliseGetResource('get-resource', $response);
+        $this->finaliseGetResource();
     }
 
     /** @inheritdoc */

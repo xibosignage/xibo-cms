@@ -107,26 +107,33 @@ class WebAuthentication implements Middleware
                 // TODO Store the current route so we can come back to it after login
                 //  $app->flash('priorRoute', $app->request()->getRootUri() . $app->request()->getResourceUri());
                 $app->getContainer()->get('flash')->addMessage('priorRoute', $request->getUri() . $resource);
+
                 $request->withAttribute('currentUser', $user)
                         ->withAttribute('name', 'web');
+
                 $app->getContainer()->get('logger')->debug('not in public routes, expired, should redirect to login ');
+
                 if ($user->hasIdentity()) {
                     $user->touch();
                 }
+
+                // Create a new response
+                $nyholmFactory = new Psr17Factory();
+                $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
+                $response = $decoratedResponseFactory->createResponse();
 
                 if ($this->isAjax($request)) {
 
                     $state = $app->getContainer()->get('state');
                     /* @var ApplicationState $state */
                     // Return a JSON response which tells the App to redirect to the login page
-                    $nyholmFactory = new Psr17Factory();
-                    $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
-                    $response = $decoratedResponseFactory->createResponse();
+
                     $state->Login();
 
-                    return $response->withJson($state->asJson());
+                    return $response->withJson($state->asArray());
                 } else {
-                    return $handler->handle($request)->withStatus(302)->withHeader('Location', $routeParser->urlFor('login'));
+                    // TODO: this probably doesn't ever call commit. How deep in the onion are we?
+                    return $response->withStatus(302)->withHeader('Location', $routeParser->urlFor('login'));
                 }
             }
         } else {

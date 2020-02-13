@@ -24,13 +24,13 @@ namespace Xibo\Widget;
 use Emojione\Client;
 use Emojione\Ruleset;
 use Respect\Validation\Validator as v;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Stash\Invalidation;
 use Xibo\Entity\Media;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\XiboException;
-use Xibo\Factory\ModuleFactory;
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
+
 /**
  * Class Twitter
  * @package Xibo\Widget
@@ -41,7 +41,7 @@ class Twitter extends TwitterBase
     private $resourceFolder;
 
     /**
-     * Twitter constructor.
+     * @inheritDoc
      */
     public function init()
     {
@@ -52,8 +52,7 @@ class Twitter extends TwitterBase
     }
     
     /**
-     * Install or Update this module
-     * @param ModuleFactory $moduleFactory
+     * @inheritDoc
      */
     public function installOrUpdate($moduleFactory)
     {
@@ -83,7 +82,7 @@ class Twitter extends TwitterBase
     }
 
     /**
-     * Install Files
+     * @inheritDoc
      */
     public function installFiles()
     {
@@ -115,7 +114,7 @@ class Twitter extends TwitterBase
     }
 
     /**
-     * Javascript functions for the layout designer
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -123,7 +122,7 @@ class Twitter extends TwitterBase
     }
 
     /**
-     * Form for updating the module settings
+     * @inheritDoc
      */
     public function settingsForm()
     {
@@ -131,12 +130,12 @@ class Twitter extends TwitterBase
     }
 
     /**
-     * Process any module settings
-     * @throws InvalidArgumentException
+     * @inheritDoc
      */
-    public function settings(Request $request, Response $response)
+    public function settings(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
+
         // Process any module settings you asked for.
         $apiKey = $sanitizedParams->getString('apiKey');
         $apiSecret = $sanitizedParams->getString('apiSecret');
@@ -167,7 +166,7 @@ class Twitter extends TwitterBase
         $this->module->settings['cachePeriodImages'] = $cachePeriodImages;
 
         // Return an array of the processed settings.
-        return $this->module->settings;
+        return $response;
     }
 
     /**
@@ -402,9 +401,9 @@ class Twitter extends TwitterBase
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
+     * @inheritDoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -446,6 +445,8 @@ class Twitter extends TwitterBase
         // Save the widget
         $this->isValid();
         $this->saveWidget();
+
+        return $response;
     }
 
     /**
@@ -453,8 +454,9 @@ class Twitter extends TwitterBase
      * @param bool $isPreview
      * @return array|false
      * @throws \Xibo\Exception\XiboException
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
-    protected function getTwitterFeed($displayId = 0, $isPreview = true, Request $request)
+    protected function getTwitterFeed($displayId = 0, $isPreview = true)
     {
         // Do we need to add a geoCode?
         $geoCode = '';
@@ -477,7 +479,7 @@ class Twitter extends TwitterBase
         
         if( $this->getOption('overrideTemplate') == 0 ) {
             
-            $tmplt = $this->getTemplateById($this->getOption('templateId'), $request);
+            $tmplt = $this->getTemplateById($this->getOption('templateId'));
             
             if (isset($tmplt)) {
                 $template = $tmplt['template'];
@@ -542,7 +544,7 @@ class Twitter extends TwitterBase
         }
 
         // Get the template
-        $template = $this->parseLibraryReferences($isPreview, $template, $request);
+        $template = $this->parseLibraryReferences($isPreview, $template);
 
         // Parse translations
         $template = $this->parseTranslations($template);
@@ -584,7 +586,7 @@ class Twitter extends TwitterBase
         $emoji = new Client(new Ruleset());
         $emoji->imageType = 'png';
         $emoji->sprites = true;
-        $emoji->imagePathPNG = $this->getResourceUrl('emojione/emojione.sprites.png', null, $request);
+        $emoji->imagePathPNG = $this->getResourceUrl('emojione/emojione.sprites.png');
 
         // Get the date format to apply
         $dateFormat = $this->getOption('dateFormat', $this->getConfig()->getSetting('DATE_FORMAT'));
@@ -679,7 +681,7 @@ class Twitter extends TwitterBase
                             $file = $this->mediaFactory->queueDownload('twitter_' . $tweet->user->id, $tweet->user->profile_image_url, $expires);
 
                             $replace = ($isPreview)
-                                ? '<img src="' . $this->urlFor($request,'library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
+                                ? '<img src="' . $this->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                                 : '<img src="' . $file->storedAs . '"  />';
                         }
                         break;
@@ -699,7 +701,7 @@ class Twitter extends TwitterBase
                                 $file = $this->mediaFactory->queueDownload('twitter_photo_' . $tweet->user->id . '_' . $mediaObject->id_str, $photoUrl, $expires);
 
                                 $replace = ($isPreview)
-                                    ? '<img src="' . $this->urlFor($request,'library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
+                                    ? '<img src="' . $this->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                                     : '<img src="' . $file->storedAs . '"  />';
                             }
                         }
@@ -707,12 +709,12 @@ class Twitter extends TwitterBase
                         
                     case 'TwitterLogoWhite':
                         //Get the Twitter logo image file path
-                        $replace = $this->getResourceUrl('twitter/twitter_white.png', null, $request);
+                        $replace = $this->getResourceUrl('twitter/twitter_white.png');
                         break;
                         
                     case 'TwitterLogoBlue':
                         //Get the Twitter logo image file path
-                        $replace = $this->getResourceUrl('twitter/twitter_blue.png', null, $request);
+                        $replace = $this->getResourceUrl('twitter/twitter_blue.png');
                         break;
 
                     default:
@@ -740,7 +742,7 @@ class Twitter extends TwitterBase
     }
 
     /** @inheritdoc */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {
         // Make sure we are set up correctly
         if ($this->getSetting('apiKey') == '' || $this->getSetting('apiSecret') == '') {
@@ -749,13 +751,9 @@ class Twitter extends TwitterBase
         }
 
         $data = [];
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-        $displayId = $request->getAttribute('displayId', 0);
-
-        $isPreview = ($sanitizedParams->getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
-        $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
+        $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
 
         // Information from the Module
         $duration = $this->getCalculatedDurationForGetResource();
@@ -765,7 +763,7 @@ class Twitter extends TwitterBase
         
         if( $this->getOption('overrideTemplate') == 0 ) {
             
-            $template = $this->getTemplateById($this->getOption('templateId'), $request);
+            $template = $this->getTemplateById($this->getOption('templateId'));
             
             if (isset($template)) {
                 $css = $template['css'];
@@ -777,14 +775,14 @@ class Twitter extends TwitterBase
             
         } else {
             $css = $this->getRawNode('styleSheet', '');
-            $widgetOriginalWidth = $sanitizedParams->getInt($this->getOption('widgetOriginalWidth'));
-            $widgetOriginalHeight = $sanitizedParams->getInt($this->getOption('widgetOriginalHeight'));
-            $widgetOriginalPadding = $sanitizedParams->getInt($this->getOption('widgetOriginalPadding'));
+            $widgetOriginalWidth = intval($this->getOption('widgetOriginalWidth'));
+            $widgetOriginalHeight = intval($this->getOption('widgetOriginalHeight'));
+            $widgetOriginalPadding = intval($this->getOption('widgetOriginalPadding'));
             $resultContent = $this->getOption('resultContent');
         }
 
         // Generate a JSON string of substituted items.
-        $items = $this->getTwitterFeed($displayId, $isPreview, $request);
+        $items = $this->getTwitterFeed($displayId);
 
         // Return empty string if there are no items to show.
         if (count($items) == 0) {
@@ -803,7 +801,7 @@ class Twitter extends TwitterBase
             'widgetDesignPadding' => $widgetOriginalPadding,
             'widgetDesignWidth' => $widgetOriginalWidth,
             'widgetDesignHeight'=> $widgetOriginalHeight,
-            'itemsPerPage' => $sanitizedParams->getInt($this->getOption('itemsPerPage', 5))
+            'itemsPerPage' => intval($this->getOption('itemsPerPage', 5))
         );
 
         // Work out how many pages we will be showing.
@@ -822,13 +820,13 @@ class Twitter extends TwitterBase
         $headContent = '';
 
         // Get the JavaScript node
-        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''), $request);
+        $javaScript = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', ''));
 
         // Add our fonts.css file
         $headContent .= '
-            <link href="' . (($isPreview) ? $this->urlFor($request,'library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
-            <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css', null, $request)  . '" rel="stylesheet" media="screen">
-            <link href="' . $this->getResourceUrl('emojione/emojione.sprites.css', null, $request)  . '" rel="stylesheet" media="screen">
+            <link href="' . (($this->isPreview()) ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
+            <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">
+            <link href="' . $this->getResourceUrl('emojione/emojione.sprites.css')  . '" rel="stylesheet" media="screen">
         ';
 
         $backgroundColor = $this->getOption('backgroundColor');
@@ -840,7 +838,7 @@ class Twitter extends TwitterBase
         
         // Add the CSS if it isn't empty
         if ($css != '') {
-            $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $css, $request) . '</style>';
+            $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($this->isPreview(), $css) . '</style>';
         }
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
@@ -848,15 +846,15 @@ class Twitter extends TwitterBase
         $data['head'] = $headContent;
 
         // Add some scripts to the JavaScript Content
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
 
         // Need the cycle plugin?
         if ($this->getOption('effect') != 'none')
-            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js', null, $request) . '"></script>';
+            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
 
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js', null, $request) . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
@@ -870,15 +868,18 @@ class Twitter extends TwitterBase
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        return $this->renderTemplate($data, 'get-resource', $response);
+        return $this->renderTemplate($data);
     }
 
     /** @inheritdoc */
     public function isValid()
     {
         // If overrideTemplate is false we have to define a template Id
-        if ($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null))
+        if ($this->getOption('overrideTemplate') == 0
+            && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null)
+        ) {
             throw new InvalidArgumentException(__('Please choose a template'), 'templateId');
+        }
 
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new InvalidArgumentException(__('Please enter a duration'), 'duration');

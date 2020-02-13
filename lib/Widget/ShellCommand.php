@@ -21,14 +21,18 @@
  */
 namespace Xibo\Widget;
 
-use Xibo\Exception\InvalidArgumentException;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Exception\InvalidArgumentException;
+
+/**
+ * Class ShellCommand
+ * @package Xibo\Widget
+ */
 class ShellCommand extends ModuleWidget
 {
-
     /**
-     * Javascript functions for the layout designer
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -127,15 +131,12 @@ class ShellCommand extends ModuleWidget
      *  )
      * )
      *
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @throws InvalidArgumentException
-     * @throws \Xibo\Exception\ValueTooLargeException
+     * @inheritDoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
+
         // Any Options (we need to encode shell commands, as they sit on the options rather than the raw
         $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
         $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
@@ -160,13 +161,15 @@ class ShellCommand extends ModuleWidget
         // Save the widget
         $this->isValid();
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
-    public function preview($width, $height, $scaleOverride = 0, Request $request)
+    public function preview($width, $height, $scaleOverride = 0)
     {
         if ($this->module->previewEnabled == 0) {
-            return parent::Preview($width, $height, $scaleOverride, $request);
+            return parent::preview($width, $height, $scaleOverride);
         }
 
         $windows = $this->getOption('windowsCommand');
@@ -189,7 +192,12 @@ class ShellCommand extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
-        if ($this->getOption('windowsCommand') == '' && $this->getOption('linuxCommand') == '' && $this->getOption('commandCode') == '' && $this->getOption('webosCommand' == '') && $this->getOption('tizenCommand') == '') {
+        if ($this->getOption('windowsCommand') == ''
+            && $this->getOption('linuxCommand') == ''
+            && $this->getOption('commandCode') == ''
+            && $this->getOption('webosCommand') == ''
+            && $this->getOption('tizenCommand') == ''
+        ) {
             throw new InvalidArgumentException(__('You must enter a command'), 'command');
         }
 
@@ -204,7 +212,7 @@ class ShellCommand extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {
         // Get resource isn't required for this module.
         return null;

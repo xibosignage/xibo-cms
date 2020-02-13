@@ -33,18 +33,22 @@
  */
 namespace Xibo\Widget;
 
+use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Respect\Validation\Validator as v;
 use Xibo\Exception\InvalidArgumentException;
 
+/**
+ * Class Countdown
+ * @package Xibo\Widget
+ */
 class Countdown extends ModuleWidget
 {
     public $codeSchemaVersion = 1;
 
 
     /**
-     * Twitter constructor.
+     * @inheritDoc
      */
     public function init()
     {
@@ -55,8 +59,7 @@ class Countdown extends ModuleWidget
     }
     
     /**
-     * Install or Update this module
-     * @param ModuleFactory $moduleFactory
+     * @inheritDoc
      */
     public function installOrUpdate($moduleFactory)
     {
@@ -85,6 +88,9 @@ class Countdown extends ModuleWidget
         $this->installFiles();
     }
 
+    /**
+     * @inheritDoc
+     */
     public function installFiles()
     {
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
@@ -94,7 +100,7 @@ class Countdown extends ModuleWidget
     }
 
     /**
-     * Javascript functions for the layout designer
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -221,13 +227,9 @@ class Countdown extends ModuleWidget
      *  )
      * )
      *
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @throws InvalidArgumentException
-     * @throws \Xibo\Exception\ValueTooLargeException
+     * @inheritDoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -260,25 +262,24 @@ class Countdown extends ModuleWidget
 
         // Save the widget
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {
         $data = [];
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-
-        $isPreview = ($sanitizedParams->getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
-        $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
+        $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
 
         // Information from the Module        
         $duration = $this->getCalculatedDurationForGetResource();
 
         if($this->getOption('overrideTemplate') == 0) {
             
-            $template = $this->getTemplateById($this->getOption('templateId'), $request);
+            $template = $this->getTemplateById($this->getOption('templateId'));
             
             if (isset($template)) {
                 $mainTemplate = $template['template'];
@@ -290,12 +291,12 @@ class Countdown extends ModuleWidget
         } else {
             $mainTemplate = $this->getRawNode('mainTemplate');
             $styleSheet = $this->getRawNode('styleSheet', '');
-            $widgetOriginalWidth = $sanitizedParams->getInt($this->getOption('widgetOriginalWidth'));
-            $widgetOriginalHeight = $sanitizedParams->getInt($this->getOption('widgetOriginalHeight'));
+            $widgetOriginalWidth = intval($this->getOption('widgetOriginalWidth'));
+            $widgetOriginalHeight = intval($this->getOption('widgetOriginalHeight'));
         }
 
         // Run through each item and substitute with the template
-        $mainTemplate = $this->parseLibraryReferences($isPreview, $mainTemplate, $request);
+        $mainTemplate = $this->parseLibraryReferences($this->isPreview(), $mainTemplate);
 
         // Make subsitutions
         $mainTemplate = $this->makeSubstitutions($mainTemplate);
@@ -321,12 +322,12 @@ class Countdown extends ModuleWidget
         $headContent = '';
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . (($isPreview) ? $this->urlFor($request,'library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
-        <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css', null, $request)  . '" rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . ($this->isPreview() ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
+        <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
         
         // Add the CSS if it isn't empty, and replace the wallpaper
         if ($styleSheet != '') {
-            $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($isPreview, $styleSheet, $request) . '</style>';
+            $headContent .= '<style type="text/css">' . $this->parseLibraryReferences($this->isPreview(), $styleSheet) . '</style>';
         }
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
@@ -334,11 +335,11 @@ class Countdown extends ModuleWidget
         $data['head'] = $headContent;
 
         // Add some scripts to the JavaScript Content
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-countdown-render.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js', null, $request) . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-countdown-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
@@ -351,7 +352,7 @@ class Countdown extends ModuleWidget
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        return $this->renderTemplate($data, 'get-resource', $response);
+        return $this->renderTemplate($data);
     }
 
 

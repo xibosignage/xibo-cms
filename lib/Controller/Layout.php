@@ -2307,7 +2307,7 @@ class Layout extends Base
             throw new NotFoundException('Cannot download non-region specific module');
         }
 
-        $response = $widget->getResource($request, $response);
+        $response = $widget->download($request, $response);
 
         $this->setNoOutput(true);
         return $this->render($request, $response);

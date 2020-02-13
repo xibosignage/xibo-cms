@@ -33,9 +33,8 @@ use Xibo\Exception\InvalidArgumentException;
  */
 class Pdf extends ModuleWidget
 {
-
     /**
-     * Javascript functions for the layout designer
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -44,7 +43,7 @@ class Pdf extends ModuleWidget
     }
 
     /**
-     * Install Files
+     * @inheritDoc
      */
     public function installFiles()
     {
@@ -103,13 +102,9 @@ class Pdf extends ModuleWidget
      *  )
      * )
      *
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @throws InvalidArgumentException
-     * @throws \Xibo\Exception\ValueTooLargeException
+     * @inheritDoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Set the properties specific to this module
@@ -120,6 +115,8 @@ class Pdf extends ModuleWidget
 
         $this->isValid();
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
@@ -132,21 +129,12 @@ class Pdf extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-        $displayId = $request->getAttribute('displayId', 0);
-        $data = [];
-        $isPreview = ($sanitizedParams->getCheckbox('preview') == 1);
-
-        // If not preview or a display, then return the file directly
-        if (!$isPreview && $displayId === 0) {
-            return $this->download($request, $response);;
-            return '';
-        }
+        $this->initialiseGetResource();
 
         // Replace the View Port Width?
-        $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
+        $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
 
         $duration = $this->getCalculatedDurationForGetResource();
 
@@ -157,27 +145,27 @@ class Pdf extends ModuleWidget
             'durationIsPerItem' => false,
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => intval($sanitizedParams->getDouble('width')),
-            'previewHeight' => intval($sanitizedParams->getDouble('height'))
+            'previewWidth' => intval($this->getPreviewWidth()),
+            'previewHeight' => intval($this->getPreviewHeight())
         );
 
         // File name?
-        $data['file'] = ($isPreview) ? $this->urlFor($request,'library.download', ['id' => $this->getMediaId()]) : $this->getMedia()->storedAs;
+        $data['file'] = ($this->isPreview()) ? $this->urlFor('library.download', ['id' => $this->getMediaId()]) : $this->getMedia()->storedAs;
 
         // Replace the head content
-        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/pdfjs/pdf.js', null, $request) . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/pdfjs/compatibility.js', null, $request) . '"></script>';
+        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/pdfjs/pdf.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/pdfjs/compatibility.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '</script>';
 
-        $data['pdfWorkerSrc'] = $this->getResourceUrl('vendor/pdfjs/pdf.worker.js', null, $request);
+        $data['pdfWorkerSrc'] = $this->getResourceUrl('vendor/pdfjs/pdf.worker.js');
 
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
 
-        return $this->renderTemplate($data, 'get-resource-pdf', $response);
+        return $this->renderTemplate($data, 'get-resource-pdf');
     }
 
     /** @inheritdoc */

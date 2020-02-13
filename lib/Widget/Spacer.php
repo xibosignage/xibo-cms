@@ -19,11 +19,12 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 namespace Xibo\Widget;
 
-use Xibo\Factory\ModuleFactory;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+
 /**
  * Class Spacer
  * @package Xibo\Widget
@@ -33,8 +34,7 @@ class Spacer extends ModuleWidget
     public $codeSchemaVersion = 1;
 
     /**
-     * Install or Update this module
-     * @param ModuleFactory $moduleFactory
+     * @inheritDoc
      */
     public function installOrUpdate($moduleFactory)
     {
@@ -65,7 +65,7 @@ class Spacer extends ModuleWidget
     }
 
     /**
-     * Javascript functions for the layout designer
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -123,15 +123,12 @@ class Spacer extends ModuleWidget
      *  )
      * )
      *
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @throws \Xibo\Exception\InvalidArgumentException
-     * @throws \Xibo\Exception\ValueTooLargeException
+     * @inheritDoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
+
         // Set the properties specific to this module
         $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
         $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
@@ -139,6 +136,8 @@ class Spacer extends ModuleWidget
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
 
         $this->saveWidget();
+
+        return $response;
     }
 
     /**
@@ -151,11 +150,13 @@ class Spacer extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {
         // Construct the response HTML
-        $this->initialiseGetResource($request, $response)->appendViewPortWidth($this->region->width);
-        $this->finaliseGetResource('get-resource', $response);
+        $this->initialiseGetResource()
+            ->appendViewPortWidth($this->region->width);
+
+        $this->finaliseGetResource();
     }
 
     /** @inheritdoc */

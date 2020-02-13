@@ -20,9 +20,14 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Widget;
+
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 
+/**
+ * Class Video
+ * @package Xibo\Widget
+ */
 class Video extends ModuleWidget
 {
 
@@ -40,7 +45,7 @@ class Video extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function settings(Request $request, Response $response)
+    public function settings(Request $request, Response $response): Response
     {
         // Process any module settings you asked for.
         $this->module->settings['defaultMute'] = $this->getSanitizer($request->getParams())->getCheckbox('defaultMute');
@@ -50,7 +55,7 @@ class Video extends ModuleWidget
         }
 
         // Return an array of the processed settings.
-        return $this->module->settings;
+        return $response;
     }
 
     /**
@@ -139,9 +144,10 @@ class Video extends ModuleWidget
      *
      * @inheritdoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
+
         // Set the properties specific to this module
         $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
         $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
@@ -160,10 +166,12 @@ class Video extends ModuleWidget
         }
         
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
-    public function previewAsClient($width, $height, $scaleOverride = 0, Request $request)
+    public function previewAsClient($width, $height, $scaleOverride = 0)
     {
         return $this->previewIcon();
     }
@@ -175,7 +183,7 @@ class Video extends ModuleWidget
         if ($fileName === null)
             return 0;
 
-        $this->getLog()->debug('Determine Duration from %s', $fileName);
+        $this->getLog()->debug('Determine Duration from ' . $fileName);
         $info = new \getID3();
         $file = $info->analyze($fileName);
         return intval($this->getSanitizer($file)->getDouble('playtime_seconds', ['default' => 0]));
@@ -189,9 +197,9 @@ class Video extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {
-        return $this->download($request, $response);;
+        return '';
     }
 
     /** @inheritdoc */

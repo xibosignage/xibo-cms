@@ -92,10 +92,10 @@ $twigMiddleware = TwigMiddleware::createFromContainer($app);
 $app->add(new RKA\Middleware\IpAddress(true, []));
 $app->add(new \Xibo\Middleware\Actions($app));
 $app->add(new \Xibo\Middleware\Theme($app));
-$app->add(new \Xibo\Middleware\Log($app));
 $app->add(new \Xibo\Middleware\WebAuthentication($app));
 $app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\State($app));
+$app->add(new \Xibo\Middleware\Log($app));
 $app->add($twigMiddleware);
 $app->add(new \Xibo\Middleware\Xmr($app));
 
@@ -145,7 +145,7 @@ $customErrorHandler = function (Request $request, Throwable $exception, bool $di
 
 // Add Error Middleware
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
-$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
+//$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
 
 // All application routes
 require PROJECT_ROOT . '/lib/routes-web.php';

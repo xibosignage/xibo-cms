@@ -21,18 +21,18 @@
  */
 namespace Xibo\Widget;
 
-use Xibo\Exception\InvalidArgumentException;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Exception\InvalidArgumentException;
+
 /**
  * Class Embedded
  * @package Xibo\Widget
  */
 class Embedded extends ModuleWidget
-{    
-
+{
     /**
-     * Javascript functions for the layout designer
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -40,7 +40,7 @@ class Embedded extends ModuleWidget
     }
 
     /**
-     * Install Files
+     * @inheritDoc
      */
     public function InstallFiles()
     {
@@ -141,9 +141,9 @@ class Embedded extends ModuleWidget
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
+     * @inheritDoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -161,6 +161,8 @@ class Embedded extends ModuleWidget
         // Save the widget
         $this->isValid();
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
@@ -174,19 +176,21 @@ class Embedded extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {
         // Construct the response HTML
-        $this->initialiseGetResource($request, $response)->appendViewPortWidth($this->region->width);
+        $this
+            ->initialiseGetResource()
+            ->appendViewPortWidth($this->region->width);
 
         // Include some vendor items and javascript
         $this
-            ->appendJavaScriptFile('vendor/jquery-1.11.1.min.js', $request)
-            ->appendJavaScriptFile('xibo-layout-scaler.js', $request)
-            ->appendJavaScriptFile('xibo-image-render.js', $request)
-            ->appendRaw('javaScript', $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('embedScript', null), $request))
-            ->appendCss($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('embedStyle', null), $request))
-            ->appendFontCss($request)
+            ->appendJavaScriptFile('vendor/jquery-1.11.1.min.js')
+            ->appendJavaScriptFile('xibo-layout-scaler.js')
+            ->appendJavaScriptFile('xibo-image-render.js')
+            ->appendRaw('javaScript', $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('embedScript', null)))
+            ->appendCss($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('embedStyle', null)))
+            ->appendFontCss()
             ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
             ->appendOptions([
                 'originalWidth' => $this->region->width,
@@ -196,7 +200,7 @@ class Embedded extends ModuleWidget
                 $(document).ready(function() { if(typeof EmbedInit === "function"){ EmbedInit(); } });
                 $("body").find("img").xiboImageRender(options);
             ')
-            ->appendBody($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('embedHtml', null), $request));
+            ->appendBody($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('embedHtml', null)));
 
         // Do we want to scale?
         if ($this->getOption('scaleContent') == 1) {
@@ -207,7 +211,7 @@ class Embedded extends ModuleWidget
             ');
         }
 
-        $this->finaliseGetResource('get-resource', $response);
+        return $this->finaliseGetResource();
     }
 
     /** @inheritdoc */

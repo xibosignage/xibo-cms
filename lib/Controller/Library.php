@@ -1333,16 +1333,6 @@ class Library extends Base
     }
 
     /**
-     * Gets a file from the library
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Get(
      *  path="/library/download/{mediaId}/{type}",
      *  operationId="libraryDownload",
@@ -1381,6 +1371,15 @@ class Library extends Base
      *  )
      * )
      *
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function download(Request $request, Response $response)
     {
@@ -1396,7 +1395,9 @@ class Library extends Base
             $media = $this->mediaFactory->getByName($mediaId);
         }
 
-        $this->getLog()->debug('Download request for mediaId ' . $mediaId . ' and type ' . $type . '. Media is a ' . $media->mediaType . ' [' . $media->moduleSystemFile . ']');
+        $this->getLog()->debug('Download request for mediaId ' . $mediaId
+            . ' and type ' . $type . '. Media is a '
+            . $media->mediaType . ', is system file:' . $media->moduleSystemFile);
 
         if ($media->mediaType === 'module' && $media->moduleSystemFile === 1) {
             // grant permissions
@@ -1409,7 +1410,8 @@ class Library extends Base
                 throw new AccessDeniedException();
             }
         } else if (!$this->getUser($request)->checkViewable($media)) {
-            throw new AccessDeniedException();}
+            throw new AccessDeniedException();
+        }
 
         if ($type == null && $media->mediaType === 'module') {
             $type = 'genericfile';
@@ -1422,13 +1424,17 @@ class Library extends Base
             $widget->setWidget($widgetOverride);
         } else {
             // Make a media module
+            $this->getLog()->debug('Creating a module with Media: ' . $media->mediaId);
+
             $widget = $this->moduleFactory->createWithMedia($media);
         }
 
-        if ($widget->getModule()->regionSpecific == 1)
+        if ($widget->getModule()->regionSpecific == 1) {
             throw new NotFoundException('Cannot download region specific module');
+        }
 
-        $response = $widget->getResource($request, $response);
+        $this->getLog()->debug('About to call download for Widget: ' . $widget->getModuleType());
+        $response = $widget->download($request, $response);
 
         $this->setNoOutput(true);
 

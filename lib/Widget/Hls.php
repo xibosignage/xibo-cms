@@ -20,22 +20,19 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Widget;
 
-
 use Respect\Validation\Validator as v;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Factory\ModuleFactory;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Exception\InvalidArgumentException;
+
 /**
  * Class Hls
  * @package Xibo\Widget
  */
 class Hls extends ModuleWidget
 {
-
     public $codeSchemaVersion = 1;
 
     /** @inheritdoc */
@@ -46,7 +43,7 @@ class Hls extends ModuleWidget
     }
 
     /**
-     * Javascript functions for the layout designer
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -54,8 +51,7 @@ class Hls extends ModuleWidget
     }
 
     /**
-     * Install or Update this module
-     * @param ModuleFactory $moduleFactory
+     * @inheritDoc
      */
     public function installOrUpdate($moduleFactory)
     {
@@ -85,7 +81,7 @@ class Hls extends ModuleWidget
     }
 
     /**
-     * Install Files
+     * @inheritDoc
      */
     public function installFiles()
     {
@@ -163,13 +159,9 @@ class Hls extends ModuleWidget
      *  )
      * )
      *
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @throws InvalidArgumentException
-     * @throws \Xibo\Exception\ValueTooLargeException
+     * @inheritDoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -187,6 +179,8 @@ class Hls extends ModuleWidget
 
         // Save the widget
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
@@ -202,7 +196,7 @@ class Hls extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {
         // Ensure we have the necessary files linked up
         $media = $this->mediaFactory->createModuleFile(PROJECT_ROOT . '/modules/vendor/hls/hls.min.js');
@@ -219,10 +213,10 @@ class Hls extends ModuleWidget
 
         // Render and output HTML
         $this
-            ->initialiseGetResource($request, $response)
+            ->initialiseGetResource()
             ->appendViewPortWidth($this->region->width)
-            ->appendJavaScriptFile('vendor/jquery-1.11.1.min.js', $request)
-            ->appendJavaScriptFile('vendor/hls/hls.min.js', $request)
+            ->appendJavaScriptFile('vendor/jquery-1.11.1.min.js')
+            ->appendJavaScriptFile('vendor/hls/hls.min.js')
             ->appendJavaScript('
                 $(document).ready(function() {
             
@@ -265,7 +259,8 @@ class Hls extends ModuleWidget
                      }
                 });
             ')
-            ->appendBody('<video id="video" poster="' . $this->getResourceUrl('vendor/hls/hls-1px-transparent.png', null, $request) . '" ' . (($this->getOption('mute', 0) == 1) ? 'muted' : '') . '></video>')
+            ->appendBody('<video id="video" poster="' . $this->getResourceUrl('vendor/hls/hls-1px-transparent.png')
+                . '" ' . (($this->getOption('mute', 0) == 1) ? 'muted' : '') . '></video>')
             ->appendCss('
                 video {
                     width: 100%; 
@@ -274,7 +269,7 @@ class Hls extends ModuleWidget
             ')
         ;
 
-        $this->finaliseGetResource('get-resource', $response);
+        $this->finaliseGetResource();
     }
 
     /** @inheritdoc */

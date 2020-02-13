@@ -21,12 +21,10 @@
  */
 namespace Xibo\Widget;
 
-
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Exception\InvalidArgumentException;
-use Xibo\Factory\ModuleFactory;
 
 /**
  * Class HtmlPackage
@@ -37,8 +35,7 @@ class HtmlPackage extends ModuleWidget
     public $codeSchemaVersion = 1;
 
     /**
-     * Install or Update this module
-     * @param ModuleFactory $moduleFactory
+     * @inheritDoc
      */
     public function installOrUpdate($moduleFactory)
     {
@@ -69,7 +66,7 @@ class HtmlPackage extends ModuleWidget
     }
 
     /**
-     * Form for updating the module settings
+     * @inheritDoc
      */
     public function settingsForm()
     {
@@ -77,10 +74,11 @@ class HtmlPackage extends ModuleWidget
         return 'htmlpackage-form-settings';
     }
 
-    /** @inheritdoc
+    /**
+     * @inheritdoc
      * @throws InvalidArgumentException
      */
-    public function settings(Request $request, Response $response)
+    public function settings(Request $request, Response $response): Response
     {
         parent::settings($request, $response);
 
@@ -91,8 +89,9 @@ class HtmlPackage extends ModuleWidget
         }
 
         $this->module->settings['updateInterval'] = $this->getSanitizer($request->getParams())->getInt('updateInterval', ['default' => 259200]);
-    }
 
+        return $response;
+    }
 
     /**
      * Validate
@@ -106,7 +105,7 @@ class HtmlPackage extends ModuleWidget
     }
 
     /**
-     * Javascript functions for the layout designer
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -178,9 +177,9 @@ class HtmlPackage extends ModuleWidget
      *  )
      * )
      *
-     * @throws InvalidArgumentException
+     * @inheritDoc
      */
-    public function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Set the properties specific to this module
@@ -192,6 +191,8 @@ class HtmlPackage extends ModuleWidget
         $this->setOption('updateInterval', $this->getSetting('updateInterval', 259200));
 
         $this->saveWidget();
+
+        return $response;
     }
 
     /**
@@ -204,11 +205,8 @@ class HtmlPackage extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource(Request $request, Response $response)
+    public function getResource($displayId = 0)
     {
-        $this->getLog()->debug('HTML Package Module: GetResource for ' . $this->getMediaId());
-
-        // At the moment there is no preview for this module, as such we only need to send the .htz archive to the player.
-        return $this->download($request, $response);;
+        return '';
     }
 }
