@@ -187,7 +187,7 @@ $(document).ready(function() {
                             title: layoutDesignerTrans.checkoutTitle,
                             logo: 'fa-edit',
                             class: 'btn-success',
-                            action: lD.showCheckoutScreen,
+                            action: lD.checkoutLayout,
                             inactiveCheck: function() {
                                 return (lD.layout.editable == true);
                             },
