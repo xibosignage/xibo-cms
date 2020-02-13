@@ -26,7 +26,6 @@ namespace Xibo\Middleware;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Psr\Http\Message\StreamInterface;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App;
@@ -56,6 +55,8 @@ class WebAuthentication implements Middleware
      * @param Request $request
      * @param RequestHandler $handler
      * @return Response
+     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Exception\ConfigurationException
      */
     public function process(Request $request, RequestHandler $handler): Response
     {
@@ -70,12 +71,13 @@ class WebAuthentication implements Middleware
         $route = $routeContext->getRoute();
         $resource = $route->getPattern();
         $routeParser = $app->getRouteCollector()->getRouteParser();
+
         // Pass the page factory into the user object, so that it can check its page permissions
         $user->setChildAclDependencies($container->get('userGroupFactory'), $container->get('pageFactory'));
 
         // Check to see if this is a public resource (there are only a few, so we have them in an array)
-        if (!in_array($resource, $app->publicRoutes)) {
-            $app->public = false;
+        if (!in_array($resource, $request->getAttribute('publicRoutes', []))) {
+            $request = $request->withAttribute('public', false);
 
             // Need to check
             if ($user->hasIdentity() &&  $container->get('session')->isExpired() == 0) {
@@ -128,7 +130,7 @@ class WebAuthentication implements Middleware
                 }
             }
         } else {
-            $app->public = true;
+            $request = $request->withAttribute('public', true);
 
             // If we are expired and come from ping/clock, then we redirect
             if ($container->get('session')->isExpired() && ($resource == '/login/ping' || $resource == 'clock')) {
@@ -136,27 +138,40 @@ class WebAuthentication implements Middleware
                 if ($user->hasIdentity()) {
                     $user->touch();
                 }
+
+                // We should redirect
+                $nyholmFactory = new Psr17Factory();
+                $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
+                $response = $decoratedResponseFactory->createResponse();
+
                 if ($this->isAjax($request)) {
 
                     $state = $app->getContainer()->get('state');
                     /* @var ApplicationState $state */
                     // Return a JSON response which tells the App to redirect to the login page
-
-                    $nyholmFactory = new Psr17Factory();
-                    $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
-                    $response = $decoratedResponseFactory->createResponse();
                     $state->Login();
 
-                    return $response->withJson($state->asJson());
+                    return $response
+                        ->withJson($state->asJson());
                 } else {
-                    return $handler->handle($request->withAttribute('name', 'web'))->withStatus(302)->withHeader('Location', $routeParser->urlFor('login'));
+                    return $response
+                        ->withStatus(302)
+                        ->withHeader('Location', $routeParser->urlFor('login'));
                 }
             }
         }
 
-        return $handler->handle($request->withAttribute('currentUser', $user)->withAttribute('name', 'web'));
+        return $handler->handle(
+            $request
+                ->withAttribute('currentUser', $user)
+                ->withAttribute('name', 'web')
+        );
     }
 
+    /**
+     * @param \Psr\Http\Message\ServerRequestInterface $request
+     * @return bool
+     */
     private function isAjax(Request $request)
     {
         return strtolower($request->getHeaderLine('X-Requested-With')) === 'xmlhttprequest';

@@ -23,9 +23,10 @@
 namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
-use Xibo\Exception\InvalidArgumentException;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Exception\InvalidArgumentException;
+
 /**
  * Class Pdf
  * @package Xibo\Widget
@@ -140,7 +141,7 @@ class Pdf extends ModuleWidget
 
         // If not preview or a display, then return the file directly
         if (!$isPreview && $displayId === 0) {
-            $this->download($request, $response);
+            return $this->download($request, $response);;
             return '';
         }
 

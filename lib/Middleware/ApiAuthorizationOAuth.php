@@ -28,6 +28,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
+use Xibo\Exception\ConfigurationException;
 use Xibo\Storage\AuthCodeRepository;
 use Xibo\Storage\RefreshTokenRepository;
 
@@ -61,37 +62,46 @@ class ApiAuthorizationOAuth implements Middleware
 
         // DI in the server
         $container->set('server', function(ContainerInterface $container) {
-            $apiKeyPaths = $container->get('configService')->apiKeyPaths;
+            /** @var \Xibo\Service\LogServiceInterface $logger */
+            $logger = $container->get('logService');
 
+            // API Keys
+            $apiKeyPaths = $container->get('configService')->apiKeyPaths;
             $privateKey = $apiKeyPaths['privateKeyPath'];
             $encryptionKey = $apiKeyPaths['encryptionKey'];
 
-            $server = new \League\OAuth2\Server\AuthorizationServer(
-                new \Xibo\Storage\ApiClientStorage($container->get('store'), $container->get('logService')),
-                new \Xibo\Storage\AccessTokenRepository($container->get('logService')),
-                new \Xibo\Storage\ScopeRepository(),
-                $privateKey,
-                $encryptionKey
-            );
+            try {
 
-            $server->enableGrantType(
-                new \League\OAuth2\Server\Grant\ClientCredentialsGrant(),
-                new \DateInterval('PT1H')
-            );
+                $server = new \League\OAuth2\Server\AuthorizationServer(
+                    new \Xibo\Storage\ApiClientStorage($container->get('store'), $logger),
+                    new \Xibo\Storage\AccessTokenRepository($logger),
+                    new \Xibo\Storage\ScopeRepository(),
+                    $privateKey,
+                    $encryptionKey
+                );
 
-            $server->enableGrantType(
-                new AuthCodeGrant(
-                    new AuthCodeRepository(),
-                    new RefreshTokenRepository(),
-                    new \DateInterval('PT10M')
-                ),
-                new \DateInterval('PT1H')
-            );
+                $server->enableGrantType(
+                    new \League\OAuth2\Server\Grant\ClientCredentialsGrant(),
+                    new \DateInterval('PT1H')
+                );
 
-            // Default scope
-            $server->setDefaultScope('all');
+                $server->enableGrantType(
+                    new AuthCodeGrant(
+                        new AuthCodeRepository(),
+                        new RefreshTokenRepository(),
+                        new \DateInterval('PT10M')
+                    ),
+                    new \DateInterval('PT1H')
+                );
 
-            return $server;
+                // Default scope
+                $server->setDefaultScope('all');
+
+                return $server;
+            } catch (\LogicException $exception) {
+                $logger->error($exception->getMessage());
+                throw new ConfigurationException('API configuration problem, consult your administrator');
+            }
         });
 
         return $handler->handle($request);

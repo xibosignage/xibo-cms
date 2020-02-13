@@ -21,10 +21,10 @@
  */
 namespace Xibo\Controller;
 
+use Parsedown;
 use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Parsedown;
 use Slim\Views\Twig;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Playlist;
@@ -46,13 +46,11 @@ use Xibo\Factory\ResolutionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
-use Xibo\Helper\Environment;
 use Xibo\Helper\LayoutUploadHandler;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Widget\ModuleWidget;
 
 /**
@@ -1136,6 +1134,13 @@ class Layout extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="campaignId",
+     *      in="formData",
+     *      description="Get all Layouts for a given campaignId",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1188,7 +1193,8 @@ class Layout extends Base
             'ownerUserGroupId' => $parsedQueryParams->getInt('ownerUserGroupId'),
             'mediaLike' => $parsedQueryParams->getString('mediaLike'),
             'publishedStatusId' => $parsedQueryParams->getInt('publishedStatusId'),
-            'activeDisplayGroupId' => $parsedQueryParams->getInt('activeDisplayGroupId')
+            'activeDisplayGroupId' => $parsedQueryParams->getInt('activeDisplayGroupId'),
+            'campaignId' => $parsedQueryParams->getInt('campaignId'),
         ], $request), $request);
 
         foreach ($layouts as $layout) {
@@ -2301,7 +2307,7 @@ class Layout extends Base
             throw new NotFoundException('Cannot download non-region specific module');
         }
 
-        $widget->getResource($request, $response);
+        $response = $widget->getResource($request, $response);
 
         $this->setNoOutput(true);
         return $this->render($request, $response);

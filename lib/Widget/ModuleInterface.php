@@ -22,9 +22,9 @@
 
 namespace Xibo\Widget;
 
+use Jenssegers\Date\Date;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Jenssegers\Date\Date;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 
@@ -171,7 +171,7 @@ interface ModuleInterface
      * Get Resource
      * @param Request $request
      * @param Response $response
-     * @return string
+     * @return Response|string
      */
     public function getResource(Request $request, Response $response);
 

@@ -80,6 +80,6 @@ class PowerPoint extends ModuleWidget
      */
     public function getResource(Request $request, Response $response)
     {
-        $this->download($request, $response);
+        return $this->download($request, $response);;
     }
 }

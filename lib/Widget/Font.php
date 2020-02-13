@@ -20,11 +20,11 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Widget;
-use Xibo\Controller\Library;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\NotFoundException;
+
 /**
  * Class Font
  * @package Xibo\Widget
@@ -151,7 +151,7 @@ class Font extends ModuleWidget
      */
     public function getResource(Request $request, Response $response)
     {
-        $this->download($request, $response);
+        return $this->download($request, $response);;
     }
 
     /**

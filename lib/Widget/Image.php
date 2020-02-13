@@ -21,11 +21,11 @@
  */
 namespace Xibo\Widget;
 
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
 use Intervention\Image\Exception\NotReadableException;
 use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Exception\InvalidArgumentException;
 
 /**
@@ -172,14 +172,12 @@ class Image extends ModuleWidget
 
         $url = $this->urlFor($request,'module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]) . '?preview=1&width=' . $width . '&height=' . $height . '&proportional=' . $proportional . '&mediaId=' . $this->getMediaId();
 
-        $html = '<div style="display:table; width:100%; height: ' . $height . 'px">
+        // Show the image - scaled to the aspect ratio of this region (get from GET)
+        return '<div style="display:table; width:100%; height: ' . $height . 'px">
             <div style="text-align:' . $align . '; display: table-cell; vertical-align: ' . $vAlign . ';">
                 <img src="' . $url . '" />
             </div>
         </div>';
-
-        // Show the image - scaled to the aspect ratio of this region (get from GET)
-        return $html;
     }
 
     /** @inheritdoc */
@@ -268,9 +266,11 @@ class Image extends ModuleWidget
 
                 echo $img->encode();
             }
+
+            return $response;
         } else {
             // Download the file
-            $this->download($request, $response);
+            return $this->download($request, $response);;
         }
     }
 

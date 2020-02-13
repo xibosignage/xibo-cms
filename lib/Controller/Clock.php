@@ -22,13 +22,13 @@
 namespace Xibo\Controller;
 
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
 
 /**
  * Class Clock
@@ -100,8 +100,8 @@ class Clock extends Base
             $this->getState()->success = true;
             return $this->render($request, $response);
         } else {
-            $this->setNoOutput(true);
-            $this->getDate()->getLocalDate(null, 'c');
+            // We are returning the response directly, so write the body.
+            $response->getBody()->write($this->getDate()->getLocalDate(null, 'c'));
             return $response;
         }
     }

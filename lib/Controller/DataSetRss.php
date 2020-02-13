@@ -820,7 +820,8 @@ class DataSetRss extends Base
                         break;
 
                     default:
-                        continue;
+                        // Continue out of the switch and the loop (this takes us back to our foreach)
+                        continue 2;
                 }
 
                 if ($i > 1)

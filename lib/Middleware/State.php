@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -68,7 +68,8 @@ class State implements Middleware
         $container = $app->getContainer();
 
         // Set state
-        State::setState($app, $request);
+        $request = State::setState($app, $request);
+
         $response = $handler->handle($request);
         // Attach a hook to log the route
 
@@ -145,8 +146,9 @@ class State implements Middleware
     /**
      * @param App $app
      * @param \Psr\Http\Message\ServerRequestInterface $request
+     * @return \Psr\Http\Message\ServerRequestInterface
      */
-    public static function setState(App $app, Request $request)
+    public static function setState(App $app, Request $request): Request
     {
         $container = $app->getContainer();
 
@@ -174,7 +176,7 @@ class State implements Middleware
 
 
         // Set some public routes
-        $app->publicRoutes = [
+        $request = $request->withAttribute('publicRoutes', [
             '/login', '/login/forgotten', '/clock', '/about', '/login/ping',
             '/rss/:psk',
             '/sssp_config.xml',
@@ -184,7 +186,7 @@ class State implements Middleware
             '/tfa',
             '/error',
             '/notFound'
-        ];
+        ]);
 
         // Setup the translations for gettext
         Translate::InitLocale($container->get('configService'));
@@ -268,6 +270,8 @@ class State implements Middleware
             }
         }
         */
+
+        return $request;
     }
 
     /**
@@ -1645,6 +1649,10 @@ class State implements Middleware
         ];
     }
 
+    /**
+     * @param \Psr\Http\Message\ServerRequestInterface $request
+     * @return bool
+     */
     private function isAjax(Request $request)
     {
         return strtolower($request->getHeaderLine('X-Requested-With')) === 'xmlhttprequest';

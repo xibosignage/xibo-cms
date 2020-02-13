@@ -37,7 +37,6 @@ use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 
 /**
  * Class Campaign
@@ -161,6 +160,13 @@ class Campaign extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="embed",
+     *      in="formData",
+     *      description="Embed related data such as layouts, permissions, tags and events",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -178,6 +184,7 @@ class Campaign extends Base
      * @throws \Twig\Error\SyntaxError
      * @throws \Xibo\Exception\ConfigurationException
      * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function grid(Request $request, Response $response)
     {
@@ -195,10 +202,24 @@ class Campaign extends Base
             'totalDuration' => $parsedParams->getInt('totalDuration', ['default' => 1]),
         ];
 
+        $embed = ($parsedParams->getString('embed') !== null) ? explode(',', $parsedParams->getString('embed')) : [];
+
         $campaigns = $this->campaignFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request), $options, $request);
 
         foreach ($campaigns as $campaign) {
             /* @var \Xibo\Entity\Campaign $campaign */
+
+            if (count($embed) > 0) {
+                $campaign->setChildObjectDependencies($this->layoutFactory);
+                $campaign->load([
+                    'loadPermissions' => in_array('permissions', $embed),
+                    'loadLayouts' => in_array('layouts', $embed),
+                    'loadTags' => in_array('tags', $embed),
+                    'loadEvents' => in_array('events', $embed)
+                ]);
+            } else {
+                $campaign->excludeProperty('layouts');
+            }
 
             if ($this->isApi($request)) {
                 break;

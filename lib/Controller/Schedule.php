@@ -45,8 +45,6 @@ use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
-use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class Schedule
@@ -277,7 +275,7 @@ class Schedule extends Base
         // Permissions check the list of display groups with the user accessible list of display groups
         $displayGroupIds = array_diff($displayGroupIds, [-1]);
 
-        if ($this->getUser($request)->getUserTypeId() != 1) {
+        if ($this->getUser($request)->isSuperAdmin()) {
             $userDisplayGroupIds = array_map(function($element) {
                 /** @var \Xibo\Entity\DisplayGroup $element */
                 return $element->displayGroupId;

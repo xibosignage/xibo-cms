@@ -24,8 +24,11 @@
 namespace Xibo\Storage;
 
 use League\OAuth2\Server\Repositories\ClientRepositoryInterface;
-use Monolog\Logger;
 
+/**
+ * Class ApiClientStorage
+ * @package Xibo\Storage
+ */
 class ApiClientStorage implements ClientRepositoryInterface
 {
     /**
@@ -34,13 +37,14 @@ class ApiClientStorage implements ClientRepositoryInterface
     private $store;
 
     /**
-     * @var Logger
+     * @var \Xibo\Service\LogServiceInterface
      */
     private $logger;
 
     /**
      * ApiAccessTokenStorage constructor.
      * @param StorageServiceInterface $store
+     * @param \Xibo\Service\LogServiceInterface $logger
      */
     public function __construct($store, $logger)
     {
@@ -63,7 +67,7 @@ class ApiClientStorage implements ClientRepositoryInterface
 
     /**
      * Get Store
-     * @return Logger
+     * @return \Xibo\Service\LogServiceInterface
      */
     protected function getLogger()
     {
@@ -157,7 +161,7 @@ class ApiClientStorage implements ClientRepositoryInterface
         $result = $this->getStore()->select($sql, $params);
 
         if (count($result) === 1) {
-            $client = new ClientEntity($this->server);
+            $client = new ClientEntity();
             $client->hydrate([
                 'id'    =>  $result[0]['id'],
                 'name'  =>  $result[0]['name'],
@@ -182,33 +186,6 @@ class ApiClientStorage implements ClientRepositoryInterface
                 default:
                     return false;
             }
-
-            return $client;
-        }
-
-        return false;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getBySession(SessionEntity $session)
-    {
-        $result = $this->getStore()->select('
-            SELECT oauth_clients.id, oauth_clients.name
-              FROM oauth_clients
-                INNER JOIN oauth_sessions ON oauth_clients.id = oauth_sessions.client_id
-             WHERE oauth_sessions.id = :id
-        ', [
-            'id' => $session->getId()
-        ]);
-
-        if (count($result) === 1) {
-            $client = new ClientEntity($this->server);
-            $client->hydrate([
-                'id'    =>  $result[0]['id'],
-                'name'  =>  $result[0]['name'],
-            ]);
 
             return $client;
         }

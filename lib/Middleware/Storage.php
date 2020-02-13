@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -19,10 +19,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-
 namespace Xibo\Middleware;
-
 
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -30,9 +27,8 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App;
-use Xibo\Service\LogService;
-use Xibo\Storage\PdoStorageService;
 use Xibo\Storage\MySqlTimeSeriesStore;
+use Xibo\Storage\PdoStorageService;
 
 /**
  * Class Storage
@@ -43,18 +39,26 @@ class Storage implements Middleware
     /* @var App $app */
     private $app;
 
+    /**
+     * Storage constructor.
+     * @param $app
+     */
     public function __construct($app)
     {
         $this->app = $app;
     }
 
+    /**
+     * Middleware process
+     * @param \Psr\Http\Message\ServerRequestInterface $request
+     * @param \Psr\Http\Server\RequestHandlerInterface $handler
+     * @return \Psr\Http\Message\ResponseInterface
+     */
     public function process(Request $request, RequestHandler $handler): Response
     {
-        $app = $this->app;
-        $container = $app->getContainer();
+        $container = $this->app->getContainer();
 
-        $app->startTime = microtime(true);
-        //$app->commit = true;
+        $startTime = microtime(true);
 
         // Configure storage
       //  self::setStorage($container);
@@ -76,7 +80,7 @@ class Storage implements Middleware
 
         // Get the stats for this connection
         $stats = $container->get('store')->stats();
-        $stats['length'] = microtime(true) - $app->startTime;
+        $stats['length'] = microtime(true) - $startTime;
         $stats['memoryUsage'] = memory_get_usage();
         $stats['peakMemoryUsage'] = memory_get_peak_usage();
 

@@ -22,29 +22,29 @@
 
 namespace Xibo\Storage;
 
-
-use League\OAuth2\Server\Repositories\AccessTokenRepositoryInterface;
 use League\OAuth2\Server\Entities\AccessTokenEntityInterface;
 use League\OAuth2\Server\Entities\ClientEntityInterface;
-use Monolog\Logger;
+use League\OAuth2\Server\Repositories\AccessTokenRepositoryInterface;
 
+/**
+ * Class AccessTokenRepository
+ * @package Xibo\Storage
+ */
 class AccessTokenRepository implements AccessTokenRepositoryInterface
 {
-    /** @var Logger*/
+    /** @var \Xibo\Service\LogServiceInterface*/
     private $logger;
 
     /**
      * AccessTokenRepository constructor.
-     * @param \Psr\Log\LoggerInterface $logger
+     * @param \Xibo\Service\LogServiceInterface $logger
      */
     public function __construct($logger)
     {
         $this->logger = $logger;
     }
 
-    /**
-     * @inheritDoc
-     */
+    /** @inheritDoc */
     public function getNewToken(ClientEntityInterface $clientEntity, array $scopes, $userIdentifier = null)
     {
         $this->logger->debug('Getting new Access Token');
@@ -66,16 +66,19 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
         return $accessToken;
     }
 
+    /** @inheritDoc */
     public function isAccessTokenRevoked($tokenId)
     {
         // TODO: Implement isAccessTokenRevoked() method.
     }
 
+    /** @inheritDoc */
     public function persistNewAccessToken(AccessTokenEntityInterface $accessTokenEntity)
     {
         // TODO: Implement persistNewAccessToken() method.
     }
 
+    /** @inheritDoc */
     public function revokeAccessToken($tokenId)
     {
         // TODO: Implement revokeAccessToken() method.

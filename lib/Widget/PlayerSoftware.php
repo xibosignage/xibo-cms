@@ -21,10 +21,11 @@
  */
 namespace Xibo\Widget;
 
-use Xibo\Factory\ModuleFactory;
-use Xibo\Factory\PlayerVersionFactory;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\PlayerVersionFactory;
+
 /**
  * Class PlayerSoftware
  * @package Xibo\Widget
@@ -73,7 +74,7 @@ class PlayerSoftware extends ModuleWidget
     /** @inheritdoc */
     public function getResource(Request $request, Response $response)
     {
-        $this->download($request, $response);
+        return $this->download($request, $response);;
     }
 
     /** @inheritdoc */

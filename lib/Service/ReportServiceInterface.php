@@ -37,7 +37,7 @@ interface ReportServiceInterface
 {
     /**
      * ReportServiceInterface constructor.
-     * @param Slim $app
+     * @param \Psr\Container\ContainerInterface $app
      * @param \Xibo\Helper\ApplicationState $state
      * @param StorageServiceInterface $store
      * @param TimeSeriesStoreInterface $timeSeriesStore
