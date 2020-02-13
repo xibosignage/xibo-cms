@@ -63,7 +63,7 @@ class Flash extends ModuleWidget
             return parent::preview($width, $height, $scaleOverride);
         }
 
-        $url = $this->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]);
+        $url = $this->urlFor('library.download', ['regionId' => $this->region->regionId, 'id' => $this->getMediaId()]);
 
         return '<object width="' . $width . '" height="' . $height . '">
             <param name="movie" value="' . $url . '"></param>

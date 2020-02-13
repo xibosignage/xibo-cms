@@ -32,7 +32,6 @@ use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 
 /**
  * Class Preview
@@ -90,9 +89,9 @@ class Preview extends Base
             'layout' => $layout,
             'previewOptions' => [
                 'getXlfUrl' => $this->urlFor($request,'layout.getXlf', ['id' => $layout->layoutId]),
-                'getResourceUrl' => $this->urlFor($request,'module.getResource'),
+                'getResourceUrl' => $this->urlFor($request,'module.getResource', ['regionId' => ':regionId', 'id' => ':id']),
                 'libraryDownloadUrl' => $this->urlFor($request,'library.download'),
-                'layoutBackgroundDownloadUrl' => $this->urlFor($request,'layout.download.background'),
+                'layoutBackgroundDownloadUrl' => $this->urlFor($request,'layout.download.background', ['id' => ':id']),
                 'loaderUrl' => $this->getConfig()->uri('img/loader.gif')
             ]
         ]);
