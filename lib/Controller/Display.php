@@ -1498,6 +1498,7 @@ class Display extends Base
         }
 
         echo $img->encode();
+        return $this->render($request, $response);
     }
 
     /**
