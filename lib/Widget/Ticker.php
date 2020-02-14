@@ -945,4 +945,10 @@ class Ticker extends ModuleWidget
         // Tickers are locked to the feed
         return md5(urldecode($this->getOption('uri')));
     }
+
+    /** @inheritDoc */
+    public function hasTemplates()
+    {
+        return true;
+    }
 }

@@ -9,7 +9,6 @@
 namespace Xibo\Factory;
 
 
-use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\User;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
@@ -114,13 +113,9 @@ class BaseFactory
      * Get User
      * @return User
      */
-    public function getUser(Request $request = null)
+    public function getUser()
     {
-            if (isset($request)) {
-                $this->user = $request->getAttribute('currentUser');
-            }
-
-            return $this->user;
+        return $this->user;
     }
 
     /**
@@ -149,8 +144,9 @@ class BaseFactory
      * @param $idColumn
      * @param null $ownerColumn
      * @param array $filterBy
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function viewPermissionSql($entity, &$sql, &$params, $idColumn, $ownerColumn = null, $filterBy = [], Request $request = null)
+    public function viewPermissionSql($entity, &$sql, &$params, $idColumn, $ownerColumn = null, $filterBy = [])
     {
         $parsedBody = $this->getSanitizer($filterBy);
         $checkUserId = $parsedBody->getInt('userCheckUserId');
@@ -160,7 +156,7 @@ class BaseFactory
             $user = $this->getUserFactory()->getById($checkUserId);
         }
         else {
-            $user = $this->getUser($request);
+            $user = $this->getUser();
 
             if ($user !== null)
                 $this->getLog()->debug(sprintf('Checking permissions against the logged in user: ID: %d, Name: %s, UserType: %d', $user->userId, $user->userName, $user->userTypeId));

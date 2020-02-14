@@ -611,7 +611,7 @@ class Module extends Base
         $module->setSaveEvent(new WidgetAddEvent($module));
 
         // Call module add
-        $module->add();
+        $response = $module->add($request, $response);
 
         // Module add will have saved our widget with the correct playlistId and displayOrder
         // if we have provided a displayOrder, then we ought to also save the Playlist so that new orders for those
@@ -673,13 +673,23 @@ class Module extends Base
             try {
                 $media = $module->getMedia();
             } catch (NotFoundException $e) {
-                
+                $this->getLog()->error('Library Widget does not have a Media Id. widgetId: ' . $id);
             }
         }
 
+        // We load this module for previewing, because we use urlFor with templates
+        $module
+            ->setUser($this->getUser($request))
+            ->setPreview(
+                true,
+                RouteContext::fromRequest($request)->getRouteParser(),
+                0,
+                0
+            );
+
+        // Do we have templates to load?
         $templates = [];
-        // TODO this is a bit silly at this point, we need a more clever to do this.
-        if (in_array($module->getModuleType(), ['forecastio', 'ticker', 'twitter','twittermetro', 'currencies', 'stocks', 'datasetview', 'countdown'])) {
+        if ($module->hasTemplates()) {
             $templates = $module->templatesAvailable();
         }
 
@@ -1273,9 +1283,18 @@ class Module extends Base
             throw new AccessDeniedException();
         }
 
+        $module
+            ->setUser($this->getUser($request))
+            ->setPreview(
+                true,
+                RouteContext::fromRequest($request)->getRouteParser(),
+                0,
+                0
+            );
+
         // Pass to view
         $this->getState()->template = $module->getModuleType() . '-tab-' . $tab;
-        $this->getState()->setData($module->getTab($tab, $request));
+        $this->getState()->setData($module->getTab($tab));
 
         return $this->render($request, $response);
     }
@@ -1309,19 +1328,18 @@ class Module extends Base
      * @param $type
      * @param $templateId
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function getTemplateImage(Request $request, Response $response,$type, $templateId)
+    public function getTemplateImage(Request $request, Response $response, $type, $templateId)
     {
         $module = $this->moduleFactory->create($type);
-        $module->getTemplateImage($templateId, $request);
+
+        $response = $module->getTemplateImage($request, $response, $templateId);
+
         $this->setNoOutput(true);
-        return $this->render($request, $response);
+
+        // Directly return the response
+        return $response;
     }
 
     /**

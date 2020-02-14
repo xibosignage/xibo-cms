@@ -868,4 +868,10 @@ class TwitterMetro extends TwitterBase
         // What is the minimum likely lock we can get to prevent concurrent access - probably search term
         return $this->getOption('searchTerm');
     }
+
+    /** @inheritDoc */
+    public function hasTemplates()
+    {
+        return true;
+    }
 }

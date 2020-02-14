@@ -80,7 +80,7 @@ class WebAuthentication implements Middleware
             $request = $request->withAttribute('public', false);
 
             // Need to check
-            if ($user->hasIdentity() &&  $container->get('session')->isExpired() == 0) {
+            if ($user->hasIdentity() && $container->get('session')->isExpired() == 0) {
 
                 // Replace our user with a fully loaded one
                 $user = $container->get('userFactory')->getById($user->userId);
@@ -98,9 +98,11 @@ class WebAuthentication implements Middleware
                 $user->routeAuthentication($resource);
 
                 // We are authenticated, override with the populated user object
-                 // $app->user = $user;
-                $newRequest = $request->withAttribute('currentUser', $user)
-                                      ->withAttribute('name', 'web');
+                $container->set('user', $user);
+
+                $newRequest = $request
+                    ->withAttribute('currentUser', $user)
+                    ->withAttribute('name', 'web');
 
                 return $handler->handle($newRequest);
             } else {
@@ -165,14 +167,14 @@ class WebAuthentication implements Middleware
                         ->withStatus(302)
                         ->withHeader('Location', $routeParser->urlFor('login'));
                 }
+            } else {
+                return $handler->handle(
+                    $request
+                        ->withAttribute('currentUser', $user)
+                        ->withAttribute('name', 'web')
+                );
             }
         }
-
-        return $handler->handle(
-            $request
-                ->withAttribute('currentUser', $user)
-                ->withAttribute('name', 'web')
-        );
     }
 
     /**

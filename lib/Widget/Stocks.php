@@ -677,4 +677,10 @@ class Stocks extends AlphaVantageBase
 
         return max($cachePeriod, $updateInterval);
     }
+
+    /** @inheritDoc */
+    public function hasTemplates()
+    {
+        return true;
+    }
 }
