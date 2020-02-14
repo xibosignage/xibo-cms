@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -100,9 +100,7 @@ class WebAuthentication implements Middleware
                 // We are authenticated, override with the populated user object
                 $container->set('user', $user);
 
-                $newRequest = $request
-                    ->withAttribute('currentUser', $user)
-                    ->withAttribute('name', 'web');
+                $newRequest = $request->withAttribute('name', 'web');
 
                 return $handler->handle($newRequest);
             } else {
@@ -110,8 +108,7 @@ class WebAuthentication implements Middleware
                 //  $app->flash('priorRoute', $app->request()->getRootUri() . $app->request()->getResourceUri());
                 $app->getContainer()->get('flash')->addMessage('priorRoute', $request->getUri() . $resource);
 
-                $request->withAttribute('currentUser', $user)
-                        ->withAttribute('name', 'web');
+                $request->withAttribute('name', 'web');
 
                 $app->getContainer()->get('logger')->debug('not in public routes, expired, should redirect to login ');
 

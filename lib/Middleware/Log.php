@@ -49,7 +49,7 @@ class Log  implements Middleware
     {
         $method = $request->getMethod();
         $route = $request->getUri()->getPath();
-        $user = $request->getAttribute('currentUser');
+        $user = $this->app->getContainer()->get('user');
         $userId = (isset($user)) ? $user->userId : null;
 
         /** @var Logger $logger */

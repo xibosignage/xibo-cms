@@ -95,8 +95,8 @@ class Actions implements Middleware
         // Only process notifications if we are a full request
         if (!$this->isAjax($request)) {
             try {
-                if ($request->getAttribute('currentUser') != null){
-                    $request->getAttribute('currentUser')->routeAuthentication('/drawer');
+                if ($container->has('user')){
+                    $container->get('user')->routeAuthentication('/drawer');
                 }
                 // Notifications
                 $notifications = [];
@@ -154,12 +154,9 @@ class Actions implements Middleware
                         }
                     }
                 }
-/* TODO
-                $app->view()->appendData([
-                    'notifications' => $notifications,
-                    'notificationCount' => $factory->countMyUnread() + $extraNotifications
-                ]);
-*/
+
+                $container->get('view')->offsetSet('notifications', $notifications);
+                $container->get('view')->offsetSet('notificationCount', $factory->countMyUnread() + $extraNotifications);
             } catch (AccessDeniedException $e) {
                 // Drawer not available
             }
