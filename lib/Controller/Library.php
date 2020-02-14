@@ -2315,7 +2315,7 @@ class Library extends Base
         }
 
         // Get count, being the number of times the media needs to appear to be true ( or use the default 0)
-        $count = $this->getSanitizer($request->getParams())->getInt('count', 0);
+        $count = $this->getSanitizer($request->getParams())->getInt('count', ['default' => 0]);
 
         // Check and return result
         $this->getState()->setData([
