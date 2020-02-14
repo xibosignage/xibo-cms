@@ -95,7 +95,7 @@ class Actions implements Middleware
         // Only process notifications if we are a full request
         if (!$this->isAjax($request)) {
             try {
-                if ($container->has('user')){
+                if ($container->get('user')->userId != null && $container->get('session')->isExpired() == 0){
                     $container->get('user')->routeAuthentication('/drawer');
                 }
                 // Notifications
