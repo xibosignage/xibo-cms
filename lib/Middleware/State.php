@@ -71,8 +71,6 @@ class State implements Middleware
         $request = State::setState($app, $request);
 
         $response = $handler->handle($request);
-        // Attach a hook to log the route
-
 
             // Do we need SSL/STS?
             // If we are behind a load balancer we should look at HTTP_X_FORWARDED_PROTO
@@ -89,7 +87,7 @@ class State implements Middleware
 
             if ($request->getUri()->getScheme() == 'https' || $forwardedProtoHttps) {
                 if ($container->get('configService')->getSetting('ISSUE_STS', 0) == 1) {
-                    $response->withHeader('strict-transport-security', 'max-age=' . $container->get('configService')->getSetting('STS_TTL', 600));
+                    $response = $response->withHeader('strict-transport-security', 'max-age=' . $container->get('configService')->getSetting('STS_TTL', 600));
                 }
             } else {
                 // Get the current route pattern
@@ -100,9 +98,8 @@ class State implements Middleware
                 // Allow non-https access to the clock page, otherwise force https
                 if ($resource !== '/clock' && $container->get('configService')->getSetting('FORCE_HTTPS', 0) == 1) {
                     $redirect = "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-                    $response
-                        ->withHeader('Location', $redirect)
-                        ->withStatus(302);
+                    $response = $response->withHeader('Location', $redirect)
+                                         ->withStatus(302);
                 }
             }
 
@@ -118,27 +115,18 @@ class State implements Middleware
             // Reset the ETAGs for GZIP
             $requestEtag = $request->getHeader('IF_NONE_MATCH');
             if ($requestEtag) {
-                $app->request()->headers->set('IF_NONE_MATCH', str_replace('-gzip', '', $requestEtag));
+                $response = $response->withHeader('IF_NONE_MATCH', str_replace('-gzip', '', $requestEtag));
             }
 
             // Handle correctly outputting cache headers for AJAX requests
             // IE cache busting
-        // TODO $app->getName() === 'web' && we should be able to use getAttribute (we need to set the names in auths)
-            if ($this->isAjax($request) && $request->getMethod() == 'GET') {
-                $response->withHeader('Cache-control', 'no-cache');
-                $response->withHeader('Cache-control', 'no-store');
-                $response->withHeader('Pragma', 'no-cache');
-                $response->withHeader('Expires', '0');
+            if ($this->isAjax($request) && $request->getMethod() == 'GET' && $request->getAttribute('name') == 'web') {
+                $response = $response->withHeader('Cache-control', 'no-cache')
+                         ->withHeader('Cache-control', 'no-store')
+                         ->withHeader('Pragma', 'no-cache')
+                         ->withHeader('Expires', '0');
             }
 
-/*
-        // Attach a hook to be called after the route has been dispatched
-        $this->app->hook('slim.after.dispatch', function() use ($app) {
-            // On our way back out the onion, we want to render the controller.
-            if ($app->controller != null)
-                $app->controller->render();
-        });
-*/
         // Next middleware
         return $response;
     }
