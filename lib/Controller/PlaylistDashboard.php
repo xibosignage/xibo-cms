@@ -222,7 +222,8 @@ class PlaylistDashboard extends Base
             'image_versions' => [],
             'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i',
             'libraryLimit' => ($this->getConfig()->GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024),
-            'libraryQuotaFull' => false
+            'libraryQuotaFull' => false,
+            'expires' => 0
         ];
 
         // Output handled by UploadHandler
