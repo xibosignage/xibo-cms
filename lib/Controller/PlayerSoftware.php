@@ -153,7 +153,7 @@ class PlayerSoftware extends Base
      */
     function grid(Request $request, Response $response)
     {
-        $user = $this->getUser($request);
+        $user = $this->getUser();
         $sanitizedQueryParams = $this->getSanitizer($request->getParams());
 
         $filter = [
@@ -165,7 +165,7 @@ class PlayerSoftware extends Base
             'playerShowVersion' => $sanitizedQueryParams->getString('playerShowVersion')
         ];
 
-        $versions = $this->playerVersionFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request), $request);
+        $versions = $this->playerVersionFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
 
         // add row buttons
         foreach ($versions as $version) {
@@ -238,7 +238,7 @@ class PlayerSoftware extends Base
         $version = $this->playerVersionFactory->getById($id);
         $media = $this->mediaFactory->getById($version->mediaId);
 
-        if (!$this->getUser($request)->checkDeleteable($media)) {
+        if (!$this->getUser()->checkDeleteable($media)) {
             throw new AccessDeniedException();
         }
 
@@ -292,7 +292,7 @@ class PlayerSoftware extends Base
         /** @var Media $media */
         $media = $this->mediaFactory->getById($version->mediaId);
 
-        if (!$this->getUser($request)->checkDeleteable($media)) {
+        if (!$this->getUser()->checkDeleteable($media)) {
             throw new AccessDeniedException();
         }
 
@@ -331,7 +331,7 @@ class PlayerSoftware extends Base
         $version = $this->playerVersionFactory->getById($id);
         $media = $this->mediaFactory->getById($version->mediaId);
 
-        if (!$this->getUser($request)->checkEditable($media)) {
+        if (!$this->getUser()->checkEditable($media)) {
             throw new AccessDeniedException();
         }
 
@@ -405,7 +405,7 @@ class PlayerSoftware extends Base
         $media = $this->mediaFactory->getById($version->mediaId);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($media)) {
+        if (!$this->getUser()->checkEditable($media)) {
             throw new AccessDeniedException();
         }
 

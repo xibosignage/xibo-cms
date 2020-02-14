@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (UserFactory.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -23,7 +24,6 @@
 namespace Xibo\Factory;
 
 
-use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
@@ -206,10 +206,11 @@ class UserFactory extends BaseFactory
      * @param array[mixed] $filterBy
      * @return array[User]
      */
-    public function query($sortOrder = [], $filterBy = [], Request $request = null)
+    public function query($sortOrder = [], $filterBy = [])
     {
         $entries = [];
         $parsedFilter = $this->getSanitizer($filterBy);
+
         // Default sort order
         if ($sortOrder === null || count($sortOrder) <= 0) {
             $sortOrder = ['userName'];
@@ -262,11 +263,11 @@ class UserFactory extends BaseFactory
 
         if ($parsedFilter->getCheckbox('disableUserCheck') == 0) {
             // Normal users can only see themselves
-            if ($this->getUser($request)->userTypeId == 3) {
-                $filterBy['userId'] = $this->getUser($request)->userId;
+            if ($this->getUser()->userTypeId == 3) {
+                $filterBy['userId'] = $this->getUser()->userId;
             }
             // Group admins can only see users from their groups.
-            else if ($this->getUser($request)->userTypeId == 2) {
+            else if ($this->getUser()->userTypeId == 2) {
                 $body .= '
                     AND user.userId IN (
                         SELECT `otherUserLinks`.userId
@@ -279,7 +280,7 @@ class UserFactory extends BaseFactory
                          WHERE `lkusergroup`.userId = :currentUserId
                     )
                 ';
-                $params['currentUserId'] = $this->getUser($request)->userId;
+                $params['currentUserId'] = $this->getUser()->userId;
             }
         }
 

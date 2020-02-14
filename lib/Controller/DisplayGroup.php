@@ -261,7 +261,7 @@ class DisplayGroup extends Base
 
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
 
-        $displayGroups = $this->displayGroupFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request), $request);
+        $displayGroups = $this->displayGroupFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
 
         foreach ($displayGroups as $group) {
             /* @var \Xibo\Entity\DisplayGroup $group */
@@ -269,7 +269,7 @@ class DisplayGroup extends Base
             // Check to see if we're getting this data for a Schedule attempt, or for a general list
             if ($parsedQueryParams->getCheckbox('forSchedule') == 1) {
                 // Can't schedule with view, but no edit permissions
-                if (!$scheduleWithView && !$this->getUser($request)->checkEditable($group))
+                if (!$scheduleWithView && !$this->getUser()->checkEditable($group))
                     continue;
             }
 
@@ -278,7 +278,7 @@ class DisplayGroup extends Base
 
             $group->includeProperty('buttons');
 
-            if ($this->getUser($request)->checkEditable($group)) {
+            if ($this->getUser()->checkEditable($group)) {
                 // Show the edit button, members button
 
                 if ($group->isDynamic == 0) {
@@ -306,7 +306,7 @@ class DisplayGroup extends Base
                 );
             }
 
-            if ($this->getUser($request)->checkDeleteable($group)) {
+            if ($this->getUser()->checkDeleteable($group)) {
                 // Show the delete button
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_delete',
@@ -327,7 +327,7 @@ class DisplayGroup extends Base
 
             $group->buttons[] = ['divider' => true];
 
-            if ($this->getUser($request)->checkEditable($group)) {
+            if ($this->getUser()->checkEditable($group)) {
                 // File Associations
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_fileassociations',
@@ -343,7 +343,7 @@ class DisplayGroup extends Base
                 );
             }
 
-            if ($this->getUser($request)->checkPermissionsModifyable($group)) {
+            if ($this->getUser()->checkPermissionsModifyable($group)) {
                 // Show the modify permissions button
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_permissions',
@@ -352,7 +352,7 @@ class DisplayGroup extends Base
                 );
             }
 
-            if ($this->getUser($request)->checkEditable($group)) {
+            if ($this->getUser()->checkEditable($group)) {
                 $group->buttons[] = ['divider' => true];
 
                 $group->buttons[] = array(
@@ -414,7 +414,7 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($displayGroup))
+        if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
         $tags = '';
@@ -458,7 +458,7 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($displayGroup))
+        if (!$this->getUser()->checkDeleteable($displayGroup))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'displaygroup-form-delete';
@@ -487,7 +487,7 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($displayGroup))
+        if (!$this->getUser()->checkEditable($displayGroup))
             throw new AccessDeniedException();
 
         // Displays in Group
@@ -586,7 +586,7 @@ class DisplayGroup extends Base
         $displayGroup->dynamicCriteria = $sanitizedParams->getString('dynamicCriteria');
         $displayGroup->dynamicCriteriaTags = $sanitizedParams->getString('dynamicCriteriaTags');
 
-        $displayGroup->userId = $this->getUser($request)->userId;
+        $displayGroup->userId = $this->getUser()->userId;
         $displayGroup->save();
 
         // Return
@@ -674,7 +674,7 @@ class DisplayGroup extends Base
         $parsedRequestParams = $this->getSanitizer($request->getParams());
         $preEditIsDynamic = $displayGroup->getOriginalValue('isDynamic');
 
-        if (!$this->getUser($request)->checkEditable($displayGroup)) {
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
@@ -754,7 +754,7 @@ class DisplayGroup extends Base
         $displayGroup = $this->displayGroupFactory->getById($id);
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
-        if (!$this->getUser($request)->checkDeleteable($displayGroup)) {
+        if (!$this->getUser()->checkDeleteable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
@@ -833,7 +833,7 @@ class DisplayGroup extends Base
 
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
-        if (!$this->getUser($request)->checkEditable($displayGroup)) {
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
@@ -848,7 +848,7 @@ class DisplayGroup extends Base
         foreach ($displays as $displayId) {
             $display = $this->displayFactory->getById($displayId);
 
-            if (!$this->getUser($request)->checkViewable($this->displayGroupFactory->getById($display->displayGroupId))) {
+            if (!$this->getUser()->checkViewable($this->displayGroupFactory->getById($display->displayGroupId))) {
                 throw new AccessDeniedException(__('Access Denied to Display'));
             }
 
@@ -865,7 +865,7 @@ class DisplayGroup extends Base
         foreach ($displays as $displayId) {
             $display = $this->displayFactory->getById($displayId);
 
-            if (!$this->getUser($request)->checkViewable($this->displayGroupFactory->getById($display->displayGroupId))) {
+            if (!$this->getUser()->checkViewable($this->displayGroupFactory->getById($display->displayGroupId))) {
                 throw new AccessDeniedException(__('Access Denied to Display'));
             }
 
@@ -951,7 +951,7 @@ class DisplayGroup extends Base
 
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
-        if (!$this->getUser($request)->checkEditable($displayGroup)) {
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
@@ -964,7 +964,7 @@ class DisplayGroup extends Base
         foreach ($displays as $displayId) {
             $display = $this->displayFactory->getById($displayId);
 
-            if (!$this->getUser($request)->checkViewable($this->displayGroupFactory->getById($display->displayGroupId))) {
+            if (!$this->getUser()->checkViewable($this->displayGroupFactory->getById($display->displayGroupId))) {
                 throw new AccessDeniedException(__('Access Denied to Display'));
             }
 
@@ -1049,7 +1049,7 @@ class DisplayGroup extends Base
 
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
-        if (!$this->getUser($request)->checkEditable($displayGroup)) {
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
@@ -1062,7 +1062,7 @@ class DisplayGroup extends Base
         foreach ($displayGroups as $assignDisplayGroupId) {
             $displayGroupAssign = $this->displayGroupFactory->getById($assignDisplayGroupId);
 
-            if (!$this->getUser($request)->checkViewable($displayGroupAssign)) {
+            if (!$this->getUser()->checkViewable($displayGroupAssign)) {
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
             }
 
@@ -1075,7 +1075,7 @@ class DisplayGroup extends Base
         foreach ($displayGroups as $assignDisplayGroupId) {
             $displayGroupUnassign = $this->displayGroupFactory->getById($assignDisplayGroupId);
 
-            if (!$this->getUser($request)->checkViewable($displayGroupUnassign)) {
+            if (!$this->getUser()->checkViewable($displayGroupUnassign)) {
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
             }
 
@@ -1149,7 +1149,7 @@ class DisplayGroup extends Base
         }
 
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-        if (!$this->getUser($request)->checkEditable($displayGroup)) {
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
@@ -1192,7 +1192,7 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($displayGroup)) {
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
@@ -1269,7 +1269,7 @@ class DisplayGroup extends Base
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($displayGroup)) {
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
@@ -1284,7 +1284,7 @@ class DisplayGroup extends Base
 
             $media = $this->mediaFactory->getById($mediaId);
 
-            if (!$this->getUser($request)->checkViewable($media)) {
+            if (!$this->getUser()->checkViewable($media)) {
                 throw new AccessDeniedException(__('You have selected media that you no longer have permission to use. Please reload the form.'));
             }
 
@@ -1298,7 +1298,7 @@ class DisplayGroup extends Base
             // Get the media record
             $media = $this->mediaFactory->getById($mediaId);
 
-            if (!$this->getUser($request)->checkViewable($media)) {
+            if (!$this->getUser()->checkViewable($media)) {
                 throw new AccessDeniedException(__('You have selected media that you no longer have permission to use. Please reload the form.'));
             }
 
@@ -1366,7 +1366,7 @@ class DisplayGroup extends Base
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($displayGroup)) {
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
@@ -1413,7 +1413,7 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($displayGroup)) {
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
@@ -1490,7 +1490,7 @@ class DisplayGroup extends Base
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($displayGroup)) {
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
@@ -1505,7 +1505,7 @@ class DisplayGroup extends Base
 
             $layout = $this->layoutFactory->getById($layoutId);
 
-            if (!$this->getUser($request)->checkViewable($layout)) {
+            if (!$this->getUser()->checkViewable($layout)) {
                 throw new AccessDeniedException(__('You have selected a layout that you no longer have permission to use. Please reload the form.'));
             }
 
@@ -1517,7 +1517,7 @@ class DisplayGroup extends Base
             // Get the layout record
             $layout = $this->layoutFactory->getById($layoutId);
 
-            if (!$this->getUser($request)->checkViewable($layout)) {
+            if (!$this->getUser()->checkViewable($layout)) {
                 throw new AccessDeniedException(__('You have selected a layout that you no longer have permission to use. Please reload the form.'));
             }
 
@@ -1585,7 +1585,7 @@ class DisplayGroup extends Base
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($displayGroup)) {
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
@@ -1630,7 +1630,7 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($displayGroup)) {
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
@@ -1677,7 +1677,7 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($displayGroup)) {
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
@@ -1728,7 +1728,7 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($displayGroup)) {
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
@@ -1818,7 +1818,7 @@ class DisplayGroup extends Base
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($displayGroup)) {
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
@@ -1852,7 +1852,7 @@ class DisplayGroup extends Base
             throw new InvalidArgumentException(__('Please provide Layout id or Campaign id'), 'layoutId');
         }
 
-        if (!$this->getUser($request)->checkViewable($layout)) {
+        if (!$this->getUser()->checkViewable($layout)) {
             throw new AccessDeniedException();
         }
 
@@ -1933,7 +1933,7 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($displayGroup)) {
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
@@ -2016,7 +2016,7 @@ class DisplayGroup extends Base
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($displayGroup)) {
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
@@ -2050,7 +2050,7 @@ class DisplayGroup extends Base
             throw new InvalidArgumentException(__('Please provide Layout id or Campaign id'), 'layoutId');
         }
 
-        if (!$this->getUser($request)->checkViewable($layout)) {
+        if (!$this->getUser()->checkViewable($layout)) {
             throw new AccessDeniedException();
         }
 
@@ -2108,14 +2108,14 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($displayGroup)) {
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
         $this->getState()->template = 'displaygroup-form-command';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
-            'commands' => $this->commandFactory->query(null, [], $request)
+            'commands' => $this->commandFactory->query()
         ]);
 
         return $this->render($request, $response);
@@ -2164,11 +2164,11 @@ class DisplayGroup extends Base
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($displayGroup)) {
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
-        $command = $this->commandFactory->getById($sanitizedParams->getInt('commandId'), $request);
+        $command = $this->commandFactory->getById($sanitizedParams->getInt('commandId'));
         $displays = $this->displayFactory->getByDisplayGroupId($id);
 
         $this->playerAction->sendAction($displays, (new CommandAction())->setCommandCode($command->code));
@@ -2207,7 +2207,7 @@ class DisplayGroup extends Base
         // Create a form out of the config object.
         $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if ($this->getUser($request)->userTypeId != 1 && $this->getUser($request)->userId != $displayGroup->userId) {
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayGroup->userId) {
             throw new AccessDeniedException(__('You do not have permission to delete this profile'));
         }
 
@@ -2299,7 +2299,7 @@ class DisplayGroup extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
 
-        if (!$this->getUser($request)->checkEditable($displayGroup)) {
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
@@ -2378,7 +2378,7 @@ class DisplayGroup extends Base
 
         $new->displayGroup = $sanitizedParams->getString('displayGroup');
         $new->description = $sanitizedParams->getString('description');
-        $new->setOwner($this->getUser($request)->userId);
+        $new->setOwner($this->getUser()->userId);
 
         // save without managing links, we need to save for new display group to get an ID, which is then used in next save to manage links - for dynamic groups.
         // we also don't want to call notify at this point (for file/layout assignment)

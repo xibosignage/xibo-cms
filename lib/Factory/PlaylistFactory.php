@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (PlaylistFactory.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,7 +23,6 @@
 
 namespace Xibo\Factory;
 
-use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
@@ -170,7 +170,7 @@ class PlaylistFactory extends BaseFactory
      * @param array $filterBy
      * @return Playlist[]
      */
-    public function query($sortOrder = null, $filterBy = [], Request $request = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $parsedFilter = $this->getSanitizer($filterBy);
         $entries = [];
@@ -302,7 +302,7 @@ class PlaylistFactory extends BaseFactory
         }
 
         // Logged in user view permissions
-        $this->viewPermissionSql('Xibo\Entity\Playlist', $body, $params, 'playlist.playlistId', 'playlist.ownerId', $filterBy, $request);
+        $this->viewPermissionSql('Xibo\Entity\Playlist', $body, $params, 'playlist.playlistId', 'playlist.ownerId', $filterBy);
 
         // Playlist Like
         if ($parsedFilter->getString('name') != '') {
@@ -382,7 +382,7 @@ class PlaylistFactory extends BaseFactory
             $params['mediaLike'] = '%' . $parsedFilter->getString('mediaLike') . '%';
         }
 
-        $user = $this->getUser($request);
+        $user = $this->getUser();
 
         if ( ($user->userTypeId == 1 && $user->showContentFrom == 2) || $user->userTypeId == 4 ) {
             $body .= ' AND user.userTypeId = 4 ';

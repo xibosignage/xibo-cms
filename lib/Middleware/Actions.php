@@ -69,7 +69,7 @@ class Actions implements Middleware
                         /** @var \Xibo\Entity\Layout $layout */
                         $layout = $container->get('layoutFactory')->createFromZip($folder . '/' . $file, null,
                             $container->get('userFactory')->getSystemUser()->getId(), false, false, true, false,
-                            true, $container->get('\Xibo\Controller\Library')->setApp($app));
+                            true, $container->get('\Xibo\Controller\Library'), $request);
                         $layout->save([
                             'audit' => false
                         ]);
@@ -95,8 +95,8 @@ class Actions implements Middleware
         // Only process notifications if we are a full request
         if (!$this->isAjax($request)) {
             try {
-                if ($request->getAttribute('currentUser') != null){
-                    $request->getAttribute('currentUser')->routeAuthentication('/drawer');
+                if ($container->get('user')->userId != null && $container->get('session')->isExpired() == 0){
+                    $container->get('user')->routeAuthentication('/drawer');
                 }
                 // Notifications
                 $notifications = [];
@@ -154,12 +154,9 @@ class Actions implements Middleware
                         }
                     }
                 }
-/* TODO
-                $app->view()->appendData([
-                    'notifications' => $notifications,
-                    'notificationCount' => $factory->countMyUnread() + $extraNotifications
-                ]);
-*/
+
+                $container->get('view')->offsetSet('notifications', $notifications);
+                $container->get('view')->offsetSet('notificationCount', $factory->countMyUnread() + $extraNotifications);
             } catch (AccessDeniedException $e) {
                 // Drawer not available
             }

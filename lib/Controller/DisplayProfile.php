@@ -216,7 +216,7 @@ class DisplayProfile extends Base
                 'text' => __('Copy')
             );
 
-            if ($this->getUser($request)->checkDeleteable($profile)) {
+            if ($this->getUser()->checkDeleteable($profile)) {
                 $profile->buttons[] = array(
                     'id' => 'displayprofile_button_delete',
                     'url' => $this->urlFor($request,'displayProfile.delete.form', ['id' => $profile->displayProfileId]),
@@ -309,7 +309,7 @@ class DisplayProfile extends Base
         $displayProfile->name = $sanitizedParams->getString('name');
         $displayProfile->type = $sanitizedParams->getString('type');
         $displayProfile->isDefault = $sanitizedParams->getCheckbox('isDefault');
-        $displayProfile->userId = $this->getUser($request)->userId;
+        $displayProfile->userId = $this->getUser()->userId;
 
         // We do not set any config at this point, so that unless the user chooses to edit the display profile
         // our defaults in the Display Profile Entity take effect
@@ -342,10 +342,10 @@ class DisplayProfile extends Base
     public function editForm(Request $request, Response $response, $id)
     {
         // Create a form out of the config object.
-        $displayProfile = $this->displayProfileFactory->getById($id, $request);
+        $displayProfile = $this->displayProfileFactory->getById($id);
 
         // Check permissions
-        if ($this->getUser($request)->userTypeId != 1 && $this->getUser($request)->userId != $displayProfile->userId) {
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId) {
             throw new AccessDeniedException(__('You do not have permission to edit this profile'));
         }
 
@@ -368,14 +368,14 @@ class DisplayProfile extends Base
 
         if ($dayPartId !== null) {
             try {
-                $dayparts[] = $this->dayPartFactory->getById($dayPartId, $request);
+                $dayparts[] = $this->dayPartFactory->getById($dayPartId);
             } catch (NotFoundException $e) {
                 $this->getLog()->debug('Unknown dayPartId set on Display Profile. ' . $displayProfile->displayProfileId);
             }
         }
 
         // Get a list of unassigned Commands
-        $unassignedCommands = array_udiff($this->commandFactory->query(null, [], $request), $displayProfile->commands, function($a, $b) {
+        $unassignedCommands = array_udiff($this->commandFactory->query(), $displayProfile->commands, function($a, $b) {
             /** @var \Xibo\Entity\Command $a */
             /** @var \Xibo\Entity\Command $b */
             return $a->getId() - $b->getId();
@@ -450,11 +450,11 @@ class DisplayProfile extends Base
     public function edit(Request $request, Response $response, $id)
     {
         // Create a form out of the config object.
-        $displayProfile = $this->displayProfileFactory->getById($id, $request);
+        $displayProfile = $this->displayProfileFactory->getById($id);
 
         $parsedParams = $this->getSanitizer($request->getParams());
 
-        if ($this->getUser($request)->userTypeId != 1 && $this->getUser($request)->userId != $displayProfile->userId) {
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId) {
             throw new AccessDeniedException(__('You do not have permission to edit this profile'));
         }
 
@@ -465,16 +465,16 @@ class DisplayProfile extends Base
         $this->editConfigFields($displayProfile, null, $request);
 
         // Capture and update commands
-        foreach ($this->commandFactory->query(null, [], $request) as $command) {
+        foreach ($this->commandFactory->query() as $command) {
             /* @var \Xibo\Entity\Command $command */
             if ($parsedParams->getString('commandString_' . $command->commandId) != null) {
                 // Set and assign the command
                 $command->commandString = $parsedParams->getString('commandString_' . $command->commandId);
                 $command->validationString = $parsedParams->getString('validationString_' . $command->commandId);
 
-                $displayProfile->assignCommand($command, $request);
+                $displayProfile->assignCommand($command);
             } else {
-                $displayProfile->unassignCommand($command, $request);
+                $displayProfile->unassignCommand($command);
             }
         }
 
@@ -512,7 +512,7 @@ class DisplayProfile extends Base
         // Create a form out of the config object.
         $displayProfile = $this->displayProfileFactory->getById($id);
 
-        if ($this->getUser($request)->userTypeId != 1 && $this->getUser($request)->userId != $displayProfile->userId)
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             throw new AccessDeniedException(__('You do not have permission to edit this profile'));
 
         $this->getState()->template = 'displayprofile-form-delete';
@@ -561,7 +561,7 @@ class DisplayProfile extends Base
         // Create a form out of the config object.
         $displayProfile = $this->displayProfileFactory->getById($id);
 
-        if ($this->getUser($request)->userTypeId != 1 && $this->getUser($request)->userId != $displayProfile->userId) {
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId) {
             throw new AccessDeniedException(__('You do not have permission to delete this profile'));
         }
 
@@ -593,7 +593,7 @@ class DisplayProfile extends Base
         // Create a form out of the config object.
         $displayProfile = $this->displayProfileFactory->getById($id);
 
-        if ($this->getUser($request)->userTypeId != 1 && $this->getUser($request)->userId != $displayProfile->userId)
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             throw new AccessDeniedException(__('You do not have permission to delete this profile'));
 
         $this->getState()->template = 'displayprofile-form-copy';
@@ -654,7 +654,7 @@ class DisplayProfile extends Base
         // Create a form out of the config object.
         $displayProfile = $this->displayProfileFactory->getById($id);
 
-        if ($this->getUser($request)->userTypeId != 1 && $this->getUser($request)->userId != $displayProfile->userId)
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
             throw new AccessDeniedException(__('You do not have permission to delete this profile'));
 
         $new = clone $displayProfile;

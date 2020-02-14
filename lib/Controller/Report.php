@@ -234,7 +234,7 @@ class Report extends Base
             ];
 
             // Reset to previous run
-            if ($this->getUser($request)->isSuperAdmin()) {
+            if ($this->getUser()->isSuperAdmin()) {
                 $reportSchedule->buttons[] = [
                     'id' => 'reportSchedule_reset_button',
                     'url' => $this->urlFor($request,'reportschedule.reset.form', ['id' => $reportSchedule->reportScheduleId]),
@@ -243,7 +243,7 @@ class Report extends Base
             }
 
             // Delete
-            if ($this->getUser($request)->checkDeleteable($reportSchedule)) {
+            if ($this->getUser()->checkDeleteable($reportSchedule)) {
                 // Show the delete button
                 $reportSchedule->buttons[] = array(
                     'id' => 'reportschedule_button_delete',
@@ -269,7 +269,7 @@ class Report extends Base
 
             // Delete all saved report
             $savedreports = $this->savedReportFactory->query(null, ['reportScheduleId'=> $reportSchedule->reportScheduleId], $request);
-            if ((count($savedreports) > 0)  && $this->getUser($request)->checkDeleteable($reportSchedule)) {
+            if ((count($savedreports) > 0)  && $this->getUser()->checkDeleteable($reportSchedule)) {
 
                 $reportSchedule->buttons[] = ['divider' => true];
 
@@ -346,7 +346,7 @@ class Report extends Base
         $reportSchedule->schedule = $result['schedule'];
         $reportSchedule->lastRunDt = 0;
         $reportSchedule->previousRunDt = 0;
-        $reportSchedule->userId = $this->getUser($request)->userId;
+        $reportSchedule->userId = $this->getUser()->userId;
         $reportSchedule->createdDt = $this->getDate()->getLocalDate(null, 'U');
 
         $reportSchedule->save();
@@ -377,9 +377,9 @@ class Report extends Base
      */
     public function reportScheduleEdit(Request $request, Response $response, $id)
     {
-        $reportSchedule = $this->reportScheduleFactory->getById($id, 0, $request);
+        $reportSchedule = $this->reportScheduleFactory->getById($id, 0);
 
-        if ($reportSchedule->getOwnerId() != $this->getUser($request)->userId && $this->getUser($request)->userTypeId != 1) {
+        if ($reportSchedule->getOwnerId() != $this->getUser()->userId && $this->getUser()->userTypeId != 1) {
             throw new AccessDeniedException();
         }
 
@@ -416,7 +416,7 @@ class Report extends Base
 
         $reportSchedule = $this->reportScheduleFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($reportSchedule)) {
+        if (!$this->getUser()->checkDeleteable($reportSchedule)) {
             throw new AccessDeniedException(__('You do not have permissions to delete this report schedule'));
         }
 
@@ -456,7 +456,7 @@ class Report extends Base
 
         $reportSchedule = $this->reportScheduleFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($reportSchedule)) {
+        if (!$this->getUser()->checkDeleteable($reportSchedule)) {
             throw new AccessDeniedException(__('You do not have permissions to delete the saved report of this report schedule'));
         }
 
@@ -497,7 +497,7 @@ class Report extends Base
 
         $reportSchedule = $this->reportScheduleFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($reportSchedule)) {
+        if (!$this->getUser()->checkEditable($reportSchedule)) {
             throw new AccessDeniedException(__('You do not have permissions to pause/resume this report schedule'));
         }
 
@@ -585,7 +585,7 @@ class Report extends Base
      */
     public function editReportScheduleForm(Request $request, Response $response, $id)
     {
-        $reportSchedule = $this->reportScheduleFactory->getById($id, 0, $request);
+        $reportSchedule = $this->reportScheduleFactory->getById($id, 0);
 
         $this->getState()->template = 'reportschedule-form-edit';
         $this->getState()->setData([
@@ -610,10 +610,10 @@ class Report extends Base
      */
     public function resetReportScheduleForm(Request $request, Response $response, $id)
     {
-        $reportSchedule = $this->reportScheduleFactory->getById($id, 0, $request);
+        $reportSchedule = $this->reportScheduleFactory->getById($id, 0);
 
         // Only admin can reset it
-        if ($this->getUser($request)->userTypeId != 1) {
+        if ($this->getUser()->userTypeId != 1) {
             throw new AccessDeniedException(__('You do not have permissions to reset this report schedule'));
         }
 
@@ -642,9 +642,9 @@ class Report extends Base
      */
     public function deleteReportScheduleForm(Request $request, Response $response, $id)
     {
-        $reportSchedule = $this->reportScheduleFactory->getById($id, 0, $request);
+        $reportSchedule = $this->reportScheduleFactory->getById($id, 0);
 
-        if (!$this->getUser($request)->checkDeleteable($reportSchedule)) {
+        if (!$this->getUser()->checkDeleteable($reportSchedule)) {
             throw new AccessDeniedException(__('You do not have permissions to delete this report schedule'));
         }
 
@@ -673,9 +673,9 @@ class Report extends Base
      */
     public function deleteAllSavedReportReportScheduleForm(Request $request, Response $response, $id)
     {
-        $reportSchedule = $this->reportScheduleFactory->getById($id, 0, $request);
+        $reportSchedule = $this->reportScheduleFactory->getById($id, 0);
 
-        if (!$this->getUser($request)->checkDeleteable($reportSchedule)) {
+        if (!$this->getUser()->checkDeleteable($reportSchedule)) {
             throw new AccessDeniedException(__('You do not have permissions to delete saved reports of this report schedule'));
         }
 
@@ -704,9 +704,9 @@ class Report extends Base
      */
     public function toggleActiveReportScheduleForm(Request $request, Response $response, $id)
     {
-        $reportSchedule = $this->reportScheduleFactory->getById($id, 0, $request);
+        $reportSchedule = $this->reportScheduleFactory->getById($id, 0);
 
-        if (!$this->getUser($request)->checkEditable($reportSchedule)) {
+        if (!$this->getUser()->checkEditable($reportSchedule)) {
             throw new AccessDeniedException(__('You do not have permissions to pause/resume this report schedule'));
         }
 
@@ -789,7 +789,7 @@ class Report extends Base
             }
 
             // Delete
-            if ($this->getUser($request)->checkDeleteable($savedReport)) {
+            if ($this->getUser()->checkDeleteable($savedReport)) {
                 // Show the delete button
                 $savedReport->buttons[] = array(
                     'id' => 'savedreport_button_delete',
@@ -853,7 +853,7 @@ class Report extends Base
     {
         $savedReport = $this->savedReportFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($savedReport)) {
+        if (!$this->getUser()->checkDeleteable($savedReport)) {
             throw new AccessDeniedException(__('You do not have permissions to delete this report schedule'));
         }
 
@@ -889,7 +889,7 @@ class Report extends Base
         /** @var Media $media */
         $media = $this->mediaFactory->getById($savedReport->mediaId);
 
-        if (!$this->getUser($request)->checkDeleteable($savedReport)) {
+        if (!$this->getUser()->checkDeleteable($savedReport)) {
             throw new AccessDeniedException(__('You do not have permissions to delete this report schedule'));
         }
 

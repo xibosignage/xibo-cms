@@ -175,7 +175,7 @@ class MediaManager extends Base
             $row['buttons'] = [];
 
             // Check editable
-            if (!$this->getUser($request)->checkEditable($widget)) {
+            if (!$this->getUser()->checkEditable($widget)) {
                 $rows[] = $row;
                 continue;
             }

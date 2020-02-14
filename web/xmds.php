@@ -21,13 +21,15 @@
  */
 
 use Monolog\Logger;
+use Nyholm\Psr7\ServerRequest;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ContainerFactory;
 
 define('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 
-error_reporting(1);
-ini_set('display_errors', 1);
+error_reporting(0);
+ini_set('display_errors', 0);
 
 require PROJECT_ROOT . '/vendor/autoload.php';
 
@@ -35,31 +37,6 @@ if (!file_exists(PROJECT_ROOT . '/web/settings.php')) {
     die('Not configured');
 }
 
-// TODO create logProcessor correctly here for xmds instead of containerFactory
-// We create a Slim Object ONLY for logging
-// Create a logger
-/*
-
-$logger = new \Xibo\Helper\AccessibleMonologWriter(array(
-    'name' => 'XMDS',
-    'handlers' => [new \Xibo\Helper\DatabaseLogHandler()],
-    'processors' => [$uidProcessor]
-));
-
-// Slim Application
-$app = new \Slim\Slim(array(
-    'debug' => false,
-    'log.writer' => $logger
-));
-$app->setName('api');
-$app->startTime = microtime(true);
-
-// Load the config
-$app->configService = \Xibo\Service\ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
-
-// Set storage
-\Xibo\Middleware\Storage::setStorage($app->container);
-*/
 // Create the container for dependency injection.
 try {
     $container = ContainerFactory::create();
@@ -81,9 +58,12 @@ $container->set('logger', function () use($uidProcessor) {
 });
 // Create a Slim application
 $app = \DI\Bridge\Slim\Bridge::create($container);
+$app->setBasePath(\Xibo\Middleware\State::determineBasePath());
+$request = new Request(new ServerRequest('GET', $app->getBasePath()));
+
 // Set state
-//\Xibo\Middleware\State::setState($app);
-$app->add(new \Xibo\Middleware\State($app));
+\Xibo\Middleware\State::setState($app, $request);
+
 // Set XMR
 \Xibo\Middleware\Xmr::setXmr($app, false);
 

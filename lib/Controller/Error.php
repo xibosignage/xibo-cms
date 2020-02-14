@@ -148,6 +148,7 @@ class Error extends Base
                 //$app->stop();
                 break;
         }
+       // return $this->render($request, $response);
     }
 
     /**
@@ -167,7 +168,7 @@ class Error extends Base
 
         // redirect to homepage (or login), if we are visiting this page with no errors to show
         // mostly for post phinx upgrade refresh.
-        if (!$message) {
+        if (!$message || $this->container->get('session')->isExpired() == 1) {
             return $response->withRedirect('/');
         }
 
@@ -238,5 +239,6 @@ class Error extends Base
                 //$app->stop();
                 break;
         }
+      //  return $this->render($request, $response);
     }
 }

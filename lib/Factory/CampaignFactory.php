@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (CampaignFactory.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,8 +23,6 @@
 
 namespace Xibo\Factory;
 
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Campaign;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
@@ -111,11 +110,11 @@ class CampaignFactory extends BaseFactory
      * @return Campaign
      * @throws NotFoundException
      */
-    public function getById($campaignId, Request $request = null)
+    public function getById($campaignId)
     {
         $this->getLog()->debug('CampaignFactory getById(%d)', $campaignId);
 
-        $campaigns = $this->query(null, array('disableUserCheck' => 1, 'campaignId' => $campaignId, 'isLayoutSpecific' => -1, 'excludeTemplates' => -1), [], $request);
+        $campaigns = $this->query(null, ['disableUserCheck' => 1, 'campaignId' => $campaignId, 'isLayoutSpecific' => -1, 'excludeTemplates' => -1]);
 
         if (count($campaigns) <= 0) {
             $this->getLog()->debug('Campaign not found with ID %d', $campaignId);
@@ -152,12 +151,13 @@ class CampaignFactory extends BaseFactory
      * @param array $filterBy
      * @return array[Campaign]
      */
-    public function query($sortOrder = null, $filterBy = [], $options = [], Request $request = null)
+    public function query($sortOrder = null, $filterBy = [], $options = [])
     {
         $sanitizedFilter = $this->getSanitizer($filterBy);
 
-        if ($sortOrder == null)
+        if ($sortOrder == null) {
             $sortOrder = ['campaign'];
+        }
 
         $campaigns = [];
         $params = [];
@@ -197,7 +197,7 @@ class CampaignFactory extends BaseFactory
         ';
 
         // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, '`campaign`.campaignId', '`campaign`.userId', $filterBy, $request);
+        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, '`campaign`.campaignId', '`campaign`.userId', $filterBy);
 
         if ($sanitizedFilter->getInt('isLayoutSpecific', ['default' => 0]) != -1) {
             // Exclude layout specific campaigns
@@ -288,7 +288,7 @@ class CampaignFactory extends BaseFactory
             }
         }
 
-        $user = $this->getUser($request);
+        $user = $this->getUser();
 
         if ( ($user->userTypeId == 1 && $user->showContentFrom == 2) || $user->userTypeId == 4 ) {
             $body .= ' AND user.userTypeId = 4 ';

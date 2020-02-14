@@ -22,7 +22,6 @@
 
 namespace Xibo\Factory;
 
-use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\SavedReport;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
@@ -119,7 +118,7 @@ class SavedReportFactory extends BaseFactory
      * @param array $filterBy
      * @return SavedReport[]
      */
-    public function query($sortOrder = null, $filterBy = [], Request $request = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         if ($sortOrder === null) {
             $sortOrder = ['generatedOn DESC'];
@@ -157,7 +156,7 @@ class SavedReportFactory extends BaseFactory
         $body .= " WHERE 1 = 1 ";
 
         // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\SavedReport', $body, $params, '`saved_report`.savedReportId', '`saved_report`.userId', $filterBy, $request);
+        $this->viewPermissionSql('Xibo\Entity\SavedReport', $body, $params, '`saved_report`.savedReportId', '`saved_report`.userId', $filterBy);
 
         // Like
         if ($sanitizedFilter->getString('saveAs') != '') {
@@ -211,7 +210,7 @@ class SavedReportFactory extends BaseFactory
 
         if ( $sanitizedFilter->getCheckbox('onlyMyReport') == 1) {
             $body .= ' AND `saved_report`.userId = :currentUserId ';
-            $params['currentUserId'] = $this->getUser($request)->userId;
+            $params['currentUserId'] = $this->getUser()->userId;
         }
 
         // Sorting?

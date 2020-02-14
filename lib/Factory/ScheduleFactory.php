@@ -379,7 +379,7 @@ class ScheduleFactory extends BaseFactory
             $params['futureSchedulesFrom'] = $parsedFilter->getInt('futureSchedulesFrom');
         }
 
-        if ($parsedFilter->getInt('futureSchedulesFrom', $filterBy) !== null && $parsedFilter->getInt('futureSchedulesTo') !== null) {
+        if ($parsedFilter->getInt('futureSchedulesFrom') !== null && $parsedFilter->getInt('futureSchedulesTo') !== null) {
             // Get schedules that end after this date, or that recur after this date
             $sql .= ' AND ((schedule.fromDt < :futureSchedulesTo AND IFNULL(`schedule`.toDt, `schedule`.fromDt) >= :futureSchedulesFrom) OR `schedule`.recurrence_range >= :futureSchedulesFrom OR (IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\') ) ';
             $params['futureSchedulesFrom'] = $parsedFilter->getInt('futureSchedulesFrom');

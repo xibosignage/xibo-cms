@@ -1,14 +1,28 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (UserGroupFactory.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
 namespace Xibo\Factory;
 
-use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\User;
 use Xibo\Entity\UserGroup;
 use Xibo\Exception\NotFoundException;
@@ -139,9 +153,9 @@ class UserGroupFactory extends BaseFactory
      * @return array[UserGroup]
      * @throws NotFoundException
      */
-    public function getByUserId($userId, $request = null)
+    public function getByUserId($userId)
     {
-        return $this->query(null, ['disableUserCheck' => 1, 'userId' => $userId, 'isUserSpecific' => 0], $request);
+        return $this->query(null, ['disableUserCheck' => 1, 'userId' => $userId, 'isUserSpecific' => 0]);
     }
 
     /**
@@ -169,7 +183,7 @@ class UserGroupFactory extends BaseFactory
      * @param array $filterBy
      * @return UserGroup[]
      */
-    public function query($sortOrder = null, $filterBy = [], Request $request = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $parsedFilter = $this->getSanitizer($filterBy);
         $entries = [];
@@ -197,7 +211,7 @@ class UserGroupFactory extends BaseFactory
         // Permissions
         if ($parsedFilter->getCheckbox('disableUserCheck') == 0) {
             // Normal users can only see their group
-            if ($this->getUser($request)->userTypeId != 1) {
+            if ($this->getUser()->userTypeId != 1) {
                 $body .= '
                 AND `group`.groupId IN (
                     SELECT `group`.groupId
@@ -208,7 +222,7 @@ class UserGroupFactory extends BaseFactory
                      WHERE `lkusergroup`.userId = :currentUserId
                 )
                 ';
-                $params['currentUserId'] = $this->getUser($request)->userId;
+                $params['currentUserId'] = $this->getUser()->userId;
             }
         }
 

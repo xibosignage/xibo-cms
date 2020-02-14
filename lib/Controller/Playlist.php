@@ -315,13 +315,13 @@ class Playlist extends Base
                     // Permissions?
                     if ($loadPermissions) {
                         // Augment with editable flag
-                        $widget->isEditable = $this->getUser($request)->checkEditable($widget);
+                        $widget->isEditable = $this->getUser()->checkEditable($widget);
 
                         // Augment with deletable flag
-                        $widget->isDeletable = $this->getUser($request)->checkDeleteable($widget);
+                        $widget->isDeletable = $this->getUser()->checkDeleteable($widget);
 
                         // Augment with permissions flag
-                        $widget->isPermissionsModifiable = $this->getUser($request)->checkPermissionsModifyable($widget);
+                        $widget->isPermissionsModifiable = $this->getUser()->checkPermissionsModifyable($widget);
                     }
                 }
             }
@@ -347,7 +347,7 @@ class Playlist extends Base
             }
 
             // Only proceed if we have edit permissions
-            if ($this->getUser($request)->checkEditable($playlist)) {
+            if ($this->getUser()->checkEditable($playlist)) {
 
                 if ($playlist->isDynamic === 0) {
                     // Timeline edit
@@ -395,7 +395,7 @@ class Playlist extends Base
             }
 
             // Extra buttons if have delete permissions
-            if ($this->getUser($request)->checkDeleteable($playlist)) {
+            if ($this->getUser()->checkDeleteable($playlist)) {
                 // Delete Button
                 $playlist->buttons[] = [
                     'id' => 'playlist_button_delete',
@@ -415,7 +415,7 @@ class Playlist extends Base
             }
 
             // Extra buttons if we have modify permissions
-            if ($this->getUser($request)->checkPermissionsModifyable($playlist)) {
+            if ($this->getUser()->checkPermissionsModifyable($playlist)) {
                 // Permissions button
                 $playlist->buttons[] = [
                     'id' => 'playlist_button_permissions',
@@ -535,7 +535,7 @@ class Playlist extends Base
             throw new InvalidArgumentException(__('Please enter playlist name'), 'name');
         }
 
-        $playlist = $this->playlistFactory->create($sanitizedParams->getString('name'), $this->getUser($request)->getId());
+        $playlist = $this->playlistFactory->create($sanitizedParams->getString('name'), $this->getUser()->getId());
         $playlist->isDynamic = $sanitizedParams->getCheckbox('isDynamic');
         $playlist->enableStat = $sanitizedParams->getString('enableStat');
 
@@ -554,7 +554,7 @@ class Playlist extends Base
         $playlist->save();
 
         // Default permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
             /* @var Permission $permission */
             $permission->save();
         }
@@ -574,7 +574,7 @@ class Playlist extends Base
                     $itemDuration = ($item->duration == 0) ? $module->determineDuration() : $item->duration;
 
                     // Create a widget
-                    $widget = $this->widgetFactory->create($this->getUser($request)->userId, $playlist->playlistId, $item->mediaType, $itemDuration);
+                    $widget = $this->widgetFactory->create($this->getUser()->userId, $playlist->playlistId, $item->mediaType, $itemDuration);
                     $widget->assignMedia($item->mediaId);
 
                     // Assign the widget to the module
@@ -607,7 +607,7 @@ class Playlist extends Base
                             $permission->save();
                         }
                     } else {
-                        foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+                        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                             /* @var Permission $permission */
                             $permission->save();
                         }
@@ -656,7 +656,7 @@ class Playlist extends Base
             }
         }
 
-        if (!$this->getUser($request)->checkEditable($playlist)) {
+        if (!$this->getUser()->checkEditable($playlist)) {
             throw new AccessDeniedException();
         }
 
@@ -744,7 +744,7 @@ class Playlist extends Base
         $playlist = $this->playlistFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($playlist)) {
+        if (!$this->getUser()->checkEditable($playlist)) {
             throw new AccessDeniedException();
         }
 
@@ -790,7 +790,7 @@ class Playlist extends Base
     {
         $playlist = $this->playlistFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($playlist)) {
+        if (!$this->getUser()->checkDeleteable($playlist)) {
             throw new AccessDeniedException();
         }
 
@@ -820,7 +820,7 @@ class Playlist extends Base
     {
         $playlist = $this->playlistFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($playlist)) {
+        if (!$this->getUser()->checkDeleteable($playlist)) {
             throw new AccessDeniedException();
         }
 
@@ -855,7 +855,7 @@ class Playlist extends Base
         $playlist = $this->playlistFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser($request)->checkViewable($playlist)) {
+        if (!$this->getUser()->checkViewable($playlist)) {
             throw new AccessDeniedException();
         }
 
@@ -928,7 +928,7 @@ class Playlist extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check Permissions
-        if (!$this->getUser($request)->checkViewable($playlist)) {
+        if (!$this->getUser()->checkViewable($playlist)) {
             throw new AccessDeniedException();
         }
 
@@ -944,7 +944,7 @@ class Playlist extends Base
                 // Copy the media
                 $oldMedia = $this->mediaFactory->getById($widget->getPrimaryMediaId());
                 $media = clone $oldMedia;
-                $media->setOwner($this->getUser($request)->userId);
+                $media->setOwner($this->getUser()->userId);
                 $media->save();
 
                 $widget->unassignMedia($oldMedia->mediaId);
@@ -964,14 +964,14 @@ class Playlist extends Base
         $playlist->save();
 
         // Permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
             /* @var Permission $permission */
             $permission->save();
         }
 
         foreach ($playlist->widgets as $widget) {
             /* @var Widget $widget */
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
@@ -1007,7 +1007,7 @@ class Playlist extends Base
         // Get a complex object of playlists and widgets
         $playlist = $this->playlistFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($playlist)) {
+        if (!$this->getUser()->checkEditable($playlist)) {
             throw new AccessDeniedException();
         }
 
@@ -1173,7 +1173,7 @@ class Playlist extends Base
         $playlist = $this->playlistFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($playlist))
+        if (!$this->getUser()->checkEditable($playlist))
             throw new AccessDeniedException();
 
         // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
@@ -1202,7 +1202,7 @@ class Playlist extends Base
             /* @var int $mediaId */
             $item = $this->mediaFactory->getById($mediaId);
 
-            if (!$this->getUser($request)->checkViewable($item))
+            if (!$this->getUser()->checkViewable($item))
                 throw new AccessDeniedException(__('You do not have permissions to use this media'));
 
             if ($item->mediaType == 'genericfile' || $item->mediaType == 'font')
@@ -1221,7 +1221,7 @@ class Playlist extends Base
             $itemDuration = ($itemDuration == 0) ? $module->determineDuration() : $itemDuration;
 
             // Create a widget
-            $widget = $this->widgetFactory->create($this->getUser($request)->userId, $id, $item->mediaType, $itemDuration);
+            $widget = $this->widgetFactory->create($this->getUser()->userId, $id, $item->mediaType, $itemDuration);
             $widget->assignMedia($item->mediaId);
 
             // Assign the widget to the module
@@ -1266,7 +1266,7 @@ class Playlist extends Base
                     $permission->save();
                 }
             } else {
-                foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                     /* @var Permission $permission */
                     $permission->save();
                 }
@@ -1350,7 +1350,7 @@ class Playlist extends Base
     {
         $playlist = $this->playlistFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($playlist)) {
+        if (!$this->getUser()->checkEditable($playlist)) {
             throw new AccessDeniedException();
         }
 
@@ -1411,7 +1411,7 @@ class Playlist extends Base
     {
         $playlist = $this->playlistFactory->getById($id);
 
-        if (!$this->getUser($request)->checkViewable($playlist)) {
+        if (!$this->getUser()->checkViewable($playlist)) {
             throw new AccessDeniedException();
         }
 
@@ -1459,7 +1459,7 @@ class Playlist extends Base
         $playlist = $this->playlistFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkViewable($playlist)) {
+        if (!$this->getUser()->checkViewable($playlist)) {
             throw new AccessDeniedException();
         }
 
@@ -1573,11 +1573,11 @@ class Playlist extends Base
     {
         $playlist = $this->playlistFactory->getById($id);
 
-        if (!$this->getUser($request)->checkViewable($playlist)) {
+        if (!$this->getUser()->checkViewable($playlist)) {
             throw new AccessDeniedException();
         }
 
-        $layouts = $this->layoutFactory->query(null, ['playlistId' => $id], $request);
+        $layouts = $this->layoutFactory->query(null, ['playlistId' => $id]);
 
         if (!$this->isApi($request)) {
             foreach ($layouts as $layout) {
@@ -1666,7 +1666,7 @@ class Playlist extends Base
         $playlist = $this->playlistFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser($request)->checkViewable($playlist)) {
+        if (!$this->getUser()->checkViewable($playlist)) {
             throw new AccessDeniedException();
         }
 
@@ -1703,7 +1703,7 @@ class Playlist extends Base
         $playlist = $this->playlistFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser($request)->checkViewable($playlist)) {
+        if (!$this->getUser()->checkViewable($playlist)) {
             throw new AccessDeniedException();
         }
 

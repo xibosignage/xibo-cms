@@ -133,16 +133,11 @@ class Base
     }
 
     /**
-     * Get the Current User
-     * @param Request|null $request
-     * @return \Xibo\Entity\User
+     * Get User
+     * @return User
      */
-    public function getUser(Request $request = null)
+    public function getUser()
     {
-        if (isset($request)) {
-            $this->user = $request->getAttribute('currentUser');
-        }
-
         return $this->user;
     }
 
@@ -342,7 +337,7 @@ class Base
 
             // Append the side bar content
             $data['clock'] = $this->getDate()->getLocalDate(null, 'H:i T');
-            $data['currentUser'] = $this->getUser($request);
+            $data['currentUser'] = $this->getUser();
 
             $response = $this->view->render($response, $state->template . '.twig', $data);
         }
@@ -414,7 +409,7 @@ class Base
         $state = $this->getState();
 
         // Supply the current user to the view
-        $data['currentUser'] = $this->getUser($request);
+        $data['currentUser'] = $this->getUser();
 
         // Render the view manually with Twig, parse it and pull out various bits
         $view = $this->view->render($response,$state->template . '.twig', $data);

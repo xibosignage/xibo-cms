@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2012-2016 Spring Signage Ltd - http://www.springsignage.com
  *
  * This file is part of Xibo.
  *
@@ -22,7 +23,6 @@
 
 namespace Xibo\Factory;
 
-use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\DayPart;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
@@ -68,9 +68,9 @@ class DayPartFactory extends BaseFactory
      * @return DayPart
      * @throws NotFoundException
      */
-    public function getById($dayPartId, Request $request = null)
+    public function getById($dayPartId)
     {
-        $dayParts = $this->query(null, ['dayPartId' => $dayPartId, 'disableUserCheck' => 1], $request);
+        $dayParts = $this->query(null, ['dayPartId' => $dayPartId, 'disableUserCheck' => 1]);
 
         if (count($dayParts) <= 0)
             throw new NotFoundException();
@@ -111,6 +111,7 @@ class DayPartFactory extends BaseFactory
     /**
      * Get all dayparts with the system entries (always and custom)
      * @return DayPart[]
+     * @throws NotFoundException
      */
     public function allWithSystem()
     {
@@ -123,8 +124,9 @@ class DayPartFactory extends BaseFactory
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[Schedule]
+     * @throws NotFoundException
      */
-    public function query($sortOrder = null, $filterBy = [], Request $request = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $entries = [];
         $sanitizedFilter = $this->getSanitizer($filterBy);
@@ -140,7 +142,7 @@ class DayPartFactory extends BaseFactory
         $body .= ' WHERE 1 = 1 ';
 
         // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\DayPart', $body, $params, '`daypart`.dayPartId', '`daypart`.userId', $filterBy, $request);
+        $this->viewPermissionSql('Xibo\Entity\DayPart', $body, $params, '`daypart`.dayPartId', '`daypart`.userId', $filterBy);
 
         if ($sanitizedFilter->getInt('dayPartId') !== null) {
             $body .= ' AND `daypart`.dayPartId = :dayPartId ';

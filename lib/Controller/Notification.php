@@ -216,7 +216,7 @@ class Notification extends Base
             'subject' => $sanitizedQueryParams->getString('subject')
         ];
         $embed = ($sanitizedQueryParams->getString('embed') != null) ? explode(',', $sanitizedQueryParams->getString('embed')) : [];
-        $notifications = $this->notificationFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request), $request);
+        $notifications = $this->notificationFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
 
         foreach ($notifications as $notification) {
             /* @var \Xibo\Entity\Notification $notification */
@@ -240,7 +240,7 @@ class Notification extends Base
                 'text' => __('Edit')
             );
 
-            if ($this->getUser($request)->checkDeleteable($notification)) {
+            if ($this->getUser()->checkDeleteable($notification)) {
                 $notification->buttons[] = array(
                     'id' => 'notification_button_delete',
                     'url' => $this->urlFor($request,'notification.delete.form', ['id' => $notification->notificationId]),
@@ -328,14 +328,14 @@ class Notification extends Base
      */
     public function editForm(Request $request, Response $response, $id)
     {
-        $notification = $this->notificationFactory->getById($id, $request);
+        $notification = $this->notificationFactory->getById($id);
         $notification->load();
 
         // Adjust the dates
         $notification->createdDt = $this->getDate()->getLocalDate($notification->createdDt);
         $notification->releaseDt = $this->getDate()->getLocalDate($notification->releaseDt);
 
-        if (!$this->getUser($request)->checkEditable($notification)) {
+        if (!$this->getUser()->checkEditable($notification)) {
             throw new AccessDeniedException();
         }
 
@@ -344,7 +344,7 @@ class Notification extends Base
         $userGroups = [];
         $users = [];
 
-        foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1], $request) as $displayGroup) {
+        foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
             /* @var \Xibo\Entity\DisplayGroup $displayGroup */
 
             if ($displayGroup->isDisplaySpecific == 1) {
@@ -354,7 +354,7 @@ class Notification extends Base
             }
         }
 
-        foreach ($this->userGroupFactory->query(['`group`'], ['isUserSpecific' => -1], $request) as $userGroup) {
+        foreach ($this->userGroupFactory->query(['`group`'], ['isUserSpecific' => -1]) as $userGroup) {
             /* @var UserGroup $userGroup */
 
             if ($userGroup->isUserSpecific == 0) {
@@ -397,9 +397,9 @@ class Notification extends Base
      */
     public function deleteForm(Request $request, Response $response, $id)
     {
-        $notification = $this->notificationFactory->getById($id, $request);
+        $notification = $this->notificationFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($notification)) {
+        if (!$this->getUser()->checkDeleteable($notification)) {
             throw new AccessDeniedException();
         }
 
@@ -423,7 +423,7 @@ class Notification extends Base
         Library::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
         $options = array(
-            'userId' => $this->getUser($request)->userId,
+            'userId' => $this->getUser()->userId,
             'controller' => $this,
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
@@ -541,7 +541,7 @@ class Notification extends Base
 
         $notification->isEmail = $sanitizedParams->getCheckbox('isEmail');
         $notification->isInterrupt = $sanitizedParams->getCheckbox('isInterrupt');
-        $notification->userId = $this->getUser($request)->userId;
+        $notification->userId = $this->getUser()->userId;
         $notification->nonusers = $sanitizedParams->getString('nonusers');
 
         // Displays and Users to link
@@ -691,12 +691,12 @@ class Notification extends Base
      */
     public function edit(Request $request, Response $response, $id)
     {
-        $notification = $this->notificationFactory->getById($id, $request);
+        $notification = $this->notificationFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $notification->load();
 
         // Check Permissions
-        if (!$this->getUser($request)->checkEditable($notification)) {
+        if (!$this->getUser()->checkEditable($notification)) {
             throw new AccessDeniedException();
         }
 
@@ -706,7 +706,7 @@ class Notification extends Base
         $notification->releaseDt = $sanitizedParams->getDate('releaseDt')->format('U');
         $notification->isEmail = $sanitizedParams->getCheckbox('isEmail');
         $notification->isInterrupt = $sanitizedParams->getCheckbox('isInterrupt');
-        $notification->userId = $this->getUser($request)->userId;
+        $notification->userId = $this->getUser()->userId;
         $notification->nonusers = $sanitizedParams->getString('nonusers');
 
         // Clear existing assignments
@@ -772,9 +772,9 @@ class Notification extends Base
      */
     public function delete(Request $request, Response $response, $id)
     {
-        $notification = $this->notificationFactory->getById($id, $request);
+        $notification = $this->notificationFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($notification)) {
+        if (!$this->getUser()->checkDeleteable($notification)) {
             throw new AccessDeniedException();
         }
 
@@ -800,7 +800,7 @@ class Notification extends Base
 
     public function exportAttachment(Request $request, Response $response, $id)
     {
-        $notification = $this->notificationFactory->getById($id, $request);
+        $notification = $this->notificationFactory->getById($id);
 
         $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION'). 'attachment/'.$notification->filename;
 

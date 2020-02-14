@@ -1,7 +1,7 @@
 <?php
 /*
  * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015-2017 Spring Signage Ltd
+ * Copyright (C) 2015-2020 Xibo Signage Ltd
  * contributions by LukyLuke aka Lukas Zurschmiede - https://github.com/LukyLuke
  *
  * (DataSetFactory.php) This file is part of Xibo.
@@ -181,7 +181,7 @@ class DataSetFactory extends BaseFactory
      * @param array $filterBy
      * @return array[DataSet]
      */
-    public function query($sortOrder = null, $filterBy = [], $request = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $entries = [];
         $params = [];
@@ -239,7 +239,7 @@ class DataSetFactory extends BaseFactory
         ';
 
         // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy, $request);
+        $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy);
 
         if ($parsedFilter->getInt('dataSetId') !== null) {
             $body .= ' AND dataset.dataSetId = :dataSetId ';

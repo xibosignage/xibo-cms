@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (MediaFactory.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,7 +23,6 @@
 
 namespace Xibo\Factory;
 
-use Slim\Http\ServerRequest as Request;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Pool;
@@ -461,12 +461,13 @@ class MediaFactory extends BaseFactory
      * @param array $filterBy
      * @return Media[]
      */
-    public function query($sortOrder = null, $filterBy = [], Request $request = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $sanitizedFilter = $this->getSanitizer($filterBy);
 
-        if ($sortOrder === null)
+        if ($sortOrder === null) {
             $sortOrder = ['name'];
+        }
 
         $newSortOrder = [];
         foreach ($sortOrder as $sort) {
@@ -553,7 +554,7 @@ class MediaFactory extends BaseFactory
         }
 
         // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy, $request);
+        $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy);
 
         if ($sanitizedFilter->getInt('allModules') == 0) {
             $body .= ' AND media.type <> \'module\' ';
@@ -762,7 +763,7 @@ class MediaFactory extends BaseFactory
             $params['duration'] = $duration['variable'];
         }
 
-        $user = $this->getUser($request);
+        $user = $this->getUser();
 
         if ( ($user->userTypeId == 1 && $user->showContentFrom == 2) || $user->userTypeId == 4 ) {
             $body .= ' AND user.userTypeId = 4 ';

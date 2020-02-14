@@ -29,9 +29,8 @@ $app->get('/', function (Request $request, Response $response) use ($app) {
     $app->getContainer()->get('configService')->setDependencies($app->getContainer()->get('store'), $app->rootUri);
     $routeParser = $app->getRouteCollector()->getRouteParser();
     /* @var \Xibo\Entity\User $user */
-    $user = $request->getAttribute('currentUser');
-    $app->user = $user;
-    $app->getContainer()->get('logger')->debug('Showing the homepage: ' . [$user->homePageId]);
+    $user = $app->getContainer()->get('user');
+    $app->getContainer()->get('logger')->debug('Showing the homepage: ' . $user->homePageId);
     /** @var \Xibo\Entity\Page $page */
     $page = $app->getContainer()->get('pageFactory')->getById($user->homePageId);
 

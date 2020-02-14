@@ -151,7 +151,7 @@ class Resolution extends Base
 
             $resolution->includeProperty('buttons');
 
-            if ($this->getUser($request)->checkEditable($resolution)) {
+            if ($this->getUser()->checkEditable($resolution)) {
                 // Edit Button
                 $resolution->buttons[] = array(
                     'id' => 'resolution_button_edit',
@@ -160,7 +160,7 @@ class Resolution extends Base
                 );
             }
 
-            if ($this->getUser($request)->checkDeleteable($resolution)) {
+            if ($this->getUser()->checkDeleteable($resolution)) {
                 // Delete Button
                 $resolution->buttons[] = array(
                     'id' => 'resolution_button_delete',
@@ -215,7 +215,7 @@ class Resolution extends Base
     {
         $resolution = $this->resolutionFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($resolution)) {
+        if (!$this->getUser()->checkEditable($resolution)) {
             throw new AccessDeniedException();
         }
 
@@ -245,7 +245,7 @@ class Resolution extends Base
     {
         $resolution = $this->resolutionFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($resolution)) {
+        if (!$this->getUser()->checkEditable($resolution)) {
             throw new AccessDeniedException();
         }
 
@@ -317,7 +317,7 @@ class Resolution extends Base
             $sanitizedParams->getInt('width'),
             $sanitizedParams->getInt('height'));
 
-        $resolution->userId = $this->getUser($request)->userId;
+        $resolution->userId = $this->getUser()->userId;
         $resolution->save();
 
         // Return
@@ -388,7 +388,7 @@ class Resolution extends Base
     {
         $resolution = $this->resolutionFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($resolution)) {
+        if (!$this->getUser()->checkEditable($resolution)) {
             throw new AccessDeniedException();
         }
 
@@ -445,7 +445,7 @@ class Resolution extends Base
     {
         $resolution = $this->resolutionFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($resolution)) {
+        if (!$this->getUser()->checkDeleteable($resolution)) {
             throw new AccessDeniedException();
         }
 

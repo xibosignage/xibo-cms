@@ -153,7 +153,7 @@ class Logging extends Base
      */
     public function truncateForm(Request $request, Response $response)
     {
-        if ($this->getUser($request)->userTypeId != 1) {
+        if ($this->getUser()->userTypeId != 1) {
             throw new AccessDeniedException(__('Only Administrator Users can truncate the log'));
         }
 
@@ -178,7 +178,7 @@ class Logging extends Base
      */
     public function truncate(Request $request, Response $response)
     {
-        if ($this->getUser($request)->userTypeId != 1) {
+        if ($this->getUser()->userTypeId != 1) {
             throw new AccessDeniedException(__('Only Administrator Users can truncate the log'));
         }
 

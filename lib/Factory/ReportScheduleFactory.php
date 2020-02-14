@@ -22,7 +22,6 @@
 
 namespace Xibo\Factory;
 
-use Slim\Http\ServerRequest as Request;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Entity\User;
@@ -89,13 +88,13 @@ class ReportScheduleFactory extends BaseFactory
      * @return ReportSchedule
      * @throws NotFoundException
      */
-    public function getById($reportScheduleId, $disableUserCheck = 0, Request $request = null)
+    public function getById($reportScheduleId, $disableUserCheck = 0)
     {
 
         if ($reportScheduleId == 0)
             throw new NotFoundException();
 
-        $reportSchedules = $this->query(null, ['reportScheduleId' => $reportScheduleId, 'disableUserCheck' => $disableUserCheck], $request);
+        $reportSchedules = $this->query(null, ['reportScheduleId' => $reportScheduleId, 'disableUserCheck' => $disableUserCheck]);
 
         if (count($reportSchedules) <= 0) {
             throw new NotFoundException(\__('Report Schedule not found'));
@@ -110,7 +109,7 @@ class ReportScheduleFactory extends BaseFactory
      * @param array $filterBy
      * @return ReportSchedule[]
      */
-    public function query($sortOrder = null, $filterBy = [], Request $request = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         if ($sortOrder == null) {
             $sortOrder = ['name'];
@@ -143,8 +142,8 @@ class ReportScheduleFactory extends BaseFactory
         $body .= " WHERE 1 = 1 ";
 
         // View Permissions
-        if ($this->getUser($request)->userTypeId != 1) {
-            $this->viewPermissionSql('Xibo\Entity\ReportSchedule', $body, $params, '`reportschedule`.reportScheduleId', '`reportschedule`.userId', $filterBy, $request);
+        if ($this->getUser()->userTypeId != 1) {
+            $this->viewPermissionSql('Xibo\Entity\ReportSchedule', $body, $params, '`reportschedule`.reportScheduleId', '`reportschedule`.userId', $filterBy);
         }
 
         // Like
@@ -166,7 +165,7 @@ class ReportScheduleFactory extends BaseFactory
 
         if ( $sanitizedFilter->getCheckbox('onlyMySchedules') == 1) {
             $body .= ' AND reportschedule.userid = :currentUserId ';
-            $params['currentUserId'] = $this->getUser($request)->userId;
+            $params['currentUserId'] = $this->getUser()->userId;
         }
 
         // Report Name

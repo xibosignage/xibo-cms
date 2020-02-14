@@ -28,7 +28,7 @@
     {% trans "Edit Twitter Metro" %}
 {% endblock %}
 
-{% block extra %}{{ {"colors": module.getOption("templateColours"), "templates": templatesAvailable}|json_encode|raw }}{% endblock %}
+{% block extra %}{{ {"colors": module.getOption("templateColours"), "templates": module.templatesAvailable()}|json_encode|raw }}{% endblock %}
 
 {% block formHtml %}
     <div class="row">

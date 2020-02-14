@@ -152,7 +152,7 @@ class DataSet extends Base
      */
     public function grid(Request $request, Response $response)
     {
-        $user = $this->getUser($request);
+        $user = $this->getUser();
         $sanitizedParams = $this->getSanitizer($request->getQueryParams());
         
         // Embed?
@@ -164,7 +164,7 @@ class DataSet extends Base
             'code' => $sanitizedParams->getString('code'),
         ];
 
-        $dataSets = $this->dataSetFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request), $request);
+        $dataSets = $this->dataSetFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
 
         foreach ($dataSets as $dataSet) {
             /* @var \Xibo\Entity\DataSet $dataSet */
@@ -457,7 +457,7 @@ class DataSet extends Base
         $dataSet->description = $sanitizedParams->getString('description');
         $dataSet->code = $sanitizedParams->getString('code');
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
-        $dataSet->userId = $this->getUser($request)->userId;
+        $dataSet->userId = $this->getUser()->userId;
 
         // Fields for remote
         if ($dataSet->isRemote === 1) {
@@ -522,7 +522,7 @@ class DataSet extends Base
     {
         $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($dataSet)) {
+        if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
         }
 
@@ -530,7 +530,7 @@ class DataSet extends Base
         $this->getState()->template = 'dataset-form-edit';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'dataSets' => $this->dataSetFactory->query(null, [], $request),
+            'dataSets' => $this->dataSetFactory->query(),
             'help' => $this->getHelp()->link('DataSet', 'Edit')
         ]);
 
@@ -696,7 +696,7 @@ class DataSet extends Base
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($dataSet)) {
+        if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
         }
 
@@ -752,7 +752,7 @@ class DataSet extends Base
     {
         $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($dataSet)) {
+        if (!$this->getUser()->checkDeleteable($dataSet)) {
             throw new AccessDeniedException();
         }
 
@@ -808,7 +808,7 @@ class DataSet extends Base
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkDeleteable($dataSet)) {
+        if (!$this->getUser()->checkDeleteable($dataSet)) {
             throw new AccessDeniedException();
         }
 
@@ -845,7 +845,7 @@ class DataSet extends Base
     {
         $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($dataSet)) {
+        if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
         }
 
@@ -929,7 +929,7 @@ class DataSet extends Base
 
         $copyRows = $sanitizedParams->getCheckbox('copyRows');
 
-        if (!$this->getUser($request)->checkEditable($dataSet)) {
+        if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
         }
 
@@ -942,7 +942,7 @@ class DataSet extends Base
         $dataSet->dataSet = $sanitizedParams->getString('dataSet');
         $dataSet->description = $sanitizedParams->getString('description');
         $dataSet->code = $sanitizedParams->getString('code');
-        $dataSet->userId = $this->getUser($request)->userId;
+        $dataSet->userId = $this->getUser()->userId;
 
         $dataSet->save();
 
@@ -1028,7 +1028,7 @@ class DataSet extends Base
         Library::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
         $options = array(
-            'userId' => $this->getUser($request)->userId,
+            'userId' => $this->getUser()->userId,
             'dataSetId' => $id,
             'controller' => $this,
             'upload_dir' => $libraryFolder . 'temp/',
@@ -1108,7 +1108,7 @@ class DataSet extends Base
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($dataSet)) {
+        if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
         }
 

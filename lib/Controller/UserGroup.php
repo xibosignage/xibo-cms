@@ -156,7 +156,7 @@ class UserGroup extends Base
             'isUserSpecific' => 0
         ];
 
-        $groups = $this->userGroupFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filterBy, $request), $request);
+        $groups = $this->userGroupFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filterBy, $request));
         $this->getLog()->debug('GROUP GRID RESULTS ' . json_encode($groups));
         foreach ($groups as $group) {
             /* @var \Xibo\Entity\UserGroup $group */
@@ -175,7 +175,7 @@ class UserGroup extends Base
                     'text' => __('Edit')
                 );
 
-                if ($this->getUser($request)->isSuperAdmin()) {
+                if ($this->getUser()->isSuperAdmin()) {
                     // Delete
                     $group->buttons[] = array(
                         'id' => 'usergroup_button_delete',
@@ -202,7 +202,7 @@ class UserGroup extends Base
                     'text' => __('Members')
                 );
 
-                if ($this->getUser($request)->isSuperAdmin()) {
+                if ($this->getUser()->isSuperAdmin()) {
                     // Page Security
                     $group->buttons[] = array(
                         'id' => 'usergroup_button_page_security',
@@ -366,7 +366,7 @@ class UserGroup extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check permissions
-        if (!$this->getUser($request)->isSuperAdmin()) {
+        if (!$this->getUser()->isSuperAdmin()) {
             throw new AccessDeniedException();
         }
 
@@ -375,7 +375,7 @@ class UserGroup extends Base
         $group->group = $sanitizedParams->getString('group');
         $group->libraryQuota = $sanitizedParams->getInt('libraryQuota');
 
-        if ($this->getUser($request)->userTypeId == 1) {
+        if ($this->getUser()->userTypeId == 1) {
             $group->isSystemNotification = $sanitizedParams->getCheckbox('isSystemNotification');
             $group->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
         }
@@ -459,7 +459,7 @@ class UserGroup extends Base
     function edit(Request $request, Response $response, $id)
     {
         // Check permissions
-        if (!$this->getUser($request)->isSuperAdmin() && !$this->getUser($request)->isGroupAdmin()) {
+        if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin()) {
             throw new AccessDeniedException();
         }
 
@@ -467,7 +467,7 @@ class UserGroup extends Base
 
         $group = $this->userGroupFactory->getById($id);
 
-        if (!$this->isEditable($group, $request)) {
+        if (!$this->isEditable($group)) {
             throw new AccessDeniedException();
         }
 
@@ -476,7 +476,7 @@ class UserGroup extends Base
         $group->group = $sanitizedParams->getString('group');
         $group->libraryQuota = $sanitizedParams->getInt('libraryQuota');
 
-        if ($this->getUser($request)->userTypeId == 1) {
+        if ($this->getUser()->userTypeId == 1) {
             $group->isSystemNotification = $sanitizedParams->getCheckbox('isSystemNotification');
             $group->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
         }
@@ -528,13 +528,13 @@ class UserGroup extends Base
     function delete(Request $request, Response $response, $id)
     {
         // Check permissions
-        if (!$this->getUser($request)->isSuperAdmin()) {
+        if (!$this->getUser()->isSuperAdmin()) {
             throw new AccessDeniedException();
         }
 
         $group = $this->userGroupFactory->getById($id);
 
-        if (!$this->isEditable($group, $request)) {
+        if (!$this->isEditable($group)) {
             throw new AccessDeniedException();
         }
 
@@ -565,7 +565,7 @@ class UserGroup extends Base
     public function aclForm(Request $request, Response $response, $id)
     {
         // Check permissions to this function
-        if (!$this->getUser($request)->isSuperAdmin()) {
+        if (!$this->getUser()->isSuperAdmin()) {
             throw new AccessDeniedException();
         }
 
@@ -640,7 +640,7 @@ class UserGroup extends Base
     public function acl(Request $request, Response $response, $id)
     {
         // Check permissions to this function
-        if (!$this->getUser($request)->isSuperAdmin()) {
+        if (!$this->getUser()->isSuperAdmin()) {
             throw new AccessDeniedException();
         }
 
@@ -738,10 +738,10 @@ class UserGroup extends Base
         }
 
         // Users in group
-        $usersAssigned = $this->userFactory->query(null, ['groupIds' => [$id]], $request);
+        $usersAssigned = $this->userFactory->query(null, ['groupIds' => [$id]]);
 
         // Users not in group
-        $allUsers = $this->userFactory->query(null, [], $request);
+        $allUsers = $this->userFactory->query();
 
         // The available users are all users except users already in assigned users
         $checkboxes = [];
@@ -841,7 +841,7 @@ class UserGroup extends Base
 
             $user = $this->userFactory->getById($userId);
 
-            if (!$this->getUser($request)->checkViewable($user)) {
+            if (!$this->getUser()->checkViewable($user)) {
                 throw new AccessDeniedException(__('Access Denied to User'));
             }
 
@@ -858,7 +858,7 @@ class UserGroup extends Base
 
             $user = $this->userFactory->getById($userId);
 
-            if (!$this->getUser($request)->checkViewable($user)) {
+            if (!$this->getUser()->checkViewable($user)) {
                 throw new AccessDeniedException(__('Access Denied to User'));
             }
 
@@ -1066,9 +1066,9 @@ class UserGroup extends Base
      * @param Request $request
      * @return bool
      */
-    private function isEditable($group, Request $request)
+    private function isEditable($group)
     {
-        return $this->getUser($request)->isSuperAdmin()
-            || ($this->getUser($request)->isGroupAdmin() && count(array_intersect($this->getUser($request)->groups, [$group])));
+        return $this->getUser()->isSuperAdmin()
+            || ($this->getUser()->isGroupAdmin() && count(array_intersect($this->getUser()->groups, [$group])));
     }
 }

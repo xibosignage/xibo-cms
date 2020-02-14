@@ -217,7 +217,7 @@ class Display extends Base
         // Call to render the template
         $this->getState()->template = 'display-page';
         $this->getState()->setData([
-            'displayGroups' => $this->displayGroupFactory->query(null, [], $request),
+            'displayGroups' => $this->displayGroupFactory->query(),
             'displayProfiles' => $displayProfiles
         ]);
 
@@ -241,7 +241,7 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser($request)->checkViewable($display)) {
+        if (!$this->getUser()->checkViewable($display)) {
             throw new AccessDeniedException();
         }
 
@@ -549,7 +549,7 @@ class Display extends Base
         ];
 
         // Get a list of displays
-        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request), $request);
+        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
 
 
         // Get all Display Profiles
@@ -646,7 +646,7 @@ class Display extends Base
             }
 
             // Edit and Delete buttons first
-            if ($this->getUser($request)->checkEditable($display)) {
+            if ($this->getUser()->checkEditable($display)) {
 
                 // Manage
                 $display->buttons[] = array(
@@ -667,7 +667,7 @@ class Display extends Base
             }
 
             // Delete
-            if ($this->getUser($request)->checkDeleteable($display)) {
+            if ($this->getUser()->checkDeleteable($display)) {
                 $display->buttons[] = array(
                     'id' => 'display_button_delete',
                     'url' => $this->urlFor($request,'display.delete.form', ['id' => $display->displayId]),
@@ -683,11 +683,11 @@ class Display extends Base
                 );
             }
 
-            if ($this->getUser($request)->checkEditable($display) || $this->getUser($request)->checkDeleteable($display)) {
+            if ($this->getUser()->checkEditable($display) || $this->getUser()->checkDeleteable($display)) {
                 $display->buttons[] = ['divider' => true];
             }
 
-            if ($this->getUser($request)->checkEditable($display)) {
+            if ($this->getUser()->checkEditable($display)) {
 
                 // Authorise
                 $display->buttons[] = array(
@@ -740,7 +740,7 @@ class Display extends Base
             }
 
             // Schedule Now
-            if (($this->getUser($request)->checkEditable($display) || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1) && $this->getUser($request)->routeViewable('/schedulenow/form/now/:from/:id') === true ) {
+            if (($this->getUser()->checkEditable($display) || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1) && $this->getUser()->routeViewable('/schedulenow/form/now/:from/:id') === true ) {
                 $display->buttons[] = array(
                     'id' => 'display_button_schedulenow',
                     'url' => $this->urlFor($request,'schedulenow.now.form', ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']),
@@ -748,7 +748,7 @@ class Display extends Base
                 );
             }
 
-            if ($this->getUser($request)->checkEditable($display)) {
+            if ($this->getUser()->checkEditable($display)) {
 
                 // File Associations
                 $display->buttons[] = array(
@@ -797,7 +797,7 @@ class Display extends Base
                 $display->buttons[] = ['divider' => true];
             }
 
-            if ($this->getUser($request)->checkPermissionsModifyable($display)) {
+            if ($this->getUser()->checkPermissionsModifyable($display)) {
 
                 // Display Groups
                 $display->buttons[] = array(
@@ -814,9 +814,9 @@ class Display extends Base
                 );
             }
 
-            if ($this->getUser($request)->checkEditable($display)) {
+            if ($this->getUser()->checkEditable($display)) {
 
-                if ($this->getUser($request)->checkPermissionsModifyable($display)) {
+                if ($this->getUser()->checkPermissionsModifyable($display)) {
                     $display->buttons[] = ['divider' => true];
                 }
 
@@ -877,8 +877,9 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id, true);
 
-        if (!$this->getUser($request)->checkEditable($display))
+        if (!$this->getUser()->checkEditable($display)) {
             throw new AccessDeniedException();
+        }
 
         // We have permission - load
         $display->load();
@@ -995,7 +996,7 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($display))
+        if (!$this->getUser()->checkDeleteable($display))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'display-form-delete';
@@ -1195,8 +1196,9 @@ class Display extends Base
         $display = $this->displayFactory->getById($id, true);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($display))
+        if (!$this->getUser()->checkEditable($display)) {
             throw new AccessDeniedException();
+        }
 
         // Update properties
         if ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 0)
@@ -1306,7 +1308,7 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($display)) {
+        if (!$this->getUser()->checkDeleteable($display)) {
             throw new AccessDeniedException();
         }
 
@@ -1341,7 +1343,7 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($display)) {
+        if (!$this->getUser()->checkEditable($display)) {
             throw new AccessDeniedException();
         }
 
@@ -1405,7 +1407,7 @@ class Display extends Base
         $display = $this->displayFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($display)) {
+        if (!$this->getUser()->checkEditable($display)) {
             throw new AccessDeniedException();
         }
 
@@ -1414,7 +1416,7 @@ class Display extends Base
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
             $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
-            if (!$this->getUser($request)->checkEditable($displayGroup)) {
+            if (!$this->getUser()->checkEditable($displayGroup)) {
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
             }
 
@@ -1427,7 +1429,7 @@ class Display extends Base
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
             $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
 
-            if (!$this->getUser($request)->checkEditable($displayGroup)) {
+            if (!$this->getUser()->checkEditable($displayGroup)) {
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
             }
 
@@ -1456,7 +1458,7 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser($request)->checkViewable($display)) {
+        if (!$this->getUser()->checkViewable($display)) {
             throw new AccessDeniedException();
         }
 
@@ -1498,6 +1500,7 @@ class Display extends Base
         }
 
         echo $img->encode();
+        return $this->render($request, $response);
     }
 
     /**
@@ -1517,7 +1520,7 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser($request)->checkViewable($display)) {
+        if (!$this->getUser()->checkViewable($display)) {
             throw new AccessDeniedException();
         }
 
@@ -1576,7 +1579,7 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser($request)->checkViewable($display)) {
+        if (!$this->getUser()->checkViewable($display)) {
             throw new AccessDeniedException();
         }
 
@@ -1613,7 +1616,7 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser($request)->checkViewable($display)) {
+        if (!$this->getUser()->checkViewable($display)) {
             throw new AccessDeniedException();
         }
 
@@ -1666,7 +1669,7 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser($request)->checkViewable($display)) {
+        if (!$this->getUser()->checkViewable($display)) {
             throw new AccessDeniedException();
         }
 
@@ -1826,7 +1829,7 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($display)) {
+        if (!$this->getUser()->checkEditable($display)) {
             throw new AccessDeniedException();
         }
 
@@ -1874,7 +1877,7 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($display)) {
+        if (!$this->getUser()->checkEditable($display)) {
             throw new AccessDeniedException();
         }
 
@@ -1906,7 +1909,7 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($display)) {
+        if (!$this->getUser()->checkEditable($display)) {
             throw new AccessDeniedException();
         }
 
@@ -1969,14 +1972,14 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($display))
+        if (!$this->getUser()->checkEditable($display))
             throw new AccessDeniedException();
 
         $layoutId = $this->getSanitizer($request->getParams())->getInt('layoutId');
 
         $layout = $this->layoutFactory->getById($layoutId);
 
-        if (!$this->getUser($request)->checkViewable($layout))
+        if (!$this->getUser()->checkViewable($layout))
             throw new AccessDeniedException();
 
         $display->defaultLayoutId = $layoutId;
@@ -2007,13 +2010,13 @@ class Display extends Base
      */
     public function moveCmsForm(Request $request, Response $response, $id)
     {
-        if ($this->getUser($request)->twoFactorTypeId != 2) {
+        if ($this->getUser()->twoFactorTypeId != 2) {
             throw new AccessDeniedException('This action requires active Google Authenticator Two Factor authentication');
         }
 
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($display)) {
+        if (!$this->getUser()->checkEditable($display)) {
             throw new AccessDeniedException();
         }
 
@@ -2045,14 +2048,14 @@ class Display extends Base
      */
     public function moveCms(Request $request, Response $response, $id)
     {
-        if ($this->getUser($request)->twoFactorTypeId != 2) {
+        if ($this->getUser()->twoFactorTypeId != 2) {
             throw new AccessDeniedException('This action requires active Google Authenticator Two Factor authentication');
         }
 
         $display = $this->displayFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($display)) {
+        if (!$this->getUser()->checkEditable($display)) {
             throw new AccessDeniedException();
         }
 
@@ -2069,7 +2072,7 @@ class Display extends Base
         $authenticationCode = $sanitizedParams->getString('twoFactorCode', '');
 
         $tfa = new TwoFactorAuth($issuer);
-        $result = $tfa->verifyCode($this->getUser($request)->twoFactorSecret, $authenticationCode);
+        $result = $tfa->verifyCode($this->getUser()->twoFactorSecret, $authenticationCode);
 
         if ($result) {
 
@@ -2174,7 +2177,7 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser($request)->checkViewable($display)) {
+        if (!$this->getUser()->checkViewable($display)) {
             throw new AccessDeniedException();
         }
 
@@ -2224,7 +2227,7 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser($request)->checkViewable($display)) {
+        if (!$this->getUser()->checkViewable($display)) {
             throw new AccessDeniedException();
         }
 

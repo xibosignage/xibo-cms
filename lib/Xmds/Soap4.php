@@ -306,9 +306,8 @@ class Soap4 extends Soap
         $hardwareKey = $sanitizer->getString('hardwareKey');
         $fileId = $sanitizer->getInt('fileId');
         $fileType = $sanitizer->getString('fileType');
-        // TODO Sanitizer :booms: here
-        $chunkOffset = $sanitizer->getInt('chunkOffset');
-        $chunkSize = $sanitizer->getString('chunkSize');
+        $chunkOffset = $sanitizer->getDouble('chunkOffset');
+        $chunkSize = $sanitizer->getDouble('chunkSize');
 
         $this->getLog()->debug('GET FILE  GET ' . ' hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: ' . $fileType . ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize);
         $libraryLocation = $this->getConfig()->getSetting("LIBRARY_LOCATION");
@@ -460,8 +459,8 @@ class Soap4 extends Soap
      * @param string $serverKey
      * @param string $hardwareKey
      * @param int $layoutId
-     * @param int $regionId
-     * @param int $mediaId
+     * @param string $regionId
+     * @param string $mediaId
      * @return mixed
      * @throws NotFoundException
      * @throws \SoapFault

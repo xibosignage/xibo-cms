@@ -99,7 +99,7 @@ class Help extends Base
             /* @var \Xibo\Entity\Help $row */
 
             // we only want to show certain buttons, depending on the user logged in
-            if ($this->getUser($request)->userTypeId == 1) {
+            if ($this->getUser()->userTypeId == 1) {
 
                 // Edit
                 $row->buttons[] = array(
@@ -144,8 +144,9 @@ class Help extends Base
      */
     public function addForm(Request $request, Response $response)
     {
-        if ($this->getUser($request)->userTypeId != 1)
+        if ($this->getUser()->userTypeId != 1) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'help-form-add';
 
@@ -167,8 +168,9 @@ class Help extends Base
      */
     public function editForm(Request $request, Response $response, $id)
     {
-        if ($this->getUser($request)->userTypeId != 1)
+        if ($this->getUser()->userTypeId != 1) {
             throw new AccessDeniedException();
+        }
 
         $help = $this->helpFactory->getById($id);
 
@@ -195,7 +197,7 @@ class Help extends Base
      */
     public function deleteForm(Request $request, Response $response, $id)
     {
-        if ($this->getUser($request)->userTypeId != 1) {
+        if ($this->getUser()->userTypeId != 1) {
             throw new AccessDeniedException();
         }
 
@@ -222,7 +224,7 @@ class Help extends Base
      */
     public function add(Request $request, Response $response)
     {
-        if ($this->getUser($request)->userTypeId != 1) {
+        if ($this->getUser()->userTypeId != 1) {
             throw new AccessDeniedException();
         }
 
@@ -259,7 +261,7 @@ class Help extends Base
      */
     public function edit(Request $request, Response $response, $id)
     {
-        if ($this->getUser($request)->userTypeId != 1) {
+        if ($this->getUser()->userTypeId != 1) {
             throw new AccessDeniedException();
         }
 
@@ -297,7 +299,7 @@ class Help extends Base
      */
     public function delete(Request $request, Response $response, $id)
     {
-        if ($this->getUser($request)->userTypeId != 1) {
+        if ($this->getUser()->userTypeId != 1) {
             throw new AccessDeniedException();
         }
 

@@ -218,13 +218,13 @@ class Layout extends Base
         $layout = $this->layoutFactory->loadById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($layout))
+        if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
 
         // Get the parent layout if it's editable
         if ($layout->isEditable()) {
             // Get the Layout using the Draft ID
-            $layout = $this->layoutFactory->getByParentId($id, $request);
+            $layout = $this->layoutFactory->getByParentId($id);
         }
 
         // Work out our resolution
@@ -241,7 +241,7 @@ class Layout extends Base
             'layout' => $layout,
             'resolution' => $resolution,
             'isTemplate' => $isTemplate,
-            'zoom' => $sanitizedParams->getDouble('zoom', ['default' => $this->getUser($request)->getOptionValue('defaultDesignerZoom', 1)]),
+            'zoom' => $sanitizedParams->getDouble('zoom', ['default' => $this->getUser()->getOptionValue('defaultDesignerZoom', 1)]),
             'users' => $this->userFactory->query(),
             'modules' => array_map(function($element) use ($moduleFactory) {
                     $module = $moduleFactory->createForInstall($element->class);
@@ -345,16 +345,16 @@ class Layout extends Base
             $layout->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
 
             // Set the owner
-            $layout->setOwner($this->getUser($request)->userId);
+            $layout->setOwner($this->getUser()->userId);
 
             // Ensure we have Playlists for each region
             foreach ($layout->regions as $region) {
                 // Set the ownership of this region to the user creating from template
-                $region->setOwner($this->getUser($request)->userId, true);
+                $region->setOwner($this->getUser()->userId, true);
             }
         }
         else {
-            $layout = $this->layoutFactory->createFromResolution($resolutionId, $this->getUser($request)->userId, $name, $description, $sanitizedParams->getString('tags'));
+            $layout = $this->layoutFactory->createFromResolution($resolutionId, $this->getUser()->userId, $name, $description, $sanitizedParams->getString('tags'));
         }
 
         // Set layout enableStat flag
@@ -367,7 +367,7 @@ class Layout extends Base
         $layout->save();
 
         // Permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), 'Xibo\\Entity\\Campaign', $layout->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), 'Xibo\\Entity\\Campaign', $layout->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
             /* @var Permission $permission */
             $permission->save();
         }
@@ -383,21 +383,21 @@ class Layout extends Base
                 $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
             }
 
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
 
             $playlist = $region->getPlaylist();
 
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
 
             foreach ($playlist->widgets as $widget) {
                 /* @var Widget $widget */
-                foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                     /* @var Permission $permission */
                     $permission->save();
                 }
@@ -504,7 +504,7 @@ class Layout extends Base
         }
 
         // Make sure we have permission
-        if (!$this->getUser($request)->checkEditable($layout))
+        if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
 
         // Make sure we're not a draft
@@ -616,7 +616,7 @@ class Layout extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Make sure we have permission
-        if (!$this->getUser($request)->checkEditable($layout))
+        if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
 
         // Check that this Layout is a Draft
@@ -674,7 +674,7 @@ class Layout extends Base
     {
         $layout = $this->layoutFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($layout))
+        if (!$this->getUser()->checkDeleteable($layout))
             throw new AccessDeniedException(__('You do not have permissions to delete this layout'));
 
         $data = [
@@ -708,7 +708,7 @@ class Layout extends Base
         $layout = $this->layoutFactory->getById($id);
 
         // Make sure we have permission
-        if (!$this->getUser($request)->checkEditable($layout)) {
+        if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
         }
 
@@ -763,7 +763,7 @@ class Layout extends Base
     {
         $layout = $this->layoutFactory->loadById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($layout)) {
+        if (!$this->getUser()->checkDeleteable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to delete this layout'));
         }
 
@@ -821,7 +821,7 @@ class Layout extends Base
     {
         $layout = $this->layoutFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($layout)) {
+        if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
         }
 
@@ -865,7 +865,7 @@ class Layout extends Base
         $layout = $this->layoutFactory->getById($id);
 
         // Make sure we have permission
-        if (!$this->getUser($request)->checkEditable($layout)) {
+        if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
         }
 
@@ -919,7 +919,7 @@ class Layout extends Base
     {
         $layout = $this->layoutFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($layout)) {
+        if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
         }
 
@@ -992,7 +992,7 @@ class Layout extends Base
         $layout = $this->layoutFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($layout)) {
+        if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
         }
 
@@ -1033,7 +1033,7 @@ class Layout extends Base
         $layout = $this->layoutFactory->getById($id);
 
         // Make sure we have permission
-        if (!$this->getUser($request)->checkEditable($layout)) {
+        if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
         }
 
@@ -1247,13 +1247,13 @@ class Layout extends Base
 
                     if (in_array('permissions', $embed)) {
                         // Augment with editable flag
-                        $widget->isEditable = $this->getUser($request)->checkEditable($widget);
+                        $widget->isEditable = $this->getUser()->checkEditable($widget);
 
                         // Augment with deletable flag
-                        $widget->isDeletable = $this->getUser($request)->checkDeleteable($widget);
+                        $widget->isDeletable = $this->getUser()->checkDeleteable($widget);
 
                         // Augment with permissions flag
-                        $widget->isPermissionsModifiable = $this->getUser($request)->checkPermissionsModifyable($widget);
+                        $widget->isPermissionsModifiable = $this->getUser()->checkPermissionsModifyable($widget);
                     }
 
                     if (in_array('widget_validity', $embed)) {
@@ -1269,13 +1269,13 @@ class Layout extends Base
                 foreach ($layout->regions as $region) {
                     if (in_array('permissions', $embed)) {
                         // Augment with editable flag
-                        $region->isEditable = $this->getUser($request)->checkEditable($region);
+                        $region->isEditable = $this->getUser()->checkEditable($region);
 
                          // Augment with deletable flag
-                        $region->isDeletable = $this->getUser($request)->checkDeleteable($region);
+                        $region->isDeletable = $this->getUser()->checkDeleteable($region);
 
                         // Augment with permissions flag
-                        $region->isPermissionsModifiable = $this->getUser($request)->checkPermissionsModifyable($region);
+                        $region->isPermissionsModifiable = $this->getUser()->checkPermissionsModifyable($region);
                     }
                 }
 
@@ -1353,10 +1353,10 @@ class Layout extends Base
             $layout->publishedStatusFailed = __('Publish failed ');
 
             // Check if user has view permissions to the schedule now page - for layout designer to show/hide Schedule Now button
-            $layout->scheduleNowPermission = $this->getUser($request)->routeViewable('/schedulenow/form/now/:from/:id');
+            $layout->scheduleNowPermission = $this->getUser()->routeViewable('/schedulenow/form/now/:from/:id');
 
             // Add some buttons for this row
-            if ($this->getUser($request)->checkEditable($layout)) {
+            if ($this->getUser()->checkEditable($layout)) {
                 // Design Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_design',
@@ -1409,7 +1409,7 @@ class Layout extends Base
             $layout->buttons[] = ['divider' => true];
 
             // Schedule Now
-            if ($this->getUser($request)->routeViewable('/schedulenow/form/now/:from/:id') === true) {
+            if ($this->getUser()->routeViewable('/schedulenow/form/now/:from/:id') === true) {
                 $layout->buttons[] = array(
                     'id' => 'layout_button_schedulenow',
                     'url' => $this->urlFor($request,'schedulenow.now.form', ['id' => $layout->campaignId, 'from' => 'Campaign']),
@@ -1417,7 +1417,7 @@ class Layout extends Base
                 );
             }
             // Assign to Campaign
-            if ($this->getUser($request)->routeViewable('/campaign')) {
+            if ($this->getUser()->routeViewable('/campaign')) {
                 $layout->buttons[] = array(
                     'id' => 'layout_button_assignTo_campaign',
                     'url' => $this->urlFor($request,'layout.assignTo.campaign.form', ['id' => $layout->layoutId]),
@@ -1428,7 +1428,7 @@ class Layout extends Base
             $layout->buttons[] = ['divider' => true];
 
             // Only proceed if we have edit permissions
-            if ($this->getUser($request)->checkEditable($layout)) {
+            if ($this->getUser()->checkEditable($layout)) {
 
                 // Edit Button
                 $layout->buttons[] = array(
@@ -1468,7 +1468,7 @@ class Layout extends Base
                 }
 
                 // Extra buttons if have delete permissions
-                if ($this->getUser($request)->checkDeleteable($layout)) {
+                if ($this->getUser()->checkDeleteable($layout)) {
                     // Delete Button
                     $layout->buttons[] = array(
                         'id' => 'layout_button_delete',
@@ -1503,7 +1503,7 @@ class Layout extends Base
 
                 $layout->buttons[] = ['divider' => true];
 
-                if ($this->getUser($request)->routeViewable('template') && !$layout->isEditable()) {
+                if ($this->getUser()->routeViewable('template') && !$layout->isEditable()) {
                     // Save template button
                     $layout->buttons[] = array(
                         'id' => 'layout_button_save_template',
@@ -1520,7 +1520,7 @@ class Layout extends Base
                 );
 
                 // Extra buttons if we have modify permissions
-                if ($this->getUser($request)->checkPermissionsModifyable($layout)) {
+                if ($this->getUser()->checkPermissionsModifyable($layout)) {
                     // Permissions button
                     $layout->buttons[] = array(
                         'id' => 'layout_button_permissions',
@@ -1595,7 +1595,7 @@ class Layout extends Base
         }
 
         // Check Permissions
-        if (!$this->getUser($request)->checkEditable($layout))
+        if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'layout-form-edit';
@@ -1628,7 +1628,7 @@ class Layout extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check Permissions
-        if (!$this->getUser($request)->checkEditable($layout))
+        if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
             
         // Edits always happen on Drafts, get the draft Layout using the Parent Layout ID
@@ -1670,7 +1670,7 @@ class Layout extends Base
         $layout = $this->layoutFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser($request)->checkViewable($layout))
+        if (!$this->getUser()->checkViewable($layout))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'layout-form-copy';
@@ -1752,7 +1752,7 @@ class Layout extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check Permissions
-        if (!$this->getUser($request)->checkViewable($layout))
+        if (!$this->getUser()->checkViewable($layout))
             throw new AccessDeniedException();
 
         // Make sure we're not a draft
@@ -1782,7 +1782,7 @@ class Layout extends Base
         $layout->layout = $sanitizedParams->getString('name');
         $layout->description = $sanitizedParams->getString('description');
         $layout->replaceTags($this->tagFactory->tagsFromString($tags));
-        $layout->setOwner($this->getUser($request)->userId, true);
+        $layout->setOwner($this->getUser()->userId, true);
 
         // Copy the media on the layout and change the assignments.
         // https://github.com/xibosignage/xibo/issues/1283
@@ -1792,7 +1792,7 @@ class Layout extends Base
                     if ( $widget->type === 'image' || $widget->type === 'video' || $widget->type === 'pdf' || $widget->type === 'powerpoint' || $widget->type === 'audio' ) {
                         $oldMedia = $this->mediaFactory->getById($widget->getPrimaryMediaId());
                         $media = clone $oldMedia;
-                        $media->setOwner($this->getUser($request)->userId);
+                        $media->setOwner($this->getUser()->userId);
                         $media->save();
 
                         $widget->unassignMedia($oldMedia->mediaId);
@@ -1807,7 +1807,7 @@ class Layout extends Base
             if ($layout->backgroundImageId != 0) {
                 $oldMedia = $this->mediaFactory->getById($layout->backgroundImageId);
                 $media = clone $oldMedia;
-                $media->setOwner($this->getUser($request)->userId);
+                $media->setOwner($this->getUser()->userId);
                 $media->save();
 
                 $layout->backgroundImageId = $media->mediaId;
@@ -1827,28 +1827,28 @@ class Layout extends Base
         }
 
         // Permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), 'Xibo\\Entity\\Campaign', $layout->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), 'Xibo\\Entity\\Campaign', $layout->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
             /* @var Permission $permission */
             $permission->save();
         }
 
         foreach ($layout->regions as $region) {
             /* @var Region $region */
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
 
             $playlist = $region->getPlaylist();
             /* @var Playlist $playlist */
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
 
             foreach ($playlist->widgets as $widget) {
                 /* @var Widget $widget */
-                foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                     /* @var Permission $permission */
                     $permission->save();
                 }
@@ -1916,7 +1916,7 @@ class Layout extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check Permissions
-        if (!$this->getUser($request)->checkEditable($layout))
+        if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
 
         // Make sure we're not a draft
@@ -1994,7 +1994,7 @@ class Layout extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check Permissions
-        if (!$this->getUser($request)->checkEditable($layout))
+        if (!$this->getUser()->checkEditable($layout))
             throw new AccessDeniedException();
 
         // Make sure we're not a draft
@@ -2128,7 +2128,7 @@ class Layout extends Base
         $layout = $this->layoutFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser($request)->checkViewable($layout))
+        if (!$this->getUser()->checkViewable($layout))
             throw new AccessDeniedException();
 
         // Make sure we're not a draft
@@ -2161,7 +2161,7 @@ class Layout extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check Permissions
-        if (!$this->getUser($request)->checkViewable($layout))
+        if (!$this->getUser()->checkViewable($layout))
             throw new AccessDeniedException();
 
         // Make sure we're not a draft
@@ -2247,7 +2247,7 @@ class Layout extends Base
         $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
 
         $options = array(
-            'userId' => $this->getUser($request)->userId,
+            'userId' => $this->getUser()->userId,
             'controller' => $this,
             'libraryController' => $libraryController,
             'upload_dir' => $libraryFolder . 'temp/',
@@ -2288,7 +2288,7 @@ class Layout extends Base
 
         $layout = $this->layoutFactory->getById($id);
 
-        if (!$this->getUser($request)->checkViewable($layout)) {
+        if (!$this->getUser()->checkViewable($layout)) {
             throw new AccessDeniedException();
         }
 
@@ -2332,7 +2332,7 @@ class Layout extends Base
         $layout = $this->layoutFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser($request)->checkViewable($layout)) {
+        if (!$this->getUser()->checkViewable($layout)) {
             throw new AccessDeniedException();
         }
 
@@ -2364,7 +2364,7 @@ class Layout extends Base
         $layout = $this->layoutFactory->getById($id);
 
         // Make sure we have permission
-        if (!$this->getUser($request)->checkEditable($layout)) {
+        if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
         }
 
@@ -2417,7 +2417,7 @@ class Layout extends Base
         $layout = $this->layoutFactory->getById($id);
 
         // Make sure we have permission
-        if (!$this->getUser($request)->checkEditable($layout)) {
+        if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
         }
 
@@ -2521,7 +2521,7 @@ class Layout extends Base
         $layout = $this->layoutFactory->getById($id);
 
         // Make sure we have permission
-        if (!$this->getUser($request)->checkEditable($layout)) {
+        if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
         }
 
@@ -2591,7 +2591,7 @@ class Layout extends Base
         $publishNow = $sanitizedParams->getCheckbox('publishNow');
 
         // Make sure we have permission
-        if (!$this->getUser($request)->checkEditable($layout)) {
+        if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
         }
 
@@ -2646,7 +2646,7 @@ class Layout extends Base
         $layout = $this->layoutFactory->getById($id);
 
         // Make sure we have permission
-        if (!$this->getUser($request)->checkEditable($layout)) {
+        if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
         }
 
@@ -2699,7 +2699,7 @@ class Layout extends Base
         $layout = $this->layoutFactory->getById($id);
 
         // Make sure we have permission
-        if (!$this->getUser($request)->checkEditable($layout)) {
+        if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
         }
 

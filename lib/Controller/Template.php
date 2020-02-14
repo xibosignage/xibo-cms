@@ -160,7 +160,7 @@ class Template extends Base
             // Parse down for description
             $template->descriptionWithMarkup = \Parsedown::instance()->text($template->description);
 
-            if ($this->getUser($request)->checkEditable($template)) {
+            if ($this->getUser()->checkEditable($template)) {
 
                 // Design Button
                 $template->buttons[] = array(
@@ -186,7 +186,7 @@ class Template extends Base
             }
 
             // Extra buttons if have delete permissions
-            if ($this->getUser($request)->checkDeleteable($template)) {
+            if ($this->getUser()->checkDeleteable($template)) {
                 // Delete Button
                 $template->buttons[] = array(
                     'id' => 'layout_button_delete',
@@ -206,7 +206,7 @@ class Template extends Base
             $template->buttons[] = ['divider' => true];
 
             // Extra buttons if we have modify permissions
-            if ($this->getUser($request)->checkPermissionsModifyable($template)) {
+            if ($this->getUser()->checkPermissionsModifyable($template)) {
                 // Permissions button
                 $template->buttons[] = array(
                     'id' => 'layout_button_permissions',
@@ -266,7 +266,7 @@ class Template extends Base
         }
 
         // Check Permissions
-        if (!$this->getUser($request)->checkViewable($layout)) {
+        if (!$this->getUser()->checkViewable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to view this layout'));
         }
 
@@ -353,7 +353,7 @@ class Template extends Base
         $layout = $this->layoutFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser($request)->checkViewable($layout)) {
+        if (!$this->getUser()->checkViewable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to view this layout'));
         }
 
@@ -378,7 +378,7 @@ class Template extends Base
         $layout->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
         $layout->tags[] = $this->tagFactory->getByTag('template');
         $layout->description = $sanitizedParams->getString('description');
-        $layout->setOwner($this->getUser($request)->userId, true);
+        $layout->setOwner($this->getUser()->userId, true);
         $layout->save();
 
         if ($includeWidgets) {

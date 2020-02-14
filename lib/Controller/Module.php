@@ -281,7 +281,7 @@ class Module extends Base
         // Can we edit?
         $moduleConfigLocked = ($this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 1 || $this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked');
 
-        if (!$this->getUser($request)->userTypeId == 1)
+        if (!$this->getUser()->userTypeId == 1)
             throw new AccessDeniedException();
 
         $module = $this->moduleFactory->createById($id);
@@ -320,7 +320,7 @@ class Module extends Base
 
         $sanitizedPrams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->userTypeId == 1)
+        if (!$this->getUser()->userTypeId == 1)
             throw new AccessDeniedException();
 
         $module = $this->moduleFactory->createById($id);
@@ -495,7 +495,7 @@ class Module extends Base
 
         // All modules should be capable of autoload
         $module = $this->moduleFactory->createForInstall($moduleDetails->class);
-        $module->setUser($this->getUser($request));
+        $module->setUser($this->getUser());
         $module->installOrUpdate($this->moduleFactory);
 
         $this->getLog()->notice('Module Installed: ' . $module->getModuleType());
@@ -570,7 +570,7 @@ class Module extends Base
     {
         $playlist = $this->playlistFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($playlist)) {
+        if (!$this->getUser()->checkEditable($playlist)) {
             throw new AccessDeniedException();
         }
 
@@ -593,14 +593,14 @@ class Module extends Base
         ]);
 
         // Create a module to use
-        $module = $this->moduleFactory->createForWidget($type, null, $this->getUser($request)->userId, $id);
+        $module = $this->moduleFactory->createForWidget($type, null, $this->getUser()->userId, $id);
 
         // Assign this module to this Playlist in the appropriate place (which could be null)
         $displayOrder = $this->getSanitizer($request->getParams())->getInt('displayOrder');
         $playlist->assignWidget($module->widget, $displayOrder);
 
         // Inject the Current User
-        $module->setUser($this->getUser($request));
+        $module->setUser($this->getUser());
 
         // Check that we can call `add()` directly on this module
         if ($module->getModule()->regionSpecific != 1) {
@@ -629,7 +629,7 @@ class Module extends Base
                 $permission->save();
             }
         } else {
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($module->widget), $module->widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($module->widget), $module->widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
@@ -663,7 +663,7 @@ class Module extends Base
     {
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
-        if (!$this->getUser($request)->checkEditable($module->widget)) {
+        if (!$this->getUser()->checkEditable($module->widget)) {
             throw new AccessDeniedException();
         }
 
@@ -679,7 +679,7 @@ class Module extends Base
 
         // We load this module for previewing, because we use urlFor with templates
         $module
-            ->setUser($this->getUser($request))
+            ->setUser($this->getUser())
             ->setPreview(
                 true,
                 RouteContext::fromRequest($request)->getRouteParser(),
@@ -725,7 +725,7 @@ class Module extends Base
     {
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
-        if (!$this->getUser($request)->checkEditable($module->widget)) {
+        if (!$this->getUser()->checkEditable($module->widget)) {
             throw new AccessDeniedException();
         }
 
@@ -738,7 +738,7 @@ class Module extends Base
         }
 
         // Inject the Current User
-        $module->setUser($this->getUser($request));
+        $module->setUser($this->getUser());
 
         // Set an event to be called when we save this module
         $module->setSaveEvent(new WidgetEditEvent($module));
@@ -773,7 +773,7 @@ class Module extends Base
     {
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
-        if (!$this->getUser($request)->checkDeleteable($module->widget)) {
+        if (!$this->getUser()->checkDeleteable($module->widget)) {
             throw new AccessDeniedException();
         }
 
@@ -829,7 +829,7 @@ class Module extends Base
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkDeleteable($module->widget)) {
+        if (!$this->getUser()->checkDeleteable($module->widget)) {
             throw new AccessDeniedException();
         }
 
@@ -848,7 +848,7 @@ class Module extends Base
         $widgetMedia = $module->widget->mediaIds;
 
         // Inject the Current User
-        $module->setUser($this->getUser($request));
+        $module->setUser($this->getUser());
 
         // Call Module Delete
         $response = $module->delete($request, $response);
@@ -862,7 +862,7 @@ class Module extends Base
                 $media = $this->mediaFactory->getById($mediaId);
 
                 // Check we have permissions to delete
-                if (!$this->getUser($request)->checkDeleteable($media)) {
+                if (!$this->getUser()->checkDeleteable($media)) {
                     throw new AccessDeniedException();
                 }
 
@@ -897,7 +897,7 @@ class Module extends Base
     {
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
-        if (!$this->getUser($request)->checkEditable($module->widget)) {
+        if (!$this->getUser()->checkEditable($module->widget)) {
             throw new AccessDeniedException();
         }
 
@@ -998,7 +998,7 @@ class Module extends Base
     {
         $widget = $this->widgetFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($widget)) {
+        if (!$this->getUser()->checkEditable($widget)) {
             throw new AccessDeniedException();
         }
 
@@ -1061,7 +1061,7 @@ class Module extends Base
     {
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
-        if (!$this->getUser($request)->checkEditable($module->widget)) {
+        if (!$this->getUser()->checkEditable($module->widget)) {
             throw new AccessDeniedException();
         }
 
@@ -1149,7 +1149,7 @@ class Module extends Base
         $widget = $this->widgetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($widget)) {
+        if (!$this->getUser()->checkEditable($widget)) {
             throw new AccessDeniedException();
         }
 
@@ -1231,7 +1231,7 @@ class Module extends Base
     {
         $widget = $this->widgetFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($widget)) {
+        if (!$this->getUser()->checkEditable($widget)) {
             throw new AccessDeniedException();
         }
 
@@ -1279,12 +1279,12 @@ class Module extends Base
     {
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
-        if (!$this->getUser($request)->checkViewable($module->widget)) {
+        if (!$this->getUser()->checkViewable($module->widget)) {
             throw new AccessDeniedException();
         }
 
         $module
-            ->setUser($this->getUser($request))
+            ->setUser($this->getUser())
             ->setPreview(
                 true,
                 RouteContext::fromRequest($request)->getRouteParser(),
@@ -1316,7 +1316,7 @@ class Module extends Base
             'dataSet' => $this->getSanitizer($request->getParams())->getString('dataSet')
         ];
 
-        $this->getState()->setData($this->dataSetFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request), $request));
+        $this->getState()->setData($this->dataSetFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request)));
         $this->getState()->recordsTotal = $this->dataSetFactory->countLast();
 
         return $this->render($request, $response);
@@ -1361,7 +1361,7 @@ class Module extends Base
     {
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id), $this->regionFactory->getById($regionId));
 
-        if (!$this->getUser($request)->checkViewable($module->widget)) {
+        if (!$this->getUser()->checkViewable($module->widget)) {
             throw new AccessDeniedException();
         }
 
@@ -1369,7 +1369,7 @@ class Module extends Base
 
         // Call module GetResource
         $module
-            ->setUser($this->getUser($request))
+            ->setUser($this->getUser())
             ->setPreview(
                 true,
                 RouteContext::fromRequest($request)->getRouteParser(),
@@ -1567,7 +1567,7 @@ class Module extends Base
     {
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
-        if (!$this->getUser($request)->checkEditable($module->widget)) {
+        if (!$this->getUser()->checkEditable($module->widget)) {
             throw new AccessDeniedException();
         }
 
@@ -1648,7 +1648,7 @@ class Module extends Base
         $widget = $this->widgetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($widget)) {
+        if (!$this->getUser()->checkEditable($widget)) {
             throw new AccessDeniedException();
         }
 

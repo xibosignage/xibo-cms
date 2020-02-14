@@ -146,7 +146,7 @@ class Command extends Base
             'code' => $sanitzedParams->getString('code')
         ];
 
-        $commands = $this->commandFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request), $request);
+        $commands = $this->commandFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
 
         foreach ($commands as $command) {
             /* @var \Xibo\Entity\Command $command */
@@ -157,7 +157,7 @@ class Command extends Base
             $command->includeProperty('buttons');
 
              // Command edit
-             if ($this->getUser($request)->checkEditable($command)) {
+             if ($this->getUser()->checkEditable($command)) {
                  $command->buttons[] = array(
                      'id' => 'command_button_edit',
                      'url' => $this->urlFor($request, 'command.edit.form', ['id' => $command->commandId]),
@@ -166,7 +166,7 @@ class Command extends Base
              }
 
             // Command delete
-            if ($this->getUser($request)->checkDeleteable($command)) {
+            if ($this->getUser()->checkDeleteable($command)) {
                 $command->buttons[] = array(
                     'id' => 'command_button_delete',
                     'url' => $this->urlFor($request,'command.delete.form', ['id' => $command->commandId]),
@@ -183,7 +183,7 @@ class Command extends Base
             }
 
             // Command Permissions
-            if ($this->getUser($request)->checkPermissionsModifyable($command)) {
+            if ($this->getUser()->checkPermissionsModifyable($command)) {
                 // Permissions button
                 $command->buttons[] = array(
                     'id' => 'command_button_permissions',
@@ -233,9 +233,9 @@ class Command extends Base
      */
     public function editForm(Request $request, Response $response, $id)
     {
-        $command = $this->commandFactory->getById($id, $request);
+        $command = $this->commandFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($command)) {
+        if (!$this->getUser()->checkEditable($command)) {
             throw new AccessDeniedException();
         }
 
@@ -262,9 +262,9 @@ class Command extends Base
      */
     public function deleteForm(Request $request, Response $response, $id)
     {
-        $command = $this->commandFactory->getById($id, $request);
+        $command = $this->commandFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($command)) {
+        if (!$this->getUser()->checkDeleteable($command)) {
             throw new AccessDeniedException();
         }
 
@@ -335,7 +335,7 @@ class Command extends Base
         $command->command = $sanitizedParams->getString('command');
         $command->description = $sanitizedParams->getString('description');
         $command->code = $sanitizedParams->getString('code');
-        $command->userId = $this->getUser($request)->userId;
+        $command->userId = $this->getUser()->userId;
         $command->save();
 
         // Return
@@ -400,9 +400,9 @@ class Command extends Base
     public function edit(Request $request, Response $response, $id)
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
-        $command = $this->commandFactory->getById($id, $request);
+        $command = $this->commandFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($command)) {
+        if (!$this->getUser()->checkEditable($command)) {
             throw new AccessDeniedException();
         }
 
@@ -454,9 +454,9 @@ class Command extends Base
      */
     public function delete(Request $request, Response $response, $id)
     {
-        $command = $this->commandFactory->getById($id, $request);
+        $command = $this->commandFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($command)) {
+        if (!$this->getUser()->checkDeleteable($command)) {
             throw new AccessDeniedException();
         }
 
