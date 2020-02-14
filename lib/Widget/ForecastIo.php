@@ -935,4 +935,10 @@ class ForecastIo extends ModuleWidget
                 return 'en';
         }
     }
+
+    /** @inheritDoc */
+    public function hasTemplates()
+    {
+        return true;
+    }
 }

@@ -920,4 +920,10 @@ class DataSetView extends ModuleWidget
         // Lock to the dataSetId, because our dataSet might have external images which are downloaded.
         return $this->getOption('dataSetId');
     }
+
+    /** @inheritDoc */
+    public function hasTemplates()
+    {
+        return true;
+    }
 }

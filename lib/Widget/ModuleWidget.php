@@ -24,6 +24,7 @@ namespace Xibo\Widget;
 use Intervention\Image\ImageManagerStatic as Img;
 use Mimey\MimeTypes;
 use Psr\Container\ContainerInterface;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
@@ -1248,6 +1249,15 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
+     * Has this Module got templates?
+     * @return bool
+     */
+    public function hasTemplates()
+    {
+        return false;
+    }
+
+    /**
      * Get templatesAvailable
      * @param bool $loadImage Should the image URL be loaded?
      * @return array
@@ -1288,7 +1298,7 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * Get by Template Id
      * @param int $templateId
-     * @return string
+     * @return array|null
      */
     public function getTemplateById($templateId)
     {
@@ -1320,10 +1330,13 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Download an image for this template
-     * @param int $templateId
-     * @throws NotFoundException
+     * @param \Slim\Http\ServerRequest $request
+     * @param \Slim\Http\Response $response
+     * @param string $templateId
+     * @return ResponseInterface
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function getTemplateImage($templateId)
+    public function getTemplateImage(Request $request, Response $response, string $templateId): ResponseInterface
     {
         $template = $this->getTemplateById($templateId);
 
@@ -1331,7 +1344,9 @@ abstract class ModuleWidget implements ModuleInterface
             throw new NotFoundException();
 
         // Output the image associated with this template
-        echo Img::make(PROJECT_ROOT . '/' . $template['fileName'])->encode();
+        $image =  Img::make(PROJECT_ROOT . '/' . $template['fileName']);
+
+        return $image->psrResponse();
     }
 
     /**
