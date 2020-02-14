@@ -377,7 +377,7 @@ class Login extends Base
             $redirect = $request->getQueryParam('redirect');
         }
 
-        $this->getUser($request)->touch();
+        $this->getUser()->touch();
 
         // to log out a user we need only to clear out some session vars
         unset($_SESSION['userid']);

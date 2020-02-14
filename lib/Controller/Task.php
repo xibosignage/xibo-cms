@@ -477,7 +477,7 @@ class Task extends Base
 
             $taskClass
                 ->setSanitizer($this->getSanitizer($request->getParams()))
-                ->setUser($this->getUser($request))
+                ->setUser($this->getUser())
                 ->setConfig($this->getConfig())
                 ->setLogger($this->getLog())
                 ->setDate($this->getDate())

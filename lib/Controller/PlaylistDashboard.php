@@ -85,7 +85,7 @@ class PlaylistDashboard extends Base
         // Do we have a Playlist already in our User Preferences?
         $playlist = null;
         try {
-            $playlistId = $this->getUser($request)->getOption('playlistDashboardSelectedPlaylistId');
+            $playlistId = $this->getUser()->getOption('playlistDashboardSelectedPlaylistId');
             if ($playlistId->value != 0) {
                 $playlist = $this->playlistFactory->getById($playlistId->value);
             }
@@ -146,8 +146,8 @@ class PlaylistDashboard extends Base
     {
         // Record this Playlist as the one we have currently selected.
         try {
-            $this->getUser($request)->setOptionValue('playlistDashboardSelectedPlaylistId', $id);
-            $this->getUser($request)->save();
+            $this->getUser()->setOptionValue('playlistDashboardSelectedPlaylistId', $id);
+            $this->getUser()->save();
         } catch (XiboException $exception) {
             $this->getLog()->error('Problem setting playlistDashboardSelectedPlaylistId user option. e = ' . $exception->getMessage());
         }
@@ -158,13 +158,13 @@ class PlaylistDashboard extends Base
         $playlist = $this->playlistFactory->getById($id);
 
         // Only edit permissions
-        if (!$this->getUser($request)->checkEditable($playlist)) {
+        if (!$this->getUser()->checkEditable($playlist)) {
             throw new AccessDeniedException();
         }
 
         // Load my Playlist and information about its widgets
         $playlist->load();
-        $user = $this->getUser($request);
+        $user = $this->getUser();
 
         foreach ($playlist->widgets as $widget) {
             // Create a module for the widget and load in some extra data
@@ -233,7 +233,7 @@ class PlaylistDashboard extends Base
     {
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
-        if (!$this->getUser($request)->checkDeleteable($module->widget)) {
+        if (!$this->getUser()->checkDeleteable($module->widget)) {
             throw new AccessDeniedException();
         }
 
@@ -273,7 +273,7 @@ class PlaylistDashboard extends Base
         $libraryController = $this->container->get('\Xibo\Controller\Library');
 
         $options = [
-            'userId' => $this->getUser($request)->userId,
+            'userId' => $this->getUser()->userId,
             'controller' => $libraryController,
             'oldMediaId' => $sanitizedParams->getInt('oldMediaId'),
             'widgetId' => $sanitizedParams->getInt('widgetId'),
@@ -289,7 +289,7 @@ class PlaylistDashboard extends Base
             'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i',
             'libraryLimit' => ($this->getConfig()->GetSetting('LIBRARY_SIZE_LIMIT_KB') * 1024),
             'libraryQuotaFull' => false,
-            'request' => $request
+            'expires' => 0
         ];
 
         // Output handled by UploadHandler

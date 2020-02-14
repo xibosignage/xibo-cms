@@ -113,7 +113,7 @@ class Sessions extends Base
             // Normalise the date
             $row->lastAccessed = $this->getDate()->getLocalDate(Date::createFromFormat($this->getDate()->getSystemFormat(), $row->lastAccessed));
 
-            if (!$this->isApi($request) && $this->getUser($request)->isSuperAdmin()) {
+            if (!$this->isApi($request) && $this->getUser()->isSuperAdmin()) {
 
                 $row->includeProperty('buttons');
 
@@ -147,7 +147,7 @@ class Sessions extends Base
      */
     function confirmLogoutForm(Request $request, Response $response, $id)
     {
-        if ($this->getUser($request)->userTypeId != 1) {
+        if ($this->getUser()->userTypeId != 1) {
             throw new AccessDeniedException();
         }
 
@@ -175,7 +175,7 @@ class Sessions extends Base
      */
     function logout(Request $request, Response $response, $id)
     {
-        if ($this->getUser($request)->userTypeId != 1) {
+        if ($this->getUser()->userTypeId != 1) {
             throw new AccessDeniedException();
         }
 

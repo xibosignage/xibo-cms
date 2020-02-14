@@ -204,7 +204,7 @@ class Campaign extends Base
 
         $embed = ($parsedParams->getString('embed') !== null) ? explode(',', $parsedParams->getString('embed')) : [];
 
-        $campaigns = $this->campaignFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request), $options, $request);
+        $campaigns = $this->campaignFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request), $options);
 
         foreach ($campaigns as $campaign) {
             /* @var \Xibo\Entity\Campaign $campaign */
@@ -245,7 +245,7 @@ class Campaign extends Base
             );
 
             // Buttons based on permissions
-            if ($this->getUser($request)->checkEditable($campaign)) {
+            if ($this->getUser()->checkEditable($campaign)) {
 
                 $campaign->buttons[] = ['divider' => true];
 
@@ -266,7 +266,7 @@ class Campaign extends Base
                 $campaign->buttons[] = ['divider' => true];
             }
 
-            if ($this->getUser($request)->checkDeleteable($campaign)) {
+            if ($this->getUser()->checkDeleteable($campaign)) {
                 // Delete Campaign
                 $campaign->buttons[] = array(
                     'id' => 'campaign_button_delete',
@@ -283,7 +283,7 @@ class Campaign extends Base
                 );
             }
 
-            if ($this->getUser($request)->checkPermissionsModifyable($campaign)) {
+            if ($this->getUser()->checkPermissionsModifyable($campaign)) {
 
                 $campaign->buttons[] = ['divider' => true];
 
@@ -371,11 +371,11 @@ class Campaign extends Base
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $campaign = $this->campaignFactory->create($sanitizedParams->getString('name'), $this->getUser($request)->userId, $sanitizedParams->getString('tags'));
+        $campaign = $this->campaignFactory->create($sanitizedParams->getString('name'), $this->getUser()->userId, $sanitizedParams->getString('tags'));
         $campaign->save();
 
         // Permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($campaign), $campaign->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($campaign), $campaign->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
             /* @var Permission $permission */
             $permission->save();
         }
@@ -425,14 +425,14 @@ class Campaign extends Base
             }
         }
 
-        if (!$this->getUser($request)->checkEditable($campaign)) {
+        if (!$this->getUser()->checkEditable($campaign)) {
             throw new AccessDeniedException();
         }
 
         // Load layouts
         $layouts = [];
         foreach ($this->layoutFactory->getByCampaignId($id, false) as $layout) {
-            if (!$this->getUser($request)->checkViewable($layout)) {
+            if (!$this->getUser()->checkViewable($layout)) {
                 // Hide all layout details from the user
                 $emptyLayout = $this->layoutFactory->createEmpty();
                 $emptyLayout->layoutId = $layout->layoutId;
@@ -502,7 +502,7 @@ class Campaign extends Base
         $campaign = $this->campaignFactory->getById($id);
         $parsedRequestParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($campaign)) {
+        if (!$this->getUser()->checkEditable($campaign)) {
             throw new AccessDeniedException();
         }
 
@@ -542,7 +542,7 @@ class Campaign extends Base
     {
         $campaign = $this->campaignFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($campaign))
+        if (!$this->getUser()->checkDeleteable($campaign))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'campaign-form-delete';
@@ -590,7 +590,7 @@ class Campaign extends Base
     {
         $campaign = $this->campaignFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($campaign))
+        if (!$this->getUser()->checkDeleteable($campaign))
             throw new AccessDeniedException();
 
         $campaign->setChildObjectDependencies($this->layoutFactory);
@@ -623,12 +623,12 @@ class Campaign extends Base
     {
         $campaign = $this->campaignFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($campaign))
+        if (!$this->getUser()->checkEditable($campaign))
             throw new AccessDeniedException();
 
         $layouts = [];
         foreach ($this->layoutFactory->getByCampaignId($id, false) as $layout) {
-            if (!$this->getUser($request)->checkViewable($layout)) {
+            if (!$this->getUser()->checkViewable($layout)) {
                 // Hide all layout details from the user
                 $emptyLayout = $this->layoutFactory->createEmpty();
                 $emptyLayout->layoutId = $layout->layoutId;
@@ -727,7 +727,7 @@ class Campaign extends Base
 
         $campaign = $this->campaignFactory->getById($campaignId);
 
-        if (!$this->getUser($request)->checkEditable($campaign))
+        if (!$this->getUser()->checkEditable($campaign))
             throw new AccessDeniedException();
 
         // Make sure this is a non-layout specific campaign
@@ -751,7 +751,7 @@ class Campaign extends Base
 
             // Check to see if this layout is already assigned
             // if it is, then we have permission to move it around
-            if (!$this->getUser($request)->checkViewable($layout) && !$campaign->isLayoutAssigned($layout))
+            if (!$this->getUser()->checkViewable($layout) && !$campaign->isLayoutAssigned($layout))
                 throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
 
             // Make sure we're not a draft
@@ -787,7 +787,7 @@ class Campaign extends Base
             $sanitizedObject = $this->getSanitizer($object);
             $layout = $this->layoutFactory->getById($sanitizedObject->getInt('layoutId'));
 
-            if (!$this->getUser($request)->checkViewable($layout) && !$campaign->isLayoutAssigned($layout)) {
+            if (!$this->getUser()->checkViewable($layout) && !$campaign->isLayoutAssigned($layout)) {
                 throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
             }
 
@@ -864,7 +864,7 @@ class Campaign extends Base
     {
         $campaign = $this->campaignFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($campaign)) {
+        if (!$this->getUser()->checkEditable($campaign)) {
             throw new AccessDeniedException();
         }
 
@@ -888,7 +888,7 @@ class Campaign extends Base
         foreach ($layouts as $object) {
             $layout = $this->layoutFactory->getById($sanitizedParams->getInt('layoutId', $object));
 
-            if (!$this->getUser($request)->checkViewable($layout) && !$campaign->isLayoutAssigned($layout))
+            if (!$this->getUser()->checkViewable($layout) && !$campaign->isLayoutAssigned($layout))
                 throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
 
             // Set the Display Order
@@ -971,7 +971,7 @@ class Campaign extends Base
         // get the Campaign
         $campaign = $this->campaignFactory->getById($id);
 
-        if ($this->getUser($request)->userTypeId != 1 && $this->getUser($request)->userId != $campaign->ownerId) {
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $campaign->ownerId) {
             throw new AccessDeniedException(__('You do not have permission to copy this Campaign'));
         }
 
@@ -1005,7 +1005,7 @@ class Campaign extends Base
         // get the Layouts assigned to the original Campaign
         $layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId, false);
 
-        if ($this->getUser($request)->userTypeId != 1 && $this->getUser($request)->userId != $campaign->ownerId) {
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $campaign->ownerId) {
             throw new AccessDeniedException(__('You do not have permission to copy this Campaign'));
         }
 

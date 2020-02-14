@@ -167,7 +167,7 @@ class DayPart extends Base
             'isCustom' => $sanitizedParams->getInt('isCustom')
         ];
 
-        $dayParts = $this->dayPartFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request), $request);
+        $dayParts = $this->dayPartFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
         $embed = ($sanitizedParams->getString('embed') != null) ? explode(',', $sanitizedParams->getString('embed')) : [];
         
         foreach ($dayParts as $dayPart) {
@@ -188,7 +188,7 @@ class DayPart extends Base
                     'text' => __('Edit')
                 );
 
-                if ($this->getUser($request)->checkDeleteable($dayPart)) {
+                if ($this->getUser()->checkDeleteable($dayPart)) {
                     $dayPart->buttons[] = array(
                         'id' => 'daypart_button_delete',
                         'url' => $this->urlFor($request,'daypart.delete.form', ['id' => $dayPart->dayPartId]),
@@ -205,7 +205,7 @@ class DayPart extends Base
                 }
             }
 
-            if ($this->getUser($request)->checkPermissionsModifyable($dayPart)) {
+            if ($this->getUser()->checkPermissionsModifyable($dayPart)) {
 
                 if (count($dayPart->buttons) > 0)
                     $dayPart->buttons[] = ['divider' => true];
@@ -266,7 +266,7 @@ class DayPart extends Base
     {
         $dayPart = $this->dayPartFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($dayPart)) {
+        if (!$this->getUser()->checkEditable($dayPart)) {
             throw new AccessDeniedException();
         }
 
@@ -302,7 +302,7 @@ class DayPart extends Base
     {
         $dayPart = $this->dayPartFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($dayPart)) {
+        if (!$this->getUser()->checkDeleteable($dayPart)) {
             throw new AccessDeniedException();
         }
 
@@ -514,7 +514,7 @@ class DayPart extends Base
             ->setChildObjectDependencies($this->displayGroupFactory, $this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->dayPartFactory)
             ->load();
 
-        if (!$this->getUser($request)->checkEditable($dayPart)) {
+        if (!$this->getUser()->checkEditable($dayPart)) {
             throw new AccessDeniedException();
         }
 
@@ -545,7 +545,7 @@ class DayPart extends Base
      */
     private function handleCommonInputs($dayPart, Request $request)
     {
-        $dayPart->userId = $this->getUser($request)->userId;
+        $dayPart->userId = $this->getUser()->userId;
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         $dayPart->name = $sanitizedParams->getString('name');
@@ -633,7 +633,7 @@ class DayPart extends Base
     {
         $dayPart = $this->dayPartFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($dayPart)) {
+        if (!$this->getUser()->checkDeleteable($dayPart)) {
             throw new AccessDeniedException();
         }
 

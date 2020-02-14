@@ -120,7 +120,7 @@ class StatusDashboard extends Base
     public function displays(Request $request, Response $response)
     {
         // Get a list of displays
-        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([], $request), $request);
+        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([], $request));
 
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->displayFactory->countLast();
@@ -235,8 +235,8 @@ class StatusDashboard extends Base
             ]);
 
             // We would also like a library usage pie chart!
-            if ($this->getUser($request)->libraryQuota != 0) {
-                $libraryLimit = $this->getUser($request)->libraryQuota * 1024;
+            if ($this->getUser()->libraryQuota != 0) {
+                $libraryLimit = $this->getUser()->libraryQuota * 1024;
             }
             else {
                 $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
@@ -302,7 +302,7 @@ class StatusDashboard extends Base
             $data['countUsers'] = count($this->userFactory->query());
 
             // Get a count of active layouts, only for display groups we have permission for
-            $displayGroups = $this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1], $request);
+            $displayGroups = $this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]);
             $displayGroupIds = array_map(function($element) {
                 return $element->displayGroupId;
             }, $displayGroups);
@@ -409,7 +409,7 @@ class StatusDashboard extends Base
             }
 
             // Display Status and Media Inventory data - Level one
-            $displays = $this->displayFactory->query(null, [], $request);
+            $displays = $this->displayFactory->query();
             $displayIds = [];
             $displayLoggedIn = [];
             $displayNames = [];
@@ -538,7 +538,7 @@ class StatusDashboard extends Base
             foreach ($results as $row) {
                 $displayGroupNames[] = $row['displayGroup'];
                 $displayGroupIds[] = $row['DisplayGroupID'];
-                $displaysAssigned[] = count($this->displayFactory->query(['displayGroup'], ['displayGroupId' => $row['DisplayGroupID'], 'mediaInventoryStatus' => $inventoryStatus, 'loggedIn' => $status], $request));
+                $displaysAssigned[] = count($this->displayFactory->query(['displayGroup'], ['displayGroupId' => $row['DisplayGroupID'], 'mediaInventoryStatus' => $inventoryStatus, 'loggedIn' => $status]));
                 $displaysAssigned[] = 0;
             }
 

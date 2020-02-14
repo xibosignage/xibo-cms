@@ -103,7 +103,7 @@ class DataSetColumn extends Base
     {
         $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($dataSet)) {
+        if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
         }
 
@@ -161,7 +161,7 @@ class DataSetColumn extends Base
     {
         $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($dataSet)) {
+        if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
         }
 
@@ -188,7 +188,7 @@ class DataSetColumn extends Base
                 'text' => __('Edit')
             );
 
-            if ($this->getUser($request)->checkDeleteable($dataSet)) {
+            if ($this->getUser()->checkDeleteable($dataSet)) {
                 // Delete
                 $column->buttons[] = array(
                     'id' => 'dataset_button_delete',
@@ -221,7 +221,7 @@ class DataSetColumn extends Base
     {
         $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($dataSet)) {
+        if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
         }
 
@@ -343,7 +343,7 @@ class DataSetColumn extends Base
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($dataSet)) {
+        if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
         }
 
@@ -402,7 +402,7 @@ class DataSetColumn extends Base
     {
         $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($dataSet)) {
+        if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
         }
 
@@ -533,7 +533,7 @@ class DataSetColumn extends Base
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($dataSet))
+        if (!$this->getUser()->checkEditable($dataSet))
             throw new AccessDeniedException();
 
         // Column
@@ -584,7 +584,7 @@ class DataSetColumn extends Base
     {
         $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($dataSet)) {
+        if (!$this->getUser()->checkDeleteable($dataSet)) {
             throw new AccessDeniedException();
         }
 
@@ -641,7 +641,7 @@ class DataSetColumn extends Base
     {
         $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($dataSet)) {
+        if (!$this->getUser()->checkDeleteable($dataSet)) {
             throw new AccessDeniedException();
         }
 

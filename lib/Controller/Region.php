@@ -139,7 +139,7 @@ class Region extends Base
     {
         $region = $this->regionFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($region))
+        if (!$this->getUser()->checkEditable($region))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'region-form-edit';
@@ -170,7 +170,7 @@ class Region extends Base
     {
         $region = $this->regionFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($region))
+        if (!$this->getUser()->checkDeleteable($region))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'region-form-delete';
@@ -256,7 +256,7 @@ class Region extends Base
         $layout = $this->layoutFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($layout)) {
+        if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException();
         }
 
@@ -273,7 +273,7 @@ class Region extends Base
 
         // Add a new region
         $region = $this->regionFactory->create(
-            $this->getUser($request)->userId, $layout->layout . '-' . (count($layout->regions) + 1),
+            $this->getUser()->userId, $layout->layout . '-' . (count($layout->regions) + 1),
             $sanitizedParams->getInt('width', ['default' => 250]),
             $sanitizedParams->getInt('height', ['default' => 250]),
             $sanitizedParams->getInt('top', ['default' => 50]),
@@ -301,7 +301,7 @@ class Region extends Base
             $this->getLog()->debug('Applying default permissions');
 
             // Apply the default permissions
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser($request), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
                 $permission->save();
             }
@@ -420,7 +420,7 @@ class Region extends Base
         $region = $this->regionFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($region)) {
+        if (!$this->getUser()->checkEditable($region)) {
             throw new AccessDeniedException();
         }
 
@@ -508,7 +508,7 @@ class Region extends Base
     {
         $region = $this->regionFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($region))
+        if (!$this->getUser()->checkDeleteable($region))
             throw new AccessDeniedException();
 
         // Check that this Regions Layout is in an editable state
@@ -578,7 +578,7 @@ class Region extends Base
         // Create the layout
         $layout = $this->layoutFactory->loadById($id);
 
-        if (!$this->getUser($request)->checkEditable($layout)) {
+        if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException();
         }
 
@@ -621,7 +621,7 @@ class Region extends Base
             $region = $layout->getRegion($regionId);
 
             // Check Permissions
-            if (!$this->getUser($request)->checkEditable($region)) {
+            if (!$this->getUser()->checkEditable($region)) {
                 throw new AccessDeniedException();
             }
 

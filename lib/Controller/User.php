@@ -249,7 +249,7 @@ class User extends Base
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 200,
-            'data' => $this->getUser($request)
+            'data' => $this->getUser()
         ]);
         
         return $this->render($request, $response);
@@ -323,7 +323,7 @@ class User extends Base
         ];
 
         // Load results into an array
-        $users = $this->userFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filterBy, $request), $request);
+        $users = $this->userFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filterBy, $request));
 
         foreach ($users as $user) {
             /* @var \Xibo\Entity\User $user */
@@ -355,7 +355,7 @@ class User extends Base
             $user->homePage = __($user->homePage);
 
             // Super admins have some buttons
-            if ($this->getUser($request)->checkEditable($user)) {
+            if ($this->getUser()->checkEditable($user)) {
                 // Edit
                 $user->buttons[] = [
                     'id' => 'user_button_edit',
@@ -364,7 +364,7 @@ class User extends Base
                 ];
             }
 
-            if ($this->getUser($request)->isSuperAdmin()) {
+            if ($this->getUser()->isSuperAdmin()) {
                 // Delete
                 $user->buttons[] = [
                     'id' => 'user_button_delete',
@@ -373,7 +373,7 @@ class User extends Base
                 ];
             }
 
-            if ($this->getUser($request)->checkPermissionsModifyable($user)) {
+            if ($this->getUser()->checkPermissionsModifyable($user)) {
                 $user->buttons[] = ['divider' => true];
 
                 // User Groups
@@ -384,7 +384,7 @@ class User extends Base
                 );
             }
 
-            if ($this->getUser($request)->isSuperAdmin()) {
+            if ($this->getUser()->isSuperAdmin()) {
                 $user->buttons[] = ['divider' => true];
 
                 // Page Security
@@ -564,7 +564,7 @@ class User extends Base
     public function add(Request $request, Response $response)
     {
         // Only group admins or super admins can create Users.
-        if (!$this->getUser($request)->isSuperAdmin() && !$this->getUser($request)->isGroupAdmin()) {
+        if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin()) {
             throw new AccessDeniedException(__('Only super and group admins can create users'));
         }
         
@@ -579,7 +579,7 @@ class User extends Base
         $user->libraryQuota = $sanitizedParams->getInt('libraryQuota', ['default' => 0]);
         $user->setNewPassword($sanitizedParams->getString('password'));
 
-        if ($this->getUser($request)->isSuperAdmin()) {
+        if ($this->getUser()->isSuperAdmin()) {
             $user->userTypeId = $sanitizedParams->getInt('userTypeId');
             $user->isSystemNotification = $sanitizedParams->getCheckbox('isSystemNotification');
             $user->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
@@ -810,7 +810,7 @@ class User extends Base
     {
         $user = $this->userFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($user)) {
+        if (!$this->getUser()->checkEditable($user)) {
             throw new AccessDeniedException();
         }
         
@@ -824,7 +824,7 @@ class User extends Base
         $user->libraryQuota = $sanitizedParams->getInt('libraryQuota');
         $user->retired = $sanitizedParams->getCheckbox('retired');
 
-        if ($this->getUser($request)->isSuperAdmin()) {
+        if ($this->getUser()->isSuperAdmin()) {
             $user->userTypeId = $sanitizedParams->getInt('userTypeId');
             $user->isSystemNotification = $sanitizedParams->getCheckbox('isSystemNotification');
             $user->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
@@ -850,7 +850,7 @@ class User extends Base
         }
 
         // If we are a super admin
-        if ($this->getUser($request)->userTypeId == 1) {
+        if ($this->getUser()->userTypeId == 1) {
             $newPassword = $sanitizedParams->getString('newPassword');
             $retypeNewPassword = $sanitizedParams->getString('retypeNewPassword');
             $disableTwoFactor = $sanitizedParams->getCheckbox('disableTwoFactor');
@@ -939,7 +939,7 @@ class User extends Base
     {
         $user = $this->userFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($user)) {
+        if (!$this->getUser()->checkDeleteable($user)) {
             throw new AccessDeniedException();
         }
 
@@ -991,7 +991,7 @@ class User extends Base
     public function addForm(Request $request, Response $response)
     {
         // Only group admins or super admins can create Users.
-        if (!$this->getUser($request)->isSuperAdmin() && !$this->getUser($request)->isGroupAdmin()) {
+        if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin()) {
             throw new AccessDeniedException(__('Only super and group admins can create users'));
         }
 
@@ -1005,7 +1005,7 @@ class User extends Base
             'options' => [
                 'homepage' => $this->pageFactory->query(null, ['asHome' => 1]),
                 'groups' => $this->userGroupFactory->query(),
-                'userTypes' => ($this->getUser($request)->isSuperAdmin()) ? $this->userTypeFactory->getAllRoles() : $this->userTypeFactory->getNonAdminRoles(),
+                'userTypes' => ($this->getUser()->isSuperAdmin()) ? $this->userTypeFactory->getAllRoles() : $this->userTypeFactory->getNonAdminRoles(),
                 'defaultGroupId' => $this->getConfig()->getSetting('DEFAULT_USERGROUP'),
                 'defaultUserType' => $defaultUserTypeId
             ],
@@ -1035,7 +1035,7 @@ class User extends Base
         $user = $this->userFactory->getById($id);
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
 
-        if (!$this->getUser($request)->checkEditable($user)) {
+        if (!$this->getUser()->checkEditable($user)) {
             throw new AccessDeniedException();
         }
 
@@ -1071,7 +1071,7 @@ class User extends Base
     {
         $user = $this->userFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($user)) {
+        if (!$this->getUser()->checkDeleteable($user)) {
             throw new AccessDeniedException();
         }
 
@@ -1100,7 +1100,7 @@ class User extends Base
      */
     public function editProfileForm(Request $request, Response $response)
     {
-        $user = $this->getUser($request);
+        $user = $this->getUser();
 
         $this->getState()->template = 'user-form-edit-profile';
         $this->getState()->setData([
@@ -1134,7 +1134,7 @@ class User extends Base
      */
     public function editProfile(Request $request, Response $response)
     {
-        $user = $this->getUser($request);
+        $user = $this->getUser();
         // Store current (before edit) value of twoFactorTypeId in a variable
         $oldTwoFactorTypeId = $user->twoFactorTypeId;
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1241,7 +1241,7 @@ class User extends Base
      */
     public function tfaSetup(Request $request, Response $response)
     {
-        $user = $this->getUser($request);
+        $user = $this->getUser();
 
         $issuerSettings = $this->getConfig()->getSetting('TWOFACTOR_ISSUER');
         $appName = $this->getConfig()->getThemeConfig('app_name');
@@ -1311,7 +1311,7 @@ class User extends Base
      */
     public function tfaRecoveryGenerate(Request $request)
     {
-        $user = $this->getUser($request);
+        $user = $this->getUser();
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // clear any existing codes when we generate new ones
@@ -1346,7 +1346,7 @@ class User extends Base
      */
     public function tfaRecoveryShow(Request $request, Response $response)
     {
-        $user = $this->getUser($request);
+        $user = $this->getUser();
 
         $user->twoFactorRecoveryCodes = json_decode($user->twoFactorRecoveryCodes);
 
@@ -1375,7 +1375,7 @@ class User extends Base
      */
     public function forceChangePasswordPage(Request $request, Response $response)
     {
-        $user = $this->getUser($request);
+        $user = $this->getUser();
 
         // if the flag to force change password is not set to 1 then redirect to the Homepage
         if ($user->isPasswordChangeRequired != 1) {
@@ -1403,7 +1403,7 @@ class User extends Base
     public function forceChangePassword(Request $request, Response $response)
     {
         // Save the user
-        $user = $this->getUser($request);
+        $user = $this->getUser();
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $newPassword = $sanitizedParams->getString('newPassword');
         $retypeNewPassword = $sanitizedParams->getString('retypeNewPassword');
@@ -1484,12 +1484,12 @@ class User extends Base
         $object = $entity->getById($id);
 
         // Does this user have permission to edit the permissions?!
-        if (!$this->getUser($request)->checkPermissionsModifyable($object)) {
+        if (!$this->getUser()->checkPermissionsModifyable($object)) {
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
         }
 
         // List of all Groups with a view / edit / delete check box
-        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser($request), $object->permissionsClass(), $id, $this->gridRenderSort($request), $this->gridRenderFilter(['name' => $sanitizedParams->getString('name')], $request));
+        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $id, $this->gridRenderSort($request), $this->gridRenderFilter(['name' => $sanitizedParams->getString('name')], $request));
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($permissions);
@@ -1522,12 +1522,12 @@ class User extends Base
         $object = $entity->getById($id);
 
         // Does this user have permission to edit the permissions?!
-        if (!$this->getUser($request)->checkPermissionsModifyable($object)) {
+        if (!$this->getUser()->checkPermissionsModifyable($object)) {
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
         }
 
         $currentPermissions = [];
-        foreach ($this->permissionFactory->getAllByObjectId($this->getUser($request), $object->permissionsClass(), $id, ['groupId'], ['setOnly' => 1]) as $permission) {
+        foreach ($this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $id, ['groupId'], ['setOnly' => 1]) as $permission) {
             /* @var Permission $permission */
             $currentPermissions[$permission->groupId] = [
                 'view' => ($permission->view == null) ? 0 : $permission->view,
@@ -1617,13 +1617,13 @@ class User extends Base
         $object = $entity->getById($id);
 
         // Does this user have permission to edit the permissions?!
-        if (!$this->getUser($request)->checkPermissionsModifyable($object)) {
+        if (!$this->getUser()->checkPermissionsModifyable($object)) {
             throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
         }
 
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Get all current permissions
-        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser($request), $object->permissionsClass(), $id);
+        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $id);
 
         // Get the provided permissions
         $groupIds = $sanitizedParams->getArray('groupIds');
@@ -1668,15 +1668,15 @@ class User extends Base
                 // Regions
                 foreach ($layout->regions as $region) {
                     /* @var Region $region */
-                    $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser($request), get_class($region), $region->getId()), $groupIds);
+                    $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($region), $region->getId()), $groupIds);
                     // Playlists
                     /* @var Playlist $playlist */
                     $playlist = $region->regionPlaylist;
-                    $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser($request), get_class($playlist), $playlist->getId()), $groupIds);
+                    $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($playlist), $playlist->getId()), $groupIds);
                     // Widgets
                     foreach ($playlist->widgets as $widget) {
                         /* @var Widget $widget */
-                        $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser($request), get_class($widget), $widget->getId()), $groupIds);
+                        $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($widget), $widget->getId()), $groupIds);
                     }
                 }
             };
@@ -1684,7 +1684,7 @@ class User extends Base
             foreach ($this->layoutFactory->getByCampaignId($object->campaignId, true, true) as $layout) {
                 /* @var Layout $layout */
                 // Assign the same permissions to the Layout
-                $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser($request), get_class($object), $layout->campaignId), $groupIds);
+                $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object), $layout->campaignId), $groupIds);
 
                 // Load the layout
                 $layout->load();
@@ -1695,13 +1695,13 @@ class User extends Base
             // We always cascade region permissions down to the Playlist
             $object->load(['loadPlaylists' => true]);
 
-            $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser($request), get_class($object->regionPlaylist), $object->regionPlaylist->getId()), $groupIds);
+            $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object->regionPlaylist), $object->regionPlaylist->getId()), $groupIds);
         } else if ($object->permissionsClass() == 'Xibo\Entity\Playlist' && $sanitizedParams->getCheckbox('cascade') == 1) {
             $object->load();
 
             // Push the permissions down to each Widget
             foreach ($object->widgets as $widget) {
-                $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser($request), get_class($widget), $widget->getId()), $groupIds);
+                $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($widget), $widget->getId()), $groupIds);
             }
         } else if ($object->permissionsClass() == 'Xibo\Entity\Media') {
             // Are we a font?
@@ -1789,7 +1789,7 @@ class User extends Base
     {
         $this->getState()->template = 'user-applications-form';
         $this->getState()->setData([
-            'applications' => $this->applicationFactory->getByUserId($this->getUser($request)->userId),
+            'applications' => $this->applicationFactory->getByUserId($this->getUser()->userId),
             'help' => $this->getHelp()->link('User', 'Applications')
         ]);
 
@@ -1834,10 +1834,10 @@ class User extends Base
         $requestedPreference =  $request->getQueryParam('preference');
 
         if ($requestedPreference != '') {
-            $this->getState()->setData($this->getUser($request)->getOption($requestedPreference));
+            $this->getState()->setData($this->getUser()->getOption($requestedPreference));
         }
         else {
-            $this->getState()->setData($this->getUser($request)->getUserOptions());
+            $this->getState()->setData($this->getUser()->getUserOptions());
         }
 
         return $this->render($request, $response);
@@ -1888,11 +1888,11 @@ class User extends Base
             $option = $sanitizedPref->getString('option');
             $value = $sanitizedPref->getString('value');
 
-            $this->getUser($request)->setOptionValue($option, $value);
+            $this->getUser()->setOptionValue($option, $value);
         }
 
         if ($i > 0) {
-            $this->getUser($request)->save();
+            $this->getUser()->save();
         }
 
         // Return
@@ -1919,7 +1919,7 @@ class User extends Base
     {
         $user = $this->userFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($user)) {
+        if (!$this->getUser()->checkEditable($user)) {
             throw new AccessDeniedException();
         }
 
@@ -1980,7 +1980,7 @@ class User extends Base
     {
         $user = $this->userFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($user)) {
+        if (!$this->getUser()->checkEditable($user)) {
             throw new AccessDeniedException();
         }
 
@@ -1989,7 +1989,7 @@ class User extends Base
         foreach ($sanitizedParams->getIntArray('userGroupId') as $userGroupId) {
             $userGroup = $this->userGroupFactory->getById($userGroupId);
 
-            if (!$this->getUser($request)->checkEditable($userGroup)) {
+            if (!$this->getUser()->checkEditable($userGroup)) {
                 throw new AccessDeniedException(__('Access Denied to UserGroup'));
             }
 
@@ -2001,7 +2001,7 @@ class User extends Base
         foreach ($sanitizedParams->getIntArray('unassignUserGroupId') as $userGroupId) {
             $userGroup = $this->userGroupFactory->getById($userGroupId);
 
-            if (!$this->getUser($request)->checkEditable($userGroup)) {
+            if (!$this->getUser()->checkEditable($userGroup)) {
                 throw new AccessDeniedException(__('Access Denied to UserGroup'));
             }
 
@@ -2033,13 +2033,13 @@ class User extends Base
      */
     public function userWelcomeSetUnSeen(Request $request, Response $response)
     {
-        $this->getUser($request)->newUserWizard = 0;
-        $this->getUser($request)->save(['validate' => false]);
+        $this->getUser()->newUserWizard = 0;
+        $this->getUser()->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
-            'message' => sprintf(__('%s has started the welcome tutorial'), $this->getUser($request)->userName)
+            'message' => sprintf(__('%s has started the welcome tutorial'), $this->getUser()->userName)
         ]);
 
         return $this->render($request, $response);
@@ -2059,13 +2059,13 @@ class User extends Base
      */
     public function userWelcomeSetSeen(Request $request, Response $response)
     {
-        $this->getUser($request)->newUserWizard = 1;
-        $this->getUser($request)->save(['validate' => false]);
+        $this->getUser()->newUserWizard = 1;
+        $this->getUser()->save(['validate' => false]);
 
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
-            'message' => sprintf(__('%s has seen the welcome tutorial'), $this->getUser($request)->userName)
+            'message' => sprintf(__('%s has seen the welcome tutorial'), $this->getUser()->userName)
         ]);
 
         return $this->render($request, $response);
@@ -2133,19 +2133,19 @@ class User extends Base
     {
         $parsedParams = $this->getSanitizer($request->getParams());
 
-        $this->getUser($request)->setOptionValue('navigationMenuPosition', $parsedParams->getString('navigationMenuPosition'));
-        $this->getUser($request)->setOptionValue('useLibraryDuration', $parsedParams->getCheckbox('useLibraryDuration'));
-        $this->getUser($request)->setOptionValue('showThumbnailColumn', $parsedParams->getCheckbox('showThumbnailColumn'));
+        $this->getUser()->setOptionValue('navigationMenuPosition', $parsedParams->getString('navigationMenuPosition'));
+        $this->getUser()->setOptionValue('useLibraryDuration', $parsedParams->getCheckbox('useLibraryDuration'));
+        $this->getUser()->setOptionValue('showThumbnailColumn', $parsedParams->getCheckbox('showThumbnailColumn'));
 
-        if ($this->getUser($request)->isSuperAdmin()) {
-            $this->getUser($request)->showContentFrom = $parsedParams->getInt('showContentFrom');
+        if ($this->getUser()->isSuperAdmin()) {
+            $this->getUser()->showContentFrom = $parsedParams->getInt('showContentFrom');
         }
 
-        if (!$this->getUser($request)->isSuperAdmin() && $parsedParams->getInt('showContentFrom') == 2) {
+        if (!$this->getUser()->isSuperAdmin() && $parsedParams->getInt('showContentFrom') == 2) {
             throw new InvalidArgumentException(__('Option available only for Super Admins'), 'showContentFrom');
         }
 
-        $this->getUser($request)->save();
+        $this->getUser()->save();
 
         // Return
         $this->getState()->hydrate([

@@ -162,7 +162,7 @@ class Applications extends Base
             // Add an Edit button (edit form also exposes the secret - not possible to get through the API)
             $application->buttons = [];
 
-            if ($application->userId == $this->getUser($request)->userId || $this->getUser($request)->getUserTypeId() == 1) {
+            if ($application->userId == $this->getUser()->userId || $this->getUser()->getUserTypeId() == 1) {
 
                 // Edit
                 $application->buttons[] = [
@@ -263,7 +263,7 @@ class Applications extends Base
 
             // get oauth User Entity and set the UserId to the current web userId
             $userEntity = new UserEntity();
-            $userEntity->userId = $this->getUser($request)->userId;
+            $userEntity->userId = $this->getUser()->userId;
             $authRequest->setUser($userEntity);
 
             // Redirect back to the home page
@@ -314,7 +314,7 @@ class Applications extends Base
         // Get the client
         $client = $this->applicationFactory->getById($id);
 
-        if ($client->userId != $this->getUser($request)->userId && $this->getUser($request)->getUserTypeId() != 1) {
+        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1) {
             throw new AccessDeniedException();
         }
 
@@ -366,7 +366,7 @@ class Applications extends Base
         // Get the client
         $client = $this->applicationFactory->getById($id);
 
-        if ($client->userId != $this->getUser($request)->userId && $this->getUser($request)->getUserTypeId() != 1)
+        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1)
             throw new AccessDeniedException();
 
         $this->getState()->template = 'applications-form-delete';
@@ -400,7 +400,7 @@ class Applications extends Base
             throw new InvalidArgumentException(__('Please enter Application name'), 'name');
         }
 
-        $application->userId = $this->getUser($request)->userId;
+        $application->userId = $this->getUser()->userId;
         $application->save();
 
         // Return
@@ -499,7 +499,7 @@ class Applications extends Base
         // Get the client
         $client = $this->applicationFactory->getById($id);
 
-        if ($client->userId != $this->getUser($request)->userId && $this->getUser($request)->getUserTypeId() != 1) {
+        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1) {
             throw new AccessDeniedException();
         }
 
@@ -565,7 +565,7 @@ class Applications extends Base
 
             $this->getLog()->debug('Attempting to change ownership to ' . $user->userId . ' - ' . $user->userName);
 
-            if (!$this->getUser($request)->checkViewable($user)) {
+            if (!$this->getUser()->checkViewable($user)) {
                 throw new InvalidArgumentException('You do not have permission to assign this user', 'userId');
             }
 
@@ -602,7 +602,7 @@ class Applications extends Base
         // Get the client
         $client = $this->applicationFactory->getById($id);
 
-        if ($client->userId != $this->getUser($request)->userId && $this->getUser($request)->getUserTypeId() != 1) {
+        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1) {
             throw new AccessDeniedException();
         }
 

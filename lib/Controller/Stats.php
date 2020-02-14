@@ -380,7 +380,7 @@ class Stats extends Base
         // Do not filter by display if super admin and no display is selected
         // Super admin will be able to see stat records of deleted display, we will not filter by display later
         $displayIds = [];
-        if (!$this->getUser($request)->isSuperAdmin()) {
+        if (!$this->getUser()->isSuperAdmin()) {
             // Get an array of display id this user has access to.
             foreach ($this->displayFactory->query(null, [], $request) as $display) {
                 $displayIds[] = $display->displayId;
@@ -617,9 +617,9 @@ class Stats extends Base
         // Do not filter by display if super admin and no display is selected
         // Super admin will be able to see stat records of deleted display, we will not filter by display later
         $displayIds = [];
-        if (!$this->getUser($request)->isSuperAdmin()) {
+        if (!$this->getUser()->isSuperAdmin()) {
             // Get an array of display id this user has access to.
-            foreach ($this->displayFactory->query(null, [], $request) as $display) {
+            foreach ($this->displayFactory->query() as $display) {
                 $displayIds[] = $display->displayId;
             }
 
@@ -732,8 +732,8 @@ class Stats extends Base
 
         // Widget for the library usage pie chart
         try {
-            if ($this->getUser($request)->libraryQuota != 0) {
-                $libraryLimit = $this->getUser($request)->libraryQuota * 1024;
+            if ($this->getUser()->libraryQuota != 0) {
+                $libraryLimit = $this->getUser()->libraryQuota * 1024;
             } else {
                 $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
             }
@@ -835,12 +835,12 @@ class Stats extends Base
         // Restrict on the users we have permission to see
         // Normal users can only see themselves
         $permissions = '';
-        if ($this->getUser($request)->userTypeId == 3) {
+        if ($this->getUser()->userTypeId == 3) {
             $permissions .= ' AND user.userId = :currentUserId ';
-            $filterBy['currentUserId'] = $this->getUser($request)->userId;
+            $filterBy['currentUserId'] = $this->getUser()->userId;
         }
         // Group admins can only see users from their groups.
-        else if ($this->getUser($request)->userTypeId == 2) {
+        else if ($this->getUser()->userTypeId == 2) {
             $permissions .= '
                 AND user.userId IN (
                     SELECT `otherUserLinks`.userId
@@ -853,7 +853,7 @@ class Stats extends Base
                      WHERE `lkusergroup`.userId = :currentUserId
                 )
             ';
-            $params['currentUserId'] = $this->getUser($request)->userId;
+            $params['currentUserId'] = $this->getUser()->userId;
         }
 
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
@@ -956,7 +956,7 @@ class Stats extends Base
         // Get an array of display id this user has access to.
         $displayIds = [];
 
-        foreach ($this->displayFactory->query(null, [], $request) as $display) {
+        foreach ($this->displayFactory->query() as $display) {
             $displayIds[] = $display->displayId;
         }
 
@@ -967,7 +967,7 @@ class Stats extends Base
         // Get an array of display groups this user has access to
         $displayGroupIds = [];
 
-        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1], $request) as $displayGroup) {
+        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
             $displayGroupIds[] = $displayGroup->displayGroupId;
         }
 

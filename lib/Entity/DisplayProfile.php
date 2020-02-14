@@ -21,7 +21,6 @@
  */
 namespace Xibo\Entity;
 
-use Slim\Http\ServerRequest as Request;
 use Respect\Validation\Validator as v;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\DisplayProfileLoadedEvent;
@@ -277,9 +276,9 @@ class DisplayProfile implements \JsonSerializable
      * Assign Command
      * @param Command $command
      */
-    public function assignCommand($command, Request $request = null)
+    public function assignCommand($command)
     {
-        $this->load([], $request);
+        $this->load([]);
 
         $assigned = false;
 
@@ -301,9 +300,9 @@ class DisplayProfile implements \JsonSerializable
      * Unassign Command
      * @param Command $command
      */
-    public function unassignCommand($command, Request $request = null)
+    public function unassignCommand($command)
     {
-        $this->load([], $request);
+        $this->load([]);
 
         $this->commands = array_udiff($this->commands, [$command], function ($a, $b) {
            /**
@@ -318,7 +317,7 @@ class DisplayProfile implements \JsonSerializable
      * Load
      * @param array $options
      */
-    public function load($options = [], Request $request = null)
+    public function load($options = [])
     {
         $options = array_merge([
             'loadConfig' => true,
@@ -357,7 +356,7 @@ class DisplayProfile implements \JsonSerializable
 
         // Load any commands
         if ($options['loadCommands']) {
-            $this->commands = $this->commandFactory->getByDisplayProfileId($this->displayProfileId, $request);
+            $this->commands = $this->commandFactory->getByDisplayProfileId($this->displayProfileId);
         }
 
         // We are loaded

@@ -209,7 +209,7 @@ class Settings extends Base
      */
     public function update(Request $request, Response $response)
     {
-        if (!$this->getUser($request)->isSuperAdmin()) {
+        if (!$this->getUser()->isSuperAdmin()) {
             throw new AccessDeniedException();
         }
 

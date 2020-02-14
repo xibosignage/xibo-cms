@@ -407,7 +407,7 @@ class Library extends Base
         $media = $this->mediaFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser($request)->checkViewable($media)) {
+        if (!$this->getUser()->checkViewable($media)) {
             throw new AccessDeniedException();
         }
 
@@ -444,7 +444,7 @@ class Library extends Base
         $media = $this->mediaFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser($request)->checkViewable($media)) {
+        if (!$this->getUser()->checkViewable($media)) {
             throw new AccessDeniedException();
         }
 
@@ -558,7 +558,7 @@ class Library extends Base
      */
     function grid(Request $request, Response $response)
     {
-        $user = $this->getUser($request);
+        $user = $this->getUser();
 
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
 
@@ -578,7 +578,7 @@ class Library extends Base
             'assignable' => $parsedQueryParams->getInt('assignable'),
             'notPlayerSoftware' => 1,
             'notSavedReport' => 1
-        ], $request), $request);
+        ], $request));
 
         // Add some additional row content
         foreach ($mediaList as $media) {
@@ -746,7 +746,7 @@ class Library extends Base
     {
         $media = $this->mediaFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($media)) {
+        if (!$this->getUser()->checkDeleteable($media)) {
             throw new AccessDeniedException();
         }
 
@@ -805,7 +805,7 @@ class Library extends Base
     {
         $media = $this->mediaFactory->getById($id);
 
-        if (!$this->getUser($request)->checkDeleteable($media)) {
+        if (!$this->getUser()->checkDeleteable($media)) {
             throw new AccessDeniedException();
         }
 
@@ -950,7 +950,7 @@ class Library extends Base
         $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
 
         $options = array(
-            'userId' => $this->getUser($request)->userId,
+            'userId' => $this->getUser()->userId,
             'controller' => $this,
             'oldMediaId' => $parsedBody->getInt('oldMediaId', ['default' => $options['oldMediaId']]),
             'widgetId' => $parsedBody->getInt('widgetId'),
@@ -967,7 +967,6 @@ class Library extends Base
             'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i',
             'libraryLimit' => $libraryLimit,
             'libraryQuotaFull' => ($libraryLimit > 0 && $this->libraryUsage() > $libraryLimit),
-            'request' => $request,
             'expires' => $expires
         );
 
@@ -999,7 +998,7 @@ class Library extends Base
     {
         $media = $this->mediaFactory->getById($id);
 
-        if (!$this->getUser($request)->checkEditable($media)) {
+        if (!$this->getUser()->checkEditable($media)) {
             throw new AccessDeniedException();
         }
 
@@ -1115,7 +1114,7 @@ class Library extends Base
         $media = $this->mediaFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser($request)->checkEditable($media)) {
+        if (!$this->getUser()->checkEditable($media)) {
             throw new AccessDeniedException();
         }
 
@@ -1185,7 +1184,7 @@ class Library extends Base
         }
 
         // Work out how many files there are
-        $media = $this->mediaFactory->query(null, ['unusedOnly' => 1, 'ownerId' => $this->getUser($request)->userId]);
+        $media = $this->mediaFactory->query(null, ['unusedOnly' => 1, 'ownerId' => $this->getUser()->userId]);
 
         $sumExcludingGeneric = 0;
         $countExcludingGeneric = 0;
@@ -1256,7 +1255,7 @@ class Library extends Base
         $tidyGenericFiles = $this->getSanitizer($request->getParams())->getCheckbox('tidyGenericFiles');
 
         // Get a list of media that is not in use (for this user)
-        $media = $this->mediaFactory->query(null, ['unusedOnly' => 1, 'ownerId' => $this->getUser($request)->userId]);
+        $media = $this->mediaFactory->query(null, ['unusedOnly' => 1, 'ownerId' => $this->getUser()->userId]);
 
         $i = 0;
         foreach ($media as $item) {
@@ -1409,7 +1408,7 @@ class Library extends Base
             if (count($this->widgetFactory->query(null, ['mediaId' => $mediaId])) <= 0) {
                 throw new AccessDeniedException();
             }
-        } else if (!$this->getUser($request)->checkViewable($media)) {
+        } else if (!$this->getUser()->checkViewable($media)) {
             throw new AccessDeniedException();
         }
 
@@ -1537,7 +1536,7 @@ class Library extends Base
 
         // Each user has their own font cache (due to permissions) and the displays have their own font cache too
         // Get the item from the cache
-        $cssItem = $this->pool->getItem('fontCss/' . $this->getUser($request)->userId);
+        $cssItem = $this->pool->getItem('fontCss/' . $this->getUser()->userId);
         $cssItem->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
 
         // Get the CSS
@@ -1584,7 +1583,7 @@ class Library extends Base
                     // Css for the player contains the actual stored as location of the font.
                     $css .= str_replace('[url]', $font->storedAs, str_replace('[family]', $familyName, $fontTemplate));
                     // Test to see if this user should have access to this font
-                    if ($this->getUser($request)->checkViewable($font)) {
+                    if ($this->getUser()->checkViewable($font)) {
                         // Css for the local CMS contains the full download path to the font
                         $url = $this->urlFor($request, 'library.download',
                                 ['type' => 'font', 'id' => $font->mediaId]) . '?download=1&downloadFromLibrary=1';
@@ -1796,7 +1795,7 @@ class Library extends Base
         $media = $this->mediaFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser($request)->checkEditable($media)) {
+        if (!$this->getUser()->checkEditable($media)) {
             throw new AccessDeniedException();
         }
 
@@ -1872,7 +1871,7 @@ class Library extends Base
         $media = $this->mediaFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser($request)->checkEditable($media)) {
+        if (!$this->getUser()->checkEditable($media)) {
             throw new AccessDeniedException();
         }
 
@@ -1915,12 +1914,12 @@ class Library extends Base
     {
         $media = $this->mediaFactory->getById($id);
 
-        if (!$this->getUser($request)->checkViewable($media)) {
+        if (!$this->getUser()->checkViewable($media)) {
             throw new AccessDeniedException();
         }
 
         // Get a list of displays that this mediaId is used on
-        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter(['disableUserCheck' => 1, 'mediaId' => $id], $request), $request);
+        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter(['disableUserCheck' => 1, 'mediaId' => $id], $request));
 
         $this->getState()->template = 'library-form-usage';
         $this->getState()->setData([
@@ -1966,12 +1965,12 @@ class Library extends Base
     {
         $media = $this->mediaFactory->getById($id);
 
-        if (!$this->getUser($request)->checkViewable($media)) {
+        if (!$this->getUser()->checkViewable($media)) {
             throw new AccessDeniedException();
         }
 
         // Get a list of displays that this mediaId is used on by direct assignment
-        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter(['mediaId' => $id], $request), $request);
+        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter(['mediaId' => $id], $request));
 
         // have we been provided with a date/time to restrict the scheduled events to?
         $mediaDate = $this->getSanitizer($request->getParams())->getDate('mediaEventDate');
@@ -2083,18 +2082,18 @@ class Library extends Base
     {
         $media = $this->mediaFactory->getById($id);
 
-        if (!$this->getUser($request)->checkViewable($media)) {
+        if (!$this->getUser()->checkViewable($media)) {
             throw new AccessDeniedException();
         }
 
-        $layouts = $this->layoutFactory->query(null, ['mediaId' => $id, 'showDrafts' => 1], $request);
+        $layouts = $this->layoutFactory->query(null, ['mediaId' => $id, 'showDrafts' => 1]);
 
         if (!$this->isApi($request)) {
             foreach ($layouts as $layout) {
                 $layout->includeProperty('buttons');
 
                 // Add some buttons for this row
-                if ($this->getUser($request)->checkEditable($layout)) {
+                if ($this->getUser()->checkEditable($layout)) {
                     // Design Button
                     $layout->buttons[] = array(
                         'id' => 'layout_button_design',
@@ -2147,7 +2146,7 @@ class Library extends Base
         $media = $this->mediaFactory->getById($id);
 
         // Check Permissions
-        if (!$this->getUser($request)->checkViewable($media)) {
+        if (!$this->getUser()->checkViewable($media)) {
             throw new AccessDeniedException();
         }
 
@@ -2238,7 +2237,7 @@ class Library extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check Permissions
-        if (!$this->getUser($request)->checkViewable($media)) {
+        if (!$this->getUser()->checkViewable($media)) {
             throw new AccessDeniedException();
         }
 
@@ -2250,7 +2249,7 @@ class Library extends Base
         $media->name = $sanitizedParams->getString('name');
         $media->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
         // Set the Owner to user making the Copy
-        $media->setOwner($this->getUser($request)->userId);
+        $media->setOwner($this->getUser()->userId);
 
         // Set from global setting
         if ($media->enableStat == null) {
@@ -2310,7 +2309,7 @@ class Library extends Base
         $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
 
         // Check Permissions
-        if (!$this->getUser($request)->checkViewable($media)) {
+        if (!$this->getUser()->checkViewable($media)) {
             throw new AccessDeniedException();
         }
 
@@ -2466,7 +2465,7 @@ class Library extends Base
             throw new InvalidArgumentException(sprintf(__('This file size exceeds your environment Max Upload Size %s'), Environment::getMaxUploadSize()), 'size');
         }
 
-        $this->getUser($request)->isQuotaFullByUser();
+        $this->getUser()->isQuotaFullByUser();
 
         // check if we have extension provided in the request (available via API), if not get it from the headers
         if (!empty($extension)) {

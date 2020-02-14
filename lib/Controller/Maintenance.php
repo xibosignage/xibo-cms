@@ -433,7 +433,7 @@ class Maintenance extends Base
      */
     public function exportForm(Request $request, Response $response)
     {
-        if ($this->getUser($request)->userTypeId != 1) {
+        if ($this->getUser()->userTypeId != 1) {
             throw new AccessDeniedException();
         }
 

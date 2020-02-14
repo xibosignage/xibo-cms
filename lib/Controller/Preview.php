@@ -80,7 +80,7 @@ class Preview extends Base
     {
         $layout = $this->layoutFactory->getById($id);
 
-        if (!$this->getUser($request)->checkViewable($layout)) {
+        if (!$this->getUser()->checkViewable($layout)) {
             throw new AccessDeniedException();
         }
 
@@ -118,7 +118,7 @@ class Preview extends Base
     {
         $layout = $this->layoutFactory->getById($id);
 
-        if (!$this->getUser($request)->checkViewable($layout)) {
+        if (!$this->getUser()->checkViewable($layout)) {
             throw new AccessDeniedException();
         }
 
