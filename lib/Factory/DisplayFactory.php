@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (DisplayFactory.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,8 +23,6 @@
 
 namespace Xibo\Factory;
 
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Display;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
@@ -144,7 +143,7 @@ class DisplayFactory extends BaseFactory
      * @param array $filterBy
      * @return Display[]
      */
-    public function query($sortOrder = null, $filterBy = [], Request $request = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $parsedBody = $this->getSanitizer($filterBy);
 
@@ -276,7 +275,7 @@ class DisplayFactory extends BaseFactory
 
         $body .= ' WHERE 1 = 1 ';
 
-        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'displaygroup.displayGroupId', null, $filterBy, $request);
+        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'displaygroup.displayGroupId', null, $filterBy);
 
         // Filter by Display ID?
         if ($parsedBody->getInt('displayId') !== null) {

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,37 +24,26 @@ namespace Xibo\Factory;
 
 use DI\ContainerBuilder;
 use Exception;
-use Monolog\Logger;
-use Monolog\Processor\UidProcessor;
 use Psr\Container\ContainerInterface;
 use Slim\Views\Twig;
-use Slim\Views\TwigExtension;
-use Slim\App;
 use Stash\Driver\Composite;
 use Stash\Pool;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Entity\User;
-use Xibo\Helper\LogProcessor;
 use Xibo\Helper\Session;
-use Xibo\Factory\PageFactory;
 use Xibo\Helper\ApplicationState;
-use Xibo\Helper\NullSession;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Translate;
 use Xibo\Middleware\State;
 use Xibo\Service\ConfigService;
-use Xibo\Service\DisplayNotifyService;
 use Xibo\Service\HelpService;
 use Xibo\Service\ImageProcessingService;
 use Xibo\Service\ModuleService;
-use Xibo\Service\ReportService;
-use Xibo\Service\SanitizeService;
 use Xibo\Storage\MySqlTimeSeriesStore;
 use Xibo\Storage\PdoStorageService;
 use Xibo\Twig\ByteFormatterTwigExtension;
 use Xibo\Twig\DateFormatTwigExtension;
 use Xibo\Twig\TransExtension;
-use Xibo\Twig\TwigMessages;
 use Xibo\Twig\UrlDecodeTwigExtension;
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 class ContainerFactory

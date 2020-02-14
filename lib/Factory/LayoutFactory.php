@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (LayoutFactory.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -23,8 +24,6 @@
 namespace Xibo\Factory;
 
 
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
@@ -336,12 +335,12 @@ class LayoutFactory extends BaseFactory
      * @return Layout
      * @throws NotFoundException
      */
-    public function getByParentId($layoutId, Request $request = null)
+    public function getByParentId($layoutId)
     {
         if ($layoutId == 0)
             throw new NotFoundException();
 
-        $layouts = $this->query(null, array('disableUserCheck' => 1, 'parentId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1), $request);
+        $layouts = $this->query(null, array('disableUserCheck' => 1, 'parentId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
 
         if (count($layouts) <= 0) {
             throw new NotFoundException(__('Layout not found'));
@@ -391,7 +390,7 @@ class LayoutFactory extends BaseFactory
      * @return Layout[]
      * @throws NotFoundException
      */
-    public function getByCampaignId($campaignId, $permissionsCheck = true, $includeDrafts = false, Request $request = null)
+    public function getByCampaignId($campaignId, $permissionsCheck = true, $includeDrafts = false)
     {
         return $this->query(['displayOrder'], [
             'campaignId' => $campaignId,
@@ -399,7 +398,7 @@ class LayoutFactory extends BaseFactory
             'retired' => -1,
             'disableUserCheck' => $permissionsCheck ? 0 : 1,
             'showDrafts' => $includeDrafts ? 1 : 0
-        ], $request);
+        ]);
     }
 
     /**
@@ -676,13 +675,12 @@ class LayoutFactory extends BaseFactory
      * @param null $layout
      * @param null $playlistJson
      * @param null $nestedPlaylistJson
-     * @param Request $request
      * @return array
      * @throws DuplicateEntityException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function loadByJson($layoutJson, $layout = null, $playlistJson, $nestedPlaylistJson, Request $request)
+    public function loadByJson($layoutJson, $layout = null, $playlistJson, $nestedPlaylistJson)
     {
         $this->getLog()->debug('Loading Layout by JSON');
 
@@ -719,7 +717,7 @@ class LayoutFactory extends BaseFactory
                 $oldIds[] = $newPlaylist->playlistId;
                 $widgets[$newPlaylist->playlistId] = $newPlaylist->widgets;
 
-                $this->setOwnerAndSavePlaylist($newPlaylist, $request);
+                $this->setOwnerAndSavePlaylist($newPlaylist);
 
                 $newIds[] = $newPlaylist->playlistId;
             }
@@ -874,7 +872,7 @@ class LayoutFactory extends BaseFactory
                             $widgets[$newPlaylist->playlistId] = $newPlaylist->widgets;
 
                             // Save a new Playlist and capture the Id
-                            $this->setOwnerAndSavePlaylist($newPlaylist, $request);
+                            $this->setOwnerAndSavePlaylist($newPlaylist);
 
                             $newIds[] = $newPlaylist->playlistId;
                         }
@@ -957,7 +955,6 @@ class LayoutFactory extends BaseFactory
      * @param bool $useExistingDataSets
      * @param bool $importDataSetData
      * @param \Xibo\Controller\Library $libraryController
-     * @param Request $request
      * @return Layout
      * @throws DuplicateEntityException
      * @throws InvalidArgumentException
@@ -965,7 +962,7 @@ class LayoutFactory extends BaseFactory
      * @throws XiboException
      * @throws \Xibo\Exception\ConfigurationException
      */
-    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $libraryController, Request $request)
+    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $libraryController)
     {
         $this->getLog()->debug('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName);
 
@@ -996,7 +993,7 @@ class LayoutFactory extends BaseFactory
                 $nestedPlaylistDetails = json_decode($nestedPlaylistDetails, true);
             }
 
-            $jsonResults = $this->loadByJson($layoutDetails, null, $playlistDetails, $nestedPlaylistDetails, $request);
+            $jsonResults = $this->loadByJson($layoutDetails, null, $playlistDetails, $nestedPlaylistDetails);
             $layout = $jsonResults[0];
             $playlists = $jsonResults[1];
 
@@ -1294,7 +1291,7 @@ class LayoutFactory extends BaseFactory
                     // We want to add the dataset we have as a new dataset.
                     // we will need to make sure we clear the ID's and save it
                     $existingDataSet = clone $dataSet;
-                    $existingDataSet->userId = $this->getUser($request)->userId;
+                    $existingDataSet->userId = $this->getUser()->userId;
                     $existingDataSet->save();
 
                     // Do we need to add data
@@ -1592,7 +1589,7 @@ class LayoutFactory extends BaseFactory
      * @return Layout[]
      * @throws NotFoundException
      */
-    public function query($sortOrder = null, $filterBy = [], Request $request = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $parsedFilter = $this->getSanitizer($filterBy);
         $entries = [];
@@ -1765,7 +1762,7 @@ class LayoutFactory extends BaseFactory
         $body .= " WHERE 1 = 1 ";
 
         // Logged in user view permissions
-        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy, $request);
+        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy);
 
         // Layout Like
         if ($parsedFilter->getString('layout') != '') {
@@ -1943,7 +1940,7 @@ class LayoutFactory extends BaseFactory
             $body .= " AND `layout`.publishedDate IS NOT NULL ";
         }
 
-        $user = $this->getUser($request);
+        $user = $this->getUser();
 
         if ( ($user->userTypeId == 1 && $user->showContentFrom == 2) || $user->userTypeId == 4 ) {
             $body .= ' AND user.userTypeId = 4 ';
@@ -2056,17 +2053,16 @@ class LayoutFactory extends BaseFactory
 
     /**
      * @param \Xibo\Entity\Playlist $newPlaylist
-     * @param Request $request
      * @return \Xibo\Entity\Playlist
      * @throws DuplicateEntityException
      * @throws InvalidArgumentException
      */
-    private function setOwnerAndSavePlaylist($newPlaylist, Request $request)
+    private function setOwnerAndSavePlaylist($newPlaylist)
     {
         // try to save with the name from import, if it already exists add "imported - "  to the name
         try {
             // The new Playlist should be owned by the importing user
-            $newPlaylist->ownerId = $this->getUser($request)->getId();
+            $newPlaylist->ownerId = $this->getUser()->getId();
             $newPlaylist->playlistId = null;
             $newPlaylist->widgets = [];
             $newPlaylist->save();

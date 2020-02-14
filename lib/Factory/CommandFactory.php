@@ -1,14 +1,28 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (CommandFactory.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
 namespace Xibo\Factory;
 
-use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Command;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
@@ -63,9 +77,9 @@ class CommandFactory extends BaseFactory
      * @return Command
      * @throws NotFoundException
      */
-    public function getById($commandId, Request $request = null)
+    public function getById($commandId)
     {
-        $commands = $this->query(null, ['commandId' => $commandId], $request);
+        $commands = $this->query(null, ['commandId' => $commandId]);
 
         if (count($commands) <= 0) {
             throw new NotFoundException();
@@ -78,18 +92,18 @@ class CommandFactory extends BaseFactory
      * @param $displayProfileId
      * @return array[Command]
      */
-    public function getByDisplayProfileId($displayProfileId, Request $request = null)
+    public function getByDisplayProfileId($displayProfileId)
     {
-        return $this->query(null, ['displayProfileId' => $displayProfileId], $request);
+        return $this->query(null, ['displayProfileId' => $displayProfileId]);
     }
 
     /**
      * @param array $sortOrder
      * @param array $filterBy
-     * @param Request|null $request
      * @return array
+     * @throws NotFoundException
      */
-    public function query($sortOrder = null, $filterBy = [], Request $request = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         $sanitizedFilter = $this->getSanitizer($filterBy);
         $entries = [];
@@ -131,7 +145,7 @@ class CommandFactory extends BaseFactory
 
         $body .= ' WHERE 1 = 1 ';
 
-        $this->viewPermissionSql('Xibo\Entity\Command', $body, $params, 'command.commandId', 'command.userId', $filterBy, $request);
+        $this->viewPermissionSql('Xibo\Entity\Command', $body, $params, 'command.commandId', 'command.userId', $filterBy);
 
         if ($sanitizedFilter->getInt('commandId') !== null) {
             $body .= ' AND `command`.commandId = :commandId ';

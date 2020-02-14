@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (PageFactory.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -63,7 +64,7 @@ class PageFactory extends BaseFactory
      */
     public function getById($pageId)
     {
-        $pages = $this->query(null, array('pageId' => $pageId, 'disableUserCheck' => 1));
+        $pages = $this->query(null, ['pageId' => $pageId, 'disableUserCheck' => 1]);
 
         if (count($pages) <= 0)
             throw new NotFoundException('Unknown Route');
@@ -99,16 +100,18 @@ class PageFactory extends BaseFactory
      * @param null $sortOrder
      * @param array $filterBy
      * @return Page[]
+     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
     {
         $parsedBody = $this->getSanitizer($filterBy);
 
-        if ($sortOrder == null)
+        if ($sortOrder == null) {
             $sortOrder = ['name'];
+        }
 
-        $entries = array();
-        $params = array();
+        $entries = [];
+        $params = [];
         $sql = 'SELECT pageId, name, title, asHome FROM `pages` WHERE 1 = 1 ';
 
         // Logged in user view permissions

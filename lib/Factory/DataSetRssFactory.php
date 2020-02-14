@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -87,7 +87,7 @@ class DataSetRssFactory extends BaseFactory
      * @param $filterBy
      * @return DataSetRss[]
      */
-    public function query($sortOrder, $filterBy, $request = null)
+    public function query($sortOrder, $filterBy)
     {
         $entries = [];
         $params = [];
@@ -114,7 +114,7 @@ class DataSetRssFactory extends BaseFactory
         ';
 
         // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`datasetrss`.dataSetId', '`dataset`.userId', $filterBy, $request);
+        $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`datasetrss`.dataSetId', '`dataset`.userId', $filterBy);
 
         if ($sanitizedFilter->getInt('id') !== null) {
             $body .= ' AND `datasetrss`.id = :id ';

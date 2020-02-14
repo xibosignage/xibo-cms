@@ -22,7 +22,6 @@
 
 namespace Xibo\Factory;
 
-use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\PlayerVersion;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
@@ -104,9 +103,9 @@ class PlayerVersionFactory extends BaseFactory
      * @return PlayerVersion
      * @throws NotFoundException
      */
-    public function getByMediaId($mediaId, Request $request = null)
+    public function getByMediaId($mediaId)
     {
-        $versions = $this->query(null, ['disableUserCheck' => 1, 'mediaId' => $mediaId], $request);
+        $versions = $this->query(null, ['disableUserCheck' => 1, 'mediaId' => $mediaId]);
 
         if (count($versions) <= 0)
             throw new NotFoundException(__('Cannot find media'));
@@ -151,7 +150,7 @@ class PlayerVersionFactory extends BaseFactory
      * @param array $filterBy
      * @return PlayerVersion[]
      */
-    public function query($sortOrder = null, $filterBy = [], Request $request = null)
+    public function query($sortOrder = null, $filterBy = [])
     {
         if ($sortOrder === null) {
             $sortOrder = ['code DESC'];
@@ -193,7 +192,7 @@ class PlayerVersionFactory extends BaseFactory
 
 
         // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy, $request);
+        $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy);
 
         // by media ID
         if ($sanitizedFilter->getInt('mediaId', ['default' => -1]) != -1) {
