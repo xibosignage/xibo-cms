@@ -1792,20 +1792,14 @@ class Soap
      * @param string $serverKey
      * @param string $hardwareKey
      * @param integer $layoutId
-     * @param integer $regionId
-     * @param integer $mediaId
+     * @param string $regionId
+     * @param string $mediaId
      * @return mixed
      * @throws NotFoundException
      * @throws \SoapFault
      */
     protected function doGetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId)
     {
-        // Attempt to create request, response
-        $nyholmFactory = new Psr17Factory();
-        $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
-        $response = $decoratedResponseFactory->createResponse(200);
-        $request = new Request(new ServerRequest('GET', PROJECT_ROOT . '/xmds'));
-
         $this->logProcessor->setRoute('GetResource');
         $sanitizer = $this->getSanitizer([
             'serverKey' => $serverKey,
@@ -1819,8 +1813,8 @@ class Soap
         $serverKey = $sanitizer->getString('serverKey');
         $hardwareKey = $sanitizer->getString('hardwareKey');
         $layoutId = $sanitizer->getInt('layoutId');
-        $regionId = $sanitizer->getInt('regionId');
-        $mediaId = $sanitizer->getInt('mediaId');
+        $regionId = $sanitizer->getString('regionId');
+        $mediaId = $sanitizer->getString('mediaId');
 
 
         // Check the serverKey matches
@@ -1843,7 +1837,7 @@ class Soap
             $requiredFile = $this->requiredFileFactory->getByDisplayAndWidget($this->display->displayId, $mediaId);
 
             $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($mediaId), $this->regionFactory->getById($regionId));
-            $resource = $module->getResourceOrCache($request->withAttribute('displayId', $this->display->displayId), $response);
+            $resource = $module->getResourceOrCache($this->display->displayId);
 
             $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
             $requiredFile->save();
