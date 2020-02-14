@@ -148,6 +148,7 @@ class DataSetView extends ModuleWidget
     public function getExtra()
     {
         return [
+            'templates' => $this->templatesAvailable(),
             'orderClause' => $this->getOrderClause(),
             'filterClause' => $this->getFilterClause(),
             'columns' => $this->dataSetColumns(),

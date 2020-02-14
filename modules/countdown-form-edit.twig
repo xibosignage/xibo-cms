@@ -28,6 +28,8 @@
     {% trans "Edit Countdown" %}
 {% endblock %}
 
+{% block extra %}{{ module.templatesAvailable()|json_encode|raw }}{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <ul class="nav nav-tabs" role="tablist">

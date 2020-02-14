@@ -27,6 +27,7 @@
     {% trans "Edit Ticker" %}
 {% endblock %}
 
+{% block extra %}{{ module.getExtra()|json_encode|raw }}{% endblock %}
 
 {% block formHtml %}
     <div class="row">

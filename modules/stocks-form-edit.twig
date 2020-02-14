@@ -32,6 +32,8 @@
     {% trans "Get Results" %}, formHelpers.requestTab("results"| "{{ url_for("module.widget.tab.form", {tab: "results", id: module.widget.widgetId}) }}")
 {% endblock %}
 
+{% block extra %}{{ module.templatesAvailable()|json_encode|raw }}{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <ul class="nav nav-tabs" role="tablist">
