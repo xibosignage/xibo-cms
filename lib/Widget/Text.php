@@ -297,7 +297,7 @@ class Text extends ModuleWidget
             $this->appendCss('body { background-color: ' . $this->getOption('backgroundColor') . '; }');
         }
 
-        $this->finaliseGetResource();
+        return $this->finaliseGetResource();
     }
 
     /** @inheritdoc */

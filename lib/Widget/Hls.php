@@ -269,7 +269,7 @@ class Hls extends ModuleWidget
             ')
         ;
 
-        $this->finaliseGetResource();
+        return $this->finaliseGetResource();
     }
 
     /** @inheritdoc */

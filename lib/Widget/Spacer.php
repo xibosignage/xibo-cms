@@ -156,7 +156,7 @@ class Spacer extends ModuleWidget
         $this->initialiseGetResource()
             ->appendViewPortWidth($this->region->width);
 
-        $this->finaliseGetResource();
+        return $this->finaliseGetResource();
     }
 
     /** @inheritdoc */
