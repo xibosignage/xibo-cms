@@ -191,9 +191,10 @@ class StatusDashboard extends Base
             $limit = [];
 
             foreach ($results as $row) {
-                // TODO
-                //$sanitizedRow = $this->getSanitizer($row);
-                $labels[] = $this->getDate()->getLocalDate($row['month'], 'F');
+                $sanitizedRow = $this->getSanitizer($row);
+                $timestamp = $this->getDate()->parse($sanitizedRow->getString('month'))->format('U');
+
+                $labels[] = $this->getDate()->getLocalDate($timestamp, 'F');
 
                 $size = ((double)$row['size']) / (pow(1024, $base));
                 $usage[] = round($size, 2);
