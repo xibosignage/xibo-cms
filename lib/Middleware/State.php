@@ -227,14 +227,13 @@ class State implements Middleware
             $level = \Xibo\Service\LogService::resolveLogLevel($container->get('configService')->getSetting('audit'));
             $restingLevel = \Xibo\Service\LogService::resolveLogLevel($container->get('configService')->getSetting('RESTING_LOG_LEVEL'));
 
-            if ($level > $restingLevel) {
+            // the higher the number the less strict the logging.
+            if ($level < $restingLevel) {
                 // Do we allow the log level to be this high
                 $elevateUntil = $container->get('configService')->getSetting('ELEVATE_LOG_UNTIL');
-
                 if (intval($elevateUntil) < time()) {
                     // Elevation has expired, revert log level
                     $container->get('configService')->changeSetting('audit', $container->get('configService')->getSetting('RESTING_LOG_LEVEL'));
-
                     $level = $restingLevel;
                 }
             }
