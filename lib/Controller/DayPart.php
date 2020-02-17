@@ -25,7 +25,6 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -119,21 +118,21 @@ class DayPart extends Base
      *  description="Search dayparts",
      *  @SWG\Parameter(
      *      name="dayPartId",
-     *      in="formData",
+     *      in="query",
      *      description="The dayPart ID to Search",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="name",
-     *      in="formData",
+     *      in="query",
      *      description="The name of the dayPart to Search",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="embed",
-     *      in="formData",
+     *      in="query",
      *      description="Embed related data such as exceptions",
      *      type="string",
      *      required=false

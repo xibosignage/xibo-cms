@@ -25,7 +25,6 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Entity\Display;
-use Xibo\Entity\Media;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
@@ -45,7 +44,6 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\PlayerActionServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\XMR\ChangeLayoutAction;
 use Xibo\XMR\CollectNowAction;
 use Xibo\XMR\CommandAction;
@@ -171,49 +169,49 @@ class DisplayGroup extends Base
      *  operationId="displayGroupSearch",
      *  @SWG\Parameter(
      *      name="displayGroupId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by DisplayGroup Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="displayGroup",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by DisplayGroup Name",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="displayId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by DisplayGroups containing a specific display",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="nestedDisplayId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by DisplayGroups containing a specific display in there nesting",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="dynamicCriteria",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by DisplayGroups containing a specific dynamic criteria",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="isDisplaySpecific",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by whether the Display Group belongs to a Display or is user created",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="forSchedule",
-     *      in="formData",
+     *      in="query",
      *      description="Should the list be refined for only those groups the User can Schedule against?",
      *      type="integer",
      *      required=false

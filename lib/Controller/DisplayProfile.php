@@ -119,28 +119,28 @@ class DisplayProfile extends Base
      *  description="Search this users Display Profiles",
      *  @SWG\Parameter(
      *      name="displayProfileId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by DisplayProfile Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="displayProfile",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by DisplayProfile Name",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="type",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by DisplayProfile Type (windows|android|lg)",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="embed",
-     *      in="formData",
+     *      in="query",
      *      description="Embed related data such as config,commands,configWithDefault",
      *      type="string",
      *      required=false

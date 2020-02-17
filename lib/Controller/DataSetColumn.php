@@ -26,8 +26,8 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetColumnTypeFactory;
 use Xibo\Factory\DataSetFactory;
@@ -36,7 +36,6 @@ use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Stash\Interfaces\PoolInterface;
 
 /**
  * Class DataSetColumn
@@ -142,7 +141,7 @@ class DataSetColumn extends Base
      *   ),
      *  @SWG\Parameter(
      *      name="dataSetColumnId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by DataSet ColumnID",
      *      type="integer",
      *      required=false
@@ -156,6 +155,7 @@ class DataSetColumn extends Base
      *      )
      *  )
      * )
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function grid(Request $request, Response $response, $id)
     {
