@@ -39,7 +39,6 @@ use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\Widget\SubPlaylist;
 
 /**
  * Class LayoutFactory
@@ -281,6 +280,28 @@ class LayoutFactory extends BaseFactory
         }
 
         return intval($row[0]['campaignId']);
+    }
+
+
+    /**
+     * Get layout by layout history
+     * @param int $layoutId
+     * @return Layout
+     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function getByLayoutHistory($layoutId)
+    {
+        // Get a Layout by its Layout HistoryId
+        $layouts = $this->query(null, array('disableUserCheck' => 1, 'layoutHistoryId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
+
+        if (count($layouts) <= 0) {
+            throw new NotFoundException(\__('Layout not found'));
+        }
+
+        // Set our layout
+        return $layouts[0];
     }
 
     /**
@@ -1007,7 +1028,7 @@ class LayoutFactory extends BaseFactory
         if (isset($layoutDetails['regions']) && count($layoutDetails['regions']) > 0) {
             $this->getLog()->debug('Updating region names according to layout.json');
             foreach ($layout->regions as $region) {
-                if (array_key_exists($region->tempId, $layoutDetails['regions'])) {
+                if (array_key_exists($region->tempId, $layoutDetails['regions']) && !empty($layoutDetails['regions'][$region->tempId])) {
                     $region->name = $layoutDetails['regions'][$region->tempId];
                     $region->regionPlaylist->name = $layoutDetails['regions'][$region->tempId];
                 }
@@ -1723,6 +1744,14 @@ class LayoutFactory extends BaseFactory
             $params['mediaLike'] = '%' . $this->getSanitizer()->getString('mediaLike', $filterBy) . '%';
         }
 
+        // LayoutHistoryID
+        if ($this->getSanitizer()->getInt('layoutHistoryId', $filterBy) !== null) {
+            $body .= '
+                INNER JOIN `layouthistory`
+                ON `layouthistory`.layoutId = `layout`.layoutId
+            ';
+        }
+
         $body .= " WHERE 1 = 1 ";
 
         // Logged in user view permissions
@@ -1809,6 +1838,11 @@ class LayoutFactory extends BaseFactory
             // Join Campaign back onto it again
             $body .= " AND `campaign`.campaignId = :ownerCampaignId ";
             $params['ownerCampaignId'] = $this->getSanitizer()->getInt('ownerCampaignId', 0, $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('layoutHistoryId', $filterBy) !== null) {
+            $body .= " AND `layouthistory`.layoutId = :layoutHistoryId ";
+            $params['layoutHistoryId'] = $this->getSanitizer()->getInt('layoutHistoryId', 0, $filterBy);
         }
 
         // Get by regionId

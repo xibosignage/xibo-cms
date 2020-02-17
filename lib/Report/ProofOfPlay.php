@@ -215,28 +215,28 @@ class ProofOfPlay implements ReportInterface
     /** @inheritdoc */
     public function generateSavedReportName($filterCriteria)
     {
-        $saveAs = ucfirst($filterCriteria['filter']). ' report for ';
+        $saveAs = __(ucfirst($filterCriteria['filter']). ' report for Type') .': ';
 
         switch ($filterCriteria['type']) {
 
             case 'layout':
-                $saveAs .= 'Type: Layout. ';
+                $saveAs .= 'Layout. ';
                 break;
 
             case 'media':
-                $saveAs .= 'Type: Media. ';
+                $saveAs .= 'Media. ';
                 break;
 
             case 'widget':
-                $saveAs .= 'Type: Widget. ';
+                $saveAs .= 'Widget. ';
                 break;
 
             case 'event':
-                $saveAs .= 'Type: Event. ';
+                $saveAs .= 'Event. ';
                 break;
 
             default:
-                $saveAs .= 'Type: All. ';
+                $saveAs .= 'All. ';
                 break;
         }
 
@@ -272,7 +272,7 @@ class ProofOfPlay implements ReportInterface
                     $name = $media->name;
 
                 } catch (NotFoundException $error) {
-                    $name = 'Media not found';
+                    $name = 'Media ' . __('Not Found');
                 }
 
                 $medias .= $name . ', ';
@@ -292,7 +292,8 @@ class ProofOfPlay implements ReportInterface
                 $saveAs .= '(Display: '. $displayName . ')';
 
             } catch (NotFoundException $error){
-                $saveAs .= '(DisplayId: Not Found )';
+                $saveAs .= ' (DisplayId: ' . __('Not Found') . ' )';
+
             }
         }
 
@@ -313,7 +314,7 @@ class ProofOfPlay implements ReportInterface
         // Show filter criteria
         $filterInfo = '';
         if ($tags != null) {
-            $filterInfo = 'Tags from: '. $this->tagsType[$tagsType]. ', Tags: '. $tags. $exactTags;
+            $filterInfo = __('Tags from') . ': '. $this->tagsType[$tagsType]. ', Tags: '. $tags. $exactTags;
         }
 
         // Return data to build chart

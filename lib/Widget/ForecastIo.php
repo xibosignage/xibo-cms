@@ -354,7 +354,7 @@ class ForecastIo extends ModuleWidget
             array('id' => 'ca', 'value' => 'Canada', 'tempUnit' => 'C', 'windUnit' => 'KPH', 'visibilityUnit' => 'km'),
             array('id' => 'si', 'value' => 'Standard International Units', 'tempUnit' => 'C', 'windUnit' => 'MPS', 'visibilityUnit' => 'km'),
             array('id' => 'uk2', 'value' => 'United Kingdom', 'tempUnit' => 'C', 'windUnit' => 'MPH', 'visibilityUnit' => 'mi'),
-            array('id' => 'us', 'value' => 'United States', 'tempUnit' => 'F', 'windUnit' => 'MPH', 'visibilityUnit' => 'km'),
+            array('id' => 'us', 'value' => 'United States', 'tempUnit' => 'F', 'windUnit' => 'MPH', 'visibilityUnit' => 'mi'),
         );
     }
 
@@ -441,7 +441,7 @@ class ForecastIo extends ModuleWidget
                      'widgetOriginalWidth' => intval($this->getOption('widgetOriginalWidth')),
                      'widgetOriginalHeight' => intval($this->getOption('widgetOriginalHeight')),
                      'image' => 'preview-image'
-                 ])
+                 ], JSON_PRETTY_PRINT)
              ];
          } else {
              return [];
