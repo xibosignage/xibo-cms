@@ -30,6 +30,7 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Views\TwigMiddleware;
 use Xibo\Exception\UpgradePendingException;
 use Xibo\Factory\ContainerFactory;
+use Xibo\Helper\Environment;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
@@ -132,16 +133,45 @@ $customErrorHandler = function (Request $request, Throwable $exception, bool $di
         $app->getContainer()->get('logger')->debug(sprintf('Page Not Found. %s', $request->getUri()->getPath()));
         return $response->withRedirect('/notFound');
     } else {
-        $app->getContainer()->get('session')->set('exceptionMessage', $exception->getMessage());
-        $app->getContainer()->get('session')->set('exceptionCode', $exception->getCode());
+        $container = $app->getContainer();
+        /** @var \Xibo\Helper\Session $session */
+        $session = $container->get('session');
+        $logger = $container->get('logger');
+
+        // log the error
+        $logger->error('Error with message: ' . $exception->getMessage());
+        $logger->debug('Error with trace: ' . $exception->getTraceAsString());
+
         $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($exception)));
 
         if ($exception instanceof UpgradePendingException) {
             $exceptionClass = 'upgrade-in-progress-page';
         }
 
-        $app->getContainer()->get('session')->set('exceptionClass', $exceptionClass);
-        return $response->withRedirect('/error');
+        if ($request->getUri()->getPath() != '/error') {
+
+            // set data in session, this is handled and then cleared in Error Controller.
+            $session->set('exceptionMessage', $exception->getMessage());
+            $session->set('exceptionCode', $exception->getCode());
+            $session->set('exceptionClass', $exceptionClass);
+
+            return $response->withRedirect('/error');
+        } else {
+            // this should only happen when there is an error in Middleware or if something went horribly wrong.
+            $mode = $container->get('configService')->getSetting('SERVER_MODE');
+
+            if (strtolower($mode) === 'test') {
+                $message = $exception->getMessage() . ' thrown in ' . $exception->getTraceAsString();
+            } else {
+                $message = $exception->getMessage();
+            }
+
+            $container->get('state')->setCommitState(false);
+
+            // attempt to render a twig template in this application state will not go well
+            // as such return simple json response, with trace if the application is in test mode.
+            return $response->withJson(['error' => $message]);
+        }
     }
 };
 
