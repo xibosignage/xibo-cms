@@ -22,6 +22,7 @@
 
 namespace Xibo\Middleware;
 
+use Monolog\Logger;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -34,7 +35,10 @@ use Stash\Driver\Composite;
 use Stash\Pool;
 use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\UpgradePendingException;
+use Xibo\Helper\DatabaseLogHandler;
 use Xibo\Helper\Environment;
+use Xibo\Helper\NullSession;
+use Xibo\Helper\Session;
 use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\ReportService;
@@ -182,82 +186,81 @@ class State implements Middleware
         // Default timezone
         date_default_timezone_set($container->get('configService')->getSetting("defaultTimezone"));
 
-        // Configure the cache TODO remove, configured in containerFactory
-     //   self::configureCache($app->getContainer(), $app->configService, $app->getContainer()->get('logService')->getWriter());
-/*
-        // Register the help service
-        $app->container->singleton('helpService', function($container) use ($app) {
-            return new HelpService(
-                $container->store,
-                $container->configService,
-                $container->pool,
-                ($app->router()->getCurrentRoute() !== null) ? $app->router()->getCurrentRoute()->getPattern() : null
-            );
+        $container->set('session', function(ContainerInterface $container) use ($app) {
+            if ($container->get('name') == 'web' || $container->get('name') == 'auth') {
+                return new Session($container->get('logService'));
+            } else {
+                return new NullSession();
+            }
         });
 
-        // Create a session
-        $app->container->singleton('session', function() use ($app) {
-            if ($app->getName() == 'web' || $app->getName() == 'auth')
-                return new Session($app->logService);
-            else
-                return new NullSession();
-        });
-*/
         // We use Slim Flash Messages so we must immediately start a session (boo)
         $container->get('session')->set('init', '1');
-        /** @var Twig $view */
-        $view = $container->get('view');
-        // TODO some sort of conflict with web and api access :(
-        $view->addExtension(new TwigMessages(new \Slim\Flash\Messages()));
+
+        if ($container->get('name') == 'web') {
+            $container->set('flash', function () {
+                return new \Slim\Flash\Messages();
+            });
+
+            /** @var Twig $view */
+            $view = $container->get('view');
+            $view->addExtension(new TwigMessages(new \Slim\Flash\Messages()));
+        }
 
         // App Mode
         $mode = $container->get('configService')->getSetting('SERVER_MODE');
-        $app->getContainer()->get('logService')->setMode($mode);
+        $container->get('logService')->setMode($mode);
+        $logger = $container->get('logger');
 
         // Configure logging
         if (Environment::isForceDebugging() || strtolower($mode) == 'test') {
             error_reporting(E_ALL);
             ini_set('display_errors', 1);
-         //   $container->get('logger')->setLevel(Logger::DEBUG);
-        }
-        else {
-
+            // log level is set in our database handler construct (in access points), it also has getLevel() and setLevel($level) functions.
+            foreach ($logger->getHandlers() as $handler) {
+                if ($handler instanceof DatabaseLogHandler) {
+                    $handler->setLevel(Logger::DEBUG);
+                }
+            }
+        } else {
             // Log level
             $level = \Xibo\Service\LogService::resolveLogLevel($container->get('configService')->getSetting('audit'));
             $restingLevel = \Xibo\Service\LogService::resolveLogLevel($container->get('configService')->getSetting('RESTING_LOG_LEVEL'));
 
-            if ($level > $restingLevel) {
+            // the higher the number the less strict the logging.
+            if ($level < $restingLevel) {
                 // Do we allow the log level to be this high
                 $elevateUntil = $container->get('configService')->getSetting('ELEVATE_LOG_UNTIL');
-
                 if (intval($elevateUntil) < time()) {
                     // Elevation has expired, revert log level
                     $container->get('configService')->changeSetting('audit', $container->get('configService')->getSetting('RESTING_LOG_LEVEL'));
-
                     $level = $restingLevel;
                 }
             }
 
-            //$app->getLog()->setLevel($level);
+            // log level is set in our database handler construct (in access points), it also has getLevel() and setLevel($level) functions.
+            foreach ($logger->getHandlers() as $handler) {
+                if ($handler instanceof DatabaseLogHandler) {
+                    $handler->setLevel($level);
+                }
+            }
         }
 
-        // TODO  Configure any extra log handlers
-        /*
+        // Configure any extra log handlers
         if ($container->get('configService')->logHandlers != null && is_array($container->get('configService')->logHandlers)) {
             $container->get('logService')->debug('Configuring %d additional log handlers from Config', count($container->get('configService')->logHandlers));
             foreach ($container->get('configService')->logHandlers as $handler) {
-                $app->logWriter->addHandler($handler);
+                $logger->pushHandler($handler);
             }
         }
 
         // Configure any extra log processors
-        if ($app->configService->logProcessors != null && is_array($app->configService->logProcessors)) {
-            $app->logService->debug('Configuring %d additional log processors from Config', count($app->configService->logProcessors));
-            foreach ($app->configService->logProcessors as $processor) {
-                $app->logWriter->addProcessor($processor);
+        if ($container->get('configService')->logProcessors != null && is_array($container->get('configService')->logProcessors)) {
+            $container->get('logService')->debug('Configuring %d additional log processors from Config', count($container->get('configService')->logProcessors));
+            foreach ($container->get('configService')->logProcessors as $processor) {
+                $logger->pushProcessor($processor);
             }
         }
-        */
 
         return $request;
     }

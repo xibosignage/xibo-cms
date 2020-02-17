@@ -432,4 +432,4 @@ $app->get('/tag/form/delete/{id}', ['\Xibo\Controller\Tag','deleteForm'])->setNa
 
 // Errors
 $app->get('/notFound', ['\Xibo\Controller\Error', 'notFoundPage'])->setName('error.notFound');
-$app->get('/error', ['\Xibo\Controller\Error', 'errorPage'])->setName('error');
+$app->any('/error', ['\Xibo\Controller\Error', 'errorPage'])->setName('error');

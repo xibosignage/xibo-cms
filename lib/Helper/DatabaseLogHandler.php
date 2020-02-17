@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (DatabaseLogHandler.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -24,6 +25,7 @@ namespace Xibo\Helper;
 
 
 use Monolog\Handler\AbstractProcessingHandler;
+use Monolog\Logger;
 use Xibo\Storage\PdoStorageService;
 
 /**
@@ -33,7 +35,28 @@ use Xibo\Storage\PdoStorageService;
 class DatabaseLogHandler extends AbstractProcessingHandler
 {
     private static $statement;
+    protected $level;
 
+    public function __construct($level = Logger::ERROR)
+    {
+        parent::__construct($level);
+    }
+
+    public function getLevel()
+    {
+        return $this->level;
+    }
+
+    /**
+     * @param int|string $level
+     * @return $this|\Monolog\Handler\AbstractHandler
+     */
+    public function setLevel($level)
+    {
+        $this->level = Logger::toMonologLevel($level);
+
+        return $this;
+    }
     protected function write(array $record)
     {
         if (self::$statement == NULL) {

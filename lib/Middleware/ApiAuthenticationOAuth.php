@@ -115,8 +115,7 @@ class ApiAuthenticationOAuth implements Middleware
             $validatedRequest = $validatedRequest->withAttribute('public', true);
         }
 
-        $newRequest = $validatedRequest->withAttribute('currentUser', $user)
-                                       ->withAttribute('name', 'API');
+        $newRequest = $validatedRequest->withAttribute('name', 'API');
 
         $this->app->getContainer()->set('user', $user);
 

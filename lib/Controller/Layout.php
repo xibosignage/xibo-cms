@@ -194,7 +194,7 @@ class Layout extends Base
         $this->getState()->setData([
             'users' => $this->userFactory->query(),
             'groups' => $this->userGroupFactory->query(),
-            'displayGroups' => $this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1], $request)
+            'displayGroups' => $this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1])
         ]);
 
         return $this->render($request, $response);

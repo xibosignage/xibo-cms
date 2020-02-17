@@ -26,9 +26,7 @@ namespace Xibo\Controller;
 use League\OAuth2\Server\Exception\OAuthException;
 use Psr\Container\ContainerInterface;
 use Slim\Views\Twig;
-use Throwable;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\FormExpiredException;
 use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\TokenExpiredException;
@@ -105,7 +103,6 @@ class Error extends Base
     {
         $message = __('Not found');
 
-        // TODO make sure all relevant cases have their names set (web and api do), at the moment only web entry point is set to use this function.
         switch ($request->getAttribute('name')) {
 
             case 'web':
@@ -139,7 +136,7 @@ class Error extends Base
 
                 break;
 
-            case 'console':
+            case 'xtr':
             case 'maint':
 
                 // Render the error page.
@@ -148,7 +145,7 @@ class Error extends Base
                 //$app->stop();
                 break;
         }
-       // return $this->render($request, $response);
+        return $this->render($request, $response);
     }
 
     /**
@@ -165,15 +162,13 @@ class Error extends Base
     {
         //$handled = $this->handledError($e);
         $message = $this->container->get('session')->get('exceptionMessage');
-
         // redirect to homepage (or login), if we are visiting this page with no errors to show
         // mostly for post phinx upgrade refresh.
         if (!$message || $this->container->get('session')->isExpired() == 1) {
             return $response->withRedirect('/');
         }
 
-        // TODO make sure all relevant cases have their names set (web and api do), at the moment only web entry point is set to use this function.
-        switch ($request->getAttribute('name')) {
+        switch ($this->container->get('name')) {
 
             case 'web':
                 // Just in case our theme has not been set by the time the exception was raised.
@@ -188,8 +183,7 @@ class Error extends Base
                         'message' => $message,
                         'template' => ''
                     ]);
-                }
-                else {
+                } else {
                     // Template depending on whether one exists for the type of exception
                     // get the exception class
                     $exceptionClass = $this->container->get('session')->get('exceptionClass');
@@ -230,7 +224,7 @@ class Error extends Base
 
                 break;
 
-            case 'console':
+            case 'xtr':
             case 'maint':
 
                 // Render the error page.
@@ -239,6 +233,7 @@ class Error extends Base
                 //$app->stop();
                 break;
         }
-      //  return $this->render($request, $response);
+        $this->getState()->setCommitState(false);
+        return $this->render($request, $response);
     }
 }
