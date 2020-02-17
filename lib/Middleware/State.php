@@ -184,7 +184,7 @@ class State implements Middleware
         // Default timezone
         date_default_timezone_set($container->get('configService')->getSetting("defaultTimezone"));
 
-        $container->set('session', function(ContainerInterface $container) use ($request, $app) {
+        $container->set('session', function(ContainerInterface $container) use ($app) {
             if ($container->get('name') == 'web' || $container->get('name') == 'auth') {
                 return new Session($container->get('logService'));
             } else {
