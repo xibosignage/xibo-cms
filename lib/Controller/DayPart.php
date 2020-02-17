@@ -104,21 +104,21 @@ class DayPart extends Base
      *  description="Search dayparts",
      *  @SWG\Parameter(
      *      name="dayPartId",
-     *      in="formData",
+     *      in="query",
      *      description="The dayPart ID to Search",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="name",
-     *      in="formData",
+     *      in="query",
      *      description="The name of the dayPart to Search",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="embed",
-     *      in="formData",
+     *      in="query",
      *      description="Embed related data such as exceptions",
      *      type="string",
      *      required=false

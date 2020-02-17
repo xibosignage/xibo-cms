@@ -69,21 +69,21 @@ class Command extends Base
      *  description="Search this users Commands",
      *  @SWG\Parameter(
      *      name="commandId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Command Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="command",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Command Name",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="code",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Command Code",
      *      type="string",
      *      required=false

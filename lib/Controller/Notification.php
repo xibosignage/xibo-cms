@@ -17,7 +17,6 @@ use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\AttachmentUploadHandler;
-use Xibo\Helper\XiboUploadHandler;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\DisplayNotifyService;
@@ -118,21 +117,21 @@ class Notification extends Base
      *  description="Search this users Notifications",
      *  @SWG\Parameter(
      *      name="notificationId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Notification Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="subject",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Subject",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="embed",
-     *      in="formData",
+     *      in="query",
      *      description="Embed related data such as userGroups,displayGroups",
      *      type="string",
      *      required=false

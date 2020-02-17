@@ -9,6 +9,7 @@
 namespace Xibo\Controller;
 
 
+use Stash\Interfaces\PoolInterface;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetColumnFactory;
@@ -19,7 +20,6 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
-use Stash\Interfaces\PoolInterface;
 
 /**
  * Class DataSetColumn
@@ -103,7 +103,7 @@ class DataSetColumn extends Base
      *   ),
      *  @SWG\Parameter(
      *      name="dataSetColumnId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by DataSet ColumnID",
      *      type="integer",
      *      required=false
@@ -117,6 +117,7 @@ class DataSetColumn extends Base
      *      )
      *  )
      * )
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function grid($dataSetId)
     {

@@ -101,28 +101,28 @@ class DataSet extends Base
      *  description="Search this users DataSets",
      *  @SWG\Parameter(
      *      name="dataSetId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by DataSet Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="dataSet",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by DataSet Name",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="code",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by DataSet Code",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="embed",
-     *      in="formData",
+     *      in="query",
      *      description="Embed related data such as columns",
      *      type="string",
      *      required=false

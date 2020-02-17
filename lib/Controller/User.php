@@ -51,8 +51,8 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserTypeFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
-use Xibo\Helper\Random;
 use Xibo\Helper\QuickChartQRProvider;
+use Xibo\Helper\Random;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -234,28 +234,28 @@ class User extends Base
      *  description="Search users",
      *  @SWG\Parameter(
      *      name="userId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by User Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="userName",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by User Name",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="userTypeId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by UserType Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="retired",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Retired",
      *      type="integer",
      *      required=false
@@ -1272,6 +1272,7 @@ class User extends Base
      *
      * @param string $entity
      * @param int $objectId
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function permissionsGrid($entity, $objectId)
     {
@@ -1562,7 +1563,7 @@ class User extends Base
      *     description="User preferences for non-state information, such as Layout designer zoom levels",
      *     @SWG\Parameter(
      *      name="preference",
-     *      in="formData",
+     *      in="query",
      *      description="An optional preference",
      *      type="string",
      *      required=false
