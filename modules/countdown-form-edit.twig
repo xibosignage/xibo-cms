@@ -130,41 +130,17 @@
                     </div>
 
                     <div class="tab-pane" id="templateTab">
-                        <div class="form-content-title container-fluid text-right">
-                            <h4 class="col-xs-6 text-left">{% trans "Main Template" %}</h4>
-                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="mainTemplate_advanced" name="mainTemplate_advanced" {% if module.getOption("mainTemplate_advanced", 0) == 1 %}checked{% endif %} 
-                                data-size="small" 
-                                data-label-text="{% trans "Visual editor" %}" 
-                                data-label-width="80px" 
-                                data-on-text="{% trans "On" %}" 
-                                data-off-text="{% trans "Off" %}">
-                        </div>
-
                         <div class="editor-messages">
-                            {% set message %}{% trans "Enter a format for the Digital Countdown e.g. [HH:mm] or [DD/MM/YYYY]. See the manual for more information." %}{% endset %}
+                            {% set message %}{% trans "Enter a format for the Countdown e.g. [hha], [hh], [mm], [ss] or [DD]. See the manual for more information." %}{% endset %}
                             {{ forms.message(message, "") }}
 
                             {% set simpleTextEditorMessage %}
                                 {% trans "Enter text or HTML in the box below." %}<br>
                             {% endset %}
-                            {{ forms.message(simpleTextEditorMessage, 'mainTemplate-advanced-editor-hide inline-editor-hide') }}
-
-                            {# Layout Designer messages #}
-                            {% set layoutDesignerMessage %}
-                                {% trans "Enter text to display using the inline editor which can be opened by clicking in the preview on the left." %}
-                                {% trans "When using the inline editor Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                            {% endset %}
-                            {{ forms.message(layoutDesignerMessage, 'layout-designer-message inline-editor-show') }}
-
-                            {# Playlist Editor messages #}
-                            {% set playlistEditorMessage %}
-                                {% trans "Enter the text to display. The red rectangle reflects the size of the region you are editing." %}
-                                {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                            {% endset %}
-                            {{ forms.message(playlistEditorMessage, 'playlist-editor-message mainTemplate-advanced-editor-show') }}
+                            {{ forms.message(simpleTextEditorMessage, 'mainTemplate-advanced-editor-hide') }}
                         </div>
 
-                        <div class="ckeditor_controls inline-editor-hide container-fluid" data-linked-to="mainTemplate">
+                        <div class="ckeditor_controls container-fluid" data-linked-to="mainTemplate">
                             <div class="col-sm-offset-4 col-sm-8">
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
@@ -189,7 +165,7 @@
                             </div>
                         </div>
 
-                        {{ forms.textarea("mainTemplate", "", module.getRawNode("mainTemplate"), "", "inline-editor-hide", "", 10) }}
+                        {{ forms.textarea("mainTemplate", "", module.getRawNode("mainTemplate"), "", "", "", 10) }}
                     </div>
 
                     <div class="tab-pane" id="optionalStylesheetTab"> 
