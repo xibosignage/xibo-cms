@@ -217,7 +217,7 @@ try {
         throw new InvalidArgumentException(__('Your client is not the correct version to communicate with this CMS.'));
 
     // logProcessor
-    $logProcessor = new \Xibo\Xmds\LogProcessor($container->get('logService'), $uidProcessor->getUid());
+    $logProcessor = new \Xibo\Xmds\LogProcessor($container->get('logger'), $uidProcessor->getUid());
     $container->get('logger')->pushProcessor($logProcessor);
 
     // Create a SoapServer

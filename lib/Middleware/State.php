@@ -22,6 +22,7 @@
 
 namespace Xibo\Middleware;
 
+use Monolog\Logger;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -34,6 +35,7 @@ use Stash\Driver\Composite;
 use Stash\Pool;
 use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\UpgradePendingException;
+use Xibo\Helper\DatabaseLogHandler;
 use Xibo\Helper\Environment;
 use Xibo\Helper\NullSession;
 use Xibo\Helper\Session;
@@ -207,16 +209,20 @@ class State implements Middleware
 
         // App Mode
         $mode = $container->get('configService')->getSetting('SERVER_MODE');
-        $app->getContainer()->get('logService')->setMode($mode);
+        $container->get('logService')->setMode($mode);
+        $logger = $container->get('logger');
 
         // Configure logging
         if (Environment::isForceDebugging() || strtolower($mode) == 'test') {
             error_reporting(E_ALL);
             ini_set('display_errors', 1);
-         //   $container->get('logger')->setLevel(Logger::DEBUG);
-        }
-        else {
-
+            // log level is set in our database handler construct (in access points), it also has getLevel() and setLevel($level) functions.
+            foreach ($logger->getHandlers() as $handler) {
+                if ($handler instanceof DatabaseLogHandler) {
+                    $handler->setLevel(Logger::DEBUG);
+                }
+            }
+        } else {
             // Log level
             $level = \Xibo\Service\LogService::resolveLogLevel($container->get('configService')->getSetting('audit'));
             $restingLevel = \Xibo\Service\LogService::resolveLogLevel($container->get('configService')->getSetting('RESTING_LOG_LEVEL'));
@@ -233,26 +239,29 @@ class State implements Middleware
                 }
             }
 
-            //$app->getLog()->setLevel($level);
+            // log level is set in our database handler construct (in access points), it also has getLevel() and setLevel($level) functions.
+            foreach ($logger->getHandlers() as $handler) {
+                if ($handler instanceof DatabaseLogHandler) {
+                    $handler->setLevel($level);
+                }
+            }
         }
 
-        // TODO  Configure any extra log handlers
-        /*
+        // Configure any extra log handlers
         if ($container->get('configService')->logHandlers != null && is_array($container->get('configService')->logHandlers)) {
             $container->get('logService')->debug('Configuring %d additional log handlers from Config', count($container->get('configService')->logHandlers));
             foreach ($container->get('configService')->logHandlers as $handler) {
-                $app->logWriter->addHandler($handler);
+                $logger->pushHandler($handler);
             }
         }
 
         // Configure any extra log processors
-        if ($app->configService->logProcessors != null && is_array($app->configService->logProcessors)) {
-            $app->logService->debug('Configuring %d additional log processors from Config', count($app->configService->logProcessors));
-            foreach ($app->configService->logProcessors as $processor) {
-                $app->logWriter->addProcessor($processor);
+        if ($container->get('configService')->logProcessors != null && is_array($container->get('configService')->logProcessors)) {
+            $container->get('logService')->debug('Configuring %d additional log processors from Config', count($container->get('configService')->logProcessors));
+            foreach ($container->get('configService')->logProcessors as $processor) {
+                $logger->pushProcessor($processor);
             }
         }
-        */
 
         return $request;
     }
