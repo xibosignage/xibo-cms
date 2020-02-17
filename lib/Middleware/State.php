@@ -35,6 +35,8 @@ use Stash\Pool;
 use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\UpgradePendingException;
 use Xibo\Helper\Environment;
+use Xibo\Helper\NullSession;
+use Xibo\Helper\Session;
 use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\ReportService;
@@ -182,33 +184,26 @@ class State implements Middleware
         // Default timezone
         date_default_timezone_set($container->get('configService')->getSetting("defaultTimezone"));
 
-        // Configure the cache TODO remove, configured in containerFactory
-     //   self::configureCache($app->getContainer(), $app->configService, $app->getContainer()->get('logService')->getWriter());
-/*
-        // Register the help service
-        $app->container->singleton('helpService', function($container) use ($app) {
-            return new HelpService(
-                $container->store,
-                $container->configService,
-                $container->pool,
-                ($app->router()->getCurrentRoute() !== null) ? $app->router()->getCurrentRoute()->getPattern() : null
-            );
+        $container->set('session', function(ContainerInterface $container) use ($request, $app) {
+            if ($container->get('name') == 'web' || $container->get('name') == 'auth') {
+                return new Session($container->get('logService'));
+            } else {
+                return new NullSession();
+            }
         });
 
-        // Create a session
-        $app->container->singleton('session', function() use ($app) {
-            if ($app->getName() == 'web' || $app->getName() == 'auth')
-                return new Session($app->logService);
-            else
-                return new NullSession();
-        });
-*/
         // We use Slim Flash Messages so we must immediately start a session (boo)
         $container->get('session')->set('init', '1');
-        /** @var Twig $view */
-        $view = $container->get('view');
-        // TODO some sort of conflict with web and api access :(
-        $view->addExtension(new TwigMessages(new \Slim\Flash\Messages()));
+
+        if ($container->get('name') == 'web') {
+            $container->set('flash', function () {
+                return new \Slim\Flash\Messages();
+            });
+
+            /** @var Twig $view */
+            $view = $container->get('view');
+            $view->addExtension(new TwigMessages(new \Slim\Flash\Messages()));
+        }
 
         // App Mode
         $mode = $container->get('configService')->getSetting('SERVER_MODE');

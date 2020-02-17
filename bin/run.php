@@ -48,6 +48,7 @@ try {
 } catch (Exception $e) {
     die($e->getMessage());
 }
+$container->set('name', 'xtr');
 
 $container->set('logger', function (ContainerInterface $container) {
     $logger = new Logger('CONSOLE');

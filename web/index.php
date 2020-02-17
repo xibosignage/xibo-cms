@@ -85,6 +85,8 @@ $app->setBasePath(\Xibo\Middleware\State::determineBasePath());
 $app->config = $container->get('configService');
 $app->router = $app->getRouteCollector()->getRouteParser();
 
+$container->set('name', 'web');
+
 //
 // Middleware (onion, outside inwards and then out again - i.e. the last one is first and last);
 //
