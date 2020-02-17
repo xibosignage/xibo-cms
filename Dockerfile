@@ -89,7 +89,8 @@ RUN apk update && apk upgrade && apk add tar \
     php7-memcached \
     php7-zlib \
     mysql-client \
-    ssmtp \
+    msmtp \
+    python2 \
     apache2 \
     ca-certificates \
     tzdata \
@@ -184,7 +185,7 @@ RUN mkdir -p /var/www/cms/library/temp &&  \
     mkdir -p /run/apache2 && \
     rm /etc/apache2/conf.d/info.conf && \
     rm /etc/apache2/conf.d/userdir.conf && \
-    addgroup ssmtp && \
+    ln -sf /usr/bin/msmtp /usr/sbin/sendmail && \
     chmod 777 /tmp
 
 # Expose volume mount points

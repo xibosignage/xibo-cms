@@ -431,70 +431,70 @@ class Library extends Base
      *  description="Search the Library for this user",
      *  @SWG\Parameter(
      *      name="mediaId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Media Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="media",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Media Name",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="type",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Media Type",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="ownerId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Owner Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="retired",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Retired",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="tags",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Tags - comma seperated",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="exactTags",
-     *      in="formData",
+     *      in="query",
      *      description="A flag indicating whether to treat the tags filter as an exact match",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="duration",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Duration - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="fileSize",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by File Size - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="ownerUserGroupId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by users in this UserGroupId",
      *      type="integer",
      *      required=false

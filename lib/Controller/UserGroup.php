@@ -101,14 +101,14 @@ class UserGroup extends Base
      *  description="Search User Groups",
      *  @SWG\Parameter(
      *      name="userGroupId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by UserGroup Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="userGroup",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by UserGroup Name",
      *      type="string",
      *      required=false

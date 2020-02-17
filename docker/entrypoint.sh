@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ "$CMS_DEV_MODE" == "true" ]
 then
@@ -188,30 +188,52 @@ then
         crontab -u apache /etc/crontabs/apache
     fi
 
-    # Configure SSMTP to send emails if required
-    /bin/sed -i "s/mailhub=.*$/mailhub=$CMS_SMTP_SERVER/" /etc/ssmtp/ssmtp.conf
+    # Configure MSMTP to send emails if required
+    # Config lives in /etc/msmtprc
+    
+    # Split CMS_SMTP_SERVER in to CMS_SMTP_SEVER_HOST : PORT
+    host_port=($(echo $CMS_SMTP_SERVER | tr ":" "\n"))
+    
+    /bin/sed -i "s/host .*$/host ${host_port[0]}/" /etc/msmtprc
+    /bin/sed -i "s/port .*$/port ${host_port[1]}/" /etc/msmtprc    
+    
     if [ -z "$CMS_SMTP_USERNAME" ] || [ "$CMS_SMTP_USERNAME" == "none" ]
     then
-      /bin/sed -i "s/^#*AuthUser=.*$/#AuthUser=/" /etc/ssmtp/ssmtp.conf
-      /bin/sed -i "s/^#*AuthPass=.*$/#AuthPass=/" /etc/ssmtp/ssmtp.conf
+      # Use no authentication
+      /bin/sed -i "s/^auth .*$/auth off/" /etc/msmtprc
     else
-      /bin/sed -i "s/^#*AuthUser=.*$/AuthUser=$CMS_SMTP_USERNAME/" /etc/ssmtp/ssmtp.conf
-      /bin/sed -i "s/^#*AuthPass=.*$/AuthPass=$CMS_SMTP_PASSWORD/" /etc/ssmtp/ssmtp.conf
+      if [ -z "$CMS_SMTP_OAUTH_CLIENT_ID" ] || [ "$CMS_SMTP_OAUTH_CLIENT_ID" == "none" ]
+      then
+        # Use Username/Password
+        /bin/sed -i "s/^auth .*$/auth on/" /etc/msmtprc
+        /bin/sed -i "s/^user .*$/user $CMS_SMTP_USERNAME/" /etc/msmtprc
+        /bin/sed -i "s/^password .*$/password $CMS_SMTP_PASSWORD/" /etc/msmtprc
+      else
+        # Use OAUTH credentials
+        /bin/sed -i "s/^auth .*$/auth oauthbearer/" /etc/msmtprc
+        /bin/sed -i "s/^user .*$/#user/" /etc/msmtprc
+        /bin/sed -i "s/^password .*$/passwordeval \"/usr/bin/oauth2.py --quiet --user=$CMS_SMTP_USERNAME --client_id=$CMS_SMTP_OAUTH_CLIENT_ID --client_secret=$CMS_SMTP_OAUTH_CLIENT_SECRET --refresh_token=$CMS_SMTP_OAUTH_CLIENT_REFRESH\"/" /etc/msmtprc
+      fi
     fi
 
-    /bin/sed -i "s/UseTLS=.*$/UseTLS=$CMS_SMTP_USE_TLS/" /etc/ssmtp/ssmtp.conf
-    /bin/sed -i "s/UseSTARTTLS=.*$/UseSTARTTLS=$CMS_SMTP_USE_STARTTLS/" /etc/ssmtp/ssmtp.conf
-    /bin/sed -i "s/rewriteDomain=.*$/rewriteDomain=$CMS_SMTP_REWRITE_DOMAIN/" /etc/ssmtp/ssmtp.conf
-    /bin/sed -i "s/hostname=.*$/hostname=$CMS_SMTP_HOSTNAME/" /etc/ssmtp/ssmtp.conf
-    /bin/sed -i "s/FromLineOverride=.*$/FromLineOverride=$CMS_SMTP_FROM_LINE_OVERRIDE/" /etc/ssmtp/ssmtp.conf
+    if [ "$CMS_SMTP_USE_TLS" == "YES" ]
+    then
+      /bin/sed -i "s/tls .*$/tls on/" /etc/msmtprc
+    else
+      /bin/sed -i "s/tls .*$/tls off/" /etc/msmtprc
+    fi
+    
+    if [ "$CMS_SMTP_USE_STARTTLS" == "YES" ]
+    then
+      /bin/sed -i "s/tls_starttls .*$/tls_starttls on/" /etc/msmtprc
+    else
+      /bin/sed -i "s/tls_starttls .*$/tls_starttls off/" /etc/msmtprc
+    fi
 
-    # Secure SSMTP files
-    # Following recommendations here:
-    # https://wiki.archlinux.org/index.php/SSMTP#Security
-    /bin/chgrp ssmtp /etc/ssmtp/ssmtp.conf
-    /bin/chgrp ssmtp /usr/sbin/ssmtp
-    /bin/chmod 640 /etc/ssmtp/ssmtp.conf
-    /bin/chmod g+s /usr/sbin/ssmtp
+    /bin/sed -i "s/maildomain .*$/maildomain $CMS_SMTP_REWRITE_DOMAIN/" /etc/msmtprc
+    /bin/sed -i "s/domain .*$/domain $CMS_SMTP_HOSTNAME/" /etc/msmtprc
+    
+    /bin/sed -i "s/from .*$/from cms@$CMS_SMTP_REWRITE_DOMAIN/" /etc/msmtprc
 
     mkdir -p /var/www/cms/library/temp
     chown apache.apache -R /var/www/cms/library
