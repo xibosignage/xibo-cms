@@ -47,7 +47,8 @@ RUN apk update && apk upgrade && apk add tar \
     php7-tokenizer \
     php7-zlib \
     mysql-client \
-    ssmtp \
+    msmtp \
+    python2 \
     apache2 \
     ca-certificates \
     tzdata \
