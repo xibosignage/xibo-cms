@@ -291,13 +291,8 @@ class ReportService implements ReportServiceInterface
         $object->setUserId($userId);
         $filterCriteria = json_decode($filterCriteria, true);
 
-        // This request object will be empty, however we need to pass it to getResults functions in Reports, otherwise it will throw errors
-        // getResults is called by both web and xtr, we need both to get the passed parameters correctly
-        $request = new Request(new ServerRequest('GET', PROJECT_ROOT . '/'));
-
-
         // Retrieve the result array
-        return $object->getResults($filterCriteria, $request);
+        return $object->getResults($filterCriteria);
     }
 
     /**

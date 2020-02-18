@@ -1092,8 +1092,10 @@ class Report extends Base
         // Create the report object
         $object = $this->reportService->createReportObject($className);
 
+        $filterCriteria = $request->getParams();
+
         // Return data to build chart
-        $results =  $object->getResults([], $request);
+        $results =  $object->getResults($filterCriteria);
         $this->getState()->extra = $results;
 
         return $this->render($request, $response);

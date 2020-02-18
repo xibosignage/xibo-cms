@@ -91,8 +91,7 @@ interface ReportInterface
     /**
      * Return results
      * @param $filterCriteria
-     * @param Request $request
      * @return array
      */
-    public function getResults($filterCriteria, Request $request);
+    public function getResults($filterCriteria);
 }
