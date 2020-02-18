@@ -140,6 +140,7 @@ class State implements Middleware
      * @param App $app
      * @param \Psr\Http\Message\ServerRequestInterface $request
      * @return \Psr\Http\Message\ServerRequestInterface
+     * @throws \Xibo\Exception\NotFoundException
      */
     public static function setState(App $app, Request $request): Request
     {
@@ -211,6 +212,10 @@ class State implements Middleware
         // We use Slim Flash Messages so we must immediately start a session (boo)
         $container->get('session')->set('init', '1');
 
+        // App Mode
+        $mode = $container->get('configService')->getSetting('SERVER_MODE');
+        $container->get('logService')->setMode($mode);
+
         if ($container->get('name') == 'web') {
             $container->set('flash', function () {
                 return new \Slim\Flash\Messages();
@@ -219,11 +224,14 @@ class State implements Middleware
             /** @var Twig $view */
             $view = $container->get('view');
             $view->addExtension(new TwigMessages(new \Slim\Flash\Messages()));
+
+            // set Twig auto reload if we are in test mode
+            if(strtolower($mode) == 'test') {
+                $twigEnvironment = $view->getEnvironment();
+                $twigEnvironment->enableAutoReload();
+            }
         }
 
-        // App Mode
-        $mode = $container->get('configService')->getSetting('SERVER_MODE');
-        $container->get('logService')->setMode($mode);
         $logger = $container->get('logger');
 
         // Configure logging
