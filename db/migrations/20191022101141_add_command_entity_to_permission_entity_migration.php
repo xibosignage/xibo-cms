@@ -30,7 +30,7 @@ class AddCommandEntityToPermissionEntityMigration extends AbstractMigration
         $permissionEntity = $this->table('permissionentity');
         $permissionEntity
             ->insert([
-                ['entityId' => 12, 'entity' => 'Xibo\Entity\Command']
+                ['entity' => 'Xibo\Entity\Command']
             ])
             ->save();
     }
