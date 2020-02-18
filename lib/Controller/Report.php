@@ -145,7 +145,7 @@ class Report extends Base
             'userId' => $sanitizedQueryParams->getInt('userId'),
             'reportScheduleId' => $sanitizedQueryParams->getInt('reportScheduleId'),
             'reportName' => $sanitizedQueryParams->getString('reportName')
-        ], $request), $request);
+        ], $request));
 
         /** @var \Xibo\Entity\ReportSchedule $reportSchedule */
         foreach ($reportSchedules as $reportSchedule) {
@@ -268,7 +268,7 @@ class Report extends Base
             ];
 
             // Delete all saved report
-            $savedreports = $this->savedReportFactory->query(null, ['reportScheduleId'=> $reportSchedule->reportScheduleId], $request);
+            $savedreports = $this->savedReportFactory->query(null, ['reportScheduleId'=> $reportSchedule->reportScheduleId]);
             if ((count($savedreports) > 0)  && $this->getUser()->checkDeleteable($reportSchedule)) {
 
                 $reportSchedule->buttons[] = ['divider' => true];

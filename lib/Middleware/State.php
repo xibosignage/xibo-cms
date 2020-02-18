@@ -33,6 +33,7 @@ use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 use Stash\Driver\Composite;
 use Stash\Pool;
+use Xibo\Entity\User;
 use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\UpgradePendingException;
 use Xibo\Helper\DatabaseLogHandler;
@@ -149,6 +150,19 @@ class State implements Middleware
 
         // Set the config dependencies
         $container->get('configService')->setDependencies($container->get('store'), $app->rootUri);
+
+        // set the system user for XTR
+        if ($container->get('name') == 'xtr') {
+            // Configure a user
+            /** @var User $user */
+            $user = $container->get('userFactory')->getSystemUser();
+            // Pass the page factory into the user object, so that it can check its page permissions
+            $user->setChildAclDependencies($container->get('userGroupFactory'), $container->get('pageFactory'));
+
+            // Load the user
+            $user->load(false);
+            $container->set('user', $user);
+        }
 
         // Register the report service
         $container->set('reportService', function(ContainerInterface $container) {
@@ -272,7 +286,7 @@ class State implements Middleware
     public static function setMiddleWare($app)
     {
         // Handle additional Middleware
-        if (isset($app->configService->middleware) && is_array($app->getContainer()->get('configService')->middleware)) {
+        if (isset($app->getContainer()->get('configService')->middleware) && is_array($app->getContainer()->get('configService')->middleware)) {
             foreach ($app->getContainer()->get('configService')->middleware as $object) {
                 $app->add($object);
             }

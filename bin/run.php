@@ -65,6 +65,7 @@ $container->set('logger', function (ContainerInterface $container) {
 
 $app = \DI\Bridge\Slim\Bridge::create($container);
 
+$app->setBasePath(\Xibo\Middleware\State::determineBasePath());
 // Config
 $app->configService = $container->get('configService');
 
@@ -99,19 +100,20 @@ $twig->twigTemplateDirs = [PROJECT_ROOT . '/views'];
 $app->view($twig);
 */
 $twigMiddleware = TwigMiddleware::createFromContainer($app);
-$app->add(new \Xibo\Middleware\Log($app));
+
 $app->add(new \Xibo\Middleware\Storage($app));
+$app->add(new \Xibo\Middleware\Xtr($app));
 $app->add(new \Xibo\Middleware\State($app));
 $app->add($twigMiddleware);
+$app->add(new \Xibo\Middleware\Log($app));
 $app->add(new \Xibo\Middleware\Xmr($app));
+
+// Handle additional Middleware
+\Xibo\Middleware\State::setMiddleWare($app);
+
 $app->addRoutingMiddleware();
 $app->addErrorMiddleware(true, true, true);
 
-// Handle additional Middleware
-//\Xibo\Middleware\State::setMiddleWare($app);
-
-// Configure a user
-//$app->user = $container->get('userFactory')->getSystemUser();
 
 /*
 // Configure the Slim error handler

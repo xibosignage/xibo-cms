@@ -329,6 +329,7 @@ class DistributionReport implements ReportInterface
     public function getResults($filterCriteria, Request $request)
     {
         $this->getLog()->debug('Filter criteria: '. json_encode($filterCriteria, JSON_PRETTY_PRINT));
+        // This function is called by both web ui and xtr,  XTR will have filters in $filterCriteria array and web in $request params
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $sanitizedCriteria = $this->getSanitizer($filterCriteria);
 
@@ -344,7 +345,7 @@ class DistributionReport implements ReportInterface
         $displayIds = [];
 
         // Get an array of display id this user has access to.
-        foreach ($this->displayFactory->query(null, [], $request) as $display) {
+        foreach ($this->displayFactory->query() as $display) {
             $displayIds[] = $display->displayId;
         }
 
@@ -364,7 +365,7 @@ class DistributionReport implements ReportInterface
         // Get an array of display groups this user has access to
         $displayGroupIds = [];
 
-        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1], $request) as $displayGroup) {
+        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
             $displayGroupIds[] = $displayGroup->displayGroupId;
         }
 

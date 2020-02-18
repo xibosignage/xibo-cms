@@ -338,6 +338,7 @@ class ProofOfPlay implements ReportInterface
     /** @inheritdoc */
     public function getResults($filterCriteria, Request $request)
     {
+        // This function is called by both web ui and xtr,  XTR will have filters in $filterCriteria array and web in $request params
         $sanitizedCriteria = $this->getSanitizer($filterCriteria);
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $displayId = $sanitizedParams->getInt('displayId', ['default' => $sanitizedCriteria->getInt('displayId')]);
@@ -364,7 +365,7 @@ class ProofOfPlay implements ReportInterface
 
         if ($user->userTypeId != 1) {
             // Get an array of display id this user has access to.
-            foreach ($displayFactory->query(null, [], $request) as $display) {
+            foreach ($displayFactory->query() as $display) {
                 $displayIds[] = $display->displayId;
             }
 

@@ -68,6 +68,7 @@ interface ReportInterface
 
     /**
      * Set Report Schedule form data
+     * @param Request $request
      * @return array
      */
     public function setReportScheduleFormData(Request $request);
@@ -90,6 +91,7 @@ interface ReportInterface
     /**
      * Return results
      * @param $filterCriteria
+     * @param Request $request
      * @return array
      */
     public function getResults($filterCriteria, Request $request);

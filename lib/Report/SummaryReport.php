@@ -303,6 +303,7 @@ class SummaryReport implements ReportInterface
     /** @inheritDoc */
     public function getResults($filterCriteria, Request $request)
     {
+        // This function is called by both web ui and xtr,  XTR will have filters in $filterCriteria array and web in $request params
         $this->getLog()->debug('Filter criteria: '. json_encode($filterCriteria, JSON_PRETTY_PRINT));
 
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -315,7 +316,7 @@ class SummaryReport implements ReportInterface
         // Get an array of display id this user has access to.
         $displayIds = [];
 
-        foreach ($this->displayFactory->query(null, [], $request) as $display) {
+        foreach ($this->displayFactory->query() as $display) {
             $displayIds[] = $display->displayId;
         }
 
