@@ -22,13 +22,13 @@
 
 namespace Xibo\Storage;
 
+use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
 
 /**
  * Class MySqlTimeSeriesStore
@@ -137,7 +137,23 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $data = [];
             foreach ($this->stats as $stat) {
                 foreach ($stat as $field) {
-                    $data[] = $field;
+                    // Be explicit about the order of the keys
+                    $data[] = [
+                        'type' => $field['type'],
+                        'statDate' => $field['statDate'],
+                        'fromDt' => $field['fromDt'],
+                        'toDt' => $field['toDt'],
+                        'scheduleId' => $field['scheduleId'],
+                        'displayId' => $field['displayId'],
+                        'campaignId' => $field['campaignId'],
+                        'layoutId' => $field['layoutId'],
+                        'mediaId' => $field['mediaId'],
+                        'tag' => $field['tag'],
+                        'widgetId' => $field['widgetId'],
+                        'duration' => $field['duration'],
+                        'count' => $field['count'],
+                        'engagements' => $field['engagements']
+                    ];
                 }
             }
 
