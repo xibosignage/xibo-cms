@@ -136,24 +136,27 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             // Flatten the array
             $data = [];
             foreach ($this->stats as $stat) {
-                foreach ($stat as $field) {
-                    // Be explicit about the order of the keys
-                    $data[] = [
-                        'type' => $field['type'],
-                        'statDate' => $field['statDate'],
-                        'fromDt' => $field['fromDt'],
-                        'toDt' => $field['toDt'],
-                        'scheduleId' => $field['scheduleId'],
-                        'displayId' => $field['displayId'],
-                        'campaignId' => $field['campaignId'],
-                        'layoutId' => $field['layoutId'],
-                        'mediaId' => $field['mediaId'],
-                        'tag' => $field['tag'],
-                        'widgetId' => $field['widgetId'],
-                        'duration' => $field['duration'],
-                        'count' => $field['count'],
-                        'engagements' => $field['engagements']
-                    ];
+                // Be explicit about the order of the keys
+                $ordered = [
+                    'type' => $stat['type'],
+                    'statDate' => $stat['statDate'],
+                    'fromDt' => $stat['fromDt'],
+                    'toDt' => $stat['toDt'],
+                    'scheduleId' => $stat['scheduleId'],
+                    'displayId' => $stat['displayId'],
+                    'campaignId' => $stat['campaignId'],
+                    'layoutId' => $stat['layoutId'],
+                    'mediaId' => $stat['mediaId'],
+                    'tag' => $stat['tag'],
+                    'widgetId' => $stat['widgetId'],
+                    'duration' => $stat['duration'],
+                    'count' => $stat['count'],
+                    'engagements' => $stat['engagements']
+                ];
+
+                // Add each value to another array in order
+                foreach ($ordered as $field) {
+                    $data[] = $field;
                 }
             }
 
