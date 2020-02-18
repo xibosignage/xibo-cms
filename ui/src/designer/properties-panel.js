@@ -7,8 +7,9 @@ const propertiesPanel = require('../templates/properties-panel.hbs');
  * Properties panel contructor
  * @param {object} container - the container to render the panel to
  */
-let PropertiesPanel = function(container) {
+let PropertiesPanel = function(parent, container) {
 
+    this.parent = parent;
     this.DOMObject = container;
 
     // Initialy loaded data on the form
@@ -22,7 +23,7 @@ let PropertiesPanel = function(container) {
  * @param {object} element - the element that the form relates to
  */
 PropertiesPanel.prototype.elementAction = function(element, subAction) {
-    const app = getXiboApp();
+    const app = this.parent;
     const mainElement = app.getElementByTypeAndId(element.type, element.id, element.regionId);
     mainElement[subAction]();
 };
@@ -33,7 +34,7 @@ PropertiesPanel.prototype.elementAction = function(element, subAction) {
  */
 PropertiesPanel.prototype.save = function(element) {
 
-    const app = getXiboApp();
+    const app = this.parent;
 
     // If inline editor and viewer exist
     if(this.inlineEditor && (typeof app.viewer != 'undefined')) {
@@ -142,7 +143,7 @@ PropertiesPanel.prototype.makeFormReadOnly = function() {
 PropertiesPanel.prototype.render = function(element, step) {
 
     // Prevent the panel to render if there's no selected object
-    if(typeof element == 'undefined' || $.isEmptyObject(element) || typeof element.type == 'undefined') {
+    if(typeof element == 'undefined' || $.isEmptyObject(element) || typeof element.type == 'undefined' || typeof element[element.type + 'Id'] == 'undefined') {
         // Clean the property panel html
         this.DOMObject.html('');
 
@@ -172,7 +173,7 @@ PropertiesPanel.prototype.render = function(element, step) {
     // Create a new request
     this.renderRequest = $.get(requestPath).done(function(res) {
 
-        const app = getXiboApp();
+        const app = self.parent;
 
         // Clear request var after response
         self.renderRequest = undefined;

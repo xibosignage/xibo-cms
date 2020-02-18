@@ -57,6 +57,7 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\PlayerActionServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\XMR\LicenceCheckAction;
 use Xibo\XMR\RekeyAction;
 use Xibo\XMR\ScreenShotAction;
 
@@ -376,98 +377,98 @@ class Display extends Base
      *  description="Search Displays for this User",
      *  @SWG\Parameter(
      *      name="displayId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Display Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="displayGroupId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by DisplayGroup Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="display",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Display Name",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="macAddress",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Mac Address",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="hardwareKey",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Hardware Key",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="clientVersion",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Client Version",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="clientType",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Client Type",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="clientCode",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Client Code",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="embed",
-     *      in="formData",
+     *      in="query",
      *      description="Embed related data, namely displaygroups. A comma separated list of child objects to embed.",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="authorised",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by authorised flag",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="displayProfileId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Display Profile",
      *      type="integer",
      *      required=false
      *   ),
      *  *  @SWG\Parameter(
      *      name="mediaInventoryStatus",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Display Status ( 1 - up to date, 2 - downloading, 3 - Out of date)",
      *      type="integer",
      *      required=false
      *   ),
      *  *  @SWG\Parameter(
      *      name="loggedIn",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Logged In flag",
      *      type="integer",
      *      required=false
      *   ),
      *  *  @SWG\Parameter(
      *      name="lastAccessed",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Display Last Accessed date, expects date in Y-m-d H:i:s format",
      *      type="string",
      *      required=false
@@ -492,6 +493,7 @@ class Display extends Base
         $filter = [
             'displayId' => $this->getSanitizer()->getInt('displayId'),
             'display' => $this->getSanitizer()->getString('display'),
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'macAddress' => $this->getSanitizer()->getString('macAddress'),
             'license' => $this->getSanitizer()->getString('hardwareKey'),
             'displayGroupId' => $this->getSanitizer()->getInt('displayGroupId'),
@@ -508,7 +510,9 @@ class Display extends Base
             'mediaInventoryStatus' => $this->getSanitizer()->getInt('mediaInventoryStatus'),
             'loggedIn' => $this->getSanitizer()->getInt('loggedIn'),
             'lastAccessed' => ($this->getSanitizer()->getDate('lastAccessed') != null) ? $this->getSanitizer()->getDate('lastAccessed')->format('U') : null,
-            'displayGroupIdMembers' => $this->getSanitizer()->getInt('displayGroupIdMembers')
+            'displayGroupIdMembers' => $this->getSanitizer()->getInt('displayGroupIdMembers'),
+            'orientation' => $this->getSanitizer()->getString('orientation'),
+            'commercialLicence' => $this->getSanitizer()->getInt('commercialLicence')
         ];
 
         // Get a list of displays
@@ -584,6 +588,20 @@ class Display extends Base
 
                 default:
                     $display->statusDescription = __('Unknown Display Status');
+            }
+
+            // Commercial Licence
+            switch ($display->commercialLicence) {
+                case 1:
+                    $display->commercialLicenceDescription = __('Display is fully licensed');
+                    break;
+
+                case 2:
+                    $display->commercialLicenceDescription = __('Display is on a trial licence');
+                    break;
+
+                default:
+                    $display->commercialLicenceDescription = __('Display is not licensed');
             }
 
             // Thumbnail
@@ -667,6 +685,22 @@ class Display extends Base
                         ['name' => 'form-callback', 'value' => 'setDefaultMultiSelectFormOpen']
                     )
                 );
+
+                if (in_array($display->clientType, ['android', 'lg', 'sssp'])) {
+                    $display->buttons[] = array(
+                        'id' => 'display_button_checkLicence',
+                        'url' => $this->urlFor('display.licencecheck.form', ['id' => $display->displayId]),
+                        'text' => __('Check Licence'),
+                        'multi-select' => true,
+                        'dataAttributes' => array(
+                            array('name' => 'commit-url', 'value' => $this->urlFor('display.licencecheck', ['id' => $display->displayId])),
+                            array('name' => 'commit-method', 'value' => 'put'),
+                            array('name' => 'id', 'value' => 'display_button_checkLicence'),
+                            array('name' => 'text', 'value' => __('Check Licence')),
+                            array('name' => 'rowtitle', 'value' => $display->display)
+                        )
+                    );
+                }
 
                 $display->buttons[] = ['divider' => true];
             }
@@ -1883,5 +1917,72 @@ class Display extends Base
             $this->getLog()->debug($e->getMessage());
             throw new InvalidArgumentException('Provided user_code does not exist', 'user_code');
         }
+    }
+
+    /**
+     * Check commercial licence form
+     * @param int $displayId
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function checkLicenceForm($displayId)
+    {
+        $display = $this->displayFactory->getById($displayId);
+
+        if (!$this->getUser()->checkViewable($display)) {
+            throw new AccessDeniedException();
+        }
+
+        $this->getState()->template = 'display-form-licence-check';
+        $this->getState()->setData([
+            'display' => $display
+        ]);
+    }
+
+    /**
+     * Check commercial licence
+     *
+     * @SWG\Put(
+     *  summary="Licence Check",
+     *  path="/display/licenceCheck/{displayId}",
+     *  operationId="displayLicenceCheck",
+     *  tags={"display"},
+     *  description="Ask this Player to check its Commercial Licence",
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      in="path",
+     *      description="The Display ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @param int $displayId
+     * @throws \Xibo\Exception\ConfigurationException if XMR cannot be contacted
+     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Exception\XiboException
+     */
+    public function checkLicence($displayId)
+    {
+        $display = $this->displayFactory->getById($displayId);
+
+        if (!$this->getUser()->checkViewable($display)) {
+            throw new AccessDeniedException();
+        }
+
+        if (empty($display->xmrChannel)) {
+            throw new InvalidArgumentException('XMR is not configured for this Display', 'xmrChannel');
+        }
+
+        $this->playerAction->sendAction($display, new LicenceCheckAction());
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Request sent for %s'), $display->display),
+            'id' => $display->displayId
+        ]);
     }
 }

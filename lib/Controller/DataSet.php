@@ -101,28 +101,28 @@ class DataSet extends Base
      *  description="Search this users DataSets",
      *  @SWG\Parameter(
      *      name="dataSetId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by DataSet Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="dataSet",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by DataSet Name",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="code",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by DataSet Code",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="embed",
-     *      in="formData",
+     *      in="query",
      *      description="Embed related data such as columns",
      *      type="string",
      *      required=false
@@ -147,6 +147,7 @@ class DataSet extends Base
         $filter = [
             'dataSetId' => $this->getSanitizer()->getInt('dataSetId'),
             'dataSet' => $this->getSanitizer()->getString('dataSet'),
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'code' => $this->getSanitizer()->getString('code'),
         ];
 
@@ -225,11 +226,20 @@ class DataSet extends Base
 
             if ($user->checkDeleteable($dataSet) && $dataSet->isLookup == 0) {
                 // Delete DataSet
-                $dataSet->buttons[] = array(
+                $dataSet->buttons[] = [
                     'id' => 'dataset_button_delete',
                     'url' => $this->urlFor('dataSet.delete.form', ['id' => $dataSet->dataSetId]),
-                    'text' => __('Delete')
-                );
+                    'text' => __('Delete'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor('dataSet.delete', ['id' => $dataSet->dataSetId])],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'dataset_button_delete'],
+                        ['name' => 'text', 'value' => __('Delete')],
+                        ['name' => 'rowtitle', 'value' => $dataSet->dataSet],
+                        ['name' => 'form-callback', 'value' => 'deleteMultiSelectFormOpen']
+                    ]
+                ];
             }
 
             // Divider
@@ -428,6 +438,8 @@ class DataSet extends Base
             $dataSet->dataRoot = $this->getSanitizer()->getString('dataRoot');
             $dataSet->summarize = $this->getSanitizer()->getString('summarize');
             $dataSet->summarizeField = $this->getSanitizer()->getString('summarizeField');
+            $dataSet->sourceId = $this->getSanitizer()->getInt('sourceId');
+            $dataSet->ignoreFirstRow = $this->getSanitizer()->getCheckbox('ignoreFirstRow');
         }
 
         // Also add one column
@@ -646,6 +658,8 @@ class DataSet extends Base
             $dataSet->dataRoot = $this->getSanitizer()->getString('dataRoot');
             $dataSet->summarize = $this->getSanitizer()->getString('summarize');
             $dataSet->summarizeField = $this->getSanitizer()->getString('summarizeField');
+            $dataSet->sourceId = $this->getSanitizer()->getInt('sourceId');
+            $dataSet->ignoreFirstRow = $this->getSanitizer()->getCheckbox('ignoreFirstRow');
         }
 
         $dataSet->save();
@@ -1074,6 +1088,7 @@ class DataSet extends Base
     /**
      * Sends out a Test Request and returns the Data as JSON to the Client so it can be shown in the Dialog
      * @throws XiboException
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function testRemoteRequest()
     {
@@ -1092,6 +1107,8 @@ class DataSet extends Base
         $dataSet->username = $this->getSanitizer()->getString('username');
         $dataSet->password = $this->getSanitizer()->getString('password');
         $dataSet->dataRoot = $this->getSanitizer()->getString('dataRoot');
+        $dataSet->sourceId = $this->getSanitizer()->getInt('sourceId');
+        $dataSet->ignoreFirstRow = $this->getSanitizer()->getCheckbox('ignoreFirstRow');
 
         // Set this DataSet as active.
         $dataSet->setActive();
@@ -1101,7 +1118,11 @@ class DataSet extends Base
 
         if ($data->number > 0) {
             // Process the results, but don't record them
-            $this->dataSetFactory->processResults($dataSet, $data, false);
+            if ($dataSet->sourceId === 1) {
+                $this->dataSetFactory->processResults($dataSet, $data, false);
+            } else {
+                $this->dataSetFactory->processCsvEntries($dataSet, $data, false);
+            }
         }
 
         $this->getLog()->debug('Results: ' . var_export($data, true));

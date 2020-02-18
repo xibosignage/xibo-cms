@@ -63,6 +63,9 @@ class ScheduleFactory extends BaseFactory
     /** @var  ScheduleReminderFactory */
     private $scheduleReminderFactory;
 
+    /** @var  ScheduleExclusionFactory */
+    private $scheduleExclusionFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -75,8 +78,9 @@ class ScheduleFactory extends BaseFactory
      * @param DayPartFactory $dayPartFactory
      * @param UserFactory $userFactory
      * @param ScheduleReminderFactory $scheduleReminderFactory
+     * @param ScheduleExclusionFactory $scheduleExclusionFactory
      */
-    public function __construct($store, $log, $sanitizerService, $config, $pool, $date, $displayGroupFactory, $dayPartFactory, $userFactory, $scheduleReminderFactory)
+    public function __construct($store, $log, $sanitizerService, $config, $pool, $date, $displayGroupFactory, $dayPartFactory, $userFactory, $scheduleReminderFactory, $scheduleExclusionFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->config = $config;
@@ -86,6 +90,7 @@ class ScheduleFactory extends BaseFactory
         $this->dayPartFactory = $dayPartFactory;
         $this->userFactory = $userFactory;
         $this->scheduleReminderFactory = $scheduleReminderFactory;
+        $this->scheduleExclusionFactory = $scheduleExclusionFactory;
     }
 
     /**
@@ -103,7 +108,8 @@ class ScheduleFactory extends BaseFactory
             $this->displayGroupFactory,
             $this->dayPartFactory,
             $this->userFactory,
-            $this->scheduleReminderFactory
+            $this->scheduleReminderFactory,
+            $this->scheduleExclusionFactory
         );
     }
 
@@ -209,6 +215,8 @@ class ScheduleFactory extends BaseFactory
                 schedule.syncTimezone,
                 schedule.syncEvent,
                 schedule.shareOfVoice,
+                schedule.isGeoAware,
+                schedule.geoLocation,
                 `campaign`.campaign,
                 `command`.command,
                 `lkscheduledisplaygroup`.displayGroupId,
@@ -304,6 +312,8 @@ class ScheduleFactory extends BaseFactory
             `schedule`.syncTimezone,
             `schedule`.syncEvent,
             `schedule`.shareOfVoice,
+            `schedule`.isGeoAware,
+            `schedule`.geoLocation,
             `daypart`.isAlways,
             `daypart`.isCustom
           FROM `schedule`
@@ -405,12 +415,36 @@ class ScheduleFactory extends BaseFactory
             $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
         }
 
+        // Restrict to playlistId - meaning layout schedules of which the layouts contain the selected playlistId
+        if ($this->getSanitizer()->getInt('playlistId', $filterBy) !== null) {
+
+            $sql .= '
+                AND schedule.campaignId IN (
+                    SELECT `lkcampaignlayout`.campaignId
+                      FROM `lkplaylistplaylist` 
+                        INNER JOIN `playlist`
+                        ON `lkplaylistplaylist`.parentId = `playlist`.playlistId
+                       INNER JOIN `region`
+                       ON `region`.regionId = `playlist`.regionId
+                       INNER JOIN layout
+                       ON layout.LayoutID = region.layoutId
+                       INNER JOIN `lkcampaignlayout`
+                       ON lkcampaignlayout.layoutId = layout.layoutId
+                     WHERE `lkplaylistplaylist`.childId = :playlistId
+                     
+                )
+            ';
+
+            $params['playlistId'] = $this->getSanitizer()->getInt('playlistId', $filterBy);
+
+        }
+
         // Sorting?
         if (is_array($sortOrder))
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['isPriority', 'syncTimezone', 'isAlways', 'isCustom', 'syncEvent', 'recurrenceMonthlyRepeatsOn', 'shareOfVoice']]);
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['isPriority', 'syncTimezone', 'isAlways', 'isCustom', 'syncEvent', 'recurrenceMonthlyRepeatsOn', 'isGeoAware', 'shareOfVoice']]);
         }
 
         return $entries;

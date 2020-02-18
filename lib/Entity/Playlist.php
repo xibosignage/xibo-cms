@@ -397,12 +397,32 @@ class Playlist implements \JsonSerializable
 
     /**
      * @param Widget $widget
+     * @param int $displayOrder
      */
-    public function assignWidget($widget)
+    public function assignWidget($widget, $displayOrder = null)
     {
         $this->load();
 
-        $widget->displayOrder = count($this->widgets) + 1;
+        // Has a display order been provided?
+        if ($displayOrder !== null) {
+            // We need to shuffle any existing widget down to make space for this one.
+            foreach ($this->widgets as $existingWidget) {
+                if ($existingWidget->displayOrder < $displayOrder) {
+                    // Earlier in the list, so do nothing.
+                    continue;
+                } else {
+                    // This widget is >= the display order and therefore needs to be moved down one position.
+                    $existingWidget->displayOrder = $existingWidget->displayOrder + 1;
+                }
+
+                // Set the incoming widget to the requested display order.
+                $widget->displayOrder = $displayOrder;
+            }
+        } else {
+            // Take the next available one
+            $widget->displayOrder = count($this->widgets) + 1;
+        }
+
         $this->widgets[] = $widget;
     }
 
@@ -527,7 +547,8 @@ class Playlist implements \JsonSerializable
     /**
      * Save
      * @param array $options
-     * @throws DuplicateEntityException
+     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Exception\InvalidArgumentException
      */
     public function save($options = [])
     {

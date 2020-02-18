@@ -1760,7 +1760,7 @@ class LayoutFactory extends BaseFactory
         // Layout Like
         if ($this->getSanitizer()->getString('layout', $filterBy) != '') {
             $terms = explode(',', $this->getSanitizer()->getString('layout', $filterBy));
-            $this->nameFilter('layout', 'layout', $terms, $body, $params);
+            $this->nameFilter('layout', 'layout', $terms, $body, $params, ($this->getSanitizer()->getCheckbox('useRegexForName') == 1));
         }
 
         if ($this->getSanitizer()->getString('layoutExact', $filterBy) != '') {
@@ -1917,13 +1917,13 @@ class LayoutFactory extends BaseFactory
 
         // PlaylistID
         if ($this->getSanitizer()->getInt('playlistId', 0, $filterBy) != 0) {
-            $body .= ' AND layout.layoutId IN (
-                SELECT DISTINCT `region`.layoutId
-                   FROM `playlist`
-                    INNER JOIN `region`
-                    ON `region`.regionId = `playlist`.regionId
-                 WHERE `playlist`.playlistId = :playlistId
-                )
+            $body .= ' AND layout.layoutId IN (SELECT DISTINCT `region`.layoutId
+                    FROM `lkplaylistplaylist`
+                      INNER JOIN `playlist`
+                      ON `playlist`.playlistId = `lkplaylistplaylist`.parentId
+                      INNER JOIN `region`
+                      ON `region`.regionId = `playlist`.regionId
+                   WHERE `lkplaylistplaylist`.childId = :playlistId )
             ';
 
             $params['playlistId'] = $this->getSanitizer()->getInt('playlistId', 0, $filterBy);

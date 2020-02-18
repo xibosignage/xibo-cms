@@ -82,8 +82,14 @@
                             {% set title %}{% trans "From Date" %}{% endset %}
                             {{ inline.date("statsFromDt", title, defaults.fromDateOneDay, "", "stats-from-dt", "", "") }}
 
+                            {% set title %}{% trans "Time" %}{% endset %}
+                            {{ inline.time("statsFromDtTime", title, "00:00", "", "stats-from-dt-time") }}
+
                             {% set title %}{% trans "To Date" %}{% endset %}
                             {{ inline.date("statsToDt", title, defaults.toDate, "", "stats-to-dt", "", "") }}
+
+                            {% set title %}{% trans "Time" %}{% endset %}
+                            {{ inline.time("statsToDtTime", title, "00:00", "", "stats-to-dt-time") }}
 
                             {% set title %}{% trans "Display" %}{% endset %}
                             {% set attributes = [
@@ -154,11 +160,9 @@
                             {{ inline.dropdown("tagsType", "single", title, "dg", options, "tagsTypeid", "tagsType") }}
 
                             {% set title %}{% trans "Tags" %}{% endset %}
+                            {% set exactMatchTitle %}{% trans "Should Tags filter by exact match?" %}{% endset %}
                             {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
-                            {{ inline.inputWithTags("tags", title, null, helpText) }}
-
-                            {% set title %}{% trans "Should Tags filter by exact match?" %}{% endset %}
-                            {{ inline.checkbox("exactTags", title) }}
+                            {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactMatchTitle) }}
 
                             <p></p>
                             <div class="row">
@@ -323,9 +327,13 @@
                 if (reportFilter.val() === '' || reportFilter.val() === undefined) {
                     $(".stats-from-dt").show();
                     $(".stats-to-dt").show();
+                    $(".stats-from-dt-time").show();
+                    $(".stats-to-dt-time").show();
                 } else {
                     $(".stats-from-dt").hide();
                     $(".stats-to-dt").hide();
+                    $(".stats-from-dt-time").hide();
+                    $(".stats-to-dt-time").hide();
                 }
             }
 

@@ -139,6 +139,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $controller->getDispatcher()->dispatch(LibraryReplaceEvent::$NAME, new LibraryReplaceEvent($module, $media, $oldMedia));
 
                 $media->enableStat = $oldMedia->enableStat;
+                $media->expires = $this->options['expires'];
 
                 // Save
                 $media->save(['oldMedia' => $oldMedia]);
@@ -290,6 +291,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     $media->enableStat = $controller->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
                 }
 
+                $media->expires = $this->options['expires'];
+
                 // Save
                 $media->save();
 
@@ -339,16 +342,21 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Set default options (this sets options on the widget)
                 $module->setDefaultWidgetOptions();
+
                 // Assign media
                 $widget->assignMedia($media->mediaId);
+
                 // Calculate the widget duration for new uploaded media widgets
                 $widget->calculateDuration($module);
 
                 // Assign the new widget to the playlist
-                $playlist->assignWidget($widget);
+                $playlist->assignWidget($widget, $this->options['displayOrder'] ?? null);
 
                 // Save the playlist
                 $playlist->save();
+
+                // Configure widgetId is reponse
+                $file->widgetId = $widget->widgetId;
 
                 // Handle permissions
                 // https://github.com/xibosignage/xibo/issues/1274

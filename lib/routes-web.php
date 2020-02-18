@@ -44,6 +44,12 @@ $app->get('/statusdashboard/displayGroups', '\Xibo\Controller\StatusDashboard:di
 $app->get('/icondashboard', '\Xibo\Controller\IconDashboard:displayPage')->name('icondashboard.view');
 $app->get('/mediamanager', '\Xibo\Controller\MediaManager:displayPage')->name('mediamanager.view');
 $app->get('/mediamanager/data', '\Xibo\Controller\MediaManager:grid')->name('mediamanager.search');
+$app->get('/playlistdashboard', '\Xibo\Controller\PlaylistDashboard:displayPage')->setName('playlistdashboard.view');
+$app->get('/playlistdashboard/data', '\Xibo\Controller\PlaylistDashboard:grid')->name('playlistdashboard.search');
+$app->get('/playlistdashboard/:id', '\Xibo\Controller\PlaylistDashboard:show')->setName('playlistdashboard.show');
+$app->get('/playlistdashboard/widget/form/delete/:id', '\Xibo\Controller\PlaylistDashboard:deletePlaylistWidgetForm')->name('playlist.module.widget.delete.form');
+$app->map('/playlistdashboard/library', '\Xibo\Controller\PlaylistDashboard:upload')->via('HEAD');
+$app->post('/playlistdashboard/library', '\Xibo\Controller\PlaylistDashboard:upload')->name('playlistdashboard.library.add');
 
 // Login Form
 $app->get('/login', '\Xibo\Controller\Login:loginForm')->name('login');
@@ -66,6 +72,7 @@ $app->get('/schedule/view', '\Xibo\Controller\Schedule:displayPage')->name('sche
 $app->get('/schedule/form/add', '\Xibo\Controller\Schedule:addForm')->name('schedule.add.form');
 $app->get('/schedule/form/edit/:id', '\Xibo\Controller\Schedule:editForm')->name('schedule.edit.form');
 $app->get('/schedule/form/delete/:id', '\Xibo\Controller\Schedule:deleteForm')->name('schedule.delete.form');
+$app->get('/schedulerecurrence/form/delete/:id', '\Xibo\Controller\Schedule:deleteRecurrenceForm')->name('schedule.recurrence.delete.form');
 $app->get('/schedule/form/now/:from/:id', '\Xibo\Controller\Schedule:scheduleNowForm')->name('schedule.now.form');
 $app->get('/schedulenow/form/now/:from/:id', '\Xibo\Controller\Schedule:scheduleNowForm')->name('schedulenow.now.form');
 // Special routes for searching inside the schedule page
@@ -113,7 +120,6 @@ $app->get('/layout/form/campaign/assign/:id', '\Xibo\Controller\Layout:assignToC
 $app->get('/region/preview/:id', '\Xibo\Controller\Region:preview')->name('region.preview');
 $app->get('/region/form/edit/:id', '\Xibo\Controller\Region:editForm')->name('region.edit.form');
 $app->get('/region/form/delete/:id', '\Xibo\Controller\Region:deleteForm')->name('region.delete.form');
-$app->get('/region/form/timeline/:id', '\Xibo\Controller\Region:timelineForm')->name('region.timeline.form');
 
 //
 // playlists
@@ -125,11 +131,9 @@ $app->get('/playlist/form/copy/:id', '\Xibo\Controller\Playlist:copyForm')->name
 $app->get('/playlist/form/delete/:id', '\Xibo\Controller\Playlist:deleteForm')->name('playlist.delete.form');
 $app->get('/playlist/form/timeline/:id', '\Xibo\Controller\Playlist:timelineForm')->name('playlist.timeline.form');
 $app->get('/playlist/form/setenablestat/:id', '\Xibo\Controller\Playlist:setEnableStatForm')->name('playlist.setenablestat.form');
+$app->get('/playlist/form/usage/:id', '\Xibo\Controller\Playlist:usageForm')->name('playlist.usage.form');
 
-// Designer
-$app->get('/playlist/form/library/assign/:id', '\Xibo\Controller\Playlist:libraryAssignForm')->name('playlist.library.assign.form');
 // Module functions
-$app->get('/playlist/widget/form/add/:type/:id', '\Xibo\Controller\Module:addWidgetForm')->name('module.widget.add.form');
 $app->get('/playlist/widget/form/edit/:id', '\Xibo\Controller\Module:editWidgetForm')->name('module.widget.edit.form');
 $app->get('/playlist/widget/form/delete/:id', '\Xibo\Controller\Module:deleteWidgetForm')->name('module.widget.delete.form');
 $app->get('/playlist/widget/form/transition/edit/:type/:id', '\Xibo\Controller\Module:editWidgetTransitionForm')->name('module.widget.transition.edit.form');
@@ -169,6 +173,7 @@ $app->get('/display/form/authorise/:id', '\Xibo\Controller\Display:authoriseForm
 $app->get('/display/form/defaultlayout/:id', '\Xibo\Controller\Display:defaultLayoutForm')->name('display.defaultlayout.form');
 $app->get('/display/form/moveCms/:id', '\Xibo\Controller\Display:moveCmsForm')->name('display.moveCms.form');
 $app->get('/display/form/addViaCode', '\Xibo\Controller\Display:addViaCodeForm')->name('display.addViaCode.form');
+$app->get('/display/form/licenceCheck/:id', '\Xibo\Controller\Display:checkLicenceForm')->name('display.licencecheck.form');
 
 //
 // user

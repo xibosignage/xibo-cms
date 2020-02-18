@@ -1,5 +1,21 @@
 // WIDGET Module
 
+const EXPIRE_STATUS_MSG_MAP = [
+    '',
+    widgetStatusTrans.setToStart,
+    widgetStatusTrans.setToExpire,
+    widgetStatusTrans.expired,
+    widgetStatusTrans.deleteOnExpire
+];
+
+const EXPIRE_STATUS_ICON_MAP = [
+    '',
+    'fa-calendar-plus-o',
+    'fa-calendar-o',
+    'fa-calendar-check-o',
+    'fa-calendar-times-o'
+];
+
 /**
  * Widget contructor
  * @param {number} id - widget id
@@ -74,6 +90,11 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
     // Date limits constants
     this.DATE_MIN = 0;
     this.DATE_MAX = 2147483647;
+
+    // Widget expire status
+    this.expireStatus = 0; // 0: Not set, 1: Due to expire, 2: Expired, 3: Delete on expire
+    this.expireStatusTitle = '';
+    this.expireStatusIcon = '';
 
     // Auto transitions
     this.transitionIn = data.transitionIn;
@@ -213,6 +234,45 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
     };
 
     /**
+     * Get widget status based on expire dates
+     * @returns {number} - Widget expire state : 0: Not set, 1: Due to expire, 2: Expired, 3: Delete on expire
+     * @
+     */
+    this.calculateExpireStatus = function() {
+        let status = 0;
+        const currentTime = Math.round(new Date().getTime() / 1000);
+
+        if(this.fromDt > this.DATE_MIN || this.toDt < this.DATE_MAX) {
+
+            if(currentTime < this.fromDt) {
+                // Set to start
+                status = 1;
+            } else if(currentTime > this.toDt) {
+                // Expired
+                status = 3;
+            } else if(this.getOptions().deleteOnExpiry == 1 && currentTime < this.toDt && this.toDt < this.DATE_MAX) {
+                // Delete on expire ( delete on expiry flag, and toDt set and after current time)
+                status = 4;
+            } else if(currentTime < this.toDt && this.toDt < this.DATE_MAX) {
+                // Set to expire ( current time before toDt and toDt is set)
+                status = 2;
+            }
+        }
+
+        // save status to the widget property
+        this.expireStatus = status;
+
+        // save status message
+        this.expireStatusTitle = EXPIRE_STATUS_MSG_MAP[status];
+
+        // save status icon
+        this.expireStatusIcon = EXPIRE_STATUS_ICON_MAP[status];
+
+        // return status
+        return status;
+    };
+
+    /**
      * Check the module list for the widget type and get if it's region specific or not
      * @returns {boolean}
      */
@@ -225,7 +285,7 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
                 regionSpecific = (modulesList[item].regionSpecific == 1);
             }
         });
-        
+
         return regionSpecific;
     };
 
@@ -240,6 +300,7 @@ Widget.prototype.createClone = function() {
     const widgetClone = {
         id: 'ghost_' + this.id,
         widgetName: this.widgetName,
+        moduleName: this.moduleName,
         subType: this.subType,
         duration: this.getTotalDuration(),
         regionId: this.regionId,
@@ -261,7 +322,7 @@ Widget.prototype.editPropertyForm = function(property, type) {
 
     const self = this;
 
-    const app = getXiboApp();
+    const app = this.designerObject;
 
     // Load form the API
     const linkToAPI = urlsForApi.widget['get' + property];
@@ -449,7 +510,7 @@ Widget.prototype.editPermissions = function() {
  */
 Widget.prototype.getNextWidget = function(reverse = false) {
     // Get main app
-    const app = getXiboApp();
+    const app = this.designerObject;
     
     // Get region widgets
     let region = app.getElementByTypeAndId('region', this.regionId);

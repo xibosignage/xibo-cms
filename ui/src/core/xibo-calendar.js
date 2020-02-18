@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,8 +22,11 @@
 // Global calendar object
 var calendar;
 var events = [];
+let mymap;
 
 $(document).ready(function() {
+
+    var getJsonRequestControl = null;
 
     // Set a listener for popover clicks
     //  http://stackoverflow.com/questions/11703093/how-to-dismiss-a-twitter-bootstrap-popover-by-clicking-outside
@@ -70,14 +73,14 @@ $(document).ready(function() {
 
                 var calendarOptions = $("#CalendarContainer").data();               
 
+                // Append display groups and layouts
+                let isShowAll = $('#showAll').is(':checked');
+
+                // Enable or disable the display list according to whether show all is selected
+                // we do this before we serialise because serialising a disabled list gives nothing
+                $('#DisplayList').prop('disabled', isShowAll);
+
                 if (this.options.view !== 'agenda') {
-
-                    // Append display groups and layouts
-                    let isShowAll = $('#showAll').is(':checked');
-
-                    // Enable or disable the display list according to whether show all is selected
-                    // we do this before we serialise because serialising a disabled list gives nothing
-                    $('#DisplayList').prop('disabled', isShowAll);
 
                     // Serialise
                     var displayGroups = $('#DisplayList').serialize();
@@ -105,9 +108,14 @@ $(document).ready(function() {
                         "to": this.options.position.end.getTime()
                     };
 
+                    // If there is already a request, abort it
+                    if(getJsonRequestControl) {
+                        getJsonRequestControl.abort();
+                    }
+
                     $('#calendar-progress').addClass('fa fa-cog fa-spin');
 
-                    $.getJSON(url, params)
+                    getJsonRequestControl = $.getJSON(url, params)
                         .done(function(data) {
                             events = data.result;
 
@@ -158,44 +166,19 @@ $(document).ready(function() {
                             
                             calendar._render();
 
-                            toastr.error(translations.failure);
-                            console.error(res);
+                            if(res.statusText != 'abort') {
+                                toastr.error(translations.failure);
+                                console.error(res);
+                            }
                         });
                 } else {
-                    
+
                     // Get selected display groups
                     var selectedDisplayGroup = $('.cal-context').data().selectedTab;
                     var displayGroupsList = [];
                     var chooseAllDisplays = false;
 
-                    if($('#showAll').is(':checked')) {
-                        $('#DisplayList').prop('disabled', true);
-
-                        $.ajax({
-                            type: 'GET',
-                            url: $('#showAll').attr("data-search-url") + '?isDisplaySpecific=-1',
-                            success: function(data) {
-
-                                let displays = data.data;
-                                $.each(displays, function(index, value) {
-
-                                    displayGroupsList.push({
-                                        id: value.displayGroupId,
-                                        name: value.displayGroup,
-                                        isDisplaySpecific: value.isDisplaySpecific
-                                    });
-
-                                    if(typeof selectedDisplayGroup == 'undefined') {
-                                        selectedDisplayGroup = value.displayGroupId;
-                                    }
-                                });
-
-                            }
-                        });
-
-                        // return true;
-
-                    } else {
+                    if(!isShowAll) {
 
                         $('#DisplayList').prop('disabled', false);
 
@@ -247,9 +230,7 @@ $(document).ready(function() {
                     // Populate the events array via AJAX
                     var params = {
                         "date": dateSelected.format(systemDateFormat)
-                    }
-                    
-                    $('#calendar-progress').addClass('fa fa-cog fa-spin');
+                    };
                     
                     // if the result are empty create a empty object and reset the results
                     if(jQuery.isEmptyObject(events['results'])){
@@ -269,31 +250,41 @@ $(document).ready(function() {
                     // Clean cache/results if its requested by the options
                     if (calendar.options['clearCache'] == true) {
                         events['results'] = {}; 
-                    }        
-                        
-                    // 1 - if there are no displaygroups selected
-                    if ($('#DisplayList').val() == null) {
-                        
+                    }
+                    
+                    // If there is already a request, abort it
+                    if(getJsonRequestControl) {
+                        getJsonRequestControl.abort();
+                    }
+
+                    // 0 - If all is selected, force the user to specify the displaygroups
+                    if(isShowAll) {
+                        events['errorMessage'] = 'all_displays_selected';
+
+                        if(done != undefined)
+                            done();
+
+                        calendar._render();
+                    } else if($('#DisplayList').val() == null || Array.isArray($('#DisplayList').val()) && $('#DisplayList').val().length == 0) {
+                        // 1 - if there are no displaygroups selected
                         events['errorMessage'] = 'display_not_selected';
                         
                         if (done != undefined)
                             done();
                             
                         calendar._render();
-                        
-                        $('#calendar-progress').removeClass('fa fa-cog fa-spin');
-                        
                     } else if(!jQuery.isEmptyObject(events['results'][selectedDisplayGroup]) && events['results'][selectedDisplayGroup]['request_date'] == params.date) {
                         // 2 - Use cache if the element was already saved for the requested date
                         if (done != undefined)
                             done();
                             
                         calendar._render();
-
-                        $('#calendar-progress').removeClass('fa fa-cog fa-spin');
                     } else {
+
+                        $('#calendar-progress').addClass('fa fa-cog fa-spin');
+
                         // 3 - make request to get the data for the events
-                        $.getJSON(url, params)
+                        getJsonRequestControl = $.getJSON(url, params)
                             .done(function(data) {
                                 
                                 if(!jQuery.isEmptyObject(data.data) && data.data.events != undefined && data.data.events.length > 0){
@@ -311,13 +302,15 @@ $(document).ready(function() {
 
                                 $('#calendar-progress').removeClass('fa fa-cog fa-spin');
                             })
-                            .fail(function(data) {
+                            .fail(function(res) {
                                 // Deal with the failed request
 
                                 if (done != undefined)
                                     done();
                                 
-                                events['errorMessage'] = 'request_failed';
+                                if(res.statusText != 'abort') {
+                                    events['errorMessage'] = 'request_failed';
+                                }
                                 
                                 calendar._render();
                                 
@@ -329,6 +322,15 @@ $(document).ready(function() {
                 
             },
             onAfterEventsLoad: function(events) {
+                if(this.options.view == 'agenda') {
+                    // When agenda panel is ready, turn tables into datatables with paging
+                    $('.agenda-panel').ready(function() {
+                        $('#layouts').dataTable({
+                            "searching": false
+                        });
+                    });
+                }
+
                 if(!events) {
                     return;
                 }
@@ -439,21 +441,104 @@ var setupScheduleForm = function(dialog) {
 
     var $eventTypeId = $('#eventTypeId').val();
     var $layoutSpecific = -1;
+    var $layoutControl = $(".layout-control");
 
-    if ($eventTypeId == 4) {
+    if ($eventTypeId == 1) {
+
+        // Load Layouts only
         $layoutSpecific = 1;
+
+        // Change Label and Helptext when Layout event type is selected
+        $layoutControl.children("label").text('Layout');
+        $layoutControl.children("div").children(".help-block").text('Please select a Layout for this Event to show');
+
+    } else if ($eventTypeId == 4) {
+
+        // Load Layouts only
+        $layoutSpecific = 1;
+
+        // Change Label and Helptext when Layout event type is selected
+        $layoutControl.children("label").text('Layout');
+        $layoutControl.children("div").children(".help-block").text('Please select a Layout for this Event to show');
+
+    } else if ($eventTypeId == 5) {
+
+        // Load Campaigns only
+        $layoutSpecific = 0;
+
+        // Change Label and Helptext when Campaign event type is selected
+        $layoutControl.children("label").text('Campaign');
+        $layoutControl.children("div").children(".help-block").text('Please select a Campaign for this Event to show');
+
     } else {
+
+        // Load both Layouts and Campaigns
         $layoutSpecific = -1;
+
     }
 
     $('#eventTypeId').change(function() {
         $eventTypeId = $('#eventTypeId').val();
-        console.log($eventTypeId);
 
-        if ($eventTypeId == 4) {
+        if ($eventTypeId == 1) {
+
+            // Load Layouts only
             $layoutSpecific = 1;
+
+            // Change Label and Helptext when Layout event type is selected
+            $layoutControl.children("label").text('Layout');
+            $layoutControl.children("div").children(".help-block").text('Please select a Layout for this Event to show');
+
+        } else if ($eventTypeId == 4) {
+
+            // Load Layouts only
+            $layoutSpecific = 1;
+
+            // Change Label and Helptext when Layout event type is selected
+            $layoutControl.children("label").text('Layout');
+            $layoutControl.children("div").children(".help-block").text('Please select a Layout for this Event to show');
+
+        } else if ($eventTypeId == 5) {
+
+            // Load Campaigns only
+            $layoutSpecific = 0;
+
+            // Change Label and Helptext when Campaign event type is selected
+            $layoutControl.children("label").text('Campaign');
+            $layoutControl.children("div").children(".help-block").text('Please select a Campaign for this Event to show');
+
         } else {
+
+            // Load both Layouts and Campaigns
             $layoutSpecific = -1;
+
+        }
+    });
+
+    // geo schedule
+    let $isGeoAware = $('#isGeoAware').is(':checked');
+
+    if ($isGeoAware ) {
+
+        // without this additional check the map will not load correctly, it should be initialised when we are on the Geo Location tab
+        $('.nav-tabs a').on('shown.bs.tab', function(event){
+            if ($(event.target).text() === 'Geo Location') {
+
+                $('#geoScheduleMap').removeClass('hidden');
+                generateGeoMap();
+            }
+        });
+    }
+
+    // hide/show and generate map according to the Geo Schedule checkbox value
+    $('#isGeoAware').change(function() {
+        $isGeoAware = $('#isGeoAware').is(':checked');
+
+        if ($isGeoAware) {
+            $('#geoScheduleMap').removeClass('hidden');
+            generateGeoMap();
+        } else {
+            $('#geoScheduleMap').addClass('hidden');
         }
     });
 
@@ -651,7 +736,7 @@ var setupScheduleForm = function(dialog) {
     });
 
     // Bind to the dialog submit
-    $("#scheduleAddForm, #scheduleEditForm, #scheduleDeleteForm").submit(function(e) {
+    $("#scheduleAddForm, #scheduleEditForm, #scheduleDeleteForm, #scheduleRecurrenceDeleteForm").submit(function(e) {
         e.preventDefault();
 
         var form = $(this);
@@ -684,9 +769,31 @@ var setupScheduleForm = function(dialog) {
         $(dialog).find('.modal-footer').prepend($button);
     }
 
+    // Popover
+    $(dialog).find('[data-toggle="popover"]').popover();
+
+    var scheduleEditForm = $(dialog).find("#scheduleEditForm");
+    // Add a button for deleting single recurring event
+    if (scheduleEditForm.length > 0) {
+        $button = $("<button>").addClass("btn btn-primary").attr("id", "scheduleRecurringDeleteButton").html(translations.deleteRecurring).on("click", function() {
+            deleteRecurringScheduledEvent(scheduleEditForm.data('eventId'), scheduleEditForm.data('eventStart'), scheduleEditForm.data('eventEnd'))
+        });
+
+        $(dialog).find('#recurringInfo').prepend($button);
+    }
+
     configReminderFields($(dialog));
 
 };
+
+var deleteRecurringScheduledEvent = function(id, eventStart, eventEnd) {
+    var url = scheduleRecurrenceDeleteUrl.replace(":id", id);
+    var data = {
+        eventStart: eventStart,
+        eventEnd: eventEnd,
+    };
+    XiboSwapDialog(url, data);
+}
 
 var beforeSubmitScheduleForm = function(form) {
 
@@ -695,6 +802,8 @@ var beforeSubmitScheduleForm = function(form) {
     checkboxes.each(function (index) {
         $(this).parent().find('[type="hidden"]').val($(this).is(":checked") ? "1" : "0");
     });
+
+    $('[data-toggle="popover"]').popover();
 
     form.submit();
 
@@ -1025,4 +1134,131 @@ var agendaSelectLinkedElements = function(elemType, elemID, data, eventId) {
         
     }
     
+};
+
+let generateGeoMap = function () {
+
+    if (mymap !== undefined && mymap !== null) {
+        mymap.remove();
+    }
+
+    let defaultLat = $('#scheduleAddForm , #scheduleEditForm').data().defaultLat;
+    let defaultLong = $('#scheduleAddForm , #scheduleEditForm').data().defaultLong;
+
+    // base map
+    mymap = L.map('geoScheduleMap').setView([defaultLat, defaultLong], 13);
+
+    // base tile layer, provided by Open Street Map
+    L.tileLayer( 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        subdomains: ['a','b','c']
+    }).addTo( mymap );
+
+    // Add a layer for drawn items
+    let drawnItems = new L.FeatureGroup();
+    mymap.addLayer(drawnItems);
+
+    // Add draw control (toolbar)
+    let drawControl = new L.Control.Draw({
+        position: 'topright',
+        draw: {
+            polyline: false,
+            circle: false,
+            marker: false,
+            circlemarker: false
+        },
+        edit: {
+            featureGroup: drawnItems
+        }
+    });
+
+    let drawControlEditOnly = new L.Control.Draw({
+        position: 'topright',
+        draw: false,
+        edit: {
+            featureGroup: drawnItems
+        }
+    });
+
+    mymap.addControl(drawControl);
+
+    // add search Control - allows searching by country/city and automatically moves map to that location
+    let searchControl = new L.Control.Search({
+        url: 'https://nominatim.openstreetmap.org/search?format=json&q={s}',
+        jsonpParam: 'json_callback',
+        propertyName: 'display_name',
+        propertyLoc: ['lat','lon'],
+        marker: L.circleMarker([0,0],{radius:30}),
+        autoCollapse: true,
+        autoType: false,
+        minLength: 2,
+        hideMarkerOnCollapse: true
+    });
+
+    mymap.addControl(searchControl);
+
+    let json = '';
+    let layer = null;
+    let layers = null;
+
+    // when user draws a new polygon it will be added as a layer to the map and as GeoJson to hidden field
+    mymap.on('draw:created', function(e) {
+        layer = e.layer;
+
+        drawnItems.addLayer(layer);
+        json = layer.toGeoJSON();
+
+        $('#geoLocation').val(JSON.stringify(json));
+
+        // disable adding new polygons
+        mymap.removeControl(drawControl);
+        mymap.addControl(drawControlEditOnly);
+    });
+
+    // update the hidden field geoJson with new coordinates
+    mymap.on('draw:edited', function (e) {
+        layers = e.layers;
+
+        layers.eachLayer(function(layer) {
+
+            json = layer.toGeoJSON();
+
+            $('#geoLocation').val(JSON.stringify(json));
+        });
+    });
+
+    // remove the layer and clear the hidden field
+    mymap.on('draw:deleted', function (e) {
+        layers = e.layers;
+
+        layers.eachLayer(function(layer) {
+            $('#geoLocation').val('');
+            drawnItems.removeLayer(layer);
+        });
+
+        // re-enable adding new polygons
+        if (drawnItems.getLayers().length === 0) {
+            mymap.removeControl(drawControlEditOnly);
+            mymap.addControl(drawControl);
+        }
+    });
+
+    // if we are editing an event with existing Geo JSON, make sure we load it and add the layer to the map
+    if ($('#geoLocation').val() != null && $('#geoLocation').val() !== '') {
+
+        let geoJSON = JSON.parse($('#geoLocation').val());
+
+        L.geoJSON(geoJSON, {
+            onEachFeature: onEachFeature
+        });
+
+        function onEachFeature(feature, layer) {
+            drawnItems.addLayer(layer);
+            mymap.fitBounds(layer.getBounds());
+        }
+
+        // disable adding new polygons
+        mymap.removeControl(drawControl);
+        mymap.addControl(drawControlEditOnly);
+    }
 };

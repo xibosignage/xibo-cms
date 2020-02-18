@@ -15,11 +15,14 @@ use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
+use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
+use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserFactory;
@@ -82,6 +85,15 @@ class Playlist extends Base
     /** @var TagFactory */
     private $tagFactory;
 
+    /** @var LayoutFactory */
+    private $layoutFactory;
+
+    /** @var DisplayFactory */
+    private $displayFactory;
+
+    /** @var ScheduleFactory */
+    private $scheduleFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -101,9 +113,12 @@ class Playlist extends Base
      * @param UserGroupFactory $userGroupFactory
      * @param UserFactory $userFactory
      * @param TagFactory $tagFactory
+     * @param LayoutFactory $layoutFactory
+     * @param DisplayFactory $displayFactory
+     * @param ScheduleFactory $scheduleFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playlistFactory, $regionFactory, $mediaFactory, $permissionFactory,
-        $transitionFactory, $widgetFactory, $moduleFactory, $userGroupFactory, $userFactory, $tagFactory)
+        $transitionFactory, $widgetFactory, $moduleFactory, $userGroupFactory, $userFactory, $tagFactory, $layoutFactory, $displayFactory, $scheduleFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
 
@@ -117,6 +132,9 @@ class Playlist extends Base
         $this->userGroupFactory = $userGroupFactory;
         $this->userFactory = $userFactory;
         $this->tagFactory = $tagFactory;
+        $this->layoutFactory = $layoutFactory;
+        $this->displayFactory = $displayFactory;
+        $this->scheduleFactory = $scheduleFactory;
     }
 
     /**
@@ -150,49 +168,49 @@ class Playlist extends Base
      *  description="Search for Playlists viewable by this user",
      *  @SWG\Parameter(
      *      name="playlistId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Playlist Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="name",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by partial Playlist name",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="userId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by user Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="tags",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by tags",
      *      type="string",
      *      required=false
      *   ),
      *   @SWG\Parameter(
      *      name="exactTags",
-     *      in="formData",
+     *      in="query",
      *      description="A flag indicating whether to treat the tags filter as an exact match",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="ownerUserGroupId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by users in this UserGroupId",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="embed",
-     *      in="formData",
+     *      in="query",
      *      description="Embed related data such as regions, widgets, permissions, tags",
      *      type="string",
      *      required=false
@@ -218,13 +236,14 @@ class Playlist extends Base
         // Playlists
         $playlists = $this->playlistFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'name' => $this->getSanitizer()->getString('name'),
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'userId' => $this->getSanitizer()->getInt('userId'),
             'tags' => $this->getSanitizer()->getString('tags'),
             'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
             'playlistId' => $this->getSanitizer()->getInt('playlistId'),
             'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
             'mediaLike' => $this->getSanitizer()->getString('mediaLike'),
-            'regionSpecific' => 0
+            'regionSpecific' => $this->getSanitizer()->getInt('regionSpecific', 0)
         ]));
 
         foreach ($playlists as $playlist) {
@@ -368,6 +387,14 @@ class Playlist extends Base
                     'text' => __('Permissions')
                 );
             }
+
+            $playlist->buttons[] = ['divider' => true];
+
+            $playlist->buttons[] = array(
+                'id' => 'usage_report_button',
+                'url' => $this->urlFor('playlist.usage.form', ['id' => $playlist->playlistId]),
+                'text' => __('Usage Report')
+            );
         }
 
         $this->getState()->recordsTotal = $this->playlistFactory->countLast();
@@ -859,14 +886,14 @@ class Playlist extends Base
      *  description="Search widgets on a Playlist",
      *  @SWG\Parameter(
      *      name="playlistId",
-     *      in="formData",
+     *      in="query",
      *      description="The Playlist ID to Search",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="widgetId",
-     *      in="formData",
+     *      in="query",
      *      description="The Widget ID to Search",
      *      type="integer",
      *      required=false
@@ -919,26 +946,6 @@ class Playlist extends Base
     }
 
     /**
-     * Form for assigning Library Items to a Playlist
-     * @param int $playlistId
-     * @throws \Xibo\Exception\NotFoundException
-     */
-    public function libraryAssignForm($playlistId)
-    {
-        $playlist = $this->playlistFactory->getById($playlistId);
-
-        if (!$this->getUser()->checkEditable($playlist))
-            throw new AccessDeniedException();
-
-        $this->getState()->template = 'playlist-form-library-assign';
-        $this->getState()->setData([
-            'playlist' => $playlist,
-            'modules' => $this->moduleFactory->query(null, ['regionSpecific' => 0, 'enabled' => 1, 'assignable' => 1]),
-            'help' => $this->getHelp()->link('Library', 'Assign')
-        ]);
-    }
-
-    /**
      * Add Library items to a Playlist
      * @param int $playlistId
      *
@@ -977,6 +984,13 @@ class Playlist extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="displayOrder",
+     *      in="formData",
+     *      description="Optional integer to say which position this assignment should occupy in the list. If more than one media item is being added, this will be the position of the first one.",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1004,10 +1018,13 @@ class Playlist extends Base
         $media = $this->getSanitizer()->getIntArray('media');
 
         if (count($media) <= 0)
-            throw new \InvalidArgumentException(__('Please provide Media to Assign'));
+            throw new InvalidArgumentException(__('Please provide Media to Assign'), 'media');
 
         // Optional Duration
         $duration = ($this->getSanitizer()->getInt('duration'));
+
+        // Optional displayOrder
+        $displayOrder = $this->getSanitizer()->getInt('displayOrder');
 
         $newWidgets = [];
 
@@ -1054,7 +1071,13 @@ class Playlist extends Base
             $widget->calculateDuration($module);
 
             // Assign the widget to the playlist
-            $playlist->assignWidget($widget);
+            $playlist->assignWidget($widget, $displayOrder);
+
+            // If we have one provided we should bump the display order by 1 so that if we have more than one
+            // media to assign, we don't put the second one in the same place as the first one.
+            if ($displayOrder !== null) {
+                $displayOrder++;
+            }
 
             // Add to a list of new widgets
             $newWidgets[] = $widget;
@@ -1184,6 +1207,195 @@ class Playlist extends Base
             'message' => __('Order Changed'),
             'data' => $playlist
         ]);
+    }
+
+    /**
+     * Playlist Usage Report Form
+     * @param int $playlistId
+     */
+    public function usageForm($playlistId)
+    {
+        $playlist = $this->playlistFactory->getById($playlistId);
+
+        if (!$this->getUser()->checkViewable($playlist))
+            throw new AccessDeniedException();
+
+        $this->getState()->template = 'playlist-form-usage';
+        $this->getState()->setData([
+            'playlist' => $playlist
+        ]);
+    }
+
+    /**
+     * @SWG\Get(
+     *  path="/playlist/usage/{playlistId}",
+     *  operationId="playlistUsageReport",
+     *  tags={"playlist"},
+     *  summary="Get Playlist Item Usage Report",
+     *  description="Get the records for the playlist item usage report",
+     * @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The Playlist Id",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *     response=200,
+     *     description="successful operation"
+     *  )
+     * )
+     *
+     * @param int $playlistId
+     * @throws NotFoundException
+     */
+    public function usage($playlistId)
+    {
+        $playlist = $this->playlistFactory->getById($playlistId);
+
+        if (!$this->getUser()->checkViewable($playlist))
+            throw new AccessDeniedException();
+
+        // Get a list of displays that this playlistId is used on
+        $displays = [];
+        $displayIds = [];
+
+        // have we been provided with a date/time to restrict the scheduled events to?
+        $playlistDate = $this->getSanitizer()->getDate('playlistEventDate');
+
+        if ($playlistDate !== null) {
+            // Get a list of scheduled events that this playlistId is used on, based on the date provided
+            $toDate = $playlistDate->copy()->addDay();
+
+            $events = $this->scheduleFactory->query(null, [
+                'futureSchedulesFrom' => $playlistDate->format('U'),
+                'futureSchedulesTo' => $toDate->format('U'),
+                'playlistId' => $playlistId
+            ]);
+        } else {
+            // All scheduled events for this playlistId
+            $events = $this->scheduleFactory->query(null, [
+                'playlistId' => $playlistId
+            ]);
+        }
+
+        // Total records returned from the schedules query
+        $totalRecords = $this->scheduleFactory->countLast();
+
+        foreach ($events as $row) {
+            /* @var \Xibo\Entity\Schedule $row */
+
+            // Generate this event
+            // Assess the date?
+            if ($playlistDate !== null) {
+                try {
+                    $scheduleEvents = $row->getEvents($playlistDate, $toDate);
+                } catch (XiboException $e) {
+                    $this->getLog()->error('Unable to getEvents for ' . $row->eventId);
+                    continue;
+                }
+
+                // Skip events that do not fall within the specified days
+                if (count($scheduleEvents) <= 0)
+                    continue;
+
+                $this->getLog()->debug('EventId ' . $row->eventId . ' as events: ' . json_encode($scheduleEvents));
+            }
+
+            // Load the display groups
+            $row->load();
+
+            foreach ($row->displayGroups as $displayGroup) {
+                foreach ($this->displayFactory->getByDisplayGroupId($displayGroup->displayGroupId) as $display) {
+
+                    if (in_array($display->displayId, $displayIds)) {
+                        continue;
+                    }
+
+                    $displays[] = $display;
+                    $displayIds = $display->displayId;
+
+                }
+            }
+        }
+
+        if ($this->isApi() && $displays == []) {
+            $displays = [
+                'data' =>__('Specified Playlist item is not in use.')];
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $totalRecords;
+        $this->getState()->setData($displays);
+    }
+
+    /**
+     * @SWG\Get(
+     *  path="/playlist/usage/layouts/{playlistId}",
+     *  operationId="playlistUsageLayoutsReport",
+     *  tags={"playlist"},
+     *  summary="Get Playlist Item Usage Report for Layouts",
+     *  description="Get the records for the playlist item usage report for Layouts",
+     * @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The Playlist Id",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *     response=200,
+     *     description="successful operation"
+     *  )
+     * )
+     *
+     * @param int $playlistId
+     * @throws NotFoundException
+     */
+    public function usageLayouts($playlistId)
+    {
+        $playlist = $this->playlistFactory->getById($playlistId);
+
+        if (!$this->getUser()->checkViewable($playlist))
+            throw new AccessDeniedException();
+
+        $layouts = $this->layoutFactory->query(null, ['playlistId' => $playlistId]);
+
+        if (!$this->isApi()) {
+            foreach ($layouts as $layout) {
+                $layout->includeProperty('buttons');
+
+                // Add some buttons for this row
+                if ($this->getUser()->checkEditable($layout)) {
+                    // Design Button
+                    $layout->buttons[] = array(
+                        'id' => 'layout_button_design',
+                        'linkType' => '_self', 'external' => true,
+                        'url' => $this->urlFor('layout.designer', array('id' => $layout->layoutId)),
+                        'text' => __('Design')
+                    );
+                }
+
+                // Preview
+                $layout->buttons[] = array(
+                    'id' => 'layout_button_preview',
+                    'linkType' => '_blank',
+                    'external' => true,
+                    'url' => $this->urlFor('layout.preview', ['id' => $layout->layoutId]),
+                    'text' => __('Preview Layout')
+                );
+            }
+        }
+
+        if ($this->isApi() && $layouts == []) {
+            $layouts = [
+                'data' =>__('Specified Playlist item is not in use.')
+            ];
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $this->layoutFactory->countLast();
+        $this->getState()->setData($layouts);
     }
 
     /**

@@ -1,0 +1,58 @@
+// Reusable LESS mixins
+@mixin border-radius($radius) {
+  -webkit-border-radius: $radius;
+     -moz-border-radius: $radius;
+          border-radius: $radius;
+}
+
+@mixin user-select-none() {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+}
+
+@mixin box-shadow($params) {
+    -moz-box-shadow: $params !important;
+    -webkit-box-shadow: $params !important;
+    box-shadow: $params !important;
+}
+
+@mixin set-transparent-color($property, $color, $opacity) {
+    #{$property}: $color;
+    #{$property}: rgba($color, $opacity);
+}
+
+@mixin background-stripes($angle, $main-line-color, $secondary-line-color, $main-line-thickness, $secondary-line-thickness) {
+    background: repeating-linear-gradient(
+        $angle,
+        $main-line-color,
+        $main-line-color $main-line-thickness,
+        $secondary-line-color $main-line-thickness,
+        $secondary-line-color ($main-line-thickness + $secondary-line-thickness)
+    ) !important;
+}
+
+@mixin transparent-object($opacity) {
+    /* IE 8 */
+    -ms-filter: "progid:DXImageTransform@mixin Microsoft@mixin Alpha(Opacity=#{opacity})";
+
+    /* IE 5-7 */
+    filter: alpha(opacity= $opacity);
+
+    /* Netscape */
+    -moz-opacity: $opacity/100;
+
+    /* Safari 1x */
+    -khtml-opacity: $opacity/100;
+
+    /* Good browsers */
+    opacity: $opacity/100;
+}
+
+@mixin z-index-set($index) {
+    z-index: $index !important;
+    position: relative;
+}

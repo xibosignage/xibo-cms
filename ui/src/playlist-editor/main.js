@@ -27,6 +27,7 @@ const loadingTemplate = require('../templates/loading.hbs');
 const dropZoneTemplate = require('../templates/drop-zone.hbs');
 const contextMenuTemplate = require('../templates/context-menu.hbs');
 const deleteElementModalContentTemplate = require('../templates/delete-element-modal-content.hbs');
+const deleteMultiElementModalContentTemplate = require('../templates/delete-multi-element-modal-content.hbs');
 
 // Include modules
 const Playlist = require('../playlist-editor/playlist.js');
@@ -36,8 +37,8 @@ const PropertiesPanel = require('../designer/properties-panel.js');
 const Manager = require('../core/manager.js');
 
 // Include CSS
-require('../css/designer.less');
-require('../css/playlist-editor.less');
+require('../style/designer.scss');
+require('../style/playlist-editor.scss');
 
 // Common funtions/tools
 const Common = require('../core/common.js');
@@ -56,7 +57,7 @@ window.pE = {
     playlist: {},
 
     // Editor DOM div
-    editorDiv: {},
+    editorContainer: {},
 
     // Timeline
     timeline: {},
@@ -81,40 +82,65 @@ pE.loadEditor = function() {
 
     // Save and change toastr positioning
     pE.toastrPosition = toastr.options.positionClass;
-    toastr.options.positionClass = 'toast-top-right';
+    toastr.options.positionClass = 'toast-top-center';
 
     // Get DOM main object
-    pE.editorDiv = $('#playlist-editor');
+    pE.editorContainer = $('#playlist-editor');
+
+    // If the editor is being loaded from within the layout designer, change the region specific flag
+    pE.regionSpecificQuery = '';
+
+    if(typeof lD != 'undefined') {
+        pE.regionSpecificQuery = '&regionSpecific=1';
+        pE.mainRegion = pE.editorContainer.parents('#editor-container').data('regionObj');
+    }
 
     // Get playlist id
-    const playlistId = pE.editorDiv.attr("playlist-id");
-
+    const playlistId = pE.editorContainer.attr("playlist-id");
+    
     // Update main object id
     pE.mainObjectId = playlistId;
 
     // Show loading template
-    pE.editorDiv.html(loadingTemplate());
+    pE.editorContainer.html(loadingTemplate());
 
     // Load playlist through an ajax request
-    $.get(urlsForApi.playlist.get.url + '?playlistId=' + playlistId + '&embed=widgets,widget_validity,tags,permissions')
+    $.get(urlsForApi.playlist.get.url + '?playlistId=' + playlistId + '&embed=widgets,widget_validity,tags,permissions' + pE.regionSpecificQuery)
         .done(function(res) {
 
             if(res.data != null && res.data.length > 0) {
 
                 // Append layout html to the main div
-                pE.editorDiv.html(playlistEditorTemplate());
+                pE.editorContainer.html(playlistEditorTemplate());
+
+                // Initialise dropabble containers
+                pE.editorContainer.find('#playlist-timeline, #dropzone-container').droppable({
+                    accept: '[drop-to="region"]',
+                    drop: function(event, ui) {
+                        pE.playlist.addElement(event.target, ui.draggable[0]);
+                    }
+                }).attr('data-type', 'region');
+
+                // Editor container select ( faking drag and drop ) to add a element to the playlist
+                pE.editorContainer.find('#playlist-timeline, #dropzone-container').click(function(e) {
+                    if(!$.isEmptyObject(pE.toolbar.selectedCard) || !$.isEmptyObject(pE.toolbar.selectedQueue)) {
+                        e.stopPropagation();
+                        pE.selectObject($(this));
+                    }
+                });
 
                 // Initialize timeline and create data structure
                 pE.playlist = new Playlist(playlistId, res.data[0]);
 
                 // Initialize properties panel
                 pE.propertiesPanel = new PropertiesPanel(
-                    pE.editorDiv.find('#playlist-properties-panel')
+                    pE,
+                    pE.editorContainer.find('#playlist-properties-panel')
                 );
 
                 // Initialize timeline
                 pE.timeline = new PlaylistTimeline(
-                    pE.editorDiv.find('#playlist-timeline')
+                    pE.editorContainer.find('#playlist-timeline')
                 );
 
                 // Append manager to the modal container
@@ -122,6 +148,7 @@ pE.loadEditor = function() {
 
                 // Initialize manager
                 pE.manager = new Manager(
+                    pE,
                     $('#playlist-editor').find('#layout-manager'),
                     false //(serverMode == 'Test') Turn of manager visibility for now
                 );
@@ -131,35 +158,20 @@ pE.loadEditor = function() {
 
                 // Initialize bottom toolbar
                 pE.toolbar = new Toolbar(
+                    pE,
                     $('#playlist-editor').find('#playlist-editor-toolbar'),
-                    null, // Custom main buttons
-                    null, // Custom dropdown buttons
                     {
                         deleteSelectedObjectAction: pE.deleteSelectedObject
-                    }
+                    },
+                    true
                 );
+                pE.toolbar.parent = pE;
 
                 // Default selected 
                 pE.selectObject();
 
                 // Setup helpers
                 formHelpers.setup(pE, pE.playlist);
-
-                // Add widget to editor div
-                pE.editorDiv.find('#playlist-editor-container').droppable({
-                    accept: '[drop-to="region"]',
-                    drop: function(event, ui) {
-                        pE.playlist.addElement(event.target, ui.draggable[0]);
-                    }
-                }).attr('data-type', 'region');
-
-                // Editor container select ( faking drag and drop ) to add a element to the playlist
-                pE.editorDiv.find('#playlist-editor-container').click(function(e) {
-                    if(!$.isEmptyObject(pE.toolbar.selectedCard)) {
-                        e.stopPropagation();
-                        pE.selectObject($(this));
-                    }
-                });
 
                 // Handle keyboard keys
                 $('body').off('keydown').keydown(function(handler) {
@@ -203,8 +215,10 @@ window.getXiboApp = function() {
  * Select a playlist object (playlist/widget)
  * @param {object=} obj - Object to be selected
  * @param {bool=} forceUnselect - Clean selected object
+ * @param {object =} [options] - selectObject options
+ * @param {number=} [options.positionToAdd = null] - Order position for widget
  */
-pE.selectObject = function(obj = null, forceUnselect = false) {
+pE.selectObject = function(obj = null, forceUnselect = false, {positionToAdd = null} = {}) {
 
     // If there is a selected card, use the drag&drop simulate to add that item to a object
     if(!$.isEmptyObject(this.toolbar.selectedCard)) {
@@ -218,9 +232,27 @@ pE.selectObject = function(obj = null, forceUnselect = false) {
             this.toolbar.deselectCardsAndDropZones();
 
             // Simulate drop item add
-            this.dropItemAdd(obj, card);
+            this.dropItemAdd(obj, card, {positionToAdd: positionToAdd});
         }
 
+    } else if(!$.isEmptyObject(this.toolbar.selectedQueue) && $(this.toolbar.selectedQueue).data('to-add')) { // If there's a selected queue, use the drag&drop simulate to add those items to a object
+        if(obj.data('type') == 'region') {
+            let mediaQueueArray = [];
+
+            // Get queue elements
+            this.toolbar.selectedQueue.find('.queue-element').each(function() {
+                mediaQueueArray.push($(this).attr('id'));
+            });
+
+            // Add media queue to playlist
+            this.playlist.addMedia(mediaQueueArray, positionToAdd);
+
+            // Destroy queue
+            this.toolbar.destroyQueue(this.toolbar.openedMenu);
+        }
+
+        // Deselect cards and drop zones
+        this.toolbar.deselectCardsAndDropZones();
     } else {
         let newSelectedId = {};
         let newSelectedType = {};
@@ -272,9 +304,11 @@ pE.selectObject = function(obj = null, forceUnselect = false) {
  * Add action to take after dropping a draggable item
  * @param {object} droppable - Target drop object
  * @param {object} draggable - Target Card
+ * @param {object =} [options] - Options
+ * @param {object/number=} [options.positionToAdd = null] - order position for widget
  */
-pE.dropItemAdd = function(droppable, card) {
-    this.playlist.addElement(droppable, card);
+pE.dropItemAdd = function(droppable, card, {positionToAdd = null} = {}) {
+    this.playlist.addElement(droppable, card, positionToAdd);
 };
 
 /**
@@ -317,15 +351,27 @@ pE.undoLastAction = function() {
  * Delete selected object
  */
 pE.deleteSelectedObject = function() {
-    pE.deleteObject(pE.selectedObject.type, pE.selectedObject[pE.selectedObject.type + 'Id']);
+    if(pE.editorContainer.hasClass('multi-select')) {
+        // Get selected widgets
+        let selectedWidgetsIds = [];
+
+        pE.timeline.DOMObject.find('.playlist-widget.multi-selected').each(function() {
+            selectedWidgetsIds.push($(this).data('widgetId'));
+
+        });
+
+        pE.deleteMultipleObjects('widget', selectedWidgetsIds);
+    } else {
+        pE.deleteObject(pE.selectedObject.type, pE.selectedObject[pE.selectedObject.type + 'Id']);
+    }
 };
 
 /**
  * Delete object
- * @param {object} objectToDelete - menu to load content for
+ * @param {string} objectType
+ * @param {number} objectId
  */
 pE.deleteObject = function(objectType, objectId) {
-
     const createDeleteModal = function(objectType, objectId, hasMedia = false, showDeleteFromLibrary = false) {
 
         bootbox.hideAll();
@@ -432,6 +478,178 @@ pE.deleteObject = function(objectType, objectId) {
 };
 
 /**
+ * Delete multiple objects
+ * @param {object[]} objectsToDelete
+ */
+pE.deleteMultipleObjects = function(objectsType, objectIds) {
+    const createMultiDeleteModal = function(objectArray) {
+        bootbox.hideAll();
+
+        const htmlContent = deleteMultiElementModalContentTemplate({
+            mainMessage: deleteMenuTrans.deleteMultipleObjects,
+            objectArray: objectArray,
+            trans: deleteMenuTrans
+        });
+
+        // Create buttons object
+        let buttons = {
+            cancel: {
+                label: editorsTrans.no,
+                className: 'btn-default'
+            }
+        };
+
+        // Select all button ( if there are 2 or more checkboxes )
+        if($(htmlContent).find('input[type="checkbox"]').length > 1) {
+            buttons.selectAll = {
+                label: editorsTrans.selectAll,
+                className: 'btn-warning',
+                callback: function() {
+                    $(this).find('input[type="checkbox"]').prop('checked', true);
+                    return false;
+                }
+            };
+        }
+        
+        buttons.confirm = {
+            label: editorsTrans.yes,
+            className: 'btn-danger',
+            callback: function() {
+                const $objects = $(this).find('.multi-delete-element');
+                let deletedElements = 0;
+
+                // Show modal
+                pE.common.showLoadingScreen('deleteObjects');
+
+                // Leave multi select mode
+                pE.toolbar.toggleMultiselectMode(false);
+
+                // Loop all items and make a delete request for each
+                for(let index = 0;index < $objects.length; index++) {
+                    const $element = $($objects[index]);
+
+                    // Empty options object
+                    let options = null;
+                    const objectId = $element.data('id');
+                    const objectType = $element.data('type');
+
+                    // If delete media is checked, pass that as a param for delete
+                    if($element.find('input.deleteMedia').is(':checked')) {
+                        options = {
+                            deleteMedia: 1
+                        };
+                    }
+
+                    // Delete element from the layout
+                    pE.playlist.deleteElement(objectType, objectId, options).then((res) => { // Success
+
+                        // Behavior if successful 
+                        toastr.success(res.message)
+                        
+                        deletedElements++;
+
+                        if(deletedElements == $objects.length) {
+                            // Hide loading screen
+                            pE.common.hideLoadingScreen('deleteObjects');
+                            
+                            // Reload data
+                            pE.reloadData();
+
+                            // Hide/close modal
+                            bootbox.hideAll();
+                        }
+                        
+                    }).catch((error) => { // Fail/error
+
+                        pE.common.hideLoadingScreen('deleteObjects');
+
+                        // Show error returned or custom message to the user
+                        let errorMessage = '';
+
+                        if(typeof error == 'string') {
+                            errorMessage = error;
+                        } else {
+                            errorMessage = error.errorThrown;
+                        }
+
+                        toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
+                    });
+                }
+
+                return false;
+            }
+        };
+
+        bootbox.dialog({
+            title: editorsTrans.deleteMultipleTitle,
+            message: htmlContent,
+            buttons: buttons
+        }).attr('data-test', 'deleteObjectModal');
+    };
+
+    if(objectsType === 'widget') {
+
+        pE.common.showLoadingScreen('checkMediaIsUsed');
+        let arrayOfWidgets = [];
+
+        for(let index = 0;index < objectIds.length;index++) {
+
+            let widgetId = objectIds[index];
+            let widgetToDelete = pE.getElementByTypeAndId('widget', 'widget_' + widgetId);
+            let linkToAPI = urlsForApi.media.isUsed;
+            let requestPath = linkToAPI.url.replace(':id', widgetToDelete.mediaIds[0]);
+
+            if(widgetToDelete.isRegionSpecific()) {
+                arrayOfWidgets.push({
+                    'objectId': widgetId,
+                    'objectType': 'widget',
+                    'objectName': widgetToDelete.widgetName,
+                    'hasMedia': false,
+                    'dataUsed': false
+                });
+
+                if(arrayOfWidgets.length == objectIds.length) {
+                    createMultiDeleteModal(arrayOfWidgets);
+                    pE.common.hideLoadingScreen('checkMediaIsUsed');
+                }
+            } else {
+                // Request with count as being 2, for the published layout and draft
+                $.get(requestPath + '?count=1')
+                    .done(function(res) {
+                        if(res.success) {
+                            arrayOfWidgets.push({
+                                'objectId': widgetId,
+                                'objectType': 'widget',
+                                'objectName': widgetToDelete.widgetName,
+                                'hasMedia': true,
+                                'dataUsed': res.data.isUsed
+                            });
+
+                            if(arrayOfWidgets.length == objectIds.length) {
+                                createMultiDeleteModal(arrayOfWidgets);
+                                pE.common.hideLoadingScreen('checkMediaIsUsed');
+                            }
+                        } else {
+                            if(res.login) {
+                                window.location.href = window.location.href;
+                                location.reload(false);
+                            } else {
+                                toastr.error(res.message);
+                            }
+                        }
+                    }).fail(function(jqXHR, textStatus, errorThrown) {
+
+                        pE.common.hideLoadingScreen('checkMediaIsUsed');
+
+                        // Output error to console
+                        console.error(jqXHR, textStatus, errorThrown);
+                    });
+            }
+        }
+    }
+};
+
+/**
  * Refresh designer
  */
 pE.refreshDesigner = function() {
@@ -445,7 +663,7 @@ pE.refreshDesigner = function() {
 
     // If there was a opened menu in the toolbar, open that tab
     if(this.toolbar.openedMenu != -1) {
-        this.toolbar.openTab(this.toolbar.openedMenu, true);
+        this.toolbar.openMenu(this.toolbar.openedMenu, true);
     }
 
     // Render widgets container only if there are widgets on the playlist, if not draw drop area
@@ -465,22 +683,22 @@ pE.refreshDesigner = function() {
             this.renderContainer(this.propertiesPanel, this.selectedObject);
         }
 
-        this.editorDiv.find('#editing-container').show();
-        this.editorDiv.find('#dropzone-container').hide();
+        this.editorContainer.find('#editing-container').show();
+        this.editorContainer.find('#dropzone-container').hide();
     } else {
-        this.editorDiv.find('#dropzone-container').html(dropZoneTemplate());
+        this.editorContainer.find('#dropzone-container').html(dropZoneTemplate());
 
-        this.editorDiv.find('#editing-container').hide();
-        this.editorDiv.find('#dropzone-container').show();
+        this.editorContainer.find('#editing-container').hide();
+        this.editorContainer.find('#dropzone-container').show();
         
         // If playlist is empty, open the widget tab
         if(this.toolbar.openedMenu == -1) {
-            this.toolbar.openTab(1, true);
+            this.toolbar.openMenu(2, true);
         }
     }
 
     // Reload tooltips
-    this.common.reloadTooltips(this.editorDiv);
+    this.common.reloadTooltips(this.editorContainer);
 };
 
 /**
@@ -508,7 +726,7 @@ pE.reloadData = function() {
 
     pE.common.showLoadingScreen();
 
-    $.get(urlsForApi.playlist.get.url + '?playlistId=' + pE.playlist.playlistId + '&embed=widgets,widget_validity,tags,permissions')
+    $.get(urlsForApi.playlist.get.url + '?playlistId=' + pE.playlist.playlistId + '&embed=widgets,widget_validity,tags,permissions' + pE.regionSpecificQuery)
         .done(function(res) {
             pE.common.hideLoadingScreen();
 
@@ -549,7 +767,7 @@ pE.showErrorMessage = function() {
         messageDescription: errorMessagesTrans.loadingPlaylist
     });
 
-    pE.editorDiv.html(htmlError);
+    pE.editorContainer.html(htmlError);
 };
 
 /**
@@ -561,7 +779,7 @@ pE.saveOrder = function() {
 
     pE.common.showLoadingScreen('saveOrder');
 
-    this.playlist.saveOrder($('#timeline-container').find('.playlist-widget')).then((res) => { // Success
+    this.playlist.saveOrder(this.editorContainer.find('#timeline-container').find('.playlist-widget')).then((res) => { // Success
 
         pE.common.hideLoadingScreen('saveOrder');
 
@@ -603,7 +821,7 @@ pE.close = function() {
     // Clear loaded vars
     this.mainObjectId = '';
     deleteObjectProperties(this.playlist);
-    deleteObjectProperties(this.editorDiv);
+    deleteObjectProperties(this.editorContainer);
     deleteObjectProperties(this.timeline);
     deleteObjectProperties(this.propertiesPanel);
     deleteObjectProperties(this.manager);
@@ -622,9 +840,9 @@ pE.close = function() {
 pE.showLocalLoadingScreen = function() {
     // If there are no widgets, render the loading template in the drop zone
     if($.isEmptyObject(pE.playlist.widgets)) {
-        pE.editorDiv.find('#dropzone-container').html(loadingTemplate());
+        pE.editorContainer.find('#dropzone-container').html(loadingTemplate());
     } else {
-        pE.editorDiv.find('#playlist-timeline').html(loadingTemplate());
+        pE.editorContainer.find('#playlist-timeline').html(loadingTemplate());
     }
 };
 
@@ -634,10 +852,10 @@ pE.showLocalLoadingScreen = function() {
 pE.clearTemporaryData = function() {
 
     // Fix for remaining ckeditor elements or colorpickers
-    pE.editorDiv.find('.colorpicker-element').colorpicker('destroy');
+    pE.editorContainer.find('.colorpicker-element').colorpicker('destroy');
 
     // Hide open tooltips
-    pE.editorDiv.find('[data-toggle="tooltip"]').tooltip('hide');
+    pE.editorContainer.find('[data-toggle="tooltip"]').tooltip('hide');
 
     // Remove text callback editor structure variables
     formHelpers.destroyCKEditor();
@@ -767,30 +985,30 @@ pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     let playlistObject = pE.getElementByTypeAndId(objType, objId);
 
     // Create menu and append to the designer div ( using the object extended with translations )
-    pE.editorDiv.append(contextMenuTemplate(Object.assign(playlistObject, {trans: contextMenuTrans})));
+    pE.editorContainer.append(contextMenuTemplate(Object.assign(playlistObject, {trans: contextMenuTrans})));
 
     // Set menu position ( and fix page limits )
-    let contextMenuWidth = pE.editorDiv.find('.context-menu').outerWidth();
-    let contextMenuHeight = pE.editorDiv.find('.context-menu').outerHeight();
+    let contextMenuWidth = pE.editorContainer.find('.context-menu').outerWidth();
+    let contextMenuHeight = pE.editorContainer.find('.context-menu').outerHeight();
 
     let positionLeft = ((position.x + contextMenuWidth) > $(window).width()) ? (position.x - contextMenuWidth) : position.x;
     let positionTop = ((position.y + contextMenuHeight) > $(window).height()) ? (position.y - contextMenuHeight) : position.y;
 
-    pE.editorDiv.find('.context-menu').offset({top: positionTop, left: positionLeft});
+    pE.editorContainer.find('.context-menu').offset({top: positionTop, left: positionLeft});
 
     // Initialize tooltips
-    pE.common.reloadTooltips(pE.editorDiv.find('.context-menu'));
+    pE.common.reloadTooltips(pE.editorContainer.find('.context-menu'));
 
     // Click overlay to close menu
-    pE.editorDiv.find('.context-menu-overlay').click((ev) => {
+    pE.editorContainer.find('.context-menu-overlay').click((ev) => {
 
         if($(ev.target).hasClass('context-menu-overlay')) {
-            pE.editorDiv.find('.context-menu-overlay').remove();
+            pE.editorContainer.find('.context-menu-overlay').remove();
         }
     });
 
     // Handle buttons
-    pE.editorDiv.find('.context-menu .context-menu-btn').click((ev) => {
+    pE.editorContainer.find('.context-menu .context-menu-btn').click((ev) => {
         let target = $(ev.currentTarget);
 
         if(target.data('action') == 'Delete') {
@@ -800,7 +1018,7 @@ pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         }
 
         // Remove context menu
-        pE.editorDiv.find('.context-menu-overlay').remove();
+        pE.editorContainer.find('.context-menu-overlay').remove();
     });
 };
 

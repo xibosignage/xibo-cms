@@ -781,6 +781,24 @@ class State extends Middleware
             );
         });
 
+        $app->container->singleton('\Xibo\Controller\PlaylistDashboard', function($container) {
+            return new \Xibo\Controller\PlaylistDashboard(
+                $container->logService,
+                $container->sanitizerService,
+                $container->state,
+                $container->user,
+                $container->helpService,
+                $container->dateService,
+                $container->configService,
+                $container->playlistFactory,
+                $container->moduleFactory,
+                $container->widgetFactory,
+                $container->layoutFactory,
+                $container->displayGroupFactory
+
+            );
+        });
+
         $app->container->singleton('\Xibo\Controller\Module', function($container) {
             return new \Xibo\Controller\Module(
                 $container->logService,
@@ -865,7 +883,10 @@ class State extends Middleware
                 $container->moduleFactory,
                 $container->userGroupFactory,
                 $container->userFactory,
-                $container->tagFactory
+                $container->tagFactory,
+                $container->layoutFactory,
+                $container->displayFactory,
+                $container->scheduleFactory
             );
         });
 
@@ -953,7 +974,8 @@ class State extends Middleware
                 $container->layoutFactory,
                 $container->mediaFactory,
                 $container->dayPartFactory,
-                $container->scheduleReminderFactory
+                $container->scheduleReminderFactory,
+                $container->scheduleExclusionFactory
             );
         });
 
@@ -1212,7 +1234,8 @@ class State extends Middleware
                 $container->logService,
                 $container->sanitizerService,
                 $container->user,
-                $container->userFactory
+                $container->userFactory,
+                $container->permissionFactory
             );
         });
 
@@ -1527,7 +1550,8 @@ class State extends Middleware
                 $container->displayGroupFactory,
                 $container->dayPartFactory,
                 $container->userFactory,
-                $container->scheduleReminderFactory
+                $container->scheduleReminderFactory,
+                $container->scheduleExclusionFactory
             );
         });
 
@@ -1539,6 +1563,14 @@ class State extends Middleware
                 $container->user,
                 $container->userFactory,
                 $container->configService
+            );
+        });
+
+        $container->singleton('scheduleExclusionFactory', function($container) {
+            return new \Xibo\Factory\ScheduleExclusionFactory(
+                $container->store,
+                $container->logService,
+                $container->sanitizerService
             );
         });
 

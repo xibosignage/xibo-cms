@@ -185,6 +185,18 @@ class DataSet implements \JsonSerializable
      */
     public $summarizeField;
 
+    /**
+     * @SWG\Property(description="The source id for remote dataSet, 1 - JSON, 2 - CSV")
+     * @var integer
+     */
+    public $sourceId;
+
+    /**
+     * @SWG\Property(description="A flag whether to ignore the first row, for CSV source remote dataSet")
+     * @var integer
+     */
+    public $ignoreFirstRow;
+
     /** @var array Permissions */
     private $permissions = [];
 
@@ -853,8 +865,8 @@ class DataSet implements \JsonSerializable
 
         // Insert the extra columns we expect for a remote DataSet
         if ($this->isRemote === 1) {
-            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `customHeaders`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`, `summarize`, `summarizeField`';
-            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :customHeaders, :refreshRate, :clearRate, :runsAfter, :dataRoot, :lastSync, :summarize, :summarizeField';
+            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `customHeaders`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`, `summarize`, `summarizeField`, `sourceId`, `ignoreFirstRow`';
+            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :customHeaders, :refreshRate, :clearRate, :runsAfter, :dataRoot, :lastSync, :summarize, :summarizeField, :sourceId, :ignoreFirstRow';
 
             $params['method'] = $this->method;
             $params['uri'] = $this->uri;
@@ -869,6 +881,8 @@ class DataSet implements \JsonSerializable
             $params['dataRoot'] = $this->dataRoot;
             $params['summarize'] = $this->summarize;
             $params['summarizeField'] = $this->summarizeField;
+            $params['sourceId'] = $this->sourceId;
+            $params['ignoreFirstRow'] = $this->ignoreFirstRow;
             $params['lastSync'] = 0;
         }
 
@@ -897,7 +911,7 @@ class DataSet implements \JsonSerializable
         ];
 
         if ($this->isRemote) {
-            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, `customHeaders` = :customHeaders, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField ';
+            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, `customHeaders` = :customHeaders, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField, `sourceId` = :sourceId, `ignoreFirstRow` = :ignoreFirstRow ';
 
             $params['method'] = $this->method;
             $params['uri'] = $this->uri;
@@ -912,6 +926,8 @@ class DataSet implements \JsonSerializable
             $params['dataRoot'] = $this->dataRoot;
             $params['summarize'] = $this->summarize;
             $params['summarizeField'] = $this->summarizeField;
+            $params['sourceId'] = $this->sourceId;
+            $params['ignoreFirstRow'] = $this->ignoreFirstRow;
         }
 
         $this->getStore()->update('UPDATE dataset SET ' . $sql . '  WHERE DataSetID = :dataSetId', $params);

@@ -214,7 +214,7 @@ class MediaFactory extends BaseFactory
             $media->isRemote = false;
             $media->urlDownload = true;
             $media->extension = $requestOptions['extension'];
-            $media->enableStat = $this->config->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
+            $media->enableStat = $requestOptions['enableStat'];
         }
 
         $this->getLog()->debug('Queue download of: ' . $uri . ', current mediaId for this download is ' . $media->mediaId . '.');
@@ -623,7 +623,7 @@ class MediaFactory extends BaseFactory
 
         if ($this->getSanitizer()->getString('name', $filterBy) != null) {
             $terms = explode(',', $this->getSanitizer()->getString('name', $filterBy));
-            $this->nameFilter('media', 'name', $terms, $body, $params);
+            $this->nameFilter('media', 'name', $terms, $body, $params, ($this->getSanitizer()->getCheckbox('useRegexForName') == 1));
         }
 
         if ($this->getSanitizer()->getString('nameExact', $filterBy) != '') {

@@ -313,7 +313,7 @@ class UserFactory extends BaseFactory
 
         if ($this->getSanitizer()->getString('userName', $filterBy) != null) {
             $terms = explode(',', $this->getSanitizer()->getString('userName', $filterBy));
-            $this->nameFilter('user', 'userName', $terms, $body, $params);
+            $this->nameFilter('user', 'userName', $terms, $body, $params, ($this->getSanitizer()->getCheckbox('useRegexForName') == 1));
         }
 
         // Email Provided

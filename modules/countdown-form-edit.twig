@@ -1,0 +1,182 @@
+{#
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Edit Countdown" %}
+{% endblock %}
+
+{% block extra %}{{ module.templatesAvailable()|json_encode|raw }}{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="active"><a href="#generalTab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li><a href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
+            <li class="dropdown">
+                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                    {% trans "Templates" %}<span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a href="#templatePreset" role="tab" data-toggle="tab"><span>{% trans "Preset" %}</span></a></li>
+                    <li><a href="#templateTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a></li>
+                    <li><a href="#optionalStylesheetTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a></li>
+                </ul>
+            </li>
+        </ul>
+        <div class="col-md-12">
+            <form id="clockFormEdit" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="generalTab">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                        {{ forms.input("name", title, module.getOption("name"), helpText) }}
+
+                        {% set title %}{% trans "Set a duration?" %}{% endset %}
+                        {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                        {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
+
+                        {% set title %}{% trans "Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
+                        {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+
+                        {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
+                        {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Widget. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
+
+                        {% set offOption %}{% trans "Off" %}{% endset %}
+                        {% set onOption %}{% trans "On" %}{% endset %}
+                        {% set inheritOption %}{% trans "Inherit" %}{% endset %}
+                        {% set options = [
+                            { id: "Off", value: offOption },
+                            { id: "On", value: onOption },
+                            { id: "Inherit", value: inheritOption }
+                        ] %}
+                        {{ forms.dropdown("enableStat", "single", title, module.getOption("enableStat", theme.getSetting("WIDGET_STATS_ENABLED_DEFAULT")), options, "id", "value", helpText) }}
+                    </div>
+
+                    <div class="tab-pane" id="configurationTab">
+                        {% set title %}{% trans "Countdown Type" %}{% endset %}
+                        {% set helpText %}{% trans "Please select the type of countdown." %}{% endset %}
+                        {% set useWidgetDuration %}{% trans "Widget Duration" %}{% endset %}
+                        {% set useCustomDuration %}{% trans "Custom Duration" %}{% endset %}
+                        {% set useDate %}{% trans "Use Date" %}{% endset %}
+                        {% set options = [
+                            { id: 1, value: useWidgetDuration },
+                            { id: 2, value: useCustomDuration },
+                            { id: 3, value: useDate }
+                        ] %}
+                        {{ forms.dropdown("countdownType", "single", title, module.getOption("countdownType"), options, "id", "value", helpText) }}
+
+                        {% set title %}{% trans "Countdown Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds." %}{% endset %}
+                        {{ forms.input("countdownDuration", title, module.getOption("countdownDuration"), helpText, "duration-group") }}
+
+                        {% set title %}{% trans "Countdown Date" %}{% endset %}
+                        {% set helpText %}{% trans "Select the target date and time." %}{% endset %}
+                        {{ forms.dateTime("countdownDate", title, module.getOption("countdownDate"), helpText, "date-group") }}
+
+                        {% set title %}{% trans "Warning Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The countdown will show in a warning mode from the end duration entered." %}{% endset %}
+                        {{ forms.input("countdownWarningDuration", title, module.getOption("countdownWarningDuration"), helpText, "duration-group widget-duration-group") }}
+
+                        {% set title %}{% trans "Warning Date" %}{% endset %}
+                        {% set helpText %}{% trans "The countdown will show in a warning mode from the warning date entered." %}{% endset %}
+                        {{ forms.dateTime("countdownWarningDate", title, module.getOption("countdownWarningDate"), helpText, "date-group") }}
+                    </div>
+
+                    <div class="tab-pane" id="templatePreset">
+                        {% set title %}{% trans "Template" %}{% endset %}
+                        {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
+                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), module.templatesAvailable(), "id", "value", helptext, "template-selector-control selectPicker selectPickerWithImage", null, null, null, [{ name: "data-minimum-results-for-search", value: "Infinity" },{ name: "data-width", value: "100%" }], null, "image") }}
+
+                        {% set title %}{% trans "Override the template?" %}{% endset %}
+                        {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
+                        {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", 0), helpText) }}
+
+                        {% set useTemplatesMessage %}
+                            {% trans "With Override the Template selected enter your own text, html and css by using the Templates drop down menu in the tab header above." %}                     
+                        {% endset %}
+                        {{ forms.message(useTemplatesMessage, 'template-override-controls') }}
+
+                        {% set title %}{% trans "Original Width" %}{% endset %}
+                        {% set helpText %}{% trans "This is the intended width of the template and is used to scale the Widget within its region when the template is applied." %}{% endset %}
+                        {{ forms.number("widgetOriginalWidth", title, module.getOption("widgetOriginalWidth", undefined), helpText, "template-override-controls", "", "number") }}
+
+                        {% set title %}{% trans "Original Height" %}{% endset %}
+                        {% set helpText %}{% trans "This is the intended height of the template and is used to scale the Widget within its region when the template is applied." %}{% endset %}
+                        {{ forms.number("widgetOriginalHeight", title, module.getOption("widgetOriginalHeight", undefined), helpText, "template-override-controls", "", "number") }}
+                    </div>
+
+                    <div class="tab-pane" id="templateTab">
+                        <div class="editor-messages">
+                            {% set message %}{% trans "Enter a format for the Countdown e.g. [hha], [hh], [mm], [ss] or [DD]. See the manual for more information." %}{% endset %}
+                            {{ forms.message(message, "") }}
+
+                            {% set simpleTextEditorMessage %}
+                                {% trans "Enter text or HTML in the box below." %}<br>
+                            {% endset %}
+                            {{ forms.message(simpleTextEditorMessage, 'mainTemplate-advanced-editor-hide') }}
+                        </div>
+
+                        <div class="ckeditor_controls container-fluid" data-linked-to="mainTemplate">
+                            <div class="col-sm-offset-4 col-sm-8">
+                                <div class="form-group">
+                                    <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
+                                    <div class="col-sm-8 ckeditor_select_container">
+                                        <select id="ckeditor_snippets_select" 
+                                            class="ckeditor_snippets_select form-control"
+                                            data-linked-to="mainTemplate">
+                                            <option value=""></option>
+                                            <option value="ss">Seconds</option>
+                                            <option value="mm">Minutes</option>
+                                            <option value="hh">Hours</option>
+                                            <option value="DD">Days</option>
+                                            <option value="WW">Weeks</option>
+                                            <option value="MM">Months</option>
+                                            <option value="YY">~Years</option>
+                                            <option value="ssa">Seconds ( show total value )</option>
+                                            <option value="mma">Minutes ( show total value )</option>
+                                            <option value="hha">Hours ( show total value )</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{ forms.textarea("mainTemplate", "", module.getRawNode("mainTemplate"), "", "", "", 10) }}
+                    </div>
+
+                    <div class="tab-pane" id="optionalStylesheetTab"> 
+                        <div class="form-content-title">
+                            <h4>{% trans "Optional Stylesheet" %}</h4>
+                        </div>
+
+                        {{ forms.textarea("styleSheet", "", module.getRawNode("styleSheet"), "", "", "", 10) }}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

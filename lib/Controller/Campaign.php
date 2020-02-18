@@ -107,51 +107,58 @@ class Campaign extends Base
      *  description="Search all Campaigns this user has access to",
      *  @SWG\Parameter(
      *      name="campaignId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Campaign Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="name",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Name",
      *      type="string",
      *      required=false
      *   ),
      *   @SWG\Parameter(
      *      name="tags",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Tags",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="hasLayouts",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by has layouts",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="isLayoutSpecific",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by whether this Campaign is specific to a Layout or User added",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="retired",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by retired",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="totalDuration",
-     *      in="formData",
+     *      in="query",
      *      description="Should we total the duration?",
      *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="embed",
+     *      in="query",
+     *      description="Embed related data such as layouts, permissions, tags and events",
+     *      type="string",
      *      required=false
      *   ),
      *  @SWG\Response(
@@ -163,12 +170,14 @@ class Campaign extends Base
      *      )
      *  )
      * )
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function grid()
     {
         $filter = [
             'campaignId' => $this->getSanitizer()->getInt('campaignId'),
             'name' => $this->getSanitizer()->getString('name'),
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'tags' => $this->getSanitizer()->getString('tags'),
             'hasLayouts' => $this->getSanitizer()->getInt('hasLayouts'),
             'isLayoutSpecific' => $this->getSanitizer()->getInt('isLayoutSpecific'),
@@ -179,10 +188,22 @@ class Campaign extends Base
             'totalDuration' => $this->getSanitizer()->getInt('totalDuration', 1),
         ];
 
+        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+
         $campaigns = $this->campaignFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter), $options);
 
         foreach ($campaigns as $campaign) {
             /* @var \Xibo\Entity\Campaign $campaign */
+
+            if (count($embed) > 0) {
+                $campaign->setChildObjectDependencies($this->layoutFactory);
+                $campaign->load([
+                    'loadPermissions' => in_array('permissions', $embed),
+                    'loadLayouts' => in_array('layouts', $embed),
+                    'loadTags' => in_array('tags', $embed),
+                    'loadEvents' => in_array('events', $embed)
+                ]);
+            }
 
             if ($this->isApi())
                 break;
@@ -217,6 +238,13 @@ class Campaign extends Base
                     'url' => $this->urlFor('campaign.edit.form', ['id' => $campaign->campaignId]),
                     'text' => __('Edit')
                 );
+
+                // Copy the campaign
+                $campaign->buttons[] = [
+                    'id' => 'campaign_button_copy',
+                    'url' => $this->urlFor('campaign.copy.form', ['id' => $campaign->campaignId]),
+                    'text' => __('Copy')
+                ];
             } else {
                 $campaign->buttons[] = ['divider' => true];
             }
@@ -781,6 +809,57 @@ class Campaign extends Base
             'layouts' => $layouts,
             'duration' => $duration,
             'extendedLayouts' => $extendedLayouts
+        ]);
+    }
+
+    public function copyForm($campaignId)
+    {
+        // get the Campaign
+        $campaign = $this->campaignFactory->getById($campaignId);
+
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $campaign->ownerId) {
+            throw new AccessDeniedException(__('You do not have permission to copy this Campaign'));
+        }
+
+        $this->getState()->template = 'campaign-form-copy';
+        $this->getState()->setData([
+            'campaign' => $campaign
+        ]);
+    }
+
+    /**
+     * @param $campaignId
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function copy($campaignId)
+    {
+        // get the Campaign
+        $campaign = $this->campaignFactory->getById($campaignId);
+
+        // get the Layouts assigned to the original Campaign
+        $layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId, false);
+
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $campaign->ownerId) {
+            throw new AccessDeniedException(__('You do not have permission to copy this Campaign'));
+        }
+
+        $newCampaign = clone $campaign;
+        $newCampaign->campaign = $this->getSanitizer()->getString('name');
+
+        // assign the same layouts to the new Campaign
+        foreach ($layouts as $layout) {
+            $newCampaign->assignLayout($layout);
+        }
+
+        $newCampaign->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => sprintf(__('Added %s'), $newCampaign->campaign),
+            'id' => $newCampaign->campaignId,
+            'data' => $newCampaign
         ]);
     }
 }

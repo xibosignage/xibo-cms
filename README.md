@@ -1,6 +1,6 @@
 # Introduction
 Xibo - Digital Signage - https://xibo.org.uk
-Copyright (C) 2006-2019 Xibo Signage Ltd and Contributors.
+Copyright (C) 2006-2020 Xibo Signage Ltd and Contributors.
 
 
 
@@ -8,9 +8,8 @@ Copyright (C) 2006-2019 Xibo Signage Ltd and Contributors.
 
 - develop: Work in progress toward 2.3
 - master: Currently 2.2
+- release23: Bug fixes for 2.3
 - release22: Bug fixes for 2.2
-- release21: Bug fixes for 2.1
-- release20: Bug fixes for 2.0
 - release18: Work in progress toward the next 1.8
 - release17: Archive of 1.7
 - release1.6.4: Archive of 1.6
@@ -89,7 +88,7 @@ This command also mounts the Composer `/tmp` folder into your home directory so 
 ### Website dependencies (webpack)
 
 ```bash
-docker run -it --volume $PWD:/app --volume ~/.npm:/root/.npm -w /app node:latest sh -c "npm install webpack -g; npm install; npm run build;"
+docker run -it --volume $PWD:/app --volume ~/.npm:/root/.npm -w /app node:12 sh -c "npm install webpack -g; npm install; npm run build;"
 ```
 
 ### Mapped Volumes

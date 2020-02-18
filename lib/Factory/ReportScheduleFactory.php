@@ -129,6 +129,7 @@ class ReportScheduleFactory extends BaseFactory
                 reportschedule.createdDt, 
                 reportschedule.userId,
                 reportschedule.isActive,
+                reportschedule.message,
                `user`.UserName AS owner 
            ';
 
@@ -146,7 +147,7 @@ class ReportScheduleFactory extends BaseFactory
         // Like
         if ($this->getSanitizer()->getString('name', $filterBy) != '') {
             $terms = explode(',', $this->getSanitizer()->getString('name', $filterBy));
-            $this->nameFilter('reportschedule', 'name', $terms, $body, $params);
+            $this->nameFilter('reportschedule', 'name', $terms, $body, $params, ($this->getSanitizer()->getCheckbox('useRegexForName') == 1));
         }
 
         if ($this->getSanitizer()->getInt('reportScheduleId', 0, $filterBy) != 0) {
@@ -203,7 +204,7 @@ class ReportScheduleFactory extends BaseFactory
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }
-        
+
         return $entries;
     }
 }

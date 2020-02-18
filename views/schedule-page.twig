@@ -43,7 +43,7 @@
                 {% set title %}{% trans "Layout / Campaign" %}{% endset %}
                 {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
 
-                <select name="campaignId" id="campaignId" class="form-control"
+                <select name="campaignId" id="campaignId" class="hidden form-control"
                     data-search-url= "{{ urlFor("schedule.campaign.search") }}"
                     data-trans-campaigns= "{% trans "Campaigns" %}"
                     data-trans-layouts= "{% trans "Layouts" %}"
@@ -97,8 +97,8 @@
             <div class="btn slider-step-btn time-picker-step-btn" data-step="1">
                 <span class="fa fa-step-forward"></span>
             </div>
-        </div> 
-    </div> 
+        </div>
+    </div>
     <div class="row">
         <div id="CalendarContainer" data-event-source="{{ urlFor("schedule.calendar.data") }}" data-agenda-link="{{ urlFor("schedule.events") }}" data-calendar-type="{{ settings.CALENDAR_TYPE }}" class="col-sm-12">
             <div id="Calendar"></div>
@@ -115,7 +115,8 @@
                     <li class="event-special"><span class="fa fa-repeat"></span> {% trans "Recurring" %}</li>
                     <li class="event-inverse"><span class="fa fa-lock"></span> {% trans "View Permission Only" %}</li>
                     <li class="event-command"><span class="fa fa-wrench"></span> {% trans "Command" %}</li>
-                    <li class="event-interrupt"><span class="fa fa-exclamation"></span> {% trans "Interrupt" %}</li>
+                    <li class="event-interrupt"><span class="fa fa-hand-paper"></span> {% trans "Interrupt" %}</li>
+                    <li class="event-geo-location"><span class="fa fa-map-marker"></span> {% trans "Geo Location" %}</li>
                 </ul>
             </div>
         </div>
@@ -139,7 +140,9 @@
                         var eventTitle = (event.event.isAlways == 1) ? event.title : "[" + moment(event.scheduleEvent.fromDt, systemDateFormat).format(jsDateFormat) + " - " + moment(event.scheduleEvent.toDt, systemDateFormat).format(jsDateFormat) + "] " + event.title;
                         %>
                         <div class="day-highlight dh-<%= event['class'] %>">
-                            <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>" class="event-item">
+                            <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                               data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
+                               class="event-item">
                                 <%= eventTitle %></a>
                         </div>
                         <% }); %>
@@ -153,7 +156,9 @@
                         <% _.each(before_time, function(event){ %>
                         <div class="day-highlight dh-<%= event['class'] %>">
                             <span class="cal-hours pull-right"><%= event.end_hour %></span>
-                            <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>" class="event-item">
+                            <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                               data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
+                               class="event-item">
                                 <%= event.title %></a>
                         </div>
                         <% }); %>
@@ -180,6 +185,7 @@
                     >
                     <span class="cal-hours"><%= event.start_hour %> - <%= event.end_hour %></span>
                     <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                       data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
                        data-event-class="<%= event['class'] %>" class="event-item">
                         <%= event.title %></a>
                     </div>
@@ -193,6 +199,7 @@
                     <div class="day-highlight dh-<%= event['class'] %>">
                         <span class="cal-hours"><%= event.start_hour %></span>
                         <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                           data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
                            data-event-class="<%= event['class'] %>" class="event-item">
                             <%= event.title %></a>
                     </div>
@@ -252,7 +259,11 @@
                     }
 
                     if (event.event.eventTypeId == 4) {
-                        eventIcon = "fa-exclamation";
+                        eventIcon = "fa-hand-paper";
+                    }
+
+                    if (event.event.isGeoAware === 1) {
+                        eventIcon = "fa-map-marker";
                     }
 
                     if (!event.editable) {
@@ -264,6 +275,7 @@
                     <li>
                         <span class="pull-left event <%= event['class'] %>"></span>&nbsp;
                         <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                           data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
                            data-event-class="<%= eventClass %>" class="event-item">
                             <span class="fa <%= eventIcon %>"></span> <%= title %></a>
                     </li>
@@ -297,6 +309,11 @@
         <script type="text/x-handlebars-template" id="calendar-template-month-day">
             <div class="cal-month-day <%= cls %>">
                 <span class="pull-right" data-cal-date="<%= data_day %>" data-cal-view="day" data-toggle="tooltip" title="<%= tooltip %>"><%= day %></span>
+
+                <% if (events.length > 0) { %>
+                    <span class="cal-month-day-number-events label label-info" data-toggle="tooltip" title="{% endraw %}{% trans "Number of events" %}{% raw %}"><%= events.length %></span>
+                <% } %>
+
                 <% if (events.length > 0) { %>
                 <div class="events-list" data-cal-start="<%= start %>" data-cal-end="<%= end %>">
                     <% _.each(events, function(event) { %>
@@ -344,7 +361,11 @@
                     }
 
                     if (event.event.eventTypeId == 4) {
-                        eventIcon = "fa-exclamation";
+                        eventIcon = "fa-hand-paper";
+                    }
+
+                    if (event.event.isGeoAware === 1) {
+                        eventIcon = "fa-map-marker";
                     }
 
                     if (!event.editable) {
@@ -353,7 +374,9 @@
                     eventClass = "event-inverse";
                     }
                     %>
-                    <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>" data-event-class="<%= eventClass %>"
+                    <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                       data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
+                       data-event-class="<%= eventClass %>"
                        class="pull-left event <%= eventClass %>" data-toggle="tooltip"
                        title="<%= event.title %>"><span class="fa <%= eventIcon %>"></span></a>
                     <% }); %>
@@ -425,7 +448,11 @@
             }
 
             if (event.event.eventTypeId == 4) {
-                eventIcon = "fa-exclamation";
+                eventIcon = "fa-hand-paper";
+            }
+
+            if (event.event.isGeoAware === 1) {
+                eventIcon = "fa-map-marker";
             }
 
             if (!event.editable) {
@@ -436,8 +463,8 @@
             %>
             <div class="cal-row-fluid">
                 <div class="cal-cell<%= event.days%> cal-offset<%= event.start_day %> day-highlight dh-<%= event['class'] %>">
-                    <a href="<%= event.url ? event.url : 'javascript:void(0)' %>"
-                       data-event-id="<%= event.id %>"
+                    <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                       data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
                        data-event-class="<%= eventClass %>"
                        class="cal-event-week event<%= event.id %>"><span class="fa <%= eventIcon %>"></span> <%= title %></a>
                 </div>
@@ -474,7 +501,9 @@
             <small class="cal-events-num badge badge-important pull-left"><%= events.length %></small>
             <div class="hide events-list" data-cal-start="<%= start %>" data-cal-end="<%= end %>">
                 <% _.each(events, function(event) { %>
-                <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>" data-event-class="<%= event['class'] %>"
+                <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                   data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
+                   data-event-class="<%= event['class'] %>"
                    class="pull-left event <%= event['class'] %> event<%= event.id %>" data-toggle="tooltip"
                    title="<%= event.title %>"></a>
                 <% }); %>
@@ -490,7 +519,7 @@
                 <div class="panel with-nav-tabs panel-default agenda-panel">
                 
                     <!-- Tab Panel -->
-                    <% if (typeof agenda.displayGroupList != 'undefined' && agenda.displayGroupList.length > 0) { %>
+                    <% if (typeof agenda.displayGroupList != 'undefined' && agenda.displayGroupList.length > 1) { %>
                         <div class="panel-heading">
                                 <ul class="nav nav-tabs">
                                     <% _.each(agenda.displayGroupList, function(displayGroup){ %>
@@ -525,6 +554,8 @@
                        <div class="text-danger text-center">
                            <% if (agenda.errorMessage == 'display_not_selected') { %>
                                <p>{% trans "Display not selected!" %}</p>
+                           <% } else if (agenda.errorMessage == 'all_displays_selected') { %>
+                               <p>{% trans "Show All option does not work for this filter, one or more specific Display/Display Group need to be selected!" %}</p>
                            <% } else if (agenda.errorMessage == 'no_events') { %>
                                <p>{% trans "No events for the chosen Display/Display Group on the selected date!" %}</p>    
                            <% } else  if (agenda.errorMessage == 'request_failed') { %>
@@ -582,6 +613,10 @@
                             <% } else if (layouts.type == 4) { %>
                                 {% endraw %}{% trans "Interrupt Layouts" %}{% raw %}
                             <% } %>
+                            
+                            <span class="pull-right badge" title="{% endraw %}{% trans "Number of Layouts" %}{% raw %}" data-toggle="tooltip" data-placement="top">
+                                <%= layouts.length %>
+                            </span>
                         </th>
                     </tr>
                     {% endraw %}
@@ -729,7 +764,7 @@
             
             <!-- Schedule -->
             <span>
-                <a href="<%= schedule.link %>" class="XiboFormButton">
+                <a href="<%= schedule.link %>" class="XiboFormButton" data-event-start="<%= schedule.fromDt %>" data-event-end="<%= schedule.toDt %>">
                     {% endraw %}
                         {% trans "Schedule" %}
                     {% raw %}
@@ -799,6 +834,9 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+		// We are using this variable in xibo-calendar.js
+        var scheduleRecurrenceDeleteUrl = "{{ urlFor("schedule.recurrence.delete.form") }}";
+
         // Equals helper for the templates below
         Handlebars.registerHelper('eq', function(v1, v2, opts) {
             if (v1 === v2) {

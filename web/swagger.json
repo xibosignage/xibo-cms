@@ -32,52 +32,59 @@
                 "parameters": [
                     {
                         "name": "campaignId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Campaign Id",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "name",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Name",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "tags",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Tags",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "hasLayouts",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by has layouts",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "isLayoutSpecific",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by whether this Campaign is specific to a Layout or User added",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "retired",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by retired",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "totalDuration",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Should we total the duration?",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "embed",
+                        "in": "query",
+                        "description": "Embed related data such as layouts, permissions, tags and events",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -257,21 +264,21 @@
                 "parameters": [
                     {
                         "name": "commandId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Command Id",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "command",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Command Name",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "code",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Command Code",
                         "required": false,
                         "type": "string"
@@ -409,28 +416,28 @@
                 "parameters": [
                     {
                         "name": "dataSetId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by DataSet Id",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "dataSet",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by DataSet Name",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "code",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by DataSet Code",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "embed",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Embed related data such as columns",
                         "required": false,
                         "type": "string"
@@ -918,7 +925,7 @@
                     },
                     {
                         "name": "dataSetColumnId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by DataSet ColumnID",
                         "required": false,
                         "type": "integer"
@@ -1498,21 +1505,21 @@
                 "parameters": [
                     {
                         "name": "dayPartId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "The dayPart ID to Search",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "name",
-                        "in": "formData",
+                        "in": "query",
                         "description": "The name of the dayPart to Search",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "embed",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Embed related data such as exceptions",
                         "required": false,
                         "type": "string"
@@ -1731,98 +1738,98 @@
                 "parameters": [
                     {
                         "name": "displayId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Display Id",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "displayGroupId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by DisplayGroup Id",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "display",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Display Name",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "macAddress",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Mac Address",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "hardwareKey",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Hardware Key",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "clientVersion",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Client Version",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "clientType",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Client Type",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "clientCode",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Client Code",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "embed",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Embed related data, namely displaygroups. A comma separated list of child objects to embed.",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "authorised",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by authorised flag",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "displayProfileId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Display Profile",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "mediaInventoryStatus",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Display Status ( 1 - up to date, 2 - downloading, 3 - Out of date)",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "loggedIn",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Logged In flag",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "lastAccessed",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Display Last Accessed date, expects date in Y-m-d H:i:s format",
                         "required": false,
                         "type": "string"
@@ -2144,6 +2151,30 @@
                 }
             }
         },
+        "/display/licenceCheck/{displayId}": {
+            "put": {
+                "tags": [
+                    "display"
+                ],
+                "summary": "Licence Check",
+                "description": "Ask this Player to check its Commercial Licence",
+                "operationId": "displayLicenceCheck",
+                "parameters": [
+                    {
+                        "name": "displayId",
+                        "in": "path",
+                        "description": "The Display ID",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/displaygroup": {
             "get": {
                 "tags": [
@@ -2154,49 +2185,49 @@
                 "parameters": [
                     {
                         "name": "displayGroupId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by DisplayGroup Id",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "displayGroup",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by DisplayGroup Name",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "displayId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by DisplayGroups containing a specific display",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "nestedDisplayId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by DisplayGroups containing a specific display in there nesting",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "dynamicCriteria",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by DisplayGroups containing a specific dynamic criteria",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "isDisplaySpecific",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by whether the Display Group belongs to a Display or is user created",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "forSchedule",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Should the list be refined for only those groups the User can Schedule against?",
                         "required": false,
                         "type": "integer"
@@ -2969,28 +3000,28 @@
                 "parameters": [
                     {
                         "name": "displayProfileId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by DisplayProfile Id",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "displayProfile",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by DisplayProfile Name",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "type",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by DisplayProfile Type (windows|android|lg)",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "embed",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Embed related data such as config,commands,configWithDefault",
                         "required": false,
                         "type": "string"
@@ -3172,80 +3203,87 @@
                 "parameters": [
                     {
                         "name": "layoutId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Layout Id",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "parentId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by parent Id",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "showDrafts",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Flag indicating whether to show drafts",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "layout",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by partial Layout name",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "userId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by user Id",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "retired",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by retired flag",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "tags",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Tags",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "exactTags",
-                        "in": "formData",
+                        "in": "query",
                         "description": "A flag indicating whether to treat the tags filter as an exact match",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "ownerUserGroupId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by users in this UserGroupId",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "publishedStatusId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by published status id, 1 - Published, 2 - Draft",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "embed",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Embed related data such as regions, playlists, widgets, tags, campaigns, permissions",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "campaignId",
+                        "in": "query",
+                        "description": "Get all Layouts for a given campaignId",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -3821,70 +3859,70 @@
                 "parameters": [
                     {
                         "name": "mediaId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Media Id",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "media",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Media Name",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "type",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Media Type",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "ownerId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Owner Id",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "retired",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Retired",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "tags",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Tags - comma seperated",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "exactTags",
-                        "in": "formData",
+                        "in": "query",
                         "description": "A flag indicating whether to treat the tags filter as an exact match",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "duration",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Duration - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "fileSize",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by File Size - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "ownerUserGroupId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by users in this UserGroupId",
                         "required": false,
                         "type": "integer"
@@ -3944,6 +3982,20 @@
                         "description": "Flag (0 , 1), to either remove or leave the old file revisions (use with oldMediaId)",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "tags",
+                        "in": "formData",
+                        "description": "Comma separated string of Tags that should be assigned to uploaded Media",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "expires",
+                        "in": "formData",
+                        "description": "Date in Y-m-d H:i:s format, will set expiration date on the uploaded Media",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -4003,6 +4055,13 @@
                         "description": "Flag indicating whether to update the duration in all Layouts the Media is assigned to",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "expires",
+                        "in": "formData",
+                        "description": "Date in Y-m-d H:i:s format, will set expiration date on the Media item",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -4339,9 +4398,23 @@
                         "type": "string"
                     },
                     {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option to enable the collection of Media Proof of Play statistics, On, Off or Inherit.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "optionalName",
                         "in": "formData",
                         "description": "An optional name for this media file, if left empty it will default to the file name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "expires",
+                        "in": "formData",
+                        "description": "Date in Y-m-d H:i:s format, will set expiration date on the Media item",
                         "required": false,
                         "type": "string"
                     }
@@ -4405,6 +4478,13 @@
                         "in": "path",
                         "description": "The Playlist ID",
                         "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "displayOrder",
+                        "in": "formData",
+                        "description": "Optional integer to say which position this assignment should occupy in the list. If more than one media item is being added, this will be the position of the first one.",
+                        "required": false,
                         "type": "integer"
                     }
                 ],
@@ -4647,21 +4727,21 @@
                 "parameters": [
                     {
                         "name": "notificationId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Notification Id",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "subject",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Subject",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "embed",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Embed related data such as userGroups,displayGroups",
                         "required": false,
                         "type": "string"
@@ -4944,49 +5024,49 @@
                 "parameters": [
                     {
                         "name": "playlistId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Playlist Id",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "name",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by partial Playlist name",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "userId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by user Id",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "tags",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by tags",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "exactTags",
-                        "in": "formData",
+                        "in": "query",
                         "description": "A flag indicating whether to treat the tags filter as an exact match",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "ownerUserGroupId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by users in this UserGroupId",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "embed",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Embed related data such as regions, widgets, permissions, tags",
                         "required": false,
                         "type": "string"
@@ -5181,14 +5261,14 @@
                 "parameters": [
                     {
                         "name": "playlistId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "The Playlist ID to Search",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "widgetId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "The Widget ID to Search",
                         "required": false,
                         "type": "integer"
@@ -5246,6 +5326,13 @@
                         "description": "Optional flag indicating whether to enable the useDuration field",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "displayOrder",
+                        "in": "formData",
+                        "description": "Optional integer to say which position this assignment should occupy in the list. If more than one media item is being added, this will be the position of the first one.",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -5291,6 +5378,54 @@
                         "schema": {
                             "$ref": "#/definitions/Playlist"
                         }
+                    }
+                }
+            }
+        },
+        "/playlist/usage/{playlistId}": {
+            "get": {
+                "tags": [
+                    "playlist"
+                ],
+                "summary": "Get Playlist Item Usage Report",
+                "description": "Get the records for the playlist item usage report",
+                "operationId": "playlistUsageReport",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The Playlist Id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/playlist/usage/layouts/{playlistId}": {
+            "get": {
+                "tags": [
+                    "playlist"
+                ],
+                "summary": "Get Playlist Item Usage Report for Layouts",
+                "description": "Get the records for the playlist item usage report for Layouts",
+                "operationId": "playlistUsageLayoutsReport",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The Playlist Id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
                     }
                 }
             }
@@ -5547,21 +5682,21 @@
                 "parameters": [
                     {
                         "name": "resolutionId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Resolution Id",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "resolution",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Resolution Name",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "enabled",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Enabled",
                         "required": false,
                         "type": "integer"
@@ -5705,7 +5840,7 @@
                 "parameters": [
                     {
                         "name": "displayGroupIds",
-                        "in": "formData",
+                        "in": "query",
                         "description": "The DisplayGroupIds to return the schedule for. Empty for All.",
                         "type": "array",
                         "items": {
@@ -5714,14 +5849,14 @@
                     },
                     {
                         "name": "from",
-                        "in": "formData",
+                        "in": "query",
                         "description": "From Date Timestamp in Microseconds",
                         "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "to",
-                        "in": "formData",
+                        "in": "query",
                         "description": "To Date Timestamp in Microseconds",
                         "required": true,
                         "type": "integer"
@@ -5757,7 +5892,7 @@
                     },
                     {
                         "name": "date",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Date in Y-m-d H:i:s",
                         "required": true,
                         "type": "string"
@@ -5905,6 +6040,23 @@
                         "items": {
                             "$ref": "#/definitions/ScheduleReminderArray"
                         }
+                    },
+                    {
+                        "name": "isGeoAware",
+                        "in": "formData",
+                        "description": "Flag (0-1), whether this event is using Geo Location",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "geoLocation",
+                        "in": "formData",
+                        "description": "Array of comma separated strings each with comma separated pair of coordinates",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -5919,6 +6071,30 @@
                                 "type": "string"
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/schedulerecurrence/{eventId}": {
+            "delete": {
+                "tags": [
+                    "schedule"
+                ],
+                "summary": "Delete a Recurring Event",
+                "description": "Delete a Recurring Event of a Scheduled Event",
+                "operationId": "schedulerecurrenceDelete",
+                "parameters": [
+                    {
+                        "name": "eventId",
+                        "in": "path",
+                        "description": "The Scheduled Event ID",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
                     }
                 }
             }
@@ -6065,6 +6241,23 @@
                         "items": {
                             "$ref": "#/definitions/ScheduleReminderArray"
                         }
+                    },
+                    {
+                        "name": "isGeoAware",
+                        "in": "formData",
+                        "description": "Flag (0-1), whether this event is using Geo Location",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "geoLocation",
+                        "in": "formData",
+                        "description": "Array of comma separated strings each with comma separated pair of coordinates",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -6108,49 +6301,49 @@
                 "parameters": [
                     {
                         "name": "type",
-                        "in": "formData",
+                        "in": "query",
                         "description": "The type of stat to return. Layout|Media|Widget or All",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "fromDt",
-                        "in": "formData",
+                        "in": "query",
                         "description": "The start date for the filter. Default = 24 hours ago",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "toDt",
-                        "in": "formData",
+                        "in": "query",
                         "description": "The end date for the filter. Default = now.",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "statDate",
-                        "in": "formData",
+                        "in": "query",
                         "description": "The statDate filter returns records that are greater than or equal a particular date",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "statId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "The statId filter returns records that are greater than a particular statId",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "displayId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "An optional display Id to filter",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "layoutId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "An optional array of layout Id to filter",
                         "required": false,
                         "type": "array",
@@ -6160,7 +6353,7 @@
                     },
                     {
                         "name": "mediaId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "An optional array of media Id to filter",
                         "required": false,
                         "type": "array",
@@ -6170,7 +6363,7 @@
                     },
                     {
                         "name": "campaignId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "An optional Campaign Id to filter",
                         "required": false,
                         "type": "integer"
@@ -6200,42 +6393,42 @@
                 "parameters": [
                     {
                         "name": "tagId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Tag Id",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "tag",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by partial Tag",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "exactTag",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by exact Tag",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "isSystem",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by isSystem flag",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "isRequired",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by isRequired flag",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "haveOptions",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Set to 1 to show only results that have options set",
                         "required": false,
                         "type": "integer"
@@ -6473,28 +6666,28 @@
                 "parameters": [
                     {
                         "name": "userId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by User Id",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "userName",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by User Name",
                         "required": false,
                         "type": "string"
                     },
                     {
                         "name": "userTypeId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by UserType Id",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "retired",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by Retired",
                         "required": false,
                         "type": "integer"
@@ -6965,7 +7158,7 @@
                 "parameters": [
                     {
                         "name": "preference",
-                        "in": "formData",
+                        "in": "query",
                         "description": "An optional preference",
                         "required": false,
                         "type": "string"
@@ -7054,14 +7247,14 @@
                 "parameters": [
                     {
                         "name": "userGroupId",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by UserGroup Id",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "userGroup",
-                        "in": "formData",
+                        "in": "query",
                         "description": "Filter by UserGroup Name",
                         "required": false,
                         "type": "string"
@@ -7891,6 +8084,128 @@
                         "name": "clockFace",
                         "in": "formData",
                         "description": "For Flip Clock, supported options: TwelveHourClock TwentyFourHourClock HourlyCounter MinuteCounter DailyCounter",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/playlist/widget/{widgetId}?countdown": {
+            "put": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Countdown Widget",
+                "description": "Edit Countdown Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
+                "operationId": "widgetCountdownEdit",
+                "parameters": [
+                    {
+                        "name": "widgetId",
+                        "in": "path",
+                        "description": "The WidgetId to Edit",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "themeId",
+                        "in": "formData",
+                        "description": "Flag (0 , 1) for Analogue countdown the light and dark theme",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "countdownType",
+                        "in": "formData",
+                        "description": "Type of a countdown widget 1-Use widget duration, 2- Custom duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "countdownDuration",
+                        "in": "formData",
+                        "description": "The duration in minutes, or a target date/time in the format Y-m-d H:i:s",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "countdownWarningDuration",
+                        "in": "formData",
+                        "description": "The warning duration in minutes, or a target date/time in the format Y-m-d H:i:s",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "overrideTemplate",
+                        "in": "formData",
+                        "description": "flag (0, 1) set to 0 and use templateId or set to 1 and provide whole template in the next parameters",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "widgetOriginalWidth",
+                        "in": "formData",
+                        "description": "This is the intended Width of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "widgetOriginalHeight",
+                        "in": "formData",
+                        "description": "This is the intended Height of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "mainTemplate",
+                        "in": "formData",
+                        "description": "Main template, Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "mainTemplate_advanced",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Should text area by presented as a visual editor?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "styleSheet",
+                        "in": "formData",
+                        "description": "Optional StyleSheet Pass only with overrideTemplate set to 1 ",
                         "required": false,
                         "type": "string"
                     }
@@ -10946,6 +11261,10 @@
                 "validationString": {
                     "description": "Validation String - when child of a Display Profile",
                     "type": "string"
+                },
+                "groupsWithPermissions": {
+                    "description": "A comma separated list of groups/users with permissions to this Command",
+                    "type": "string"
                 }
             }
         },
@@ -11050,6 +11369,14 @@
                 "summarizeField": {
                     "description": "JSON-Element below the Root-Element on which the consolidation should be applied on",
                     "type": "string"
+                },
+                "sourceId": {
+                    "description": "The source id for remote dataSet, 1 - JSON, 2 - CSV",
+                    "type": "integer"
+                },
+                "ignoreFirstRow": {
+                    "description": "A flag whether to ignore the first row, for CSV source remote dataSet",
+                    "type": "integer"
                 }
             }
         },
@@ -11346,6 +11673,18 @@
                 "newCmsKey": {
                     "description": "The new CMS Key",
                     "type": "string"
+                },
+                "orientation": {
+                    "description": "The orientation of the Display, either landscape or portrait",
+                    "type": "string"
+                },
+                "resolution": {
+                    "description": "The resolution of the Display expressed as a string in the format WxH",
+                    "type": "string"
+                },
+                "commercialLicence": {
+                    "description": "Status of the commercial licence for this Display. 0 - Not licensed, 1 - licensed, 2 - trial licence, 3 - not applicable",
+                    "type": "integer"
                 }
             }
         },
@@ -12316,6 +12655,34 @@
                 },
                 "shareOfVoice": {
                     "description": "Percentage (0-100) of each full hour that is scheduled that this Layout should occupy",
+                    "type": "integer"
+                },
+                "isGeoAware": {
+                    "description": "Flag (0-1), whether this event is using Geo Location",
+                    "type": "integer"
+                },
+                "geoLocation": {
+                    "description": "Geo JSON representing the area of this event",
+                    "type": "string"
+                }
+            }
+        },
+        "ScheduleExclusion": {
+            "properties": {
+                "scheduleExclusionId": {
+                    "description": "Excluded Schedule ID",
+                    "type": "integer"
+                },
+                "eventId": {
+                    "description": "The eventId that this Excluded Schedule applies to",
+                    "type": "integer"
+                },
+                "fromDt": {
+                    "description": "A Unix timestamp representing the from date of an excluded recurring event in CMS time.",
+                    "type": "integer"
+                },
+                "toDt": {
+                    "description": "A Unix timestamp representing the to date of an excluded recurring event in CMS time.",
                     "type": "integer"
                 }
             }

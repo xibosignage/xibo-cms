@@ -419,6 +419,9 @@ class Ticker extends ModuleWidget
         
         // Parse library references on the template
         $text = $this->parseLibraryReferences($isPreview, $text);
+        
+        // Parse translations
+        $text = $this->parseTranslations($text);
 
         // Parse library references on the CSS Node
         $css = $this->parseLibraryReferences($isPreview, $css);

@@ -42,7 +42,6 @@ use Xibo\Factory\ResolutionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
-use Xibo\Helper\Environment;
 use Xibo\Helper\LayoutUploadHandler;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -893,79 +892,86 @@ class Layout extends Base
      *  description="Search for Layouts viewable by this user",
      *  @SWG\Parameter(
      *      name="layoutId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Layout Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="parentId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by parent Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="showDrafts",
-     *      in="formData",
+     *      in="query",
      *      description="Flag indicating whether to show drafts",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="layout",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by partial Layout name",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="userId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by user Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="retired",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by retired flag",
      *      type="integer",
      *      required=false
      *   ),
      *   @SWG\Parameter(
      *      name="tags",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Tags",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="exactTags",
-     *      in="formData",
+     *      in="query",
      *      description="A flag indicating whether to treat the tags filter as an exact match",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="ownerUserGroupId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by users in this UserGroupId",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="publishedStatusId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by published status id, 1 - Published, 2 - Draft",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="embed",
-     *      in="formData",
+     *      in="query",
      *      description="Embed related data such as regions, playlists, widgets, tags, campaigns, permissions",
      *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="campaignId",
+     *      in="query",
+     *      description="Get all Layouts for a given campaignId",
+     *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Response(
@@ -1000,6 +1006,7 @@ class Layout extends Base
         // Get all layouts
         $layouts = $this->layoutFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'layout' => $this->getSanitizer()->getString('layout'),
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'userId' => $this->getSanitizer()->getInt('userId'),
             'retired' => $this->getSanitizer()->getInt('retired'),
             'tags' => $this->getSanitizer()->getString('tags'),
@@ -1011,7 +1018,8 @@ class Layout extends Base
             'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
             'mediaLike' => $this->getSanitizer()->getString('mediaLike'),
             'publishedStatusId' => $this->getSanitizer()->getInt('publishedStatusId'),
-            'activeDisplayGroupId' => $this->getSanitizer()->getInt('activeDisplayGroupId')
+            'activeDisplayGroupId' => $this->getSanitizer()->getInt('activeDisplayGroupId'),
+            'campaignId' => $this->getSanitizer()->getInt('campaignId'),
         ]));
 
         foreach ($layouts as $layout) {
@@ -1758,6 +1766,9 @@ class Layout extends Base
      * Layout Status
      * @param int $layoutId
      *
+     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Exception\XiboException
      * @SWG\Get(
      *  path="/layout/status/{layoutId}",
      *  operationId="layoutStatus",
@@ -1793,7 +1804,7 @@ class Layout extends Base
                 break;
 
             case ModuleWidget::$STATUS_PLAYER:
-                $status = __('There are items on this Layout that can only be assessed by the client');
+                $status = __('There are items on this Layout that can only be assessed by the Display');
                 break;
 
             case 3:

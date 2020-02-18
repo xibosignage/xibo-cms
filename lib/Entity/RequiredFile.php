@@ -27,6 +27,7 @@ class RequiredFile implements \JsonSerializable
     public $path;
     public $bytesRequested = 0;
     public $complete = 0;
+    public $released = 1;
 
     /**
      * Entity constructor.
@@ -59,8 +60,8 @@ class RequiredFile implements \JsonSerializable
     private function add()
     {
         $this->rfId = $this->store->insert('
-            INSERT INTO `requiredfile` (`displayId`, `type`, `itemId`, `bytesRequested`, `complete`, `size`, `path`)
-              VALUES (:displayId, :type, :itemId, :bytesRequested, :complete, :size, :path)
+            INSERT INTO `requiredfile` (`displayId`, `type`, `itemId`, `bytesRequested`, `complete`, `size`, `path`, `released`)
+              VALUES (:displayId, :type, :itemId, :bytesRequested, :complete, :size, :path, :released)
         ', [
             'displayId' => $this->displayId,
             'type' => $this->type,
@@ -68,7 +69,8 @@ class RequiredFile implements \JsonSerializable
             'bytesRequested' => $this->bytesRequested,
             'complete' => $this->complete,
             'size' => $this->size,
-            'path' => $this->path
+            'path' => $this->path,
+            'released' => $this->released
         ]);
     }
 

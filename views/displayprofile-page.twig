@@ -23,8 +23,18 @@
                 <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {% set title %}{% trans "Name" %}{% endset %}
-                            {{ inline.input("displayProfile", title) }}
+
+                            <div class="form-group ">
+                                <label class="control-label" title="" for="displayProfile" accesskey="">{% trans "Name" %}</label>
+                                <div>
+                                    <div class="input-group">
+                                        <input class="form-control" name="displayProfile" type="text" id="displayProfile" value="">
+                                        <span class="input-group-addon">
+                                            <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
 
                             {% set title %}{% trans "Type" %}{% endset %}
                             {% set android %}{% trans "Android" %}{% endset %}

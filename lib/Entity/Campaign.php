@@ -86,7 +86,7 @@ class Campaign implements \JsonSerializable
     /**
      * @var Layout[]
      */
-    private $layouts = [];
+    public $layouts = [];
 
     /**
      * @var Permission[]
@@ -157,6 +157,11 @@ class Campaign implements \JsonSerializable
     {
         $this->layoutFactory = $layoutFactory;
         return $this;
+    }
+
+    public function __clone()
+    {
+        $this->campaignId = null;
     }
 
     /**

@@ -78,21 +78,21 @@ class Resolution extends Base
      *  description="Search Resolutions this user has access to",
      *  @SWG\Parameter(
      *      name="resolutionId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Resolution Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="resolution",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Resolution Name",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="enabled",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Enabled",
      *      type="integer",
      *      required=false

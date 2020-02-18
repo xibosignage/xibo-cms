@@ -48,16 +48,12 @@ class ImageProcessingTask implements TaskInterface
     /** @var DisplayFactory */
     private $displayFactory;
 
-    /** @var ScheduleFactory */
-    private $scheduleFactory;
-
     /** @inheritdoc */
     public function setFactories($container)
     {
         $this->date = $container->get('dateService');
         $this->mediaFactory = $container->get('mediaFactory');
         $this->displayFactory = $container->get('displayFactory');
-        $this->scheduleFactory = $container->get('scheduleFactory');
         $this->imageProcessingService = $container->get('imageProcessingService');
         return $this;
     }
@@ -78,17 +74,16 @@ class ImageProcessingTask implements TaskInterface
      */
     private function runImageProcessing()
     {
-        $now = time();
-        $rfLookAhead = (int) $this->config->getSetting('REQUIRED_FILES_LOOKAHEAD');
+        $images = $this->mediaFactory->query(null, ['released' => 0, 'allModules' => 1, 'imageProcessing' => 1]);
+
         $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
         $resizeThreshold = $this->config->getSetting('DEFAULT_RESIZE_THRESHOLD');
-
         $count = 0;
-        $eventsCached = [];
-        $displayGroupsCached = [];
+
+        // All displayIds
+        $displayIds = [];
 
         // Get list of Images
-        $images = $this->mediaFactory->query(null, ['released' => 0, 'allModules' => 1, 'imageProcessing' => 1]);
         foreach ($images as $media) {
 
             $filePath = $libraryLocation . $media->storedAs;
@@ -110,33 +105,34 @@ class ImageProcessingTask implements TaskInterface
             $media->release(md5_file($filePath), filesize($filePath));
             $this->store->commitIfNecessary();
 
-            // Get events using the media and only events from now and within the RF Look Ahead
-            $events = $this->scheduleFactory->query(null, ['mediaId' => $media->mediaId, 'futureSchedulesFrom' => $now, 'futureSchedulesTo' => $now + $rfLookAhead]);
-            foreach ($events as $event) {
-                /** @var \Xibo\Entity\Schedule $event */
-                if (in_array($event->eventId, $eventsCached))
-                    continue;
-
-                // Cache event
-                $eventsCached[] = $event->eventId;
-
-                $event->load();
-                foreach ($event->displayGroups as $displayGroup) {
-
-                    if (in_array($displayGroup->displayGroupId, $displayGroupsCached))
-                        continue;
-
-                    // Cache display group
-                    $displayGroupsCached[] = $displayGroup->displayGroupId;
-                }
+            $mediaDisplays= [];
+            $sql = 'SELECT displayId FROM `requiredfile` WHERE itemId = :itemId';
+            foreach ($this->store->select($sql, ['itemId' =>  $media->mediaId]) as $row) {
+                $displayIds[] = $row['displayId'];
+                $mediaDisplays[] = $row['displayId'];
             }
+
+            // Update Required Files
+            foreach ($mediaDisplays as $displayId) {
+
+                $this->store->update('UPDATE `requiredfile` SET released = :released, size = :size
+                WHERE `requiredfile`.displayId = :displayId AND `requiredfile`.itemId = :itemId ', [
+                    'released' => 1,
+                    'size' => $media->fileSize,
+                    'displayId' => $displayId,
+                    'itemId' => $media->mediaId
+                ]);
+            }
+
         }
 
-        // Notify display groups
-        if (count($displayGroupsCached) > 0) {
-            foreach ($displayGroupsCached as $displayGroupId) {
-                /* @var DisplayGroup $displayGroup */
-                $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroupId);
+        // Notify display
+        if ($count > 0) {
+            foreach (array_unique($displayIds) as $displayId) {
+
+                // Get display
+                $display = $this->displayFactory->getById($displayId);
+                $display->notify();
             }
         }
 

@@ -1,0 +1,10 @@
+{
+    "id": "countdown1",
+    "value": "Simple Text",
+    "template": "<p style=\"text-align: center;\"><span style=\"font-size:72px;\">[hha]:[mm]:[ss]</span></p>",
+    "css": "body {\n  color: #222;\n}\n\n.warning .seconds, .warning .minutes, .warning .hours {\n  color: orange;\n}\n\n.finished  .seconds, .finished .minutes, .finished .hours {\n  color: red;\n}",
+    "widgetOriginalWidth": "400",
+    "widgetOriginalHeight": "100",
+    "image": "modules/countdown/template-thumbs/countdown1.png",
+    "defaultVisualEditor": false
+}

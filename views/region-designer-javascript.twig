@@ -15,7 +15,7 @@
 
         // Handle set region as fullscreen button
         // Get layout object
-        const layout = getXiboApp().layout;
+        const layout = lD.layout;
         const form = $(this).find('form');
         let buttonText = form.find('#setFullScreenButton').html();
 
@@ -52,10 +52,10 @@
     }
 
     function formChangesRegion() {
-        const app = getXiboApp();
+        const app = lD;
         const layout = app.layout;
         const regionId = app.selectedObject.id;
-        const form = $(app.navigatorEdit.regionPropertiesPanel.DOMObject).find('form');
+        const form = $(app.propertiesPanel.DOMObject).find('form');
 
         layout.regions[regionId].transform({
             'width': form.find('#width').val(),
@@ -64,21 +64,21 @@
             'left': form.find('#left').val()
         }, false);
 
-        app.renderContainer(app.navigatorEdit);
+        app.renderContainer(app.navigator);
     }
 
     function formChangesRegionZIndex() {
-        const app = getXiboApp();
-        const form = $(app.navigatorEdit.regionPropertiesPanel.DOMObject).find('form');
+        const app = lD;
+        const form = $(app.propertiesPanel.DOMObject).find('form');
         const newZIndex = parseInt(form.find('#zIndex').val());
 
-        app.navigatorEdit.DOMObject.find('#' + app.selectedObject.id).css('zIndex', newZIndex);
+        app.navigator.DOMObject.find('#' + app.selectedObject.id).css('zIndex', newZIndex);
         app.selectedObject.zIndex = newZIndex;
     }
 
     function regionChangesForm() {
-        const app = getXiboApp();
-        const form = $(app.navigatorEdit.regionPropertiesPanel.DOMObject).find('form')
+        const app = lD;
+        const form = $(app.propertiesPanel.DOMObject).find('form')
         
         // If form not loaded, prevent changes
         if(form.length == 0 || app.layout.regions[app.selectedObject.id] == undefined) {

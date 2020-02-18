@@ -23,9 +23,9 @@ namespace Xibo\Controller;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Mimey\MimeTypes;
+use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
-use Respect\Validation\Validator as v;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\Widget;
@@ -431,70 +431,70 @@ class Library extends Base
      *  description="Search the Library for this user",
      *  @SWG\Parameter(
      *      name="mediaId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Media Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="media",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Media Name",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="type",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Media Type",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="ownerId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Owner Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="retired",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Retired",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="tags",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Tags - comma seperated",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="exactTags",
-     *      in="formData",
+     *      in="query",
      *      description="A flag indicating whether to treat the tags filter as an exact match",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="duration",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Duration - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="fileSize",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by File Size - a number or less-than,greater-than,less-than-equal or great-than-equal followed by a | followed by a number",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="ownerUserGroupId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by users in this UserGroupId",
      *      type="integer",
      *      required=false
@@ -517,6 +517,7 @@ class Library extends Base
         $mediaList = $this->mediaFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
             'mediaId' => $this->getSanitizer()->getInt('mediaId'),
             'name' => $this->getSanitizer()->getString('media'),
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'nameExact' => $this->getSanitizer()->getString('nameExact'),
             'type' => $this->getSanitizer()->getString('type'),
             'tags' => $this->getSanitizer()->getString('tags'),
@@ -803,6 +804,20 @@ class Library extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="tags",
+     *      in="formData",
+     *      description="Comma separated string of Tags that should be assigned to uploaded Media",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="expires",
+     *      in="formData",
+     *      description="Date in Y-m-d H:i:s format, will set expiration date on the uploaded Media",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation"
@@ -821,6 +836,16 @@ class Library extends Base
         ], $options);
 
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+        if ($this->getSanitizer()->getDate('expires') != null ) {
+
+            if ($this->getSanitizer()->getDate('expires')->format('U') > time()) {
+                $expires = $this->getSanitizer()->getDate('expires')->format('U');
+            } else {
+                throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');
+            }
+        } else {
+            $expires = 0;
+        }
 
         // Make sure the library exists
         self::ensureLibraryExists($libraryFolder);
@@ -844,6 +869,7 @@ class Library extends Base
             'updateInLayouts' => $this->getSanitizer()->getCheckbox('updateInLayouts', $options['updateInLayouts']),
             'deleteOldRevisions' => $this->getSanitizer()->getCheckbox('deleteOldRevisions', $options['deleteOldRevisions']),
             'allowMediaTypeChange' => $options['allowMediaTypeChange'],
+            'displayOrder' => $this->getSanitizer()->getInt('displayOrder'),
             'playlistId' => $this->getSanitizer()->getInt('playlistId'),
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
@@ -852,7 +878,8 @@ class Library extends Base
             'image_versions' => array(),
             'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i',
             'libraryLimit' => $libraryLimit,
-            'libraryQuotaFull' => ($libraryLimit > 0 && $this->libraryUsage() > $libraryLimit)
+            'libraryQuotaFull' => ($libraryLimit > 0 && $this->libraryUsage() > $libraryLimit),
+            'expires' => $expires
         );
 
         // Output handled by UploadHandler
@@ -950,6 +977,13 @@ class Library extends Base
      *      in="formData",
      *      description="Flag indicating whether to update the duration in all Layouts the Media is assigned to",
      *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="expires",
+     *      in="formData",
+     *      description="Date in Y-m-d H:i:s format, will set expiration date on the Media item",
+     *      type="string",
      *      required=false
      *   ),
      *  @SWG\Response(
@@ -2049,9 +2083,23 @@ class Library extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="The option to enable the collection of Media Proof of Play statistics, On, Off or Inherit.",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="optionalName",
      *      in="formData",
      *      description="An optional name for this media file, if left empty it will default to the file name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="expires",
+     *      in="formData",
+     *      description="Date in Y-m-d H:i:s format, will set expiration date on the Media item",
      *      type="string",
      *      required=false
      *   ),
@@ -2083,6 +2131,18 @@ class Library extends Base
         $type = $this->getSanitizer()->getString('type');
         $optionalName = $this->getSanitizer()->getString('optionalName');
         $extension = $this->getSanitizer()->getString('extension');
+        $enableStat = $this->getSanitizer()->getString('enableStat', $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT'));
+
+        if ($this->getSanitizer()->getDate('expires') != null ) {
+
+            if ($this->getSanitizer()->getDate('expires')->format('U') > time()) {
+                $expires = $this->getSanitizer()->getDate('expires')->format('U');
+            } else {
+                throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');
+            }
+        } else {
+            $expires = 0;
+        }
 
         // Validate the URL
         if (!v::url()->notEmpty()->validate(urldecode($url)) || !filter_var($url, FILTER_VALIDATE_URL)) {
@@ -2136,7 +2196,7 @@ class Library extends Base
         }
 
         // add our media to queueDownload and process the downloads
-        $this->mediaFactory->queueDownload($name, str_replace(' ', '%20', htmlspecialchars_decode($url)), 0, ['fileType' => strtolower($module->getModuleType()), 'duration' => $module->determineDuration(), 'extension' => $ext]);
+        $this->mediaFactory->queueDownload($name, str_replace(' ', '%20', htmlspecialchars_decode($url)), $expires, ['fileType' => strtolower($module->getModuleType()), 'duration' => $module->determineDuration(), 'extension' => $ext, 'enableStat' => $enableStat]);
         $this->mediaFactory->processDownloads(function($media) {
             // Success
             $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);

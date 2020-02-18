@@ -404,32 +404,6 @@ class Module extends Base
     }
 
     /**
-     * Add Widget Form
-     * @param string $type
-     * @param int $playlistId
-     * @throws XiboException
-     */
-    public function addWidgetForm($type, $playlistId)
-    {
-        $playlist = $this->playlistFactory->getById($playlistId);
-
-        if (!$this->getUser()->checkEditable($playlist))
-            throw new AccessDeniedException();
-
-        // Create a module to use
-        $module = $this->moduleFactory->createForWidget($type, null, $this->getUser()->userId, $playlistId);
-
-        $this->getLog()->debug('Module created, passing back to Twig');
-
-        // Pass to view
-        $this->getState()->template = $module->addForm();
-        $this->getState()->setData($module->setTemplateData([
-            'playlist' => $playlist,
-            'module' => $module
-        ]));
-    }
-
-    /**
      * Add Widget
      *
      * * @SWG\Post(
@@ -451,6 +425,13 @@ class Module extends Base
      *      description="The Playlist ID",
      *      type="integer",
      *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayOrder",
+     *      in="formData",
+     *      description="Optional integer to say which position this assignment should occupy in the list. If more than one media item is being added, this will be the position of the first one.",
+     *      type="integer",
+     *      required=false
      *   ),
      *  @SWG\Response(
      *      response=201,
@@ -484,14 +465,19 @@ class Module extends Base
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
 
         // Load some information about this playlist
+        // loadWidgets = true to keep the ordering correct
         $playlist->load([
             'playlistIncludeRegionAssignments' => false,
-            'loadWidgets' => false,
+            'loadWidgets' => true,
             'loadTags' => false
         ]);
 
         // Create a module to use
         $module = $this->moduleFactory->createForWidget($type, null, $this->getUser()->userId, $playlistId);
+
+        // Assign this module to this Playlist in the appropriate place (which could be null)
+        $displayOrder = $this->getSanitizer()->getInt('displayOrder');
+        $playlist->assignWidget($module->widget, $displayOrder);
 
         // Inject the Current User
         $module->setUser($this->getUser());
@@ -506,6 +492,13 @@ class Module extends Base
 
         // Call module add
         $module->add();
+
+        // Module add will have saved our widget with the correct playlistId and displayOrder
+        // if we have provided a displayOrder, then we ought to also save the Playlist so that new orders for those
+        // existing Widgets are also saved.
+        if ($displayOrder !== null) {
+            $playlist->save();
+        }
 
         // Permissions
         if ($this->getConfig()->getSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
@@ -676,7 +669,7 @@ class Module extends Base
         $module->widget->delete();
 
          // Delete Media?
-        if ($this->getSanitizer()->getInt('deleteMedia', 0) == 1) {
+        if ($this->getSanitizer()->getCheckbox('deleteMedia', 0) == 1) {
             foreach ($widgetMedia as $mediaId) {
                 $media = $this->mediaFactory->getById($mediaId);
 

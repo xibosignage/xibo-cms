@@ -213,6 +213,8 @@ class DataSetFactory extends BaseFactory
             dataset.`summarizeField`,
             dataset.`lastSync`,
             dataset.`lastClear`,
+            dataset.`sourceId`,
+            dataset.`ignoreFirstRow`,
             user.userName AS owner,
             (
               SELECT GROUP_CONCAT(DISTINCT `group`.group)
@@ -254,7 +256,7 @@ class DataSetFactory extends BaseFactory
 
         if ($this->getSanitizer()->getString('dataSet', $filterBy) != null) {
             $terms = explode(',', $this->getSanitizer()->getString('dataSet', $filterBy));
-            $this->nameFilter('dataset', 'dataSet', $terms, $body, $params);
+            $this->nameFilter('dataset', 'dataSet', $terms, $body, $params, ($this->getSanitizer()->getCheckbox('useRegexForName') == 1));
         }
 
         if ($this->getSanitizer()->getString('dataSetExact', $filterBy) != '') {
@@ -282,7 +284,7 @@ class DataSetFactory extends BaseFactory
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row, [
-                'intProperties' => ['isLookup', 'isRemote', 'clearRate', 'refreshRate', 'lastDataEdit', 'runsAfter', 'lastSync', 'lastClear']
+                'intProperties' => ['isLookup', 'isRemote', 'clearRate', 'refreshRate', 'lastDataEdit', 'runsAfter', 'lastSync', 'lastClear', 'ignoreFirstRow']
             ]);
         }
 
@@ -376,7 +378,9 @@ class DataSetFactory extends BaseFactory
             if ($dataSet->method === 'POST') {
                 parse_str($this->replaceParams($dataSet->postData, $options), $requestParams['form_params']);
             } else {
-                parse_str($this->replaceParams($dataSet->postData, $options), $requestParams['query']);
+                parse_str(parse_url($resolvedUri, PHP_URL_QUERY), $queryParamsArray);
+                parse_str($this->replaceParams($dataSet->postData, $options), $dataSetPostData);
+                $requestParams['query'] = array_merge($queryParamsArray, $dataSetPostData);
             }
 
             $this->getLog()->debug('Making request to ' . $resolvedUri . ' with params: ' . var_export($requestParams, true));
@@ -448,9 +452,20 @@ class DataSetFactory extends BaseFactory
                 }
 
                 // TODO: we should probably do some checking to ensure we have JSON back
-                $result->entries[] = json_decode($request->getBody());
-                $result->number = $result->number + 1;
+                if ($dataSet->sourceId === 1) {
+                    $result->entries[] = json_decode($request->getBody());
+                    $result->number = $result->number + 1;
+                } else {
+                    $csv = $request->getBody();
+                    $array = array_map("str_getcsv", explode("\n", $csv));
 
+                    if ($dataSet->ignoreFirstRow == 1) {
+                        array_shift($array);
+                    }
+
+                    $result->entries = $array;
+                    $result->number = count($array);
+                }
             } catch (RequestException $requestException) {
                 $this->getLog()->error('Error making request. ' . $requestException->getMessage());
 
@@ -761,5 +776,25 @@ class DataSetFactory extends BaseFactory
         }
 
         return $entries;
+    }
+
+    public function processCsvEntries(DataSet $dataSet, \stdClass $results, $save = true)
+    {
+        $this->getLog()->debug('Processing CSV results');
+
+        $dataSet->load();
+        $entries = [];
+
+        foreach ($results->entries as $entry) {
+            $entries[] = $this->processEntry((array)$entry, $dataSet->columns);
+        }
+
+        $results->processed = $entries;
+
+        if ($save) {
+            foreach ($entries as $row) {
+                $dataSet->addRow($row);
+            }
+        }
     }
 }

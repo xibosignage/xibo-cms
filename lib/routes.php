@@ -87,6 +87,7 @@ $app->get('/schedule/:id/events', '\Xibo\Controller\Schedule:eventList')->name('
 $app->post('/schedule', '\Xibo\Controller\Schedule:add')->name('schedule.add');
 $app->put('/schedule/:id', '\Xibo\Controller\Schedule:edit')->name('schedule.edit');
 $app->delete('/schedule/:id', '\Xibo\Controller\Schedule:delete')->name('schedule.delete');
+$app->delete('/schedulerecurrence/:id', '\Xibo\Controller\Schedule:deleteRecurrence')->name('schedule.recurrence.delete');
 
 /**
  * Notification
@@ -150,6 +151,8 @@ $app->put('/playlist/:id', '\Xibo\Controller\Playlist:edit')->name('playlist.edi
 $app->delete('/playlist/:id', '\Xibo\Controller\Playlist:delete')->name('playlist.delete');
 $app->post('/playlist/copy/:id', '\Xibo\Controller\Playlist:copy')->name('playlist.copy');
 $app->put('/playlist/setenablestat/:id', '\Xibo\Controller\Playlist:setEnableStat')->name('playlist.setenablestat');
+$app->get('/playlist/usage/:id', '\Xibo\Controller\Playlist:usage')->name('playlist.usage');
+$app->get('/playlist/usage/layouts/:id', '\Xibo\Controller\Playlist:usageLayouts')->name('playlist.usage.layouts');
 
 // Widgets Order
 $app->get('/playlist/widget', '\Xibo\Controller\Playlist:widgetGrid')->name('playlist.widget.search');
@@ -181,6 +184,7 @@ $app->get('/campaign', '\Xibo\Controller\Campaign:grid')->name('campaign.search'
 $app->post('/campaign', '\Xibo\Controller\Campaign:add')->name('campaign.add');
 $app->put('/campaign/:id', '\Xibo\Controller\Campaign:edit')->name('campaign.edit');
 $app->delete('/campaign/:id', '\Xibo\Controller\Campaign:delete')->name('campaign.delete');
+$app->post('/campaign/:id/copy', '\Xibo\Controller\Campaign:copy')->name('campaign.copy');
 
 // We use POST requests so that we can support multiple records
 $app->post('/campaign/layout/assign/:id', '\Xibo\Controller\Campaign:assignLayout')->name('campaign.assign.layout');
@@ -246,6 +250,7 @@ $app->post('/display/wol/:id', '\Xibo\Controller\Display:wakeOnLan')->name('disp
 $app->put('/display/authorise/:id', '\Xibo\Controller\Display:toggleAuthorise')->name('display.authorise');
 $app->put('/display/defaultlayout/:id', '\Xibo\Controller\Display:setDefaultLayout')->name('display.defaultlayout');
 $app->put('/display/requestscreenshot/:id', '\Xibo\Controller\Display:requestScreenShot')->name('display.requestscreenshot');
+$app->put('/display/licenceCheck/:id', '\Xibo\Controller\Display:checkLicence')->name('display.licencecheck');
 $app->get('/display/screenshot/:id', '\Xibo\Controller\Display:screenShot')->name('display.screenShot');
 $app->post('/display/:id/displaygroup/assign', '\Xibo\Controller\Display:assignDisplayGroup')->name('display.assign.displayGroup');
 $app->put('/display/:id/moveCms', '\Xibo\Controller\Display:moveCms')->name('display.moveCms');

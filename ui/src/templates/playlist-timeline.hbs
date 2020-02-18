@@ -8,5 +8,13 @@
     {{#each widgets}}
         {{> playlist-timeline-widget}}
     {{/each}}
+
+    <div id="timeline-overlay-container">
+        {{#each widgets}}
+            <div class="timeline-overlay-step"
+                data-position="{{@index}}"></div>
+            <div class="timeline-overlay-dummy"></div>
+        {{/each}}
+    </div>
 </div>
 

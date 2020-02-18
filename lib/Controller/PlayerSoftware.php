@@ -140,7 +140,8 @@ class PlayerSoftware extends Base
             'playerCode' => $this->getSanitizer()->getInt('playerCode'),
             'versionId' => $this->getSanitizer()->getInt('versionId'),
             'mediaId' => $this->getSanitizer()->getInt('mediaId'),
-            'playerShowVersion' => $this->getSanitizer()->getString('playerShowVersion')
+            'playerShowVersion' => $this->getSanitizer()->getString('playerShowVersion'),
+            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName')
         ];
 
         $versions = $this->playerVersionFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));

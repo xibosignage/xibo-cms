@@ -21,7 +21,6 @@
 namespace Xibo\Controller;
 
 use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -29,7 +28,6 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
-use Xibo\Report\ProofOfPlay;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -232,42 +230,42 @@ class Stats extends Base
      *  tags={"statistics"},
      *  @SWG\Parameter(
      *      name="type",
-     *      in="formData",
+     *      in="query",
      *      description="The type of stat to return. Layout|Media|Widget or All",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="fromDt",
-     *      in="formData",
+     *      in="query",
      *      description="The start date for the filter. Default = 24 hours ago",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="toDt",
-     *      in="formData",
+     *      in="query",
      *      description="The end date for the filter. Default = now.",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="statDate",
-     *      in="formData",
+     *      in="query",
      *      description="The statDate filter returns records that are greater than or equal a particular date",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="statId",
-     *      in="formData",
+     *      in="query",
      *      description="The statId filter returns records that are greater than a particular statId",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="displayId",
-     *      in="formData",
+     *      in="query",
      *      description="An optional display Id to filter",
      *      type="integer",
      *      required=false
@@ -275,7 +273,7 @@ class Stats extends Base
      *   @SWG\Parameter(
      *      name="layoutId",
      *      description="An optional array of layout Id to filter",
-     *      in="formData",
+     *      in="query",
      *      required=false,
      *      type="array",
      *      @SWG\Items(
@@ -285,7 +283,7 @@ class Stats extends Base
      *   @SWG\Parameter(
      *      name="mediaId",
      *      description="An optional array of media Id to filter",
-     *      in="formData",
+     *      in="query",
      *      required=false,
      *      type="array",
      *      @SWG\Items(
@@ -294,7 +292,7 @@ class Stats extends Base
      *  ),
      *   @SWG\Parameter(
      *      name="campaignId",
-     *      in="formData",
+     *      in="query",
      *      description="An optional Campaign Id to filter",
      *      type="integer",
      *      required=false
@@ -414,6 +412,7 @@ class Stats extends Base
             $entry['mediaId'] = $this->getSanitizer()->int($row['mediaId']);
             $entry['tag'] = $this->getSanitizer()->string($row['tag']);
             $entry['statDate'] = isset($row['statDate']) ? $this->getDate()->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : '';
+            $entry['engagements'] = $row['engagements'];
 
             $rows[] = $entry;
         }
@@ -588,7 +587,7 @@ class Stats extends Base
         ]);
 
         $out = fopen('php://output', 'w');
-        fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count']);
+        fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'Engagements']);
 
         while ($row = $resultSet->getNextRow() ) {
 
@@ -602,11 +601,13 @@ class Stats extends Base
                 $statDate = isset($row['statDate']) ? $this->getDate()->parse($row['statDate']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s') : null;
                 $fromDt = $this->getDate()->parse($row['start']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
                 $toDt = $this->getDate()->parse($row['end']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
+                $engagements = isset($row['engagements']) ? json_encode($row['engagements']): '[]';
             } else {
 
                 $statDate = isset($row['statDate']) ?$this->getDate()->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : null;
                 $fromDt = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
                 $toDt = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
+                $engagements = isset($row['engagements']) ? $row['engagements']: '[]';
             }
 
             $layout = ($layoutName != '') ? $layoutName :  __('Not Found');
@@ -617,7 +618,7 @@ class Stats extends Base
             $duration = isset($row['duration']) ? $this->getSanitizer()->string($row['duration']): '';
             $count = isset($row['count']) ? $this->getSanitizer()->string($row['count']): '';
 
-            fputcsv($out, [$statDate, $type, $fromDt, $toDt, $layout, $display, $media, $tag, $duration, $count]);
+            fputcsv($out, [$statDate, $type, $fromDt, $toDt, $layout, $display, $media, $tag, $duration, $count, $engagements]);
         }
 
         fclose($out);

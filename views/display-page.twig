@@ -33,8 +33,17 @@
                                     {% set title %}{% trans "ID" %}{% endset %}
                                     {{ inline.number("displayId", title) }}
 
-                                    {% set title %}{% trans "Name" %}{% endset %}
-                                    {{ inline.input("display", title) }}
+                                    <div class="form-group ">
+                                        <label class="control-label" title="" for="display" accesskey="">{% trans "Name" %}</label>
+                                        <div>
+                                            <div class="input-group">
+                                                <input class="form-control" name="display" type="text" id="display" value="">
+                                                <span class="input-group-addon">
+                                                    <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     {% set title %}{% trans "Status" %}{% endset %}
                                     {% set check %}{% trans "Up to date" %}{% endset %}
@@ -69,17 +78,16 @@
                                     {{ inline.dropdown("authorised", "single", title, "", options, "optionid", "option") }}
 
                                     {% set title %}{% trans "Tags" %}{% endset %}
+                                    {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
                                     {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                                    {{ inline.inputWithTags("tags", title, null, helpText) }}
-
-                                    {% set title %}{% trans "Exact match?" %}{% endset %}
-                                    {{ inline.checkbox("exactTags", title) }}
+                                    {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
 
                                     {% set title %}{% trans "Display Group" %}{% endset %}
                                     {{ inline.dropdown("displayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup") }}
 
                                     {% set title %}{% trans "Display Profile" %}{% endset %}
                                     {{ inline.dropdown("displayProfileId", "single", title, "", [{displayProfileId:null, name:""}]|merge(displayProfiles), "displayProfileId", "name") }}
+
                                 </div>
 
                                 <div class="tab-pane" id="filter-advanced">
@@ -121,6 +129,30 @@
 
                                     {% set title %}{% trans "IP Address" %}{% endset %}
                                     {{ inline.input("clientAddress", title) }}
+
+                                    {% set title %}{% trans "Orientation" %}{% endset %}
+                                    {% set landscape %}{% trans "Landscape" %}{% endset %}
+                                    {% set portrait %}{% trans "Portrait" %}{% endset %}
+                                    {% set options = [
+                                        { optionid: "", option: "" },
+                                        { optionid: "landscape", option: landscape},
+                                        { optionid: "portrait", option: portrait}
+                                    ] %}
+                                    {{ inline.dropdown("orientation", "single", title, "", options, "optionid", "option") }}
+
+                                    {% set title %}{% trans "Commercial Licence" %}{% endset %}
+                                    {% set licensed %}{% trans "Licensed fully" %}{% endset %}
+                                    {% set trial %}{% trans "Trial" %}{% endset %}
+                                    {% set notLinceced %}{% trans "Not licenced" %}{% endset %}
+                                    {% set notApplicable %}{% trans "Not applicable" %}{% endset %}
+                                    {% set options = [
+                                        { optionid: "", option: "" },
+                                        { optionid: "1", option: licensed},
+                                        { optionid: "2", option: trial},
+                                        { optionid: "0", option: notLinceced},
+                                        { optionid: "3", option: notApplicable}
+                                    ] %}
+                                    {{ inline.dropdown("commercialLicence", "single", title, "", options, "optionid", "option") }}
                                 </div>
                             </div>
                         </form>
@@ -139,6 +171,8 @@
                                 <th>{% trans "Storage Total" %}</th>
                                 <th>{% trans "Storage Free %" %}</th>
                                 <th>{% trans "Description" %}</th>
+                                <th>{% trans "Orientation" %}</th>
+                                <th>{% trans "Resolution" %}</th>
                                 <th>{% trans "Tags" %}</th>
                                 <th>{% trans "Default Layout" %}</th>
                                 <th>{% trans "Interleave Default" %}</th>
@@ -151,11 +185,14 @@
                                 <th>{% trans "IP Address" %}</th>
                                 <th>{% trans "Mac Address" %}</th>
                                 <th>{% trans "Timezone" %}</th>
+                                <th>{% trans "Latitude" %}</th>
+                                <th>{% trans "Longitude" %}</th>
                                 <th>{% trans "Screen shot?" %}</th>
                                 <th>{% trans "Thumbnail" %}</th>
                                 <th>{% trans "Bandwidth Limit" %}</th>
                                 <th>{% trans "Last Command" %}</th>
                                 <th>{% trans "XMR Registered" %}</th>
+                                <th>{% trans "Commercial Licence" %}</th>
                                 <th>{% trans "Row Menu" %}</th>
                             </tr>
                         </thead>
@@ -301,6 +338,8 @@
                     },
                     {"data": "storagePercentage", "visible": false, "sortable": false},
                     {"data": "description", "visible": false},
+                    {"data": "orientation", "visible": false},
+                    {"data": "resolution", "visible": false},
                     {
                         "name": "tags",
                         "sortable": false,
@@ -330,6 +369,8 @@
                     {"data": "clientAddress", "visible": false},
                     {"data": "macAddress"},
                     {"data": "timeZone", "visible": false},
+                    {"data": "latitude", "visible": false},
+                    {"data": "longitude", "visible": false},
                     {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false, "name": "screenShotRequested"},
                     {
                         "name": "thumbnail",
@@ -388,6 +429,29 @@
                                 icon = "fa-times";
 
                             return "<span class='fa " + icon + "'></span>";
+                        },
+                        "visible": false
+                    },
+                    {
+                        "data": "commercialLicence",
+                        "render": function (data, type, row) {
+                            if (type != "display")
+                                return data;
+
+                            var icon = "";
+                            if (data == 3) {
+                                return "N/A";
+                            } else {
+                                if (data == 1) {
+                                    icon = "fa-check";
+                                } else if (data == 0) {
+                                    icon = "fa-times";
+                                } else if (data == 2) {
+                                    icon = "fa-clock-o";
+                                }
+
+                                return "<span class='fa " + icon + "' title='" + (row.commercialLicenceDescription) + "'></span>";
+                            }
                         },
                         "visible": false
                     },

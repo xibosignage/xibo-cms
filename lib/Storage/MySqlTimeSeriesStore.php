@@ -115,6 +115,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $statData['toDt'] = $statData['toDt']->format('U');
         $statData['campaignId'] = $campaignId;
         $statData['displayId'] = $statData['display']->displayId;
+        $statData['engagements'] = json_encode($statData['engagements']);
         unset($statData['display']);
 
         $this->stats[] = $statData;
@@ -127,8 +128,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
 
         if (count($this->stats) > 0) {
 
-            $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, layoutID, mediaID, Tag, `widgetId`, duration, `count`, campaignID, displayID) VALUES ';
-            $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+            $sql = 'INSERT INTO `stat` (`type`, statDate, start, `end`, scheduleID, displayID, campaignID, layoutID, mediaID, Tag, `widgetId`, duration, `count`, `engagements`) VALUES ';
+            $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
             $sql = $sql . implode(', ', array_fill(1, count($this->stats), $placeHolders));
 
@@ -187,7 +188,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $length = isset($filterBy['length']) ? $filterBy['length'] : null;
 
         $params = [];
-        $select = ' SELECT stat.statId, stat.statDate, stat.type, stat.displayId, stat.widgetId, stat.layoutId, stat.mediaId, stat.start as start, stat.end as end, stat.tag, stat.duration, stat.count, 
+        $select = ' SELECT stat.statId, stat.statDate, stat.type, stat.displayId, stat.widgetId, stat.layoutId, stat.mediaId, stat.start as start, stat.end as end, stat.tag, stat.duration, stat.count, stat.engagements, 
         display.Display as display, layout.Layout as layout, media.Name AS media ';
 
         $body = '
