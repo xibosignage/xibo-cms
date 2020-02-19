@@ -60,7 +60,8 @@ $container->set('logger', function () use($uidProcessor) {
 $app = \DI\Bridge\Slim\Bridge::create($container);
 $app->setBasePath(\Xibo\Middleware\State::determineBasePath());
 $request = new Request(new ServerRequest('GET', $app->getBasePath()));
-
+$request = $request->withAttribute('name', 'xmds');
+$container->set('name', 'xmds');
 // Set state
 \Xibo\Middleware\State::setState($app, $request);
 
@@ -216,7 +217,7 @@ try {
         throw new InvalidArgumentException(__('Your client is not the correct version to communicate with this CMS.'));
 
     // logProcessor
-    $logProcessor = new \Xibo\Xmds\LogProcessor($container->get('logService'), $uidProcessor->getUid());
+    $logProcessor = new \Xibo\Xmds\LogProcessor($container->get('logger'), $uidProcessor->getUid());
     $container->get('logger')->pushProcessor($logProcessor);
 
     // Create a SoapServer

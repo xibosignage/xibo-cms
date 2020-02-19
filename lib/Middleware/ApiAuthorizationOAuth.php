@@ -104,6 +104,6 @@ class ApiAuthorizationOAuth implements Middleware
             }
         });
 
-        return $handler->handle($request);
+        return $handler->handle($request->withAttribute('name', 'auth'));
     }
 }

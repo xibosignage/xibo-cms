@@ -65,12 +65,13 @@ $app = \DI\Bridge\Slim\Bridge::create($container);
 // Config
 $app->config = $container->get('configService');
 $routeParser = $app->getRouteCollector()->getRouteParser();
+$container->set('name', 'auth');
+
 // Config
-$app->add(new \Xibo\Middleware\Log($app));
 $app->add(new \Xibo\Middleware\ApiAuthorizationOAuth($app));
 $app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\State($app));
-
+$app->add(new \Xibo\Middleware\Log($app));
 $app->addRoutingMiddleware();
 $app->setBasePath(\Xibo\Middleware\State::determineBasePath());
 

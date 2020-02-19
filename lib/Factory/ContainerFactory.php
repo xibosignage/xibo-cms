@@ -30,7 +30,6 @@ use Stash\Driver\Composite;
 use Stash\Pool;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Entity\User;
-use Xibo\Helper\Session;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Translate;
@@ -128,9 +127,6 @@ class ContainerFactory
             'configService' => function(ContainerInterface $c) {
                return ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
             },
-            'session' => function(ContainerInterface $c) {
-                    return new Session($c->get('logService'));
-            },
             'user' => function (ContainerInterface $c) {
                 return new User(
                     $c->get('store'),
@@ -173,9 +169,6 @@ class ContainerFactory
                 $pool->setNamespace($c->get('configService')->getCacheNamespace());
                 $c->get('configService')->setPool($pool);
                 return $pool;
-            },
-            'flash' => function(ContainerInterface $c) {
-                return new \Slim\Flash\Messages();
             },
             'imageProcessingService' => function(ContainerInterface $c) {
                 $imageProcessingService = new ImageProcessingService();
