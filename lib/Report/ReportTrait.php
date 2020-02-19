@@ -3,15 +3,14 @@
 namespace Xibo\Report;
 
 use Slim\Http\ServerRequest as Request;
-//use Slim\Http\Request;
 use Xibo\Exception\InvalidArgumentException;
-use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 trait ReportTrait
 {
@@ -47,7 +46,7 @@ trait ReportTrait
     private $dateService;
 
     /**
-     * @var SanitizerService
+     * @var SanitizerInterface
      */
     private $sanitizerService;
 
@@ -356,13 +355,13 @@ trait ReportTrait
 
     /**
      * Set the filter
-     * @param Request $request
      * @param array[Optional] $extraFilter
      * @return array
      */
-    public function gridRenderFilter(Request $request, $extraFilter = [])
+    public function gridRenderFilter($extraFilter)
     {
-        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $sanitizedParams = $this->getSanitizer($extraFilter);
+
         // Handle filtering
         $filter = [
             'start' => $sanitizedParams->getInt('start', ['default' => 0]),
@@ -385,19 +384,20 @@ trait ReportTrait
 
     /**
      * Set the sort order
-     * @param Request $request
+     * @param $filter
      * @return array
      */
-    public function gridRenderSort(Request $request)
+    public function gridRenderSort($filter)
     {
-        $columns = $this->getSanitizer($request->getParams())->getArray('columns');
+        $sanitizedParams = $this->getSanitizer($filter);
+        $columns = $sanitizedParams->getArray('columns');
 
         if ($columns == null || !is_array($columns))
             return null;
 
         $order = array_map(function ($element) use ($columns) {
             return ((isset($columns[$element['column']]['name']) && $columns[$element['column']]['name'] != '') ? '`' . $columns[$element['column']]['name'] . '`' : '`' . $columns[$element['column']]['data'] . '`') . (($element['dir'] == 'desc') ? ' DESC' : '');
-        }, $this->getSanitizer($request->getParams())->getArray('order'));
+        }, $sanitizedParams->getArray('order'));
 
         return $order;
     }

@@ -33,6 +33,7 @@ use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 use Stash\Driver\Composite;
 use Stash\Pool;
+use Xibo\Entity\User;
 use Xibo\Exception\InstanceSuspendedException;
 use Xibo\Exception\UpgradePendingException;
 use Xibo\Helper\DatabaseLogHandler;
@@ -139,6 +140,7 @@ class State implements Middleware
      * @param App $app
      * @param \Psr\Http\Message\ServerRequestInterface $request
      * @return \Psr\Http\Message\ServerRequestInterface
+     * @throws \Xibo\Exception\NotFoundException
      */
     public static function setState(App $app, Request $request): Request
     {
@@ -149,6 +151,19 @@ class State implements Middleware
 
         // Set the config dependencies
         $container->get('configService')->setDependencies($container->get('store'), $app->rootUri);
+
+        // set the system user for XTR
+        if ($container->get('name') == 'xtr') {
+            // Configure a user
+            /** @var User $user */
+            $user = $container->get('userFactory')->getSystemUser();
+            // Pass the page factory into the user object, so that it can check its page permissions
+            $user->setChildAclDependencies($container->get('userGroupFactory'), $container->get('pageFactory'));
+
+            // Load the user
+            $user->load(false);
+            $container->set('user', $user);
+        }
 
         // Register the report service
         $container->set('reportService', function(ContainerInterface $container) {
@@ -197,6 +212,10 @@ class State implements Middleware
         // We use Slim Flash Messages so we must immediately start a session (boo)
         $container->get('session')->set('init', '1');
 
+        // App Mode
+        $mode = $container->get('configService')->getSetting('SERVER_MODE');
+        $container->get('logService')->setMode($mode);
+
         if ($container->get('name') == 'web') {
             $container->set('flash', function () {
                 return new \Slim\Flash\Messages();
@@ -205,11 +224,14 @@ class State implements Middleware
             /** @var Twig $view */
             $view = $container->get('view');
             $view->addExtension(new TwigMessages(new \Slim\Flash\Messages()));
+
+            // set Twig auto reload if we are in test mode
+            if(strtolower($mode) == 'test') {
+                $twigEnvironment = $view->getEnvironment();
+                $twigEnvironment->enableAutoReload();
+            }
         }
 
-        // App Mode
-        $mode = $container->get('configService')->getSetting('SERVER_MODE');
-        $container->get('logService')->setMode($mode);
         $logger = $container->get('logger');
 
         // Configure logging
@@ -272,7 +294,7 @@ class State implements Middleware
     public static function setMiddleWare($app)
     {
         // Handle additional Middleware
-        if (isset($app->configService->middleware) && is_array($app->getContainer()->get('configService')->middleware)) {
+        if (isset($app->getContainer()->get('configService')->middleware) && is_array($app->getContainer()->get('configService')->middleware)) {
             foreach ($app->getContainer()->get('configService')->middleware as $object) {
                 $app->add($object);
             }
