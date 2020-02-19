@@ -34,13 +34,12 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ScheduleFactory;
-use Xibo\Factory\UserFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Factory\UserFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
@@ -158,42 +157,42 @@ class Tag extends Base
      *  description="Search for Tags viewable by this user",
      *  @SWG\Parameter(
      *      name="tagId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Tag Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="tag",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by partial Tag",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="exactTag",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by exact Tag",
      *      type="string",
      *      required=false
      *   ),
      *   @SWG\Parameter(
      *      name="isSystem",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by isSystem flag",
      *      type="integer",
      *      required=false
      *   ),
      *   @SWG\Parameter(
      *      name="isRequired",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by isRequired flag",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="haveOptions",
-     *      in="formData",
+     *      in="query",
      *      description="Set to 1 to show only results that have options set",
      *      type="integer",
      *      required=false

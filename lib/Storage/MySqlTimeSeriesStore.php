@@ -22,13 +22,13 @@
 
 namespace Xibo\Storage;
 
+use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
 
 /**
  * Class MySqlTimeSeriesStore
@@ -136,7 +136,26 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             // Flatten the array
             $data = [];
             foreach ($this->stats as $stat) {
-                foreach ($stat as $field) {
+                // Be explicit about the order of the keys
+                $ordered = [
+                    'type' => $stat['type'],
+                    'statDate' => $stat['statDate'],
+                    'fromDt' => $stat['fromDt'],
+                    'toDt' => $stat['toDt'],
+                    'scheduleId' => $stat['scheduleId'],
+                    'displayId' => $stat['displayId'],
+                    'campaignId' => $stat['campaignId'],
+                    'layoutId' => $stat['layoutId'],
+                    'mediaId' => $stat['mediaId'],
+                    'tag' => $stat['tag'],
+                    'widgetId' => $stat['widgetId'],
+                    'duration' => $stat['duration'],
+                    'count' => $stat['count'],
+                    'engagements' => $stat['engagements']
+                ];
+
+                // Add each value to another array in order
+                foreach ($ordered as $field) {
                     $data[] = $field;
                 }
             }

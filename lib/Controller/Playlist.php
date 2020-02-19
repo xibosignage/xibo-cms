@@ -196,49 +196,49 @@ class Playlist extends Base
      *  description="Search for Playlists viewable by this user",
      *  @SWG\Parameter(
      *      name="playlistId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Playlist Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="name",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by partial Playlist name",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="userId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by user Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="tags",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by tags",
      *      type="string",
      *      required=false
      *   ),
      *   @SWG\Parameter(
      *      name="exactTags",
-     *      in="formData",
+     *      in="query",
      *      description="A flag indicating whether to treat the tags filter as an exact match",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="ownerUserGroupId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by users in this UserGroupId",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="embed",
-     *      in="formData",
+     *      in="query",
      *      description="Embed related data such as regions, widgets, permissions, tags",
      *      type="string",
      *      required=false
@@ -1032,14 +1032,14 @@ class Playlist extends Base
      *  description="Search widgets on a Playlist",
      *  @SWG\Parameter(
      *      name="playlistId",
-     *      in="formData",
+     *      in="query",
      *      description="The Playlist ID to Search",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="widgetId",
-     *      in="formData",
+     *      in="query",
      *      description="The Widget ID to Search",
      *      type="integer",
      *      required=false

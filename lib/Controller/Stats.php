@@ -25,7 +25,6 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -34,12 +33,10 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\SanitizerService;
-use Xibo\Report\ProofOfPlay;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ReportServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
 
@@ -257,42 +254,42 @@ class Stats extends Base
      *  tags={"statistics"},
      *  @SWG\Parameter(
      *      name="type",
-     *      in="formData",
+     *      in="query",
      *      description="The type of stat to return. Layout|Media|Widget or All",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="fromDt",
-     *      in="formData",
+     *      in="query",
      *      description="The start date for the filter. Default = 24 hours ago",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="toDt",
-     *      in="formData",
+     *      in="query",
      *      description="The end date for the filter. Default = now.",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="statDate",
-     *      in="formData",
+     *      in="query",
      *      description="The statDate filter returns records that are greater than or equal a particular date",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="statId",
-     *      in="formData",
+     *      in="query",
      *      description="The statId filter returns records that are greater than a particular statId",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="displayId",
-     *      in="formData",
+     *      in="query",
      *      description="An optional display Id to filter",
      *      type="integer",
      *      required=false
@@ -300,7 +297,7 @@ class Stats extends Base
      *   @SWG\Parameter(
      *      name="layoutId",
      *      description="An optional array of layout Id to filter",
-     *      in="formData",
+     *      in="query",
      *      required=false,
      *      type="array",
      *      @SWG\Items(
@@ -310,7 +307,7 @@ class Stats extends Base
      *   @SWG\Parameter(
      *      name="mediaId",
      *      description="An optional array of media Id to filter",
-     *      in="formData",
+     *      in="query",
      *      required=false,
      *      type="array",
      *      @SWG\Items(
@@ -319,7 +316,7 @@ class Stats extends Base
      *  ),
      *   @SWG\Parameter(
      *      name="campaignId",
-     *      in="formData",
+     *      in="query",
      *      description="An optional Campaign Id to filter",
      *      type="integer",
      *      required=false

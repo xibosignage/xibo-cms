@@ -36,7 +36,6 @@ use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 
 /**
  * Class UserGroup
@@ -117,14 +116,14 @@ class UserGroup extends Base
      *  description="Search User Groups",
      *  @SWG\Parameter(
      *      name="userGroupId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by UserGroup Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="userGroup",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by UserGroup Name",
      *      type="string",
      *      required=false

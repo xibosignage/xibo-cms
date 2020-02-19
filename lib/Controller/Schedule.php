@@ -211,7 +211,7 @@ class Schedule extends Base
      *  @SWG\Parameter(
      *      name="displayGroupIds",
      *      description="The DisplayGroupIds to return the schedule for. Empty for All.",
-     *      in="formData",
+     *      in="query",
      *      type="array",
      *      @SWG\Items(
      *          type="integer"
@@ -219,14 +219,14 @@ class Schedule extends Base
      *  ),
      *  @SWG\Parameter(
      *      name="from",
-     *      in="formData",
+     *      in="query",
      *      required=true,
      *      type="integer",
      *      description="From Date Timestamp in Microseconds"
      *  ),
      *  @SWG\Parameter(
      *      name="to",
-     *      in="formData",
+     *      in="query",
      *      required=true,
      *      type="integer",
      *      description="To Date Timestamp in Microseconds"
@@ -465,7 +465,7 @@ class Schedule extends Base
      *  ),
      *  @SWG\Parameter(
      *      name="date",
-     *      in="formData",
+     *      in="query",
      *      required=true,
      *      type="string",
      *      description="Date in Y-m-d H:i:s"

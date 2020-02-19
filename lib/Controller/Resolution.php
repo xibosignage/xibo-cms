@@ -21,10 +21,10 @@
  */
 namespace Xibo\Controller;
 
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
 use baseDAO;
 use Kit;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\ResolutionFactory;
@@ -33,7 +33,6 @@ use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 
 /**
  * Class Resolution
@@ -94,21 +93,21 @@ class Resolution extends Base
      *  description="Search Resolutions this user has access to",
      *  @SWG\Parameter(
      *      name="resolutionId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Resolution Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="resolution",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Resolution Name",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="enabled",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Enabled",
      *      type="integer",
      *      required=false

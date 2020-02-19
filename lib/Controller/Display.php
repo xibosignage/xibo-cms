@@ -59,7 +59,6 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\PlayerActionServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\XMR\LicenceCheckAction;
 use Xibo\XMR\RekeyAction;
@@ -402,98 +401,98 @@ class Display extends Base
      *  description="Search Displays for this User",
      *  @SWG\Parameter(
      *      name="displayId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Display Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="displayGroupId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by DisplayGroup Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="display",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Display Name",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="macAddress",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Mac Address",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="hardwareKey",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Hardware Key",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="clientVersion",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Client Version",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="clientType",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Client Type",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="clientCode",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Client Code",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="embed",
-     *      in="formData",
+     *      in="query",
      *      description="Embed related data, namely displaygroups. A comma separated list of child objects to embed.",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="authorised",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by authorised flag",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="displayProfileId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Display Profile",
      *      type="integer",
      *      required=false
      *   ),
      *  *  @SWG\Parameter(
      *      name="mediaInventoryStatus",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Display Status ( 1 - up to date, 2 - downloading, 3 - Out of date)",
      *      type="integer",
      *      required=false
      *   ),
      *  *  @SWG\Parameter(
      *      name="loggedIn",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Logged In flag",
      *      type="integer",
      *      required=false
      *   ),
      *  *  @SWG\Parameter(
      *      name="lastAccessed",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Display Last Accessed date, expects date in Y-m-d H:i:s format",
      *      type="string",
      *      required=false

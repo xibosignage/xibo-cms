@@ -22,9 +22,9 @@
 namespace Xibo\Controller;
 
 use Psr\Container\ContainerInterface;
+use RobThree\Auth\TwoFactorAuth;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use RobThree\Auth\TwoFactorAuth;
 use Slim\Views\Twig;
 use Xibo\Entity\Campaign;
 use Xibo\Entity\Layout;
@@ -55,13 +55,12 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserTypeFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
-use Xibo\Helper\Random;
 use Xibo\Helper\QuickChartQRProvider;
+use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 
 /**
  * Class User
@@ -216,7 +215,7 @@ class User extends Base
         $this->getState()->setData([
             'userTypes' => $this->userTypeFactory->query()
         ]);
-        
+
         return $this->render($request, $response);
     }
 
@@ -251,7 +250,7 @@ class User extends Base
             'httpStatus' => 200,
             'data' => $this->getUser()
         ]);
-        
+
         return $this->render($request, $response);
     }
 
@@ -266,28 +265,28 @@ class User extends Base
      *  description="Search users",
      *  @SWG\Parameter(
      *      name="userId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by User Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="userName",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by User Name",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="userTypeId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by UserType Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="retired",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Retired",
      *      type="integer",
      *      required=false
@@ -567,7 +566,7 @@ class User extends Base
         if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin()) {
             throw new AccessDeniedException(__('Only super and group admins can create users'));
         }
-        
+
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Build a user entity and save it
         $user = $this->userFactory->create();
@@ -609,7 +608,7 @@ class User extends Base
         if ($group->isUserSpecific == 1) {
             throw new InvalidArgumentException(__('Invalid user group selected'), 'groupId');
         }
-        
+
         // Save the user
         $user->save();
 
@@ -622,7 +621,7 @@ class User extends Base
         if (!$user->checkViewable($this->pageFactory->getById($user->homePageId))) {
             throw new InvalidArgumentException(__('User does not have permission for this homepage'), 'homePageId');
         }
-        
+
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 201,
@@ -630,7 +629,7 @@ class User extends Base
             'id' => $user->userId,
             'data' => $user
         ]);
-        
+
         return $this->render($request, $response);
     }
 
@@ -813,7 +812,7 @@ class User extends Base
         if (!$this->getUser()->checkEditable($user)) {
             throw new AccessDeniedException();
         }
-        
+
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Build a user entity and save it
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
@@ -1805,7 +1804,7 @@ class User extends Base
      *     description="User preferences for non-state information, such as Layout designer zoom levels",
      *     @SWG\Parameter(
      *      name="preference",
-     *      in="formData",
+     *      in="query",
      *      description="An optional preference",
      *      type="string",
      *      required=false

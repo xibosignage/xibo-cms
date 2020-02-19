@@ -236,258 +236,258 @@
         {% autoescape "js" %}
             // TRANSLATIONS
             var editorsTrans = {
-                deleteTitle: "{% trans "Delete %obj%" %}",
-                deleteMultipleTitle: "{% trans "Delete selected elements" %}",
-                deleteConfirm: "{% trans "Are you sure? All changes related to this object will be erased" %}",
-                yes: "{% trans "Yes" %}",
-                no: "{% trans "No" %}",
-                selectAll: "{% trans "Select All" %}",
-                allChangesSaved: "{% trans "All changes saved!" %}",
-                back: "{% trans "Back" %}",
-                loadPropertyForObject: "{% trans "Load %prop% for %obj%" %}",
-                loading: "{% trans "Loading" %}",
-                resetTourNotification: "{% trans "Layout Designer Tour enabled!" %}",
-                tooltipsDisabled: "{% trans "Tooltips disabled!" %}",
-                tooltipsEnabled: "{% trans "Tooltips enabled!" %}",
-                publish: "{% trans "Publish" %}",
-                discard: "{% trans "Discard" %}"
+                deleteTitle: "{{ "Delete %obj%" |trans }}",
+                deleteMultipleTitle: "{{ "Delete selected elements" |trans }}",
+                deleteConfirm: "{{ "Are you sure? All changes related to this object will be erased" |trans }}",
+                yes: "{{ "Yes" |trans }}",
+                no: "{{ "No" |trans }}",
+                selectAll: "{{ "Select All" |trans }}",
+                allChangesSaved: "{{ "All changes saved!" |trans }}",
+                back: "{{ "Back" |trans }}",
+                loadPropertyForObject: "{{ "Load %prop% for %obj%" |trans }}",
+                loading: "{{ "Loading" |trans }}",
+                resetTourNotification: "{{ "Layout Designer Tour enabled!" |trans }}",
+                tooltipsDisabled: "{{ "Tooltips disabled!" |trans }}",
+                tooltipsEnabled: "{{ "Tooltips enabled!" |trans }}",
+                publish: "{{ "Publish" |trans }}",
+                discard: "{{ "Discard"|trans }}"
             };
 
             var uploadTrans = {
-                uploadMessage: "{% trans "Upload media" %}",
-                addFiles: "{% trans "Add files" %}",
-                startUpload: "{% trans "Start upload" %}",
-                cancelUpload: "{% trans "Cancel upload" %}",
-                processing: "{% trans "Processing..." %}",
-                viewLibrary: "{% trans "View Library" %}",
+                uploadMessage: "{{ "Upload media" |trans }}",
+                addFiles: "{{ "Add files" |trans }}",
+                startUpload: "{{ "Start upload" |trans }}",
+                cancelUpload: "{{ "Cancel upload" |trans }}",
+                processing: "{{ "Processing..." |trans }}",
+                viewLibrary: "{{ "View Library" |trans }}",
             };
 
             var deleteMenuTrans = {
-                mainMessage: "{% trans "Are you sure you want to remove this %obj%? This action cannot be undone." %}",
-                infoDeleteMessage: "{% trans "This widget is linked to Media in the Library which is also in use elsewhere. If this should be deleted then please do so from the Library page." %}",
-                deleteMediaFromLibraryTitle: "{% trans "Also delete from the Library?" %}",
-                deleteMediaFromLibraryMessage: "{% trans "This widget is linked to Media in the Library. Check this option to also delete that Media." %}",
-                deleteMultipleObjects: "{% trans "Are you sure you want to remove these elements? This action cannot be undone." %}"
+                mainMessage: "{{ "Are you sure you want to remove this %obj%? This action cannot be undone." |trans }}",
+                infoDeleteMessage: "{{ "This widget is linked to Media in the Library which is also in use elsewhere. If this should be deleted then please do so from the Library page." |trans }}",
+                deleteMediaFromLibraryTitle: "{{ "Also delete from the Library?" |trans }}",
+                deleteMediaFromLibraryMessage: "{{ "This widget is linked to Media in the Library. Check this option to also delete that Media." |trans }}",
+                deleteMultipleObjects: "{{ "Are you sure you want to remove these elements? This action cannot be undone."|trans }}"
             };
 
             var contextMenuTrans = {
-                editAudio: "{% trans "Edit Attached Audio" %}",
-                editExpiry: "{% trans "Edit Expiry Dates" %}",
-                editTransIn: "{% trans "Edit Transition In" %}",
-                editTransOut: "{% trans "Edit Transition Out" %}",
-                editPermissions: "{% trans "Edit Permissions" %}",
-                moveLeft: "{% trans "Move one step left" %}",
-                moveRight: "{% trans "Move one step right" %}",
-                moveTopLeft: "{% trans "Move to the top left" %}",
-                moveTopRight: "{% trans "Move to the top right" %}",
-                delete: "{% trans "Delete" %}"
+                editAudio: "{{ "Edit Attached Audio" |trans }}",
+                editExpiry: "{{ "Edit Expiry Dates" |trans }}",
+                editTransIn: "{{ "Edit Transition In"|trans }}",
+                editTransOut: "{{ "Edit Transition Out" |trans }}",
+                editPermissions: "{{ "Edit Permissions" |trans }}",
+                moveLeft: "{{ "Move one step left" |trans }}",
+                moveRight: "{{ "Move one step right" |trans }}",
+                moveTopLeft: "{{ "Move to the top left" |trans }}",
+                moveTopRight: "{{ "Move to the top right" |trans }}",
+                delete: "{{ "Delete"|trans }}"
             };
 
             var propertiesPanelTrans = {
-                width: "{% trans "Width" %}",
-                height: "{% trans "Height" %}",
-                scale: "{% trans "Scale" %}"
+                width: "{{ "Width" |trans }}",
+                height: "{{ "Height" |trans }}",
+                scale: "{{ "Scale"|trans }}"
             };
 
             var toolbarTrans = {
-                toolbarTagsMessage: "{% trans "%tagCount% tags" %}",
-                deleteObject: "{% trans "Delete selected %object%" %}",
-                selectMultipleWidgets: "{% trans "Select multiple widgets" %}",
-                changeLayout: "{% trans "Change Layout" %}",
-                options: "{% trans "Options" %}",
-                displayTooltipsName: "{% trans "Tooltips?" %}",
-                displayTooltipsTitle: "{% trans "Show/Hide Tooltips" %}",
-                resetTour: "{% trans "Show tour!" %}",
-                resetTourTitle: "{% trans "Show Layout Designer tour" %}",
-                createNewTab: "{% trans "Library Media Search" %}",
-                closeAllTabs: "{% trans "Close all tabs" %}",
-                actions: "{% trans "Actions" %}",
-                search: "{% trans "Search" %}",
-                add: "{% trans "Add" %}",
-                grab: "{% trans "Grab" %}",
-                addAsFavourite: "{% trans "Add as favourite" %}",
-                addedToFavourites: "{% trans "Module added to favourites!" %}",
-                moduleNavStart: "{% trans "Scroll to the start!" %}",
-                moduleNavEnd: "{% trans "Scroll to the end!" %}",
-                moduleNavLeft: "{% trans "Scroll left!" %}",
-                moduleNavRight: "{% trans "Scroll right!" %}",
-                removedFromFavourites: "{% trans "Module removed from favourites!" %}",
-                noResults: "{% trans "No results for the filter!" %}",
+                toolbarTagsMessage: "{{ "%tagCount% tags" |trans }}",
+                deleteObject: "{{ "Delete selected %object%" |trans }}",
+                selectMultipleWidgets: "{{ "Select multiple widgets" |trans }}",
+                changeLayout: "{{ "Change Layout" |trans }}",
+                options: "{{ "Options" |trans }}",
+                displayTooltipsName: "{{ "Tooltips?" |trans }}",
+                displayTooltipsTitle: "{{ "Show/Hide Tooltips" |trans }}",
+                resetTour: "{{ "Show tour!" |trans }}",
+                resetTourTitle: "{{ "Show Layout Designer tour" |trans }}",
+                createNewTab: "{{ "Library Media Search" |trans }}",
+                closeAllTabs: "{{ "Close all tabs" |trans }}",
+                actions: "{{ "Actions" |trans }}",
+                search: "{{ "Search" |trans }}",
+                add: "{{ "Add" |trans }}",
+                grab: "{{ "Grab" |trans }}",
+                addAsFavourite: "{{ "Add as favourite" |trans }}",
+                addedToFavourites: "{{ "Module added to favourites!" |trans }}",
+                moduleNavStart: "{{ "Scroll to the start!" |trans }}",
+                moduleNavEnd: "{{ "Scroll to the end!" |trans }}",
+                moduleNavLeft: "{{ "Scroll left!" |trans }}",
+                moduleNavRight: "{{ "Scroll right!" |trans }}",
+                removedFromFavourites: "{{ "Module removed from favourites!" |trans }}",
+                noResults: "{{ "No results for the filter!" |trans }}",
                 searchFilters: {
-                    name: "{% trans "Name" %}",
-                    tag: "{% trans "Tag" %}",
-                    type: "{% trans "Type" %}",
-                    owner: "{% trans "Owner" %}"
+                    name: "{{ "Name" |trans }}",
+                    tag: "{{ "Tag" |trans }}",
+                    type: "{{ "Type" |trans }}",
+                    owner: "{{ "Owner"|trans }}"
                 },
-                tabName: "{% trans "Library Search %tagId%" %}",
+                tabName: "{{ "Library Search %tagId%" |trans }}",
                 tableHeader: {
-                    toolsName: "{% trans "Tools" %}",
-                    id: "{% trans "Id"%}",
-                    name: "{% trans "Name"%}",
-                    type: "{% trans "Type"%}",
-                    tags: "{% trans "Tags"%}",
-                    thumbnail: "{% trans "Thumbnail"%}"
+                    toolsName: "{{ "Tools" |trans }}",
+                    id: "{{ "Id"|trans }}",
+                    name: "{{ "Name"|trans }}",
+                    type: "{{ "Type"|trans }}",
+                    tags: "{{ "Tags"|trans }}",
+                    thumbnail: "{{ "Thumbnail|trans"}}"
                 },
                 queue: {
-                    title: "{% trans "Media Add Queue"%}",
-                    clear: "{% trans "Clear Queue"%}",
-                    addToRegion: "{% trans "Add to Selected Region"%}",
-                    addToPlaylist: "{% trans "Add to Playlist"%}",
-                    selectRegion: "{% trans "Click in Region to Add"%}",
-                    cancel: "{% trans "Cancel"%}"
+                    title: "{{ "Media Add Queue"|trans }}",
+                    clear: "{{ "Clear Queue"|trans }}",
+                    addToRegion: "{{ "Add to Selected Region"|trans }}",
+                    addToPlaylist: "{{ "Add to Playlist"|trans }}",
+                    selectRegion: "{{ "Click in Region to Add"|trans }}",
+                    cancel: "{{ "Cancel|trans"}}"
                 },
                 menuItems: {
-                    toolsName: "{% trans "Tools" %}",
-                    toolsTitle: "{% trans "Layout Designer tools" %}",
-                    widgetsName: "{% trans "Widgets" %}",
-                    widgetsTitle: "{% trans "Layout Designer widgets" %}",
-                    libraryName: "{% trans "Library" %}",
-                    libraryTitle: "{% trans "Library search" %}"
+                    toolsName: "{{ "Tools" |trans }}",
+                    toolsTitle: "{{ "Layout Designer tools" |trans }}",
+                    widgetsName: "{{ "Widgets" |trans }}",
+                    widgetsTitle: "{{ "Layout Designer widgets" |trans }}",
+                    libraryName: "{{ "Library" |trans }}",
+                    libraryTitle: "{{ "Library search"|trans }}"
                 },
                 tools: {
                     region: {
-                        name: "{% trans "Region" %}",
-                        description: "{% trans "Add a Region" %}"
+                        name: "{{ "Region" |trans }}",
+                        description: "{{ "Add a Region"|trans }}"
                     },
                     audio: {
-                        name: "{% trans "Audio" %}",
-                        description: "{% trans "Upload Audio files to assign to Widgets" %}"
+                        name: "{{ "Audio" |trans }}",
+                        description: "{{ "Upload Audio files to assign to Widgets"|trans }}"
                     },
                     expiry: {
-                        name: "{% trans "Expiry Dates" %}",
-                        description: "{% trans "Enter start and end times for Widgets" %}"
+                        name: "{{ "Expiry Dates" |trans }}",
+                        description: "{{ "Enter start and end times for Widgets"|trans }}"
                     },
                     transitionIn: {
-                        name: "{% trans "Transition In" %}",
-                        description: "{% trans "Apply a Transition type for the start of a media item" %}"
+                        name: "{{ "Transition In" |trans }}",
+                        description: "{{ "Apply a Transition type for the start of a media item"|trans }}"
                     },
                     transitionOut: {
-                        name: "{% trans "Transition Out" %}",
-                        description: "{% trans "Apply a Transition type for the end of a media item" %}"
+                        name: "{{ "Transition Out" |trans }}",
+                        description: "{{ "Apply a Transition type for the end of a media item"|trans }}"
                     },
                     permissions: {
-                        name: "{% trans "Permissions" %}",
-                        description: "{% trans "Set View, Edit and Delete Permissions for Widgets and Regions" %}"
+                        name: "{{ "Permissions" |trans }}",
+                        description: "{{ "Set View, Edit and Delete Permissions for Widgets and Regions"|trans }}"
                     }
                 },
                 window: {
-                    drag: "{% trans "Move Window" %}",
-                    close: "{% trans "Close Window" %}",
-                    minimise: "{% trans "Minimise Window" %}",
-                    newTab: "{% trans "New Tab" %}"
+                    drag: "{{ "Move Window" |trans }}",
+                    close: "{{ "Close Window" |trans }}",
+                    minimise: "{{ "Minimise Window" |trans }}",
+                    newTab: "{{ "New Tab"|trans }}"
                 }
             };
 
             var topbarTrans = {
-                name: "{% trans "Name" %}",
-                nameDetail: "{% trans "Layout name" %}",
-                duration: "{% trans "Duration" %}",
-                durationDetail: "{% trans "Layout duration" %}",
-                dimensions: "{% trans "Dimensions" %}",
-                dimensionsDetail: "{% trans "Layout dimensions" %}"
+                name: "{{ "Name" |trans }}",
+                nameDetail: "{{ "Layout name" |trans }}",
+                duration: "{{ "Duration" |trans }}",
+                durationDetail: "{{ "Layout duration" |trans }}",
+                dimensions: "{{ "Dimensions" |trans }}",
+                dimensionsDetail: "{{ "Layout dimensions"|trans }}"
             };
 
             var historyManagerTrans = {
                 revert: {
-                    saveForm: "{% trans "Revert %target% form save" %}",
-                    order: "{% trans "Revert %target% order" %}",
-                    transform: "{% trans "Revert %target% transformation" %}",
-                    addWidget: "{% trans "Revert %target% creation" %}",
-                    addMedia: "{% trans "Revert %target% assignment" %}",
-                    create: "{% trans "Revert %target% creation" %}"
+                    saveForm: "{{ "Revert %target% form save" |trans }}",
+                    order: "{{ "Revert %target% order" |trans }}",
+                    transform: "{{ "Revert %target% transformation" |trans }}",
+                    addWidget: "{{ "Revert %target% creation" |trans }}",
+                    addMedia: "{{ "Revert %target% assignment" |trans }}",
+                    create: "{{ "Revert %target% creation"|trans }}"
                 }
             };
 
             var playlistAddFilesTrans = {
-                uploadMessage: "{% trans "Replace" %}",
-                addFiles: "{% trans "Add Replacement" %}",
-                startUpload: "{% trans "Start Replace" %}",
-                cancelUpload: "{% trans "Cancel Replace" %}",
-                processing: "{% trans "Processing..." %}",
+                uploadMessage: "{{ "Replace" |trans }}",
+                addFiles: "{{ "Add Replacement" |trans }}",
+                startUpload: "{{ "Start Replace" |trans }}",
+                cancelUpload: "{{ "Cancel Replace" |trans }}",
+                processing: "{{ "Processing..." |trans }}",
                 updateInLayouts: {
-                    title: "{% trans "Update this media in all layouts it is assigned to?" %}",
-                    helpText: "{% trans "Note: It will only be updated in layouts you have permission to edit." %}"
+                    title: "{{ "Update this media in all layouts it is assigned to?" |trans }}",
+                    helpText: "{{ "Note: It will only be updated in layouts you have permission to edit."|trans }}"
                 },
                 deleteOldRevisions: {
-                    title: "{% trans "Delete the old version?" %}",
-                    helpText: "{% trans "Completely remove the old version of this media item if a new file is being uploaded." %}"
+                    title: "{{ "Delete the old version?" |trans }}",
+                    helpText: "{{ "Completely remove the old version of this media item if a new file is being uploaded."|trans }}"
                 }
             };
 
             var errorMessagesTrans = {
-                error: "{% trans "ERROR" %}",
-                loadingLayout: "{% trans "There was a problem loading the Layout!" %}",
-                loadingPlaylist: "{% trans "There was a problem loading the Playlist!" %}",
-                userSavePreferencesFailed: "{% trans "User save preferences failed!" %}",
-                userLoadPreferencesFailed: "{% trans "User load preferences failed!" %}",
-                libraryLoadFailed: "{% trans "Library load failed!" %}",
-                formLoadFailed: "{% trans "Form load failed!" %}",
-                revertFailed: "{% trans "Revert failed: %error%" %}",
-                saveOrderFailed: "{% trans "Save order failed: %error%" %}",
-                deleteFailed: "{% trans "Object delete failed: %error%" %}",
-                saveAllChangesFailed: "{% trans "Save all changes failed!" %}",
-                removeAllChangesFailed: "{% trans "Remove all changes failed!!" %}",
-                addMediaFailed: "{% trans "Add media failed: %error%" %}",
-                addModuleFailed: "{% trans "Add module failed: %error%" %}",
-                createRegionFailed: "{% trans "Create region failed: %error%" %}",
-                listOrderNotChanged: "{% trans "List order not Changed!" %}",
-                playlistOrderSave: "{% trans "Playlist save order failed!" %}",
-                getFormFailed: "{% trans "Get form failed!" %}",
-                transformRegionFailed: "{% trans "Transform region failed!" %}",
-                previewFailed: "{% trans "Preview failed!" %}",
-                noWidgetsNeedSaving: "{% trans "No widgets need saving!" %}"
+                error: "{{ "ERROR" |trans }}",
+                loadingLayout: "{{ "There was a problem loading the Layout!" |trans }}",
+                loadingPlaylist: "{{ "There was a problem loading the Playlist!" |trans }}",
+                userSavePreferencesFailed: "{{ "User save preferences failed!" |trans }}",
+                userLoadPreferencesFailed: "{{ "User load preferences failed!" |trans }}",
+                libraryLoadFailed: "{{ "Library load failed!" |trans }}",
+                formLoadFailed: "{{ "Form load failed!" |trans }}",
+                revertFailed: "{{ "Revert failed: %error%" |trans }}",
+                saveOrderFailed: "{{ "Save order failed: %error%" |trans }}",
+                deleteFailed: "{{ "Object delete failed: %error%" |trans }}",
+                saveAllChangesFailed: "{{ "Save all changes failed!" |trans }}",
+                removeAllChangesFailed: "{{ "Remove all changes failed!!" |trans }}",
+                addMediaFailed: "{{ "Add media failed: %error%" |trans }}",
+                addModuleFailed: "{{ "Add module failed: %error%" |trans }}",
+                createRegionFailed: "{{ "Create region failed: %error%" |trans }}",
+                listOrderNotChanged: "{{ "List order not Changed!" |trans }}",
+                playlistOrderSave: "{{ "Playlist save order failed!" |trans }}",
+                getFormFailed: "{{ "Get form failed!" |trans }}",
+                transformRegionFailed: "{{ "Transform region failed!" |trans }}",
+                previewFailed: "{{ "Preview failed!" |trans }}",
+                noWidgetsNeedSaving: "{{ "No widgets need saving!"|trans }}"
             };
 
             var widgetStatusTrans = {
-                setToStart: "{% trans "Set to start" %}",
-                setToExpire: "{% trans "Set to expire" %}",
-                expired: "{% trans "Expired" %}",
-                deleteOnExpire: "{% trans "Delete on expire" %}"
+                setToStart: "{{ "Set to start" |trans }}",
+                setToExpire: "{{ "Set to expire" |trans }}",
+                expired: "{{ "Expired" |trans }}",
+                deleteOnExpire: "{{ "Delete on expire"|trans }}"
             };
 
             var datasetQueryBuilderTranslations = {
-                ascTitle: "{% trans "Ascending" %}",
-                descTitle: "{% trans "Descending" %}",
+                ascTitle: "{{ "Ascending" |trans }}",
+                descTitle: "{{ "Descending" |trans }}",
                 filterOptions: [
                     {
                         id: "starts-with",
-                        value: "{% trans "starts with" %}"
+                        value: "{{ "starts with"|trans }}"
                     }, {
                         id: "ends-with",
-                        value: "{% trans "ends with" %}"
+                        value: "{{ "ends with"|trans }}"
                     }, {
                         id: "contains",
-                        value: "{% trans "contains" %}"
+                        value: "{{ "contains"|trans }}"
                     }, {
                         id: "equals",
-                        value: "{% trans "equals" %}"
+                        value: "{{ "equals"|trans }}"
                     }, {
                         id: "not-starts-with",
-                        value: "{% trans "does not start with" %}"
+                        value: "{{ "does not start with"|trans }}"
                     }, {
                         id: "not-ends-with",
-                        value: "{% trans "does not end with" %}"
+                        value: "{{ "does not end with"|trans }}"
                     }, {
                         id: "not-contains",
-                        value: "{% trans "does not contain" %}"
+                        value: "{{ "does not contain"|trans }}"
                     }, {
                         id: "not-equals",
-                        value: "{% trans "does not equal" %}"
+                        value: "{{ "does not equal"|trans }}"
                     }, {
                         id: "greater-than",
-                        value: "{% trans "greater than" %}"
+                        value: "{{ "greater than"|trans }}"
                     }, {
                         id: "less-than",
-                        value: "{% trans "less than" %}"
+                        value: "{{ "less than"|trans }}"
                     }
                 ],
                 filterOperatorOptions: [
                     {
                         id: "OR",
-                        value: "{% trans "Or" %}"
+                        value: "{{ "Or"|trans }}"
                     }, {
                         id: "AND",
-                        value: "{% trans "And" %}"
+                        value: "{{ "And"|trans }}"
                     }
                 ]
             };
