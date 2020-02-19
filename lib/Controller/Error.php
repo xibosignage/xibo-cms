@@ -25,6 +25,8 @@ namespace Xibo\Controller;
 
 use League\OAuth2\Server\Exception\OAuthException;
 use Psr\Container\ContainerInterface;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\FormExpiredException;
@@ -38,8 +40,6 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\HelpServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
 
 /**
  * Class Error
@@ -103,7 +103,7 @@ class Error extends Base
     {
         $message = __('Not found');
 
-        switch ($request->getAttribute('name')) {
+        switch ($this->container->get('name')) {
 
             case 'web':
 
