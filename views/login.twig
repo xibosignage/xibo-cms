@@ -53,7 +53,9 @@
     <div class="container">
         {% if authCASEnabled %}
         <form id="cas-login-form" class="form-signin text-center" action="{{ url_for("cas.login") }}" method="post">
-            <input name="priorRoute" type="hidden" value="{{ flash.priorRoute }}" />
+            {% for priorRoute in flash('priorRoute') %}
+                <input name="priorRoute" type="hidden" value="{{ priorRoute }}" />
+            {% endfor %}
             <p><img class="login-logo" src="{{ theme.uri("img/xibologo.png") }}"></p>
 
             <p>{% trans  %}Connect with the Central Authentication Server{% endtrans %}</p>
@@ -66,7 +68,9 @@
         </form>
         {% else %}
         <form id="login-form" class="form-signin text-center" action="{{ url_for("login") }}" method="post">
-            <input name="priorRoute" type="hidden" value="{{ flash.priorRoute }}" />
+            {% for priorRoute in flash('priorRoute') %}
+                <input name="priorRoute" type="hidden" value="{{ priorRoute }}" />
+            {% endfor %}
             <input type="hidden" name="{{ csrfKey }}" value="{{ csrfToken }}" />
             <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ theme.uri("img/xibologo.png") }}"></a></p>
 
