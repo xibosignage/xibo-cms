@@ -184,6 +184,8 @@
         {% block javaScriptTemplates %}{% endblock %}
         {% block javaScript %}{% endblock %}
 
+        {% include "theme-javascript.twig" ignore missing %}
+
         {% include "user-welcome.twig" %}
 
     </body>
