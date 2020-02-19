@@ -30,7 +30,6 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Views\TwigMiddleware;
 use Xibo\Exception\UpgradePendingException;
 use Xibo\Factory\ContainerFactory;
-use Xibo\Helper\Environment;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
@@ -95,7 +94,14 @@ $twigMiddleware = TwigMiddleware::createFromContainer($app);
 $app->add(new RKA\Middleware\IpAddress(true, []));
 $app->add(new \Xibo\Middleware\Actions($app));
 $app->add(new \Xibo\Middleware\Theme($app));
-$app->add(new \Xibo\Middleware\WebAuthentication($app));
+
+if ($container->get('configService')->authentication != null) {
+    $authentication = $container->get('configService')->authentication;
+    $app->add(new $authentication($app));
+} else {
+    $app->add(new \Xibo\Middleware\WebAuthentication($app));
+}
+
 $app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\State($app));
 $app->add(new \Xibo\Middleware\Log($app));
@@ -104,13 +110,6 @@ $app->add(new \Xibo\Middleware\Xmr($app));
 
 $app->addRoutingMiddleware();
 
-
-/* TODO Authentication middleware
-if ($app->configService->authentication != null && $app->configService->authentication instanceof \Slim\Middleware)
-    $app->add($app->configService->authentication);
-else
-    $app->add(new \Xibo\Middleware\WebAuthentication());
-*/
 // Standard Xibo middleware
 // TODO, investigate if we still want to use csrf
 //$app->add(new \Xibo\Middleware\CsrfGuard());
