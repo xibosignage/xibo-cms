@@ -103,17 +103,13 @@ if ($container->get('configService')->authentication != null) {
 }
 
 $app->add(new \Xibo\Middleware\Storage($app));
+$app->add(new \Xibo\Middleware\CsrfGuard($app));
 $app->add(new \Xibo\Middleware\State($app));
 $app->add(new \Xibo\Middleware\Log($app));
 $app->add($twigMiddleware);
 $app->add(new \Xibo\Middleware\Xmr($app));
 
 $app->addRoutingMiddleware();
-
-// Standard Xibo middleware
-// TODO, investigate if we still want to use csrf
-//$app->add(new \Xibo\Middleware\CsrfGuard());
-
 
 // Handle additional Middleware
 \Xibo\Middleware\State::setMiddleWare($app);
