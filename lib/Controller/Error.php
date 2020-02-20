@@ -162,9 +162,12 @@ class Error extends Base
     {
         //$handled = $this->handledError($e);
         $message = $this->container->get('session')->get('exceptionMessage');
+        $exceptionClass = $this->container->get('session')->get('exceptionClass');
+        $priorRoute = $this->container->get('session')->get('priorRoute');
+
         // redirect to homepage (or login), if we are visiting this page with no errors to show
         // mostly for post phinx upgrade refresh.
-        if (!$message || $this->container->get('session')->isExpired() == 1) {
+        if (!$message || ( $this->container->get('session')->isExpired() == 1 && !in_array($priorRoute, $request->getAttribute('publicRoutes')) ) ) {
             return $response->withRedirect('/');
         }
 
@@ -186,8 +189,6 @@ class Error extends Base
                 } else {
                     // Template depending on whether one exists for the type of exception
                     // get the exception class
-                    $exceptionClass = $this->container->get('session')->get('exceptionClass');
-
                     $this->getLog()->debug('Loading error template ' . $exceptionClass);
 
                     if (file_exists(PROJECT_ROOT . '/views/' . $exceptionClass . '.twig')) {
@@ -204,6 +205,7 @@ class Error extends Base
                 $this->container->get('session')->unSet('exceptionMessage');
                 $this->container->get('session')->unSet('exceptionClass');
                 $this->container->get('session')->unSet('exceptionCode');
+                $this->container->get('session')->unSet('priorRoute');
                 $this->getState()->setCommitState(false);
 
                 return $this->render($request, $response);

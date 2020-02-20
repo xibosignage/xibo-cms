@@ -133,8 +133,10 @@ $customErrorHandler = function (Request $request, Throwable $exception, bool $di
         $session = $container->get('session');
         $logger = $container->get('logger');
 
+        $message = ( !empty($exception->getMessage()) ) ? $exception->getMessage() : __('Unexpected Error, please contact support.');
+
         // log the error
-        $logger->error('Error with message: ' . $exception->getMessage());
+        $logger->error('Error with message: ' . $message);
         $logger->debug('Error with trace: ' . $exception->getTraceAsString());
 
         $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($exception)));
@@ -146,9 +148,10 @@ $customErrorHandler = function (Request $request, Throwable $exception, bool $di
         if ($request->getUri()->getPath() != '/error') {
 
             // set data in session, this is handled and then cleared in Error Controller.
-            $session->set('exceptionMessage', $exception->getMessage());
+            $session->set('exceptionMessage', $message);
             $session->set('exceptionCode', $exception->getCode());
             $session->set('exceptionClass', $exceptionClass);
+            $session->set('priorRoute', $request->getUri()->getPath());
 
             return $response->withRedirect('/error');
         } else {
