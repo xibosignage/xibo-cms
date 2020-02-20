@@ -201,6 +201,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $layoutIds = isset($filterBy['layoutIds']) ? $filterBy['layoutIds'] : [];
         $mediaIds = isset($filterBy['mediaIds']) ? $filterBy['mediaIds'] : [];
         $campaignId = isset($filterBy['campaignId']) ? $filterBy['campaignId'] : null;
+        $eventTag = isset($filterBy['eventTag']) ? $filterBy['eventTag'] : null;
 
         // Limit
         $start = isset($filterBy['start']) ? $filterBy['start'] : null;
@@ -250,6 +251,12 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $body .= ' AND `stat`.type = \'widget\' AND IFNULL(`widget`.widgetId, 0) <> 0 ';
         } else if ($type == 'event') {
             $body .= ' AND `stat`.type = \'event\' ';
+        }
+
+        // Event Tag Filter
+        if ($eventTag) {
+            $body .= ' AND `stat`.tag = :eventTag';
+            $params['eventTag'] = $eventTag;
         }
 
         // Layout Filter
