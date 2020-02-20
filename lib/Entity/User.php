@@ -819,14 +819,15 @@ class User implements \JsonSerializable
         if ($options['validate'])
             $this->validate();
 
-        $this->getLog()->debug('Saving user. %s', $this);
+        $this->getLog()->debug('Saving user. ' . $this);
 
-        if ($this->userId == 0)
+        if ($this->userId == 0) {
             $this->add();
-        else if ($options['passwordUpdate'])
+        } else if ($options['passwordUpdate']) {
             $this->updatePassword();
-        else if ($this->hash() != $this->hash)
+        } else if ($this->hash() != $this->hash || $this->hasPropertyChanged('twoFactorRecoveryCodes')) {
             $this->update();
+        }
 
         // Save user options
         if ($options['saveUserOptions']) {
@@ -966,7 +967,7 @@ class User implements \JsonSerializable
      */
     private function update()
     {
-        $this->getLog()->debug('Update userId %d.', $this->userId);
+        $this->getLog()->debug('Update userId ' . $this->userId);
 
         $sql = 'UPDATE `user` SET UserName = :userName,
                   homePageId = :homePageId,

@@ -69,6 +69,9 @@ class Login extends Base
     /** @var Messages */
     private $flash;
 
+    /** @var Twig */
+    private $view;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -94,6 +97,7 @@ class Login extends Base
         $this->pool = $pool;
         $this->store = $store;
         $this->flash = $flash;
+        $this->view  = $view;
     }
 
     /**
@@ -169,7 +173,7 @@ class Login extends Base
                         'UserAgent' => $request->getHeader('User-Agent')
                     ]);
 
-                    $response->withRedirect('home');
+                    return $response->withRedirect($this->urlFor($request, 'home'));
                 } catch (NotFoundException $notFoundException) {
                     $this->getLog()->error('Valid nonce for non-existing user');
                     $this->flash->addMessageNow('login_message', __('This link has expired.'));
@@ -202,7 +206,7 @@ class Login extends Base
     {
         $parsedRequest = $this->getSanitizer($request->getParsedBody());
         $routeParser = RouteContext::fromRequest($request)->getRouteParser();
-        // $this->urlFor($request, 'login')
+
         // Capture the prior route (if there is one)
         $user = null;
         $redirect = 'login';
@@ -231,7 +235,8 @@ class Login extends Base
                 // check if 2FA is enabled
                 if ($user->twoFactorTypeId != 0) {
                     $_SESSION['tfaUsername'] = $user->userName;
-                    $response->withRedirect($routeParser->urlFor('tfa'));
+                    $this->flash->addMessage('priorRoute', $priorRoute);
+                    return $response->withRedirect($routeParser->urlFor('tfa'));
                 }
 
                 // We are logged in, so complete the login flow
@@ -473,7 +478,7 @@ class Login extends Base
         ob_start();
 
         // Render the template
-        $this->app->render('email-template.twig', ['config' => $this->getConfig(), 'subject' => $subject, 'body' => $body]);
+        echo $this->view->fetch('email-template.twig', ['config' => $this->getConfig(), 'subject' => $subject, 'body' => $body]);
 
         $body = ob_get_contents();
 
@@ -500,11 +505,12 @@ class Login extends Base
     public function twoFactorAuthForm(Request $request, Response $response)
     {
         if (!isset($_SESSION['tfaUsername'])) {
-            $this->flash->addMessageNow('login_message', __('Session has expired, please log in again'));
-            return $response->withRedirect('login');
+            $this->flash->addMessage('login_message', __('Session has expired, please log in again'));
+            return $response->withRedirect($this->urlFor($request, 'login'));
         }
 
         $user = $this->userFactory->getByName($_SESSION['tfaUsername']);
+        $message = '';
 
         // if our user has email two factor enabled, we need to send the email with code now
         if ($user->twoFactorTypeId === 1) {
@@ -569,22 +575,23 @@ class Login extends Base
                 '<p>' . __('You are receiving this email because two factor email authorisation is enabled in your CMS user account. If you did not make this request, please report this email to your administrator immediately.') . '</p>' . '<p>' . $code . '</p>');
 
             if (!$mail->send()) {
-                throw new ConfigurationException('Unable to send two factor code to ' . $user->email);
+                $message = __('Unable to send two factor code to email address associated with this user');
             } else {
-                $this->flash->addMessage('login_message',
-                    __('Two factor code email has been sent to your email address'));
+                $message =  __('Two factor code email has been sent to your email address');
+
+                // Audit Log
+                $this->getLog()->audit('User', $user->userId, 'Two Factor Code email sent', [
+                    'IPAddress' => $request->getAttribute('ip_address'),
+                    'UserAgent' => $request->getHeader('User-Agent')
+                ]);
             }
-
-            // Audit Log
-            $this->getLog()->audit('User', $user->userId, 'Two Factor Code email sent', [
-                'IPAddress' => $request->getAttribute('ip_address'),
-                'UserAgent' => $request->getHeader('User-Agent')
-            ]);
-
         }
 
         // Template
         $this->getState()->template = 'tfa';
+
+        // the flash message do not work well here - need to reload the page to see the message, hence the below
+        $this->getState()->setData(['message' => $message]);
 
         return $this->render($request, $response);
     }
@@ -602,6 +609,8 @@ class Login extends Base
         $result = false;
         $updatedCodes = [];
         $sanitizedParams = $this->getSanitizer($request->getParams());
+        // prior route
+        $priorRoute = ($sanitizedParams->getString('priorRoute'));
 
         if (isset($_POST['code'])) {
             $issuerSettings = $this->getConfig()->getSetting('TWOFACTOR_ISSUER');
@@ -625,19 +634,22 @@ class Login extends Base
             $codes = $user->twoFactorRecoveryCodes;
 
             foreach (json_decode($codes) as $code) {
+
                 // if the provided recovery code matches one stored in the database, we want to log in the user
-                if ($sanitizedParams->getString($code) === $sanitizedParams->getString('recoveryCode')) {
+                if ($code === $sanitizedParams->getString('recoveryCode')) {
                     $result = true;
                 }
 
-                if ($sanitizedParams->getString($code) !== $sanitizedParams->getString('recoveryCode')) {
-                    $updatedCodes[] = $sanitizedParams->getString($code);
+                if ($code !== $sanitizedParams->getString('recoveryCode')) {
+                    $updatedCodes[] = $code;
                 }
 
             }
             // recovery codes are one time use, as such we want to update user recovery codes and remove the one that was just used.
             $user->updateRecoveryCodes(json_encode($updatedCodes));
         }
+
+        $redirect = ($priorRoute == '' || $priorRoute == '/' || stripos($priorRoute, $this->urlFor($request,'login'))) ? $this->urlFor($request,'home') : $priorRoute;
 
         if ($result) {
             // We are logged in at this point
@@ -648,11 +660,11 @@ class Login extends Base
             //unset the session tfaUsername
             unset($_SESSION['tfaUsername']);
 
-            return $response->withRedirect('home');
+            return $response->withRedirect($redirect);
         } else {
             $this->getLog()->error('Authentication code incorrect, redirecting to login page');
-            $this->flash->addMessageNow('login_message', __('Authentication code incorrect'));
-            return $response->withRedirect('login');
+            $this->flash->addMessage('login_message', __('Authentication code incorrect'));
+            return $response->withRedirect($this->urlFor($request, 'login'));
         }
     }
 
