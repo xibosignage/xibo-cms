@@ -92,6 +92,7 @@
         {% if passwordReminderEnabled %}
         <form id="reminder-form" class="form-signin text-center hidden" action="{{ url_for("login.forgotten") }}" method="post">
             <input type="hidden" name="{{ csrfKey }}" value="{{ csrfToken }}" />
+            <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ theme.uri("img/xibologo.png") }}"></a></p>
 
             <p>{% trans "Please provide your user name" %}</p>
             <input id="username" class="form-control input-block-level" name="username" type="text" placeholder="{% trans "User" %}">
