@@ -57,6 +57,11 @@ class Actions implements Middleware
         $app = $this->app;
         $container = $app->getContainer();
         $container->get('configService')->setDependencies($container->get('store'), $app->rootUri);
+        // Get the current route pattern
+        $routeContext = RouteContext::fromRequest($request);
+        $route = $routeContext->getRoute();
+        $resource = $route->getPattern();
+        $routeParser = $app->getRouteCollector()->getRouteParser();
 
         // Process Actions
         if (!Environment::migrationPending() && $container->get('configService')->getSetting('DEFAULTS_IMPORTED') == 0) {
@@ -138,19 +143,13 @@ class Actions implements Middleware
 
                 // User notifications
                 $notifications = array_merge($notifications, $factory->getMine());
-
-                // Get the current route pattern
-                $routeContext = RouteContext::fromRequest($request);
-                $route = $routeContext->getRoute();
-                $resource = $route->getPattern();
-
                 // If we aren't already in a notification interrupt, then check to see if we should be
-                if ($resource != '/drawer/notification/interrupt/:id' && !$this->isAjax($request)) {
+                if ($resource != '/drawer/notification/interrupt/:id' && !$this->isAjax($request) && $container->get('session')->isExpired() != 1) {
                     foreach ($notifications as $notification) {
                         /** @var UserNotification $notification */
                         if ($notification->isInterrupt == 1 && $notification->read == 0) {
-                         //   $app->flash('interruptedUrl', $app->request()->getResourceUri());
-                            $app->redirect($route, 'notification.interrupt', ['id' => $notification->notificationId]);
+                            $container->get('flash')->addMessage('interruptedUrl', $resource);
+                            return $handler->handle($request)->withHeader('Location', $routeParser->urlFor('notification.interrupt', ['id' => $notification->notificationId]));
                         }
                     }
                 }
@@ -162,12 +161,8 @@ class Actions implements Middleware
             }
         }
 
-        $routeContext = RouteContext::fromRequest($request);
-        $route = $routeContext->getRoute();
-        $resource = $route->getPattern();
-
         if (!$this->isAjax($request) && $container->get('user')->isPasswordChangeRequired == 1 && $resource != '/user/page/password') {
-            $app->redirect($route,'user.force.change.password.page');
+            return $handler->handle($request)->withHeader('Location', $routeParser->urlFor('user.force.change.password.page'));
         }
 
         return $handler->handle($request);
