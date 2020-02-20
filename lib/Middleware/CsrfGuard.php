@@ -99,6 +99,15 @@ class CsrfGuard implements Middleware
                 // Checking CSRF
                 $userToken = $request->getHeaderLine('X-XSRF-TOKEN');
 
+                if ($userToken == '') {
+                    $parsedBody = $request->getParsedBody();
+                    foreach ($parsedBody as $param => $value) {
+                        if ($param == $this->key) {
+                            $userToken = $value;
+                        }
+                    }
+                }
+
                 if ($token !== $userToken) {
                     throw new InvalidArgumentException(__('Sorry the form has expired. Please refresh.'), 'token');
                 }
