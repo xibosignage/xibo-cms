@@ -542,14 +542,14 @@ class Notification extends Base
         $notification->nonusers = $sanitizedParams->getString('nonusers');
 
         // Displays and Users to link
-        foreach ($sanitizedParams->getIntArray('displayGroupIds') as $displayGroupId) {
+        foreach ($sanitizedParams->getIntArray('displayGroupIds', ['default' => [] ]) as $displayGroupId) {
             $notification->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
 
             // Notify (don't collect)
             $this->displayNotifyService->collectLater()->notifyByDisplayGroupId($displayGroupId);
         }
 
-        foreach ($sanitizedParams->getIntArray('userGroupIds') as $userGroupId) {
+        foreach ($sanitizedParams->getIntArray('userGroupIds', ['default' => [] ]) as $userGroupId) {
             $notification->assignUserGroup($this->userGroupFactory->getById($userGroupId));
         }
 
