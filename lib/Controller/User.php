@@ -1145,10 +1145,10 @@ class User extends Base
         $user->email = $sanitizedParams->getString('email');
         $user->twoFactorTypeId = $sanitizedParams->getInt('twoFactorTypeId');
         $code = $sanitizedParams->getString('code');
-        $recoveryCodes = $sanitizedParams->getArray('twoFactorRecoveryCodes');
+        $recoveryCodes = $sanitizedParams->getString('twoFactorRecoveryCodes');
 
-        if ($recoveryCodes != null || $recoveryCodes != []) {
-            $user->twoFactorRecoveryCodes = json_decode($sanitizedParams->getArray('twoFactorRecoveryCodes'));
+        if ($recoveryCodes != null) {
+            $user->twoFactorRecoveryCodes = json_decode($recoveryCodes);
         }
 
         // check if we have a new password provided, if so check if it was correctly entered
@@ -1305,13 +1305,17 @@ class User extends Base
 
     /**
      * @param Request $request
-     * @return array
-     * @throws \Exception
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ConfigurationException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function tfaRecoveryGenerate(Request $request)
+    public function tfaRecoveryGenerate(Request $request, Response $response)
     {
         $user = $this->getUser();
-        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // clear any existing codes when we generate new ones
         $user->twoFactorRecoveryCodes = [];
@@ -1320,7 +1324,6 @@ class User extends Base
         $codes = [];
 
         for ($i = 0; $i < $count; $i++) {
-            // TODO sanitizer?
             $codes[] = Random::generateString(50);
         }
 
@@ -1330,7 +1333,7 @@ class User extends Base
             'codes' => json_encode($codes, JSON_PRETTY_PRINT)
         ]);
 
-        return $codes;
+        return $this->render($request, $response);
     }
 
     /**

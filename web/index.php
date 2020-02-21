@@ -30,7 +30,6 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Views\TwigMiddleware;
 use Xibo\Exception\UpgradePendingException;
 use Xibo\Factory\ContainerFactory;
-use Xibo\Helper\Environment;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
@@ -95,26 +94,22 @@ $twigMiddleware = TwigMiddleware::createFromContainer($app);
 $app->add(new RKA\Middleware\IpAddress(true, []));
 $app->add(new \Xibo\Middleware\Actions($app));
 $app->add(new \Xibo\Middleware\Theme($app));
-$app->add(new \Xibo\Middleware\WebAuthentication($app));
+
+if ($container->get('configService')->authentication != null) {
+    $authentication = $container->get('configService')->authentication;
+    $app->add(new $authentication($app));
+} else {
+    $app->add(new \Xibo\Middleware\WebAuthentication($app));
+}
+
 $app->add(new \Xibo\Middleware\Storage($app));
+$app->add(new \Xibo\Middleware\CsrfGuard($app));
 $app->add(new \Xibo\Middleware\State($app));
 $app->add(new \Xibo\Middleware\Log($app));
 $app->add($twigMiddleware);
 $app->add(new \Xibo\Middleware\Xmr($app));
 
 $app->addRoutingMiddleware();
-
-
-/* TODO Authentication middleware
-if ($app->configService->authentication != null && $app->configService->authentication instanceof \Slim\Middleware)
-    $app->add($app->configService->authentication);
-else
-    $app->add(new \Xibo\Middleware\WebAuthentication());
-*/
-// Standard Xibo middleware
-// TODO, investigate if we still want to use csrf
-//$app->add(new \Xibo\Middleware\CsrfGuard());
-
 
 // Handle additional Middleware
 \Xibo\Middleware\State::setMiddleWare($app);
@@ -138,8 +133,10 @@ $customErrorHandler = function (Request $request, Throwable $exception, bool $di
         $session = $container->get('session');
         $logger = $container->get('logger');
 
+        $message = ( !empty($exception->getMessage()) ) ? $exception->getMessage() : __('Unexpected Error, please contact support.');
+
         // log the error
-        $logger->error('Error with message: ' . $exception->getMessage());
+        $logger->error('Error with message: ' . $message);
         $logger->debug('Error with trace: ' . $exception->getTraceAsString());
 
         $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($exception)));
@@ -151,9 +148,10 @@ $customErrorHandler = function (Request $request, Throwable $exception, bool $di
         if ($request->getUri()->getPath() != '/error') {
 
             // set data in session, this is handled and then cleared in Error Controller.
-            $session->set('exceptionMessage', $exception->getMessage());
+            $session->set('exceptionMessage', $message);
             $session->set('exceptionCode', $exception->getCode());
             $session->set('exceptionClass', $exceptionClass);
+            $session->set('priorRoute', $request->getUri()->getPath());
 
             return $response->withRedirect('/error');
         } else {
