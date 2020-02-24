@@ -322,6 +322,7 @@ class Stats extends Base
         $statDate = $this->getSanitizer()->getDate('statDate');
         $statId = $this->getSanitizer()->getString('statId');
         $campaignId = $this->getSanitizer()->getInt('campaignId');
+        $eventTag = $this->getSanitizer()->getString('eventTag');
 
         $start = $this->getSanitizer()->getInt('start', 0);
         $length = $this->getSanitizer()->getInt('length', 10);
@@ -378,6 +379,7 @@ class Stats extends Base
                 'statDate' => $statDate,
                 'statId' => $statId,
                 'campaignId' => $campaignId,
+                'eventTag' => $eventTag,
                 'start' => $start,
                 'length' => $length,
             ]);
