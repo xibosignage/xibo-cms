@@ -360,7 +360,7 @@ class DisplayProfile extends Base
         // Get the Player Version for this display profile type
         if ($versionId !== null) {
             try {
-                $playerVersions[] = $this->playerVersionFactory->getByMediaId($versionId, $request);
+                $playerVersions[] = $this->playerVersionFactory->getByMediaId($versionId);
             } catch (NotFoundException $e) {
                 $this->getLog()->debug('Unknown versionId set on Display Profile. ' . $displayProfile->displayProfileId);
             }

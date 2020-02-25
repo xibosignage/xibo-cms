@@ -1323,18 +1323,16 @@ class Module extends Base
     }
 
     /**
-     * @param Request $request
-     * @param Response $response
      * @param $type
      * @param $templateId
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
      */
-    public function getTemplateImage(Request $request, Response $response, $type, $templateId)
+    public function getTemplateImage($type, $templateId)
     {
         $module = $this->moduleFactory->create($type);
 
-        $response = $module->getTemplateImage($request, $response, $templateId);
+        $response = $module->getTemplateImage($templateId);
 
         $this->setNoOutput(true);
 

@@ -125,31 +125,5 @@ class Theme implements Middleware
         ];
         $view['ckeditorConfig'] = $container->get('\Xibo\Controller\Library')->fontCKEditorConfig($request);
         $view['version'] = Environment::$WEBSITE_VERSION_NAME;
-
-
-        /*
-        $container->get('view')->appendData(array(
-            'baseUrl' => $routeParser->urlFor('home'),
-            'logoutUrl' => $routeParser->urlFor((empty($app->logoutRoute)) ? 'logout' : $app->logoutRoute),
-            'route' => $routeName,
-            'theme' => $container->get('configService'),
-            'settings' => $settings,
-            'helpService' => $container->get('helpService'),
-            'translate' => [
-                'locale' => Translate::GetLocale(),
-                'jsLocale' => Translate::getRequestedJsLocale(),
-                'jsShortLocale' => Translate::getRequestedJsLocale(['short' => true])
-            ],
-            'translations' => '{}',
-            'libraryUpload' => [
-                'maxSize' => ByteFormatter::toBytes(Environment::getMaxUploadSize()),
-                'maxSizeMessage' => sprintf(__('This form accepts files up to a maximum size of %s'), Environment::getMaxUploadSize()),
-                'validExt' => implode('|', $container->get('moduleFactory')->getValidExtensions()),
-                'validImageExt' => implode('|', $container->get('moduleFactory')->getValidExtensions(['type' => 'image']))
-            ],
-            'ckeditorConfig' => $container->get('\Xibo\Controller\Library')->setApp($app, false)->fontCKEditorConfig(),
-            'version' => Environment::$WEBSITE_VERSION_NAME
-        ));
-        */
     }
 }
