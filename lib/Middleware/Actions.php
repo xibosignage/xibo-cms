@@ -144,12 +144,16 @@ class Actions implements Middleware
                 // User notifications
                 $notifications = array_merge($notifications, $factory->getMine());
                 // If we aren't already in a notification interrupt, then check to see if we should be
-                if ($resource != '/drawer/notification/interrupt/:id' && !$this->isAjax($request) && $container->get('session')->isExpired() != 1) {
+                if ($resource != '/drawer/notification/interrupt/{id}' && !$this->isAjax($request) && $container->get('session')->isExpired() != 1) {
                     foreach ($notifications as $notification) {
                         /** @var UserNotification $notification */
                         if ($notification->isInterrupt == 1 && $notification->read == 0) {
                             $container->get('flash')->addMessage('interruptedUrl', $resource);
-                            return $handler->handle($request)->withHeader('Location', $routeParser->urlFor('notification.interrupt', ['id' => $notification->notificationId]));
+                            return $handler->handle($request)
+                                ->withHeader('Location', $routeParser->urlFor('notification.interrupt', ['id' => $notification->notificationId]))
+                                ->withHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+                                ->withHeader('Pragma',' no-cache')
+                                ->withHeader('Expires',' 0');
                         }
                     }
                 }
