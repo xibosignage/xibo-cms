@@ -544,8 +544,8 @@ $app->delete('/playersoftware/{id}', ['\Xibo\Controller\PlayerSoftware','delete'
 // Install
 $app->get('/sssp_config.xml', ['\Xibo\Controller\PlayerSoftware','getSsspInstall'])->setName('playersoftware.sssp.install');
 $app->get('/sssp_dl.wgt', ['\Xibo\Controller\PlayerSoftware','getSsspInstallDownload'])->setName('playersoftware.sssp.install.download');
-$app->get('/playersoftware/nonce/sssp_config.xml', ['\Xibo\Controller\PlayerSoftware','getSssp'])->setName('playersoftware.sssp');
-$app->get('/playersoftware/nonce/sssp_dl.wgt', ['\Xibo\Controller\PlayerSoftware','getVersionFile'])->setName('playersoftware.version.file');
+$app->get('/playersoftware/{nonce}/sssp_config.xml', ['\Xibo\Controller\PlayerSoftware','getSssp'])->setName('playersoftware.sssp');
+$app->get('/playersoftware/{nonce}/sssp_dl.wgt', ['\Xibo\Controller\PlayerSoftware','getVersionFile'])->setName('playersoftware.version.file');
 
 
 /**
