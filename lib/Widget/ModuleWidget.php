@@ -57,6 +57,7 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\HttpCacheProvider;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -1164,9 +1165,11 @@ abstract class ModuleWidget implements ModuleInterface
             // Get the name with library
             $attachmentName = $sanitizedParams->getString('attachment', ['default' => (($attachment == null) ? $media->storedAs : $attachment)]);
 
-            // Issue some headers TODO
-           //$this->getApp()->etag($media->md5);
-           // $this->getApp()->expires('+1 week');
+            /** @var $httpCache HttpCacheProvider*/
+            $httpCache = $this->container->get('httpCache');
+            // Issue some headers
+            $response = $httpCache->withEtag($response, $media->md5);
+            $response = $httpCache->withExpires($response,'+1 week');
 
             $headers['Content-Type'] = 'application/octet-stream';
             $headers['Content-Transfer-Encoding'] = 'Binary';
@@ -1202,7 +1205,6 @@ abstract class ModuleWidget implements ModuleInterface
                 $response = $response->withHeader($header, $value);
             }
             return $response;
-            //return $response->withFile($libraryPath);
         }
     }
 
@@ -1330,13 +1332,11 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Download an image for this template
-     * @param \Slim\Http\ServerRequest $request
-     * @param \Slim\Http\Response $response
      * @param string $templateId
      * @return ResponseInterface
      * @throws \Xibo\Exception\NotFoundException
      */
-    public function getTemplateImage(Request $request, Response $response, string $templateId): ResponseInterface
+    public function getTemplateImage(string $templateId): ResponseInterface
     {
         $template = $this->getTemplateById($templateId);
 

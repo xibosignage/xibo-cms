@@ -109,8 +109,9 @@ class State implements Middleware
             }
 
             // Check to see if the instance has been suspended, if so call the special route
-            if ($container->get('configService')->getSetting('INSTANCE_SUSPENDED') == 1)
+            if ($container->get('configService')->getSetting('INSTANCE_SUSPENDED') == 1) {
                 throw new InstanceSuspendedException();
+            }
 
             // Get to see if upgrade is pending, we don't want to throw this when we are on error page, causes redirect problems with error handler.
             if (Environment::migrationPending() && $request->getUri()->getPath() != '/error') {
@@ -118,7 +119,7 @@ class State implements Middleware
             }
 
             // Reset the ETAGs for GZIP
-            $requestEtag = $request->getHeader('IF_NONE_MATCH');
+            $requestEtag = $request->getHeaderLine('IF_NONE_MATCH');
             if ($requestEtag) {
                 $response = $response->withHeader('IF_NONE_MATCH', str_replace('-gzip', '', $requestEtag));
             }
@@ -713,7 +714,8 @@ class State implements Middleware
                     $c->get('scheduleFactory'),
                     $c->get('dayPartFactory'),
                     $c->get('playerVersionFactory'),
-                    $c->get('view')
+                    $c->get('view'),
+                    $c->get('httpCache')
                 );
             },
             '\Xibo\Controller\Logging' => function(ContainerInterface $c) {
