@@ -186,11 +186,11 @@ class State implements Middleware
         // Set some public routes
         $request = $request->withAttribute('publicRoutes', [
             '/login', '/login/forgotten', '/clock', '/about', '/login/ping',
-            '/rss/:psk',
+            '/rss/{psk}',
             '/sssp_config.xml',
             '/sssp_dl.wgt',
-            '/playersoftware/:nonce/sssp_dl.wgt',
-            '/playersoftware/:nonce/sssp_config.xml',
+            '/playersoftware/{nonce}/sssp_dl.wgt',
+            '/playersoftware/{nonce}/sssp_config.xml',
             '/tfa',
             '/error',
             '/notFound'
