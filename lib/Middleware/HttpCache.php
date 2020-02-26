@@ -35,9 +35,6 @@ use Slim\App as App;
  */
 class HttpCache implements Middleware
 {
-    /* @var App $app */
-    private $app;
-
     /**
      * Cache-Control type (public or private)
      *
@@ -59,9 +56,8 @@ class HttpCache implements Middleware
      */
     protected $mustRevalidate;
 
-    public function __construct($app, $type = 'private', $maxAge = 86400, $mustRevalidate = false)
+    public function __construct($type = 'private', $maxAge = 86400, $mustRevalidate = false)
     {
-        $this->app = $app;
         $this->type = $type;
         $this->maxAge = $maxAge;
         $this->mustRevalidate = $mustRevalidate;

@@ -101,7 +101,7 @@ if ($container->get('configService')->authentication != null) {
 } else {
     $app->add(new \Xibo\Middleware\WebAuthentication($app));
 }
-$app->add(new Xibo\Middleware\HttpCache($app, 'public', 86400));
+$app->add(new Xibo\Middleware\HttpCache());
 $app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\CsrfGuard($app));
 $app->add(new \Xibo\Middleware\State($app));
