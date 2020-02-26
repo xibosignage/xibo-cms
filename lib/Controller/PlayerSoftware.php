@@ -470,7 +470,7 @@ class PlayerSoftware extends Base
                 ->withHeader('Content-Type', 'application/xml')
                 ->write($xml);
         } else {
-            return $response->withRedirect('/notFound');
+            return $response->withStatus(404);
         }
 
         $this->setNoOutput(true);
@@ -505,7 +505,7 @@ class PlayerSoftware extends Base
             $response = $widget->download($request, $response);
 
         } else {
-            return $response->withRedirect('/notFound');
+            return $response->withStatus(404);
         }
 
         $this->setNoOutput(true);
@@ -562,7 +562,7 @@ class PlayerSoftware extends Base
             $xml = $this->outputSsspXml($versionInformation->version . '.' . $versionInformation->code, $media->fileSize);
             $response = $response->write($xml);
         } else {
-            return  $response->withStatus(404);
+            return $response->withStatus(404);
         }
 
         $this->setNoOutput(true);
@@ -606,7 +606,7 @@ class PlayerSoftware extends Base
             $widget = $this->moduleFactory->createWithMedia($media);
             $response = $widget->download($request, $response);
         } else {
-            return  $response->withStatus(404);
+            return $response->withStatus(404);
         }
 
         $this->setNoOutput(true);
@@ -617,7 +617,7 @@ class PlayerSoftware extends Base
      * Output the SSSP XML
      * @param $version
      * @param $size
-     * @param $widgetName
+     * @return string
      */
     private function outputSsspXml($version, $size)
     {
