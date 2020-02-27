@@ -176,6 +176,9 @@ class ContainerFactory
                     $c->get('logService')
                 );
                 return $imageProcessingService;
+            },
+            'httpCache' => function() {
+                return new \Xibo\Helper\HttpCacheProvider();
             }
         ]);
 

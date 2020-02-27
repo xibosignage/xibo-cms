@@ -21,6 +21,7 @@
  */
 namespace Xibo\Middleware;
 
+use League\OAuth2\Server\CryptKey;
 use League\OAuth2\Server\Grant\AuthCodeGrant;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -67,7 +68,8 @@ class ApiAuthorizationOAuth implements Middleware
 
             // API Keys
             $apiKeyPaths = $container->get('configService')->apiKeyPaths;
-            $privateKey = $apiKeyPaths['privateKeyPath'];
+            // TODO this is temporary solution to remove the notice from API responses - ultimately we should have them with correct permissions (600, 660) and we should check it here.
+            $privateKey = new CryptKey($apiKeyPaths['privateKeyPath'], null, false);
             $encryptionKey = $apiKeyPaths['encryptionKey'];
 
             try {

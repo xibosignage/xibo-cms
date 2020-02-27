@@ -101,7 +101,7 @@ if ($container->get('configService')->authentication != null) {
 } else {
     $app->add(new \Xibo\Middleware\WebAuthentication($app));
 }
-
+$app->add(new Xibo\Middleware\HttpCache());
 $app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\CsrfGuard($app));
 $app->add(new \Xibo\Middleware\State($app));
@@ -126,7 +126,7 @@ $customErrorHandler = function (Request $request, Throwable $exception, bool $di
 
     if ($exception->getCode() == 404) {
         $app->getContainer()->get('logger')->debug(sprintf('Page Not Found. %s', $request->getUri()->getPath()));
-        return $response->withRedirect('/notFound');
+        return $response = $response->withRedirect('/notFound');
     } else {
         $container = $app->getContainer();
         /** @var \Xibo\Helper\Session $session */
@@ -153,7 +153,7 @@ $customErrorHandler = function (Request $request, Throwable $exception, bool $di
             $session->set('exceptionClass', $exceptionClass);
             $session->set('priorRoute', $request->getUri()->getPath());
 
-            return $response->withRedirect('/error');
+            return $response = $response->withRedirect('/error');
         } else {
             // this should only happen when there is an error in Middleware or if something went horribly wrong.
             $mode = $container->get('configService')->getSetting('SERVER_MODE');
@@ -168,14 +168,14 @@ $customErrorHandler = function (Request $request, Throwable $exception, bool $di
 
             // attempt to render a twig template in this application state will not go well
             // as such return simple json response, with trace if the application is in test mode.
-            return $response->withJson(['error' => $message]);
+            return $response = $response->withJson(['error' => $message]);
         }
     }
 };
 
 // Add Error Middleware
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
-//$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
+$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
 
 // All application routes
 require PROJECT_ROOT . '/lib/routes-web.php';

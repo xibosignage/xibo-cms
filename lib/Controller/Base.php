@@ -515,11 +515,11 @@ class Base
             }
 */
             // Enveloped responses always return 200
-           $response->withStatus(200);
+           $response = $response->withStatus(200);
         } else {
             // Don't envelope
             // Set status
-            $response->withStatus($data['status']);
+            $response = $response->withStatus($data['status']);
 
             // Are we successful?
             if (!$data['success']) {
@@ -562,8 +562,9 @@ class Base
                     // The first page
                     $linkHeader .= '<' . $url . '?start=0&length=' . $size . '>; rel="first"';
 
-                    $response->withHeader('X-Total-Count', $totalRows);
-                    $response->withHeader('Link', $linkHeader);
+                    $response = $response
+                        ->withHeader('X-Total-Count', $totalRows)
+                        ->withHeader('Link', $linkHeader);
                 } else {
                     // Set the response to our data object
                     $data = $data['data'];
@@ -579,8 +580,9 @@ class Base
             $app->response()->body(json_encode($response, JSON_PRETTY_PRINT));
         }
         */
+        $response = $response->withJson($data);
 
-        return $response->withJson($data);
+        return $response;
 
     }
 }

@@ -58,6 +58,7 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Environment;
+use Xibo\Helper\HttpCacheProvider;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\XiboUploadHandler;
 use Xibo\Service\ConfigServiceInterface;
@@ -148,6 +149,9 @@ class Library extends Base
     /** @var  DayPartFactory */
     private $dayPartFactory;
 
+    /** @var HttpCacheProvider */
+    private $cacheProvider;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -177,8 +181,9 @@ class Library extends Base
      * @param DayPartFactory $dayPartFactory
      * @param PlayerVersionFactory $playerVersionFactory
      * @param Twig $view
+     * @param HttpCacheProvider $cacheProvider
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $dispatcher, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory, $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $dispatcher, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory, $view, HttpCacheProvider $cacheProvider)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
@@ -201,6 +206,7 @@ class Library extends Base
         $this->scheduleFactory = $scheduleFactory;
         $this->dayPartFactory = $dayPartFactory;
         $this->playerVersionFactory = $playerVersionFactory;
+        $this->cacheProvider = $cacheProvider;
     }
 
     /**
@@ -1444,7 +1450,7 @@ class Library extends Base
      * Return the CMS flavored font css
      * @param Request $request
      * @param Response $response
-     * @return Response
+     * @return \Psr\Http\Message\ResponseInterface
      * @throws XiboException
      */
     public function fontCss(Request $request, Response $response)
@@ -1452,8 +1458,12 @@ class Library extends Base
         // Regenerate the CSS for fonts
         $css = $this->installFonts(['invalidateCache' => false], $request);
 
-        // Work out the etag TODO slim/httpCache most likely needed
-       // $response->etag(md5($css['css']));
+        // Work out the etag
+        /** @var $httpCache HttpCacheProvider*/
+        $httpCache = $this->cacheProvider;
+        // Issue some headers
+        $response = $httpCache->withEtag($response, md5($css['css']));
+        $response = $response->withHeader('Content-Type', 'text/css');
 
         // Return the CSS to the browser as a file
         $out = fopen('php://output', 'w');
@@ -1462,7 +1472,7 @@ class Library extends Base
 
         $this->setNoOutput(true);
 
-        return $response->withStatus(200)->withHeader('Content-Type', 'text/css');
+        return $this->render($request, $response);
     }
 
     /**

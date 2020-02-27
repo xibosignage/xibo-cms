@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "33be3b0b45941c8ec9254045489d8365",
+    "content-hash": "02d7da2a14688d791710b5f469f67754",
     "packages": [
         {
             "name": "abraham/twitteroauth",
@@ -340,6 +340,7 @@
                 "smilies",
                 "unicode"
             ],
+            "abandoned": true,
             "time": "2015-10-30T04:41:37+00:00"
         },
         {
@@ -4952,17 +4953,72 @@
             "time": "2019-12-28T07:17:28+00:00"
         },
         {
+            "name": "xibosignage/oauth2-xibo-cms",
+            "version": "dev-feature/3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/xibosignage/oauth2-xibo-cms.git",
+                "reference": "eb16bad139d6072811a1a815ceeb2cad04819746"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/xibosignage/oauth2-xibo-cms/zipball/eb16bad139d6072811a1a815ceeb2cad04819746",
+                "reference": "eb16bad139d6072811a1a815ceeb2cad04819746",
+                "shasum": ""
+            },
+            "require": {
+                "league/oauth2-client": "^2.4",
+                "php": ">=5.6.0",
+                "psr/log": "1.1.*"
+            },
+            "require-dev": {
+                "monolog/monolog": "^1.22"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Xibo\\OAuth2\\Client\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Xibo Signage Ltd",
+                    "homepage": "https://xibo.org.uk"
+                }
+            ],
+            "description": "A Xibo CMS provider for league/oauth2-client",
+            "homepage": "http://xibo.org.uk",
+            "keywords": [
+                "Authentication",
+                "SSO",
+                "authorization",
+                "client",
+                "identity",
+                "idp",
+                "oauth",
+                "oauth2",
+                "single sign on",
+                "xibo",
+                "xibo cms"
+            ],
+            "time": "2020-02-25T15:33:37+00:00"
+        },
+        {
             "name": "xibosignage/support",
             "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/PeterMis/support.git",
-                "reference": "12e4dff60eb105b9fd601c0c058b1279928c13b7"
+                "reference": "52604ab163f26bae10fd0028101c9b251e87644f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PeterMis/support/zipball/12e4dff60eb105b9fd601c0c058b1279928c13b7",
-                "reference": "12e4dff60eb105b9fd601c0c058b1279928c13b7",
+                "url": "https://api.github.com/repos/PeterMis/support/zipball/52604ab163f26bae10fd0028101c9b251e87644f",
+                "reference": "52604ab163f26bae10fd0028101c9b251e87644f",
                 "shasum": ""
             },
             "require": {
@@ -4995,7 +5051,7 @@
             "support": {
                 "source": "https://github.com/PeterMis/support/tree/master"
             },
-            "time": "2020-01-09T12:50:06+00:00"
+            "time": "2020-02-25T10:57:08+00:00"
         },
         {
             "name": "xibosignage/xibo-xmr",
@@ -6515,6 +6571,7 @@
         "sallar/jdatetime": 20,
         "infostars/picofeed": 20,
         "xibosignage/support": 20,
+        "xibosignage/oauth2-xibo-cms": 20,
         "robthree/twofactorauth": 20
     },
     "prefer-stable": true,

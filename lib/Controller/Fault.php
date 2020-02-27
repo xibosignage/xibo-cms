@@ -179,7 +179,7 @@ class Fault extends Base
         // Output Displays
         if ($outputDisplays) {
 
-            $displays = $this->displayFactory->query(['display'], [], $request);
+            $displays = $this->displayFactory->query(['display']);
 
             // Output Profiles
             if ($outputDisplayProfile) {
