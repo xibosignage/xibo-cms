@@ -356,7 +356,7 @@ class Stats extends Base
         $statDate = $sanitizedQueryParams->getDate('statDate');
         $statId = $sanitizedQueryParams->getString('statId');
         $campaignId = $sanitizedQueryParams->getInt('campaignId');
-        $eventTag = $this->getSanitizer()->getString('eventTag');
+        $eventTag = $sanitizedQueryParams->getString('eventTag');
 
         $start = $sanitizedQueryParams->getInt('start', 0);
         $length = $sanitizedQueryParams->getInt('length', 10);

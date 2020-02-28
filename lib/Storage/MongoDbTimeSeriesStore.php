@@ -425,6 +425,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $layoutIds = isset($filterBy['layoutIds']) ? $filterBy['layoutIds'] : [];
         $mediaIds = isset($filterBy['mediaIds']) ? $filterBy['mediaIds'] : [];
         $campaignId = isset($filterBy['campaignId']) ? $filterBy['campaignId'] : null;
+        $eventTag = isset($filterBy['eventTag']) ? $filterBy['eventTag'] : null;
 
         // Limit
         $start = isset($filterBy['start']) ? $filterBy['start'] : null;
@@ -490,6 +491,11 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         // Type Filter
         if ($type != null) {
             $match['$match']['type'] = $type;
+        }
+
+        // Event Tag Filter
+        if ($eventTag != null) {
+            $match['$match']['eventName'] = $eventTag;
         }
 
         // Layout Filter
