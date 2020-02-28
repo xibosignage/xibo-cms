@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (DataSetTest.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 namespace Xibo\Tests\Integration;
@@ -57,12 +72,12 @@ class DataSetTest extends LocalWebTestCase
     */
     public function testListAll()
     {
-        $this->client->get('/dataset');
+        $response = $this->sendRequest('GET','/dataset');
 
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
     }
 
     /**
@@ -73,13 +88,13 @@ class DataSetTest extends LocalWebTestCase
         # Generate random name
         $name = Random::generateString(8, 'phpunit');
         # Add dataset
-        $response = $this->client->post('/dataset', [
+        $response = $this->sendRequest('POST','/dataset', [
             'dataSet' => $name,
             'description' => 'PHP Unit Test'
         ]);
         # Check if call was successful
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         # Check if dataset has the correct name
@@ -99,13 +114,13 @@ class DataSetTest extends LocalWebTestCase
         $name = Random::generateString(8, 'phpunit');
         $description = 'New description';
         # Edit the name and description
-        $this->client->put('/dataset/' . $dataSet->dataSetId, [
+        $response = $this->sendRequest('PUT','/dataset/' . $dataSet->dataSetId, [
             'dataSet' => $name,
             'description' => $description
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
         # Check if call was successful
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         # Check if name and description were correctly changed
         $this->assertSame($name, $object->data->dataSet);
@@ -130,10 +145,10 @@ class DataSetTest extends LocalWebTestCase
         $data1 = (new XiboDataSet($this->getEntityProvider()))->create($name1, 'phpunit description');
         $data2 = (new XiboDataSet($this->getEntityProvider()))->create($name2, 'phpunit description');
         # Delete the one we created last
-        $this->client->delete('/dataset/' . $data2->dataSetId);
+        $response = $this->sendRequest('DELETE','/dataset/' . $data2->dataSetId);
         # This should return 204 for success
-        $response = json_decode($this->client->response->body());
-        $this->assertSame(204, $response->status, $this->client->response->body());
+        $object = json_decode($response->getBody());
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
         # Check only one remains
         $dataSets = (new XiboDataSet($this->getEntityProvider()))->get();
         $this->assertEquals(count($this->startDataSets) + 1, count($dataSets));
@@ -159,7 +174,7 @@ class DataSetTest extends LocalWebTestCase
         # Create new dataset
         $dataSet = (new XiboDataSet($this->getEntityProvider()))->create($name, $description);
         # Create new columns with arguments from provideSuccessCases
-        $response = $this->client->post('/dataset/' . $dataSet->dataSetId . '/column', [
+        $response = $this->sendRequest('POST','/dataset/' . $dataSet->dataSetId . '/column', [
             'heading' => $columnName,
             'listContent' => $columnListContent,
             'columnOrder' => $columnOrd,
@@ -168,8 +183,8 @@ class DataSetTest extends LocalWebTestCase
             'formula' => $columnFormula
         ]);
         # Check that call was successful
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $object = json_decode($response->getBody());
         # Check that columns have correct parameters
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
@@ -219,7 +234,7 @@ class DataSetTest extends LocalWebTestCase
         # Create new columns that we expect to fail with arguments from provideFailureCases
         /** @var XiboDataSet $dataSet */
         $dataSet = (new XiboDataSet($this->getEntityProvider()))->create($name, $description);
-        $this->client->post('/dataset/' . $dataSet->dataSetId . '/column', [
+        $response = $this->sendRequest('POST','/dataset/' . $dataSet->dataSetId . '/column', [
             'heading' => $columnName,
             'listContent' => $columnListContent,
             'columnOrder' => $columnOrd,
@@ -228,7 +243,7 @@ class DataSetTest extends LocalWebTestCase
             'formula' => $columnFormula
         ]);
         # Check if cases are failing as expected
-        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
+        $this->assertSame(500, $response->getStatusCode(), 'Expecting failure, received ' . $response->getStatusCode());
     }
 
     /**
@@ -263,12 +278,12 @@ class DataSetTest extends LocalWebTestCase
         $nameCol = Random::generateString(8, 'phpunit');
         $dataSet->createColumn($nameCol,'', 2, 1, 1, '');
         # Search for columns
-        $this->client->get('/dataset/' . $dataSet->dataSetId . '/column');
+        $response = $this->sendRequest('GET','/dataset/' . $dataSet->dataSetId . '/column');
         # Check if call was successful
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
         # Clean up as we no longer need it
         $dataSet->delete();
     }
@@ -288,7 +303,7 @@ class DataSetTest extends LocalWebTestCase
         # Generate new random name
         $nameNew = Random::generateString(8, 'phpunit');
         # Edit our column and change the name
-        $response = $this->client->put('/dataset/' . $dataSet->dataSetId . '/column/' . $column->dataSetColumnId, [
+        $response = $this->sendRequest('PUT','/dataset/' . $dataSet->dataSetId . '/column/' . $column->dataSetColumnId, [
             'heading' => $nameNew,
             'listContent' => '',
             'columnOrder' => $column->columnOrder,
@@ -297,8 +312,8 @@ class DataSetTest extends LocalWebTestCase
             'formula' => ''
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
         # Check if call was successful
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $this->client->response->body());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         # Check if our column has updated name
@@ -321,8 +336,8 @@ class DataSetTest extends LocalWebTestCase
         $nameCol = Random::generateString(8, 'phpunit');
         $column = (new XiboDataSetColumn($this->getEntityProvider()))->create($dataSet->dataSetId, $nameCol,'', 2, 1, 1, '');
         # delete column
-        $response = $this->client->delete('/dataset/' . $dataSet->dataSetId . '/column/' . $column->dataSetColumnId);
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+        $response = $this->sendRequest('DELETE','/dataset/' . $dataSet->dataSetId . '/column/' . $column->dataSetColumnId);
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
     }
 
     /*
@@ -336,12 +351,12 @@ class DataSetTest extends LocalWebTestCase
         $description = 'PHP Unit';
         $dataSet = (new XiboDataSet($this->getEntityProvider()))->create($name, $description);
         # Call get data
-        $this->client->get('/dataset/data/' . $dataSet->dataSetId);
+        $response = $this->sendRequest('GET','/dataset/data/' . $dataSet->dataSetId);
         # Check if call was successful
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
         # Clean up
         $dataSet->delete();
     }
@@ -360,11 +375,11 @@ class DataSetTest extends LocalWebTestCase
         $nameCol = Random::generateString(8, 'phpunit');
         $column = (new XiboDataSetColumn($this->getEntityProvider()))->create($dataSet->dataSetId, $nameCol,'', 2, 1, 1, '');
         # Add new row to our dataset and column
-        $response = $this->client->post('/dataset/data/' . $dataSet->dataSetId, [
+        $response = $this->sendRequest('POST','/dataset/data/' . $dataSet->dataSetId, [
             'dataSetColumnId_' . $column->dataSetColumnId => 'test',
             ]);
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         # Get the row id
@@ -395,11 +410,13 @@ class DataSetTest extends LocalWebTestCase
         $rowD = 'test';
         $row = (new XiboDataSetRow($this->getEntityProvider()))->create($dataSet->dataSetId, $column->dataSetColumnId, $rowD);
         # Edit row data
-        $response = $this->client->put('/dataset/data/' . $dataSet->dataSetId . '/' . $row['id'], [
+        $response = $this->sendRequest('PUT','/dataset/data/' . $dataSet->dataSetId . '/' . $row['id'], [
             'dataSetColumnId_' . $column->dataSetColumnId => $data
             ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
-        $object = json_decode($this->client->response->body());
+
+        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         # get the row id
@@ -412,8 +429,9 @@ class DataSetTest extends LocalWebTestCase
         else {
          $this->assertSame($rowCheck[0][$nameCol], $data);
         }
+
         # Clean up as we no longer need it, deleteWData will delete dataset even if it has data assigned to it
-        $dataSet -> deleteWData();
+        $dataSet->deleteWData();
     }
 
     /**
@@ -450,18 +468,18 @@ class DataSetTest extends LocalWebTestCase
         # Add new row data
         $row = (new XiboDataSetRow($this->getEntityProvider()))->create($dataSet->dataSetId, $column->dataSetColumnId, 'Row Data');
         # Delete row
-        $this->client->delete('/dataset/data/' . $dataSet->dataSetId . '/' . $row['id']);
-        $response = json_decode($this->client->response->body());
-        $this->assertSame(204, $response->status, $this->client->response->body());
+        $response = $this->sendRequest('DELETE','/dataset/data/' . $dataSet->dataSetId . '/' . $row['id']);
+        $object = json_decode($response->getBody());
+        $this->assertSame(200, $object->status, $response->getBody());
         # Clean up as we no longer need it, deleteWData will delete dataset even if it has data assigned to it
-        $dataSet -> deleteWData();
+        $dataSet->deleteWData();
     }
 
     public function testAddRemoteDataSet()
     {
         $name = Random::generateString(8, 'phpunit');
         # Add dataset
-        $response = $this->client->post('/dataset', [
+        $response = $this->sendRequest('POST','/dataset', [
             'dataSet' => $name,
             'code' => 'remote',
             'isRemote' => 1,
@@ -473,8 +491,8 @@ class DataSetTest extends LocalWebTestCase
             'sourceId' => 1
         ]);
         # Check if call was successful
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
 
@@ -497,7 +515,7 @@ class DataSetTest extends LocalWebTestCase
         $dataSet = (new XiboDataSet($this->getEntityProvider()))->create($name, '', 'remote', 1, 'GET', 'http://localhost/resources/RemoteDataSet.json', '', '', '', '', 1, 0, null, 'data');
 
         // Edit DataSet
-        $response = $this->client->put('/dataset/' . $dataSet->dataSetId, [
+        $response = $this->sendRequest('PUT','/dataset/' . $dataSet->dataSetId, [
             'dataSet' => $name2,
             'code' => 'remote',
             'isRemote' => 1,
@@ -510,8 +528,8 @@ class DataSetTest extends LocalWebTestCase
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
         # Check if call was successful
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
 
@@ -533,7 +551,7 @@ class DataSetTest extends LocalWebTestCase
         $dataSet = (new XiboDataSet($this->getEntityProvider()))->create($name, '', 'remote', 1, 'GET',  'http://localhost/RemoteDataSet.json', '', '', '', '', 1, 0, null, 'data');
 
         // call the remote dataSet test
-        $response = $this->client->post('/dataset/remote/test', [
+        $response = $this->sendRequest('POST','/dataset/remote/test', [
             'testDataSetId' => $dataSet->dataSetId,
             'dataSet' => $name,
             'code' => 'remote',
@@ -547,8 +565,8 @@ class DataSetTest extends LocalWebTestCase
         ]);
 
         # Check if call was successful
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         $this->assertSame($object->id, $dataSet->dataSetId);

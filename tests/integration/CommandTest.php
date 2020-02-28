@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (CommandTest.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 namespace Xibo\Tests\Integration;
@@ -58,12 +73,12 @@ class CommandTest extends LocalWebTestCase
     public function testListAll()
     {
         # Get the list of all commands
-        $this->client->get('/command');
+        $response = $this->sendRequest('GET','/command');
         # Check if call was successful
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
     }
 
      /**
@@ -83,13 +98,13 @@ class CommandTest extends LocalWebTestCase
             }
         }
         # Add new comands with arguments from provideSuccessCases
-        $response = $this->client->post('/command', [
+        $response = $this->sendRequest('POST','/command', [
             'command' => $commandName,
             'description' => $commandDescription,
             'code' => $commandCode
         ]);
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $object = json_decode($response->getBody());
         # Check if commands were added successfully and have correct parameters
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
@@ -130,13 +145,13 @@ class CommandTest extends LocalWebTestCase
     public function testAddFailure($commandName, $commandDescription, $commandCode)
     {
         # Add new commands with arguments from provideFailureCases
-        $response = $this->client->post('/command', [
+        $response = $this->sendRequest('POST','/command', [
             'command' => $commandName,
             'description' => $commandDescription,
             'code' => $commandCode
         ]);
         # Check if commands are failing as expected
-        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
+        $this->assertSame(500, $response->getStatusCode(), 'Expecting failure, received ' . $response->getStatusCode());
     }
 
     /**
@@ -181,11 +196,12 @@ class CommandTest extends LocalWebTestCase
                 $commands[] = (new XiboCommand($this->getEntityProvider()))->create($case[0],$case[1],$case[2]);
             }
         }
-        $this->client->get('/command');
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+
+        $response = $this->sendRequest('GET','/command');
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
         # There should be as many commands as we created plus the number we started with in the system
         $this->assertEquals(count($commands) + count($this->startCommands), $object->data->recordsTotal);
         # Clean up the groups we created
@@ -206,14 +222,14 @@ class CommandTest extends LocalWebTestCase
         $name = Random::generateString(8, 'command');
         $description = Random::generateString(8, 'description');
         # Change name and description of earlier created command
-        $this->client->put('/command/' . $command->commandId, [
+        $response = $this->sendRequest('PUT','/command/' . $command->commandId, [
             'command' => $name,
             'description' => $description,
             'code' => $command->code
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
         # Check if call was successful
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
+        $object = json_decode($response->getBody());
         # Examine the returned object and check that it's what we expect
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
@@ -240,10 +256,10 @@ class CommandTest extends LocalWebTestCase
         $command1 = (new XiboCommand($this->getEntityProvider()))->create($name1, 'phpunit description', 'code');
         $command2 = (new XiboCommand($this->getEntityProvider()))->create($name2, 'phpunit description', 'codetwo');
         # Delete the one we created last
-        $this->client->delete('/command/' . $command2->commandId);
+        $response = $this->sendRequest('DELETE','/command/' . $command2->commandId);
         # This should return 204 for success
-        $response = json_decode($this->client->response->body());
-        $this->assertSame(204, $response->status, $this->client->response->body());
+        $object = json_decode($response->getBody());
+        $this->assertSame(200, $object->status, $response->getBody());
         # Check only one remains
         $commands = (new XiboCommand($this->getEntityProvider()))->get();
         $this->assertEquals(count($this->startCommands) + 1, count($commands));
