@@ -143,13 +143,8 @@ class WidgetSyncTask implements TaskInterface
                             // Record start time
                             $startTime = microtime(true);
 
-                            $nyholmFactory = new Psr17Factory();
-                            $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
-                            $response = $decoratedResponseFactory->createResponse(200);
-                            $request = new Request(new ServerRequest('GET', PROJECT_ROOT . '/'));
-
                             // Cache the widget
-                            $module->getResourceOrCache($request->withAttribute('displayId', $displayId), $response);
+                            $module->getResourceOrCache($displayId);
 
                             // Record we have done this widget
                             $widgetsDone[] = $widget->widgetId;

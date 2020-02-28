@@ -167,7 +167,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
             ]);
         };
 
-// Add Error Middleware
+        // Add Error Middleware
         $errorMiddleware = $app->addErrorMiddleware(true, true, true);
         $errorMiddleware->setDefaultErrorHandler($customErrorHandler);
 

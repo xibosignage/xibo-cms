@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,11 +24,6 @@ namespace Xibo\Xmds;
 define('BLACKLIST_ALL', "All");
 define('BLACKLIST_SINGLE', "Single");
 
-use Nyholm\Psr7\Factory\Psr17Factory;
-use Nyholm\Psr7\ServerRequest;
-use Slim\Http\Factory\DecoratedResponseFactory;
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
 use Jenssegers\Date\Date;
 use Monolog\Logger;
 use Slim\Log;
