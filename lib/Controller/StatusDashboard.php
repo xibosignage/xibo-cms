@@ -1,14 +1,15 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (StatusDashboard.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -16,9 +17,13 @@
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public License
- * along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
+use Slim\Routing\RouteContext;
 use Exception;
 use GuzzleHttp\Client;
 use PicoFeed\PicoFeedException;
@@ -29,6 +34,7 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -74,7 +80,7 @@ class StatusDashboard extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -86,10 +92,11 @@ class StatusDashboard extends Base
      * @param DisplayFactory $displayFactory
      * @param DisplayGroupFactory $displayGroupFactory
      * @param MediaFactory $mediaFactory
+     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $displayFactory, $displayGroupFactory, $mediaFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $displayFactory, $displayGroupFactory, $mediaFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->store = $store;
         $this->pool = $pool;
@@ -101,24 +108,42 @@ class StatusDashboard extends Base
 
     /**
      * Displays
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function displays()
+    public function displays(Request $request, Response $response)
     {
         // Get a list of displays
-        $displays = $this->displayFactory->query($this->gridRenderSort(), $this->gridRenderFilter());
+        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([], $request));
 
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->displayFactory->countLast();
         $this->getState()->setData($displays);
+
+        return $this->render($request, $response);
     }
 
     /**
      * View
+     * @param Request $request
+     * @param Response $response
+     * @param null $args
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function displayPage()
+    function displayPage(Request $request, Response $response)
     {
         $data = [];
-
         // Set up some suffixes
         $suffixes = array('B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB');
 
@@ -166,7 +191,10 @@ class StatusDashboard extends Base
             $limit = [];
 
             foreach ($results as $row) {
-                $labels[] = $this->getDate()->getLocalDate($this->getSanitizer()->getDate('month', $row), 'F');
+                $sanitizedRow = $this->getSanitizer($row);
+                $timestamp = $this->getDate()->parse($sanitizedRow->getString('month'))->format('U');
+
+                $labels[] = $this->getDate()->getLocalDate($timestamp, 'F');
 
                 $size = ((double)$row['size']) / (pow(1024, $base));
                 $usage[] = round($size, 2);
@@ -324,12 +352,12 @@ class StatusDashboard extends Base
 
                         // Create a Guzzle Client to get the Feed XML
                         $client = new Client();
-                        $response = $client->get($feedUrl, $this->getConfig()->getGuzzleProxy());
+                        $responseGuzzle = $client->get($feedUrl, $this->getConfig()->getGuzzleProxy());
 
                         // Pull out the content type and body
-                        $result = explode('charset=', $response->getHeaderLine('Content-Type'));
+                        $result = explode('charset=', $responseGuzzle->getHeaderLine('Content-Type'));
                         $document['encoding'] = isset($result[1]) ? $result[1] : '';
-                        $document['xml'] = $response->getBody();
+                        $document['xml'] = $responseGuzzle->getBody();
 
                         // Get the feed parser
                         $reader = new Reader();
@@ -433,15 +461,28 @@ class StatusDashboard extends Base
         // Render the Theme and output
         $this->getState()->template = 'dashboard-status-page';
         $this->getState()->setData($data);
+
+        return $this->render($request, $response);
     }
 
-    function displayGroups()
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
+    function displayGroups(Request $request, Response $response)
     {
+        $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
         $status = null;
         $inventoryStatus = null;
         $params = [];
-        $label = $this->getSanitizer()->getString('status');
-        $labelContent = $this->getSanitizer()->getString('inventoryStatus');
+        $label = $parsedQueryParams->getString('status');
+        $labelContent = $parsedQueryParams->getString('inventoryStatus');
 
         $displayGroupIds = [];
         $displayGroupNames = [];
@@ -498,6 +539,7 @@ class StatusDashboard extends Base
                 $displayGroupNames[] = $row['displayGroup'];
                 $displayGroupIds[] = $row['DisplayGroupID'];
                 $displaysAssigned[] = count($this->displayFactory->query(['displayGroup'], ['displayGroupId' => $row['DisplayGroupID'], 'mediaInventoryStatus' => $inventoryStatus, 'loggedIn' => $status]));
+                $displaysAssigned[] = 0;
             }
 
             $data['displayGroupNames'] = json_encode($displayGroupNames);
@@ -510,5 +552,6 @@ class StatusDashboard extends Base
             $this->getLog()->error($e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
         }
+        return $this->render($request, $response);
     }
 }

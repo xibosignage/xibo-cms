@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,6 +20,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
+{% import "forms.twig" as forms %}
+
+{% block formHtml %}
 {% set title %}{% trans "Name" %}{% endset %}
 {% set helpText %}{% trans "The Name of the Profile - (1 - 50 characters)" %}{% endset %}
 {{ forms.input("name", title, displayProfile.name, helpText) }}
@@ -27,3 +30,4 @@
 {% set title %}{% trans "Default Profile?" %}{% endset %}
 {% set helpText %}{% trans "Is this the default profile for all Displays of this type? Only 1 profile can be the default." %}{% endset %}
 {{ forms.checkbox("isDefault", title, displayProfile.isDefault, helpText) }}
+{% endblock %}

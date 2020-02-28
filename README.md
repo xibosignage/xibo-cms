@@ -1,6 +1,6 @@
 # Introduction
 Xibo - Digital Signage - https://xibo.org.uk
-Copyright (C) 2006-2019 Xibo Signage Ltd and Contributors.
+Copyright (C) 2006-2020 Xibo Signage Ltd and Contributors.
 
 
 
@@ -8,9 +8,8 @@ Copyright (C) 2006-2019 Xibo Signage Ltd and Contributors.
 
 - develop: Work in progress toward 2.3
 - master: Currently 2.2
+- release23: Bug fixes for 2.3
 - release22: Bug fixes for 2.2
-- release21: Bug fixes for 2.1
-- release20: Bug fixes for 2.0
 - release18: Work in progress toward the next 1.8
 - release17: Archive of 1.7
 - release1.6.4: Archive of 1.6
@@ -103,6 +102,33 @@ to be created and the container given access to them.
 The easiest way to do this is to make the `cache` and `library` folders and `chmod 777` them. Obviously this is not
 suitable for production, but you shouldn't be using these files for production (we have containers for that).
 
+### API Keys
+The API requires a pub/private RSA keypair and an encryption key to be provided. The location for these should be
+in `settings-custom.php` in an array called `$apiKeyPaths`.
+
+For example: 
+
+```php
+$apiKeyPaths = [
+    'publicKeyPath' => '/var/www/cms/custom/public.key',
+    'privateKeyPath' => '/var/www/cms/custom/private.key',
+    'encryptionKey' => ''
+];
+```
+
+On Linux you can generate a RSA key pair using the following steps:
+
+```shell script
+openssl genrsa -out private.key 2048
+openssl rsa -in private.key -pubout -out public.key
+chmod 600 public.key
+```
+
+The encryption key should be 32 random bytes, you can generate one using the below:
+
+```shell script
+php -r 'echo base64_encode(random_bytes(32)), PHP_EOL;'
+```
 
 ## Bring up the Containers
 

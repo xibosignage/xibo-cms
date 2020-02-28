@@ -6,7 +6,7 @@
         <div class="col-md-12">
             {% set themeName = theme.getThemeConfig("app_name") %}
 
-            <form action="{{ urlFor("install", {step: 7}) }}" class="form-horizontal" method="post">
+            <form action="{{ url_for("install", {step: 7}) }}" class="form-horizontal" method="post">
 
                 {% set message %}{% trans %}{{ themeName }} needs an administrator user account to be the first user account that has access to the CMS. Please enter your chosen details below.{% endtrans %}{% endset %}
                 {{ forms.message(message) }}

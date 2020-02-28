@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -22,13 +23,16 @@ namespace Xibo\Controller;
 
 use baseDAO;
 use Kit;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\ResolutionFactory;
 use Xibo\Helper\Form;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 
 /**
  * Class Resolution
@@ -44,27 +48,38 @@ class Resolution extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param ResolutionFactory $resolutionFactory
+     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $resolutionFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $resolutionFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->resolutionFactory = $resolutionFactory;
     }
 
     /**
      * Display the Resolution Page
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function displayPage()
+    function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'resolution-page';
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -78,21 +93,21 @@ class Resolution extends Base
      *  description="Search Resolutions this user has access to",
      *  @SWG\Parameter(
      *      name="resolutionId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Resolution Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="resolution",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Resolution Name",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="enabled",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Enabled",
      *      type="integer",
      *      required=false
@@ -106,22 +121,31 @@ class Resolution extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function grid()
+    function grid(Request $request, Response $response)
     {
+        $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
         // Show enabled
         $filter = [
-            'enabled' => $this->getSanitizer()->getInt('enabled', -1),
-            'resolutionId' => $this->getSanitizer()->getInt('resolutionId'),
-            'resolution' => $this->getSanitizer()->getString('resolution')
+            'enabled' => $sanitizedQueryParams->getInt('enabled', ['default' => -1]),
+            'resolutionId' => $sanitizedQueryParams->getInt('resolutionId'),
+            'resolution' => $sanitizedQueryParams->getString('resolution')
         ];
 
-        $resolutions = $this->resolutionFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $resolutions = $this->resolutionFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
 
         foreach ($resolutions as $resolution) {
             /* @var \Xibo\Entity\Resolution $resolution */
 
-            if ($this->isApi())
+            if ($this->isApi($request))
                 break;
 
             $resolution->includeProperty('buttons');
@@ -130,7 +154,7 @@ class Resolution extends Base
                 // Edit Button
                 $resolution->buttons[] = array(
                     'id' => 'resolution_button_edit',
-                    'url' => $this->urlFor('resolution.edit.form', ['id' => $resolution->resolutionId]),
+                    'url' => $this->urlFor($request,'resolution.edit.form', ['id' => $resolution->resolutionId]),
                     'text' => __('Edit')
                 );
             }
@@ -139,7 +163,7 @@ class Resolution extends Base
                 // Delete Button
                 $resolution->buttons[] = array(
                     'id' => 'resolution_button_delete',
-                    'url' => $this->urlFor('resolution.delete.form', ['id' => $resolution->resolutionId]),
+                    'url' => $this->urlFor($request,'resolution.delete.form', ['id' => $resolution->resolutionId]),
                     'text' => __('Delete')
                 );
             }
@@ -148,53 +172,89 @@ class Resolution extends Base
         $this->getState()->template = 'grid';
         $this->getState()->setData($resolutions);
         $this->getState()->recordsTotal = $this->resolutionFactory->countLast();
+
+        return $this->render($request, $response);
     }
 
     /**
      * Resolution Add
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function addForm()
+    function addForm(Request $request, Response $response)
     {
         $this->getState()->template = 'resolution-form-add';
         $this->getState()->setData([
             'help' => $this->getHelp()->link('Resolution', 'Add')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Resolution Edit Form
-     * @param int $resolutionId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    function editForm($resolutionId)
+    function editForm(Request $request, Response $response, $id)
     {
-        $resolution = $this->resolutionFactory->getById($resolutionId);
+        $resolution = $this->resolutionFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($resolution))
+        if (!$this->getUser()->checkEditable($resolution)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'resolution-form-edit';
         $this->getState()->setData([
             'resolution' => $resolution,
             'help' => $this->getHelp()->link('Resolution', 'Edit')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Resolution Delete Form
-     * @param int $resolutionId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    function deleteForm($resolutionId)
+    function deleteForm(Request $request, Response $response, $id)
     {
-        $resolution = $this->resolutionFactory->getById($resolutionId);
+        $resolution = $this->resolutionFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($resolution))
+        if (!$this->getUser()->checkEditable($resolution)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'resolution-form-delete';
         $this->getState()->setData([
             'resolution' => $resolution,
             'help' => $this->getHelp()->link('Resolution', 'Delete')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -238,13 +298,23 @@ class Resolution extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function add()
+    function add(Request $request, Response $response)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
         /* @var \Xibo\Entity\Resolution $resolution */
-        $resolution = $this->resolutionFactory->create($this->getSanitizer()->getString('resolution'),
-            $this->getSanitizer()->getInt('width'),
-            $this->getSanitizer()->getInt('height'));
+        $resolution = $this->resolutionFactory->create($sanitizedParams->getString('resolution'),
+            $sanitizedParams->getInt('width'),
+            $sanitizedParams->getInt('height'));
 
         $resolution->userId = $this->getUser()->userId;
         $resolution->save();
@@ -256,12 +326,22 @@ class Resolution extends Base
             'id' => $resolution->resolutionId,
             'data' => $resolution
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edit Resolution
-     * @param int $resolutionId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      * @SWG\Put(
      *  path="/resolution/{resolutionId}",
      *  operationId="resolutionEdit",
@@ -303,17 +383,20 @@ class Resolution extends Base
      *  )
      * )
      */
-    function edit($resolutionId)
+    function edit(Request $request, Response $response, $id)
     {
-        $resolution = $this->resolutionFactory->getById($resolutionId);
+        $resolution = $this->resolutionFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($resolution))
+        if (!$this->getUser()->checkEditable($resolution)) {
             throw new AccessDeniedException();
+        }
 
-        $resolution->resolution = $this->getSanitizer()->getString('resolution');
-        $resolution->width = $this->getSanitizer()->getInt('width');
-        $resolution->height = $this->getSanitizer()->getInt('height');
-        $resolution->enabled = $this->getSanitizer()->getCheckbox('enabled');
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $resolution->resolution = $sanitizedParams->getString('resolution');
+        $resolution->width = $sanitizedParams->getInt('width');
+        $resolution->height = $sanitizedParams->getInt('height');
+        $resolution->enabled = $sanitizedParams->getCheckbox('enabled');
         $resolution->save();
 
         // Return
@@ -322,12 +405,22 @@ class Resolution extends Base
             'id' => $resolution->resolutionId,
             'data' => $resolution
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Delete Resolution
-     * @param int $resolutionId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      * @SWG\Delete(
      *  path="/resolution/{resolutionId}",
      *  operationId="resolutionDelete",
@@ -347,12 +440,13 @@ class Resolution extends Base
      *  )
      * )
      */
-    function delete($resolutionId)
+    function delete(Request $request, Response $response, $id)
     {
-        $resolution = $this->resolutionFactory->getById($resolutionId);
+        $resolution = $this->resolutionFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($resolution))
+        if (!$this->getUser()->checkDeleteable($resolution)) {
             throw new AccessDeniedException();
+        }
 
         $resolution->delete();
 
@@ -360,5 +454,7 @@ class Resolution extends Base
         $this->getState()->hydrate([
             'message' => sprintf(__('Deleted %s'), $resolution->resolution),
         ]);
+
+        return $this->render($request, $response);
     }
 }

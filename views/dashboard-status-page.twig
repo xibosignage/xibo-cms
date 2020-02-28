@@ -1,10 +1,24 @@
 {#
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #}
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
@@ -83,7 +97,7 @@
                         {% trans %}Bandwidth Usage ({{ bandwidthSuffix }}){% endtrans %}
                     {% endif %}
                     {% if currentUser.routeViewable("/stats") %}
-                    <a class="pull-right" href="{{ urlFor("stats.view") }}">{% trans "More Statistics" %}</a>
+                    <a class="pull-right" href="{{ url_for("stats.view") }}">{% trans "More Statistics" %}</a>
                     {% endif %}
                     <div class="clearfix"></div>
                 </div>
@@ -221,16 +235,9 @@
                         <form class="form-inline">
                             <div class="tab-content">
                                 <div class="tab-pane active" id="filter-general">
-
-                                    {% set title %}{% trans "Display Group" %}{% endset %}
-                                    {{ inline.hidden("displayGroupId", title) }}
-
-                                    {% set title %}{% trans "Content Status" %}{% endset %}
-                                    {{ inline.hidden("mediaInventoryStatus", title) }}
-
-                                    {% set title %}{% trans "Online Status" %}{% endset %}
-                                    {{ inline.hidden("loggedIn", title) }}
-
+                                    {{ inline.hidden("displayGroupId") }}
+                                    {{ inline.hidden("mediaInventoryStatus") }}
+                                    {{ inline.hidden("loggedIn") }}
                                 </div>
                             </div>
                         </form>
@@ -351,7 +358,7 @@
                 $.ajax({
                     type: "GET",
                     async: false,
-                    url: "{{ urlFor("user.pref") }}?preference=statusDashboardDisplays",
+                    url: "{{ url_for("user.pref") }}?preference=statusDashboardDisplays",
                     dataType: 'json',
                     success: function (json) {
                         try {
@@ -368,7 +375,7 @@
             stateSaveCallback: function (settings, data) {
                 $.ajax({
                     type: "POST",
-                    url: "{{ urlFor("user.pref") }}",
+                    url: "{{ url_for("user.pref") }}",
                     data: {
                         preference: [{
                             option: "statusDashboardDisplays",
@@ -381,7 +388,7 @@
             searchDelay: 3000,
             order: [[0, "asc"]],
             ajax: {
-                "url": "{{ urlFor("statusdashboard.displays") }}",
+                "url": "{{ url_for("statusdashboard.displays") }}",
                 "data": function (dataToSend) {
                     //make a new object so as not to destroy the input.
                     var data = {};
@@ -430,7 +437,6 @@
         });
 
         var displayData = {{ displayStatus|raw }};
-
         var displayStatusChart = new Chart($("#displayStatusChart"), {
             type: 'doughnut',
             data: {
@@ -482,7 +488,7 @@
 
                     $.ajax({
                         type: "get",
-                        url: "{{ urlFor("statusdashboard.displayGroups") }}",
+                        url: "{{ url_for("statusdashboard.displayGroups") }}",
                         data: {
                             status: label
                         },
@@ -546,7 +552,7 @@
 
                     $.ajax({
                         type: "get",
-                        url: "{{ urlFor("statusdashboard.displayGroups") }}",
+                        url: "{{ url_for("statusdashboard.displayGroups") }}",
                         data: {
                             inventoryStatus: label
                         },
@@ -641,7 +647,7 @@
                 $.ajax({
                     type: "GET",
                     async: false,
-                    url: "{{ urlFor("user.pref") }}?preference=displaysGrid",
+                    url: "{{ url_for("user.pref") }}?preference=displaysGrid",
                     dataType: 'json',
                     success: function (json) {
                         try {
@@ -658,7 +664,7 @@
             stateSaveCallback: function (settings, data) {
                 $.ajax({
                     type: "POST",
-                    url: "{{ urlFor("user.pref") }}",
+                    url: "{{ url_for("user.pref") }}",
                     data: {
                         preference: [{
                             option: "displaysGrid",
@@ -671,7 +677,7 @@
             searchDelay: 3000,
             order: [[1, "asc"]],
             ajax: {
-                "url": "{{ urlFor("display.search") }}",
+                "url": "{{ url_for("display.search") }}",
                 "data": function (dataToSend) {
                     //make a new object so as not to destroy the input.
                     var data = {};
@@ -680,7 +686,6 @@
                     data.start = dataToSend.start;
                     data.order = dataToSend.order;
                     data.columns = [];
-
                     $.each(dataToSend.columns, function (index, e) {
                         var col = {};
                         col.data = e.data;
@@ -690,7 +695,6 @@
                     });
 
                     $.extend(data, $("#displaysGrid").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
-
                     return data;
                 }
             },

@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (PageFactory.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,7 +23,7 @@
 
 namespace Xibo\Factory;
 
-
+use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Page;
 use Xibo\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
@@ -63,7 +64,7 @@ class PageFactory extends BaseFactory
      */
     public function getById($pageId)
     {
-        $pages = $this->query(null, array('pageId' => $pageId, 'disableUserCheck' => 1));
+        $pages = $this->query(null, ['pageId' => $pageId, 'disableUserCheck' => 1]);
 
         if (count($pages) <= 0)
             throw new NotFoundException('Unknown Route');
@@ -99,31 +100,35 @@ class PageFactory extends BaseFactory
      * @param null $sortOrder
      * @param array $filterBy
      * @return Page[]
+     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        if ($sortOrder == null)
-            $sortOrder = ['name'];
+        $parsedBody = $this->getSanitizer($filterBy);
 
-        $entries = array();
-        $params = array();
+        if ($sortOrder == null) {
+            $sortOrder = ['name'];
+        }
+
+        $entries = [];
+        $params = [];
         $sql = 'SELECT pageId, name, title, asHome FROM `pages` WHERE 1 = 1 ';
 
         // Logged in user view permissions
         $this->viewPermissionSql('Xibo\Entity\Page', $sql, $params, 'pageId', null, $filterBy);
 
-        if ($this->getSanitizer()->getString('name', $filterBy) != null) {
-            $params['name'] = $this->getSanitizer()->getString('name', $filterBy);
+        if ($parsedBody->getString('name') != null) {
+            $params['name'] = $parsedBody->getString('name');
             $sql .= ' AND `name` = :name ';
         }
 
-        if ($this->getSanitizer()->getInt('pageId', $filterBy) !== null) {
-            $params['pageId'] = $this->getSanitizer()->getString('pageId', $filterBy);
+        if ($parsedBody->getInt('pageId') !== null) {
+            $params['pageId'] = $parsedBody->getInt('pageId');
             $sql .= ' AND `pageId` = :pageId ';
         }
 
-        if ($this->getSanitizer()->getInt('asHome', $filterBy) !== null) {
-            $params['asHome'] = $this->getSanitizer()->getString('asHome', $filterBy);
+        if ($parsedBody->getInt('asHome') !== null) {
+            $params['asHome'] = $parsedBody->getInt('asHome');
             $sql .= ' AND `asHome` = :asHome ';
         }
 

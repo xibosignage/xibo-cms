@@ -47,21 +47,21 @@
                 </tbody>
             </table>
             {% if config.EnvironmentFault() %}
-                <form action="{{ urlFor("install", {step: 1}) }}" class="form-inline">
+                <form action="{{ url_for("install", {step: 1}) }}" class="form-inline">
                     {% set title %}{% trans "Retest" %}{% endset %}
                     {{ forms.button(title, "submit") }}
                 </form>
             {% elseif config.EnvironmentWarning() %}
-                <form action="{{ urlFor("install", {step: 2}) }}" class="form-inline">
+                <form action="{{ url_for("install", {step: 2}) }}" class="form-inline">
                     {% set title %}{% trans "Retest" %}{% endset %}
-                    {% set link = urlFor("install", {step: 1}) %}
+                    {% set link = url_for("install", {step: 1}) %}
                     {{ forms.button(title, "link", link) }}
 
                     {% set title %}{% trans "Next" %}{% endset %}
                     {{ forms.button(title, "submit", link) }}
                 </form>
             {% else %}
-                <form action="{{ urlFor("install", {step: 2}) }}" class="form-inline">
+                <form action="{{ url_for("install", {step: 2}) }}" class="form-inline">
                     {% set title %}{% trans "Next" %}{% endset %}
                     {{ forms.button(title, "submit") }}
                 </form>

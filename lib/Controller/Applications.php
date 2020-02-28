@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2010-13 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -20,9 +21,14 @@
  */
 namespace Xibo\Controller;
 
+use League\OAuth2\Server\RequestTypes\AuthorizationRequest;
+use Psr\Container\ContainerInterface;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\Grant\AuthCodeGrant;
 use League\OAuth2\Server\Util\RedirectUri;
+use Slim\Views\Twig;
 use Xibo\Entity\Application;
 use Xibo\Entity\ApplicationScope;
 use Xibo\Exception\AccessDeniedException;
@@ -31,17 +37,20 @@ use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\ApplicationRedirectUriFactory;
 use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\ApiAccessTokenStorage;
 use Xibo\Storage\ApiAuthCodeStorage;
 use Xibo\Storage\ApiClientStorage;
 use Xibo\Storage\ApiScopeStorage;
 use Xibo\Storage\ApiSessionStorage;
+use Xibo\Storage\AuthCodeRepository;
+use Xibo\Storage\RefreshTokenRepository;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Storage\UserEntity;
 
 /**
  * Class Applications
@@ -73,10 +82,13 @@ class Applications extends Base
     /** @var  UserFactory */
     private $userFactory;
 
+    /** @var ContainerInterface */
+    private $container;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -86,11 +98,14 @@ class Applications extends Base
      * @param StorageServiceInterface $store
      * @param ApplicationFactory $applicationFactory
      * @param ApplicationRedirectUriFactory $applicationRedirectUriFactory
+     * @param $applicationScopeFactory
      * @param UserFactory $userFactory
+     * @param Twig $view
+     * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $store, $applicationFactory, $applicationRedirectUriFactory, $applicationScopeFactory, $userFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $store, $applicationFactory, $applicationRedirectUriFactory, $applicationScopeFactory, $userFactory, Twig $view, ContainerInterface $container)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->session = $session;
         $this->store = $store;
@@ -98,29 +113,48 @@ class Applications extends Base
         $this->applicationRedirectUriFactory = $applicationRedirectUriFactory;
         $this->applicationScopeFactory = $applicationScopeFactory;
         $this->userFactory = $userFactory;
+        $this->container = $container;
     }
 
     /**
      * Display Page
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function displayPage()
+    public function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'applications-page';
+
+        return $this->render($request, $response);
     }
 
     /**
      * Display page grid
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function grid()
+    public function grid(Request $request, Response $response)
     {
         $this->getState()->template = 'grid';
 
-        $applications = $this->applicationFactory->query($this->gridRenderSort(), $this->gridRenderFilter());
+        $applications = $this->applicationFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([], $request));
 
         foreach ($applications as $application) {
             /* @var Application $application */
-            if ($this->isApi())
-                return;
+            if ($this->isApi($request))
+                return $response->write('Nope');
 
             // Include the buttons property
             $application->includeProperty('buttons');
@@ -133,14 +167,14 @@ class Applications extends Base
                 // Edit
                 $application->buttons[] = [
                     'id' => 'application_edit_button',
-                    'url' => $this->urlFor('application.edit.form', ['id' => $application->key]),
+                    'url' => $this->urlFor($request,'application.edit.form', ['id' => $application->key]),
                     'text' => __('Edit')
                 ];
 
                 // Delete
                 $application->buttons[] = [
                     'id' => 'application_delete_button',
-                    'url' => $this->urlFor('application.delete.form', ['id' => $application->key]),
+                    'url' => $this->urlFor($request,'application.delete.form', ['id' => $application->key]),
                     'text' => __('Delete')
                 ];
             }
@@ -148,12 +182,21 @@ class Applications extends Base
 
         $this->getState()->setData($applications);
         $this->getState()->recordsTotal = $this->applicationFactory->countLast();
+
+        return $this->render($request, $response);
     }
 
     /**
      * Display the Authorize form.
+     * @param Request $request
+     * @param Response $response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function authorizeRequest()
+    public function authorizeRequest(Request $request, Response $response)
     {
         // Pull authorize params from our session
         if (!$authParams = $this->session->get('authParams'))
@@ -164,76 +207,116 @@ class Applications extends Base
         $this->getState()->setData([
             'authParams' => $authParams
         ]);
+
+       return $this->render($request, $response);
     }
 
     /**
      * Authorize an oAuth request
-     * @throws \League\OAuth2\Server\Exception\InvalidGrantException
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Exception
      */
-    public function authorize()
+    public function authorize(Request $request, Response $response)
     {
         // Pull authorize params from our session
-        if (!$authParams = $this->session->get('authParams'))
+        if (!$authParams = $this->session->get('authParams')) {
             throw new \InvalidArgumentException(__('Authorisation Parameters missing from session.'));
+        }
+
+        $sanitizedQueryParams = $this->getSanitizer($request->getParams());
+
+        // get auth server
+        /** @var AuthorizationRequest $authRequest */
+        $authRequest = $this->session->get('authParams');
+
+        $apiKeyPaths = $this->getConfig()->apiKeyPaths;
+
+        $privateKey = $apiKeyPaths['privateKeyPath'];
+        $encryptionKey = $apiKeyPaths['publicKeyPath'];
+
+        $server = new AuthorizationServer(
+            new ApiClientStorage($this->container->get('store'), $this->container->get('logService')),
+            new \Xibo\Storage\AccessTokenRepository($this->container->get('logService')),
+            new \Xibo\Storage\ScopeRepository(),
+            $privateKey,
+            $encryptionKey
+        );
+
+        $server->enableGrantType(
+            new AuthCodeGrant(
+                new AuthCodeRepository(),
+                new RefreshTokenRepository(),
+                new \DateInterval('PT10M')
+            ),
+            new \DateInterval('PT1H')
+        );
+
+        // Default scope
+        $server->setDefaultScope('all');
 
         // We are authorized
-        if ($this->getSanitizer()->getString('authorization') === 'Approve') {
+        if ($sanitizedQueryParams->getString('authorization') === 'Approve') {
 
-            // Create a server
-            $server = new AuthorizationServer();
+            $authRequest->setAuthorizationApproved(true);
 
-            $server->setSessionStorage(new ApiSessionStorage($this->store));
-            $server->setAccessTokenStorage(new ApiAccessTokenStorage($this->store));
-            $server->setClientStorage(new ApiClientStorage($this->store));
-            $server->setScopeStorage(new ApiScopeStorage($this->store));
-            $server->setAuthCodeStorage(new ApiAuthCodeStorage($this->store));
+            // get oauth User Entity and set the UserId to the current web userId
+            $userEntity = new UserEntity();
+            $userEntity->userId = $this->getUser()->userId;
+            $authRequest->setUser($userEntity);
 
-            $authCodeGrant = new AuthCodeGrant();
-            $server->addGrantType($authCodeGrant);
-
-            // TODO: Add scopes element to $authParams based on the selections granted in the form
-
-            // Authorize the request
-            $redirectUri = $server->getGrantType('authorization_code')->newAuthorizeRequest('user', $this->getUser()->userId, $authParams);
+            // Redirect back to the home page
+            return $server->completeAuthorizationRequest($authRequest, $response);
         }
         else {
-            $error = new \League\OAuth2\Server\Exception\AccessDeniedException();
-            $error->redirectUri = $authParams['redirect_uri'];
-
-            $redirectUri = RedirectUri::make($authParams['redirect_uri'], [
-                'error' => $error->errorType,
-                'message' => $error->getMessage()
-            ]);
+            $authRequest->setAuthorizationApproved(false);
+            return $server->completeAuthorizationRequest($authRequest, $response);
         }
-
-        $this->getLog()->debug('Redirect URL is %s', $redirectUri);
-
-        $this->getApp()->redirect($redirectUri, 302);
     }
 
     /**
      * Form to register a new application.
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function addForm()
+    public function addForm(Request $request, Response $response)
     {
         $this->getState()->template = 'applications-form-add';
         $this->getState()->setData([
             'help' => $this->getHelp()->link('Services', 'Register')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edit Application
-     * @param $clientId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\NotFoundException
      */
-    public function editForm($clientId)
+    public function editForm(Request $request, Response $response, $id)
     {
         // Get the client
-        $client = $this->applicationFactory->getById($clientId);
+        $client = $this->applicationFactory->getById($id);
 
-        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1)
+        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1) {
             throw new AccessDeniedException();
+        }
 
         // Load this clients details.
         $client->load();
@@ -261,16 +344,27 @@ class Applications extends Base
             'users' => $this->userFactory->query(),
             'help' => $this->getHelp()->link('Services', 'Register')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Delete Application Form
-     * @param $clientId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function deleteForm($clientId)
+    public function deleteForm(Request $request, Response $response, $id)
     {
         // Get the client
-        $client = $this->applicationFactory->getById($clientId);
+        $client = $this->applicationFactory->getById($id);
 
         if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1)
             throw new AccessDeniedException();
@@ -280,21 +374,33 @@ class Applications extends Base
             'client' => $client,
             'help' => $this->getHelp()->link('Services', 'Register')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Register a new application with OAuth
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws InvalidArgumentException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function add()
+    public function add(Request $request, Response $response)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         $application = $this->applicationFactory->create();
-        $application->name = $this->getSanitizer()->getString('name');
+        $application->name = $sanitizedParams->getString('name');
 
         if ($application->name == '' ) {
             throw new InvalidArgumentException(__('Please enter Application name'), 'name');
         }
 
+        $application->userId = $this->getUser()->userId;
         $application->save();
 
         // Return
@@ -303,29 +409,50 @@ class Applications extends Base
             'data' => $application,
             'id' => $application->key
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Form to register a new application for Advertisement.
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function addDoohForm()
+    public function addDoohForm(Request $request, Response $response)
     {
         $this->getState()->template = 'applications-form-add-dooh';
         $this->getState()->setData([
             'help' => $this->getHelp()->link('Services', 'Register')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Register a new application with OAuth
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws InvalidArgumentException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @throws \Xibo\Exception\NotFoundException
      */
-    public function addDooh()
+    public function addDooh(Request $request, Response $response)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());;
         $application = $this->applicationFactory->create();
-        $application->name = $this->getSanitizer()->getString('name');
-        $application->userId = $this->getSanitizer()->getInt('userId');
+        $application->name = $sanitizedParams->getString('name');
+        $application->userId = $sanitizedParams->getInt('userId');
 
         if ($application->name == '' ) {
             throw new InvalidArgumentException(__('Please enter Application name'), 'name');
@@ -347,28 +474,41 @@ class Applications extends Base
             'data' => $application,
             'id' => $application->key
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edit Application
-     * @param $clientId
-     * @throws \Xibo\Exception\XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function edit($clientId)
+    public function edit(Request $request, Response $response, $id)
     {
-        $this->getLog()->debug('Editing ' . $clientId);
+        $this->getLog()->debug('Editing ' . $id);
 
         // Get the client
-        $client = $this->applicationFactory->getById($clientId);
+        $client = $this->applicationFactory->getById($id);
 
-        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1)
+        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1) {
             throw new AccessDeniedException();
+        }
 
-        $client->name = $this->getSanitizer()->getString('name');
-        $client->authCode = $this->getSanitizer()->getCheckbox('authCode');
-        $client->clientCredentials = $this->getSanitizer()->getCheckbox('clientCredentials');
+        $sanitizedParams = $this->getSanitizer($request->getParams());;
+        $client->name = $sanitizedParams->getString('name');
+        $client->authCode = $sanitizedParams->getCheckbox('authCode');
+        $client->clientCredentials = $sanitizedParams->getCheckbox('clientCredentials');
 
-        if ($this->getSanitizer()->getCheckbox('resetKeys') == 1) {
+        if ($sanitizedParams->getCheckbox('resetKeys') == 1) {
             $client->resetKeys();
         }
 
@@ -383,7 +523,7 @@ class Applications extends Base
         $client->redirectUris = [];
 
         // Do we have a redirect?
-        $redirectUris = $this->getSanitizer()->getStringArray('redirectUri');
+        $redirectUris = $sanitizedParams->getArray('redirectUri');
 
         foreach ($redirectUris as $redirectUri) {
             if ($redirectUri == '')
@@ -399,7 +539,7 @@ class Applications extends Base
             /** @var ApplicationScope $scope */
 
             // See if this has been checked this time
-            $checked = $this->getSanitizer()->getCheckbox('scope_' . $scope->id);
+            $checked = $sanitizedParams->getCheckbox('scope_' . $scope->id);
 
             // Does this scope already exist?
             $found = false;
@@ -419,14 +559,15 @@ class Applications extends Base
         }
 
         // Change the ownership?
-        if ($this->getSanitizer()->getInt('userId') !== null) {
+        if ($sanitizedParams->getInt('userId') !== null) {
             // Check we have permissions to view this user
-            $user = $this->userFactory->getById($this->getSanitizer()->getInt('userId'));
+            $user = $this->userFactory->getById($sanitizedParams->getInt('userId'));
 
             $this->getLog()->debug('Attempting to change ownership to ' . $user->userId . ' - ' . $user->userName);
 
-            if (!$this->getUser()->checkViewable($user))
+            if (!$this->getUser()->checkViewable($user)) {
                 throw new InvalidArgumentException('You do not have permission to assign this user', 'userId');
+            }
 
             $client->userId = $user->userId;
         }
@@ -439,19 +580,31 @@ class Applications extends Base
             'data' => $client,
             'id' => $client->key
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Delete application
-     * @param $clientId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
      */
-    public function delete($clientId)
+    public function delete(Request $request, Response $response, $id)
     {
         // Get the client
-        $client = $this->applicationFactory->getById($clientId);
+        $client = $this->applicationFactory->getById($id);
 
-        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1)
+        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1) {
             throw new AccessDeniedException();
+        }
 
         $client->delete();
 
@@ -459,5 +612,7 @@ class Applications extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $client->name)
         ]);
+
+        return $this->render($request, $response);
     }
 }

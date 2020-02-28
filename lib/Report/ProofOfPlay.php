@@ -2,7 +2,10 @@
 
 namespace Xibo\Report;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use MongoDB\BSON\UTCDateTime;
+use Psr\Container\ContainerInterface;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
@@ -94,7 +97,7 @@ class ProofOfPlay implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function setFactories($container)
+    public function setFactories(ContainerInterface $container)
     {
 
         $this->displayFactory = $container->get('displayFactory');
@@ -136,7 +139,7 @@ class ProofOfPlay implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportScheduleFormData()
+    public function getReportScheduleFormData(Request $request)
     {
 
         $data = [];
@@ -144,13 +147,13 @@ class ProofOfPlay implements ReportInterface
         $title = 'Add Report Schedule';
         $data['formTitle'] = $title;
 
-        $data['type'] = $this->getSanitizer()->getParam('type', '');
-        $data['tagsType'] = $this->getSanitizer()->getParam('tagsType', '');
+        $data['type'] = $request->getParam('type', '');
+        $data['tagsType'] = $request->getParam('tagsType', '');
 
-        $exactTags = $this->getSanitizer()->getParam('exactTags', false);
+        $exactTags = $request->getParam('exactTags', false);
         $data['exactTags'] = ($exactTags == 'true') ? true : false;
 
-        $tags = $this->getSanitizer()->getParam('tags', '');
+        $tags = $request->getParam('tags', '');
         $data['tags'] = $tags;
 
         $data['hiddenFields'] =  '';
@@ -163,19 +166,20 @@ class ProofOfPlay implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function setReportScheduleFormData()
+    public function setReportScheduleFormData(Request $request)
     {
 
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // We use the following variables in temp array
-        $filter = $this->getSanitizer()->getString('filter');
-        $displayId = $this->getSanitizer()->getInt('displayId');
-        $layoutIds = $this->getSanitizer()->getIntArray('layoutId');
-        $mediaIds = $this->getSanitizer()->getIntArray('mediaId');
-        $type = $this->getSanitizer()->getString('type');
-        $sortBy = $this->getSanitizer()->getString('sortBy');
-        $tagsType = $this->getSanitizer()->getString('tagsType');
-        $tags = $this->getSanitizer()->getString('tags');
-        $exactTags = $this->getSanitizer()->getCheckbox('exactTags');
+        $filter = $sanitizedParams->getString('filter');
+        $displayId = $sanitizedParams->getInt('displayId');
+        $layoutIds = $sanitizedParams->getIntArray('layoutId');
+        $mediaIds = $sanitizedParams->getIntArray('mediaId');
+        $type = $sanitizedParams->getString('type');
+        $sortBy = $sanitizedParams->getString('sortBy');
+        $tagsType = $sanitizedParams->getString('tagsType');
+        $tags = $sanitizedParams->getString('tags');
+        $exactTags = $sanitizedParams->getCheckbox('exactTags');
 
         $temp = ['filter', 'displayId', 'layoutIds', 'mediaIds', 'type', 'sortBy', 'tagsType', 'tags', 'exactTags'];
 
@@ -202,8 +206,8 @@ class ProofOfPlay implements ReportInterface
             $filterCriteria['reportFilter'] = 'lastyear';
         }
 
-        $filterCriteria['sendEmail'] = $this->getSanitizer()->getCheckbox('sendEmail');
-        $filterCriteria['nonusers'] = $this->getSanitizer()->getString('nonusers');
+        $filterCriteria['sendEmail'] = $sanitizedParams->getCheckbox('sendEmail');
+        $filterCriteria['nonusers'] = $sanitizedParams->getString('nonusers');
 
         // Return
         return [
@@ -303,7 +307,7 @@ class ProofOfPlay implements ReportInterface
     public function getSavedReportResults($json, $savedReport)
     {
         // Get filter criteria
-        $rs = $this->reportScheduleFactory->getById($savedReport->reportScheduleId)->filterCriteria;
+        $rs = $this->reportScheduleFactory->getById($savedReport->reportScheduleId, 1)->filterCriteria;
         $filterCriteria = json_decode($rs, true);
 
         $tagsType = $filterCriteria['tagsType'];
@@ -334,14 +338,14 @@ class ProofOfPlay implements ReportInterface
     /** @inheritdoc */
     public function getResults($filterCriteria)
     {
-
-        $displayId = $this->getSanitizer()->getInt('displayId', $filterCriteria);
-        $layoutIds = $this->getSanitizer()->getIntArray('layoutId', $filterCriteria);
-        $mediaIds = $this->getSanitizer()->getIntArray('mediaId', $filterCriteria);
-        $type = strtolower($this->getSanitizer()->getString('type'));
-        $tags = $this->getSanitizer()->getString('tags', $filterCriteria);
-        $tagsType = $this->getSanitizer()->getString('tagsType', $filterCriteria);
-        $exactTags = $this->getSanitizer()->getCheckbox('exactTags', $filterCriteria);
+        $sanitizedParams = $this->getSanitizer($filterCriteria);
+        $displayId = $sanitizedParams->getInt('displayId');
+        $layoutIds = $sanitizedParams->getIntArray('layoutId',  ['default' => [] ]);
+        $mediaIds = $sanitizedParams->getIntArray('mediaId',  ['default' => [] ]);
+        $type = strtolower($sanitizedParams->getString('type'));
+        $tags = $sanitizedParams->getString('tags');
+        $tagsType = $sanitizedParams->getString('tagsType');
+        $exactTags = $sanitizedParams->getCheckbox('exactTags');
 
         // Do not filter by display if super admin and no display is selected
         // Super admin will be able to see stat records of deleted display, we will not filter by display later
@@ -349,11 +353,13 @@ class ProofOfPlay implements ReportInterface
 
         // Get user
         $userId = $this->getUserId();
+
         if ($userId == null) {
             $user = $this->userFactory->getUser();
         } else {
             $user = $this->userFactory->getById($userId);
         }
+
         $displayFactory = clone $this->displayFactory;
         $displayFactory->setAclDependencies($user, $this->userFactory);
 
@@ -363,8 +369,9 @@ class ProofOfPlay implements ReportInterface
                 $displayIds[] = $display->displayId;
             }
 
-            if (count($displayIds) <= 0)
+            if (count($displayIds) <= 0) {
                 throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
+            }
 
             // Set displayIds as [-1] if the user selected a display for which they don't have permission
             if ($displayId != 0) {
@@ -380,29 +387,24 @@ class ProofOfPlay implements ReportInterface
             }
         }
 
-        // Sorting?
-
-        if($filterCriteria == null) {
-
-            $filterBy = $this->gridRenderFilter();
-            $sortOrder = $this->gridRenderSort();
-
+        // web
+        if ($sanitizedParams->getString('sortBy') == null) {
+            // Sorting?
+            $sortOrder = $this->gridRenderSort($filterCriteria);
             $columns = [];
-            if (is_array($sortOrder))
+
+            if (is_array($sortOrder)) {
                 $columns = $sortOrder;
+            }
 
             // Paging
-            $start = 0;
-            $length = 0;
-            if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-
-                $start = intval($this->getSanitizer()->getInt('start', $filterBy), 0);
-                $length = $this->getSanitizer()->getInt('length', 10, $filterBy);
-            }
+            $start = intval($sanitizedParams->getInt('start'), 0);
+            $length = $sanitizedParams->getInt('length', ['default' => 10]);
         } else {
+            // xtr
             $start = 0;
             $length = -1;
-            $sortBy = $this->getSanitizer()->getString('sortBy', $filterCriteria);
+            $sortBy = $sanitizedParams->getString('sortBy');
 
             $columns = ($sortBy == '') ? ['widgetId'] : [$sortBy];
         }
@@ -412,7 +414,7 @@ class ProofOfPlay implements ReportInterface
         // --------------------------
         // Our report has a range filter which determins whether or not the user has to enter their own from / to dates
         // check the range filter first and set from/to dates accordingly.
-        $reportFilter = $this->getSanitizer()->getString('reportFilter', $filterCriteria);
+        $reportFilter = $sanitizedParams->getString('reportFilter');
 
         // Use the current date as a helper
         $now = $this->getDate()->parse();
@@ -462,14 +464,14 @@ class ProofOfPlay implements ReportInterface
             case '':
             default:
                 // Expect dates to be provided.
-                $fromDt = $this->getSanitizer()->getDate('statsFromDt', $this->getDate()->parse()->addDay(-1));
+                $fromDt = $sanitizedParams->getDate('statsFromDt', ['default' => $this->getDate()->parse()->subDay()]);
                 $fromDt->startOfDay();
 
-                $toDt = $this->getSanitizer()->getDate('statsToDt', $this->getDate()->parse());
+                $toDt = $sanitizedParams->getDate('statsToDt', ['default' => $this->getDate()->parse()]);
                 $toDt->startOfDay();
 
-                $fromDtTime = $this->getSanitizer()->getString('statsFromDtTime');
-                $toDtTime = $this->getSanitizer()->getString('statsToDtTime');
+                $fromDtTime = $sanitizedParams->getString('statsFromDtTime');
+                $toDtTime = $sanitizedParams->getString('statsToDtTime');
 
                 if ($fromDtTime !== null && $toDtTime !== null) {
 
@@ -504,27 +506,28 @@ class ProofOfPlay implements ReportInterface
         foreach ($result['result'] as $row) {
 
             $entry = [];
+            $sanitizedRow = $this->getSanitizer($row);
 
-            $widgetId = $this->getSanitizer()->int($row['widgetId']);
-            $widgetName = $this->getSanitizer()->string($row['media']);
+            $widgetId = $sanitizedRow->getInt('widgetId');
+            $widgetName = $sanitizedRow->getString('media');
             // If the media name is empty, and the widgetid is not, then we can assume it has been deleted.
             $widgetName = ($widgetName == '' &&  $widgetId != 0) ? __('Deleted from Layout') : $widgetName;
-            $displayName = $this->getSanitizer()->string($row['display']);
-            $layoutName = $this->getSanitizer()->string($row['layout']);
+            $displayName = $sanitizedRow->getString('display');
+            $layoutName = $sanitizedRow->getString('layout');
 
-            $entry['type'] = $this->getSanitizer()->string($row['type']);
-            $entry['displayId'] = $this->getSanitizer()->int(($row['displayId']));
+            $entry['type'] = $sanitizedRow->getString('type');
+            $entry['displayId'] = $sanitizedRow->getInt('displayId');
             $entry['display'] = ($displayName != '') ? $displayName : __('Not Found');
-            $entry['layoutId'] = $this->getSanitizer()->int($row['layoutId']);
+            $entry['layoutId'] = $sanitizedRow->getInt('layoutId');
             $entry['layout'] = ($layoutName != '') ? $layoutName :  __('Not Found');
-            $entry['widgetId'] = $this->getSanitizer()->int($row['widgetId']);
+            $entry['widgetId'] = $sanitizedRow->getInt('widgetId');
             $entry['media'] = $widgetName;
-            $entry['tag'] = $this->getSanitizer()->string($row['tag']);
-            $entry['numberPlays'] = $this->getSanitizer()->int($row['numberPlays']);
-            $entry['duration'] = $this->getSanitizer()->int($row['duration']);
+            $entry['tag'] = $sanitizedRow->getString('tag');
+            $entry['numberPlays'] = $sanitizedRow->getInt('numberPlays');
+            $entry['duration'] = $sanitizedRow->getInt('duration');
             $entry['minStart'] = $this->getDate()->parse($row['minStart'], 'U')->format('Y-m-d H:i:s');
             $entry['maxEnd'] = $this->getDate()->parse($row['maxEnd'], 'U')->format('Y-m-d H:i:s');
-            $entry['mediaId'] = $this->getSanitizer()->int($row['mediaId']);
+            $entry['mediaId'] = $sanitizedRow->getInt('mediaId');
 
             $rows[] = $entry;
         }

@@ -1,8 +1,23 @@
 {#
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
 
@@ -18,7 +33,7 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Delete" %}, XiboSwapDialog("{{ urlFor("schedule.delete.form", {id: event.eventId}) }}")
+    {% trans "Delete" %}, XiboSwapDialog("{{ url_for("schedule.delete.form", {id: event.eventId}) }}")
     {% trans "Save" %}, beforeSubmitScheduleForm($("#scheduleEditForm"))
 {% endblock %}
 
@@ -32,11 +47,10 @@
                 <li class="geoSchedule"><a href="#geoSchedule" role="tab" data-toggle="tab"><span>{% trans "Geo Location" %}</span></a></li>
             </ul>
             {% set dayPartMessage %}{% trans "Select the start time for this event" %}{% endset %}
-            {% set notDayPartMessage %}{% trans "Start and end time will be defined by the daypart's configuration for this day of the week. Use a repeating schedule to apply this event over multiple days" %}{% endset %}
-            <form id="scheduleEditForm" autocomplete="off" class="form-horizontal" method="put" data-event-id="{{ event.eventId }}" data-event-start="{{ eventStart }}" data-event-end="{{ eventEnd }}" action="{{ urlFor("schedule.edit", {id: event.eventId}) }}"
+            <form id="scheduleEditForm" autocomplete="off" class="form-horizontal" method="put" data-event-id="{{ event.eventId }}" data-event-start="{{ eventStart }}" data-event-end="{{ eventEnd }}" action="{{ url_for("schedule.edit", {id: event.eventId}) }}"
                   data-daypart-message="{{ dayPartMessage }}"
                   data-not-daypart-message="{{ notDayPartMessage }}"
-                  data-add-url="{{ urlFor("schedule.add") }}"
+                  data-add-url="{{ url_for("schedule.add") }}"
                   data-duplicated-message="{% trans "Duplicate form loaded, make adjustments and press save." %}"
                   data-default-lat="{{ defaultLat }}"
                   data-default-long="{{ defaultLong }}">
@@ -61,7 +75,7 @@
                         {% set title %}{% trans "Display" %}{% endset %}
                         {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
                         {% set attributes = [
-                            { name: "data-search-url", value:  urlFor("schedule.displayGroup.search") },
+                            { name: "data-search-url", value:  url_for("schedule.displayGroup.search") },
                             { name: "data-trans-groups", value:  "Groups"|trans },
                             { name: "data-trans-display", value:  "Display"|trans }
                         ] %}
@@ -94,7 +108,7 @@
 
                         {# Campaign / Layout list. We want to build two arrays for us to use. #}
                         {% set attributes = [
-                            { name: "data-search-url", value:  urlFor("schedule.campaign.search") },
+                            { name: "data-search-url", value:  url_for("schedule.campaign.search") },
                         ] %}
 
                         {% set title %}{% trans "Layout" %}{% endset %}
@@ -107,7 +121,7 @@
 
                         <div class="form-group preview-button-container">
                             <div class="col-md-offset-2 col-md-10">
-                                <a id="previewButton" class="btn btn-success" target="_blank" data-url="{{ urlFor("campaign.preview") }}">{% trans "Preview" %} <span class="fa fa-tablet"></span></a>
+                                <a id="previewButton" class="btn btn-success" target="_blank" data-url="{{ url_for("campaign.preview", {id: ':id'}) }}">{% trans "Preview" %} <span class="fa fa-tablet"></span></a>
                                 <span class="help-block">{% trans "Preview your selection in a new tab" %}</span>
                             </div>
                         </div>

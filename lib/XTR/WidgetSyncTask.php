@@ -21,6 +21,11 @@
 
 namespace Xibo\XTR;
 
+use Nyholm\Psr7\Factory\Psr17Factory;
+use Nyholm\Psr7\ServerRequest;
+use Slim\Http\Factory\DecoratedResponseFactory;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Region;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\LayoutFactory;
@@ -138,8 +143,13 @@ class WidgetSyncTask implements TaskInterface
                             // Record start time
                             $startTime = microtime(true);
 
+                            $nyholmFactory = new Psr17Factory();
+                            $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
+                            $response = $decoratedResponseFactory->createResponse(200);
+                            $request = new Request(new ServerRequest('GET', PROJECT_ROOT . '/'));
+
                             // Cache the widget
-                            $module->getResourceOrCache($displayId);
+                            $module->getResourceOrCache($request->withAttribute('displayId', $displayId), $response);
 
                             // Record we have done this widget
                             $widgetsDone[] = $widget->widgetId;

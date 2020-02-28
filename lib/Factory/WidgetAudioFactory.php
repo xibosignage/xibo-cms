@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (WidgetMediaFactory.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -73,9 +74,11 @@ class WidgetAudioFactory extends BaseFactory
     public function query($sortOrder = null, $filterBy = [])
     {
         $entries = [];
+        $sanitizedFilter = $this->getSanitizer($filterBy);
+
         $sql = 'SELECT `mediaId`, `widgetId`, `volume`, `loop` FROM `lkwidgetaudio` WHERE widgetId = :widgetId AND mediaId <> 0 ';
 
-        foreach ($this->getStore()->select($sql, ['widgetId' => $this->getSanitizer()->getInt('widgetId', $filterBy)]) as $row) {
+        foreach ($this->getStore()->select($sql, ['widgetId' => $sanitizedFilter->getInt('widgetId')]) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['duration']]);
         }
 

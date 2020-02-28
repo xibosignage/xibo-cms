@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (UserFactory.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -208,10 +209,12 @@ class UserFactory extends BaseFactory
     public function query($sortOrder = [], $filterBy = [])
     {
         $entries = [];
+        $parsedFilter = $this->getSanitizer($filterBy);
 
         // Default sort order
-        if ($sortOrder === null || count($sortOrder) <= 0)
+        if ($sortOrder === null || count($sortOrder) <= 0) {
             $sortOrder = ['userName'];
+        }
 
         $params = [];
         $select = '
@@ -258,7 +261,7 @@ class UserFactory extends BaseFactory
              WHERE 1 = 1
          ';
 
-        if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
+        if ($parsedFilter->getCheckbox('disableUserCheck') == 0) {
             // Normal users can only see themselves
             if ($this->getUser()->userTypeId == 3) {
                 $filterBy['userId'] = $this->getUser()->userId;
@@ -281,67 +284,67 @@ class UserFactory extends BaseFactory
             }
         }
 
-        if ($this->getSanitizer()->getInt('notUserId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('notUserId') !== null) {
             $body .= ' AND user.userId <> :notUserId ';
-            $params['notUserId'] = $this->getSanitizer()->getInt('notUserId', $filterBy);
+            $params['notUserId'] = $parsedFilter->getInt('notUserId');
         }
 
         // User Id Provided?
-        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('userId') !== null) {
             $body .= " AND user.userId = :userId ";
-            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
+            $params['userId'] = $parsedFilter->getInt('userId');
         }
 
         // Groups Provided
-        $groups = $this->getSanitizer()->getParam('groupIds', $filterBy);
+        $groups = $parsedFilter->getIntArray('groupIds');
 
         if ($groups !== null && count($groups) > 0) {
             $body .= ' AND user.userId IN (SELECT userId FROM `lkusergroup` WHERE groupId IN (' . implode($groups, ',') . ')) ';
         }
 
         // User Type Provided
-        if ($this->getSanitizer()->getInt('userTypeId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('userTypeId') !== null) {
             $body .= " AND user.userTypeId = :userTypeId ";
-            $params['userTypeId'] = $this->getSanitizer()->getInt('userTypeId', $filterBy);
+            $params['userTypeId'] = $parsedFilter->getInt('userTypeId');
         }
 
         // User Name Provided
-        if ($this->getSanitizer()->getString('exactUserName', $filterBy) != null) {
+        if ($parsedFilter->getString('exactUserName') != null) {
             $body .= " AND user.userName = :exactUserName ";
-            $params['exactUserName'] = $this->getSanitizer()->getString('exactUserName', $filterBy);
+            $params['exactUserName'] = $parsedFilter->getString('exactUserName');
         }
 
-        if ($this->getSanitizer()->getString('userName', $filterBy) != null) {
-            $terms = explode(',', $this->getSanitizer()->getString('userName', $filterBy));
+        if ($parsedFilter->getString('userName') != null) {
+            $terms = explode(',', $parsedFilter->getString('userName'));
             $this->nameFilter('user', 'userName', $terms, $body, $params);
         }
 
         // Email Provided
-        if ($this->getSanitizer()->getString('email', $filterBy) != null) {
+        if ($parsedFilter->getString('email') != null) {
             $body .= " AND user.email = :email ";
-            $params['email'] = $this->getSanitizer()->getString('email', $filterBy);
+            $params['email'] = $parsedFilter->getString('email');
         }
 
         // Retired users?
-        if ($this->getSanitizer()->getInt('retired', $filterBy) !== null) {
+        if ($parsedFilter->getInt('retired') !== null) {
             $body .= " AND user.retired = :retired ";
-            $params['retired'] = $this->getSanitizer()->getInt('retired', $filterBy);
+            $params['retired'] = $parsedFilter->getInt('retired');
         }
 
-        if ($this->getSanitizer()->getString('clientId', $filterBy) != null) {
+        if ($parsedFilter->getString('clientId') != null) {
             $body .= ' AND user.userId = (SELECT userId FROM `oauth_clients` WHERE id = :clientId) ';
-            $params['clientId'] = $this->getSanitizer()->getString('clientId', $filterBy);
+            $params['clientId'] = $parsedFilter->getString('clientId');
         }
 
         // Sorting?
         $order = '';
         if (is_array($sortOrder))
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+            $order .= ' ORDER BY ' . implode(',', $sortOrder);
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $parsedFilter->getInt('start') !== null && $parsedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($parsedFilter->getInt('start'), 0) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

@@ -1,6 +1,6 @@
 <?php
 /**
-* Copyright (C) 2019 Xibo Signage Ltd
+* Copyright (C) 2020 Xibo Signage Ltd
 *
 * Xibo - Digital Signage - http://www.xibo.org.uk
 *
@@ -22,6 +22,9 @@
 
 namespace Xibo\Controller;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CampaignFactory;
@@ -31,12 +34,12 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ScheduleFactory;
-use Xibo\Factory\UserFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Factory\UserFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
@@ -90,7 +93,7 @@ class Tag extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -106,9 +109,10 @@ class Tag extends Base
      * @param ScheduleFactory $scheduleFactory
      * @param CampaignFactory $campaignFactory
      * @param PlaylistFactory $playlistFactory
+     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $displayGroupFactory, $layoutFactory, $tagFactory, $userFactory, $displayFactory, $mediaFactory, $scheduleFactory, $campaignFactory, $playlistFactory) {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $displayGroupFactory, $layoutFactory, $tagFactory, $userFactory, $displayFactory, $mediaFactory, $scheduleFactory, $campaignFactory, $playlistFactory, Twig $view) {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->store = $store;
         $this->displayGroupFactory = $displayGroupFactory;
@@ -122,12 +126,24 @@ class Tag extends Base
         $this->playlistFactory = $playlistFactory;
     }
 
-    public function displayPage()
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
+    public function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'tag-page';
         $this->getState()->setData([
             'users' => $this->userFactory->query()
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -141,42 +157,42 @@ class Tag extends Base
      *  description="Search for Tags viewable by this user",
      *  @SWG\Parameter(
      *      name="tagId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by Tag Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="tag",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by partial Tag",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="exactTag",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by exact Tag",
      *      type="string",
      *      required=false
      *   ),
      *   @SWG\Parameter(
      *      name="isSystem",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by isSystem flag",
      *      type="integer",
      *      required=false
      *   ),
      *   @SWG\Parameter(
      *      name="isRequired",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by isRequired flag",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="haveOptions",
-     *      in="formData",
+     *      in="query",
      *      description="Set to 1 to show only results that have options set",
      *      type="integer",
      *      required=false
@@ -190,23 +206,33 @@ class Tag extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function grid()
+    function grid(Request $request, Response $response)
     {
+        $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
+
         $filter = [
-            'tagId' => $this->getSanitizer()->getInt('tagId'),
-            'tag' => $this->getSanitizer()->getString('tag'),
-            'isSystem' => $this->getSanitizer()->getCheckbox('isSystem'),
-            'isRequired' => $this->getSanitizer()->getCheckbox('isRequired'),
-            'haveOptions' => $this->getSanitizer()->getCheckbox('haveOptions')
+            'tagId' => $sanitizedQueryParams->getInt('tagId'),
+            'tag' => $sanitizedQueryParams->getString('tag'),
+            'isSystem' => $sanitizedQueryParams->getCheckbox('isSystem'),
+            'isRequired' => $sanitizedQueryParams->getCheckbox('isRequired'),
+            'haveOptions' => $sanitizedQueryParams->getCheckbox('haveOptions')
         ];
 
-        $tags = $this->tagFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $tags = $this->tagFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
 
         foreach ($tags as $tag) {
             /* @var \Xibo\Entity\Tag $tag */
 
-            if ($this->isApi()) {
+            if ($this->isApi($request)) {
                 break;
             }
 
@@ -219,18 +245,18 @@ class Tag extends Base
                 // Edit the Tag
                 $tag->buttons[] = [
                     'id' => 'tag_button_edit',
-                    'url' => $this->urlFor('tag.edit.form', ['id' => $tag->tagId]),
+                    'url' => $this->urlFor($request,'tag.edit.form', ['id' => $tag->tagId]),
                     'text' => __('Edit')
                 ];
 
                 // Delete Tag
                 $tag->buttons[] = [
                     'id' => 'tag_button_delete',
-                    'url' => $this->urlFor('tag.delete.form', ['id' => $tag->tagId]),
+                    'url' => $this->urlFor($request,'tag.delete.form', ['id' => $tag->tagId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor('tag.delete', ['id' => $tag->tagId])],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'tag.delete', ['id' => $tag->tagId])],
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'tag_button_delete'],
                         ['name' => 'text', 'value' => __('Delete')],
@@ -243,17 +269,29 @@ class Tag extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->tagFactory->countLast();
         $this->getState()->setData($tags);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Tag Add Form
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function addForm()
+    public function addForm(Request $request, Response $response)
     {
         $this->getState()->template = 'tag-form-add';
         $this->getState()->setData([
             'help' => $this->getHelp()->link('Tags', 'Add')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -295,18 +333,30 @@ class Tag extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Exception\InvalidArgumentException
      */
-    public function add()
+    public function add(Request $request, Response $response)
     {
         if (!$this->getUser()->isSuperAdmin()) {
             throw new AccessDeniedException();
         }
 
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
         $values = [];
-        $tag = $this->tagFactory->create($this->getSanitizer()->getString('name'));
+        $tag = $this->tagFactory->create($sanitizedParams->getString('name'));
         $tag->options = [];
-        $tag->isRequired = $this->getSanitizer()->getCheckbox('isRequired');
-        $optionValues = $this->getSanitizer()->getString('options');
+        $tag->isRequired = $sanitizedParams->getCheckbox('isRequired');
+        $optionValues = $sanitizedParams->getString('options');
 
         if ($optionValues != '') {
             $optionValuesArray = explode(',', $optionValues);
@@ -327,6 +377,8 @@ class Tag extends Base
             'id' => $tag->tagId,
             'data' => $tag
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -370,12 +422,20 @@ class Tag extends Base
      * )
      *
      *
-     * @param $tagId
-     * @throws \Xibo\Exception\NotFoundException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function editForm($tagId)
+    public function editForm(Request $request, Response $response, $id)
     {
-        $tag = $this->tagFactory->getById($tagId);
+        $tag = $this->tagFactory->getById($id);
         $tagOptions = '';
 
         if (isset($tag->options)) {
@@ -388,21 +448,34 @@ class Tag extends Base
             'options' => $tagOptions,
             'help' => $this->getHelp()->link('Tags', 'Add')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edit a Tag
      *
-     * @param $tagId
-     * @throws \Xibo\Exception\NotFoundException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Exception\InvalidArgumentException
      */
-    public function edit($tagId)
+    public function edit(Request $request, Response $response, $id)
     {
         if (!$this->getUser()->isSuperAdmin()) {
             throw new AccessDeniedException();
         }
 
-        $tag = $this->tagFactory->getById($tagId);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $tag = $this->tagFactory->getById($id);
         $tag->load();
 
         if ($tag->isSystem === 1) {
@@ -416,9 +489,9 @@ class Tag extends Base
 
         $values = [];
 
-        $tag->tag = $this->getSanitizer()->getString('name');
-        $tag->isRequired = $this->getSanitizer()->getCheckbox('isRequired');
-        $optionValues = $this->getSanitizer()->getString('options');
+        $tag->tag = $sanitizedParams->getString('name');
+        $tag->isRequired = $sanitizedParams->getCheckbox('isRequired');
+        $optionValues = $sanitizedParams->getString('options');
 
         if ($optionValues != '') {
             $optionValuesArray = explode(',', $optionValues);
@@ -459,22 +532,34 @@ class Tag extends Base
             'id' => $tag->tagId,
             'data' => $tag
         ]);
+
+        return $this->render($request,$response);
     }
 
     /**
      * Shows the Delete Group Form
-     * @param int $tagId
-     * @throws \Xibo\Exception\NotFoundException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function deleteForm($tagId)
+    function deleteForm(Request $request, Response $response, $id)
     {
-        $tag = $this->tagFactory->getById($tagId);
+        $tag = $this->tagFactory->getById($id);
 
         $this->getState()->template = 'tag-form-delete';
         $this->getState()->setData([
             'tag' => $tag,
             'help' => $this->getHelp()->link('Tag', 'Delete')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -499,19 +584,27 @@ class Tag extends Base
      *  )
      * )
      *
-     * @param int $tagId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\DuplicateEntityException
      * @throws \Xibo\Exception\InvalidArgumentException
-     * @throws \Xibo\Exception\NotFoundException
      * @throws \Xibo\Exception\XiboException
      */
-    public function delete($tagId)
+    public function delete(Request $request, Response $response, $id)
     {
         if (!$this->getUser()->isSuperAdmin()) {
             throw new AccessDeniedException();
         }
 
-        $tag = $this->tagFactory->getById($tagId);
+        $tag = $this->tagFactory->getById($id);
         $tag->load();
 
         if ($tag->isSystem === 1) {
@@ -570,14 +663,23 @@ class Tag extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $tag->tag)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
-     * @throws NotFoundException
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function loadTagOptions()
+    public function loadTagOptions(Request $request, Response $response)
     {
-        $tagName = $this->getSanitizer()->getString('name');
+        $tagName = $this->getSanitizer($request->getParams())->getString('name');
 
         try {
             $tag = $this->tagFactory->getByTag($tagName);
@@ -589,5 +691,7 @@ class Tag extends Base
         $this->getState()->setData([
             'tag' => ($tag === null) ? null : $tag
         ]);
+
+        return $this->render($request, $response);
     }
 }

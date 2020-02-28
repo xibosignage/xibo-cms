@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,11 +22,13 @@
 namespace Xibo\Controller;
 
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 
 /**
  * Class Clock
@@ -41,7 +44,7 @@ class Clock extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -75,22 +78,31 @@ class Clock extends Base
      *  )
      * )
      *
-     * @throws \Exception
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function clock()
+    public function clock(Request $request, Response $response)
     {
         $this->session->refreshExpiry = false;
 
-        if ($this->getApp()->request()->isAjax() || $this->isApi()) {
+        if ($request->isXhr() || $this->isApi($request)) {
             $output = $this->getDate()->getLocalDate(null, 'H:i T');
 
             $this->getState()->setData(array('time' => $output));
             $this->getState()->html = $output;
             $this->getState()->clockUpdate = true;
             $this->getState()->success = true;
+            return $this->render($request, $response);
         } else {
-            $this->setNoOutput(true);
-            echo $this->getDate()->getLocalDate(null, 'c');
+            // We are returning the response directly, so write the body.
+            $response->getBody()->write($this->getDate()->getLocalDate(null, 'c'));
+            return $response;
         }
     }
 }

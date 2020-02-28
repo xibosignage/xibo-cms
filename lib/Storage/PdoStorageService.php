@@ -197,9 +197,9 @@ class PdoStorageService implements StorageServiceInterface
             $connection = 'default';
 
         try {
-            if (!$this->getConnection($connection)->inTransaction())
+            if (!$this->getConnection($connection)->inTransaction()) {
                 $this->getConnection($connection)->beginTransaction();
-
+            }
             $sth = $this->getConnection($connection)->prepare($sql);
 
             $sth->execute($params);

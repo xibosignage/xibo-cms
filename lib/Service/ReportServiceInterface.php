@@ -22,6 +22,7 @@
 
 namespace Xibo\Service;
 
+use Slim\Http\ServerRequest as Request;
 use Slim\Slim;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Report\ReportInterface;
@@ -36,7 +37,7 @@ interface ReportServiceInterface
 {
     /**
      * ReportServiceInterface constructor.
-     * @param Slim $app
+     * @param \Psr\Container\ContainerInterface $app
      * @param \Xibo\Helper\ApplicationState $state
      * @param StorageServiceInterface $store
      * @param TimeSeriesStoreInterface $timeSeriesStore
@@ -76,14 +77,14 @@ interface ReportServiceInterface
      * @param string $reportName
      * @return array
      */
-    public function getReportScheduleFormData($reportName);
+    public function getReportScheduleFormData($reportName, Request $request);
 
     /**
      * Set Report Schedule form data
      * @param string $reportName
      * @return array
      */
-    public function setReportScheduleFormData($reportName);
+    public function setReportScheduleFormData($reportName, Request $request);
 
     /**
      * Generate saved report name

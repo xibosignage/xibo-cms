@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (RequiredFileFactory.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -79,7 +94,7 @@ class RequiredFileFactory extends BaseFactory
         $result = $this->query(['displayId' => $displayId, 'type' => 'L', 'itemId' => $layoutId]);
 
         if (count($result) <= 0)
-            throw new NotFoundException(__('Required file not found for Display and Layout Combination'));
+            throw new NotFoundException('Required file not found for Display and Layout Combination');
 
         return $result[0];
     }
@@ -95,7 +110,7 @@ class RequiredFileFactory extends BaseFactory
         $result = $this->query(['displayId' => $displayId, 'type' => 'M', 'itemId' => $mediaId]);
 
         if (count($result) <= 0)
-            throw new NotFoundException(__('Required file not found for Display and Media Combination'));
+            throw new NotFoundException('Required file not found for Display and Media Combination');
 
         return $result[0];
     }
@@ -111,7 +126,7 @@ class RequiredFileFactory extends BaseFactory
         $result = $this->query(['displayId' => $displayId, 'type' => 'W', 'itemId' => $widgetId]);
 
         if (count($result) <= 0)
-            throw new NotFoundException(__('Required file not found for Display and Layout Widget'));
+            throw new NotFoundException('Required file not found for Display and Layout Widget');
 
         return $result[0];
     }
@@ -168,6 +183,7 @@ class RequiredFileFactory extends BaseFactory
      * @param $mediaId
      * @param $size
      * @param $path
+     * @param $released
      * @return RequiredFile
      */
     public function createForMedia($displayId, $mediaId, $size, $path, $released)

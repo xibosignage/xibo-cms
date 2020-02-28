@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -19,9 +19,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 namespace Xibo\Widget;
 
-use Xibo\Factory\ModuleFactory;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 
 /**
  * Class Spacer
@@ -32,8 +34,7 @@ class Spacer extends ModuleWidget
     public $codeSchemaVersion = 1;
 
     /**
-     * Install or Update this module
-     * @param ModuleFactory $moduleFactory
+     * @inheritDoc
      */
     public function installOrUpdate($moduleFactory)
     {
@@ -64,7 +65,7 @@ class Spacer extends ModuleWidget
     }
 
     /**
-     * Javascript functions for the layout designer
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -122,17 +123,21 @@ class Spacer extends ModuleWidget
      *  )
      * )
      *
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @inheritDoc
      */
-    public function edit()
+    public function edit(Request $request, Response $response): Response
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
         // Set the properties specific to this module
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
 
         $this->saveWidget();
+
+        return $response;
     }
 
     /**
@@ -148,7 +153,9 @@ class Spacer extends ModuleWidget
     public function getResource($displayId = 0)
     {
         // Construct the response HTML
-        $this->initialiseGetResource()->appendViewPortWidth($this->region->width);
+        $this->initialiseGetResource()
+            ->appendViewPortWidth($this->region->width);
+
         return $this->finaliseGetResource();
     }
 

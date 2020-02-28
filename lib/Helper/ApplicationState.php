@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -44,6 +45,7 @@ class ApplicationState
     public $extra;
     public $recordsTotal;
     public $recordsFiltered;
+    private $commit = true;
 
     public function __construct()
     {
@@ -84,9 +86,9 @@ class ApplicationState
 
     /**
      * Response JSON
-     * @return string JSON String
+     * @return array
      */
-    public function asJson()
+    public function asArray()
     {
         // Construct the Response
         $response = array();
@@ -110,7 +112,15 @@ class ApplicationState
         $response['extra'] = $this->extra;
         $response['data'] = $this->data;
 
-        return json_encode($response);
+        return $response;
+    }
+
+    /**
+     * @return false|string
+     */
+    public function asJson()
+    {
+        return json_encode($this->asArray());
     }
 
     /**
@@ -150,5 +160,15 @@ class ApplicationState
         }
 
         return $this;
+    }
+
+    public function getCommitState()
+    {
+        return $this->commit;
+    }
+
+    public function setCommitState(bool $state)
+    {
+        return $this->commit = $state;
     }
 }

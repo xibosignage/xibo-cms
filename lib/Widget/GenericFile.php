@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -19,6 +20,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Widget;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 
 /**
  * Class GenericFile
@@ -27,17 +30,13 @@ namespace Xibo\Widget;
 class GenericFile extends ModuleWidget
 {
     /** @inheritdoc */
-    public function edit()
+    public function edit(Request $request, Response $response): Response
     {
-        // Non-editable
+        return $response;
     }
 
     /**
-     * Preview code for a module
-     * @param int $width
-     * @param int $height
-     * @param int $scaleOverride The Scale Override
-     * @return string The Rendered Content
+     * @inheritDoc
      */
     public function preview($width, $height, $scaleOverride = 0)
     {
@@ -46,17 +45,21 @@ class GenericFile extends ModuleWidget
     }
 
     /**
-     * Get Resource
-     * @param int $displayId
-     * @return mixed
+     * @inheritDoc
      */
     public function getResource($displayId = 0)
+    {
+        return '';
+    }
+
+    /** @inheritDoc */
+    public function download(Request $request, Response $response): Response
     {
         if (ini_get('zlib.output_compression')) {
             ini_set('zlib.output_compression', 'Off');
         }
 
-        $this->download();
+        return parent::download($request, $response);
     }
 
     /**

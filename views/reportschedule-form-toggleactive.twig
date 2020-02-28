@@ -1,7 +1,8 @@
 {#
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2019 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -17,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 #}
 
@@ -41,7 +41,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="reportScheduleToggleActiveForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("reportschedule.toggleactive", {"id": reportSchedule.reportScheduleId}) }}">
+            <form id="reportScheduleToggleActiveForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("reportschedule.toggleactive", {"id": reportSchedule.reportScheduleId}) }}">
                 {% if reportSchedule.isActive == 1 %}
                     {% set message %}{% trans "Are you sure you want to pause this report schedule?" %}{% endset %}
                 {% else %}

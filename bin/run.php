@@ -20,6 +20,12 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+use Monolog\Logger;
+use Monolog\Processor\UidProcessor;
+use Psr\Container\ContainerInterface;
+use Slim\Views\TwigMiddleware;
+use Xibo\Factory\ContainerFactory;
+
 define('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 
@@ -36,32 +42,39 @@ $argv = $GLOBALS['argv'];
 array_shift($GLOBALS['argv']);
 $pathInfo = '/' . implode('/', $argv);
 
-// Create a logger
-$logger = new \Xibo\Helper\AccessibleMonologWriter(array(
-    'name' => 'CONSOLE',
-    'handlers' => array(
-        new \Xibo\Helper\DatabaseLogHandler()
-    ),
-    'processors' => array(
-        new \Xibo\Helper\LogProcessor(),
-        new \Monolog\Processor\UidProcessor(7)
-    )
-), false);
+// Create the container for dependency injection.
+try {
+    $container = ContainerFactory::create();
+} catch (Exception $e) {
+    die($e->getMessage());
+}
+$container->set('name', 'xtr');
 
-$app = new \RKA\Slim(array(
-    'debug' => false,
-    'log.writer' => $logger
-));
-$app->setName('console');
+$container->set('logger', function (ContainerInterface $container) {
+    $logger = new Logger('CONSOLE');
 
+    $uidProcessor = new UidProcessor();
+    // db
+    $dbhandler  =  new \Xibo\Helper\DatabaseLogHandler();
+
+    $logger->pushProcessor($uidProcessor);
+    $logger->pushHandler($dbhandler);
+
+    return $logger;
+});
+
+$app = \DI\Bridge\Slim\Bridge::create($container);
+
+$app->setBasePath(\Xibo\Middleware\State::determineBasePath());
 // Config
-$app->configService = \Xibo\Service\ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
+$app->configService = $container->get('configService');
 
 // Check for upgrade after we've loaded settings to make sure the main app gets any custom settings it needs.
 if (\Xibo\Helper\Environment::migrationPending()) {
     die('Upgrade pending');
 }
 
+/*
 // Set up the environment so that Slim can route
 $app->environment = Slim\Environment::mock([
     'PATH_INFO'   => $pathInfo
@@ -85,20 +98,24 @@ $twig->parserExtensions = array(
 $twig->twigTemplateDirs = [PROJECT_ROOT . '/views'];
 
 $app->view($twig);
+*/
+$twigMiddleware = TwigMiddleware::createFromContainer($app);
 
-\Xibo\Middleware\Storage::setStorage($app->container);
-\Xibo\Middleware\State::setState($app);
-
-$app->add(new \Xibo\Middleware\Xtr());
-$app->add(new \Xibo\Middleware\Storage());
-$app->add(new \Xibo\Middleware\Xmr());
+$app->add(new \Xibo\Middleware\Storage($app));
+$app->add(new \Xibo\Middleware\Xtr($app));
+$app->add(new \Xibo\Middleware\State($app));
+$app->add($twigMiddleware);
+$app->add(new \Xibo\Middleware\Log($app));
+$app->add(new \Xibo\Middleware\Xmr($app));
 
 // Handle additional Middleware
 \Xibo\Middleware\State::setMiddleWare($app);
 
-// Configure a user
-$app->user = $app->userFactory->getSystemUser();
+$app->addRoutingMiddleware();
+$app->addErrorMiddleware(true, true, true);
 
+
+/*
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
     $app->container->get('\Xibo\Controller\Error')->handler($e);
@@ -108,10 +125,10 @@ $app->error(function (\Exception $e) use ($app) {
 $app->notFound(function () use ($app) {
     $app->container->get('\Xibo\Controller\Error')->notFound();
 });
-
+*/
 // All routes
-$app->get('/', '\Xibo\Controller\Task:poll');
-$app->get('/:id', '\Xibo\Controller\Task:run');
+$app->get('/', ['\Xibo\Controller\Task','poll']);
+$app->get('/{id}', ['\Xibo\Controller\Task','run']);
 
 // Run app
 $app->run();

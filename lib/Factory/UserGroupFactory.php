@@ -1,13 +1,27 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (UserGroupFactory.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
 namespace Xibo\Factory;
-
 
 use Xibo\Entity\User;
 use Xibo\Entity\UserGroup;
@@ -171,11 +185,13 @@ class UserGroupFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        $entries = array();
-        $params = array();
+        $parsedFilter = $this->getSanitizer($filterBy);
+        $entries = [];
+        $params = [];
 
-        if ($sortOrder === null)
+        if ($sortOrder === null) {
             $sortOrder = ['`group`'];
+        }
 
         $select = '
         SELECT 	`group`.group,
@@ -193,7 +209,7 @@ class UserGroupFactory extends BaseFactory
         ';
 
         // Permissions
-        if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0) {
+        if ($parsedFilter->getCheckbox('disableUserCheck') == 0) {
             // Normal users can only see their group
             if ($this->getUser()->userTypeId != 1) {
                 $body .= '
@@ -211,54 +227,54 @@ class UserGroupFactory extends BaseFactory
         }
 
         // Filter by Group Id
-        if ($this->getSanitizer()->getInt('groupId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('groupId') !== null) {
             $body .= ' AND `group`.groupId = :groupId ';
-            $params['groupId'] = $this->getSanitizer()->getInt('groupId', $filterBy);
+            $params['groupId'] = $parsedFilter->getInt('groupId');
         }
 
         // Filter by Group Name
-        if ($this->getSanitizer()->getString('group', $filterBy) != null) {
-            $terms = explode(',', $this->getSanitizer()->getString('group', $filterBy));
+        if ($parsedFilter->getString('group') != null) {
+            $terms = explode(',', $parsedFilter->getString('group'));
             $this->nameFilter('group', 'group', $terms, $body, $params);
         }
 
-        if ($this->getSanitizer()->getString('exactGroup', $filterBy) != null) {
+        if ($parsedFilter->getString('exactGroup') != null) {
             $body .= ' AND `group`.group = :exactGroup ';
-            $params['exactGroup'] = $this->getSanitizer()->getString('exactGroup', $filterBy);
+            $params['exactGroup'] = $parsedFilter->getString('exactGroup');
         }
 
         // Filter by User Id
-        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('userId') !== null) {
             $body .= ' AND `group`.groupId IN (SELECT groupId FROM `lkusergroup` WHERE userId = :userId) ';
-            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
+            $params['userId'] = $parsedFilter->getInt('userId');
         }
 
-        if ($this->getSanitizer()->getInt('isUserSpecific', $filterBy) != -1) {
+        if ($parsedFilter->getInt('isUserSpecific', ['default' => -1]) != -1) {
             $body .= ' AND isUserSpecific = :isUserSpecific ';
-            $params['isUserSpecific'] = $this->getSanitizer()->getInt('isUserSpecific', 0, $filterBy);
+            $params['isUserSpecific'] = $parsedFilter->getInt('isUserSpecific');
         }
 
-        if ($this->getSanitizer()->getInt('isEveryone', $filterBy) != -1) {
+        if ($parsedFilter->getInt('isEveryone', ['default' => -1]) != -1) {
             $body .= ' AND isEveryone = :isEveryone ';
-            $params['isEveryone'] = $this->getSanitizer()->getInt('isEveryone', 0, $filterBy);
+            $params['isEveryone'] = $parsedFilter->getInt('isEveryone');
         }
 
-        if ($this->getSanitizer()->getInt('isSystemNotification', $filterBy) !== null) {
+        if ($parsedFilter->getInt('isSystemNotification') !== null) {
             $body .= ' AND isSystemNotification = :isSystemNotification ';
-            $params['isSystemNotification'] = $this->getSanitizer()->getInt('isSystemNotification', $filterBy);
+            $params['isSystemNotification'] = $parsedFilter->getInt('isSystemNotification');
         }
 
-        if ($this->getSanitizer()->getInt('isDisplayNotification', $filterBy) !== null) {
+        if ($parsedFilter->getInt('isDisplayNotification') !== null) {
             $body .= ' AND isDisplayNotification = :isDisplayNotification ';
-            $params['isDisplayNotification'] = $this->getSanitizer()->getInt('isDisplayNotification', $filterBy);
+            $params['isDisplayNotification'] = $parsedFilter->getInt('isDisplayNotification');
         }
 
-        if ($this->getSanitizer()->getInt('notificationId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('notificationId') !== null) {
             $body .= ' AND `group`.groupId IN (SELECT groupId FROM `lknotificationgroup` WHERE notificationId = :notificationId) ';
-            $params['notificationId'] = $this->getSanitizer()->getInt('notificationId', $filterBy);
+            $params['notificationId'] = $parsedFilter->getInt('notificationId');
         }
 
-        if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('displayGroupId') !== null) {
             $body .= ' 
                 AND `group`.groupId IN (
                     SELECT DISTINCT `permission`.groupId
@@ -270,18 +286,18 @@ class UserGroupFactory extends BaseFactory
                         AND `permission`.view = 1
                 )
             ';
-            $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
+            $params['displayGroupId'] = $parsedFilter->getInt('displayGroupId');
         }
 
         // Sorting?
         $order = '';
         if (is_array($sortOrder))
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+            $order .= ' ORDER BY ' . implode(',', $sortOrder);
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $parsedFilter->getInt('start', ['default' => 0]) !== null && $parsedFilter->getInt('length', ['default' => 10]) !== null) {
+            $limit = ' LIMIT ' . intval($parsedFilter->getInt('start', ['default' => 0]), 0) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

@@ -9,7 +9,9 @@
 namespace Xibo\Service;
 
 
-use Slim\Slim;
+use Psr\Container\ContainerInterface;
+use Slim\App;
+use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Module;
@@ -35,7 +37,7 @@ interface ModuleServiceInterface
 {
     /**
      * ModuleServiceInterface constructor.
-     * @param Slim $app
+     * @param App $app
      * @param StorageServiceInterface $store
      * @param PoolInterface $pool
      * @param LogServiceInterface $log
@@ -44,7 +46,7 @@ interface ModuleServiceInterface
      * @param SanitizerServiceInterface $sanitizer
      * @param EventDispatcherInterface $dispatcher
      */
-    public function __construct($app, $store, $pool, $log, $config, $date, $sanitizer, $dispatcher);
+    public function __construct($store, $pool, $log, $config, $date, $sanitizer, $dispatcher);
 
     /**
      * @param Module $module
@@ -59,9 +61,12 @@ interface ModuleServiceInterface
      * @param PermissionFactory $permissionFactory
      * @param UserGroupFactory $userGroupFactory
      * @param PlaylistFactory $playlistFactory
+     * @param Twig $view
+     * @param ContainerInterface $container
      * @return ModuleWidget
      */
-    public function get($module, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory);
+    public function get($module, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $view, ContainerInterface $container);
+
     /**
      * @param string $className
      * @param ModuleFactory $moduleFactory
@@ -75,7 +80,9 @@ interface ModuleServiceInterface
      * @param PermissionFactory $permissionFactory
      * @param UserGroupFactory $userGroupFactory
      * @param PlaylistFactory $playlistFactory
+     * @param Twig $view
+     * @param ContainerInterface $container
      * @return ModuleWidget
      */
-    public function getByClass($className, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory);
+    public function getByClass($className, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $view, ContainerInterface $container);
 }

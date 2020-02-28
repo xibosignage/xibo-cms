@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (AuditTrailFactory.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -59,7 +60,8 @@ class AuditLogFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        $this->getLog()->debug('AuditLog Factory with filter: %s', var_export($filterBy, true));
+        $this->getLog()->debug(sprintf('AuditLog Factory with filter: %s', var_export($filterBy, true)));
+        $sanitizedFilter = $this->getSanitizer($filterBy);
 
         $entries = [];
         $params = [];
@@ -67,36 +69,36 @@ class AuditLogFactory extends BaseFactory
         $select = ' SELECT logId, logDate, user.userName, message, objectAfter, entity, entityId, auditlog.userId ';
         $body = 'FROM `auditlog` LEFT OUTER JOIN user ON user.userId = auditlog.userId WHERE 1 = 1 ';
 
-        if ($this->getSanitizer()->getInt('fromTimeStamp', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('fromTimeStamp') !== null) {
             $body .= ' AND `auditlog`.logDate >= :fromTimeStamp ';
-            $params['fromTimeStamp'] = $this->getSanitizer()->getInt('fromTimeStamp', $filterBy);
+            $params['fromTimeStamp'] = $sanitizedFilter->getInt('fromTimeStamp');
         }
 
-        if ($this->getSanitizer()->getInt('toTimeStamp', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('toTimeStamp') !== null) {
             $body .= ' AND `auditlog`.logDate < :toTimeStamp ';
-            $params['toTimeStamp'] = $this->getSanitizer()->getInt('toTimeStamp', $filterBy);
+            $params['toTimeStamp'] = $sanitizedFilter->getInt('toTimeStamp');
         }
 
-        if ($this->getSanitizer()->getString('entity', $filterBy) != null) {
+        if ($sanitizedFilter->getString('entity') != null) {
             $body .= ' AND `auditlog`.entity LIKE :entity ';
-            $params['entity'] = '%' . $this->getSanitizer()->getString('entity', $filterBy) . '%';
+            $params['entity'] = '%' . $sanitizedFilter->getString('entity') . '%';
         }
 
-        if ($this->getSanitizer()->getString('userName', $filterBy) != null) {
+        if ($sanitizedFilter->getString('userName') != null) {
             $body .= ' AND `user`.userName LIKE :userName ';
-            $params['userName'] = '%' . $this->getSanitizer()->getString('userName', $filterBy) . '%';
+            $params['userName'] = '%' . $sanitizedFilter->getString('userName') . '%';
         }
 
-        if ($this->getSanitizer()->getString('message', $filterBy) != null) {
+        if ($sanitizedFilter->getString('message') != null) {
             $body .= ' AND `auditlog`.message LIKE :message ';
-            $params['message'] = '%' . $this->getSanitizer()->getString('message', $filterBy) . '%';
+            $params['message'] = '%' . $sanitizedFilter->getString('message') . '%';
         }
 
-        if ($this->getSanitizer()->getInt('entityId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('entityId') !== null) {
             $body .= ' AND ( `auditlog`.entityId = :entityId  ' ;
-            $params['entityId'] = $this->getSanitizer()->getInt('entityId', $filterBy);
+            $params['entityId'] = $sanitizedFilter->getInt('entityId');
 
-            $entity = $this->getSanitizer()->getString('entity', $filterBy);
+            $entity = $sanitizedFilter->getString('entity');
 
             // if we were supplied with both layout entity and entityId (layoutId), expand the results
             // we want to get all actions issued on this layout from the moment it was added
@@ -127,8 +129,8 @@ class AuditLogFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         // The final statements

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -21,11 +21,10 @@
  */
 namespace Xibo\Widget;
 
-
 use Respect\Validation\Validator as v;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\XiboException;
-use Xibo\Factory\ModuleFactory;
 
 /**
  * Class HtmlPackage
@@ -36,8 +35,7 @@ class HtmlPackage extends ModuleWidget
     public $codeSchemaVersion = 1;
 
     /**
-     * Install or Update this module
-     * @param ModuleFactory $moduleFactory
+     * @inheritDoc
      */
     public function installOrUpdate($moduleFactory)
     {
@@ -68,7 +66,7 @@ class HtmlPackage extends ModuleWidget
     }
 
     /**
-     * Form for updating the module settings
+     * @inheritDoc
      */
     public function settingsForm()
     {
@@ -76,21 +74,24 @@ class HtmlPackage extends ModuleWidget
         return 'htmlpackage-form-settings';
     }
 
-    /** @inheritdoc
+    /**
+     * @inheritdoc
      * @throws InvalidArgumentException
      */
-    public function settings()
+    public function settings(Request $request, Response $response): Response
     {
-        parent::settings();
+        parent::settings($request, $response);
 
         if ($this->module->enabled != 0) {
-            if ($this->getSanitizer()->getInt('updateInterval') <= 0)
+            if ($this->getSanitizer($request->getParams())->getInt('updateInterval') <= 0) {
                 throw new InvalidArgumentException(__('Update Interval must be a positive number'), 'updateInterval');
+            }
         }
 
-        $this->module->settings['updateInterval'] = $this->getSanitizer()->getInt('updateInterval', 259200);
-    }
+        $this->module->settings['updateInterval'] = $this->getSanitizer($request->getParams())->getInt('updateInterval', ['default' => 259200]);
 
+        return $response;
+    }
 
     /**
      * Validate
@@ -98,12 +99,13 @@ class HtmlPackage extends ModuleWidget
      */
     public function validate()
     {
-        if (!v::intType()->min(1, true)->validate($this->getDuration()))
+        if (!v::intType()->min(1, true)->validate($this->getDuration())) {
             throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
+        }
     }
 
     /**
-     * Javascript functions for the layout designer
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -175,19 +177,22 @@ class HtmlPackage extends ModuleWidget
      *  )
      * )
      *
-     * @throws InvalidArgumentException
+     * @inheritDoc
      */
-    public function edit()
+    public function edit(Request $request, Response $response): Response
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Set the properties specific to this module
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
-        $this->setOption('nominatedFile', $this->getSanitizer()->getString('nominatedFile'));
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
+        $this->setOption('nominatedFile', $sanitizedParams->getString('nominatedFile'));
         $this->setOption('updateInterval', $this->getSetting('updateInterval', 259200));
 
         $this->saveWidget();
+
+        return $response;
     }
 
     /**
@@ -202,9 +207,6 @@ class HtmlPackage extends ModuleWidget
     /** @inheritdoc */
     public function getResource($displayId = 0)
     {
-        $this->getLog()->debug('HTML Package Module: GetResource for ' . $this->getMediaId());
-
-        // At the moment there is no preview for this module, as such we only need to send the .htz archive to the player.
-        $this->download();
+        return '';
     }
 }

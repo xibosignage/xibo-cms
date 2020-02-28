@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2018 Spring Signage Ltd
+ * Copyright (C) 2020 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -21,8 +21,12 @@
 
 namespace Xibo\Middleware;
 
-
-use Slim\Middleware;
+use Illuminate\Support\Str;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Psr\Http\Server\MiddlewareInterface as Middleware;
+use Slim\App as App;
 
 /**
  * Class Xtr
@@ -31,30 +35,35 @@ use Slim\Middleware;
  *   - sets the module theme files
  * @package Xibo\Middleware
  */
-class Xtr extends Middleware
+class Xtr implements Middleware
 {
-    public function call()
+    /* @var App $app */
+    private $app;
+
+    public function __construct($app)
+    {
+        $this->app = $app;
+    }
+
+    public function process(Request $request, RequestHandler $handler): Response
     {
         // Inject our Theme into the Twig View (if it exists)
-        $app = $this->getApplication();
+        $app = $this->app;
+        $container = $app->getContainer();
 
-        $app->configService->loadTheme();
+        $container->get('configService')->loadTheme();
+        $view = $container->get('view');
+        // Provide the view path to Twig
+        /* @var \Twig\Loader\FilesystemLoader $twig */
+        $twig = $view->getLoader();
+        $twig->setPaths(array_merge($container->get('moduleFactory')->getViewPaths(), [PROJECT_ROOT . '/views', PROJECT_ROOT . '/custom', PROJECT_ROOT . '/reports']));
 
-        $app->hook('slim.before.dispatch', function() use($app) {
-            // Provide the view path to Twig
-            $twig = $app->view()->getInstance()->getLoader();
-            /* @var \Twig_Loader_Filesystem $twig */
-
-            // Append the module view paths
-            $twig->setPaths(array_merge($app->moduleFactory->getViewPaths(), [PROJECT_ROOT . '/views', PROJECT_ROOT . '/reports']));
-
-            // Does this theme provide an alternative view path?
-            if ($app->configService->getThemeConfig('view_path') != '') {
-                $twig->prependPath(str_replace_first('..', PROJECT_ROOT, $app->configService->getThemeConfig('view_path')));
-            }
-        });
+        // Does this theme provide an alternative view path?
+        if ($container->get('configService')->getThemeConfig('view_path') != '') {
+            $twig->prependPath(Str::replaceFirst('..', PROJECT_ROOT, $container->get('configService')->getThemeConfig('view_path')));
+        }
 
         // Call Next
-        $this->next->call();
+        return $handler->handle($request);
     }
 }

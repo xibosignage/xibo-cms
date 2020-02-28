@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,6 +21,8 @@
  */
 namespace Xibo\Widget;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Exception\InvalidArgumentException;
 
 /**
@@ -27,10 +30,9 @@ use Xibo\Exception\InvalidArgumentException;
  * @package Xibo\Widget
  */
 class Embedded extends ModuleWidget
-{    
-
+{
     /**
-     * Javascript functions for the layout designer
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -38,7 +40,7 @@ class Embedded extends ModuleWidget
     }
 
     /**
-     * Install Files
+     * @inheritDoc
      */
     public function InstallFiles()
     {
@@ -139,24 +141,28 @@ class Embedded extends ModuleWidget
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
+     * @inheritDoc
      */
-    public function edit()
+    public function edit(Request $request, Response $response): Response
     {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
-        $this->setOption('transparency', $this->getSanitizer()->getCheckbox('transparency'));
-        $this->setOption('scaleContent', $this->getSanitizer()->getCheckbox('scaleContent'));
-        $this->setRawNode('embedHtml', $this->getSanitizer()->getParam('embedHtml', null));
-        $this->setOption('embedHtml_advanced', $this->getSanitizer()->getCheckbox('embedHtml_advanced'));
-        $this->setRawNode('embedScript', $this->getSanitizer()->getParam('embedScript', null));
-        $this->setRawNode('embedStyle', $this->getSanitizer()->getParam('embedStyle', null));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
+        $this->setOption('transparency', $sanitizedParams->getCheckbox('transparency'));
+        $this->setOption('scaleContent', $sanitizedParams->getCheckbox('scaleContent'));
+        $this->setRawNode('embedHtml', $request->getParam('embedHtml', null));
+        $this->setOption('embedHtml_advanced', $sanitizedParams->getCheckbox('embedHtml_advanced'));
+        $this->setRawNode('embedScript', $request->getParam('embedScript', null));
+        $this->setRawNode('embedStyle', $request->getParam('embedStyle', null));
 
         // Save the widget
         $this->isValid();
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
@@ -173,7 +179,9 @@ class Embedded extends ModuleWidget
     public function getResource($displayId = 0)
     {
         // Construct the response HTML
-        $this->initialiseGetResource()->appendViewPortWidth($this->region->width);
+        $this
+            ->initialiseGetResource()
+            ->appendViewPortWidth($this->region->width);
 
         // Include some vendor items and javascript
         $this

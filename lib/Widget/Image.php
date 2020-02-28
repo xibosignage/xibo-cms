@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -18,12 +19,16 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 namespace Xibo\Widget;
 
 use Intervention\Image\Exception\NotReadableException;
 use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Helper\HttpCacheProvider;
 
 /**
  * Class Image
@@ -38,11 +43,11 @@ class Image extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function settings()
+    public function settings(Request $request, Response $response): Response
     {
-        parent::settings();
+        $this->module->settings['defaultScaleTypeId'] = $this->getSanitizer($request->getParams())->getString('defaultScaleTypeId');
 
-        $this->module->settings['defaultScaleTypeId'] = $this->getSanitizer()->getString('defaultScaleTypeId');
+        return parent::settings($request, $response);
     }
 
     /** @inheritdoc */
@@ -53,9 +58,8 @@ class Image extends ModuleWidget
         $this->setOption('scaleType', $this->getSetting('defaultScaleTypeId', 'center'));
     }
 
-
     /**
-     * Javascript functions for the layout designer
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -139,58 +143,60 @@ class Image extends ModuleWidget
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
+     * @inheritDoc
      */
-    public function edit()
+    public function edit(Request $request, Response $response): Response
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Set the properties specific to Images
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('scaleType', $this->getSanitizer()->getString('scaleTypeId', 'center'));
-        $this->setOption('align', $this->getSanitizer()->getString('alignId', 'center'));
-        $this->setOption('valign', $this->getSanitizer()->getString('valignId', 'middle'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('scaleType', $sanitizedParams->getString('scaleTypeId', ['default' => 'center']));
+        $this->setOption('align', $sanitizedParams->getString('alignId', ['default' => 'center']));
+        $this->setOption('valign', $sanitizedParams->getString('valignId', ['default' => 'middle']));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
 
         $this->isValid();
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
     public function preview($width, $height, $scaleOverride = 0)
     {
         if ($this->module->previewEnabled == 0)
-            return parent::preview($width, $height);
+            return parent::preview($width, $height, $scaleOverride);
 
         $proportional = ($this->getOption('scaleType') == 'stretch') ? 0 : 1;
         $align = $this->getOption('align', 'center');
         $vAlign = $this->getOption('valign', 'middle');
 
-        $url = $this->getApp()->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]) . '?preview=1&width=' . $width . '&height=' . $height . '&proportional=' . $proportional . '&mediaId=' . $this->getMediaId();
+        $url = $this->urlFor('library.download', ['regionId' => $this->region->regionId, 'id' => $this->getMediaId()]) . '?preview=1&width=' . $width . '&height=' . $height . '&proportional=' . $proportional;
 
-        $html = '<div style="display:table; width:100%; height: ' . $height . 'px">
+        // Show the image - scaled to the aspect ratio of this region (get from GET)
+        return '<div style="display:table; width:100%; height: ' . $height . 'px">
             <div style="text-align:' . $align . '; display: table-cell; vertical-align: ' . $vAlign . ';">
                 <img src="' . $url . '" />
             </div>
         </div>';
-
-        // Show the image - scaled to the aspect ratio of this region (get from GET)
-        return $html;
     }
 
-    /** @inheritdoc */
-    public function getResource($displayId = 0)
+    /** @inheritDoc */
+    public function download(Request $request, Response $response): Response
     {
+        $sanitizedParams = $this->getSanitizer($request->getQueryParams());
         $this->getLog()->debug('Image Module: GetResource for ' . $this->getMediaId());
 
         $media = $this->mediaFactory->getById($this->getMediaId());
         $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
         $filePath = $libraryLocation . $media->storedAs;
-        $proportional = $this->getSanitizer()->getInt('proportional', 1) == 1;
-        $preview = $this->getSanitizer()->getInt('preview', 0) == 1;
-        $cache = $this->getSanitizer()->getInt('cache', 0) == 1;
-        $width = intval($this->getSanitizer()->getDouble('width'));
-        $height = intval($this->getSanitizer()->getDouble('height'));
+        $proportional = $sanitizedParams->getInt('proportional', ['default' => 1]) == 1;
+        $preview = $sanitizedParams->getInt('preview', ['default' => 0]) == 1;
+        $cache = $sanitizedParams->getInt('cache', ['default' => 0]) == 1;
+        $width = intval($sanitizedParams->getDouble('width'));
+        $height = intval($sanitizedParams->getDouble('height'));
         $extension = explode('.', $media->storedAs)[1];
 
         // Preview or download?
@@ -228,8 +234,10 @@ class Image extends ModuleWidget
                     $this->getLog()->debug('Outputting Image Response');
 
                     // Output Etags
-                    $this->getApp()->etag($media->md5 . $width . $height . $proportional . $preview);
-                    $this->getApp()->expires('+1 week');
+                    /** @var $httpCache HttpCacheProvider*/
+                    $httpCache = $this->container->get('httpCache');
+                    $response = $httpCache->withEtag($response, $media->md5 . $width . $height . $proportional . $preview);
+                    $response = $httpCache->withExpires($response,'+1 week');
 
                     // Should we cache?
                     if ($cache) {
@@ -263,13 +271,15 @@ class Image extends ModuleWidget
 
                 echo $img->encode();
             }
+
+            return $response;
         } else {
             // Download the file
-            $this->download();
+            return parent::download($request, $response);
         }
     }
 
-    /** @inheritdoc */
+    /** @inheritDoc */
     public function isValid()
     {
         if ($this->getMedia()->released == 0) {
@@ -280,9 +290,18 @@ class Image extends ModuleWidget
             throw new InvalidArgumentException(__('%s is too large, please replace it', $this->getMedia()->name), 'name');
         }
 
-        if (!v::intType()->min(1, true)->validate($this->getDuration()))
+        if (!v::intType()->min(1, true)->validate($this->getDuration())) {
             throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
+        }
 
         return self::$STATUS_VALID;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getResource($displayId = 0)
+    {
+        return '';
     }
 }

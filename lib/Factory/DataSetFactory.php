@@ -1,7 +1,7 @@
 <?php
 /*
  * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015-2017 Spring Signage Ltd
+ * Copyright (C) 2015-2020 Xibo Signage Ltd
  * contributions by LukyLuke aka Lukas Zurschmiede - https://github.com/LukyLuke
  *
  * (DataSetFactory.php) This file is part of Xibo.
@@ -101,10 +101,11 @@ class DataSetFactory extends BaseFactory
      */
     public function createEmpty()
     {
+        $array = [];
         return new DataSet(
             $this->getStore(),
             $this->getLog(),
-            $this->getSanitizer(),
+            $this->getSanitizer($array),
             $this->config,
             $this->pool,
             $this,
@@ -182,8 +183,9 @@ class DataSetFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        $entries = array();
-        $params = array();
+        $entries = [];
+        $params = [];
+        $parsedFilter = $this->getSanitizer($filterBy);
 
         if ($sortOrder === null) {
             $sortOrder = ['dataSet'];
@@ -239,34 +241,34 @@ class DataSetFactory extends BaseFactory
         // View Permissions
         $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy);
 
-        if ($this->getSanitizer()->getInt('dataSetId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('dataSetId') !== null) {
             $body .= ' AND dataset.dataSetId = :dataSetId ';
-            $params['dataSetId'] = $this->getSanitizer()->getInt('dataSetId', $filterBy);
+            $params['dataSetId'] = $parsedFilter->getInt('dataSetId');
         }
 
-        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('userId') !== null) {
             $body .= ' AND dataset.userId = :userId ';
-            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
+            $params['userId'] = $parsedFilter->getInt('userId');
         }
 
-        if ($this->getSanitizer()->getInt('isRemote', $filterBy) !== null) {
+        if ($parsedFilter->getInt('isRemote') !== null) {
             $body .= ' AND dataset.isRemote = :isRemote ';
-            $params['isRemote'] = $this->getSanitizer()->getInt('isRemote', $filterBy);
+            $params['isRemote'] = $parsedFilter->getInt('isRemote');
         }
 
-        if ($this->getSanitizer()->getString('dataSet', $filterBy) != null) {
-            $terms = explode(',', $this->getSanitizer()->getString('dataSet', $filterBy));
+        if ($parsedFilter->getString('dataSet') != null) {
+            $terms = explode(',', $parsedFilter->getString('dataSet'));
             $this->nameFilter('dataset', 'dataSet', $terms, $body, $params);
         }
 
-        if ($this->getSanitizer()->getString('dataSetExact', $filterBy) != '') {
+        if ($parsedFilter->getString('dataSetExact') != '') {
             $body.= " AND dataset.dataSet = :exact ";
-            $params['exact'] = $this->getSanitizer()->getString('dataSetExact', $filterBy);
+            $params['exact'] = $parsedFilter->getString('dataSetExact');
         }
 
-        if ($this->getSanitizer()->getString('code', $filterBy) != null) {
+        if ($parsedFilter->getString('code') != null) {
             $body .= ' AND `dataset`.`code` = :code ';
-            $params['code'] = $this->getSanitizer()->getString('code', $filterBy);
+            $params['code'] = $parsedFilter->getString('code');
         }
 
         // Sorting?
@@ -276,8 +278,8 @@ class DataSetFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $parsedFilter->getInt('start') !== null && $parsedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($parsedFilter->getInt('start'), 0) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

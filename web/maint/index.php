@@ -20,73 +20,70 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use Xibo\Service\ConfigService;
+use Monolog\Logger;
+use Monolog\Processor\UidProcessor;
+use Psr\Container\ContainerInterface;
+use Slim\Views\TwigMiddleware;
+use Xibo\Factory\ContainerFactory;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/../..'));
 
-error_reporting(0);
-ini_set('display_errors', 0);
+error_reporting(1);
+ini_set('display_errors', 1);
 
 require PROJECT_ROOT . '/vendor/autoload.php';
 
 if (!file_exists(PROJECT_ROOT . '/web/settings.php'))
     die('Not configured');
 
-// Create a logger
-$logger = new \Xibo\Helper\AccessibleMonologWriter(array(
-    'name' => 'MAINT',
-    'handlers' => array(
-        new \Xibo\Helper\DatabaseLogHandler()
-    ),
-    'processors' => array(
-        new \Xibo\Helper\LogProcessor(),
-        new \Monolog\Processor\UidProcessor(7)
-    )
-), false);
 
-$app = new \RKA\Slim(array(
-    'debug' => false,
-    'log.writer' => $logger
-));
-$app->setName('maint');
 
-// Twig templates
-$twig = new \Slim\Views\Twig();
-$twig->parserOptions = array(
-    'debug' => true,
-    'cache' => PROJECT_ROOT . '/cache'
-);
-$twig->parserExtensions = array(
-    new \Slim\Views\TwigExtension(),
-    new \Xibo\Twig\TransExtension(),
-    new \Xibo\Twig\ByteFormatterTwigExtension(),
-    new \Xibo\Twig\UrlDecodeTwigExtension(),
-    new \Xibo\Twig\DateFormatTwigExtension()
-);
+// Create the container for dependency injection.
+try {
+    $container = ContainerFactory::create();
+} catch (Exception $e) {
+    die($e->getMessage());
+}
 
-// Configure the template folder
-$twig->twigTemplateDirs = [PROJECT_ROOT . '/views'];
+$container->set('logger', function (ContainerInterface $container) {
+    $logger = new Logger('MAINT');
 
-$app->view($twig);
+    $uidProcessor = new UidProcessor();
+    // db
+    $dbhandler  =  new \Xibo\Helper\DatabaseLogHandler();
+
+    $logger->pushProcessor($uidProcessor);
+    $logger->pushHandler($dbhandler);
+
+    return $logger;
+});
+
+$app = \DI\Bridge\Slim\Bridge::create($container);
+$app->setBasePath(\Xibo\Middleware\State::determineBasePath());
+$container->set('name', 'maint');
 
 // Config
-$app->configService = ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
+$app->configService = $container->get('configService');
 
 // Check for upgrade after we've loaded settings to make sure the main app gets any custom settings it needs.
 if (\Xibo\Helper\Environment::migrationPending()) {
     die('Upgrade pending');
 }
 
-\Xibo\Middleware\Storage::setStorage($app->container);
-\Xibo\Middleware\State::setState($app);
-
-$app->add(new \Xibo\Middleware\Storage());
-$app->add(new \Xibo\Middleware\Xmr());
+$twigMiddleware = TwigMiddleware::createFromContainer($app);
+$app->add(new \Xibo\Middleware\Log($app));
+$app->add(new \Xibo\Middleware\Storage($app));
+$app->add(new \Xibo\Middleware\State($app));
+$app->add($twigMiddleware);
+$app->add(new \Xibo\Middleware\Xmr($app));
+$app->addRoutingMiddleware();
+$app->addErrorMiddleware(true, true, true);
 
 // Configure a user
-$app->user = $app->userFactory->getSystemUser();
+//$app->user = $container->get('userFactory')->getSystemUser();
 
+/*
 // Configure the Slim error handler
 $app->error(function (\Exception $e) use ($app) {
     $app->container->get('\Xibo\Controller\Error')->handler($e);
@@ -96,9 +93,10 @@ $app->error(function (\Exception $e) use ($app) {
 $app->notFound(function () use ($app) {
     $app->container->get('\Xibo\Controller\Error')->notFound();
 });
+*/
 
 // All routes
-$app->get('/', '\Xibo\Controller\Maintenance:run');
+$app->get('/', ['\Xibo\Controller\Maintenance','run']);
 
 // Run app
 $app->run();

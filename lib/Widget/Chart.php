@@ -1,8 +1,9 @@
 <?php
-/*
+/**
  * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
  * Copyright (C) 2018 Lukas Zurschmiede
- * Copyright (C) 2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -22,11 +23,16 @@
 namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
-use Xibo\Factory\ModuleFactory;
 
+/**
+ * Class Chart
+ * @package Xibo\Widget
+ */
 class Chart extends ModuleWidget
 {
     public $codeSchemaVersion = 1;
@@ -41,8 +47,7 @@ class Chart extends ModuleWidget
     }
     
     /**
-     * Install or Update this module
-     * @param ModuleFactory $moduleFactory
+     * @inheritdoc
      * @Override
      */
     public function installOrUpdate($moduleFactory)
@@ -103,14 +108,14 @@ class Chart extends ModuleWidget
     }
 
     /**
-     * Process any module settings
-     * @return array An array of the processed settings.
+     * @inheritDoc
      * @override
      */
-    public function settings()
+    public function settings(Request $request, Response $response): Response
     {
-        $this->module->settings['defaultColors'] = explode(',', $this->getSanitizer()->getString('defaultColors'));
-        return $this->module->settings;
+        $this->module->settings['defaultColors'] = explode(',', $this->getSanitizer($request->getParams())->getString('defaultColors'));
+
+        return $response;
     }
 
     /**
@@ -228,10 +233,11 @@ class Chart extends ModuleWidget
     }
 
     /** @inheritdoc @override */
-    public function editForm()
+    public function editForm(Request $request)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Do we have a step provided?
-        $step = $this->getSanitizer()->getInt('step', 2);
+        $step = $sanitizedParams->getInt('step', 2);
 
         if ($step == 1 || !$this->hasDataSet()) {
             return 'chart-form-edit-step1';
@@ -425,15 +431,16 @@ class Chart extends ModuleWidget
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
+     * @inheritDoc
      */
-    public function edit()
+    public function edit(Request $request, Response $response): Response
     {
         // Do we have a step provided?
-        $step = $this->getSanitizer()->getInt('step', 2);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $step = $sanitizedParams->getInt('step', ['default' => 2]);
 
         if ($step == 1 || !$this->hasDataSet()) {
-            $dataSetId = $this->getSanitizer()->getInt('dataSetId');
+            $dataSetId = $sanitizedParams->getInt('dataSetId');
 
             // Do we already have a DataSet?
             if($this->hasDataSet() && $dataSetId != $this->getOption('dataSetId')) {
@@ -459,29 +466,30 @@ class Chart extends ModuleWidget
         } else {
 
             // Check we have permission to use this DataSetId
-            if (!$this->getUser()->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId'))))
+            if (!$this->getUser()->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId')))) {
                 throw new InvalidArgumentException(__('You do not have permission to use that DataSet'), 'dataSetId');
+            }
 
-            $this->setOption('name', $this->getSanitizer()->getString('name'));
-            $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-            $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-            $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
+            $this->setOption('name', $sanitizedParams->getString('name'));
+            $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+            $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+            $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
 
-            $this->setOption('graphType', $this->getSanitizer()->getString('graphType'));
-            $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
-            $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
-            $this->setOption('fontColor', $this->getSanitizer()->getString('fontColor'));
-            $this->setOption('fontSize', $this->getSanitizer()->getInt('fontSize'));
-            $this->setOption('showLegend', $this->getSanitizer()->getCheckbox('showLegend', 0));
-            $this->setOption('legendPosition', $this->getSanitizer()->getString('legendPosition'));
-            $this->setOption('startYAtZero', $this->getSanitizer()->getCheckbox('startYAtZero', 0));
-            $this->setOption('title', $this->getSanitizer()->getString('title'));
-            $this->setOption('x-axis-label', $this->getSanitizer()->getString('x-axis-label'));
-            $this->setOption('y-axis-label', $this->getSanitizer()->getString('y-axis-label'));
+            $this->setOption('graphType', $sanitizedParams->getString('graphType'));
+            $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 120]));
+            $this->setOption('backgroundColor', $sanitizedParams->getString('backgroundColor'));
+            $this->setOption('fontColor', $sanitizedParams->getString('fontColor'));
+            $this->setOption('fontSize', $sanitizedParams->getInt('fontSize'));
+            $this->setOption('showLegend', $sanitizedParams->getCheckbox('showLegend'));
+            $this->setOption('legendPosition', $sanitizedParams->getString('legendPosition'));
+            $this->setOption('startYAtZero', $sanitizedParams->getCheckbox('startYAtZero'));
+            $this->setOption('title', $sanitizedParams->getString('title'));
+            $this->setOption('x-axis-label', $sanitizedParams->getString('x-axis-label'));
+            $this->setOption('y-axis-label', $sanitizedParams->getString('y-axis-label'));
 
             // Handle the config
-            $columnTypes = $this->getSanitizer()->getStringArray('columnType');
-            $dataSetColumnIds = $this->getSanitizer()->getStringArray('dataSetColumnId');
+            $columnTypes = $sanitizedParams->getArray('columnType');
+            $dataSetColumnIds = $sanitizedParams->getArray('dataSetColumnId');
             $config = [];
 
             $i = -1;
@@ -501,14 +509,14 @@ class Chart extends ModuleWidget
             $this->setOption('config', json_encode($config));
 
             // Handle colours
-            $seriesColors = $this->getSanitizer()->getStringArray('seriesColor');
+            $seriesColors = $sanitizedParams->getArray('seriesColor');
             $this->setOption('seriesColors', json_encode(array_filter($seriesColors)));
 
             // Order and Filter criteria
-            $this->setOption('useOrderingClause', $this->getSanitizer()->getCheckbox('useOrderingClause'));
-            $this->setOption('useFilteringClause', $this->getSanitizer()->getCheckbox('useFilteringClause'));
-            $orderClauses = $this->getSanitizer()->getStringArray('orderClause');
-            $orderClauseDirections = $this->getSanitizer()->getStringArray('orderClauseDirection');
+            $this->setOption('useOrderingClause', $sanitizedParams->getCheckbox('useOrderingClause'));
+            $this->setOption('useFilteringClause', $sanitizedParams->getCheckbox('useFilteringClause'));
+            $orderClauses = $sanitizedParams->getArray('orderClause');
+            $orderClauseDirections = $sanitizedParams->getArray('orderClauseDirection');
             $orderClauseMapping = [];
 
             $i = -1;
@@ -527,10 +535,10 @@ class Chart extends ModuleWidget
 
             $this->setOption('orderClauses', json_encode($orderClauseMapping));
 
-            $filterClauses = $this->getSanitizer()->getStringArray('filterClause');
-            $filterClauseOperator = $this->getSanitizer()->getStringArray('filterClauseOperator');
-            $filterClauseCriteria = $this->getSanitizer()->getStringArray('filterClauseCriteria');
-            $filterClauseValue = $this->getSanitizer()->getStringArray('filterClauseValue');
+            $filterClauses = $sanitizedParams->getArray('filterClause');
+            $filterClauseOperator = $sanitizedParams->getArray('filterClauseOperator');
+            $filterClauseCriteria = $sanitizedParams->getArray('filterClauseCriteria');
+            $filterClauseValue = $sanitizedParams->getArray('filterClauseValue');
             $filterClauseMapping = [];
 
             $i = -1;
@@ -556,6 +564,8 @@ class Chart extends ModuleWidget
         }
 
         $this->saveWidget();
+
+        return $response;
     }
 
     /**
@@ -569,7 +579,7 @@ class Chart extends ModuleWidget
         $this->getLog()->debug('Render graph for widgetId: ' . $this->getWidgetId() . ' and displayId: ' . $displayId);
 
         // Replace the View Port Width if we are in Preview-Mode
-        $data['viewPortWidth'] = ($this->getSanitizer()->getCheckbox('preview') == 1) ? $this->region->width : '[[ViewPortWidth]]';
+        $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
 
         // Options XIBO needs for rendering - see JavaScript at the end of this function
         $options = array(

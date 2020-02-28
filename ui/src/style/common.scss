@@ -200,6 +200,10 @@ $loading-overlay-z-index: 2000;
     @extend .fa-clock-o;
 }
 
+.module-icon-countdown {
+    @extend .fa-hourglass-o;
+}
+
 .module-icon-currencies {
     @extend .fa-line-chart;
 }

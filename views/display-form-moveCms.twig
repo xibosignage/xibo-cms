@@ -35,7 +35,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="displayMoveCmsForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("display.moveCms", {id: display.displayId}) }}">
+            <form id="displayMoveCmsForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("display.moveCms", {id: display.displayId}) }}">
 
                 {% set message = "Please note: Once the CMS Address and Key are authenticated in this form the Display will attempt to register with the CMS Instance details entered. Once transferred the Display will stop communicating with this CMS Instance."|trans %}
                 {{ forms.message(message, "alert alert-info") }}

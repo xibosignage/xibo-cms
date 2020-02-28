@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2012-15 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,13 +21,18 @@
  */
 namespace Xibo\Widget;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Exception\InvalidArgumentException;
 
+/**
+ * Class ShellCommand
+ * @package Xibo\Widget
+ */
 class ShellCommand extends ModuleWidget
 {
-
     /**
-     * Javascript functions for the layout designer
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -125,26 +131,28 @@ class ShellCommand extends ModuleWidget
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
+     * @inheritDoc
      */
-    public function edit()
+    public function edit(Request $request, Response $response): Response
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
         // Any Options (we need to encode shell commands, as they sit on the options rather than the raw
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
 
         // Commands
-        $windows = $this->getSanitizer()->getString('windowsCommand');
-        $linux = $this->getSanitizer()->getString('linuxCommand');
-        $webos = $this->getSanitizer()->getString('webosCommand');
-        $tizen = $this->getSanitizer()->getString('tizenCommand');
+        $windows = $sanitizedParams->getString('windowsCommand');
+        $linux = $sanitizedParams->getString('linuxCommand');
+        $webos = $sanitizedParams->getString('webosCommand');
+        $tizen = $sanitizedParams->getString('tizenCommand');
 
-        $this->setOption('launchThroughCmd', $this->getSanitizer()->getCheckbox('launchThroughCmd'));
-        $this->setOption('terminateCommand', $this->getSanitizer()->getCheckbox('terminateCommand'));
-        $this->setOption('useTaskkill', $this->getSanitizer()->getCheckbox('useTaskkill'));
-        $this->setOption('commandCode', $this->getSanitizer()->getString('commandCode'));
+        $this->setOption('launchThroughCmd', $sanitizedParams->getCheckbox('launchThroughCmd'));
+        $this->setOption('terminateCommand', $sanitizedParams->getCheckbox('terminateCommand'));
+        $this->setOption('useTaskkill', $sanitizedParams->getCheckbox('useTaskkill'));
+        $this->setOption('commandCode', $sanitizedParams->getString('commandCode'));
         $this->setOption('windowsCommand', urlencode($windows));
         $this->setOption('linuxCommand', urlencode($linux));
         $this->setOption('webosCommand', urlencode($webos));
@@ -153,13 +161,16 @@ class ShellCommand extends ModuleWidget
         // Save the widget
         $this->isValid();
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
     public function preview($width, $height, $scaleOverride = 0)
     {
-        if ($this->module->previewEnabled == 0)
-            return parent::Preview($width, $height);
+        if ($this->module->previewEnabled == 0) {
+            return parent::preview($width, $height, $scaleOverride);
+        }
 
         $windows = $this->getOption('windowsCommand');
         $linux = $this->getOption('linuxCommand');
@@ -181,8 +192,14 @@ class ShellCommand extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
-        if ($this->getOption('windowsCommand') == '' && $this->getOption('linuxCommand') == '' && $this->getOption('commandCode') == '' && $this->getOption('webosCommand' == '') && $this->getOption('tizenCommand') == '')
+        if ($this->getOption('windowsCommand') == ''
+            && $this->getOption('linuxCommand') == ''
+            && $this->getOption('commandCode') == ''
+            && $this->getOption('webosCommand') == ''
+            && $this->getOption('tizenCommand') == ''
+        ) {
             throw new InvalidArgumentException(__('You must enter a command'), 'command');
+        }
 
         return self::$STATUS_PLAYER;
     }
@@ -195,7 +212,7 @@ class ShellCommand extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource($displayId)
+    public function getResource($displayId = 0)
     {
         // Get resource isn't required for this module.
         return null;

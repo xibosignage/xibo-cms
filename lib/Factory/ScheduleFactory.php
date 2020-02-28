@@ -287,6 +287,7 @@ class ScheduleFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
+        $parsedFilter = $this->getSanitizer($filterBy);
         $entries = [];
         $params = [];
 
@@ -326,67 +327,67 @@ class ScheduleFactory extends BaseFactory
           WHERE 1 = 1
         ';
 
-        if ($this->getSanitizer()->getInt('eventId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('eventId') !== null) {
             $sql .= ' AND `schedule`.eventId = :eventId ';
-            $params['eventId'] = $this->getSanitizer()->getInt('eventId', $filterBy);
+            $params['eventId'] = $parsedFilter->getInt('eventId');
         }
 
-        if ($this->getSanitizer()->getInt('campaignId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('campaignId') !== null) {
             $sql .= ' AND `schedule`.campaignId = :campaignId ';
-            $params['campaignId'] = $this->getSanitizer()->getInt('campaignId', $filterBy);
+            $params['campaignId'] = $parsedFilter->getInt('campaignId');
         }
 
-        if ($this->getSanitizer()->getInt('ownerId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('ownerId') !== null) {
             $sql .= ' AND `schedule`.userId = :ownerId ';
-            $params['ownerId'] = $this->getSanitizer()->getInt('ownerId', $filterBy);
+            $params['ownerId'] = $parsedFilter->getInt('ownerId');
         }
 
-        if ($this->getSanitizer()->getInt('dayPartId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('dayPartId') !== null) {
             $sql .= ' AND `schedule`.dayPartId = :dayPartId ';
-            $params['dayPartId'] = $this->getSanitizer()->getInt('dayPartId', $filterBy);
+            $params['dayPartId'] = $parsedFilter->getInt('dayPartId');
         }
 
         // Only 1 date
-        if ($this->getSanitizer()->getInt('fromDt', $filterBy) !== null && $this->getSanitizer()->getInt('toDt', $filterBy) === null) {
+        if ($parsedFilter->getInt('fromDt') !== null && $parsedFilter->getInt('toDt') === null) {
             $sql .= ' AND schedule.fromDt > :fromDt ';
-            $params['fromDt'] = $this->getSanitizer()->getInt('fromDt', $filterBy);
+            $params['fromDt'] = $parsedFilter->getInt('fromDt');
         }
 
-        if ($this->getSanitizer()->getInt('toDt', $filterBy) !== null && $this->getSanitizer()->getInt('fromDt', $filterBy) === null) {
+        if ($parsedFilter->getInt('toDt') !== null && $parsedFilter->getInt('fromDt') === null) {
             $sql .= ' AND IFNULL(schedule.toDt, schedule.fromDt) <= :toDt ';
-            $params['toDt'] = $this->getSanitizer()->getInt('toDt', $filterBy);
+            $params['toDt'] = $parsedFilter->getInt('toDt');
         }
         // End only 1 date
 
         // Both dates
-        if ($this->getSanitizer()->getInt('fromDt', $filterBy) !== null && $this->getSanitizer()->getInt('toDt', $filterBy) !== null) {
+        if ($parsedFilter->getInt('fromDt') !== null && $parsedFilter->getInt('toDt') !== null) {
             $sql .= ' AND schedule.fromDt < :toDt ';
             $sql .= ' AND IFNULL(schedule.toDt, schedule.fromDt) >= :fromDt ';
-            $params['fromDt'] = $this->getSanitizer()->getInt('fromDt', $filterBy);
-            $params['toDt'] = $this->getSanitizer()->getInt('toDt', $filterBy);
+            $params['fromDt'] = $parsedFilter->getInt('fromDt');
+            $params['toDt'] = $parsedFilter->getInt('toDt');
         }
         // End both dates
 
-        if ($this->getSanitizer()->getIntArray('displayGroupIds', $filterBy) != null) {
-            $sql .= ' AND `schedule`.eventId IN (SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup` WHERE displayGroupId IN (' . implode(',', $this->getSanitizer()->getIntArray('displayGroupIds', $filterBy)) . ')) ';
+        if ($parsedFilter->getIntArray('displayGroupIds') != null) {
+            $sql .= ' AND `schedule`.eventId IN (SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup` WHERE displayGroupId IN (' . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')) ';
         }
 
         // Future schedules?
-        if ($this->getSanitizer()->getInt('futureSchedulesFrom', $filterBy) !== null && $this->getSanitizer()->getInt('futureSchedulesTo', $filterBy) === null) {
+        if ($parsedFilter->getInt('futureSchedulesFrom') !== null && $parsedFilter->getInt('futureSchedulesTo') === null) {
             // Get schedules that end after this date, or that recur after this date
             $sql .= ' AND (IFNULL(`schedule`.toDt, `schedule`.fromDt) >= :futureSchedulesFrom OR `schedule`.recurrence_range >= :futureSchedulesFrom OR (IFNULL(`schedule`.recurrence_range, 0) = 0) AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\') ';
-            $params['futureSchedulesFrom'] = $this->getSanitizer()->getInt('futureSchedulesFrom', $filterBy);
+            $params['futureSchedulesFrom'] = $parsedFilter->getInt('futureSchedulesFrom');
         }
 
-        if ($this->getSanitizer()->getInt('futureSchedulesFrom', $filterBy) !== null && $this->getSanitizer()->getInt('futureSchedulesTo', $filterBy) !== null) {
+        if ($parsedFilter->getInt('futureSchedulesFrom') !== null && $parsedFilter->getInt('futureSchedulesTo') !== null) {
             // Get schedules that end after this date, or that recur after this date
             $sql .= ' AND ((schedule.fromDt < :futureSchedulesTo AND IFNULL(`schedule`.toDt, `schedule`.fromDt) >= :futureSchedulesFrom) OR `schedule`.recurrence_range >= :futureSchedulesFrom OR (IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\') ) ';
-            $params['futureSchedulesFrom'] = $this->getSanitizer()->getInt('futureSchedulesFrom', $filterBy);
-            $params['futureSchedulesTo'] = $this->getSanitizer()->getInt('futureSchedulesTo', $filterBy);
+            $params['futureSchedulesFrom'] = $parsedFilter->getInt('futureSchedulesFrom');
+            $params['futureSchedulesTo'] = $parsedFilter->getInt('futureSchedulesTo');
         }
 
         // Restrict to mediaId - meaning layout schedules of which the layouts contain the selected mediaId
-        if ($this->getSanitizer()->getInt('mediaId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('mediaId') !== null) {
             $sql .= '
                 AND schedule.campaignId IN (
                     SELECT `lkcampaignlayout`.campaignId
@@ -412,11 +413,11 @@ class ScheduleFactory extends BaseFactory
                      WHERE `layout`.backgroundImageId = :mediaId
                 )
             ';
-            $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
+            $params['mediaId'] = $parsedFilter->getInt('mediaId');
         }
 
         // Restrict to playlistId - meaning layout schedules of which the layouts contain the selected playlistId
-        if ($this->getSanitizer()->getInt('playlistId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('playlistId') !== null) {
 
             $sql .= '
                 AND schedule.campaignId IN (
@@ -435,7 +436,7 @@ class ScheduleFactory extends BaseFactory
                 )
             ';
 
-            $params['playlistId'] = $this->getSanitizer()->getInt('playlistId', $filterBy);
+            $params['playlistId'] = $parsedFilter->getInt('playlistId');
 
         }
 

@@ -1,10 +1,24 @@
 {#
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (library-page)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #}
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
@@ -12,10 +26,10 @@
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="btns" href="#" id="libraryUploadForm" title="{% trans "Add a new media item to the library" %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Media" %}</a></li>
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new media item to the library via external URL" %}" href="{{ urlFor("library.uploadUrl.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add media (URL)" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new media item to the library via external URL" %}" href="{{ url_for("library.uploadUrl.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add media (URL)" %}</a></li>
 
         {% if settings.SETTING_LIBRARY_TIDY_ENABLED == 1 %}
-            <li class="btn btn-danger btn-xs"><a class="XiboFormButton btns" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ urlFor("library.tidy.form") }}"> <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Tidy Library" %}</a></li>
+            <li class="btn btn-danger btn-xs"><a class="XiboFormButton btns" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ url_for("library.tidy.form") }}"> <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Tidy Library" %}</a></li>
         {% endif %}
     </ul>
 {% endblock %}
@@ -112,7 +126,7 @@
                     $.ajax({
                         type: "GET",
                         async: false,
-                        url: "{{ urlFor("user.pref") }}?preference=libraryGrid",
+                        url: "{{ url_for("user.pref") }}?preference=libraryGrid",
                         dataType: 'json',
                         success: function (json) {
                             try {
@@ -129,7 +143,7 @@
                 stateSaveCallback: function (settings, data) {
                     $.ajax({
                         type: "POST",
-                        url: "{{ urlFor("user.pref") }}",
+                        url: "{{ url_for("user.pref") }}",
                         data: {
                             preference: [{
                                 option: "libraryGrid",
@@ -142,7 +156,7 @@
                 searchDelay: 3000,
                 "order": [[1, "asc"]],
                 ajax: {
-                    "url": "{{ urlFor("library.search") }}",
+                    "url": "{{ url_for("library.search") }}",
                     "data": function (d) {
                         $.extend(d, $("#libraryItems").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }
@@ -347,8 +361,11 @@
                 }
             }).on('shown.bs.modal', function() {
                 // Configure the upload form
-                var url = "{{ urlFor("library.add") }}";
+                var url = "{{ url_for("library.add") }}";
                 var form = $(this).find("form");
+                console.log("UPLOAD FORM ! ");
+                console.log(url);
+                console.log(templateOptions);
                 var options = {
                     url: url,
                     disableImageResize: true,
@@ -448,7 +465,7 @@
                 searchDelay: 3000,
                 "order": [[1, "asc"]],
                 ajax: {
-                    "url": "{{ urlFor("library.usage") }}".replace(":id", $("#usageReportTable").data().mediaId),
+                    "url": "{{ url_for("library.usage", {id: ':id'}) }}".replace(":id", $("#usageReportTable").data().mediaId),
                     "data": function(dataDisplay) {
                         $.extend(dataDisplay, $(dialog).find("#usageReportForm").serializeObject());
                         return dataDisplay;
@@ -489,7 +506,7 @@
                 searchDelay: 3000,
                 "order": [[1, "asc"]],
                 ajax: {
-                    "url": "{{ urlFor("library.usage.layouts") }}".replace(":id", $("#usageReportLayoutsTable").data().mediaId)
+                    "url": "{{ url_for("library.usage.layouts", {id: ':id'}) }}".replace(":id", $("#usageReportLayoutsTable").data().mediaId)
                 },
                 "columns": [
                     { "data": "layoutId"},

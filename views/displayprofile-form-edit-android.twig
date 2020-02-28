@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,6 +20,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
+{% import "forms.twig" as forms %}
+
+{% block formHtml %}
 <div class="row">
     <div class="col-md-12">
         <ul class="nav nav-tabs" role="tablist">
@@ -32,10 +35,10 @@
                 <li><a href="#commands" role="tab" data-toggle="tab">{% trans "Commands" %}</a></li>
             {% endif %}
         </ul>
-        <form id="displayProfileForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("displayProfile.edit", {id: displayProfile.displayProfileId}) }}">
+        <form id="displayProfileForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("displayProfile.edit", {id: displayProfile.displayProfileId}) }}">
             <div class="tab-content">
                 <div class="tab-pane active" id="general">
-                    {% include "displayprofile-form-edit-common-fields.twig" %}
+                    {{ include('displayprofile-form-edit-common-fields.twig') }}
 
                     {% set title = "Email Address"|trans %}
                     {% set helpText = "The email address will be used to license this Player. This is the email address you provided when you purchased the licence."|trans %}
@@ -95,7 +98,7 @@
                         { name: "data-allow-clear", value: "true" },
                         { name: "data-placeholder--id", value: null },
                         { name: "data-placeholder--value", value: "" },
-                        { name: "data-search-url", value: urlFor("playersoftware.search") },
+                        { name: "data-search-url", value: url_for("playersoftware.search") },
                         { name: "data-search-term", value: "playerShowVersion" },
                         { name: "data-id-property", value: "mediaId" },
                         { name: "data-text-property", value: "playerShowVersion" },
@@ -133,7 +136,7 @@
                         { name: "data-allow-clear", value: "true" },
                         { name: "data-placeholder--id", value: null },
                         { name: "data-placeholder--value", value: "" },
-                        { name: "data-search-url", value: urlFor("daypart.search") },
+                        { name: "data-search-url", value: url_for("daypart.search") },
                         { name: "data-search-term", value: "name" },
                         { name: "data-id-property", value: "dayPartId" },
                         { name: "data-text-property", value: "name" },
@@ -286,3 +289,4 @@
         </form>
     </div>
 </div>
+{% endblock %}

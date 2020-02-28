@@ -127,7 +127,7 @@ class ScheduleReminderTask implements TaskInterface
                     break;
                 default:
                     $this->log->error('Unknown schedule reminder type has been provided');
-                    continue;
+                    continue 2;
             }
 
             switch ($reminder->option) {
@@ -145,7 +145,7 @@ class ScheduleReminderTask implements TaskInterface
                     break;
                 default:
                     $this->log->error('Unknown schedule reminder option has been provided');
-                    continue;
+                    continue 2;
             }
 
             // Create a notification

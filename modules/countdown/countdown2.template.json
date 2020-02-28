@@ -1,0 +1,10 @@
+{
+    "id": "countdown2",
+    "value": "Clock Styled",
+    "template": "<div id=\"clockdiv\">\n  <div>[mm]\n    <div class=\"smalltext\">||Minutes||</div>\n  </div>\n\n  <div>[ss]\n    <div class=\"smalltext\">||Seconds||</div>\n  </div>\n</div>\n",
+    "css": "body {\n    text-align: center;\n    font-family: sans-serif;\n    font-weight: 100;\n    }\n#clockdiv {\n    font-family: sans-serif;\n    color: #fff;\n    display: inline-block;\n    font-weight: 100;\n    text-align: center;\n    font-size: 178px;\n    }\n#clockdiv > div {\n    padding: 10px 15px;\n    border-radius: 4px;\n    background: #00BF96;\n    display: inline-block;\n    width: 275px;\n    }\n#clockdiv div > span {\ntext-align: center;\n    padding: 15px 0;\n    width: 240px;\n    border-radius: 4px;\n    background: #00816A;\n    display: inline-block;\n    }\n.smalltext {\n    padding-top: 5px;\n    font-size: 64px;\n    }\n.warning > #clockdiv > div {\n    background: darkred;\n    }\n.warning > #clockdiv > div > span {\n    background: red;\n    }",
+    "widgetOriginalWidth": "600",
+    "widgetOriginalHeight": "400",
+    "image": "modules/countdown/template-thumbs/countdown2.png",
+    "defaultVisualEditor": false
+}

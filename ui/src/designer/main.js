@@ -161,6 +161,17 @@ $(document).ready(function() {
                     // Custom dropdown options
                     [
                         {
+                            id: 'discardLayout',
+                            title: layoutDesignerTrans.discardTitle,
+                            logo: 'fa-times-circle-o',
+                            class: 'btn-warning',
+                            action: lD.showDiscardScreen,
+                            inactiveCheck: function() {
+                                return (lD.layout.editable == false);
+                            },
+                            inactiveCheckClass: 'hidden',
+                        },
+                        {
                             id: 'publishLayout',
                             title: layoutDesignerTrans.publishTitle,
                             logo: 'fa-check-square-o',
@@ -176,7 +187,7 @@ $(document).ready(function() {
                             title: layoutDesignerTrans.checkoutTitle,
                             logo: 'fa-edit',
                             class: 'btn-success',
-                            action: lD.showCheckoutScreen,
+                            action: lD.checkoutLayout,
                             inactiveCheck: function() {
                                 return (lD.layout.editable == true);
                             },
@@ -284,6 +295,7 @@ $(document).ready(function() {
             // Refresh navigators and viewer
             lD.renderContainer(lD.navigator);
             lD.renderContainer(lD.viewer, lD.selectedObject);
+            lD.renderContainer(lD.timeline);
         }
     }, 250));
 });
@@ -452,6 +464,10 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
                 // To select an object that still doesn't exist
                 if(refreshBeforeSelect) {
                     lD.refreshDesigner();
+                    // Higlight widget on refresh
+                    if(lD.selectedObject.type == 'widget') {
+                        lD.timeline.highlightOnLoad = lD.selectedObject;
+                    }
                     
                     // Make the timeline scroll to the new widget on load
                     lD.timeline.scrollOnLoad = lD.selectedObject;
@@ -596,6 +612,57 @@ lD.publishLayout = function() {
 };
 
 /**
+ * Discard layout
+ */
+lD.discardLayout = function() {
+    const linkToAPI = urlsForApi.layout.discard;
+    let requestPath = linkToAPI.url;
+
+    lD.common.showLoadingScreen();
+
+    // replace id if necessary/exists
+    requestPath = requestPath.replace(':id', lD.layout.parentLayoutId);
+
+    const serializedData = $('#layoutDiscardForm').serialize();
+
+    $.ajax({
+        url: requestPath,
+        type: linkToAPI.type,
+        data: serializedData
+    }).done(function(res) {
+
+        lD.common.hideLoadingScreen();
+
+        if(res.success) {
+
+            console.log('discardLayout success');
+
+            toastr.success(res.message);
+
+            // Redirect to the layout grid
+            window.location.href = urlsForApi.layout.list.url;
+        } else {
+
+            // Login Form needed?
+            if(res.login) {
+                window.location.href = window.location.href;
+                location.reload(false);
+            } else {
+                toastr.error(res.message);
+
+                // Close dialog
+                bootbox.hideAll();
+            }
+        }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        lD.common.hideLoadingScreen();
+
+        // Output error to console
+        console.error(jqXHR, textStatus, errorThrown);
+    });
+}
+
+/**
  * Read Only Mode
  */
 lD.welcomeScreen = function() {
@@ -692,6 +759,8 @@ lD.toggleNavigatorEditing = function(enable) {
 
         // Render navigator
         this.renderContainer(this.navigator, this.selectedObject);
+
+        toastr.info(layoutDesignerTrans.regionEditModeMessage);
     } else {
 
         // Refresh designer
@@ -706,7 +775,6 @@ lD.toggleNavigatorEditing = function(enable) {
 
         // Show viewer div
         this.editorContainer.find('#layout-viewer-container').css('display', 'block');
-
     }
 };
 
@@ -758,6 +826,13 @@ lD.showCheckoutScreen = function() {
  */
 lD.showPublishScreen = function() {
     lD.loadFormFromAPI('publishForm', lD.layout.parentLayoutId, "formHelpers.setupCheckboxInputFields($('#layoutPublishForm'), '#publishNow', '', '.publish-date-control')", "lD.publishLayout();");
+};
+
+/**
+ * Layout publish screen
+ */
+lD.showDiscardScreen = function() {
+    lD.loadFormFromAPI('discardForm', lD.layout.parentLayoutId, '', 'lD.discardLayout();');
 };
 
 /**
@@ -815,7 +890,7 @@ lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActio
                     if(button != translations.cancel) {
                         let buttonType = 'btn-default';
 
-                        if(button === translations.save || button === editorsTrans.publish) {
+                        if(button === translations.save || button === editorsTrans.publish || button === editorsTrans.discard) {
                             buttonType = 'btn-primary';
                         }
 
@@ -1129,6 +1204,7 @@ lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
                         toastr.success(res.message);
 
                         lD.selectedObject.id = 'region_' + res.data.regionId;
+                        lD.selectedObject.type = 'region';
                         lD.reloadData(lD.layout, true);
                     }).catch((error) => { // Fail/error
 
@@ -1274,8 +1350,8 @@ lD.addModuleToPlaylist = function(playlistId, moduleType, moduleData, addToPosit
 
             // The new selected object as the id based on the previous selected region
             lD.selectedObject.id = 'widget_' + lD.selectedObject.regionId + '_' + res.data.widgetId;
+            lD.selectedObject.type = 'widget';
             lD.reloadData(lD.layout, true);
-            
         }).catch((error) => { // Fail/error
 
             lD.common.hideLoadingScreen('addModuleToPlaylist');
@@ -1352,6 +1428,7 @@ lD.addMediaToPlaylist = function(playlistId, media, addToPosition = null) {
 
         // The new selected object as the id based on the previous selected region
         lD.selectedObject.id = 'widget_' + res.data.regionId + '_' + res.data.newWidgets[0].widgetId;
+        lD.selectedObject.type = 'widget';
 
         lD.timeline.resetZoom();
         lD.reloadData(lD.layout, true);

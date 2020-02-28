@@ -139,12 +139,17 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $controller->getDispatcher()->dispatch(LibraryReplaceEvent::$NAME, new LibraryReplaceEvent($module, $media, $oldMedia));
 
                 $media->enableStat = $oldMedia->enableStat;
+                $media->expires = $this->options['expires'];
 
                 // Save
                 $media->save(['oldMedia' => $oldMedia]);
 
                 // Post process
-                $module->postProcess($media);
+                $playerVersionFactory = null;
+                if ($media->mediaType === 'playersoftware') {
+                    $playerVersionFactory = $controller->getPlayerVersionFactory();
+                }
+                $module->postProcess($media, $playerVersionFactory);
 
                 $controller->getLog()->debug('Copying permissions to new media');
 
@@ -290,11 +295,17 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     $media->enableStat = $controller->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
                 }
 
+                $media->expires = $this->options['expires'];
+
                 // Save
                 $media->save();
 
-                // Post process
-                $module->postProcess($media);
+                // Post process TODO I don't like this :/
+                $playerVersionFactory = null;
+                if ($media->mediaType === 'playersoftware') {
+                    $playerVersionFactory = $controller->getPlayerVersionFactory();
+                }
+                $module->postProcess($media, $playerVersionFactory);
 
                 // Permissions
                 foreach ($controller->getPermissionFactory()->createForNewEntity($controller->getUser(), get_class($media), $media->getId(), $controller->getConfig()->getSetting('MEDIA_DEFAULT'), $controller->getUserGroupFactory()) as $permission) {
@@ -380,7 +391,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
             $file->error = $e->getMessage();
 
-            $controller->getApp()->commit = false;
+            //$controller->getApp()->commit = false;
         }
     }
 }

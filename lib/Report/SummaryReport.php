@@ -2,7 +2,9 @@
 
 namespace Xibo\Report;
 
+use Slim\Http\ServerRequest as Request;
 use MongoDB\BSON\UTCDateTime;
+use Psr\Container\ContainerInterface;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
@@ -72,7 +74,7 @@ class SummaryReport implements ReportInterface
     }
 
     /** @inheritDoc */
-    public function setFactories($container)
+    public function setFactories(ContainerInterface $container)
     {
 
         $this->displayFactory = $container->get('displayFactory');
@@ -145,23 +147,23 @@ class SummaryReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportScheduleFormData()
+    public function getReportScheduleFormData(Request $request)
     {
-        $type = $this->getSanitizer()->getParam('type', '');
+        $type = $request->getParam('type', '');
 
         if ($type == 'layout') {
-            $selectedId = $this->getSanitizer()->getParam('layoutId', null);
+            $selectedId = $request->getParam('layoutId', null);
             $title = __('Add Report Schedule for '). $type. ' - '.
                     $this->layoutFactory->getById($selectedId)->layout;
 
         } else if ($type == 'media') {
-            $selectedId = $this->getSanitizer()->getParam('mediaId', null);
+            $selectedId = $request->getParam('mediaId', null);
             $title = __('Add Report Schedule for '). $type. ' - '.
                     $this->mediaFactory->getById($selectedId)->name;
 
         } else if ($type == 'event') {
             $selectedId = 0; // we only need eventTag
-            $eventTag = $this->getSanitizer()->getParam('eventTag', null);
+            $eventTag = $request->getParam('eventTag', null);
             $title = __('Add Report Schedule for '). $type. ' - '. $eventTag;
 
         }
@@ -190,10 +192,11 @@ class SummaryReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function setReportScheduleFormData()
+    public function setReportScheduleFormData(Request $request)
     {
-        $filter = $this->getSanitizer()->getString('filter');
-        $hiddenFields = json_decode($this->getSanitizer()->getParam('hiddenFields', null), true);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $filter = $sanitizedParams->getString('filter');
+        $hiddenFields = json_decode($request->getParam('hiddenFields', null), true);
 
         $type = $hiddenFields['type'];
         $selectedId = $hiddenFields['selectedId'];
@@ -230,8 +233,8 @@ class SummaryReport implements ReportInterface
             $filterCriteria['groupByFilter'] = 'bymonth';
         }
 
-        $filterCriteria['sendEmail'] = $this->getSanitizer()->getCheckbox('sendEmail');
-        $filterCriteria['nonusers'] = $this->getSanitizer()->getString('nonusers');
+        $filterCriteria['sendEmail'] = $sanitizedParams->getCheckbox('sendEmail');
+        $filterCriteria['nonusers'] = $sanitizedParams->getString('nonusers');
 
         // Return
         return [
@@ -302,11 +305,12 @@ class SummaryReport implements ReportInterface
     {
         $this->getLog()->debug('Filter criteria: '. json_encode($filterCriteria, JSON_PRETTY_PRINT));
 
-        $type = strtolower($this->getSanitizer()->getString('type', $filterCriteria));
-        $layoutId = $this->getSanitizer()->getInt('layoutId', $filterCriteria);
-        $mediaId = $this->getSanitizer()->getInt('mediaId', $filterCriteria);
-        $eventTag = $this->getSanitizer()->getString('eventTag', $filterCriteria);
+        $sanitizedParams = $this->getSanitizer($filterCriteria);
 
+        $type = strtolower($sanitizedParams->getString('type'));
+        $layoutId = $sanitizedParams->getInt('layoutId');
+        $mediaId = $sanitizedParams->getInt('mediaId');
+        $eventTag = $sanitizedParams->getString('eventTag');
         // Get an array of display id this user has access to.
         $displayIds = [];
 
@@ -323,7 +327,7 @@ class SummaryReport implements ReportInterface
         // --------------------------
         // Our report has a range filter which determins whether or not the user has to enter their own from / to dates
         // check the range filter first and set from/to dates accordingly.
-        $reportFilter = $this->getSanitizer()->getString('reportFilter', $filterCriteria);
+        $reportFilter = $sanitizedParams->getString('reportFilter');
 
         // Use the current date as a helper
         $now = $this->getDate()->parse();
@@ -353,7 +357,7 @@ class SummaryReport implements ReportInterface
                 $toDt = $fromDt->copy()->addMonth();
 
                 // User can pick their own group by filter when they provide a manual range
-                $groupByFilter = $this->getSanitizer()->getString('groupByFilter', $filterCriteria);
+                $groupByFilter = $sanitizedParams->getString('groupByFilter');
                 break;
 
             case 'thisyear':
@@ -361,7 +365,7 @@ class SummaryReport implements ReportInterface
                 $toDt = $fromDt->copy()->addYear();
 
                 // User can pick their own group by filter when they provide a manual range
-                $groupByFilter = $this->getSanitizer()->getString('groupByFilter', $filterCriteria);
+                $groupByFilter = $sanitizedParams->getString('groupByFilter');
                 break;
 
             case 'lastweek':
@@ -375,7 +379,7 @@ class SummaryReport implements ReportInterface
                 $toDt = $fromDt->copy()->addMonth();
 
                 // User can pick their own group by filter when they provide a manual range
-                $groupByFilter = $this->getSanitizer()->getString('groupByFilter', $filterCriteria);
+                $groupByFilter = $sanitizedParams->getString('groupByFilter');
                 break;
 
             case 'lastyear':
@@ -383,16 +387,16 @@ class SummaryReport implements ReportInterface
                 $toDt = $fromDt->copy()->addYear();
 
                 // User can pick their own group by filter when they provide a manual range
-                $groupByFilter = $this->getSanitizer()->getString('groupByFilter', $filterCriteria);
+                $groupByFilter = $sanitizedParams->getString('groupByFilter');
                 break;
 
             case '':
             default:
                 // Expect dates to be provided.
-                $fromDt = $this->getSanitizer()->getDate('statsFromDt', $this->getDate()->parse()->addDay(-1));
+                $fromDt = $sanitizedParams->getDate('statsFromDt', ['default' => $this->getDate()->parse()->subDay()]);
                 $fromDt->startOfDay();
 
-                $toDt = $this->getSanitizer()->getDate('statsToDt', $this->getDate()->parse());
+                $toDt = $sanitizedParams->getDate('statsToDt', ['default' =>  $this->getDate()->parse()]);
                 $toDt->addDay()->startOfDay();
 
                 // What if the fromdt and todt are exactly the same?
@@ -402,7 +406,7 @@ class SummaryReport implements ReportInterface
                 }
 
                 // User can pick their own group by filter when they provide a manual range
-                $groupByFilter = $this->getSanitizer()->getString('groupByFilter', $filterCriteria);
+                $groupByFilter = $sanitizedParams->getString('groupByFilter');
 
                 break;
         }
@@ -437,10 +441,10 @@ class SummaryReport implements ReportInterface
                 $backgroundColor[] = 'rgb(95, 186, 218, 0.6)';
                 $borderColor[] = 'rgb(240,93,41, 0.8)';
 
-                $count = $this->getSanitizer()->int($row['NumberPlays']);
+                $count = $this->getSanitizer($row)->getInt('NumberPlays');
                 $countData[] = ($count == '') ? 0 : $count;
 
-                $duration = $this->getSanitizer()->int($row['Duration']);
+                $duration = $this->getSanitizer($row)->getInt('Duration');
                 $durationData[] = ($duration == '') ? 0 : $duration;
             }
     }

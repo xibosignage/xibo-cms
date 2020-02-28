@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2015 Daniel Garner. 2006-2008 Daniel Garner and James Packer.
  *
  * This file is part of Xibo.
  *
@@ -20,21 +21,31 @@
  */
 namespace Xibo\Widget;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 
+/**
+ * Class PowerPoint
+ * @package Xibo\Widget
+ */
 class PowerPoint extends ModuleWidget
 {
     /** @inheritdoc */
-    public function edit()
+    public function edit(Request $request, Response $response): Response
     {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
         $this->saveWidget();
+
+        return $response;
     }
 
     /**
-     * Javascript functions for the layout designer
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -50,17 +61,13 @@ class PowerPoint extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function editForm()
+    public function editForm(Request $request)
     {
         return 'generic-form-edit';
     }
 
     /**
-     * Override previewAsClient
-     * @param float $width
-     * @param float $height
-     * @param int $scaleOverride
-     * @return string
+     * @inheritDoc
      */
     public function previewAsClient($width, $height, $scaleOverride = 0)
     {
@@ -68,12 +75,10 @@ class PowerPoint extends ModuleWidget
     }
 
     /**
-     * Get Resource
-     * @param int $displayId
-     * @return mixed
+     * @inheritDoc
      */
     public function getResource($displayId = 0)
     {
-        $this->download();
+        return '';
     }
 }

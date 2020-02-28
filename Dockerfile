@@ -89,14 +89,15 @@ RUN apk update && apk upgrade && apk add tar \
     php7-memcached \
     php7-zlib \
     mysql-client \
-    ssmtp \
+    msmtp \
+    python2 \
     apache2 \
     ca-certificates \
     tzdata \
     && rm -rf /var/cache/apk/*
 
 RUN apk add --no-cache build-base php7-dev php7-pear openssl-dev \
-    && pecl install mongodb \
+    && pecl install mongodb-1.6.1 \
     && apk del build-base php7-dev \
     && echo extension=mongodb.so > /etc/php7/conf.d/51_mongodb.ini
 
@@ -184,7 +185,7 @@ RUN mkdir -p /var/www/cms/library/temp &&  \
     mkdir -p /run/apache2 && \
     rm /etc/apache2/conf.d/info.conf && \
     rm /etc/apache2/conf.d/userdir.conf && \
-    addgroup ssmtp && \
+    ln -sf /usr/bin/msmtp /usr/sbin/sendmail && \
     chmod 777 /tmp
 
 # Expose volume mount points

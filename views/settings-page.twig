@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,10 +25,10 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-info btn-xs" ><a class="XiboFormButton btns" title="{% trans "Export database" %}" href="{{ urlFor("maintenance.export.form") }}"> <i class="fa fa-cloud-upload" aria-hidden="true"></i> {% trans "Export" %}</a></li>
+        <li class="btn btn-info btn-xs" ><a class="XiboFormButton btns" title="{% trans "Export database" %}" href="{{ url_for("maintenance.export.form") }}"> <i class="fa fa-cloud-upload" aria-hidden="true"></i> {% trans "Export" %}</a></li>
 
         {% if settings.SETTING_LIBRARY_TIDY_ENABLED %}
-            <li class="btn btn-danger btn-xs"><a class="XiboFormButton btns" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ urlFor("maintenance.libraryTidy.form") }}"> <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Tidy Library" %}</a></li>
+            <li class="btn btn-danger btn-xs"><a class="XiboFormButton btns" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ url_for("maintenance.libraryTidy.form") }}"> <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Tidy Library" %}</a></li>
         {% endif %}
     </ul>
 {% endblock %}
@@ -51,7 +51,7 @@
                         <li><a href="#tab_troubleshooting" role="tab" data-toggle="tab"><span>{% trans "Troubleshooting" %}</span></a></li>
                         <li><a href="#tab_users" role="tab" data-toggle="tab"><span>{% trans "Users" %}</span></a></li>
                     </ul>
-                    <form id="SettingsForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("settings.update") }}">
+                    <form id="SettingsForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("settings.update") }}">
                         <div class="tab-content">
                             <div class="tab-pane active" id="tab_config">
                                 <h3 class="section-heading">{% trans "Configuration" %}</h3>
@@ -156,7 +156,7 @@
                                     {% if theme.isSettingEditable("DEFAULT_TRANSITION_IN") %}
                                         {% set attributes = [
                                             { name: "data-width", value: "100%" },
-                                            { name: "data-search-url", value: urlFor("transition.search") },
+                                            { name: "data-search-url", value: url_for("transition.search") },
                                             { name: "data-search-term", value: "transition" },
                                             { name: "data-id-property", value: "code" },
                                             { name: "data-text-property", value: "transition" },
@@ -175,7 +175,7 @@
                                     {% if theme.isSettingEditable("DEFAULT_TRANSITION_OUT") %}
                                         {% set attributes = [
                                             { name: "data-width", value: "100%" },
-                                            { name: "data-search-url", value: urlFor("transition.search") },
+                                            { name: "data-search-url", value: url_for("transition.search") },
                                             { name: "data-search-term", value: "transition" },
                                             { name: "data-id-property", value: "code" },
                                             { name: "data-text-property", value: "transition" },
@@ -236,7 +236,7 @@
                                     {% if theme.isSettingEditable("DEFAULT_LAYOUT") %}
                                         {% set attributes = [
                                             { name: "data-width", value: "100%" },
-                                            { name: "data-search-url", value: urlFor("layout.search") },
+                                            { name: "data-search-url", value: url_for("layout.search") },
                                             { name: "data-search-term", value: "layout" },
                                             { name: "data-search-term-tags", value: "tags" },
                                             { name: "data-id-property", value: "layoutId" },
@@ -1093,7 +1093,7 @@
                                     {% if theme.isSettingEditable("DEFAULT_USERGROUP") %}
                                         {% set attributes = [
                                             { name: "data-width", value: "100%" },
-                                            { name: "data-search-url", value: urlFor("group.search") },
+                                            { name: "data-search-url", value: url_for("group.search") },
                                             { name: "data-search-term", value: "group" },
                                             { name: "data-id-property", value: "groupId" },
                                             { name: "data-text-property", value: "group" }

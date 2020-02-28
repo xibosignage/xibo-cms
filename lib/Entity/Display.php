@@ -517,7 +517,7 @@ class Display implements \JsonSerializable
      */
     public function isAuditing()
     {
-        $this->getLog()->debug('Testing whether this display is auditing. %d vs %d.', $this->auditingUntil, time());
+        $this->getLog()->debug(sprintf('Testing whether this display is auditing. %d vs %d.', $this->auditingUntil, time()));
         // Test $this->auditingUntil against the current date.
         return ($this->auditingUntil >= time());
     }

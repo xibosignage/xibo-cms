@@ -1,8 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2011-2017 Spring Signage Ltd
- * contributions by LukyLuke aka Lukas Zurschmiede - https://github.com/LukyLuke
  *
  * This file is part of Xibo.
  *
@@ -21,6 +21,9 @@
  */
 namespace Xibo\Controller;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
@@ -28,10 +31,10 @@ use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Helper\DataSetUploadHandler;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 
 /**
  * Class DataSet
@@ -48,7 +51,7 @@ class DataSet extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -56,21 +59,14 @@ class DataSet extends Base
      * @param ConfigServiceInterface $config
      * @param DataSetFactory $dataSetFactory
      * @param DataSetColumnFactory $dataSetColumnFactory
+     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $dataSetFactory, $dataSetColumnFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $dataSetFactory, $dataSetColumnFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->dataSetFactory = $dataSetFactory;
         $this->dataSetColumnFactory = $dataSetColumnFactory;
-    }
-
-    /**
-     * @return SanitizerServiceInterface
-     */
-    public function getSanitizer()
-    {
-        return parent::getSanitizer();
     }
 
     /**
@@ -83,16 +79,32 @@ class DataSet extends Base
 
     /**
      * View Route
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function displayPage()
+    public function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'dataset-page';
+
+        return $this->render($request, $response);
     }
 
     /**
      * Search Data
-     * @throws \Xibo\Exception\NotFoundException
-     *
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Get(
      *  path="/dataset",
      *  operationId="dataSetSearch",
@@ -101,28 +113,28 @@ class DataSet extends Base
      *  description="Search this users DataSets",
      *  @SWG\Parameter(
      *      name="dataSetId",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by DataSet Id",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="dataSet",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by DataSet Name",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="code",
-     *      in="formData",
+     *      in="query",
      *      description="Filter by DataSet Code",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="embed",
-     *      in="formData",
+     *      in="query",
      *      description="Embed related data such as columns",
      *      type="string",
      *      required=false
@@ -137,27 +149,28 @@ class DataSet extends Base
      *  )
      * )
      */
-    public function grid()
+    public function grid(Request $request, Response $response)
     {
         $user = $this->getUser();
+        $sanitizedParams = $this->getSanitizer($request->getQueryParams());
         
         // Embed?
-        $embed = ($this->getSanitizer()->getString('embed') != null) ? explode(',', $this->getSanitizer()->getString('embed')) : [];
+        $embed = ($sanitizedParams->getString('embed') != null) ? explode(',', $sanitizedParams->getString('embed')) : [];
         
         $filter = [
-            'dataSetId' => $this->getSanitizer()->getInt('dataSetId'),
-            'dataSet' => $this->getSanitizer()->getString('dataSet'),
-            'code' => $this->getSanitizer()->getString('code'),
+            'dataSetId' => $sanitizedParams->getInt('dataSetId'),
+            'dataSet' => $sanitizedParams->getString('dataSet'),
+            'code' => $sanitizedParams->getString('code'),
         ];
 
-        $dataSets = $this->dataSetFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $dataSets = $this->dataSetFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
 
         foreach ($dataSets as $dataSet) {
             /* @var \Xibo\Entity\DataSet $dataSet */
             if (in_array('columns', $embed)) {
                 $dataSet->load();
             }
-            if ($this->isApi())
+            if ($this->isApi($request))
                 break;
 
             $dataSet->includeProperty('buttons');
@@ -172,14 +185,14 @@ class DataSet extends Base
                 $dataSet->buttons[] = array(
                     'id' => 'dataset_button_viewdata',
                     'class' => 'XiboRedirectButton',
-                    'url' => $this->urlFor('dataSet.view.data', ['id' => $dataSet->dataSetId]),
+                    'url' => $this->urlFor($request,'dataSet.view.data', ['id' => $dataSet->dataSetId]),
                     'text' => __('View Data')
                 );
 
                 // View Columns
                 $dataSet->buttons[] = array(
                     'id' => 'dataset_button_viewcolumns',
-                    'url' => $this->urlFor('dataSet.column.view', ['id' => $dataSet->dataSetId]),
+                    'url' => $this->urlFor($request,'dataSet.column.view', ['id' => $dataSet->dataSetId]),
                     'class' => 'XiboRedirectButton',
                     'text' => __('View Columns')
                 );
@@ -187,7 +200,7 @@ class DataSet extends Base
                 // View RSS
                 $dataSet->buttons[] = array(
                     'id' => 'dataset_button_viewrss',
-                    'url' => $this->urlFor('dataSet.rss.view', ['id' => $dataSet->dataSetId]),
+                    'url' => $this->urlFor($request,'dataSet.rss.view', ['id' => $dataSet->dataSetId]),
                     'class' => 'XiboRedirectButton',
                     'text' => __('View RSS')
                 );
@@ -200,7 +213,7 @@ class DataSet extends Base
                     $dataSet->buttons[] = array(
                         'id' => 'dataset_button_import',
                         'class' => 'dataSetImportForm',
-                        'url' => $this->urlFor('dataSet.import.form', ['id' => $dataSet->dataSetId]),
+                        'url' => $this->urlFor($request,'dataSet.import.form', ['id' => $dataSet->dataSetId]),
                         'text' => __('Import CSV')
                     );
                 }
@@ -208,7 +221,7 @@ class DataSet extends Base
                 // Copy
                 $dataSet->buttons[] = array(
                     'id' => 'dataset_button_copy',
-                    'url' => $this->urlFor('dataSet.copy.form', ['id' => $dataSet->dataSetId]),
+                    'url' => $this->urlFor($request,'dataSet.copy.form', ['id' => $dataSet->dataSetId]),
                     'text' => __('Copy')
                 );
 
@@ -218,7 +231,7 @@ class DataSet extends Base
                 // Edit DataSet
                 $dataSet->buttons[] = array(
                     'id' => 'dataset_button_edit',
-                    'url' => $this->urlFor('dataSet.edit.form', ['id' => $dataSet->dataSetId]),
+                    'url' => $this->urlFor($request,'dataSet.edit.form', ['id' => $dataSet->dataSetId]),
                     'text' => __('Edit')
                 );
             }
@@ -227,11 +240,11 @@ class DataSet extends Base
                 // Delete DataSet
                 $dataSet->buttons[] = [
                     'id' => 'dataset_button_delete',
-                    'url' => $this->urlFor('dataSet.delete.form', ['id' => $dataSet->dataSetId]),
+                    'url' => $this->urlFor($request,'dataSet.delete.form', ['id' => $dataSet->dataSetId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor('dataSet.delete', ['id' => $dataSet->dataSetId])],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'dataSet.delete', ['id' => $dataSet->dataSetId])],
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'dataset_button_delete'],
                         ['name' => 'text', 'value' => __('Delete')],
@@ -248,7 +261,7 @@ class DataSet extends Base
                 // Edit Permissions
                 $dataSet->buttons[] = array(
                     'id' => 'dataset_button_permissions',
-                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId]),
+                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId]),
                     'text' => __('Permissions')
                 );
             }
@@ -257,18 +270,30 @@ class DataSet extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->dataSetFactory->countLast();
         $this->getState()->setData($dataSets);
+        
+        return $this->render($request, $response);
     }
 
     /**
      * Add DataSet Form
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function addForm()
+    public function addForm(Request $request, Response $response)
     {
         $this->getState()->template = 'dataset-form-add';
         $this->getState()->setData([
-            'dataSets' => $this->dataSetFactory->query(),
+            'dataSets' => $this->dataSetFactory->query(null, [], $request),
             'help' => $this->getHelp()->link('DataSet', 'Add')
         ]);
+        
+        return $this->render($request, $response);
     }
 
     /**
@@ -411,34 +436,45 @@ class DataSet extends Base
      *  )
      * )
      *
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\DuplicateEntityException
      */
-    public function add()
+    public function add(Request $request, Response $response)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        
         $dataSet = $this->dataSetFactory->createEmpty();
-        $dataSet->dataSet = $this->getSanitizer()->getString('dataSet');
-        $dataSet->description = $this->getSanitizer()->getString('description');
-        $dataSet->code = $this->getSanitizer()->getString('code');
-        $dataSet->isRemote = $this->getSanitizer()->getCheckbox('isRemote');
+        $dataSet->dataSet = $sanitizedParams->getString('dataSet');
+        $dataSet->description = $sanitizedParams->getString('description');
+        $dataSet->code = $sanitizedParams->getString('code');
+        $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
         $dataSet->userId = $this->getUser()->userId;
 
         // Fields for remote
         if ($dataSet->isRemote === 1) {
-            $dataSet->method = $this->getSanitizer()->getString('method');
-            $dataSet->uri = $this->getSanitizer()->getString('uri');
-            $dataSet->postData = trim($this->getSanitizer()->getString('postData'));
-            $dataSet->authentication = $this->getSanitizer()->getString('authentication');
-            $dataSet->username = $this->getSanitizer()->getString('username');
-            $dataSet->password = $this->getSanitizer()->getString('password');
-            $dataSet->customHeaders = $this->getSanitizer()->getString('customHeaders');
-            $dataSet->refreshRate = $this->getSanitizer()->getInt('refreshRate');
-            $dataSet->clearRate = $this->getSanitizer()->getInt('clearRate');
-            $dataSet->runsAfter = $this->getSanitizer()->getInt('runsAfter');
-            $dataSet->dataRoot = $this->getSanitizer()->getString('dataRoot');
-            $dataSet->summarize = $this->getSanitizer()->getString('summarize');
-            $dataSet->summarizeField = $this->getSanitizer()->getString('summarizeField');
-            $dataSet->sourceId = $this->getSanitizer()->getInt('sourceId');
-            $dataSet->ignoreFirstRow = $this->getSanitizer()->getCheckbox('ignoreFirstRow');
+            $dataSet->method = $sanitizedParams->getString('method');
+            $dataSet->uri = $sanitizedParams->getString('uri');
+            $dataSet->postData = trim($sanitizedParams->getString('postData'));
+            $dataSet->authentication = $sanitizedParams->getString('authentication');
+            $dataSet->username = $sanitizedParams->getString('username');
+            $dataSet->password = $sanitizedParams->getString('password');
+            $dataSet->customHeaders = $sanitizedParams->getString('customHeaders');
+            $dataSet->refreshRate = $sanitizedParams->getInt('refreshRate');
+            $dataSet->clearRate = $sanitizedParams->getInt('clearRate');
+            $dataSet->runsAfter = $sanitizedParams->getInt('runsAfter');
+            $dataSet->dataRoot = $sanitizedParams->getString('dataRoot');
+            $dataSet->summarize = $sanitizedParams->getString('summarize');
+            $dataSet->summarizeField = $sanitizedParams->getString('summarizeField');
+            $dataSet->sourceId = $sanitizedParams->getInt('sourceId');
+            $dataSet->ignoreFirstRow = $sanitizedParams->getCheckbox('ignoreFirstRow');
         }
 
         // Also add one column
@@ -450,8 +486,9 @@ class DataSet extends Base
 
         // Add Column
         // only when we are not routing through the API
-        if (!$this->isApi())
+        if (!$this->isApi($request)) {
             $dataSet->assignColumn($dataSetColumn);
+        }
 
         // Save
         $dataSet->save();
@@ -463,19 +500,30 @@ class DataSet extends Base
             'id' => $dataSet->dataSetId,
             'data' => $dataSet
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edit DataSet Form
-     * @param int $dataSetId
-     * @throws \Xibo\Exception\NotFoundException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function editForm($dataSetId)
+    public function editForm(Request $request, Response $response, $id)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
 
         // Set the form
         $this->getState()->template = 'dataset-form-edit';
@@ -484,12 +532,24 @@ class DataSet extends Base
             'dataSets' => $this->dataSetFactory->query(),
             'help' => $this->getHelp()->link('DataSet', 'Edit')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edit DataSet
-     * @param int $dataSetId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\DuplicateEntityException
      * @SWG\Put(
      *  path="/dataset/{dataSetId}",
      *  operationId="dataSetEdit",
@@ -629,36 +689,37 @@ class DataSet extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function edit($dataSetId)
+    public function edit(Request $request, Response $response, $id)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
 
-        $dataSet->dataSet = $this->getSanitizer()->getString('dataSet');
-        $dataSet->description = $this->getSanitizer()->getString('description');
-        $dataSet->code = $this->getSanitizer()->getString('code');
-        $dataSet->isRemote = $this->getSanitizer()->getCheckbox('isRemote');
+        $dataSet->dataSet = $sanitizedParams->getString('dataSet');
+        $dataSet->description = $sanitizedParams->getString('description');
+        $dataSet->code = $sanitizedParams->getString('code');
+        $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
 
         if ($dataSet->isRemote === 1) {
-            $dataSet->method = $this->getSanitizer()->getString('method');
-            $dataSet->uri = $this->getSanitizer()->getString('uri');
-            $dataSet->postData = trim($this->getSanitizer()->getString('postData'));
-            $dataSet->authentication = $this->getSanitizer()->getString('authentication');
-            $dataSet->username = $this->getSanitizer()->getString('username');
-            $dataSet->password = $this->getSanitizer()->getString('password');
-            $dataSet->customHeaders = $this->getSanitizer()->getString('customHeaders');
-            $dataSet->refreshRate = $this->getSanitizer()->getInt('refreshRate');
-            $dataSet->clearRate = $this->getSanitizer()->getInt('clearRate');
-            $dataSet->runsAfter = $this->getSanitizer()->getInt('runsAfter');
-            $dataSet->dataRoot = $this->getSanitizer()->getString('dataRoot');
-            $dataSet->summarize = $this->getSanitizer()->getString('summarize');
-            $dataSet->summarizeField = $this->getSanitizer()->getString('summarizeField');
-            $dataSet->sourceId = $this->getSanitizer()->getInt('sourceId');
-            $dataSet->ignoreFirstRow = $this->getSanitizer()->getCheckbox('ignoreFirstRow');
+            $dataSet->method = $sanitizedParams->getString('method');
+            $dataSet->uri = $sanitizedParams->getString('uri');
+            $dataSet->postData = trim($sanitizedParams->getString('postData'));
+            $dataSet->authentication = $sanitizedParams->getString('authentication');
+            $dataSet->username = $sanitizedParams->getString('username');
+            $dataSet->password = $sanitizedParams->getString('password');
+            $dataSet->customHeaders = $sanitizedParams->getString('customHeaders');
+            $dataSet->refreshRate = $sanitizedParams->getInt('refreshRate');
+            $dataSet->clearRate = $sanitizedParams->getInt('clearRate');
+            $dataSet->runsAfter = $sanitizedParams->getInt('runsAfter');
+            $dataSet->dataRoot = $sanitizedParams->getString('dataRoot');
+            $dataSet->summarize = $sanitizedParams->getString('summarize');
+            $dataSet->summarizeField = $sanitizedParams->getString('summarizeField');
+            $dataSet->sourceId = $sanitizedParams->getInt('sourceId');
+            $dataSet->ignoreFirstRow = $sanitizedParams->getCheckbox('ignoreFirstRow');
         }
 
         $dataSet->save();
@@ -669,22 +730,34 @@ class DataSet extends Base
             'id' => $dataSet->dataSetId,
             'data' => $dataSet
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * DataSet Delete
-     * @param int $dataSetId
-     * @throws XiboException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function deleteForm($dataSetId)
+    public function deleteForm(Request $request, Response $response, $id)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($dataSet))
+        if (!$this->getUser()->checkDeleteable($dataSet)) {
             throw new AccessDeniedException();
+        }
 
-        if ($dataSet->isLookup)
+        if ($dataSet->isLookup) {
             throw new \InvalidArgumentException(__('Lookup Tables cannot be deleted'));
+        }
 
         // Set the form
         $this->getState()->template = 'dataset-form-delete';
@@ -692,12 +765,23 @@ class DataSet extends Base
             'dataSet' => $dataSet,
             'help' => $this->getHelp()->link('DataSet', 'Delete')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * DataSet Delete
-     * @param int $dataSetId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Delete(
      *  path="/dataset/{dataSetId}",
      *  operationId="dataSetDelete",
@@ -717,17 +801,18 @@ class DataSet extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function delete($dataSetId)
+    public function delete(Request $request, Response $response, $id)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkDeleteable($dataSet))
+        if (!$this->getUser()->checkDeleteable($dataSet)) {
             throw new AccessDeniedException();
+        }
 
         // Is there existing data?
-        if ($this->getSanitizer()->getCheckbox('deleteData') == 0 && $dataSet->hasData())
+        if ($sanitizedParams->getCheckbox('deleteData') == 0 && $dataSet->hasData())
             throw new InvalidArgumentException(__('There is data assigned to this data set, cannot delete.'), 'dataSetId');
 
         // Otherwise delete
@@ -738,19 +823,30 @@ class DataSet extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $dataSet->dataSet)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Copy DataSet Form
-     * @param int $dataSetId
-     * @throws \Xibo\Exception\NotFoundException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function copyForm($dataSetId)
+    public function copyForm(Request $request, Response $response, $id)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
 
         // Set the form
         $this->getState()->template = 'dataset-form-copy';
@@ -758,12 +854,24 @@ class DataSet extends Base
             'dataSet' => $dataSet,
             'help' => $this->getHelp()->link('DataSet', 'Edit')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Copy DataSet
-     * @param int $dataSetId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\DuplicateEntityException
      * @SWG\Post(
      *  path="/dataset/copy/{dataSetId}",
      *  operationId="dataSetCopy",
@@ -812,15 +920,17 @@ class DataSet extends Base
      *  )
      * )
      *
-     * @throws XiboException
      */
-    public function copy($dataSetId)
+    public function copy(Request $request, Response $response, $id)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
-        $copyRows = $this->getSanitizer()->getCheckbox('copyRows', 0);
+        $dataSet = $this->dataSetFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        $copyRows = $sanitizedParams->getCheckbox('copyRows');
+
+        if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
 
         // Load for the Copy
         $dataSet->load();
@@ -828,15 +938,16 @@ class DataSet extends Base
 
         // Clone and reset parameters
         $dataSet = clone $dataSet;
-        $dataSet->dataSet = $this->getSanitizer()->getString('dataSet');
-        $dataSet->description = $this->getSanitizer()->getString('description');
-        $dataSet->code = $this->getSanitizer()->getString('code');
+        $dataSet->dataSet = $sanitizedParams->getString('dataSet');
+        $dataSet->description = $sanitizedParams->getString('description');
+        $dataSet->code = $sanitizedParams->getString('code');
         $dataSet->userId = $this->getUser()->userId;
 
         $dataSet->save();
 
-        if ($copyRows === 1)
-            $dataSet->copyRows($dataSetId, $dataSet->dataSetId);
+        if ($copyRows === 1) {
+            $dataSet->copyRows($id, $dataSet->dataSetId);
+        }
 
         // Return
         $this->getState()->hydrate([
@@ -844,12 +955,20 @@ class DataSet extends Base
             'id' => $dataSet->dataSetId,
             'data' => $dataSet
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Import CSV
-     * @param int $dataSetId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/dataset/import/{dataSetId}",
      *  operationId="dataSetImport",
@@ -897,10 +1016,8 @@ class DataSet extends Base
      *  )
      * )
      *
-     * @throws XiboException
-     * @throws \Exception
      */
-    public function import($dataSetId)
+    public function import(Request $request, Response $response, $id)
     {
         $this->getLog()->debug('Import DataSet');
 
@@ -911,12 +1028,12 @@ class DataSet extends Base
 
         $options = array(
             'userId' => $this->getUser()->userId,
-            'dataSetId' => $dataSetId,
+            'dataSetId' => $id,
             'controller' => $this,
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
-            'script_url' => $this->urlFor('dataSet.import'),
-            'upload_url' => $this->urlFor('dataSet.import'),
+            'script_url' => $this->urlFor($request,'dataSet.import'),
+            'upload_url' => $this->urlFor($request,'dataSet.import'),
             'image_versions' => array(),
             'accept_file_types' => '/\.csv/i'
         );
@@ -927,10 +1044,12 @@ class DataSet extends Base
 
         } catch (\Exception $e) {
             // We must not issue an error, the file upload return should have the error object already
-            $this->getApp()->commit = false;
+            $this->getState()->setCommitState(false);
         }
 
         $this->setNoOutput(true);
+
+        $this->render($request, $response);
     }
 
 
@@ -947,9 +1066,16 @@ class DataSet extends Base
 
     /**
      * Import JSON
-     * @param int $dataSetId
-     * @throws \Exception
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/dataset/importjson/{dataSetId}",
      *  operationId="dataSetImportJson",
@@ -976,17 +1102,20 @@ class DataSet extends Base
      *  )
      * )
      */
-    public function importJson($dataSetId)
+    public function importJson(Request $request, Response $response, $id)
     {
-        $dataSet = $this->dataSetFactory->getById($dataSetId);
+        $dataSet = $this->dataSetFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
 
-        $body = $this->getApp()->request()->getBody();
+        $body = $request->getParsedBody();
 
-        if (empty($body))
+        if (empty($body)) {
             throw new \InvalidArgumentException(__('Missing JSON Body'));
+        }
 
         // Expect 2 parameters
         $data = json_decode($body, true);
@@ -1022,7 +1151,7 @@ class DataSet extends Base
                     // Sanitize accordingly
                     if ($columns[$key] == 2) {
                         // Number
-                        $value = $this->getSanitizer()->double($value);
+                        $value = $sanitizedParams->getDouble($value);
                     }
                     else if ($columns[$key] == 3) {
                         // Date
@@ -1030,11 +1159,11 @@ class DataSet extends Base
                     }
                     else if ($columns[$key] == 5) {
                         // Media Id
-                        $value = $this->getSanitizer()->int($value);
+                        $value = $sanitizedParams->getInt($value);
                     }
                     else {
                         // String
-                        $value = $this->getSanitizer()->string($value);
+                        $value = $sanitizedParams->getString($value);
                     }
 
                     // Data is sanitized, add to the sanitized row
@@ -1082,32 +1211,47 @@ class DataSet extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Imported JSON into %s'), $dataSet->dataSet)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Sends out a Test Request and returns the Data as JSON to the Client so it can be shown in the Dialog
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      * @throws XiboException
      * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function testRemoteRequest()
+    public function testRemoteRequest(Request $request, Response $response)
     {
-        $testDataSetId = $this->getSanitizer()->getInt('testDataSetId');
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $testDataSetId = $sanitizedParams->getInt('testDataSetId');
 
         if ($testDataSetId !== null) {
             $dataSet = $this->dataSetFactory->getById($testDataSetId);
         } else {
             $dataSet = $this->dataSetFactory->createEmpty();
         }
-        $dataSet->dataSet = $this->getSanitizer()->getString('dataSet');
-        $dataSet->method = $this->getSanitizer()->getString('method');
-        $dataSet->uri = $this->getSanitizer()->getString('uri');
-        $dataSet->postData = $this->getSanitizer()->getString('postData');
-        $dataSet->authentication = $this->getSanitizer()->getString('authentication');
-        $dataSet->username = $this->getSanitizer()->getString('username');
-        $dataSet->password = $this->getSanitizer()->getString('password');
-        $dataSet->dataRoot = $this->getSanitizer()->getString('dataRoot');
-        $dataSet->sourceId = $this->getSanitizer()->getInt('sourceId');
-        $dataSet->ignoreFirstRow = $this->getSanitizer()->getCheckbox('ignoreFirstRow');
+
+        $dataSet->dataSet = $sanitizedParams->getString('dataSet');
+        $dataSet->method = $sanitizedParams->getString('method');
+        $dataSet->uri = $sanitizedParams->getString('uri');
+        $dataSet->postData = $sanitizedParams->getString('postData');
+        $dataSet->authentication = $sanitizedParams->getString('authentication');
+        $dataSet->username = $sanitizedParams->getString('username');
+        $dataSet->password = $sanitizedParams->getString('password');
+        $dataSet->dataRoot = $sanitizedParams->getString('dataRoot');
+        $dataSet->sourceId = $sanitizedParams->getInt('sourceId');
+        $dataSet->ignoreFirstRow = $sanitizedParams->getCheckbox('ignoreFirstRow');
 
         // Set this DataSet as active.
         $dataSet->setActive();
@@ -1132,5 +1276,7 @@ class DataSet extends Base
             'id' => $dataSet->dataSetId,
             'data' => $data
         ]);
+
+        return $this->render($request, $response);
     }
 }

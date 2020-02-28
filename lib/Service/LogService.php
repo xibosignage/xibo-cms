@@ -23,6 +23,7 @@
 namespace Xibo\Service;
 
 
+use Monolog\Logger;
 use Xibo\Storage\PdoStorageService;
 
 /**
@@ -32,7 +33,7 @@ use Xibo\Storage\PdoStorageService;
 class LogService implements LogServiceInterface
 {
     /**
-     * @var \Slim\Log
+     * @var LogServiceInterface
      */
     private $log;
 
@@ -212,31 +213,31 @@ class LogService implements LogServiceInterface
         switch (strtolower($level)) {
 
             case 'emergency':
-                return \Slim\Log::EMERGENCY;
+                return Logger::EMERGENCY;
 
             case 'alert':
-                return \Slim\Log::ALERT;
+                return Logger::ALERT;
 
             case 'critical':
-                return \Slim\Log::CRITICAL;
+                return logger::CRITICAL;
 
             case 'error':
-                return \Slim\Log::ERROR;
+                return logger::ERROR;
 
             case 'warning':
-                return \Slim\Log::WARN;
+                return logger::WARNING;
 
             case 'notice':
-                return \Slim\Log::NOTICE;
+                return logger::NOTICE;
 
             case 'info':
-                return \Slim\Log::INFO;
+                return logger::INFO;
 
             case 'debug':
-                return \Slim\Log::DEBUG;
+                return logger::DEBUG;
 
             default:
-                return \Slim\Log::ERROR;
+                return logger::ERROR;
         }
     }
 }

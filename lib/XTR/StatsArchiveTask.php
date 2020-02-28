@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
- * (StatsArchiveTask.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -32,11 +47,15 @@ class StatsArchiveTask implements TaskInterface
     /** @var UserFactory */
     private $userFactory;
 
+    /** @var  \Xibo\Helper\SanitizerService */
+    private $sanitizerService;
+
     /** @inheritdoc */
     public function setFactories($container)
     {
         $this->userFactory = $container->get('userFactory');
         $this->mediaFactory = $container->get('mediaFactory');
+        $this->sanitizerService = $container->get('sanitizerService');
         return $this;
     }
 
@@ -115,6 +134,8 @@ class StatsArchiveTask implements TaskInterface
 
         while ($row = $resultSet->getNextRow() ) {
 
+            $sanitizedRow = $this->getSanitizer($row);
+
             if ($this->timeSeriesStore->getEngine() == 'mongodb') {
 
                 $statDate = isset($row['statDate']) ? $this->date->parse($row['statDate']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s') : null;
@@ -130,19 +151,19 @@ class StatsArchiveTask implements TaskInterface
             // Read the columns
             fputcsv($out, [
                 $statDate,
-                $this->sanitizer->string($row['type']),
+                $sanitizedRow->getString('type'),
                 $start,
                 $end,
-                isset($row['layout']) ? $this->sanitizer->string($row['layout']) :'',
-                isset($row['display']) ? $this->sanitizer->string($row['display']) :'',
-                isset($row['media']) ? $this->sanitizer->string($row['media']) :'',
-                isset($row['tag']) ? $this->sanitizer->string($row['tag']) :'',
-                $this->sanitizer->string($row['duration']),
-                $this->sanitizer->string($row['count']),
-                $this->sanitizer->int($row['displayId']),
-                isset($row['layoutId']) ? $this->sanitizer->int($row['layoutId']) :'',
-                isset($row['widgetId']) ? $this->sanitizer->int($row['widgetId']) :'',
-                isset($row['mediaId']) ? $this->sanitizer->int($row['mediaId']) :'',
+                isset($row['layout']) ? $sanitizedRow->getString('layout') :'',
+                isset($row['display']) ? $sanitizedRow->getString('display') :'',
+                isset($row['media']) ? $sanitizedRow->getString('media') :'',
+                isset($row['tag']) ? $sanitizedRow->getString('tag') :'',
+                $sanitizedRow->getString('duration'),
+                $sanitizedRow->getString('count'),
+                $sanitizedRow->getInt('displayId'),
+                isset($row['layoutId']) ? $sanitizedRow->getInt('layoutId') :'',
+                isset($row['widgetId']) ? $sanitizedRow->getInt('widgetId') :'',
+                isset($row['mediaId']) ? $sanitizedRow->getInt('mediaId') :'',
             ]);
         }
 

@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2011-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,16 +19,21 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 namespace Xibo\Controller;
+
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 
 /**
  * Class MediaManager
@@ -53,7 +59,7 @@ class MediaManager extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -65,9 +71,9 @@ class MediaManager extends Base
      * @param PlaylistFactory $playlistFactory
      * @param WidgetFactory $widgetFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $moduleFactory, $layoutFactory, $regionFactory, $playlistFactory, $widgetFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $moduleFactory, $layoutFactory, $regionFactory, $playlistFactory, $widgetFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
         $this->moduleFactory = $moduleFactory;
         $this->layoutFactory = $layoutFactory;
         $this->regionFactory = $regionFactory;
@@ -75,7 +81,17 @@ class MediaManager extends Base
         $this->widgetFactory = $widgetFactory;
     }
 
-    public function displayPage()
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
+    public function displayPage(Request $request, Response $response)
     {
         $moduleFactory = $this->moduleFactory;
         
@@ -89,22 +105,36 @@ class MediaManager extends Base
                     return $module;
                 }, $moduleFactory->getAssignableModules())
         ]);
+
+        return $this->render($request, $response);
     }
 
-    public function grid()
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    public function grid(Request $request, Response $response)
     {
         $this->getState()->template = 'grid';
+        $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
 
         $rows = [];
 
-        $widgets = $this->widgetFactory->query($this->gridRenderSort(), $this->gridRenderFilter([
-            'layout' => $this->getSanitizer()->getString('layout'),
-            'region' => $this->getSanitizer()->getString('region'),
-            'media' => $this->getSanitizer()->getString('media'),
-            'type' => $this->getSanitizer()->getString('type'),
-            'playlist' => $this->getSanitizer()->getString('playlist'),
-            'showWidgetsFrom' => $this->getSanitizer()->getInt('showWidgetsFrom')
-        ]));
+        $widgets = $this->widgetFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+            'layout' => $sanitizedQueryParams->getString('layout'),
+            'region' => $sanitizedQueryParams->getString('region'),
+            'media' => $sanitizedQueryParams->getString('media'),
+            'type' => $sanitizedQueryParams->getString('type'),
+            'playlist' => $sanitizedQueryParams->getString('playlist'),
+            'showWidgetsFrom' => $sanitizedQueryParams->getInt('showWidgetsFrom')
+        ], $request));
         $widgetsCount = $this->widgetFactory->countLast();
 
         foreach ($widgets as $widget) {
@@ -116,7 +146,7 @@ class MediaManager extends Base
             $module = $this->moduleFactory->createWithWidget($widget);
 
             // Get a list of Layouts that this playlist uses
-            $layouts = $this->layoutFactory->query(null, ['playlistId' => $widget->playlistId, 'showDrafts' => 1]);
+            $layouts = $this->layoutFactory->query(null, ['playlistId' => $widget->playlistId, 'showDrafts' => 1], $request);
 
             $layoutNames = array_map(function($layout) {
                 return $layout->layout;
@@ -167,7 +197,7 @@ class MediaManager extends Base
                     ['name' => 'region-width', 'value' => $regionWidth],
                     ['name' => 'region-height', 'value' => $regionHeight]
                 ],
-                'url' => $this->urlFor('module.widget.edit.form', ['id' => $widget->widgetId]),
+                'url' => $this->urlFor($request,'module.widget.edit.form', ['id' => $widget->widgetId]),
                 'text' => __('Edit')
             ];
 
@@ -178,7 +208,7 @@ class MediaManager extends Base
             if ($module->getModule()->regionSpecific == 0) {
 
                 if ($widget->type == 'image') {
-                    $download = $this->urlFor('library.download', ['id' => $widget->getPrimaryMediaId()]) . '?preview=1';
+                    $download = $this->urlFor($request,'library.download', ['id' => $widget->getPrimaryMediaId()]) . '?preview=1';
                     $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56&cache=1" /></i></a>';
                     $row['thumbnailUrl'] = $download . '&width=100&height=56&cache=1';
                 }
@@ -203,5 +233,7 @@ class MediaManager extends Base
 
         $this->getState()->recordsTotal = $widgetsCount;
         $this->getState()->setData($rows);
+
+        return $this->render($request, $response);
     }
 }

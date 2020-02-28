@@ -2,7 +2,7 @@
 
 namespace Xibo\Report;
 
-use Slim\Http\Request;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -10,6 +10,7 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 trait ReportTrait
 {
@@ -45,7 +46,7 @@ trait ReportTrait
     private $dateService;
 
     /**
-     * @var SanitizerServiceInterface
+     * @var SanitizerInterface
      */
     private $sanitizerService;
 
@@ -134,12 +135,12 @@ trait ReportTrait
     }
 
     /**
-     * Get Sanitizer
-     * @return SanitizerServiceInterface
+     * @param $array
+     * @return \Xibo\Support\Sanitizer\SanitizerInterface
      */
-    protected function getSanitizer()
+    protected function getSanitizer($array)
     {
-        return $this->sanitizerService;
+        return $this->sanitizerService->getSanitizer($array);
     }
 
     /**
@@ -357,15 +358,17 @@ trait ReportTrait
      * @param array[Optional] $extraFilter
      * @return array
      */
-    public function gridRenderFilter($extraFilter = [])
+    public function gridRenderFilter($extraFilter)
     {
+        $sanitizedParams = $this->getSanitizer($extraFilter);
+
         // Handle filtering
         $filter = [
-            'start' => $this->getSanitizer()->getInt('start', 0),
-            'length' => $this->getSanitizer()->getInt('length', 10)
+            'start' => $sanitizedParams->getInt('start', ['default' => 0]),
+            'length' => $sanitizedParams->getInt('length', ['default' => 10])
         ];
 
-        $search = $this->getSanitizer()->getStringArray('search');
+        $search = $sanitizedParams->getArray('search');
         if (is_array($search) && isset($search['value'])) {
             $filter['search'] = $search['value'];
         }
@@ -381,18 +384,20 @@ trait ReportTrait
 
     /**
      * Set the sort order
+     * @param $filter
      * @return array
      */
-    public function gridRenderSort()
+    public function gridRenderSort($filter)
     {
-        $columns = $this->getSanitizer()->getStringArray('columns');
+        $sanitizedParams = $this->getSanitizer($filter);
+        $columns = $sanitizedParams->getArray('columns');
 
         if ($columns == null || !is_array($columns))
             return null;
 
         $order = array_map(function ($element) use ($columns) {
             return ((isset($columns[$element['column']]['name']) && $columns[$element['column']]['name'] != '') ? '`' . $columns[$element['column']]['name'] . '`' : '`' . $columns[$element['column']]['data'] . '`') . (($element['dir'] == 'desc') ? ' DESC' : '');
-        }, $this->getSanitizer()->getStringArray('order'));
+        }, $sanitizedParams->getArray('order'));
 
         return $order;
     }

@@ -83,8 +83,9 @@ class SessionFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        $entries = array();
-        $params = array();
+        $entries = [];
+        $params = [];
+        $sanitizedFilter = $this->getSanitizer($filterBy);
 
         $select = '
             SELECT `session`.session_id AS sessionId, 
@@ -104,34 +105,34 @@ class SessionFactory extends BaseFactory
          WHERE 1 = 1
         ';
 
-        if ($this->getSanitizer()->getString('sessionId', $filterBy) != null) {
+        if ($sanitizedFilter->getString('sessionId') != null) {
             $body .= ' AND session.session_id = :sessionId ';
-            $params['sessionId'] = $this->getSanitizer()->getString('sessionId', $filterBy);
+            $params['sessionId'] = $sanitizedFilter->getString('sessionId');
         }
 
-        if ($this->getSanitizer()->getString('fromDt', $filterBy) != null) {
+        if ($sanitizedFilter->getString('fromDt') != null) {
             $body .= ' AND session.LastAccessed >= :lastAccessed ';
-            $params['lastAccessed'] = $this->date->getLocalDate($this->getSanitizer()->getDate('fromDt', $filterBy)->setTime(0, 0, 0));
+            $params['lastAccessed'] = $this->date->getLocalDate($sanitizedFilter->getDate('fromDt')->setTime(0, 0, 0));
         }
 
-        if ($this->getSanitizer()->getString('type', $filterBy) != null) {
+        if ($sanitizedFilter->getString('type') != null) {
 
-            if ($this->getSanitizer()->getString('type', $filterBy) == 'active') {
+            if ($sanitizedFilter->getString('type') == 'active') {
                 $body .= ' AND IsExpired = 0 ';
             }
 
-            if ($this->getSanitizer()->getString('type', $filterBy) == 'expired') {
+            if ($sanitizedFilter->getString('type') == 'expired') {
                 $body .= ' AND IsExpired = 1 ';
             }
 
-            if ($this->getSanitizer()->getString('type', $filterBy) == 'guest') {
+            if ($sanitizedFilter->getString('type') == 'guest') {
                 $body .= ' AND IFNULL(session.userID, 0) = 0 ';
             }
         }
 
-        if ($this->getSanitizer()->getString('userId', $filterBy) != null) {
+        if ($sanitizedFilter->getInt('userId') != null) {
             $body .= ' AND user.userID = :userId ';
-            $params['userId'] = $this->getSanitizer()->getString('userId', $filterBy);
+            $params['userId'] = $sanitizedFilter->getInt('userId');
         }
 
         // Sorting?
@@ -141,8 +142,8 @@ class SessionFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

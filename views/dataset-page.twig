@@ -1,10 +1,24 @@
 {#
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #}
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
@@ -12,7 +26,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new DataSet" %}" href="{{ urlFor("dataSet.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add DataSet" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new DataSet" %}" href="{{ url_for("dataSet.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add DataSet" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -63,7 +77,7 @@
                 $.ajax({
                     type: "GET",
                     async: false,
-                    url: "{{ urlFor("user.pref") }}?preference=dataSetGrid",
+                    url: "{{ url_for("user.pref") }}?preference=dataSetGrid",
                     dataType: 'json',
                     success: function (json) {
                         try {
@@ -80,7 +94,7 @@
             stateSaveCallback: function (settings, data) {
                 $.ajax({
                     type: "POST",
-                    url: "{{ urlFor("user.pref") }}",
+                    url: "{{ url_for("user.pref") }}",
                     data: {
                         preference: [{
                             option: "dataSetGrid",
@@ -93,7 +107,7 @@
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
             ajax: {
-                "url": "{{ urlFor("dataSet.search") }}",
+                "url": "{{ url_for("dataSet.search") }}",
                 "data": function(d) {
                     $.extend(d, $("#datasets").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                 }
@@ -179,7 +193,7 @@
                     }
                 }).on('shown.bs.modal', function() {
                     // Configure the upload form
-                    var url = "{{ urlFor("dataSet.import") }}".replace(":id", data.dataSetId);
+                    var url = "{{ url_for("dataSet.import", {id: ':id'}) }}".replace(":id", data.dataSetId);
                     var form = $(this).find("form");
                     var refreshSessionInterval;
 
@@ -259,7 +273,7 @@
             // Bind the test button
             $(dialog).find("#dataSetRemoteTestButton").on('click', function() {
                 var $form = $(dialog).find("form");
-                XiboRemoteRequest("{{ urlFor("dataSet.test.remote") }}", $form.serializeObject(), function(response) {
+                XiboRemoteRequest("{{ url_for("dataSet.test.remote") }}", $form.serializeObject(), function(response) {
                     if (!$.trim(response.data.entries)) {
                         response.data = response.message;
                     }
@@ -345,7 +359,7 @@
 {% block javaScriptTemplates %}
     {{ parent() }}
 
-    {% raw %}
+    {% verbatim %}
 
     <script type="text/x-handlebars-template" id="template-dataset-upload">
         <form class="form-horizontal" method="post" enctype="multipart/form-data" data-max-file-size="{{ upload.maxSize }}" data-accept-file-types="/(\.|\/)csv/i">
@@ -388,7 +402,7 @@
             </div>
             <div class="row">
                 <div class="col-md-12">
-        {% endraw %}
+        {% endverbatim %}
                     {% set title %}{% trans "Overwrite existing data?" %}{% endset %}
                     {% set helpText %}{% trans "Erase all content in this DataSet and overwrite it with the new content in this import." %}{% endset %}
                     {{ forms.checkbox("overwrite", title, "", helpText) }}
@@ -400,7 +414,7 @@
                     {% set message %}{% trans "In the fields below please enter the column number in the CSV file that corresponds to the Column Heading listed. This should be done before Adding the file." %}{% endset %}
                     {{ forms.message(message) }}
 
-        {% raw %}
+        {% verbatim %}
                     {{#each columns}}
                     <div class="form-group">
                         <label class="col-sm-2 control-label" for="csvImport_{{dataSetColumnId}}">{{heading}}</label>
@@ -477,5 +491,5 @@
         {% } %}
         </script>
 
-    {% endraw %}
+    {% endverbatim %}
 {% endblock %}

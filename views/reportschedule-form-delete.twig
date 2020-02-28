@@ -37,7 +37,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="reportScheduleDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("reportschedule.delete", {"id": reportSchedule.reportScheduleId}) }}">
+            <form id="reportScheduleDeleteForm" class="XiboForm form-horizontal" method="delete" action="{{ url_for("reportschedule.delete", {"id": reportSchedule.reportScheduleId}) }}">
                 {% set message %}{% trans "Are you sure you want to delete this report schedule? This cannot be undone" %}{% endset %}
                 {{ forms.message(message) }}
             </form>

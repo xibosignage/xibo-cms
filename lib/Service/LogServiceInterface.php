@@ -8,6 +8,8 @@
 
 namespace Xibo\Service;
 
+use Monolog\Logger;
+
 /**
  * Interface LogServiceInterface
  * @package Xibo\Service
@@ -16,7 +18,7 @@ interface LogServiceInterface
 {
     /**
      * Log constructor.
-     * @param \Slim\Log $logger
+     * @param Logger $logger
      * @param string $mode
      */
     public function __construct($logger, $mode = 'production');

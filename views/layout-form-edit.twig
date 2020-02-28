@@ -1,7 +1,8 @@
 {#
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -17,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 #}
 {% extends "form-base.twig" %}
@@ -40,7 +40,7 @@
                 <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                 <li><a href="#description" role="tab" data-toggle="tab"><span>{% trans "Description" %}</span></a></li>
             </ul>
-            <form id="layoutEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("layout.edit", {id: layout.layoutId}) }}" data-gettag="{{ urlFor("tag.getByName") }}">
+            <form id="layoutEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("layout.edit", {id: layout.layoutId}) }}" data-gettag="{{ url_for("tag.getByName") }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}

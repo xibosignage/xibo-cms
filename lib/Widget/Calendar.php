@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2018 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -17,9 +18,8 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
- * (Calendar.php)
  */
+
 namespace Xibo\Widget;
 
 use GuzzleHttp\Client;
@@ -27,6 +27,8 @@ use GuzzleHttp\Exception\RequestException;
 use ICal\ICal;
 use Jenssegers\Date\Date;
 use Respect\Validation\Validator as v;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Stash\Invalidation;
 use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\InvalidArgumentException;
@@ -270,14 +272,14 @@ class Calendar extends ModuleWidget
      *      type="integer",
      *      required=false
      *   ),
-     *          *  @SWG\Parameter(
+     *  @SWG\Parameter(
      *      name="useCalendarTimezone",
      *      in="formData",
      *      description="A flag (0,1), Should we use Calendar Timezone?",
      *      type="integer",
      *      required=false
      *   ),
-     *          *  @SWG\Parameter(
+     *  @SWG\Parameter(
      *      name="windowsFormatCalendar",
      *      in="formData",
      *      description="Does the calendar feed come from Windows - if unsure leave unselected.",
@@ -292,53 +294,59 @@ class Calendar extends ModuleWidget
      *
      * @inheritdoc
      */
-    public function edit()
+    public function edit(Request $request, Response $response): Response
     {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('customInterval', $this->getSanitizer()->getString('customInterval'));
-        $this->setOption('eventLabelNow', $this->getSanitizer()->getString('eventLabelNow'));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('uri', urlencode($sanitizedParams->getString('uri')));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('customInterval', $sanitizedParams->getString('customInterval'));
+        $this->setOption('eventLabelNow', $sanitizedParams->getString('eventLabelNow'));
 
         // Other options
-        $this->setOption('dateFormat', $this->getSanitizer()->getString('dateFormat'));
-        $this->setOption('numItems', $this->getSanitizer()->getInt('numItems'));
-        $this->setOption('itemsPerPage', $this->getSanitizer()->getInt('itemsPerPage'));
-        $this->setOption('effect', $this->getSanitizer()->getString('effect'));
-        $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
-        $this->setOption('itemsSideBySide', $this->getSanitizer()->getCheckbox('itemsSideBySide'));
-        $this->setOption('useCurrentTemplate', $this->getSanitizer()->getCheckbox('useCurrentTemplate'));
+        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat'));
+        $this->setOption('numItems', $sanitizedParams->getInt('numItems'));
+        $this->setOption('itemsPerPage', $sanitizedParams->getInt('itemsPerPage'));
+        $this->setOption('effect', $sanitizedParams->getString('effect'));
+        $this->setOption('durationIsPerItem', $sanitizedParams->getCheckbox('durationIsPerItem'));
+        $this->setOption('itemsSideBySide', $sanitizedParams->getCheckbox('itemsSideBySide'));
+        $this->setOption('useCurrentTemplate', $sanitizedParams->getCheckbox('useCurrentTemplate'));
 
-        $this->setOption('excludeCurrent', $this->getSanitizer()->getCheckbox('excludeCurrent'));
-        $this->setOption('excludeAllDay', $this->getSanitizer()->getCheckbox('excludeAllDay'));
-        $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
+        $this->setOption('excludeCurrent', $sanitizedParams->getCheckbox('excludeCurrent'));
+        $this->setOption('excludeAllDay', $sanitizedParams->getCheckbox('excludeAllDay'));
+        $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 120]));
 
-        $this->setRawNode('template', $this->getSanitizer()->getParam('template', null));
-        $this->setOption('template_advanced', $this->getSanitizer()->getCheckbox('template_advanced'));
+        $this->setRawNode('template', $request->getParam('template', null));
+        $this->setOption('template_advanced', $sanitizedParams->getCheckbox('template_advanced'));
 
-        $this->setRawNode('currentEventTemplate', $this->getSanitizer()->getParam('currentEventTemplate', null));
-        $this->setOption('currentEventTemplate_advanced', $this->getSanitizer()->getCheckbox('currentEventTemplate_advanced'));
+        $this->setRawNode('currentEventTemplate', $request->getParam('currentEventTemplate', null));
+        $this->setOption('currentEventTemplate_advanced', $sanitizedParams->getCheckbox('currentEventTemplate_advanced'));
 
-        $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', null)));
-        $this->setOption('noDataMessage_advanced', $this->getSanitizer()->getCheckbox('noDataMessage_advanced'));
+        $this->setRawNode('noDataMessage', $request->getParam('noDataMessage', $request->getParam('noDataMessage', null)));
+        $this->setOption('noDataMessage_advanced', $sanitizedParams->getCheckbox('noDataMessage_advanced'));
 
-        $this->setRawNode('styleSheet', $this->getSanitizer()->getParam('styleSheet', $this->getSanitizer()->getParam('styleSheet', null)));
+        $this->setRawNode('styleSheet', $request->getParam('styleSheet', $request->getParam('styleSheet', null)));
 
-        $this->setOption('useEventTimezone', $this->getSanitizer()->getCheckbox('useEventTimezone'));
-        $this->setOption('useCalendarTimezone', $this->getSanitizer()->getCheckbox('useCalendarTimezone'));
-        $this->setOption('windowsFormatCalendar', $this->getSanitizer()->getCheckbox('windowsFormatCalendar'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
+        $this->setOption('useEventTimezone', $sanitizedParams->getCheckbox('useEventTimezone'));
+        $this->setOption('useCalendarTimezone', $sanitizedParams->getCheckbox('useCalendarTimezone'));
+        $this->setOption('windowsFormatCalendar', $sanitizedParams->getCheckbox('windowsFormatCalendar'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
 
         $this->isValid();
         $this->saveWidget();
     }
 
-    /** @inheritdoc */
-    public function getResource($displayId)
+    /** @inheritdoc
+     * @throws \Xibo\Exception\ConfigurationException
+     */
+    public function getResource($displayId = 0)
     {
         // Construct the response HTML
-        $this->initialiseGetResource()->appendViewPortWidth($this->region->width);
+        $this
+            ->initialiseGetResource()
+            ->appendViewPortWidth($this->region->width);
 
         // Get the template and start making the body
         $template = $this->getRawNode('template', '');

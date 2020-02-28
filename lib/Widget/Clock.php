@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2015-2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,13 +22,20 @@
 namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Helper\Translate;
 
+/**
+ * Class Clock
+ * @package Xibo\Widget
+ */
 class Clock extends ModuleWidget
 {
     public $codeSchemaVersion = 1;
 
+    /** @inheritDoc */
     public function installFiles()
     {
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
@@ -38,9 +45,7 @@ class Clock extends ModuleWidget
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
     }
 
-    /**
-     * Javascript functions for the layout designer
-     */
+    /** @inheritDoc */
     public function layoutDesignerJavaScript()
     {
         return 'clock-designer-javascript';
@@ -138,27 +143,30 @@ class Clock extends ModuleWidget
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
+     * @inheritDoc
      */
-    public function edit()
+    public function edit(Request $request, Response $response): Response
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // You must also provide a duration (all media items must provide this field)
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setOption('theme', $this->getSanitizer()->getInt('themeId', 1));
-        $this->setOption('clockTypeId', $this->getSanitizer()->getInt('clockTypeId', 1));
-        $this->setOption('offset', $this->getSanitizer()->getString('offset', 0));
-        $this->setRawNode('format', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('format', '')));
-        $this->setOption('ta_text_advanced', $this->getSanitizer()->getCheckbox('ta_text_advanced'));
-        $this->setOption('showSeconds', $this->getSanitizer()->getCheckbox('showSeconds'));
-        $this->setOption('clockFace', $this->getSanitizer()->getString('clockFace'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setOption('theme', $sanitizedParams->getInt('themeId', ['default' => 1]));
+        $this->setOption('clockTypeId', $sanitizedParams->getInt('clockTypeId', ['default' => 1]));
+        $this->setOption('offset', $sanitizedParams->getString('offset', ['default' => 0]));
+        $this->setRawNode('format', $request->getParam('ta_text', $request->getParam('format', '')));
+        $this->setOption('ta_text_advanced', $sanitizedParams->getCheckbox('ta_text_advanced'));
+        $this->setOption('showSeconds', $sanitizedParams->getCheckbox('showSeconds'));
+        $this->setOption('clockFace', $sanitizedParams->getString('clockFace'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
 
         $this->isValid();
 
         // Save the widget
         $this->saveWidget();
+
+        return $response;
     }
 
     /**
@@ -181,14 +189,13 @@ class Clock extends ModuleWidget
     {
         $template = null;
         $data = [];
-        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
         // After body content
         $options = [
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'previewWidth' => intval($this->getSanitizer()->getDouble('width')),
-            'previewHeight' => intval($this->getSanitizer()->getDouble('height'))
+            'previewWidth' => intval($this->getPreviewWidth()),
+            'previewHeight' => intval($this->getPreviewHeight())
         ];
 
         // Clock Type
@@ -260,7 +267,7 @@ class Clock extends ModuleWidget
                 $data['javaScript'] = $javaScriptContent;
 
                 // Add our fonts.css file
-                $headContent  = '<link href = "' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
+                $headContent  = '<link href = "' . ($this->isPreview() ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
                 $headContent .= '<style type = "text/css" > ' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
                 $data['head'] = $headContent;
@@ -292,7 +299,7 @@ class Clock extends ModuleWidget
         $data['options'] = json_encode($options);
 
         // Replace the View Port Width?
-        $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
+        $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
 
         // Return that content.
         return $this->renderTemplate($data, $template);

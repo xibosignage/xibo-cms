@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (TransitionFactory.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -96,8 +111,10 @@ class TransitionFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        $entries = array();
-        $params = array();
+        $entries = [];
+        $params = [];
+
+        $sanitizedFilter = $this->getSanitizer($filterBy);
 
         $sql = '
         SELECT transitionId,
@@ -111,30 +128,30 @@ class TransitionFactory extends BaseFactory
          WHERE 1 = 1
         ';
 
-        if ($this->getSanitizer()->getInt('transitionId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('transitionId') !== null) {
             $sql .= ' AND transition.transitionId = :transitionId ';
-            $params['transitionId'] = $this->getSanitizer()->getInt('transitionId', $filterBy);
+            $params['transitionId'] = $sanitizedFilter->getInt('transitionId');
         }
 
-        if ($this->getSanitizer()->getInt('availableAsIn', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('availableAsIn') !== null) {
             $sql .= ' AND transition.availableAsIn = :availableAsIn ';
-            $params['availableAsIn'] = $this->getSanitizer()->getInt('availableAsIn', $filterBy);
+            $params['availableAsIn'] = $sanitizedFilter->getInt('availableAsIn');
         }
 
-        if ($this->getSanitizer()->getInt('availableAsOut', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('availableAsOut') !== null) {
             $sql .= ' AND transition.availableAsOut = :availableAsOut ';
-            $params['availableAsOut'] = $this->getSanitizer()->getInt('availableAsOut', $filterBy);
+            $params['availableAsOut'] = $sanitizedFilter->getInt('availableAsOut');
         }
 
-        if ($this->getSanitizer()->getString('code', $filterBy) != null) {
+        if ($sanitizedFilter->getString('code') != null) {
             $sql .= ' AND transition.code = :code ';
-            $params['code'] = $this->getSanitizer()->getString('code', $filterBy);
+            $params['code'] = $sanitizedFilter->getString('code');
         }
 
         // Sorting?
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $sql .= 'ORDER BY ' . implode(',', $sortOrder);
-
+        }
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {

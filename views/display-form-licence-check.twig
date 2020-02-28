@@ -34,7 +34,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="displayLicenceCheckForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("display.licencecheck", {id: display.displayId}) }}">
+            <form id="displayLicenceCheckForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("display.licencecheck", {id: display.displayId}) }}">
                 {% set message %}{% trans "Are you sure you want to ask this Player to check its Licence?" %}{% endset %}
                 {{ forms.message(message) }}
 

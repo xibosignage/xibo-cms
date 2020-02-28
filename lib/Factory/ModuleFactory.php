@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (ModuleFactory.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -23,6 +24,8 @@
 namespace Xibo\Factory;
 
 
+use Psr\Container\ContainerInterface;
+use Slim\Views\Twig;
 use Xibo\Entity\Media;
 use Xibo\Entity\Module;
 use Xibo\Entity\Region;
@@ -101,6 +104,12 @@ class ModuleFactory extends BaseFactory
     /** @var  UserGroupFactory */
     protected $userGroupFactory;
 
+    /** @var Twig */
+    protected $view;
+
+    /** @var ContainerInterface */
+    protected $container;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -121,8 +130,10 @@ class ModuleFactory extends BaseFactory
      * @param ScheduleFactory $scheduleFactory
      * @param PermissionFactory $permissionFactory
      * @param UserGroupFactory $userGroupFactory
+     * @param Twig $view
+     * @param ContainerInterface $container
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $moduleService, $widgetFactory, $regionFactory, $playlistFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $moduleService, $widgetFactory, $regionFactory, $playlistFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $view, ContainerInterface $container)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
@@ -140,6 +151,8 @@ class ModuleFactory extends BaseFactory
         $this->scheduleFactory = $scheduleFactory;
         $this->permissionFactory = $permissionFactory;
         $this->userGroupFactory = $userGroupFactory;
+        $this->view = $view;
+        $this->container = $container;
     }
 
     /**
@@ -178,7 +191,9 @@ class ModuleFactory extends BaseFactory
             $this->scheduleFactory,
             $this->permissionFactory,
             $this->userGroupFactory,
-            $this->playlistFactory
+            $this->playlistFactory,
+            $this->view,
+            $this->container
         );
     }
 
@@ -210,7 +225,9 @@ class ModuleFactory extends BaseFactory
             $this->scheduleFactory,
             $this->permissionFactory,
             $this->userGroupFactory,
-            $this->playlistFactory
+            $this->playlistFactory,
+            $this->view,
+            $this->container
         );
     }
 
@@ -234,7 +251,9 @@ class ModuleFactory extends BaseFactory
             $this->scheduleFactory,
             $this->permissionFactory,
             $this->userGroupFactory,
-            $this->playlistFactory
+            $this->playlistFactory,
+            $this->view,
+            $this->container
         );
     }
 
@@ -258,7 +277,9 @@ class ModuleFactory extends BaseFactory
             $this->scheduleFactory,
             $this->permissionFactory,
             $this->userGroupFactory,
-            $this->playlistFactory
+            $this->playlistFactory,
+            $this->view,
+            $this->container
         );
     }
 
@@ -294,7 +315,9 @@ class ModuleFactory extends BaseFactory
             $this->scheduleFactory,
             $this->permissionFactory,
             $this->userGroupFactory,
-            $this->playlistFactory
+            $this->playlistFactory,
+            $this->view,
+            $this->container
         );
         $object->setWidget($widget);
 
@@ -382,6 +405,9 @@ class ModuleFactory extends BaseFactory
         return $modules;
     }
 
+    /**
+     * @return Module[]
+     */
     public function getAssignableModules()
     {
         return $this->query(null, array('assignable' => 1, 'enabled' => 1));
@@ -503,10 +529,12 @@ class ModuleFactory extends BaseFactory
     /**
      * @param null $sortOrder
      * @param array $filterBy
-     * @return ModuleWidget[]
+     * @return Module[]
      */
-    public function query($sortOrder = null, $filterBy = array())
+    public function query($sortOrder = null, $filterBy = [])
     {
+        $parsedBody = $this->getSanitizer($filterBy);
+        
         if ($sortOrder == null)
             $sortOrder = array('Module');
 
@@ -540,56 +568,56 @@ class ModuleFactory extends BaseFactory
                  WHERE 1 = 1
             ';
 
-        if ($this->getSanitizer()->getInt('moduleId', $filterBy) !== null) {
-            $params['moduleId'] = $this->getSanitizer()->getInt('moduleId', $filterBy);
+        if ($parsedBody->getInt('moduleId') !== null) {
+            $params['moduleId'] = $parsedBody->getInt('moduleId');
             $body .= ' AND `ModuleID` = :moduleId ';
         }
 
-        if ($this->getSanitizer()->getString('name', $filterBy) != '') {
-            $params['name'] = $this->getSanitizer()->getString('name', $filterBy);
+        if ($parsedBody->getString('name') != '') {
+            $params['name'] = $parsedBody->getString('name');
             $body .= ' AND `name` = :name ';
         }
 
-        if ($this->getSanitizer()->getString('installName', $filterBy) != null) {
-            $params['installName'] = $this->getSanitizer()->getString('installName', $filterBy);
+        if ($parsedBody->getString('installName') != null) {
+            $params['installName'] = $parsedBody->getString('installName');
             $body .= ' AND `installName` = :installName ';
         }
 
-        if ($this->getSanitizer()->getString('type', $filterBy) != '') {
-            $params['type'] = $this->getSanitizer()->getString('type', $filterBy);
+        if ($parsedBody->getString('type') != '') {
+            $params['type'] = $parsedBody->getString('type');
             $body .= ' AND `module` = :type ';
         }
 
-        if ($this->getSanitizer()->getString('class', $filterBy) != '') {
-            $params['class'] = $this->getSanitizer()->getString('class', $filterBy);
+        if ($parsedBody->getString('class') != '') {
+            $params['class'] = $parsedBody->getString('class');
             $body .= ' AND `class` = :class ';
         }
 
-        if ($this->getSanitizer()->getString('extension', $filterBy) != '') {
-            $params['extension'] = '%' . $this->getSanitizer()->getString('extension', $filterBy) . '%';
+        if ($parsedBody->getString('extension') != '') {
+            $params['extension'] = '%' . $parsedBody->getString('extension') . '%';
             $body .= ' AND `ValidExtensions` LIKE :extension ';
         }
 
-        if ($this->getSanitizer()->getInt('assignable', -1, $filterBy) != -1) {
+        if ($parsedBody->getInt('assignable', ['default' => -1]) != -1) {
             $body .= " AND `assignable` = :assignable ";
-            $params['assignable'] = $this->getSanitizer()->getInt('assignable', $filterBy);
+            $params['assignable'] = $parsedBody->getInt('assignable');
         }
 
-        if ($this->getSanitizer()->getInt('enabled', -1, $filterBy) != -1) {
+        if ($parsedBody->getInt('enabled', ['default' => -1]) != -1) {
             $body .= " AND `enabled` = :enabled ";
-            $params['enabled'] = $this->getSanitizer()->getInt('enabled', $filterBy);
+            $params['enabled'] = $parsedBody->getInt('enabled');
         }
 
-        if ($this->getSanitizer()->getInt('regionSpecific', -1, $filterBy) != -1) {
+        if ($parsedBody->getInt('regionSpecific', ['default' => -1]) != -1) {
             $body .= " AND `regionSpecific` = :regionSpecific ";
-            $params['regionSpecific'] = $this->getSanitizer()->getInt('regionSpecific', $filterBy);
+            $params['regionSpecific'] = $parsedBody->getInt('regionSpecific');
         }
 
-        if ($this->getSanitizer()->getInt('notPlayerSoftware', $filterBy) == 1) {
+        if ($parsedBody->getInt('notPlayerSoftware') == 1) {
             $body .= ' AND `module` <> \'playersoftware\' ';
         }
 
-        if ($this->getSanitizer()->getInt('notSavedReport', $filterBy) == 1) {
+        if ($parsedBody->getInt('notSavedReport') == 1) {
             $body .= ' AND `module` <> \'savedreport\' ';
         }
 
@@ -600,8 +628,8 @@ class ModuleFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $parsedBody->getInt('start') !== null && $parsedBody->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($parsedBody->getInt('start'), 0) . ', ' . $parsedBody->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -613,24 +641,26 @@ class ModuleFactory extends BaseFactory
 
         foreach ($sth->fetchAll(\PDO::FETCH_ASSOC) as $row) {
             $module = $this->createEmpty();
-            $module->moduleId = $this->getSanitizer()->int($row['ModuleID']);
-            $module->name = __($this->getSanitizer()->string($row['Name']));
-            $module->description = $this->getSanitizer()->string($row['Description']);
-            $module->validExtensions = $this->getSanitizer()->string($row['ValidExtensions']);
-            $module->renderAs = $this->getSanitizer()->string($row['render_as']);
-            $module->enabled = $this->getSanitizer()->int($row['Enabled']);
-            $module->regionSpecific = $this->getSanitizer()->int($row['RegionSpecific']);
-            $module->previewEnabled = $this->getSanitizer()->int($row['PreviewEnabled']);
-            $module->assignable = $this->getSanitizer()->int($row['assignable']);
-            $module->schemaVersion = $this->getSanitizer()->int($row['SchemaVersion']);
+            $parsedRow = $this->getSanitizer($row);
+
+            $module->moduleId = $parsedRow->getInt('ModuleID');
+            $module->name = $parsedRow->getString('Name');
+            $module->description = $parsedRow->getString('Description');
+            $module->validExtensions = $parsedRow->getString('ValidExtensions');
+            $module->renderAs = $parsedRow->getString('render_as');
+            $module->enabled = $parsedRow->getInt('Enabled');
+            $module->regionSpecific = $parsedRow->getInt('RegionSpecific');
+            $module->previewEnabled = $parsedRow->getInt('PreviewEnabled');
+            $module->assignable = $parsedRow->getInt('assignable');
+            $module->schemaVersion = $parsedRow->getInt('SchemaVersion');
 
             // Identification
-            $module->type = strtolower($this->getSanitizer()->string($row['Module']));
+            $module->type = strtolower($row['Module']);
 
-            $module->class = $this->getSanitizer()->string($row['class']);
-            $module->viewPath = $this->getSanitizer()->string($row['viewPath']);
-            $module->defaultDuration = $this->getSanitizer()->int($row['defaultDuration']);
-            $module->installName = $this->getSanitizer()->string($row['installName']);
+            $module->class = $row['class'];
+            $module->viewPath = $row['viewPath'];
+            $module->defaultDuration = $row['defaultDuration'];
+            $module->installName = $row['installName'];
 
             $settings = $row['settings'];
             $module->settings = ($settings == '') ? array() : json_decode($settings, true);

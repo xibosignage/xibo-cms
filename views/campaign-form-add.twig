@@ -1,8 +1,23 @@
 {#
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
 
@@ -25,7 +40,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="campaignAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("campaign.add") }}" data-gettag="{{ urlFor("tag.getByName") }}">
+            <form id="campaignAddForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("campaign.add") }}" data-gettag="{{ url_for("tag.getByName") }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Campaign" %}{% endset %}
                 {{ forms.input("name", title, "", helpText) }}
@@ -51,7 +66,7 @@
     <div class="row">
         <div class="col-md-12 well">
             <h4>{% trans %}Layouts on new campaign{% endtrans %}</h4>
-            <div id="LayoutAssign" class="well" data-url="{{ urlFor("campaign.assign.layout", {id: campaign.campaignId}) }}">
+            <div id="LayoutAssign" class="well" data-url="{{ url_for("campaign.assign.layout", {id: campaign.campaignId}) }}">
                 <div>
                     <ul id="LayoutAssignSortable">
                         {% for item in layouts %}

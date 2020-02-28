@@ -1,19 +1,33 @@
 {#
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #}
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add an Application" %}" href="{{ urlFor("application.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Application" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add an Application" %}" href="{{ url_for("application.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Application" %}</a></li>
         {% if currentUser.isSuperAdmin() %}
-            <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a DOOH Application" %}" href="{{ urlFor("application.addDooh.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add DOOH Application" %}</a></li>
+            <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a DOOH Application" %}" href="{{ url_for("application.addDooh.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add DOOH Application" %}</a></li>
         {% endif %}
     </ul>
 {% endblock %}
@@ -58,7 +72,7 @@
                 $.ajax({
                     type: "GET",
                     async: false,
-                    url: "{{ urlFor("user.pref") }}?preference=applicationsGrid",
+                    url: "{{ url_for("user.pref") }}?preference=applicationsGrid",
                     dataType: 'json',
                     success: function (json) {
                         try {
@@ -75,7 +89,7 @@
             stateSaveCallback: function (settings, data) {
                 $.ajax({
                     type: "POST",
-                    url: "{{ urlFor("user.pref") }}",
+                    url: "{{ url_for("user.pref") }}",
                     data: {
                         preference: [{
                             option: "applicationsGrid",
@@ -87,7 +101,7 @@
             filter: false,
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
-            ajax: "{{ urlFor("application.search") }}",
+            ajax: "{{ url_for("application.search") }}",
             "columns": [
                 { "data": "name", "render": dataTableSpacingPreformatted },
                 { "data": "owner" },

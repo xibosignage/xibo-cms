@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,6 +22,9 @@
 
 namespace Xibo\Controller;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Entity\Media;
 use Xibo\Entity\PlayerVersion;
 use Xibo\Exception\AccessDeniedException;
@@ -37,10 +40,10 @@ use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 
 /**
 * Class PlayerSoftware
@@ -81,7 +84,7 @@ class PlayerSoftware extends Base
     /**
      * Notification constructor.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -98,9 +101,9 @@ class PlayerSoftware extends Base
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $pool, $mediaFactory, $playerVersionFactory, $displayProfileFactory, $moduleFactory, $layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $pool, $mediaFactory, $playerVersionFactory, $displayProfileFactory, $moduleFactory, $layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->pool = $pool;
         $this->mediaFactory = $mediaFactory;
@@ -116,8 +119,16 @@ class PlayerSoftware extends Base
 
     /**
      * Displays the page logic
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function displayPage()
+    function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'playersoftware-page';
         $this->getState()->setData([
@@ -125,29 +136,40 @@ class PlayerSoftware extends Base
             'validExt' => implode('|', $this->moduleFactory->getValidExtensions(['type' => 'playersoftware'])),
             'warningLabel' => __("Please set Player Software Version")
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function grid()
+    function grid(Request $request, Response $response)
     {
         $user = $this->getUser();
+        $sanitizedQueryParams = $this->getSanitizer($request->getParams());
 
         $filter = [
-            'playerType' => $this->getSanitizer()->getString('playerType'),
-            'playerVersion' => $this->getSanitizer()->getString('playerVersion'),
-            'playerCode' => $this->getSanitizer()->getInt('playerCode'),
-            'versionId' => $this->getSanitizer()->getInt('versionId'),
-            'mediaId' => $this->getSanitizer()->getInt('mediaId'),
-            'playerShowVersion' => $this->getSanitizer()->getString('playerShowVersion')
+            'playerType' => $sanitizedQueryParams->getString('playerType'),
+            'playerVersion' => $sanitizedQueryParams->getString('playerVersion'),
+            'playerCode' => $sanitizedQueryParams->getInt('playerCode'),
+            'versionId' => $sanitizedQueryParams->getInt('versionId'),
+            'mediaId' => $sanitizedQueryParams->getInt('mediaId'),
+            'playerShowVersion' => $sanitizedQueryParams->getString('playerShowVersion')
         ];
 
-        $versions = $this->playerVersionFactory->query($this->gridRenderSort(), $this->gridRenderFilter($filter));
+        $versions = $this->playerVersionFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
 
         // add row buttons
         foreach ($versions as $version) {
-            if ($this->isApi())
+            if ($this->isApi($request))
                 break;
 
             $media = $this->mediaFactory->getById($version->mediaId);
@@ -159,7 +181,7 @@ class PlayerSoftware extends Base
                 // Edit
                 $version->buttons[] = [
                     'id' => 'content_button_edit',
-                    'url' => $this->urlFor('playersoftware.edit.form', ['id' => $version->versionId]),
+                    'url' => $this->urlFor($request,'playersoftware.edit.form', ['id' => $version->versionId]),
                     'text' => __('Edit')
                 ];
             }
@@ -168,7 +190,7 @@ class PlayerSoftware extends Base
                 // Delete Button
                 $version->buttons[] = array(
                     'id' => 'content_button_delete',
-                    'url' => $this->urlFor('playersoftware.delete.form', ['id' => $version->versionId]),
+                    'url' => $this->urlFor($request,'playersoftware.delete.form', ['id' => $version->versionId]),
                     'text' => __('Delete')
                 );
             }
@@ -177,7 +199,7 @@ class PlayerSoftware extends Base
                 // Permissions
                 $version->buttons[] = array(
                     'id' => 'content_button_permissions',
-                    'url' => $this->urlFor('user.permissions.form', ['entity' => 'Media', 'id' => $media->mediaId]),
+                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Media', 'id' => $media->mediaId]),
                     'text' => __('Permissions')
                 );
             }
@@ -186,7 +208,7 @@ class PlayerSoftware extends Base
             $version->buttons[] = array(
                 'id' => 'content_button_download',
                 'linkType' => '_self', 'external' => true,
-                'url' => $this->urlFor('library.download', ['id' => $media->mediaId]) . '?attachment=' . $media->fileName,
+                'url' => $this->urlFor($request,'library.download', ['id' => $media->mediaId]) . '?attachment=' . $media->fileName,
                 'text' => __('Download')
             );
         }
@@ -194,21 +216,31 @@ class PlayerSoftware extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->playerVersionFactory->countLast();
         $this->getState()->setData($versions);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Version Delete Form
-     * @param int $versionId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
-     * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function deleteForm($versionId)
+    public function deleteForm(Request $request, Response $response, $id)
     {
-        $version = $this->playerVersionFactory->getById($versionId);
+        $version = $this->playerVersionFactory->getById($id);
         $media = $this->mediaFactory->getById($version->mediaId);
 
-        if (!$this->getUser()->checkDeleteable($media))
+        if (!$this->getUser()->checkDeleteable($media)) {
             throw new AccessDeniedException();
+        }
 
         $version->load();
 
@@ -217,14 +249,23 @@ class PlayerSoftware extends Base
             'version' => $version,
             'help' => $this->getHelp()->link('Player Software', 'Delete')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Delete Version
-     * @param int $versionId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
      * @throws XiboException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Delete(
      *  path="/playersoftware/{versionId}",
      *  operationId="playerSoftwareDelete",
@@ -244,18 +285,34 @@ class PlayerSoftware extends Base
      *  )
      * )
      */
-    public function delete($versionId)
+    public function delete(Request $request, Response $response, $id)
     {
         /** @var PlayerVersion $version */
-        $version = $this->playerVersionFactory->getById($versionId);
+        $version = $this->playerVersionFactory->getById($id);
         /** @var Media $media */
         $media = $this->mediaFactory->getById($version->mediaId);
 
-        if (!$this->getUser()->checkDeleteable($media))
+        if (!$this->getUser()->checkDeleteable($media)) {
             throw new AccessDeniedException();
+        }
 
         $version->load();
         $media->load();
+
+        // Unset player version from Display Profile
+        $displayProfiles = $this->displayProfileFactory->query();
+
+        foreach($displayProfiles as $displayProfile) {
+            if (in_array($displayProfile->type, ['android', 'lg', 'sssp'])) {
+
+                $currentVersionId = $displayProfile->getSetting('versionMediaId');
+
+                if ($currentVersionId === $media->mediaId) {
+                    $displayProfile->setSetting('versionMediaId', null);
+                    $displayProfile->save();
+                }
+            }
+        }
 
         // Delete
         $version->delete();
@@ -267,20 +324,31 @@ class PlayerSoftware extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $version->playerShowVersion)
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edit Form
-     * @param int $versionId
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function editForm($versionId)
+    public function editForm(Request $request, Response $response, $id)
     {
-        $version = $this->playerVersionFactory->getById($versionId);
+        $version = $this->playerVersionFactory->getById($id);
         $media = $this->mediaFactory->getById($version->mediaId);
 
-        if (!$this->getUser()->checkEditable($media))
+        if (!$this->getUser()->checkEditable($media)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'playersoftware-form-edit';
         $this->getState()->setData([
@@ -289,13 +357,22 @@ class PlayerSoftware extends Base
             'validExtensions' => implode('|', $this->moduleFactory->getValidExtensions(['type' => 'playersoftware'])),
             'help' => $this->getHelp()->link('Player Software', 'Edit')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Edit Player Version
-     * @param int $versionId
-     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/playersoftware/{versionId}",
      *  operationId="playersoftwareEdit",
@@ -337,17 +414,19 @@ class PlayerSoftware extends Base
      *  )
      * )
      */
-    public function edit($versionId)
+    public function edit(Request $request, Response $response, $id)
     {
-        $version = $this->playerVersionFactory->getById($versionId);
+        $version = $this->playerVersionFactory->getById($id);
         $media = $this->mediaFactory->getById($version->mediaId);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($media))
+        if (!$this->getUser()->checkEditable($media)) {
             throw new AccessDeniedException();
+        }
 
-        $version->version = $this->getSanitizer()->getString('version');
-        $version->code = $this->getSanitizer()->getInt('code');
-        $version->playerShowVersion = $this->getSanitizer()->getString('playerShowVersion');
+        $version->version = $sanitizedParams->getString('version');
+        $version->code = $sanitizedParams->getInt('code');
+        $version->playerShowVersion = $sanitizedParams->getString('playerShowVersion');
 
         $version->save();
 
@@ -357,13 +436,23 @@ class PlayerSoftware extends Base
             'id' => $version->versionId,
             'data' => $version
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Install Route for SSSP XML
-     * @throws \Xibo\Exception\NotFoundException
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function getSsspInstall()
+    public function getSsspInstall(Request $request, Response $response)
     {
         // Get the default SSSP display profile
         $profile = $this->displayProfileFactory->getDefaultByType('sssp');
@@ -376,20 +465,31 @@ class PlayerSoftware extends Base
 
             $versionInformation = $this->playerVersionFactory->getByMediaId($mediaId);
 
-            $this->outputSsspXml($versionInformation->version . '.' . $versionInformation->code, $media->fileSize);
+            $xml = $this->outputSsspXml($versionInformation->version . '.' . $versionInformation->code, $media->fileSize);
+            $response = $response
+                ->withHeader('Content-Type', 'application/xml')
+                ->write($xml);
         } else {
-            $app = $this->getApp();
-            $app->status(404);
+            return $response->withStatus(404);
         }
 
         $this->setNoOutput(true);
+        return $this->render($request, $response);
     }
 
     /**
      * Install Route for SSSP WGT
-     * @throws \Xibo\Exception\NotFoundException
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function getSsspInstallDownload()
+    public function getSsspInstallDownload(Request $request, Response $response)
     {
         // Get the default SSSP display profile
         $profile = $this->displayProfileFactory->getDefaultByType('sssp');
@@ -402,33 +502,40 @@ class PlayerSoftware extends Base
 
             // Create a widget from media and call getResource on it
             $widget = $this->moduleFactory->createWithMedia($media);
-            $widget->getResource(0);
+            $response = $widget->download($request, $response);
 
         } else {
-            $app = $this->getApp();
-            $app->status(404);
+            return $response->withStatus(404);
         }
 
         $this->setNoOutput(true);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Upgrade Route for SSSP XML
-     * @param string $nonce
+     * @param Request $request
+     * @param Response $response
+     * @param $nonce
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws InvalidArgumentException
      * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function getSssp($nonce)
+    public function getSssp(Request $request, Response $response, $nonce)
     {
         // Use the cache to get the displayId for this nonce
         $cache = $this->pool->getItem('/playerVersion/' . $nonce);
 
         if ($cache->isMiss()) {
-            $app = $this->getApp();
-            $app->status(404);
+            $response = $response->withStatus(404);
             $this->setNoOutput(true);
-            return;
+            return $this->render($request, $response);
         }
 
         $displayId = $cache->get();
@@ -442,8 +549,7 @@ class PlayerSoftware extends Base
         }
 
         // Add the correct header
-        $app = $this->getApp();
-        $app->response()->header('content-type', 'application/xml');
+        $response = $response->withHeader('content-type', 'application/xml');
 
         // get the media ID from display profile
         $mediaId = $display->getSetting('versionMediaId', null, ['displayOverride' => true]);
@@ -453,30 +559,39 @@ class PlayerSoftware extends Base
 
             $versionInformation = $this->playerVersionFactory->getByMediaId($mediaId);
 
-            $this->outputSsspXml($versionInformation->version . '.' . $versionInformation->code, $media->fileSize);
+            $xml = $this->outputSsspXml($versionInformation->version . '.' . $versionInformation->code, $media->fileSize);
+            $response = $response->write($xml);
         } else {
-            $app = $this->getApp();
-            $app->status(404);
+            return $response->withStatus(404);
         }
 
         $this->setNoOutput(true);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Upgrade Route for SSSP WGT
-     * @param string $nonce
+     * @param Request $request
+     * @param Response $response
+     * @param $nonce
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function getVersionFile($nonce)
+    public function getVersionFile(Request $request, Response $response, $nonce)
     {
         // Use the cache to get the displayId for this nonce
         $cache = $this->pool->getItem('/playerVersion/' . $nonce);
 
         if ($cache->isMiss()) {
-            $app = $this->getApp();
-            $app->status(404);
+            $response = $response->withStatus(404);
             $this->setNoOutput(true);
-            return;
+            return $this->render($request, $response);
         }
 
         $displayId = $cache->get();
@@ -489,20 +604,20 @@ class PlayerSoftware extends Base
             $media = $this->mediaFactory->getById($mediaId);
             // Create a widget from media and call getResource on it
             $widget = $this->moduleFactory->createWithMedia($media);
-            $widget->getResource($displayId);
+            $response = $widget->download($request, $response);
         } else {
-            $app = $this->getApp();
-            $app->status(404);
+            return $response->withStatus(404);
         }
 
         $this->setNoOutput(true);
+        return $this->render($request, $response);
     }
 
     /**
-     * Output the SSP XML
+     * Output the SSSP XML
      * @param $version
      * @param $size
-     * @param $widgetName
+     * @return string
      */
     private function outputSsspXml($version, $size)
     {
@@ -522,8 +637,6 @@ class PlayerSoftware extends Base
         $versionNode->appendChild($ssspDocument->createElement('webtype', 'tizen'));
         $ssspDocument->formatOutput = true;
 
-        $this->getApp()->response()->header('Content-Type', 'application/xml');
-
-        echo $ssspDocument->saveXML();
+        return $ssspDocument->saveXML();
     }
 }

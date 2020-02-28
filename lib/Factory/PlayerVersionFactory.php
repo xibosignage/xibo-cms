@@ -22,7 +22,6 @@
 
 namespace Xibo\Factory;
 
-
 use Xibo\Entity\PlayerVersion;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
@@ -106,7 +105,7 @@ class PlayerVersionFactory extends BaseFactory
      */
     public function getByMediaId($mediaId)
     {
-        $versions = $this->query(null, array('disableUserCheck' => 1, 'mediaId' => $mediaId));
+        $versions = $this->query(null, ['disableUserCheck' => 1, 'mediaId' => $mediaId]);
 
         if (count($versions) <= 0)
             throw new NotFoundException(__('Cannot find media'));
@@ -153,9 +152,12 @@ class PlayerVersionFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        if ($sortOrder === null)
+        if ($sortOrder === null) {
             $sortOrder = ['code DESC'];
-
+        }
+        
+        $sanitizedFilter = $this->getSanitizer($filterBy);
+        
         $params = [];
         $entries = [];
 
@@ -193,45 +195,46 @@ class PlayerVersionFactory extends BaseFactory
         $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy);
 
         // by media ID
-        if ($this->getSanitizer()->getInt('mediaId', -1, $filterBy) != -1) {
+        if ($sanitizedFilter->getInt('mediaId', ['default' => -1]) != -1) {
             $body .= " AND media.mediaId = :mediaId ";
-            $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
+            $params['mediaId'] = $sanitizedFilter->getInt('mediaId');
         }
 
-        if ($this->getSanitizer()->getInt('versionId', -1, $filterBy) != -1) {
+        if ($sanitizedFilter->getInt('versionId', ['default' => -1]) != -1) {
             $body .= " AND player_software.versionId = :versionId ";
-            $params['versionId'] = $this->getSanitizer()->getInt('versionId', $filterBy);
+            $params['versionId'] = $sanitizedFilter->getInt('versionId');
         }
 
-        if ($this->getSanitizer()->getString('playerType', $filterBy) != '') {
+        if ($sanitizedFilter->getString('playerType') != '') {
             $body .= " AND player_software.player_type = :playerType ";
-            $params['playerType'] = $this->getSanitizer()->getString('playerType', $filterBy);
+            $params['playerType'] = $sanitizedFilter->getString('playerType');
         }
 
-        if ($this->getSanitizer()->getString('playerVersion', $filterBy) != '') {
+        if ($sanitizedFilter->getString('playerVersion') != '') {
             $body .= " AND player_software.player_version = :playerVersion ";
-            $params['playerVersion'] = $this->getSanitizer()->getString('playerVersion', $filterBy);
+            $params['playerVersion'] = $sanitizedFilter->getString('playerVersion');
         }
 
-        if ($this->getSanitizer()->getInt('playerCode', $filterBy) != '') {
+        if ($sanitizedFilter->getInt('playerCode') != '') {
             $body .= " AND player_software.player_code = :playerCode ";
-            $params['playerCode'] = $this->getSanitizer()->getInt('playerCode', $filterBy);
+            $params['playerCode'] = $sanitizedFilter->getInt('playerCode');
         }
 
-        if ($this->getSanitizer()->getString('playerShowVersion', $filterBy) !== null) {
-            $terms = explode(',', $this->getSanitizer()->getString('playerShowVersion', $filterBy));
+        if ($sanitizedFilter->getString('playerShowVersion') !== null) {
+            $terms = explode(',', $sanitizedFilter->getString('playerShowVersion'));
             $this->nameFilter('player_software', 'playerShowVersion', $terms, $body, $params);
         }
 
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

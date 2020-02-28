@@ -100,6 +100,7 @@ echo __('Weather');
 echo __('Weather Powered by DarkSky');
 echo __('Sub-Playlist');
 echo __('Embed a Sub-Playlist');
+echo __('Countdown');
 
 echo __('January');
 echo __('February');

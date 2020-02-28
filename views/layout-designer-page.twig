@@ -1,8 +1,23 @@
 {#
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2018 Spring Signage Ltd
- * (${FILE_NAME})
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
 
@@ -33,6 +48,7 @@
                 {# Insert custom translations here #}
                 var layoutDesignerTrans = {
                     publishTitle: "{% trans "Publish layout" %}",
+                    discardTitle: "{% trans "Discard layout" %}",
                     publishMessage: "{% trans "Are you sure you want to publish this Layout? If it is already in use the update will automatically get pushed." %}",
                     checkoutTitle: "{% trans "Checkout" %}",
                     scheduleTitle: "{% trans "Schedule Now" %}",
@@ -41,6 +57,7 @@
                     readOnlyModeMessage: "{% trans "You are viewing this Layout in read only mode, checkout by clicking on this message or from the Actions menu above!" %}",
                     checkoutMessage: "{% trans "Layout is not editable, please checkout!" %}",
                     viewModeTitle: "{% trans "View" %}",
+                    regionEditModeMessage: "{% trans "Editing Regions" %}",
                     welcomeModalMessage: "{% trans "This Layout is Published and cannot be edited. You can checkout the Layout for editing below, or continue to view it in a read only mode." %}"
                 };
 
@@ -68,7 +85,8 @@
                     layoutDuration: "{% trans "Layout duration" %}",
                     layoutDimensions: "{% trans "Layout dimensions" %}",
                     emptyRegion: "{% trans "Empty Region" %}",
-                    addToThisPosition: "{% trans "Add to this position" %}"
+                    addToThisPosition: "{% trans "Add to this position" %}",
+                    hiddenContentInWidget: "{% trans "Zoom in to see more details!" %}",
                 };
 
                 var navigatorTrans = {

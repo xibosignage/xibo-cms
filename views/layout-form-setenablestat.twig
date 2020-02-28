@@ -37,7 +37,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="layoutSetEnableStatForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("layout.setenablestat", {input: "enableStat", id: layout.layoutId}) }}">
+            <form id="layoutSetEnableStatForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("layout.setenablestat", {input: "enableStat", id: layout.layoutId}) }}">
                 {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
                 {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for the selected Layout." %}{% endset %}
                 {{ forms.checkbox("enableStat", title, layout.enableStat, helpText) }}

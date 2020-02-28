@@ -9,6 +9,7 @@
 namespace Xibo\Service;
 
 
+use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Exception\NotFoundException;
@@ -20,10 +21,6 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class ModuleService implements ModuleServiceInterface
 {
-    /**
-     * @var \Slim\Slim
-     */
-    public $app;
 
     /**
      * @var StorageServiceInterface
@@ -61,9 +58,8 @@ class ModuleService implements ModuleServiceInterface
     /**
      * @inheritdoc
      */
-    public function __construct($app, $store, $pool, $log, $config, $date, $sanitizer, $dispatcher)
+    public function __construct($store, $pool, $log, $config, $date, $sanitizer, $dispatcher)
     {
-        $this->app = $app;
         $this->store = $store;
         $this->pool = $pool;
         $this->logService = $log;
@@ -76,9 +72,9 @@ class ModuleService implements ModuleServiceInterface
     /**
      * @inheritdoc
      */
-    public function get($module, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory)
+    public function get($module, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $view, $container)
     {
-        $object = $this->getByClass($module->class, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory);
+        $object = $this->getByClass($module->class, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $view, $container);
 
         $object->setModule($module);
 
@@ -88,14 +84,14 @@ class ModuleService implements ModuleServiceInterface
     /**
      * @inheritdoc
      */
-    public function getByClass($className, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory)
+    public function getByClass($className, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $view, $container)
     {
-        if (!\class_exists($className))
+        if (!\class_exists($className)) {
             throw new NotFoundException(__('Class %s not found', $className));
+        }
 
         /* @var \Xibo\Widget\ModuleWidget $object */
         $object = new $className(
-            $this->app,
             $this->store,
             $this->pool,
             $this->logService,
@@ -113,7 +109,9 @@ class ModuleService implements ModuleServiceInterface
             $scheduleFactory,
             $permissionFactory,
             $userGroupFactory,
-            $playlistFactory
+            $playlistFactory,
+            $view,
+            $container
         );
 
         return $object;

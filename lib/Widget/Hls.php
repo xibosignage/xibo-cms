@@ -1,17 +1,31 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
- * (GoogleTraffic.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 namespace Xibo\Widget;
 
-
 use Respect\Validation\Validator as v;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Exception\InvalidArgumentException;
-use Xibo\Factory\ModuleFactory;
 
 /**
  * Class Hls
@@ -19,7 +33,6 @@ use Xibo\Factory\ModuleFactory;
  */
 class Hls extends ModuleWidget
 {
-
     public $codeSchemaVersion = 1;
 
     /** @inheritdoc */
@@ -30,7 +43,7 @@ class Hls extends ModuleWidget
     }
 
     /**
-     * Javascript functions for the layout designer
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -38,8 +51,7 @@ class Hls extends ModuleWidget
     }
 
     /**
-     * Install or Update this module
-     * @param ModuleFactory $moduleFactory
+     * @inheritDoc
      */
     public function installOrUpdate($moduleFactory)
     {
@@ -69,7 +81,7 @@ class Hls extends ModuleWidget
     }
 
     /**
-     * Install Files
+     * @inheritDoc
      */
     public function installFiles()
     {
@@ -147,16 +159,18 @@ class Hls extends ModuleWidget
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
+     * @inheritDoc
      */
-    public function edit()
+    public function edit(Request $request, Response $response): Response
     {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
-        $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
-        $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
+        $this->setOption('uri', urlencode($sanitizedParams->getString('uri')));
+        $this->setOption('mute', $sanitizedParams->getCheckbox('mute'));
 
         // This causes some android devices to switch to a hardware accellerated web view
         $this->setOption('transparency', 0);
@@ -165,6 +179,8 @@ class Hls extends ModuleWidget
 
         // Save the widget
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
@@ -243,7 +259,8 @@ class Hls extends ModuleWidget
                      }
                 });
             ')
-            ->appendBody('<video id="video" poster="' . $this->getResourceUrl('vendor/hls/hls-1px-transparent.png') . '" ' . (($this->getOption('mute', 0) == 1) ? 'muted' : '') . '></video>')
+            ->appendBody('<video id="video" poster="' . $this->getResourceUrl('vendor/hls/hls-1px-transparent.png')
+                . '" ' . (($this->getOption('mute', 0) == 1) ? 'muted' : '') . '></video>')
             ->appendCss('
                 video {
                     width: 100%; 

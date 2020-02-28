@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (UserTypeFactory.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -63,10 +78,11 @@ class UserTypeFactory extends BaseFactory
      * @return array[Transition]
      * @throws NotFoundException
      */
-    public function query($sortOrder = ['userType'], $filterBy = null)
+    public function query($sortOrder = ['userType'], $filterBy = [])
     {
-        $entries = array();
-        $params = array();
+        $entries = [];
+        $params = [];
+        $sanitizedFilter = $this->getSanitizer($filterBy);
 
         try {
             $sql = '
@@ -75,13 +91,13 @@ class UserTypeFactory extends BaseFactory
              WHERE 1 = 1
             ';
 
-            if ($this->getSanitizer()->getInt('userOnly', $filterBy) !== null) {
+            if ($sanitizedFilter->getInt('userOnly') !== null) {
                 $sql .= ' AND `userTypeId` = 3 ';
             }
 
-            if ($this->getSanitizer()->getString('userType', $filterBy) !== null) {
+            if ($sanitizedFilter->getString('userType') !== null) {
                 $sql .= ' AND userType = :userType ';
-                $params['userType'] = $this->getSanitizer()->getString('userType', $filterBy);
+                $params['userType'] = $sanitizedFilter->getString('userType');
             }
 
             // Sorting?

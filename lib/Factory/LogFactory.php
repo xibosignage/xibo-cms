@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (LogFactory.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -48,6 +63,8 @@ class LogFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
+        $parsedFilter = $this->getSanitizer($filterBy);
+
         if ($sortOrder == null)
             $sortOrder = ['logId DESC'];
 
@@ -62,7 +79,7 @@ class LogFactory extends BaseFactory
                   LEFT OUTER JOIN display
                   ON display.displayid = log.displayid
                   ';
-        if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('displayGroupId') !== null) {
             $body .= 'INNER JOIN `lkdisplaydg`
                         ON lkdisplaydg.DisplayID = log.displayid ';
         }
@@ -70,70 +87,70 @@ class LogFactory extends BaseFactory
         $body .= ' WHERE 1 = 1 ';
 
 
-        if ($this->getSanitizer()->getInt('fromDt', $filterBy) !== null) {
+        if ($parsedFilter->getInt('fromDt') !== null) {
             $body .= ' AND logdate > :fromDt ';
-            $params['fromDt'] = date("Y-m-d H:i:s", $this->getSanitizer()->getInt('fromDt', $filterBy));
+            $params['fromDt'] = date("Y-m-d H:i:s", $parsedFilter->getInt('fromDt'));
         }
 
-        if ($this->getSanitizer()->getInt('toDt', $filterBy) !== null) {
+        if ($parsedFilter->getInt('toDt') !== null) {
             $body .= ' AND logdate <= :toDt ';
-            $params['toDt'] = date("Y-m-d H:i:s", $this->getSanitizer()->getInt('toDt', $filterBy));
+            $params['toDt'] = date("Y-m-d H:i:s", $parsedFilter->getInt('toDt'));
         }
 
-        if ($this->getSanitizer()->getString('runNo', $filterBy) != null) {
+        if ($parsedFilter->getString('runNo') != null) {
             $body .= ' AND runNo = :runNo ';
-            $params['runNo'] = $this->getSanitizer()->getString('runNo', $filterBy);
+            $params['runNo'] = $parsedFilter->getString('runNo');
         }
 
-        if ($this->getSanitizer()->getString('type', $filterBy) != null) {
+        if ($parsedFilter->getString('type') != null) {
             $body .= ' AND type = :type ';
-            $params['type'] = $this->getSanitizer()->getString('type', $filterBy);
+            $params['type'] = $parsedFilter->getString('type');
         }
 
-        if ($this->getSanitizer()->getString('channel', $filterBy) != null) {
+        if ($parsedFilter->getString('channel') != null) {
             $body .= ' AND channel LIKE :channel ';
-            $params['channel'] = '%' . $this->getSanitizer()->getString('channel', $filterBy) . '%';
+            $params['channel'] = '%' . $parsedFilter->getString('channel') . '%';
         }
 
-        if ($this->getSanitizer()->getString('page', $filterBy) != null) {
+        if ($parsedFilter->getString('page') != null) {
             $body .= ' AND page LIKE :page ';
-            $params['page'] = '%' . $this->getSanitizer()->getString('page', $filterBy) . '%';
+            $params['page'] = '%' . $parsedFilter->getString('page') . '%';
         }
 
-        if ($this->getSanitizer()->getString('function', $filterBy) != null) {
+        if ($parsedFilter->getString('function') != null) {
             $body .= ' AND function LIKE :function ';
-            $params['function'] = '%' . $this->getSanitizer()->getString('function', $filterBy) . '%';
+            $params['function'] = '%' . $parsedFilter->getString('function') . '%';
         }
 
-        if ($this->getSanitizer()->getString('message', $filterBy) != null) {
+        if ($parsedFilter->getString('message') != null) {
             $body .= ' AND message LIKE :message ';
-            $params['message'] = '%' . $this->getSanitizer()->getString('message', $filterBy) . '%';
+            $params['message'] = '%' . $parsedFilter->getString('message') . '%';
         }
 
-        if ($this->getSanitizer()->getInt('displayId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('displayId') !== null) {
             $body .= ' AND log.displayId = :displayId ';
-            $params['displayId'] = $this->getSanitizer()->getInt('displayId', $filterBy);
+            $params['displayId'] = $parsedFilter->getInt('displayId');
         }
 
-        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('userId') !== null) {
             $body .= ' AND log.userId = :userId ';
-            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
+            $params['userId'] = $parsedFilter->getInt('userId');
         }
 
-        if ($this->getSanitizer()->getCheckbox('excludeLog', $filterBy) == 1) {
+        if ($parsedFilter->getCheckbox('excludeLog') == 1) {
             $body .= ' AND (log.page NOT LIKE \'/log%\' OR log.page = \'/login\') ';
             $body .= ' AND log.page <> \'/user/pref\' AND log.page <> \'/clock\' AND log.page <> \'/library/fontcss\' ';
         }
 
         // Filter by Display Name?
-        if ($this->getSanitizer()->getString('display', $filterBy) != null) {
-            $terms = explode(',', $this->getSanitizer()->getString('display', $filterBy));
+        if ($parsedFilter->getString('display') != null) {
+            $terms = explode(',', $parsedFilter->getString('display'));
             $this->nameFilter('display', 'display', $terms, $body, $params);
         }
 
-        if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('displayGroupId') !== null) {
             $body .= ' AND lkdisplaydg.displaygroupid = :displayGroupId ';
-            $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
+            $params['displayGroupId'] = $parsedFilter->getInt('displayGroupId');
         }
 
         // Sorting?
@@ -141,8 +158,8 @@ class LogFactory extends BaseFactory
             $order = ' ORDER BY ' . implode(',', $sortOrder);
 
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $parsedFilter->getInt('start') !== null && $parsedFilter->getInt('length', ['default' => 10]) !== null) {
+            $limit = ' LIMIT ' . intval($parsedFilter->getInt('start', ['default' => 0]), 0) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

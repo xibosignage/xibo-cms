@@ -1,17 +1,31 @@
 {#
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #}
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-info btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Display Settings Profile" %}" href="{{ urlFor("displayProfile.add.form") }}"> <i class="fa fa-cogs" aria-hidden="true"></i> {% trans "Add Profile" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Display Settings Profile" %}" href="{{ url_for("displayProfile.add.form") }}"> <i class="fa fa-cogs" aria-hidden="true"></i> {% trans "Add Profile" %}</a></li>
     </ul>
 {% endblock %}
 
@@ -74,7 +88,7 @@
                 $.ajax({
                     type: "GET",
                     async: false,
-                    url: "{{ urlFor("user.pref") }}?preference=displayProfileGrid",
+                    url: "{{ url_for("user.pref") }}?preference=displayProfileGrid",
                     dataType: 'json',
                     success: function (json) {
                         try {
@@ -91,7 +105,7 @@
             stateSaveCallback: function (settings, data) {
                 $.ajax({
                     type: "POST",
-                    url: "{{ urlFor("user.pref") }}",
+                    url: "{{ url_for("user.pref") }}",
                     data: {
                         preference: [{
                             option: "displayProfileGrid",
@@ -104,7 +118,7 @@
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
             ajax: {
-                "url": "{{ urlFor("displayProfile.search") }}",
+                "url": "{{ url_for("displayProfile.search") }}",
                 "data": function(d) {
                     $.extend(d, $("#displayProfiles").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                 }
@@ -162,30 +176,6 @@
             });
 
             // Submit form
-            $form.submit();
-        }
-
-        // Custom submit for display profile form
-        function displayProfileEditFormSubmit() {
-            let $form = $("#displayProfileForm");
-
-            // Replace all checkboxes with hidden input fields
-            $form.find('input[type="checkbox"]').each(function () {
-                // Get checkbox values
-                let value = $(this).is(':checked') ? 'on' : 'off';
-                let id = $(this).attr('id');
-
-                // Create hidden input
-                $('<input type="hidden">')
-                    .attr('id', id)
-                    .attr('name', id)
-                    .val(value)
-                    .appendTo($(this).parent());
-
-                // Disable checkbox so it won't be submitted
-                $(this).attr('disabled', true);
-            });
-
             $form.submit();
         }
     </script>

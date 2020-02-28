@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -19,8 +19,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 namespace Xibo\Widget;
+
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Widget;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
@@ -67,13 +69,12 @@ class SubPlaylist extends ModuleWidget
     }
 
     /**
-     * Extra data for the Form rendering
-     * @return array
+     * @inheritDoc
      */
-    public function getExtra()
+    public function getExtra($userId)
     {
         return [
-            'playlists' => $this->getAssignablePlaylists(),
+            'playlists' => $this->getAssignablePlaylists($userId),
             'subPlaylistId' => $this->getAssignedPlaylistIds(),
             'subPlaylistOptions'=> $this->getSubPlaylistOptions()
         ];
@@ -90,6 +91,7 @@ class SubPlaylist extends ModuleWidget
     /**
      * @param int[] $playlistIds
      * @return $this
+     * @throws \Xibo\Exception\ValueTooLargeException
      */
     protected function setAssignedPlaylistIds($playlistIds)
     {
@@ -189,23 +191,24 @@ class SubPlaylist extends ModuleWidget
      *  )
      * )
      *
-     * @throws InvalidArgumentException
+     * @inheritDoc
      */
-    public function edit()
+    public function edit(Request $request, Response $response): Response
     {
         // Set some dud durations
         $this->setDuration(10);
         $this->setUseDuration(0);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Options
-        $this->setOption('arrangement', $this->getSanitizer()->getString('arrangement'));
-        $this->setOption('remainder', $this->getSanitizer()->getString('remainder'));
+        $this->setOption('arrangement', $sanitizedParams->getString('arrangement'));
+        $this->setOption('remainder', $sanitizedParams->getString('remainder'));
 
         // Get the list of playlists
-        $subPlaylistId = $this->getSanitizer()->getIntArray('subPlaylistId');
-        $spots = $this->getSanitizer()->getStringArray('subPlaylistIdSpots');
-        $spotLength = $this->getSanitizer()->getStringArray('subPlaylistIdSpotLength');
-        $spotFill = $this->getSanitizer()->getStringArray('subPlaylistIdSpotFill');
+        $subPlaylistId = $sanitizedParams->getIntArray('subPlaylistId', ['default' => []]);
+        $spots = $sanitizedParams->getArray('subPlaylistIdSpots');
+        $spotLength = $sanitizedParams->getArray('subPlaylistIdSpotLength');
+        $spotFill = $sanitizedParams->getArray('subPlaylistIdSpotFill');
 
         // Make up a companion setting which maps the playlistIds to the options
         $subPlaylistOptions = [];
@@ -239,8 +242,9 @@ class SubPlaylist extends ModuleWidget
         $existingSubPlaylistId = $this->getAssignedPlaylistIds();
 
         // Validation
-        if (count($subPlaylistId) < 1)
+        if (count($subPlaylistId) < 1) {
             throw new InvalidArgumentException(__('Please select at least 1 Playlist to embed'), 'subPlaylistId');
+        }
 
         // Set the new list
         $this->setAssignedPlaylistIds($subPlaylistId);
@@ -303,12 +307,14 @@ class SubPlaylist extends ModuleWidget
 
         // Save the widget
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
-    public function delete()
+    public function delete(Request $request, Response $response): Response
     {
-        parent::delete();
+        $response = parent::delete($request, $response);
 
         $subPlaylistIds = $this->getAssignedPlaylistIds();
 
@@ -324,6 +330,8 @@ class SubPlaylist extends ModuleWidget
                 'childId' => $subPlaylistId
             ]);
         }
+
+        return $response;
     }
 
     /**
@@ -334,13 +342,12 @@ class SubPlaylist extends ModuleWidget
         // Output a summary
         $resolvedWidgets = $this->getSubPlaylistResolvedWidgets();
 
-        $output = '
+        return '
             <div style="text-align:center;">
                 <i alt="' . __($this->module->name) . ' thumbnail" class="fa module-preview-icon module-icon-' . __($this->module->type) . '"></i>
                 <br/>
                 ' . __('%d Widgets / %d seconds', count($resolvedWidgets), $this->getSubPlaylistResolvedDuration()) . '
             </div>';
-        return $output;
     }
 
     /**
@@ -502,6 +509,10 @@ class SubPlaylist extends ModuleWidget
 
                 // Update our count of expanded widgets to be the spots
                 $countExpanded = $spots;
+
+            } else if ($countExpanded <= 0) {
+                // No spots required and no content in this list.
+                continue;
             }
 
             // first watermark
@@ -549,7 +560,7 @@ class SubPlaylist extends ModuleWidget
         $lastTakeIndices = [];
 
         // Arrangement first
-        if ($arrangement === 'even') {
+        if ($arrangement === 'even' && $smallestListCount > 0) {
             // Evenly distributed by round robin
             $arrangement = 'roundrobin';
 

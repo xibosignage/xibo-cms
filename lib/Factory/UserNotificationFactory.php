@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
- * (NotificationFactory.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -121,7 +136,8 @@ class UserNotificationFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        $entries = array();
+        $entries = [];
+        $parsedBody = $this->getSanitizer($filterBy);
 
         if ($sortOrder == null)
             $sortOrder = ['releaseDt DESC'];
@@ -153,28 +169,28 @@ class UserNotificationFactory extends BaseFactory
 
         $body .= ' WHERE `notification`.releaseDt < :now ';
 
-        if ($this->getSanitizer()->getInt('notificationId', $filterBy) !== null) {
+        if ($parsedBody->getInt('notificationId') !== null) {
             $body .= ' AND `lknotificationuser`.notificationId = :notificationId ';
-            $params['notificationId'] = $this->getSanitizer()->getInt('notificationId', $filterBy);
+            $params['notificationId'] = $parsedBody->getInt('notificationId');
         }
 
-        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
+        if ($parsedBody->getInt('userId') !== null) {
             $body .= ' AND `lknotificationuser`.userId = :userId ';
-            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
+            $params['userId'] = $parsedBody->getInt('userId');
         }
 
-        if ($this->getSanitizer()->getInt('read', $filterBy) !== null) {
+        if ($parsedBody->getInt('read') !== null) {
             $body .= ' AND `lknotificationuser`.read = :read ';
-            $params['read'] = $this->getSanitizer()->getInt('read', $filterBy);
+            $params['read'] = $parsedBody->getInt('read');
         }
 
-        if ($this->getSanitizer()->getInt('isEmail', $filterBy) !== null) {
+        if ($parsedBody->getInt('isEmail') !== null) {
             $body .= ' AND `notification`.isEmail = :isEmail  ';
-            $params['isEmail'] = $this->getSanitizer()->getInt('isEmail', $filterBy);
+            $params['isEmail'] = $parsedBody->getInt('isEmail');
         }
 
-        if ($this->getSanitizer()->getInt('isEmailed', $filterBy) !== null) {
-            if ($this->getSanitizer()->getInt('isEmailed', $filterBy) == 0)
+        if ($parsedBody->getInt('isEmailed') !== null) {
+            if ($parsedBody->getInt('isEmailed') == 0)
                 $body .= ' AND `lknotificationuser`.emailDt = 0 ';
             else
                 $body .= ' AND `lknotificationuser`.emailDt <> 0 ';
@@ -187,8 +203,8 @@ class UserNotificationFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $parsedBody->getInt('start') !== null && $parsedBody->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($parsedBody->getInt('start'), 0) . ', ' . $parsedBody->getInt('length');
         }
 
         $sql = $select . $body . $order . $limit;

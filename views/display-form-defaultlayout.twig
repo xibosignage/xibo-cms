@@ -1,7 +1,8 @@
 {#
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -35,9 +36,9 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="displayDefaultLayoutForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("display.defaultlayout", {id: display.displayId}) }}">
+            <form id="displayDefaultLayoutForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("display.defaultlayout", {id: display.displayId}) }}">
                 {% set attributes = [
-                    { name: "data-search-url", value: urlFor("layout.search") },
+                    { name: "data-search-url", value: url_for("layout.search") },
                     { name: "data-search-term", value: "layout" },
                     { name: "data-search-term-tags", value: "tags" },
                     { name: "data-id-property", value: "layoutId" },

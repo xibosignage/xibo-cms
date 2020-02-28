@@ -129,9 +129,11 @@ class ScheduleReminderFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        if ($sortOrder === null)
+        if ($sortOrder === null) {
             $sortOrder = ['scheduleReminderId '];
+        }
 
+        $sanitizedFilter = $this->getSanitizer($filterBy);
         $params = [];
         $entries = [];
 
@@ -151,44 +153,44 @@ class ScheduleReminderFactory extends BaseFactory
 
         $body .= " WHERE 1 = 1 ";
 
-        if ($this->getSanitizer()->getInt('scheduleReminderId', -1, $filterBy) != -1) {
+        if ($sanitizedFilter->getInt('scheduleReminderId', ['default' => -1]) != -1) {
             $body .= " AND schedulereminder.scheduleReminderId = :scheduleReminderId ";
-            $params['scheduleReminderId'] = $this->getSanitizer()->getInt('scheduleReminderId', $filterBy);
+            $params['scheduleReminderId'] = $sanitizedFilter->getInt('scheduleReminderId');
         }
 
-        if ($this->getSanitizer()->getInt('eventId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('eventId') !== null) {
             $body .= " AND schedulereminder.eventId = :eventId ";
-            $params['eventId'] = $this->getSanitizer()->getInt('eventId', $filterBy);
+            $params['eventId'] = $sanitizedFilter->getInt('eventId');
         }
 
-        if ($this->getSanitizer()->getInt('value', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('value') !== null) {
             $body .= " AND schedulereminder.value = :value ";
-            $params['value'] = $this->getSanitizer()->getInt('value', $filterBy);
+            $params['value'] = $sanitizedFilter->getInt('value');
         }
 
-        if ($this->getSanitizer()->getInt('type', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('type') !== null) {
             $body .= " AND schedulereminder.type = :type ";
-            $params['type'] = $this->getSanitizer()->getInt('type', $filterBy);
+            $params['type'] = $sanitizedFilter->getInt('type');
         }
 
-        if ($this->getSanitizer()->getInt('option', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('option') !== null) {
             $body .= " AND schedulereminder.option = :option ";
-            $params['option'] = $this->getSanitizer()->getInt('option', $filterBy);
+            $params['option'] = $sanitizedFilter->getInt('option');
         }
 
-        if ($this->getSanitizer()->getInt('reminderDt', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('reminderDt') !== null) {
             $body .= ' AND `schedulereminder`.reminderDt = :reminderDt ';
-            $params['reminderDt'] = $this->getSanitizer()->getInt('reminderDt', $filterBy);
+            $params['reminderDt'] = $sanitizedFilter->getInt('reminderDt');
         }
 
-        if ($this->getSanitizer()->getInt('nextRunDate', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('nextRunDate') !== null) {
             $body .= ' AND `schedulereminder`.reminderDt <= :nextRunDate AND `schedulereminder`.reminderDt > `schedulereminder`.lastReminderDt ';
-            $params['nextRunDate'] = $this->getSanitizer()->getInt('nextRunDate', $filterBy);
+            $params['nextRunDate'] = $sanitizedFilter->getInt('nextRunDate');
         }
 
-        if ($this->getSanitizer()->getInt('isEmail', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('isEmail') !== null) {
             $body .= ' AND `schedulereminder`.isEmail = :isEmail ';
-            $params['isEmail'] = $this->getSanitizer()->getInt('isEmail', $filterBy);
+            $params['isEmail'] = $sanitizedFilter->getInt('isEmail');
         }
 
         // Sorting?
@@ -198,8 +200,8 @@ class ScheduleReminderFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

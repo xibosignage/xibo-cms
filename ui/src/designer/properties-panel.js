@@ -143,7 +143,7 @@ PropertiesPanel.prototype.makeFormReadOnly = function() {
 PropertiesPanel.prototype.render = function(element, step) {
 
     // Prevent the panel to render if there's no selected object
-    if(typeof element == 'undefined' || $.isEmptyObject(element) || typeof element.type == 'undefined') {
+    if(typeof element == 'undefined' || $.isEmptyObject(element) || typeof element.type == 'undefined' || typeof element[element.type + 'Id'] == 'undefined') {
         // Clean the property panel html
         this.DOMObject.html('');
 

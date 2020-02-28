@@ -1,14 +1,30 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2017 Spring Signage Ltd
- * (NotificationView.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\NotificationFactory;
 
@@ -19,7 +35,7 @@ use Xibo\Factory\NotificationFactory;
 class NotificationView extends ModuleWidget
 {
     /**
-     * Install Files
+     * @inheritDoc
      */
     public function installFiles()
     {
@@ -31,7 +47,7 @@ class NotificationView extends ModuleWidget
     }
 
     /**
-     * @return string
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -116,7 +132,7 @@ class NotificationView extends ModuleWidget
      *      description="The transition speed of the selected effect in milliseconds (1000 = normal)",
      *      type="integer",
      *      required=false
-     *   ),     *
+     *   ),
      *  @SWG\Parameter(
      *      name="durationIsPerItem",
      *      in="formData",
@@ -137,33 +153,38 @@ class NotificationView extends ModuleWidget
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
+     * @inheritDoc
      */
-    public function edit()
+    public function edit(Request $request, Response $response): Response
     {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('age', $this->getSanitizer()->getInt('age'));
-        $this->setOption('effect', $this->getSanitizer()->getString('effect'));
-        $this->setOption('speed', $this->getSanitizer()->getInt('speed'));
-        $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
-        $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 60));
-        $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', null));        
-        $this->setOption('noDataMessage_advanced', $this->getSanitizer()->getCheckbox('noDataMessage_advanced'));
-        $this->setRawNode('template', $this->getSanitizer()->getParam('template', null));
-        $this->setRawNode('template_advanced', $this->getSanitizer()->getParam('template_advanced', null));
-        $this->setRawNode('embedStyle', $this->getSanitizer()->getParam('embedStyle', null));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('age', $sanitizedParams->getInt('age'));
+        $this->setOption('effect', $sanitizedParams->getString('effect'));
+        $this->setOption('speed', $sanitizedParams->getInt('speed'));
+        $this->setOption('durationIsPerItem', $sanitizedParams->getCheckbox('durationIsPerItem'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
+        $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 60]));
+        $this->setRawNode('noDataMessage', $request->getParam('noDataMessage', null));
+        $this->setOption('noDataMessage_advanced', $sanitizedParams->getCheckbox('noDataMessage_advanced'));
+        $this->setRawNode('template', $request->getParam('template', null));
+        $this->setRawNode('template_advanced', $request->getParam('template_advanced', null));
+        $this->setRawNode('embedStyle', $request->getParam('embedStyle', null));
 
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
     public function isValid()
     {
-        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration()))
+        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration())) {
             throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
+        }
 
         // Can't be sure because the client does the rendering
         return self::$STATUS_PLAYER;
@@ -174,7 +195,7 @@ class NotificationView extends ModuleWidget
      */
     private function getNotificationFactory()
     {
-        return $this->getApp()->container->get('notificationFactory');
+        return $this->container->get('notificationFactory');
     }
 
     /**
@@ -254,13 +275,12 @@ class NotificationView extends ModuleWidget
     {
         // Behave exactly like the client.
         $data = [];
-        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
-        $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
+        $data['viewPortWidth'] = ($this->isPreview()) ? $this->region->width : '[[ViewPortWidth]]';
 
         // Items
-        $items = $this->getNotifications($isPreview, $displayId);
+        $items = $this->getNotifications($this->isPreview(), $displayId);
 
         // Include some vendor items
         $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
@@ -276,7 +296,7 @@ class NotificationView extends ModuleWidget
             $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
 
         // Get the Style Sheet
-        $styleSheetContent = $this->parseLibraryReferences($isPreview, $this->getRawNode('embedStyle', null));
+        $styleSheetContent = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('embedStyle', null));
 
         // Set some options
         $options = array(
@@ -301,7 +321,7 @@ class NotificationView extends ModuleWidget
         $javaScriptContent .= '</script>';
 
         // Add our fonts.css file
-        $headContent = '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
+        $headContent = '<link href="' . (($this->isPreview()) ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
         $data['head'] = $headContent;
@@ -329,7 +349,9 @@ class NotificationView extends ModuleWidget
         ]);
 
         // Get the release date from the notification returned
-        $widgetModifiedDt = (count($notifications) > 0) ? $this->getDate()->parse($notifications[0]->releaseDt, 'U') : $widgetModifiedDt;
+        $widgetModifiedDt = (count($notifications) > 0)
+            ? $this->getDate()->parse($notifications[0]->releaseDt, 'U')
+            : $widgetModifiedDt;
 
         return $widgetModifiedDt;
     }

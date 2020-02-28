@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,6 +23,8 @@
 namespace Xibo\Widget;
 
 use Jenssegers\Date\Date;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\ModuleFactory;
 
@@ -33,24 +36,45 @@ interface ModuleInterface
 {
     /**
      * Add Widget
-     * @return mixed
-     * @throws XiboException
+     * @param \Slim\Http\ServerRequest $request
+     * @param \Slim\Http\Response $response
+     * @return Response
+     * @throws \Xibo\Exception\XiboException
      */
-    public function add();
+    public function add(Request $request, Response $response): Response;
 
     /**
      * Edit Widget
-     * @return mixed
-     * @throws XiboException
+     * @param \Slim\Http\ServerRequest $request
+     * @param \Slim\Http\Response $response
+     * @return \Slim\Http\Response
+     * @throws \Xibo\Exception\XiboException
      */
-    public function edit();
+    public function edit(Request $request, Response $response): Response;
 
     /**
      * Delete Widget
-     * @return mixed
-     * @throws XiboException
+     * @param \Slim\Http\ServerRequest $request
+     * @param \Slim\Http\Response $response
+     * @return Response
      */
-    public function delete();
+    public function delete(Request $request, Response $response): Response;
+
+    /**
+     * Module Settings
+     * @param \Slim\Http\ServerRequest $request
+     * @param \Slim\Http\Response $response
+     * @return mixed
+     */
+    public function settings(Request $request, Response $response): Response;
+
+    /**
+     * Download
+     * @param Request $request
+     * @param Response $response
+     * @return Response
+     */
+    public function download(Request $request, Response $response): Response;
 
     /**
      * Return the name of the media as input by the user
@@ -84,7 +108,7 @@ interface ModuleInterface
     /**
      * Is the Module Valid?
      * @return int (1 = Yes, 2 = Player Dependent)
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws XiboException
      */
     public function isValid();
 
@@ -100,12 +124,6 @@ interface ModuleInterface
      * @return mixed
      */
     public function installModule();
-
-    /**
-     * Module Settings
-     * @return mixed
-     */
-    public function settings();
 
     /**
      * Get the Modified Date of this Widget
@@ -167,9 +185,10 @@ interface ModuleInterface
     /**
      * Get Resource
      * @param int $displayId The displayId we're requesting for, or 0 for preview
-     * @return string
+     * @return string|false
+     * @throws \Xibo\Exception\ConfigurationException
      */
-    public function getResource($displayId);
+    public function getResource($displayId = 0);
 
     /**
      * Check if status message is not empty

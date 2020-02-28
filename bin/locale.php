@@ -28,7 +28,7 @@
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 require_once PROJECT_ROOT . '/vendor/autoload.php';
 
-$twig = new Twig_Environment(new \Twig\Loader\FilesystemLoader([PROJECT_ROOT . '/views', PROJECT_ROOT . '/modules']), [
+$twig = new Twig\Environment(new \Twig\Loader\FilesystemLoader([PROJECT_ROOT . '/views', PROJECT_ROOT . '/modules']), [
     'cache'       => PROJECT_ROOT . '/cache',
     'auto_reload' => true
 ]);

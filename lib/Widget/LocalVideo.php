@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2012-15 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -21,13 +22,18 @@
 namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Exception\InvalidArgumentException;
 
+/**
+ * Class LocalVideo
+ * @package Xibo\Widget
+ */
 class LocalVideo extends ModuleWidget
 {
-    
     /**
-     * Javascript functions for the layout designer
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -105,23 +111,26 @@ class LocalVideo extends ModuleWidget
      *  )
      * )
      *
-     * @throws \Xibo\Exception\XiboException
+     * @inheritDoc
      */
-    public function edit()
+    public function edit(Request $request, Response $response): Response
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Set some options
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
-        $this->setOption('scaleType', $this->getSanitizer()->getString('scaleTypeId', 'aspect'));
-        $this->setOption('mute', $this->getSanitizer()->getCheckbox('mute'));
-        $this->setOption('showFullScreen', $this->getSanitizer()->getCheckbox('showFullScreen'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('uri', urlencode($sanitizedParams->getString('uri')));
+        $this->setOption('scaleType', $sanitizedParams->getString('scaleTypeId', ['default' => 'aspect']));
+        $this->setOption('mute', $sanitizedParams->getCheckbox('mute'));
+        $this->setOption('showFullScreen', $sanitizedParams->getCheckbox('showFullScreen'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
 
         $this->isValid();
 
         // Save the widget
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
@@ -144,7 +153,7 @@ class LocalVideo extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function getResource($displayId)
+    public function getResource($displayId = 0)
     {
         // Get resource isn't required for this module.
         return null;

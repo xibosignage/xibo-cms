@@ -120,9 +120,11 @@ class SavedReportFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        if ($sortOrder === null)
+        if ($sortOrder === null) {
             $sortOrder = ['generatedOn DESC'];
-
+        }
+        
+        $sanitizedFilter = $this->getSanitizer($filterBy);
         $params = [];
         $entries = [];
 
@@ -157,69 +159,70 @@ class SavedReportFactory extends BaseFactory
         $this->viewPermissionSql('Xibo\Entity\SavedReport', $body, $params, '`saved_report`.savedReportId', '`saved_report`.userId', $filterBy);
 
         // Like
-        if ($this->getSanitizer()->getString('saveAs', $filterBy) != '') {
-            $terms = explode(',', $this->getSanitizer()->getString('saveAs', $filterBy));
+        if ($sanitizedFilter->getString('saveAs') != '') {
+            $terms = explode(',', $sanitizedFilter->getString('saveAs'));
             $this->nameFilter('saved_report', 'saveAs', $terms, $body, $params);
         }
 
-        if ($this->getSanitizer()->getInt('savedReportId', -1, $filterBy) != -1) {
+        if ($sanitizedFilter->getInt('savedReportId', ['default' => -1]) != -1) {
             $body .= " AND saved_report.savedReportId = :savedReportId ";
-            $params['savedReportId'] = $this->getSanitizer()->getInt('savedReportId', $filterBy);
+            $params['savedReportId'] = $sanitizedFilter->getInt('savedReportId');
         }
 
-        if ($this->getSanitizer()->getInt('reportScheduleId', $filterBy) != '') {
+        if ($sanitizedFilter->getInt('reportScheduleId') != '') {
             $body .= " AND saved_report.reportScheduleId = :reportScheduleId ";
-            $params['reportScheduleId'] = $this->getSanitizer()->getInt('reportScheduleId', $filterBy);
+            $params['reportScheduleId'] = $sanitizedFilter->getInt('reportScheduleId');
         }
 
-        if ($this->getSanitizer()->getInt('generatedOn', $filterBy) != '') {
+        if ($sanitizedFilter->getInt('generatedOn') != '') {
             $body .= " AND saved_report.generatedOn = :generatedOn ";
-            $params['generatedOn'] = $this->getSanitizer()->getInt('generatedOn', $filterBy);
+            $params['generatedOn'] = $sanitizedFilter->getInt('generatedOn');
         }
 
-        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('userId') !== null) {
             $body .= ' AND `saved_report`.userId = :userId ';
-            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
+            $params['userId'] = $sanitizedFilter->getInt('userId');
         }
 
         // Report name
-        if ($this->getSanitizer()->getString('reportName', $filterBy) != '') {
+        if ($sanitizedFilter->getString('reportName') != '') {
             $body .= " AND reportschedule.reportName = :reportName ";
-            $params['reportName'] = $this->getSanitizer()->getString('reportName',  $filterBy);
+            $params['reportName'] = $sanitizedFilter->getString('reportName');
         }
 
         // User Group filter
-        if ($this->getSanitizer()->getInt('ownerUserGroupId', 0, $filterBy) != 0) {
+        if ($sanitizedFilter->getInt('ownerUserGroupId', ['default' => 0]) != 0) {
             $body .= ' AND `saved_report`.userId IN (SELECT DISTINCT userId FROM `lkusergroup` WHERE groupId =  :ownerUserGroupId) ';
-            $params['ownerUserGroupId'] = $this->getSanitizer()->getInt('ownerUserGroupId', 0, $filterBy);
+            $params['ownerUserGroupId'] = $sanitizedFilter->getInt('ownerUserGroupId',  ['default' => 0]);
         }
 
         // by media ID
-        if ($this->getSanitizer()->getInt('mediaId', -1, $filterBy) != -1) {
+        if ($sanitizedFilter->getInt('mediaId',  ['default' => -1]) != -1) {
             $body .= " AND media.mediaId = :mediaId ";
-            $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
+            $params['mediaId'] = $sanitizedFilter->getInt('mediaId');
         }
 
         // Owner filter
-        if ($this->getSanitizer()->getInt('userId', 0, $filterBy) != 0) {
+        if ($sanitizedFilter->getInt('userId',  ['default' => 0]) != 0) {
             $body .= " AND `saved_report`.userid = :userId ";
-            $params['userId'] = $this->getSanitizer()->getInt('userId', 0, $filterBy);
+            $params['userId'] = $sanitizedFilter->getInt('userId',  ['default' => 0]);
         }
 
-        if ( $this->getSanitizer()->getCheckbox('onlyMyReport') == 1) {
+        if ( $sanitizedFilter->getCheckbox('onlyMyReport') == 1) {
             $body .= ' AND `saved_report`.userId = :currentUserId ';
             $params['currentUserId'] = $this->getUser()->userId;
         }
 
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length',  ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -239,9 +242,5 @@ class SavedReportFactory extends BaseFactory
         }
 
         return $entries;
-
-
     }
-
-
 }

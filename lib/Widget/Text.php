@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,6 +21,8 @@
  */
 namespace Xibo\Widget;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Helper\Translate;
 
@@ -30,7 +33,7 @@ use Xibo\Helper\Translate;
 class Text extends ModuleWidget
 {
     /**
-     * Install Files
+     * @inheritDoc
      */
     public function installFiles()
     {
@@ -44,7 +47,7 @@ class Text extends ModuleWidget
     }
 
     /**
-     * Javascript functions for the layout designer
+     * @inheritDoc
      */
     public function layoutDesignerJavaScript()
     {
@@ -150,26 +153,30 @@ class Text extends ModuleWidget
      *  )
      * )
      *
-     * @throws InvalidArgumentException
+     * @inheritDoc
      */
-    public function edit()
+    public function edit(Request $request, Response $response): Response
     {
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
         $this->setOption('xmds', true);
-        $this->setOption('effect', $this->getSanitizer()->getString('effect'));
-        $this->setOption('speed', $this->getSanitizer()->getInt('speed'));
-        $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('marqueeInlineSelector', $this->getSanitizer()->getString('marqueeInlineSelector'));
-        $this->setRawNode('text', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('text', null)));
-        $this->setOption('ta_text_advanced', $this->getSanitizer()->getCheckbox('ta_text_advanced'));
-        $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
+        $this->setOption('effect', $sanitizedParams->getString('effect'));
+        $this->setOption('speed', $sanitizedParams->getInt('speed'));
+        $this->setOption('backgroundColor', $sanitizedParams->getString('backgroundColor'));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('marqueeInlineSelector', $sanitizedParams->getString('marqueeInlineSelector'));
+        $this->setRawNode('text', $request->getParam('ta_text', $request->getParam('text', null)));
+        $this->setOption('ta_text_advanced', $sanitizedParams->getCheckbox('ta_text_advanced'));
+        $this->setRawNode('javaScript', $request->getParam('javaScript', ''));
 
         // Save the widget
         $this->isValid();
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */

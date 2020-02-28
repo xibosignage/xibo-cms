@@ -34,7 +34,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
                 throw new LibraryFullException(sprintf(__('Your library is full. Library Limit: %s K'), $this->options['libraryLimit']));
 
             // Check for a user quota
-            $controller->getUser()->isQuotaFullByUser();
+            $controller->getUser($this->options['request'])->isQuotaFullByUser();
 
             // Parse parameters
             $name = isset($_REQUEST['name']) ? $_REQUEST['name'][$index] : '';
@@ -54,7 +54,8 @@ class LayoutUploadHandler extends BlueImpUploadHandler
                 $importTags,
                 $useExistingDataSets,
                 $importDataSetData,
-                $this->options['libraryController']
+                $this->options['libraryController'],
+                $this->options['request']
             );
 
             $layout->save();
@@ -72,7 +73,8 @@ class LayoutUploadHandler extends BlueImpUploadHandler
 
             $file->error = $e->getMessage();
 
-            $controller->getApp()->commit = false;
+            // TODO for this the getState() had to be changed to public, we should do it in a better way I think.
+            $controller->getState()->setCommitState(false);
         }
     }
 }

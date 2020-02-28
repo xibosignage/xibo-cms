@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (HelpFactory.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -62,8 +77,9 @@ class HelpFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        $entries = array();
-        $params = array();
+        $entries = [];
+        $params = [];
+        $sanitizedFilter = $this->getSanitizer($filterBy);
 
         $select = 'SELECT `helpId`, `topic`, `category`, `link` ';
 
@@ -72,9 +88,9 @@ class HelpFactory extends BaseFactory
          WHERE 1 = 1
         ';
 
-        if ($this->getSanitizer()->getInt('helpId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('helpId') !== null) {
             $body .= ' AND help.helpId = :helpId ';
-            $params['helpId'] = $this->getSanitizer()->getInt('helpId', $filterBy);
+            $params['helpId'] = $sanitizedFilter->getInt('helpId');
         }
 
         // Sorting?
@@ -83,8 +99,8 @@ class HelpFactory extends BaseFactory
             $order .= ' ORDER BY ' . implode(',', $sortOrder);
 
         $limit = '';
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit .= ' LIMIT ' . intval($this->getSanitizer()->getInt('start')) . ', ' . $this->getSanitizer()->getInt('length', 10);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
+            $limit .= ' LIMIT ' . intval($sanitizedFilter->getInt('start')) . ', ' . $sanitizedFilter->getInt('length',['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

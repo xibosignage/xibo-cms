@@ -1,7 +1,8 @@
 <?php
-/*
-* Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2018 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
  *
  * This file is part of Xibo.
  *

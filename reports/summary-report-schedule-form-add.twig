@@ -36,7 +36,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="reportScheduleAddForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("reportschedule.add") }}">
+            <form id="reportScheduleAddForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("reportschedule.add") }}">
 
                 {{ forms.hidden("hiddenFields", hiddenFields) }}
                 {{ forms.hidden("reportName", reportName) }}

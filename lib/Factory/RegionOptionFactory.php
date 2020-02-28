@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (RegionOptionFactory.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -88,11 +89,12 @@ class RegionOptionFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        $entries = array();
+        $entries = [];
+        $sanitizedFilter = $this->getSanitizer($filterBy);
 
         $sql = 'SELECT * FROM `regionoption` WHERE regionId = :regionId';
 
-        foreach ($this->getStore()->select($sql, array('regionId' => $this->getSanitizer()->getInt('regionId', $filterBy))) as $row) {
+        foreach ($this->getStore()->select($sql, array('regionId' => $sanitizedFilter->getInt('regionId'))) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row);
         }
 

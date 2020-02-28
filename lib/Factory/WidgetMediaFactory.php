@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (WidgetMediaFactory.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -68,7 +69,9 @@ class WidgetMediaFactory extends BaseFactory
      */
     public function query($sortOrder = null, $filterBy = [])
     {
-        if ($this->getSanitizer()->getInt('moduleOnly', $filterBy) === 1) {
+        $sanitizedFilter = $this->getSanitizer($filterBy);
+
+        if ($sanitizedFilter->getInt('moduleOnly') === 1) {
             $sql = '
                 SELECT lkwidgetmedia.mediaId 
                   FROM `lkwidgetmedia` 
@@ -82,6 +85,6 @@ class WidgetMediaFactory extends BaseFactory
             $sql = 'SELECT mediaId FROM `lkwidgetmedia` WHERE widgetId = :widgetId AND mediaId <> 0 ';
         }
 
-        return array_map(function($element) { return $element['mediaId']; }, $this->getStore()->select($sql, array('widgetId' => $this->getSanitizer()->getInt('widgetId', $filterBy))));
+        return array_map(function($element) { return $element['mediaId']; }, $this->getStore()->select($sql, array('widgetId' => $sanitizedFilter->getInt('widgetId'))));
     }
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,6 +22,8 @@
 namespace Xibo\Widget;
 
 use Respect\Validation\Validator as v;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
@@ -33,7 +35,7 @@ use Xibo\Exception\NotFoundException;
 class DataSetTicker extends ModuleWidget
 {
     /**
-     * Install Files
+     * @inheritDoc
      */
     public function installFiles()
     {
@@ -115,10 +117,11 @@ class DataSetTicker extends ModuleWidget
     }
 
     /** @inheritdoc @override */
-    public function editForm()
+    public function editForm(Request $request)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Do we have a step provided?
-        $step = $this->getSanitizer()->getInt('step', 2);
+        $step = $sanitizedParams->getInt('step', ['default' => 2]);
 
         if ($step == 1 || !$this->hasDataSet()) {
             return 'datasetticker-form-edit-step1';
@@ -342,17 +345,18 @@ class DataSetTicker extends ModuleWidget
      *
      * @inheritdoc
      */
-    public function edit()
+    public function edit(Request $request, Response $response): Response
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // Do we have a step provided?
-        $step = $this->getSanitizer()->getInt('step', 2);
+        $step = $sanitizedParams->getInt('step', ['default' => 2]);
 
         if ($step == 1) {
 
-            $dataSetId = $this->getSanitizer()->getInt('dataSetId');
+            $dataSetId = $sanitizedParams->getInt('dataSetId');
 
             // Do we already have a DataSet?
-            if($this->hasDataSet() && $dataSetId != $this->getOption('dataSetId')) {
+            if ($this->hasDataSet() && $dataSetId != $this->getOption('dataSetId')) {
                 // Reset the fields that are dependent on the dataSetId
                 //$this->setOption('columns', '');
             }
@@ -371,30 +375,30 @@ class DataSetTicker extends ModuleWidget
 
         } else {
 
-            $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-            $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-            $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
-            $this->setOption('speed', $this->getSanitizer()->getInt('speed', 2));
-            $this->setOption('name', $this->getSanitizer()->getString('name'));
-            $this->setOption('effect', $this->getSanitizer()->getString('effect'));
-            $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
-            $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
-            $this->setOption('itemsSideBySide', $this->getSanitizer()->getCheckbox('itemsSideBySide'));
-            $this->setOption('upperLimit', $this->getSanitizer()->getInt('upperLimit', 0));
-            $this->setOption('lowerLimit', $this->getSanitizer()->getInt('lowerLimit', 0));
-            $this->setOption('itemsPerPage', $this->getSanitizer()->getInt('itemsPerPage'));
-            $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
-            $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
-            $this->setOption('noDataMessage_advanced', $this->getSanitizer()->getCheckbox('noDataMessage_advanced'));
-            $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
-            $this->setOption('filter', $this->getSanitizer()->getParam('filter', null));
-            $this->setOption('ordering', $this->getSanitizer()->getString('ordering'));
-            $this->setOption('useOrderingClause', $this->getSanitizer()->getCheckbox('useOrderingClause'));
-            $this->setOption('useFilteringClause', $this->getSanitizer()->getCheckbox('useFilteringClause'));
+            $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+            $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+            $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 120]));
+            $this->setOption('speed', $sanitizedParams->getInt('speed', ['default' => 2]));
+            $this->setOption('name', $sanitizedParams->getString('name'));
+            $this->setOption('effect', $sanitizedParams->getString('effect'));
+            $this->setOption('durationIsPerItem', $sanitizedParams->getCheckbox('durationIsPerItem'));
+            $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
+            $this->setOption('itemsSideBySide', $sanitizedParams->getCheckbox('itemsSideBySide'));
+            $this->setOption('upperLimit', $sanitizedParams->getInt('upperLimit', ['default' => 0]));
+            $this->setOption('lowerLimit', $sanitizedParams->getInt('lowerLimit', ['default' => 0]));
+            $this->setOption('itemsPerPage', $sanitizedParams->getInt('itemsPerPage'));
+            $this->setOption('backgroundColor', $sanitizedParams->getString('backgroundColor'));
+            $this->setRawNode('noDataMessage', $request->getParam('noDataMessage', ''));
+            $this->setOption('noDataMessage_advanced', $sanitizedParams->getCheckbox('noDataMessage_advanced'));
+            $this->setRawNode('javaScript', $request->getParam('javaScript', ''));
+            $this->setOption('filter', $request->getParam('filter', null));
+            $this->setOption('ordering', $sanitizedParams->getString('ordering'));
+            $this->setOption('useOrderingClause', $sanitizedParams->getCheckbox('useOrderingClause'));
+            $this->setOption('useFilteringClause', $sanitizedParams->getCheckbox('useFilteringClause'));
 
             // Order and Filter criteria
-            $orderClauses = $this->getSanitizer()->getStringArray('orderClause');
-            $orderClauseDirections = $this->getSanitizer()->getStringArray('orderClauseDirection');
+            $orderClauses = $sanitizedParams->getArray('orderClause');
+            $orderClauseDirections = $sanitizedParams->getArray('orderClauseDirection');
             $orderClauseMapping = [];
 
             $i = -1;
@@ -413,10 +417,10 @@ class DataSetTicker extends ModuleWidget
 
             $this->setOption('orderClauses', json_encode($orderClauseMapping));
 
-            $filterClauses = $this->getSanitizer()->getStringArray('filterClause');
-            $filterClauseOperator = $this->getSanitizer()->getStringArray('filterClauseOperator');
-            $filterClauseCriteria = $this->getSanitizer()->getStringArray('filterClauseCriteria');
-            $filterClauseValue = $this->getSanitizer()->getStringArray('filterClauseValue');
+            $filterClauses = $sanitizedParams->getArray('filterClause');
+            $filterClauseOperator = $sanitizedParams->getArray('filterClauseOperator');
+            $filterClauseCriteria = $sanitizedParams->getArray('filterClauseCriteria');
+            $filterClauseValue = $sanitizedParams->getArray('filterClauseValue');
             $filterClauseMapping = [];
 
             $i = -1;
@@ -438,9 +442,9 @@ class DataSetTicker extends ModuleWidget
             $this->setOption('filterClauses', json_encode($filterClauseMapping));
 
             // DataSet Tickers always have Templates provided.
-            $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
-            $this->setOption('ta_text_advanced', $this->getSanitizer()->getCheckbox('ta_text_advanced'));
-            $this->setRawNode('css', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('css', null)));
+            $this->setRawNode('template', $request->getParam('ta_text', $request->getParam('template', null)));
+            $this->setOption('ta_text_advanced', $sanitizedParams->getCheckbox('ta_text_advanced'));
+            $this->setRawNode('css', $request->getParam('ta_css', $request->getParam('css', null)));
 
             $this->isValid();
         }
@@ -454,10 +458,9 @@ class DataSetTicker extends ModuleWidget
     {
         // Load in the template
         $data = [];
-        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
-        $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
+        $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
 
         // Information from the Module
         $itemsSideBySide = $this->getOption('itemsSideBySide', 0);
@@ -472,21 +475,22 @@ class DataSetTicker extends ModuleWidget
         $css = $this->getRawNode('css', '');
         
         // Parse library references on the template
-        $text = $this->parseLibraryReferences($isPreview, $text);
+        $text = $this->parseLibraryReferences($this->isPreview(), $text);
 
         // Parse library references on the CSS Node
-        $css = $this->parseLibraryReferences($isPreview, $css);
+        $css = $this->parseLibraryReferences($this->isPreview(), $css);
 
         // Get the JavaScript node
-        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
+        $javaScript = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', ''));
 
         // Handle older layouts that have a direction node but no effect node
         $oldDirection = $this->getOption('direction', 'none');
 
-        if ($oldDirection == 'single')
+        if ($oldDirection == 'single') {
             $oldDirection = 'noTransition';
-        else if ($oldDirection != 'none')
+        } else if ($oldDirection != 'none') {
             $oldDirection = 'marquee' . ucfirst($oldDirection);
+        }
 
         $effect = $this->getOption('effect', $oldDirection);
 
@@ -514,7 +518,7 @@ class DataSetTicker extends ModuleWidget
             if ($noDataMessage != '') {
                 $items[] = $noDataMessage;
             } else {
-                $this->getLog()->info('Request failed for dataSet id=%d. Widget=%d. Due to No Records Found', $this->getOption('dataSetId'), $this->getWidgetId());
+                $this->getLog()->info(sprintf('Request failed for dataSet id=%d. Widget=%d. Due to No Records Found', $this->getOption('dataSetId'), $this->getWidgetId()));
                 return '';
             }
         }
@@ -554,7 +558,7 @@ class DataSetTicker extends ModuleWidget
         }
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . (($this->isPreview()) ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
         // Replace the Head Content with our generated javascript
@@ -741,7 +745,7 @@ class DataSetTicker extends ModuleWidget
                 $timeZone = $display->getSetting('displayTimeZone', '');
                 $timeZone = ($timeZone == '') ? $this->getConfig()->getSetting('defaultTimezone') : $timeZone;
                 $dateNow->timezone($timeZone);
-                $this->getLog()->debug('Display Timezone Resolved: %s. Time: %s.', $timeZone, $dateNow->toDateTimeString());
+                $this->getLog()->debug(sprintf('Display Timezone Resolved: %s. Time: %s.', $timeZone, $dateNow->toDateTimeString()));
             }
 
             $this->getStore()->setTimeZone($this->getDate()->getLocalDate($dateNow, 'P'));
@@ -792,7 +796,7 @@ class DataSetTicker extends ModuleWidget
                                 }
                             }
                             catch (NotFoundException $e) {
-                                $this->getLog()->error('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId);
+                                $this->getLog()->error(sprintf('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId));
                                 $replace = '';
                             }
                         }
@@ -834,9 +838,9 @@ class DataSetTicker extends ModuleWidget
             throw new InvalidArgumentException(__('Please select a DataSet'), 'dataSetId');
 
         // Check we have permission to use this DataSetId
-        // FIXME: Call to a member function checkViewable() on null
-        //if (!$this->getUser()->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId'))))
-            //throw new InvalidArgumentException(__('You do not have permission to use that dataset'), 'dataSetId');
+        if (!$this->getUser()->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId')))) {
+            throw new InvalidArgumentException(__('You do not have permission to use that dataset'), 'dataSetId');
+        }
 
         if ($this->widget->widgetId != 0) {
             // Some extra edit validation

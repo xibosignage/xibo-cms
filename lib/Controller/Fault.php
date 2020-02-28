@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-13 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,14 +21,17 @@
  */
 namespace Xibo\Controller;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LogFactory;
 use Xibo\Helper\Environment;
 use Xibo\Helper\Random;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
@@ -50,7 +54,7 @@ class Fault extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -59,19 +63,30 @@ class Fault extends Base
      * @param StorageServiceInterface $store
      * @param LogFactory $logFactory
      * @param DisplayFactory $displayFactory
+     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $logFactory, $displayFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $logFactory, $displayFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->store = $store;
         $this->logFactory = $logFactory;
         $this->displayFactory = $displayFactory;
     }
 
-    function displayPage()
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
+    function displayPage(Request $request, Response $response)
     {
-        $url = $this->getApp()->request()->getUrl() . $this->getApp()->request()->getPathInfo();
+        $url = $request->getUri() . $request->getUri()->getPath();
 
         $config = $this->getConfig();
         $data = [
@@ -84,11 +99,19 @@ class Fault extends Base
 
         $this->getState()->template = 'fault-page';
         $this->getState()->setData($data);
+
+        return $this->render($request,$response);
     }
 
-    public function collect()
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @throws \Xibo\Exception\XiboException
+     */
+    public function collect(Request $request, Response $response)
     {
         $this->setNoOutput(true);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Create a ZIP file
         $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . Random::generateString();
@@ -99,15 +122,16 @@ class Fault extends Base
             throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: ' . $result));
 
         // Decide what we output based on the options selected.
-        $outputVersion = $this->getSanitizer()->getCheckbox('outputVersion') == 1;
-        $outputLog = $this->getSanitizer()->getCheckbox('outputLog') == 1;
-        $outputEnvCheck = $this->getSanitizer()->getCheckbox('outputEnvCheck') == 1;
-        $outputSettings = $this->getSanitizer()->getCheckbox('outputSettings') == 1;
-        $outputDisplays = $this->getSanitizer()->getCheckbox('outputDisplays') == 1;
-        $outputDisplayProfile = $this->getSanitizer()->getCheckbox('outputDisplayProfile') == 1;
+        $outputVersion = $sanitizedParams->getCheckbox('outputVersion') == 1;
+        $outputLog = $sanitizedParams->getCheckbox('outputLog') == 1;
+        $outputEnvCheck = $sanitizedParams->getCheckbox('outputEnvCheck') == 1;
+        $outputSettings = $sanitizedParams->getCheckbox('outputSettings') == 1;
+        $outputDisplays = $sanitizedParams->getCheckbox('outputDisplays') == 1;
+        $outputDisplayProfile = $sanitizedParams->getCheckbox('outputDisplayProfile') == 1;
 
-        if (!$outputVersion && !$outputLog && !$outputEnvCheck && !$outputSettings && !$outputDisplays && !$outputDisplayProfile)
+        if (!$outputVersion && !$outputLog && !$outputEnvCheck && !$outputSettings && !$outputDisplays && !$outputDisplayProfile) {
             throw new \InvalidArgumentException(__('Please select at least one option'));
+        }
 
         $environmentVariables = [
             'app_ver' => Environment::$WEBSITE_VERSION_NAME,
@@ -187,12 +211,12 @@ class Fault extends Base
         // Send via Apache X-Sendfile header?
         if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Apache') {
             header("X-Sendfile: $tempFileName");
-            $this->getApp()->halt(200);
+            $response->withStatus(200);
         }
         // Send via Nginx X-Accel-Redirect?
         if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Nginx') {
             header("X-Accel-Redirect: /download/temp/" . basename($tempFileName));
-            $this->getApp()->halt(200);
+            $response->withStatus(200);
         }
 
         // Return the file with PHP
@@ -204,7 +228,17 @@ class Fault extends Base
         exit;
     }
 
-    public function debugOn()
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
+    public function debugOn(Request $request, Response $response)
     {
         $this->getConfig()->changeSetting('audit', 'DEBUG');
         $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', $this->getDate()->parse()->addMinutes(30)->format('U'));
@@ -213,9 +247,21 @@ class Fault extends Base
         $this->getState()->hydrate([
             'message' => __('Switched to Debug Mode')
         ]);
+
+        return $this->render($request, $response);
     }
 
-    public function debugOff()
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
+    public function debugOff(Request $request, Response $response)
     {
         $this->getConfig()->changeSetting('audit', $this->getConfig()->getSetting('RESTING_LOG_LEVEL'));
         $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', '');
@@ -224,5 +270,7 @@ class Fault extends Base
         $this->getState()->hydrate([
             'message' => __('Switched to Normal Mode')
         ]);
+
+        return $this->render($request, $response);
     }
 }

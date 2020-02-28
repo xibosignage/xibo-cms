@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (CampaignFactory.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -113,11 +114,11 @@ class CampaignFactory extends BaseFactory
     {
         $this->getLog()->debug('CampaignFactory getById(%d)', $campaignId);
 
-        $campaigns = $this->query(null, array('disableUserCheck' => 1, 'campaignId' => $campaignId, 'isLayoutSpecific' => -1, 'excludeTemplates' => -1));
+        $campaigns = $this->query(null, ['disableUserCheck' => 1, 'campaignId' => $campaignId, 'isLayoutSpecific' => -1, 'excludeTemplates' => -1]);
 
         if (count($campaigns) <= 0) {
             $this->getLog()->debug('Campaign not found with ID %d', $campaignId);
-            throw new NotFoundException(\__('Campaign not found'));
+            throw new NotFoundException(__('Campaign not found'));
         }
 
         // Set our layout
@@ -150,13 +151,16 @@ class CampaignFactory extends BaseFactory
      * @param array $filterBy
      * @return array[Campaign]
      */
-    public function query($sortOrder = null, $filterBy = array(), $options = array())
+    public function query($sortOrder = null, $filterBy = [], $options = [])
     {
-        if ($sortOrder == null)
-            $sortOrder = array('campaign');
+        $sanitizedFilter = $this->getSanitizer($filterBy);
 
-        $campaigns = array();
-        $params = array();
+        if ($sortOrder == null) {
+            $sortOrder = ['campaign'];
+        }
+
+        $campaigns = [];
+        $params = [];
 
         $select = '
         SELECT `campaign`.campaignId, `campaign`.campaign, `campaign`.isLayoutSpecific, `campaign`.userId AS ownerId,
@@ -195,31 +199,31 @@ class CampaignFactory extends BaseFactory
         // View Permissions
         $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, '`campaign`.campaignId', '`campaign`.userId', $filterBy);
 
-        if ($this->getSanitizer()->getString('isLayoutSpecific', 0, $filterBy) != -1) {
+        if ($sanitizedFilter->getInt('isLayoutSpecific', ['default' => 0]) != -1) {
             // Exclude layout specific campaigns
             $body .= " AND `campaign`.isLayoutSpecific = :isLayoutSpecific ";
-            $params['isLayoutSpecific'] = $this->getSanitizer()->getString('isLayoutSpecific', 0, $filterBy);
+            $params['isLayoutSpecific'] = $sanitizedFilter->getInt('isLayoutSpecific', ['default' => 0]);
         }
 
-        if ($this->getSanitizer()->getString('campaignId', 0, $filterBy) != 0) {
+        if ($sanitizedFilter->getInt('campaignId', ['default' => 0]) != 0) {
             // Join Campaign back onto it again
             $body .= " AND `campaign`.campaignId = :campaignId ";
-            $params['campaignId'] = $this->getSanitizer()->getString('campaignId', 0, $filterBy);
+            $params['campaignId'] = $sanitizedFilter->getInt('campaignId', ['default' => 0]);
         }
 
-        if ($this->getSanitizer()->getString('ownerId', 0, $filterBy) != 0) {
+        if ($sanitizedFilter->getInt('ownerId', ['default' => 0]) != 0) {
             // Join Campaign back onto it again
             $body .= " AND `campaign`.userId = :ownerId ";
-            $params['ownerId'] = $this->getSanitizer()->getString('ownerId', 0, $filterBy);
+            $params['ownerId'] = $sanitizedFilter->getInt('ownerId', ['default' => 0]);
         }
 
-        if ($this->getSanitizer()->getString('layoutId', 0, $filterBy) != 0) {
+        if ($sanitizedFilter->getInt('layoutId', ['default' => 0]) != 0) {
             // Filter by Layout
             $body .= " AND `lkcampaignlayout`.layoutId = :layoutId ";
-            $params['layoutId'] = $this->getSanitizer()->getString('layoutId', 0, $filterBy);
+            $params['layoutId'] = $sanitizedFilter->getInt('layoutId', ['default' => 0]);
         }
         
-        if ($this->getSanitizer()->getString('hasLayouts', 0, $filterBy) != 0) {
+        if ($sanitizedFilter->getInt('hasLayouts', ['default' => 0]) != 0) {
 
             $body .= " AND (
                 SELECT COUNT(*)
@@ -227,13 +231,13 @@ class CampaignFactory extends BaseFactory
                 WHERE lkcampaignlayout.campaignId = `campaign`.campaignId
                 )";
     
-            $body .= ($this->getSanitizer()->getString('hasLayouts', 0, $filterBy) == 1) ? " = 0 " : " > 0";
+            $body .= ($sanitizedFilter->getInt('hasLayouts', ['default' => 0]) == 1) ? " = 0 " : " > 0";
         }
 
         // Tags
-        if ($this->getSanitizer()->getString('tags', $filterBy) != '') {
+        if ($sanitizedFilter->getString('tags') != '') {
 
-            $tagFilter = $this->getSanitizer()->getString('tags', $filterBy);
+            $tagFilter = $sanitizedFilter->getString('tags');
 
             if (trim($tagFilter) === '--no-tag') {
                 $body .= ' AND `campaign`.campaignID NOT IN (
@@ -244,7 +248,7 @@ class CampaignFactory extends BaseFactory
                     )
                 ';
             } else {
-                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+                $operator = $sanitizedFilter->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
 
                 $body .= " AND campaign.campaignID IN (
                 SELECT lktagcampaign.campaignId
@@ -258,14 +262,14 @@ class CampaignFactory extends BaseFactory
             }
         }
 
-        if ($this->getSanitizer()->getString('name', $filterBy) != '') {
-            $terms = explode(',', $this->getSanitizer()->getString('name', $filterBy));
+        if ($sanitizedFilter->getString('name') != '') {
+            $terms = explode(',', $sanitizedFilter->getString('name'));
             $this->nameFilter('campaign', 'Campaign', $terms, $body, $params);
         }
 
         // Exclude templates by default
-        if ($this->getSanitizer()->getInt('excludeTemplates', 1, $filterBy) != -1) {
-            if ($this->getSanitizer()->getInt('excludeTemplates', 1, $filterBy) == 1) {
+        if ($sanitizedFilter->getInt('excludeTemplates', ['default' => 1]) != -1) {
+            if ($sanitizedFilter->getInt('excludeTemplates', ['default' => 1]) == 1) {
                 $body .= " AND `campaign`.campaignId NOT IN (SELECT `campaignId` FROM `lkcampaignlayout` WHERE layoutId IN (SELECT layoutId FROM lktaglayout INNER JOIN tag ON lktaglayout.tagId = tag.tagId WHERE tag = 'template')) ";
             } else {
                 $body .= " AND `campaign`.campaignId IN (SELECT `campaignId` FROM `lkcampaignlayout` WHERE layoutId IN (SELECT layoutId FROM lktaglayout INNER JOIN tag ON lktaglayout.tagId = tag.tagId WHERE tag = 'template')) ";
@@ -274,13 +278,13 @@ class CampaignFactory extends BaseFactory
 
         $group = 'GROUP BY `campaign`.CampaignID, Campaign, IsLayoutSpecific, `campaign`.userId ';
 
-        if ($this->getSanitizer()->getInt('retired', -1, $filterBy) != -1) {
+        if ($sanitizedFilter->getInt('retired', ['default' => -1]) != -1) {
             $group .= ' HAVING retired = :retired ';
-            $params['retired'] = $this->getSanitizer()->getInt('retired', $filterBy);
+            $params['retired'] = $sanitizedFilter->getInt('retired');
 
-            if ($this->getSanitizer()->getInt('includeCampaignId', $filterBy) !== null) {
+            if ($sanitizedFilter->getInt('includeCampaignId') !== null) {
                 $group .= ' OR campaign.campaignId = :includeCampaignId ';
-                $params['includeCampaignId'] = $this->getSanitizer()->getInt('includeCampaignId', $filterBy);
+                $params['includeCampaignId'] = $sanitizedFilter->getInt('includeCampaignId');
             }
         }
 
@@ -299,14 +303,14 @@ class CampaignFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $intProperties = ['intProperties' => ['numberLayouts', 'isLayoutSpecific']];
 
         // Layout durations
-        if ($this->getSanitizer()->getInt('totalDuration', 0, $options) != 0) {
+        if ($sanitizedFilter->getInt('totalDuration', ['default' => 0]) != 0) {
             $select .= ", SUM(`layout`.duration) AS totalDuration";
             $intProperties = ['intProperties' => ['numberLayouts', 'totalDuration', 'displayOrder']];
         }
@@ -320,7 +324,7 @@ class CampaignFactory extends BaseFactory
 
         // Paging
         if ($limit != '' && count($campaigns) > 0) {
-            if ($this->getSanitizer()->getInt('retired', -1, $filterBy) != -1) {
+            if ($sanitizedFilter->getInt('retired', ['default' => -1]) != -1) {
                 $body .= ' AND layout.retired = :retired ';
             }
 

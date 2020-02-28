@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -21,7 +21,8 @@
  */
 namespace Xibo\Widget;
 
-use Xibo\Factory\ModuleFactory;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\PlayerVersionFactory;
 
 /**
@@ -33,8 +34,7 @@ class PlayerSoftware extends ModuleWidget
     public $codeSchemaVersion = 1;
 
     /**
-     * Install or Update this module
-     * @param ModuleFactory $moduleFactory
+     * @inheritDoc
      */
     public function installOrUpdate($moduleFactory)
     {
@@ -64,15 +64,16 @@ class PlayerSoftware extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function edit()
+    public function edit(Request $request, Response $response): Response
     {
         // Non-editable
+        return $response;
     }
 
     /** @inheritdoc */
     public function getResource($displayId = 0)
     {
-        $this->download();
+        return '';
     }
 
     /** @inheritdoc */
@@ -82,15 +83,8 @@ class PlayerSoftware extends ModuleWidget
         return 1;
     }
 
-    /**
-     * @return PlayerVersionFactory
-     */
-    private function getPlayerVersionFactory()
-    {
-        return $this->getApp()->container->get('playerVersionFactory');
-    }
-
-    public function postProcess($media)
+    /** @inheritDoc */
+    public function postProcess($media, PlayerVersionFactory $factory = null)
     {
         $version = '';
         $code = null;
@@ -155,9 +149,12 @@ class PlayerSoftware extends ModuleWidget
             $type = 'sssp';
         }
 
-        return $this->getPlayerVersionFactory()->create($type, $version, $code, $media->mediaId, $playerShowVersion);
+        return $factory->create($type, $version, $code, $media->mediaId, $playerShowVersion);
     }
 
+    /**
+     * @inheritDoc
+     */
     public function getValidExtensions()
     {
         return $this->module->validExtensions;

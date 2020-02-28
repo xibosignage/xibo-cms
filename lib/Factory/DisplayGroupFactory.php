@@ -1,13 +1,27 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (DisplayGroup.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
 namespace Xibo\Factory;
-
 
 use Xibo\Entity\DisplayGroup;
 use Xibo\Entity\User;
@@ -217,9 +231,11 @@ class DisplayGroupFactory extends BaseFactory
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[DisplayGroup]
+     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
     {
+        $parsedBody = $this->getSanitizer($filterBy);
         if ($sortOrder == null)
             $sortOrder = ['displayGroup'];
 
@@ -258,65 +274,63 @@ class DisplayGroupFactory extends BaseFactory
               FROM `displaygroup`
         ';
 
-        if ($this->getSanitizer()->getInt('mediaId', $filterBy) !== null) {
+        if ($parsedBody->getInt('mediaId') !== null) {
             $body .= '
                 INNER JOIN lkmediadisplaygroup
                 ON lkmediadisplaygroup.displayGroupId = `displaygroup`.displayGroupId
                     AND lkmediadisplaygroup.mediaId = :mediaId
             ';
-            $params['mediaId'] = $this->getSanitizer()->getInt('mediaId', $filterBy);
+            $params['mediaId'] = $parsedBody->getInt('mediaId');
         }
 
-        if ($this->getSanitizer()->getInt('eventId', $filterBy) !== null) {
+        if ($parsedBody->getInt('eventId') !== null) {
             $body .= '
                 INNER JOIN `lkscheduledisplaygroup`
                 ON `lkscheduledisplaygroup`.displayGroupId = `displaygroup`.displayGroupId
                     AND `lkscheduledisplaygroup`.eventId = :eventId
             ';
-            $params['eventId'] = $this->getSanitizer()->getInt('eventId', $filterBy);
+            $params['eventId'] = $parsedBody->getInt('eventId');
         }
 
         $body .= ' WHERE 1 = 1 ';
 
         // View Permissions
         $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, '`displaygroup`.displayGroupId', '`displaygroup`.userId', $filterBy);
-
-        if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
+        if ($parsedBody->getInt('displayGroupId') !== null) {
             $body .= ' AND displaygroup.displayGroupId = :displayGroupId ';
-            $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
+            $params['displayGroupId'] = $parsedBody->getInt('displayGroupId');
         }
 
-        if ($this->getSanitizer()->getInt('parentId', $filterBy) !== null) {
+        if ($parsedBody->getInt('parentId') !== null) {
             $body .= ' AND `displaygroup`.displayGroupId IN (SELECT `childId` FROM `lkdgdg` WHERE `parentId` = :parentId AND `depth` = 1) ';
-            $params['parentId'] = $this->getSanitizer()->getInt('parentId', $filterBy);
+            $params['parentId'] = $parsedBody->getInt('parentId');
         }
 
-        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
+        if ($parsedBody->getInt('userId') !== null) {
             $body .= ' AND `displaygroup`.userId = :userId ';
-            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
+            $params['userId'] = $parsedBody->getInt('userId');
         }
 
-        if ($this->getSanitizer()->getInt('isDisplaySpecific', 0, $filterBy) != -1) {
+        if ($parsedBody->getInt('isDisplaySpecific', ['default' => 0]) != -1) {
             $body .= ' AND displaygroup.isDisplaySpecific = :isDisplaySpecific ';
-            $params['isDisplaySpecific'] = $this->getSanitizer()->getInt('isDisplaySpecific', 0, $filterBy);
+            $params['isDisplaySpecific'] = $parsedBody->getInt('isDisplaySpecific', ['default' => 0]);
         }
 
-        if ($this->getSanitizer()->getInt('isDynamic', $filterBy) !== null) {
+        if ($parsedBody->getInt('isDynamic') !== null) {
             $body .= ' AND `displaygroup`.isDynamic = :isDynamic ';
-            $params['isDynamic'] = $this->getSanitizer()->getInt('isDynamic', $filterBy);
+            $params['isDynamic'] = $parsedBody->getInt('isDynamic');
         }
-
-        if ($this->getSanitizer()->getString('dynamicCriteria', $filterBy) !== null) {
+        if (!empty($parsedBody->getString('dynamicCriteria'))) {
             $body .= ' AND `displaygroup`.dynamicCriteria = :dynamicCriteria ';
-            $params['dynamicCriteria'] = $this->getSanitizer()->getString('dynamicCriteria', $filterBy);
+            $params['dynamicCriteria'] = $parsedBody->getString('dynamicCriteria');
         }
 
-        if ($this->getSanitizer()->getInt('displayId', $filterBy) !== null) {
+        if ($parsedBody->getInt('displayId') !== null) {
             $body .= ' AND displaygroup.displayGroupId IN (SELECT displayGroupId FROM lkdisplaydg WHERE displayId = :displayId) ';
-            $params['displayId'] = $this->getSanitizer()->getInt('displayId', $filterBy);
+            $params['displayId'] = $parsedBody->getInt('displayId');
         }
 
-        if ($this->getSanitizer()->getInt('nestedDisplayId', $filterBy) !== null) {
+        if ($parsedBody->getInt('nestedDisplayId') !== null) {
             $body .= ' 
                 AND displaygroup.displayGroupId IN (
                     SELECT DISTINCT parentId
@@ -326,24 +340,24 @@ class DisplayGroupFactory extends BaseFactory
                      WHERE displayId = :nestedDisplayId
                 ) 
             ';
-            $params['nestedDisplayId'] = $this->getSanitizer()->getInt('nestedDisplayId', $filterBy);
+            $params['nestedDisplayId'] = $parsedBody->getInt('nestedDisplayId');
         }
 
-        if ($this->getSanitizer()->getInt('notificationId', $filterBy) !== null) {
+        if ($parsedBody->getInt('notificationId') !== null) {
             $body .= ' AND displaygroup.displayGroupId IN (SELECT displayGroupId FROM `lknotificationdg` WHERE notificationId = :notificationId) ';
-            $params['notificationId'] = $this->getSanitizer()->getInt('notificationId', $filterBy);
+            $params['notificationId'] = $parsedBody->getInt('notificationId');
         }
 
         // Filter by DisplayGroup Name?
-        if ($this->getSanitizer()->getString('displayGroup', $filterBy) != null) {
-            $terms = explode(',', $this->getSanitizer()->getString('displayGroup', $filterBy));
+        if ($parsedBody->getString('displayGroup') != null) {
+            $terms = explode(',', $parsedBody->getString('displayGroup'));
             $this->nameFilter('displaygroup', 'displayGroup', $terms, $body, $params);
         }
 
         // Tags
-        if ($this->getSanitizer()->getString('tags', $filterBy) != '') {
+        if ($parsedBody->getString('tags') != '') {
 
-            $tagFilter = $this->getSanitizer()->getString('tags', $filterBy);
+            $tagFilter = $parsedBody->getString('tags');
 
             if (trim($tagFilter) === '--no-tag') {
                 $body .= ' AND `displaygroup`.displaygroupId NOT IN (
@@ -354,7 +368,7 @@ class DisplayGroupFactory extends BaseFactory
                     )
                 ';
             } else {
-                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+                $operator = $parsedBody->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
 
                 $body .= " AND `displaygroup`.displaygroupId IN (
                 SELECT `lktagdisplaygroup`.displaygroupId
@@ -368,11 +382,11 @@ class DisplayGroupFactory extends BaseFactory
             }
         }
 
-        if ($this->getSanitizer()->getInt('displayGroupIdMembers', $filterBy) !== null) {
+        if ($parsedBody->getInt('displayGroupIdMembers') !== null) {
             $members = [];
             foreach ($this->getStore()->select($select . $body, $params) as $row) {
-                $displayGroupId = $this->getSanitizer()->int($row['displayGroupId']);
-                $parentId = $this->getSanitizer()->getInt('displayGroupIdMembers', $filterBy);
+                $displayGroupId = $parsedBody->getInt($row['displayGroupId']);
+                $parentId = $parsedBody->getInt('displayGroupIdMembers');
 
                 if ($this->getStore()->exists('SELECT `childId` FROM `lkdgdg` WHERE `parentId` = :parentId AND `childId` = :childId AND `depth` = 1',
                     [
@@ -405,13 +419,13 @@ class DisplayGroupFactory extends BaseFactory
         }
 
         if (is_array($sortOrder) && ($sortOrder != ['`member`'] && $sortOrder != ['`member` DESC'] )) {
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+            $order .= ' ORDER BY ' . implode(',', $sortOrder);
         }
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $parsedBody->getInt('start') !== null && $parsedBody->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($parsedBody->getInt('start'), 0) . ', ' . $parsedBody->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

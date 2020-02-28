@@ -25,6 +25,7 @@ use Xibo\Entity\Media;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Task;
 use Xibo\Exception\NotFoundException;
+use Xibo\Exception\XiboException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlaylistFactory;
@@ -107,76 +108,98 @@ class DynamicPlaylistSyncTask implements TaskInterface
 
         // Get all Dynamic Playlists
         foreach ($this->playlistFactory->query(null, ['isDynamic' => 1]) as $playlist) {
-            // We want to detect any differences in what should be assigned to this Playlist.
-            $playlist->load();
+            try {
+                // We want to detect any differences in what should be assigned to this Playlist.
+                $playlist->load();
 
-            $this->log->debug('Assessing Playlist: ' . $playlist->name);
+                $this->log->debug('Assessing Playlist: ' . $playlist->name);
 
-            // Query for media which would be assigned to this Playlist and see if there are any differences
-            $media = $this->mediaFactory->query(null, ['name' => $playlist->filterMediaName, 'tags' => $playlist->filterMediaTags]);
+                // Query for media which would be assigned to this Playlist and see if there are any differences
+                $media = $this->mediaFactory->query(null,
+                    ['name' => $playlist->filterMediaName, 'tags' => $playlist->filterMediaTags]);
 
-            // Work out if the set of widgets is different or not.
-            // This is only the first loose check
-            $different = (count($playlist->widgets) !== count($media));
+                // Work out if the set of widgets is different or not.
+                // This is only the first loose check
+                $different = (count($playlist->widgets) !== count($media));
 
-            $this->log->debug('There are ' . count($media) . ' that should be assigned and ' . count($playlist->widgets) . ' currently assigned. Difference is ' . var_export($different, true));
+                $this->log->debug('There are ' . count($media) . ' that should be assigned and ' . count($playlist->widgets) . ' currently assigned. Difference is ' . var_export($different,
+                        true));
 
-            // Get a simple array of mediaId's out of our complex array of media
-            $mediaIds = array_map(function($element){
-                /** @var $element Media */
-                return $element->mediaId;
-            }, $media);
+                // Get a simple array of mediaId's out of our complex array of media
+                $mediaIds = array_map(function ($element) {
+                    /** @var $element Media */
+                    return $element->mediaId;
+                }, $media);
 
 
-            if (!$different) {
-                // Try a more complete check, using mediaIds
-                $compareMediaIds = $mediaIds;
+                if (!$different) {
+                    // Try a more complete check, using mediaIds
+                    $compareMediaIds = $mediaIds;
 
-                // ordering should be the same, so the first time we get one out of order, we can stop
-                foreach ($playlist->widgets as $widget) {
-                    if ($widget->getPrimaryMediaId() !== $compareMediaIds[0]) {
-                        $different = true;
-                        break;
-                    }
+                    // ordering should be the same, so the first time we get one out of order, we can stop
+                    foreach ($playlist->widgets as $widget) {
+                        try {
+                            if ($widget->getPrimaryMediaId() !== $compareMediaIds[0]) {
+                                $different = true;
+                                break;
+                            }
+                        } catch (NotFoundException $notFoundException) {
+                            $this->log->error('Playlist ' . $playlist->getId() . ' has a Widget without any associated media. widgetId = ' . $widget->getId());
 
-                    array_shift($compareMediaIds);
-                }
-            }
+                            // We ought to recalculate
+                            $different = true;
+                            break;
+                        }
 
-            if ($different) {
-                // We will update this Playlist
-                $count++;
-
-                // Remove the ones no-longer present, add the ones we're missing
-                // we don't delete and re-add the lot to avoid regenerating the widgetIds (makes stats harder to
-                // interpret)
-                foreach ($playlist->widgets as $widget) {
-                    $widgetMediaId = $widget->getPrimaryMediaId();
-
-                    if (!in_array($widgetMediaId, $mediaIds)) {
-                        $playlist->deleteWidget($widget);
-                    } else {
-                        // It's present in the array, so pop it off
-                        $mediaIds = array_diff($mediaIds, [$widgetMediaId]);
+                        array_shift($compareMediaIds);
                     }
                 }
 
-                // Do we have any mediaId's left which should be assigned and aren't?
+                if ($different) {
+                    // We will update this Playlist
+                    $count++;
 
-                // Add the ones we have left
-                $assignmentMade = false;
-                foreach ($media as $item) {
-                    if (in_array($item->mediaId, $mediaIds)) {
-                        $assignmentMade = true;
-                        $this->createAndAssign($playlist, $item, $count);
+                    // Remove the ones no-longer present, add the ones we're missing
+                    // we don't delete and re-add the lot to avoid regenerating the widgetIds (makes stats harder to
+                    // interpret)
+                    foreach ($playlist->widgets as $widget) {
+                        try {
+                            $widgetMediaId = $widget->getPrimaryMediaId();
+
+                            if (!in_array($widgetMediaId, $mediaIds)) {
+                                $playlist->deleteWidget($widget);
+                            } else {
+                                // It's present in the array, so pop it off
+                                $mediaIds = array_diff($mediaIds, [$widgetMediaId]);
+                            }
+
+                        } catch (NotFoundException $exception) {
+                            // Delete it
+                            $playlist->deleteWidget($widget);
+                        }
                     }
+
+                    // Do we have any mediaId's left which should be assigned and aren't?
+                    // Add the ones we have left
+                    $assignmentMade = false;
+                    foreach ($media as $item) {
+                        if (in_array($item->mediaId, $mediaIds)) {
+                            $assignmentMade = true;
+                            $this->createAndAssign($playlist, $item, $count);
+                        }
+                    }
+
+                    if ($assignmentMade) {
+                        $playlist->save();
+                    }
+                } else {
+                    $this->log->debug('No differences detected');
                 }
 
-                if ($assignmentMade) {
-                    $playlist->save();
-                }
-            } else {
-                $this->log->debug('No differences detected');
+            } catch (XiboException $exception) {
+                $this->log->debug($exception->getTraceAsString());
+                $this->log->error('Problem with PlaylistId: ' . $playlist->getId() . ', e = ' . $exception->getMessage());
+                $this->appendRunMessage('Error with Playlist: ' . $playlist->name);
             }
         }
 

@@ -1,8 +1,23 @@
 {#
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (${FILE_NAME})
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
 
@@ -33,7 +48,7 @@
             <li><a href="#cacheTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
         </ul>
         <div class="col-md-12">
-            <form id="twitterMetroEditForm" class="XiboForm form-horizontal" method="put" action="{{ urlFor("module.widget.edit", {id: module.widget.widgetId}) }}">
+            <form id="twitterMetroEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
                  <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}
@@ -137,7 +152,7 @@
                     <div class="tab-pane" id="colorsTemplateTab">
                         {% set title %}{% trans "Template Colours" %}{% endset %}
                         {% set helpText %}{% trans "Select the template colours you would like to apply." %}{% endset %}
-                        {{ forms.dropdown("colorTemplateId", "single", title, module.getOption("colorTemplateId"), module.templatesAvailable(), "id", "value", helpText, "selectPicker selectPickerWithImage template-selector-control", null, null, null, null, null, "image") }}
+                        {{ forms.dropdown("colorTemplateId", "single", title, module.getOption("colorTemplateId"), templatesAvailable, "id", "value", helpText, "selectPicker selectPickerWithImage template-selector-control", null, null, null, null, null, "image") }}
             
                         {% set title %}{% trans "Override the template?" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}

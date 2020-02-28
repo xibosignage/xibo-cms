@@ -157,3 +157,21 @@
 .cal-event-breadcrumb-trail #content {
     text-align: center;
 }
+
+#CalendarContainer .cal-events-num {
+    margin-top: 15px;
+    background-color: #5bc0de;
+}
+
+.cal-month-day-number-events {
+    position: absolute;
+    display: none;
+    top: 5px;
+    left: 5px;
+    border-radius: 0.5em;
+    border-top-left-radius: 0;
+}
+
+.cal-cell:hover .cal-month-day-number-events {
+    display: block;
+}

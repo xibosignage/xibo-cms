@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (BaseFactory.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -10,7 +25,7 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\User;
-use Xibo\Service\FactoryServiceInterface;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -38,7 +53,7 @@ class BaseFactory
     private $log;
 
     /**
-     * @var SanitizerServiceInterface
+     * @var SanitizerService
      */
     private $sanitizerService;
 
@@ -101,11 +116,12 @@ class BaseFactory
 
     /**
      * Get Sanitizer
-     * @return SanitizerServiceInterface
+     * @param $array
+     * @return \Xibo\Support\Sanitizer\SanitizerInterface
      */
-    protected function getSanitizer()
+    protected function getSanitizer($array)
     {
-        return $this->sanitizerService;
+        return $this->sanitizerService->getSanitizer($array);
     }
 
     /**
@@ -143,25 +159,27 @@ class BaseFactory
      * @param $idColumn
      * @param null $ownerColumn
      * @param array $filterBy
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function viewPermissionSql($entity, &$sql, &$params, $idColumn, $ownerColumn = null, $filterBy = [])
     {
-        $checkUserId = $this->getSanitizer()->getInt('userCheckUserId', $filterBy);
+        $parsedBody = $this->getSanitizer($filterBy);
+        $checkUserId = $parsedBody->getInt('userCheckUserId');
 
         if ($checkUserId !== null) {
-            $this->getLog()->debug('Checking permissions against a specific user: %d', $checkUserId);
+            $this->getLog()->debug(sprintf('Checking permissions against a specific user: %d', $checkUserId));
             $user = $this->getUserFactory()->getById($checkUserId);
         }
         else {
             $user = $this->getUser();
 
             if ($user !== null)
-                $this->getLog()->debug('Checking permissions against the logged in user: ID: %d, Name: %s, UserType: %d', $user->userId, $user->userName, $user->userTypeId);
+                $this->getLog()->debug(sprintf('Checking permissions against the logged in user: ID: %d, Name: %s, UserType: %d', $user->userId, $user->userName, $user->userTypeId));
         }
 
         $permissionSql = '';
 
-        if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0 && ($user->userTypeId != 1 && $user->userTypeId != 4)) {
+        if ($parsedBody->getCheckbox('disableUserCheck') == 0 && (!$user->isSuperAdmin())) {
             $permissionSql .= '
               AND (' . $idColumn . ' IN (
                 SELECT `permission`.objectId

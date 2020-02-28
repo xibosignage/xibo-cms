@@ -1,15 +1,31 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
- * (Xmr.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-
 namespace Xibo\Middleware;
 
-use Slim\Middleware;
-use Slim\Slim;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\MiddlewareInterface as Middleware;
+use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Slim\App as App;
 use Xibo\Exception\XiboException;
 use Xibo\Service\DisplayNotifyService;
 use Xibo\Service\PlayerActionService;
@@ -17,77 +33,100 @@ use Xibo\Service\PlayerActionService;
 /**
  * Class Xmr
  * @package Xibo\Middleware
+ *
+ * NOTE: This must be the very last layer in the onion
  */
-class Xmr extends Middleware
+class Xmr implements Middleware
 {
+    /* @var App $app */
+    private $app;
+
+    /**
+     * Xmr constructor.
+     * @param $app
+     */
+    public function __construct($app)
+    {
+        $this->app = $app;
+    }
+
     /**
      * Call
+     * @param Request $request
+     * @param RequestHandler $handler
+     * @return Response
      */
-    public function call()
+    public function process(Request $request, RequestHandler $handler): Response
     {
-        $app = $this->getApplication();
+        $app = $this->app;
 
-        $app->hook('slim.before', function() {
+        // Start
+        self::setXmr($app);
 
-            $app = $this->app;
-
-            self::setXmr($app);
-        });
-
-        $this->next->call();
+        // Pass along the request
+        $response = $handler->handle($request);
 
         // Finish
+        // this must happen at the very end of the request
         self::finish($app);
+
+        // Return the response to the browser
+        return $response;
     }
 
     /**
      * Finish XMR
-     * @param Slim $app
+     * @param App $app
      */
     public static function finish($app)
     {
+        $container = $app->getContainer();
         // Handle display notifications
-        if ($app->displayNotifyService != null) {
+        if ($container->get('displayNotifyService') != null) {
             try {
-                $app->displayNotifyService->processQueue();
+                $container->get('displayNotifyService')->processQueue();
             } catch (XiboException $e) {
-                $app->logService->error('Unable to Process Queue of Display Notifications due to %s', $e->getMessage());
+                $container->get('logService')->error('Unable to Process Queue of Display Notifications due to %s', $e->getMessage());
             }
         }
 
         // Handle player actions
-        if ($app->playerActionService != null) {
+        if ($container->get('playerActionService') != null) {
             try {
-                $app->playerActionService->processQueue();
+                $container->get('playerActionService')->processQueue();
             } catch (\Exception $e) {
-                $app->logService->error('Unable to Process Queue of Player actions due to %s', $e->getMessage());
+                $container->get('logService')->error('Unable to Process Queue of Player actions due to %s', $e->getMessage());
             }
         }
     }
 
     /**
      * Set XMR
-     * @param \Slim\Slim $app
+     * @param App $app
      * @param bool $triggerPlayerActions
      */
     public static function setXmr($app, $triggerPlayerActions = true)
     {
         // Player Action Helper
-        $app->container->singleton('playerActionService', function() use ($app, $triggerPlayerActions) {
-            return new PlayerActionService($app->configService, $app->logService, $triggerPlayerActions);
+        $app->getContainer()->set('playerActionService', function() use ($app, $triggerPlayerActions) {
+            return new PlayerActionService(
+                $app->getContainer()->get('configService'),
+                $app->getContainer()->get('logService'),
+                $triggerPlayerActions
+            );
         });
 
         // Register the display notify service
-        $app->container->singleton('displayNotifyService', function () use ($app) {
+        $app->getContainer()->set('displayNotifyService', function () use ($app) {
             return new DisplayNotifyService(
-                $app->configService,
-                $app->logService,
-                $app->store,
-                $app->pool,
-                $app->playerActionService,
-                $app->dateService,
-                $app->scheduleFactory,
-                $app->dayPartFactory
+                $app->getContainer()->get('configService'),
+                $app->getContainer()->get('logService'),
+                $app->getContainer()->get('store'),
+                $app->getContainer()->get('pool'),
+                $app->getContainer()->get('playerActionService'),
+                $app->getContainer()->get('dateService'),
+                $app->getContainer()->get('scheduleFactory'),
+                $app->getContainer()->get('dayPartFactory')
             );
         });
     }

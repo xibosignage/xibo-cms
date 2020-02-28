@@ -3,7 +3,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Layout and jump to the layout designer." %}" href="{{ urlFor("layout.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Layout" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Layout and jump to the layout designer." %}" href="{{ url_for("layout.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Layout" %}</a></li>
         <li class="btn btn-info btn-xs"><a class="btns" id="layoutUploadForm" title="{% trans "Import a Layout from a ZIP file." %}" href="#"> <i class="fa fa-cloud-download" aria-hidden="true"></i> {% trans "Import" %}</a></li>
     </ul>
 {% endblock %}
@@ -128,7 +128,7 @@
                     $.ajax({
                         type: "GET",
                         async: false,
-                        url: "{{ urlFor("user.pref") }}?preference=layoutGrid",
+                        url: "{{ url_for("user.pref") }}?preference=layoutGrid",
                         dataType: 'json',
                         success: function (json) {
                             try {
@@ -145,7 +145,7 @@
                 stateSaveCallback: function (settings, data) {
                     $.ajax({
                         type: "POST",
-                        url: "{{ urlFor("user.pref") }}",
+                        url: "{{ url_for("user.pref") }}",
                         data: {
                             preference: [{
                                 option: "layoutGrid",
@@ -156,9 +156,10 @@
                 },
                 filter: false,
                 searchDelay: 3000,
+                dataType: 'json',
                 "order": [[1, "asc"]],
                 ajax: {
-                    url: "{{ urlFor("layout.search") }}",
+                    url: "{{ url_for("layout.search") }}",
                     "data": function (d) {
                         $.extend(d, $("#layouts").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }
@@ -271,6 +272,7 @@
             table.on('draw', { form: $("#layouts").closest(".XiboGrid").find(".FilterDiv form") } ,dataTableCreateTagEvents);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#layouts_wrapper').find('.col-sm-6').eq(1));
+
         });
 
         $("#layoutUploadForm").click(function() {
@@ -309,7 +311,7 @@
                 }
             }).on('shown.bs.modal', function() {
                 // Configure the upload form
-                var url = "{{ urlFor("layout.import") }}";
+                var url = "{{ url_for("layout.import") }}";
                 var form = $(this).find("form");
                 var refreshSessionInterval;
 
@@ -454,7 +456,7 @@
 {% block javaScriptTemplates %}
     {{ parent() }}
 
-    {% raw %}
+    {% verbatim %}
 
         <script type="text/x-handlebars-template" id="template-layout-upload">
             <form method="post" enctype="multipart/form-data" data-max-file-size="{{ upload.maxSize }}" data-accept-file-types="/(\.|\/)zip$/i">
@@ -587,5 +589,5 @@
         {% } %}
         </script>
 
-    {% endraw %}
+    {% endverbatim %}
 {% endblock %}

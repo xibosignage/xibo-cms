@@ -37,7 +37,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="displayProfileCopyForm" class="XiboForm form-horizontal" method="post" action="{{ urlFor("displayProfile.copy", {id: displayProfile.displayProfileId}) }}">
+            <form id="displayProfileCopyForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("displayProfile.copy", {id: displayProfile.displayProfileId}) }}">
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Display Profile" %}{% endset %}
                 {% set name %}{{ displayProfile.name }} 2{% endset %}

@@ -2,13 +2,15 @@
 
 const EXPIRE_STATUS_MSG_MAP = [
     '',
-    widgetStatusTrans.dueToExpire,
+    widgetStatusTrans.setToStart,
+    widgetStatusTrans.setToExpire,
     widgetStatusTrans.expired,
     widgetStatusTrans.deleteOnExpire
 ];
 
 const EXPIRE_STATUS_ICON_MAP = [
     '',
+    'fa-calendar-plus-o',
     'fa-calendar-o',
     'fa-calendar-check-o',
     'fa-calendar-times-o'
@@ -241,17 +243,19 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
         const currentTime = Math.round(new Date().getTime() / 1000);
 
         if(this.fromDt > this.DATE_MIN || this.toDt < this.DATE_MAX) {
-            if(this.getOptions().deleteOnExpiry == 1) {
-                // Delete on expire
+
+            if(currentTime < this.fromDt) {
+                // Set to start
+                status = 1;
+            } else if(currentTime > this.toDt) {
+                // Expired
                 status = 3;
-            } else {
-                if(currentTime < this.toDt) {
-                    // Due to expire
-                    status = 1;
-                } else {
-                    // Expired
-                    status = 2;
-                }
+            } else if(this.getOptions().deleteOnExpiry == 1 && currentTime < this.toDt && this.toDt < this.DATE_MAX) {
+                // Delete on expire ( delete on expiry flag, and toDt set and after current time)
+                status = 4;
+            } else if(currentTime < this.toDt && this.toDt < this.DATE_MAX) {
+                // Set to expire ( current time before toDt and toDt is set)
+                status = 2;
             }
         }
 
@@ -296,6 +300,7 @@ Widget.prototype.createClone = function() {
     const widgetClone = {
         id: 'ghost_' + this.id,
         widgetName: this.widgetName,
+        moduleName: this.moduleName,
         subType: this.subType,
         duration: this.getTotalDuration(),
         regionId: this.regionId,

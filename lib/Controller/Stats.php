@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2016 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,8 +21,10 @@
  */
 namespace Xibo\Controller;
 
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -29,12 +32,11 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
-use Xibo\Report\ProofOfPlay;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ReportServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
 
@@ -86,7 +88,7 @@ class Stats extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -102,9 +104,9 @@ class Stats extends Base
      * @param UserGroupFactory $userGroupFactory
      * @param DisplayGroupFactory $displayGroupFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $reportService, $displayFactory, $layoutFactory, $mediaFactory, $userFactory, $userGroupFactory, $displayGroupFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $reportService, $displayFactory, $layoutFactory, $mediaFactory, $userFactory, $userGroupFactory, $displayGroupFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->store = $store;
         $this->timeSeriesStore = $timeSeriesStore;
@@ -119,8 +121,16 @@ class Stats extends Base
 
     /**
      * Stats page
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function displayPage()
+    function displayPage(Request $request, Response $response)
     {
         $data = [
             // List of Displays this user has permission for
@@ -133,12 +143,22 @@ class Stats extends Base
 
         $this->getState()->template = 'statistics-page';
         $this->getState()->setData($data);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Stats page
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function displayProofOfPlayPage()
+    function displayProofOfPlayPage(Request $request, Response $response)
     {
         $data = [
             // List of Displays this user has permission for
@@ -152,6 +172,8 @@ class Stats extends Base
 
         $this->getState()->template = 'stats-proofofplay-page';
         $this->getState()->setData($data);
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -232,42 +254,42 @@ class Stats extends Base
      *  tags={"statistics"},
      *  @SWG\Parameter(
      *      name="type",
-     *      in="formData",
+     *      in="query",
      *      description="The type of stat to return. Layout|Media|Widget or All",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="fromDt",
-     *      in="formData",
+     *      in="query",
      *      description="The start date for the filter. Default = 24 hours ago",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="toDt",
-     *      in="formData",
+     *      in="query",
      *      description="The end date for the filter. Default = now.",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="statDate",
-     *      in="formData",
+     *      in="query",
      *      description="The statDate filter returns records that are greater than or equal a particular date",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="statId",
-     *      in="formData",
+     *      in="query",
      *      description="The statId filter returns records that are greater than a particular statId",
      *      type="string",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="displayId",
-     *      in="formData",
+     *      in="query",
      *      description="An optional display Id to filter",
      *      type="integer",
      *      required=false
@@ -275,7 +297,7 @@ class Stats extends Base
      *   @SWG\Parameter(
      *      name="layoutId",
      *      description="An optional array of layout Id to filter",
-     *      in="formData",
+     *      in="query",
      *      required=false,
      *      type="array",
      *      @SWG\Items(
@@ -285,7 +307,7 @@ class Stats extends Base
      *   @SWG\Parameter(
      *      name="mediaId",
      *      description="An optional array of media Id to filter",
-     *      in="formData",
+     *      in="query",
      *      required=false,
      *      type="array",
      *      @SWG\Items(
@@ -294,7 +316,7 @@ class Stats extends Base
      *  ),
      *   @SWG\Parameter(
      *      name="campaignId",
-     *      in="formData",
+     *      in="query",
      *      description="An optional Campaign Id to filter",
      *      type="integer",
      *      required=false
@@ -310,23 +332,33 @@ class Stats extends Base
      *      )
      *  )
      * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function grid()
+    public function grid(Request $request, Response $response)
     {
-        // This endpoint is only ever used by API
-        $fromDt = $this->getSanitizer()->getDate('fromDt');
-        $toDt = $this->getSanitizer()->getDate('toDt');
-        $type = strtolower($this->getSanitizer()->getString('type'));
+        $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
 
-        $displayId = $this->getSanitizer()->getInt('displayId');
-        $layoutIds = $this->getSanitizer()->getIntArray('layoutId');
-        $mediaIds = $this->getSanitizer()->getIntArray('mediaId');
-        $statDate = $this->getSanitizer()->getDate('statDate');
-        $statId = $this->getSanitizer()->getString('statId');
-        $campaignId = $this->getSanitizer()->getInt('campaignId');
+        $fromDt = $sanitizedQueryParams->getDate('fromDt', ['default' => $sanitizedQueryParams->getDate('statsFromDt', ['default' => $this->getDate()->parse()->subDay()])]);
+        $toDt = $sanitizedQueryParams->getDate('toDt', ['default' => $sanitizedQueryParams->getDate('statsToDt', ['default' => $this->getDate()->parse()])]);
+        $type = strtolower($sanitizedQueryParams->getString('type'));
 
-        $start = $this->getSanitizer()->getInt('start', 0);
-        $length = $this->getSanitizer()->getInt('length', 10);
+        $displayId = $sanitizedQueryParams->getInt('displayId');
+        $layoutIds = $sanitizedQueryParams->getIntArray('layoutId');
+        $mediaIds = $sanitizedQueryParams->getIntArray('mediaId');
+        $statDate = $sanitizedQueryParams->getDate('statDate');
+        $statId = $sanitizedQueryParams->getString('statId');
+        $campaignId = $sanitizedQueryParams->getInt('campaignId');
+
+        $start = $sanitizedQueryParams->getInt('start', 0);
+        $length = $sanitizedQueryParams->getInt('length', 10);
 
         if ($fromDt != null) {
             $fromDt->startOfDay();
@@ -339,7 +371,7 @@ class Stats extends Base
         // What if the fromdt and todt are exactly the same?
         // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
         if ($fromDt != null && $toDt != null && $fromDt == $toDt) {
-            $toDt->addDay(1);
+            $toDt->addDay();
         }
 
         // Do not filter by display if super admin and no display is selected
@@ -351,8 +383,9 @@ class Stats extends Base
                 $displayIds[] = $display->displayId;
             }
 
-            if (count($displayIds) <= 0)
+            if (count($displayIds) <= 0) {
                 throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
+            }
 
             // Set displayIds as [-1] if the user selected a display for which they don't have permission
             if ($displayId != 0) {
@@ -390,29 +423,30 @@ class Stats extends Base
         $rows = [];
         foreach ($result['statData'] as $row) {
             $entry = [];
+            $sanitizedRow = $this->getSanitizer($row);
 
-            $widgetId = $this->getSanitizer()->int($row['widgetId']);
-            $widgetName = $this->getSanitizer()->string($row['media']);
+            $widgetId = $sanitizedRow->getInt('widgetId');
+            $widgetName = $sanitizedRow->getString('media');
             $widgetName = ($widgetName == '' &&  $widgetId != 0) ? __('Deleted from Layout') : $widgetName;
 
-            $displayName = isset($row['display']) ? $this->getSanitizer()->string($row['display']) : '';
-            $layoutName = isset($row['layout']) ? $this->getSanitizer()->string($row['layout']) : '';
-            $entry['id'] = $this->getSanitizer()->string($row['id']);
-            $entry['type'] = $this->getSanitizer()->string($row['type']);
-            $entry['displayId'] = $this->getSanitizer()->int(($row['displayId']));
+            $displayName = isset($row['display']) ? $sanitizedRow->getString('display') : '';
+            $layoutName = isset($row['layout']) ? $sanitizedRow->getString('layout') : '';
+            $entry['id'] = $sanitizedRow->getString('id');
+            $entry['type'] = $sanitizedRow->getString('type');
+            $entry['displayId'] = $sanitizedRow->getInt(('displayId'));
             $entry['display'] = ($displayName != '') ? $displayName : __('Not Found');
             $entry['layout'] = ($layoutName != '') ? $layoutName :  __('Not Found');
             $entry['media'] = $widgetName;
-            $entry['numberPlays'] = $this->getSanitizer()->int($row['count']);
-            $entry['duration'] = $this->getSanitizer()->int($row['duration']);
+            $entry['numberPlays'] = $sanitizedRow->getInt('count');
+            $entry['duration'] = $sanitizedRow->getInt('duration');
             $entry['minStart'] = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
             $entry['maxEnd'] = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
             $entry['start'] = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
             $entry['end'] = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
-            $entry['layoutId'] = $this->getSanitizer()->int($row['layoutId']);
-            $entry['widgetId'] = $this->getSanitizer()->int($row['widgetId']);
-            $entry['mediaId'] = $this->getSanitizer()->int($row['mediaId']);
-            $entry['tag'] = $this->getSanitizer()->string($row['tag']);
+            $entry['layoutId'] = $sanitizedRow->getInt('layoutId');
+            $entry['widgetId'] = $sanitizedRow->getInt('widgetId');
+            $entry['mediaId'] = $sanitizedRow->getInt('mediaId');
+            $entry['tag'] = $sanitizedRow->getString('tag');
             $entry['statDate'] = isset($row['statDate']) ? $this->getDate()->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : '';
             $entry['engagements'] = $row['engagements'];
 
@@ -422,34 +456,47 @@ class Stats extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $resultSet->getTotalCount();
         $this->getState()->setData($rows);
+
+        return $this->render($request, $response);
     }
 
 
     /**
      * Bandwidth Data
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function bandwidthData()
+    public function bandwidthData(Request $request, Response $response)
     {
-        $fromDt = $this->getSanitizer()->getDate('fromDt', $this->getSanitizer()->getDate('bandwidthFromDt'));
-        $toDt = $this->getSanitizer()->getDate('toDt', $this->getSanitizer()->getDate('bandwidthToDt'));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $fromDt = $sanitizedParams->getDate('fromDt', ['default' => $sanitizedParams->getDate('bandwidthFromDt')]);
+        $toDt = $sanitizedParams->getDate('toDt', ['default' => $sanitizedParams->getDate('bandwidthToDt')]);
 
         // Get an array of display id this user has access to.
         $displayIds = [];
 
-        foreach ($this->displayFactory->query() as $display) {
+        foreach ($this->displayFactory->query(null, [], $request) as $display) {
             $displayIds[] = $display->displayId;
         }
 
-        if (count($displayIds) <= 0)
+        if (count($displayIds) <= 0) {
             throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
+        }
 
         // Get some data for a bandwidth chart
         $dbh = $this->store->getConnection();
 
-        $displayId = $this->getSanitizer()->getInt('displayId');
+        $displayId = $sanitizedParams->getInt('displayId');
         $params = array(
             'month' => $this->getDate()->getLocalDate($fromDt->setDateTime($fromDt->year, $fromDt->month, 1, 0, 0), 'U'),
-            'month2' => $this->getDate()->getLocalDate($toDt->addMonth(1)->setDateTime($toDt->year, $toDt->month, 1, 0, 0), 'U')
+            'month2' => $this->getDate()->getLocalDate($toDt->addMonth()->setDateTime($toDt->year, $toDt->month, 1, 0, 0), 'U')
         );
 
         $SQL = 'SELECT display.display, IFNULL(SUM(Size), 0) AS size ';
@@ -522,25 +569,47 @@ class Stats extends Base
             'backgroundColor' => $backgroundColor,
             'postUnits' => (isset($suffixes[$base]) ? $suffixes[$base] : '')
         ];
+
+        return $this->render($request, $response);
     }
 
     /**
      * Output CSV Form
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function exportForm()
+    public function exportForm(Request $request, Response $response)
     {
         $this->getState()->template = 'statistics-form-export';
+
+        return $this->render($request, $response);
     }
 
     /**
      * Outputs a CSV of stats
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function export()
+    public function export(Request $request, Response $response)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // We are expecting some parameters
-        $fromDt = $this->getSanitizer()->getDate('fromDt');
-        $toDt = $this->getSanitizer()->getDate('toDt');
-        $displayId = $this->getSanitizer()->getInt('displayId');
+        $fromDt = $sanitizedParams->getDate('fromDt');
+        $toDt = $sanitizedParams->getDate('toDt');
+        $displayId = $sanitizedParams->getInt('displayId');
 
         // Do not filter by display if super admin and no display is selected
         // Super admin will be able to see stat records of deleted display, we will not filter by display later
@@ -551,8 +620,9 @@ class Stats extends Base
                 $displayIds[] = $display->displayId;
             }
 
-            if (count($displayIds) <= 0)
+            if (count($displayIds) <= 0) {
                 throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
+            }
 
             // Set displayIds as [-1] if the user selected a display for which they don't have permission
             if ($displayId != 0) {
@@ -593,11 +663,12 @@ class Stats extends Base
 
         while ($row = $resultSet->getNextRow() ) {
 
-            $displayName = isset($row['display']) ? $this->getSanitizer()->string($row['display']) : '';
-            $layoutName = isset($row['layout']) ? $this->getSanitizer()->string($row['layout']) : '';
+            $sanitizedRow = $this->getSanitizer($row);
+            $displayName = isset($row['display']) ? $sanitizedRow->getString('display') : '';
+            $layoutName = isset($row['layout']) ? $sanitizedRow->getString('layout') : '';
 
             // Read the columns
-            $type = $this->getSanitizer()->string($row['type']);
+            $type = $sanitizedRow->getString('type');
             if ($this->timeSeriesStore->getEngine() == 'mongodb') {
 
                 $statDate = isset($row['statDate']) ? $this->getDate()->parse($row['statDate']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s') : null;
@@ -614,11 +685,12 @@ class Stats extends Base
 
             $layout = ($layoutName != '') ? $layoutName :  __('Not Found');
             $display = ($displayName != '') ? $displayName : __('Not Found');
-            $media = isset($row['media']) ? $this->getSanitizer()->string($row['media']): '';
-            $tag = isset($row['tag']) ? $this->getSanitizer()->string($row['tag']): '';
+            $media = isset($row['media']) ? $sanitizedRow->getString('media'): '';
+            $tag = isset($row['tag']) ? $sanitizedRow->getString('tag'): '';
 
-            $duration = isset($row['duration']) ? $this->getSanitizer()->string($row['duration']): '';
-            $count = isset($row['count']) ? $this->getSanitizer()->string($row['count']): '';
+            // TODO string?
+            $duration = isset($row['duration']) ? $sanitizedRow->getString('duration'): '';
+            $count = isset($row['count']) ? $sanitizedRow->getString('count'): '';
 
             fputcsv($out, [$statDate, $type, $fromDt, $toDt, $layout, $display, $media, $tag, $duration, $count, $engagements]);
         }
@@ -626,18 +698,28 @@ class Stats extends Base
         fclose($out);
 
         // We want to output a load of stuff to the browser as a text file.
-        $app = $this->getApp();
-        $app->response()->header('Content-Type', 'text/csv');
-        $app->response()->header('Content-Disposition', 'attachment; filename="stats.csv"');
-        $app->response()->header('Content-Transfer-Encoding', 'binary"');
-        $app->response()->header('Accept-Ranges', 'bytes');
+        $response
+            ->withHeader('Content-Type', 'text/csv')
+            ->withHeader('Content-Disposition', 'attachment; filename="stats.csv"')
+            ->withHeader('Content-Transfer-Encoding', 'binary"')
+            ->withHeader('Accept-Ranges', 'bytes');
         $this->setNoOutput(true);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Stats page
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    function displayLibraryPage()
+    function displayLibraryPage(Request $request, Response $response)
     {
         $this->getState()->template = 'stats-library-page';
         $data = [];
@@ -717,9 +799,21 @@ class Stats extends Base
         $data['groups'] = $this->userGroupFactory->query();
 
         $this->getState()->setData($data);
+
+        return $this->render($request, $response);
     }
 
-    public function libraryUsageGrid()
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
+    public function libraryUsageGrid(Request $request, Response $response)
     {
         $params = [];
         $select = '
@@ -759,16 +853,18 @@ class Stats extends Base
             $params['currentUserId'] = $this->getUser()->userId;
         }
 
+        $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
+
         // Filter by userId
-        if ($this->getSanitizer()->getInt('userId') !== null) {
+        if ($sanitizedQueryParams->getInt('userId') !== null) {
             $body .= ' AND user.userId = :userId ';
-            $params['userId'] = $this->getSanitizer()->getInt('userId');
+            $params['userId'] = $sanitizedQueryParams->getInt('userId');
         }
 
         // Filter by groupId
-        if ($this->getSanitizer()->getInt('groupId') !== null) {
+        if ($sanitizedQueryParams->getInt('groupId') !== null) {
             $body .= ' AND user.userId IN (SELECT userId FROM `lkusergroup` WHERE groupId = :groupId) ';
-            $params['groupId'] = $this->getSanitizer()->getInt('groupId');
+            $params['groupId'] = $sanitizedQueryParams->getInt('groupId');
         }
 
         $body .= $permissions;
@@ -779,8 +875,8 @@ class Stats extends Base
 
 
         // Sorting?
-        $filterBy = $this->gridRenderFilter();
-        $sortOrder = $this->gridRenderSort();
+        $filterBy = $this->gridRenderFilter([], $request);
+        $sortOrder = $this->gridRenderSort($request);
 
         $order = '';
         if (is_array($sortOrder))
@@ -788,8 +884,8 @@ class Stats extends Base
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $sanitizedQueryParams->getInt('start') !== null && $sanitizedQueryParams->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($sanitizedQueryParams->getInt('start'), 0) . ', ' . $sanitizedQueryParams->getInt('length',['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -797,12 +893,13 @@ class Stats extends Base
 
         foreach ($this->store->select($sql, $params) as $row) {
             $entry = [];
+            $sanitizedRow = $this->getSanitizer($row);
 
-            $entry['userId'] = $this->getSanitizer()->int($row['userId']);
-            $entry['userName'] = $this->getSanitizer()->string($row['userName']);
-            $entry['bytesUsed'] = $this->getSanitizer()->int($row['bytesUsed']);
-            $entry['bytesUsedFormatted'] = ByteFormatter::format($this->getSanitizer()->int($row['bytesUsed']), 2);
-            $entry['numFiles'] = $this->getSanitizer()->int($row['numFiles']);
+            $entry['userId'] = $sanitizedRow->getInt('userId');
+            $entry['userName'] = $sanitizedRow->getString('userName');
+            $entry['bytesUsed'] = $sanitizedRow->getInt('bytesUsed');
+            $entry['bytesUsedFormatted'] = ByteFormatter::format($sanitizedRow->getInt('bytesUsed'), 2);
+            $entry['numFiles'] = $sanitizedRow->getInt('numFiles');
 
             $rows[] = $entry;
         }
@@ -815,20 +912,31 @@ class Stats extends Base
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($rows);
+
+        return $this->render($request, $response);
     }
 
     /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws InvalidArgumentException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function timeDisconnectedGrid()
+    public function timeDisconnectedGrid(Request $request, Response $response)
     {
-        $fromDt = $this->getSanitizer()->getDate('fromDt', $this->getSanitizer()->getDate('availabilityFromDt'));
-        $toDt = $this->getSanitizer()->getDate('toDt', $this->getSanitizer()->getDate('availabilityToDt'));
+        $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
+        $fromDt = $sanitizedQueryParams->getDate('fromDt', ['default' => $sanitizedQueryParams->getDate('availabilityFromDt')]);
+        $toDt = $sanitizedQueryParams->getDate('toDt', ['default' => $sanitizedQueryParams->getDate('availabilityToDt')]);
 
-        $displayId = $this->getSanitizer()->getInt('displayId');
-        $displayGroupId = $this->getSanitizer()->getInt('displayGroupId');
-        $tags = $this->getSanitizer()->getString('tags');
-        $onlyLoggedIn = $this->getSanitizer()->getCheckbox('onlyLoggedIn') == 1;
+        $displayId = $sanitizedQueryParams->getInt('displayId');
+        $displayGroupId = $sanitizedQueryParams->getInt('displayGroupId');
+        $tags = $sanitizedQueryParams->getString('tags');
+        $onlyLoggedIn = $sanitizedQueryParams->getCheckbox('onlyLoggedIn') == 1;
 
         $currentDate = $this->getDate()->parse()->startOfDay()->format('Y-m-d');
 
@@ -849,8 +957,9 @@ class Stats extends Base
             $displayIds[] = $display->displayId;
         }
 
-        if (count($displayIds) <= 0)
+        if (count($displayIds) <= 0) {
             throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
+        }
 
         // Get an array of display groups this user has access to
         $displayGroupIds = [];
@@ -859,8 +968,9 @@ class Stats extends Base
             $displayGroupIds[] = $displayGroup->displayGroupId;
         }
 
-        if (count($displayGroupIds) <= 0)
+        if (count($displayGroupIds) <= 0) {
             throw new InvalidArgumentException(__('No display groups with View permissions'), 'displayGroup');
+        }
 
         $params = array(
             'start' => $fromDt->format('U'),
@@ -919,7 +1029,7 @@ class Stats extends Base
                     )
                 ';
             } else {
-                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+                $operator = $sanitizedQueryParams->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
 
                 $body .= " AND `displaygroup`.displaygroupId IN (
                 SELECT `lktagdisplaygroup`.displaygroupId
@@ -961,8 +1071,8 @@ class Stats extends Base
         ';
 
         // Sorting?
-        $filterBy = $this->gridRenderFilter();
-        $sortOrder = $this->gridRenderSort();
+        $filterBy = $this->gridRenderFilter([], $request);
+        $sortOrder = $this->gridRenderSort($request);
 
         $order = '';
         if (is_array($sortOrder))
@@ -971,8 +1081,8 @@ class Stats extends Base
         $limit = '';
 
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $sanitizedQueryParams->getInt('start') !== null && $sanitizedQueryParams->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($sanitizedQueryParams->getInt('start'), 0) . ', ' . $sanitizedQueryParams->getInt('length', ['default' => 10]);
         }
 
 
@@ -981,7 +1091,7 @@ class Stats extends Base
         $rows = [];
 
         foreach ($this->store->select($sql, $params) as $row) {
-            $maxDuration = $maxDuration + $this->getSanitizer()->double($row['duration']);
+            $maxDuration = $maxDuration + $this->getSanitizer($row)->getDouble('duration');
         }
 
         if ($maxDuration > 86400) {
@@ -998,11 +1108,13 @@ class Stats extends Base
         }
 
         foreach ($this->store->select($sql, $params) as $row) {
+            $sanitizedRow = $this->getSanitizer($row);
+            $this->getLog()->debug('STATS TIMEDISC ROW IS ' . json_encode($row));
             $entry = [];
-            $entry['displayId'] = $this->getSanitizer()->int(($row['displayId']));
-            $entry['display'] = $this->getSanitizer()->string(($row['display']));
-            $entry['timeDisconnected'] =  round($this->getSanitizer()->double($row['duration']) / $divisor, 2);
-            $entry['timeConnected'] =  round($this->getSanitizer()->double($row['filter'] / $divisor) - $entry['timeDisconnected'], 2);
+            $entry['displayId'] = $sanitizedRow->getInt(('displayId'));
+            $entry['display'] = $sanitizedRow->getString(('display'));
+            $entry['timeDisconnected'] =  round($sanitizedRow->getDouble('duration') / $divisor, 2);
+            $entry['timeConnected'] =  round($sanitizedRow->getDouble('filter') / $divisor - $entry['timeDisconnected'], 2);
             $entry['postUnits'] = $postUnits;
 
             $rows[] = $entry;
@@ -1016,5 +1128,7 @@ class Stats extends Base
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($rows);
+
+        return $this->render($request, $response);
     }
 }

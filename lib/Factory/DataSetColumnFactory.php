@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (DataSetColumnFactory.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -87,6 +102,7 @@ class DataSetColumnFactory extends BaseFactory
     {
         $entries = [];
         $params = [];
+        $sanitizedFilter = $this->getSanitizer($filterBy);
 
         if ($sortOrder == null)
             $sortOrder = ['columnOrder'];
@@ -115,19 +131,19 @@ class DataSetColumnFactory extends BaseFactory
                ON datasetcolumntype.DataSetColumnTypeID = datasetcolumn.DataSetColumnTypeID
              WHERE 1 = 1 ';
 
-        if ($this->getSanitizer()->getInt('dataSetColumnId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('dataSetColumnId') !== null) {
             $body .= ' AND dataSetColumnId = :dataSetColumnId ';
-            $params['dataSetColumnId'] = $this->getSanitizer()->getInt('dataSetColumnId', $filterBy);
+            $params['dataSetColumnId'] = $sanitizedFilter->getInt('dataSetColumnId');
         }
 
-        if ($this->getSanitizer()->getInt('dataSetId', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('dataSetId') !== null) {
             $body .= ' AND DataSetID = :dataSetId ';
-            $params['dataSetId'] = $this->getSanitizer()->getInt('dataSetId', $filterBy);
+            $params['dataSetId'] = $sanitizedFilter->getInt('dataSetId');
         }
 
-        if ($this->getSanitizer()->getInt('remoteField', $filterBy) !== null) {
+        if ($sanitizedFilter->getInt('remoteField') !== null) {
             $body .= ' AND remoteField = :remoteField ';
-            $params['remoteField'] = $this->getSanitizer()->getInt('remoteField', $filterBy);
+            $params['remoteField'] = $sanitizedFilter->getInt('remoteField');
         }
 
         // Sorting?
@@ -137,12 +153,11 @@ class DataSetColumnFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
-            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', ' . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
-
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {

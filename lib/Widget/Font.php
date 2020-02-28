@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2014-15 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -19,6 +20,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Widget;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 
@@ -29,13 +32,14 @@ use Xibo\Exception\NotFoundException;
 class Font extends ModuleWidget
 {
     /** @inheritdoc */
-    public function edit()
+    public function edit(Request $request, Response $response): Response
     {
         // Non-editable
+        return $response;
     }
 
     /**
-     * Install some fonts
+     * @inheritDoc
      */
     public function installFiles()
     {
@@ -69,7 +73,7 @@ class Font extends ModuleWidget
     }
 
     /**
-     * Form for updating the module settings
+     * @inheritDoc
      */
     public function settingsForm()
     {
@@ -77,13 +81,15 @@ class Font extends ModuleWidget
     }
 
     /**
-     * Process any module settings
+     * @inheritDoc
      */
-    public function settings()
+    public function settings(Request $request, Response $response): Response
     {
-        if ($this->getSanitizer()->getCheckbox('rebuildFonts', 0) == 1) {
-            $this->getApp()->container->get('\Xibo\Controller\Library')->setApp($this->getApp())->installFonts(['invalidateCache' => true]);
+        if ($this->getSanitizer($request->getParams())->getCheckbox('rebuildFonts') == 1) {
+            $this->container->get('\Xibo\Controller\Library')->installFonts(['invalidateCache' => true], $request);
         }
+
+        return $response;
     }
 
     /**
@@ -123,11 +129,7 @@ class Font extends ModuleWidget
     }
 
     /**
-     * Preview code for a module
-     * @param int $width
-     * @param int $height
-     * @param int $scaleOverride The Scale Override
-     * @return string The Rendered Content
+     * @inheritDoc
      */
     public function preview($width, $height, $scaleOverride = 0)
     {
@@ -135,14 +137,10 @@ class Font extends ModuleWidget
         return $this->previewIcon();
     }
 
-    /**
-     * Get Resource
-     * @param int $displayId
-     * @return mixed
-     */
+    /** @inheritDoc */
     public function getResource($displayId = 0)
     {
-        $this->download();
+        return '';
     }
 
     /**

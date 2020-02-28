@@ -1,7 +1,23 @@
 {#
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015-2018 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
 <!DOCTYPE html>
@@ -16,7 +32,7 @@
 
     <script src="{{ theme.rootUri() }}dist/style.bundle.min.js"></script>
 
-    <!-- Copyright 2006-2018 Spring Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
+    <!-- Copyright 2006-2020 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
     <style type="text/css">
         body {
             padding-top: 40px;
@@ -41,27 +57,23 @@
         .form-signin .checkbox {
             margin-bottom: 10px;
         }
-        .form-signin input[type="text"],
-        .form-signin input[type="password"] {
-            font-size: 16px;
-            height: auto;
-            margin-bottom: 15px;
-            padding: 7px 9px;
-        }
 
     </style>
 </head>
 <body>
 <div class="container">
-    <div class="form-signin text-center" action="{{ urlFor("login") }}">
+    <div class="form-signin text-center">
         <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img src="{{ theme.uri("img/xibologo.png") }}"></a></p>
 
-        <p>{% trans "Sorry we could not find that page. Please check your URL or press back in your browser" %}</p>
+        <p>{% trans "Sorry we could not find that page." %}</p>
+        <p>{% trans "Please press the button below to go to your homepage or press back in your browser" %}</p>
+        <a class="btn btn-info" href="{{ url_for("home") }}">{% trans "Home" %}</a>
+
     </div>
 
     <p class="text-center">{% trans %}Version {{ version }}{% endtrans %}
         | <a id="source-link" href="{{ theme.getThemeConfig("cms_source_url") }}">{% trans "Source" %}</a>
-        | <a id="about-link" class="XiboFormButton" href="{{ urlFor("about") }}" title="{% trans "About" %}">{% trans "About" %}</a>
+        | <a id="about-link" class="XiboFormButton" href="{{ url_for("about") }}" title="{% trans "About" %}">{% trans "About" %}</a>
     </p>
 </div> <!-- /container -->
     <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js"></script>

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2012-2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -30,6 +30,8 @@ use PicoFeed\Parser\Item;
 use PicoFeed\PicoFeedException;
 use PicoFeed\Reader\Reader;
 use Respect\Validation\Validator as v;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Stash\Invalidation;
 use Xibo\Controller\Library;
 use Xibo\Exception\InvalidArgumentException;
@@ -42,7 +44,7 @@ use Xibo\Helper\Environment;
 class Ticker extends ModuleWidget
 {
     /**
-     * Install Files
+     * @inheritDoc
      */
     public function installFiles()
     {
@@ -63,7 +65,7 @@ class Ticker extends ModuleWidget
     }
 
     /**
-     * Form for updating the module settings
+     * @inheritDoc
      */
     public function settingsForm()
     {
@@ -71,31 +73,30 @@ class Ticker extends ModuleWidget
     }
 
     /**
-     * Process any module settings
-     * @throws InvalidArgumentException
+     * @inheritDoc
      */
-    public function settings()
+    public function settings(Request $request, Response $response): Response
     {
-        $updateIntervalImages = $this->getSanitizer()->getInt('updateIntervalImages', 240);
+        $updateIntervalImages = $this->getSanitizer($request->getParams())->getInt('updateIntervalImages', 240);
 
         if ($this->module->enabled != 0) {
-            if ($updateIntervalImages < 0)
+            if ($updateIntervalImages < 0) {
                 throw new InvalidArgumentException(__('Update Interval Images must be greater than or equal to 0'), 'updateIntervalImages');
+            }
         }
 
         $this->module->settings['updateIntervalImages'] = $updateIntervalImages;
 
-        return $this->module->settings;
+        return $response;
     }
 
     /**
-     * Get Extra content for the form
-     * @return array
+     * @inheritDoc
      */
     public function getExtra()
     {
         return [
-            'templates' => $this->templatesAvailable(),
+            'templates' => $this->templatesAvailable(true),
         ];
     }
 
@@ -326,54 +327,58 @@ class Ticker extends ModuleWidget
      *
      * @inheritdoc
      */
-    public function edit()
+    public function edit(Request $request, Response $response): Response
     {
-        // Other properties
-        $this->setDuration($this->getSanitizer()->getInt('duration', $this->getDuration()));
-        $this->setUseDuration($this->getSanitizer()->getCheckbox('useDuration'));
-        $this->setOption('enableStat', $this->getSanitizer()->getString('enableStat'));
-        $this->setOption('xmds', true);
-        $this->setOption('uri', urlencode($this->getSanitizer()->getString('uri')));
-        $this->setOption('updateInterval', $this->getSanitizer()->getInt('updateInterval', 120));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if ($this->getSanitizer()->getInt('updateIntervalImages') !== null) {
-            $this->setOption('updateIntervalImages', $this->getSanitizer()->getInt('updateIntervalImages'));
+        // Other properties
+        $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
+        $this->setOption('xmds', true);
+        $this->setOption('uri', $sanitizedParams->getString('uri'));
+        $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 120]));
+
+        if ($sanitizedParams->getInt('updateIntervalImages') !== null) {
+            $this->setOption('updateIntervalImages', $sanitizedParams->getInt('updateIntervalImages'));
         }
 
-        $this->setOption('speed', $this->getSanitizer()->getInt('speed', 2));
-        $this->setOption('name', $this->getSanitizer()->getString('name'));
-        $this->setOption('effect', $this->getSanitizer()->getString('effect'));
-        $this->setOption('copyright', $this->getSanitizer()->getString('copyright'));
-        $this->setOption('numItems', $this->getSanitizer()->getInt('numItems'));
-        $this->setOption('takeItemsFrom', $this->getSanitizer()->getString('takeItemsFrom'));
-        $this->setOption('reverseOrder', $this->getSanitizer()->getCheckbox('reverseOrder'));
-        $this->setOption('durationIsPerItem', $this->getSanitizer()->getCheckbox('durationIsPerItem'));
-        $this->setOption('randomiseItems', $this->getSanitizer()->getCheckbox('randomiseItems'));
-        $this->setOption('itemsSideBySide', $this->getSanitizer()->getCheckbox('itemsSideBySide'));
-        $this->setOption('itemsPerPage', $this->getSanitizer()->getInt('itemsPerPage'));
-        $this->setOption('dateFormat', $this->getSanitizer()->getString('dateFormat'));
-        $this->setOption('allowedAttributes', $this->getSanitizer()->getString('allowedAttributes'));
-        $this->setOption('stripTags', $this->getSanitizer()->getString('stripTags'));
-        $this->setOption('decodeHtml', $this->getSanitizer()->getCheckbox('decodeHtml'));
-        $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
-        $this->setOption('disableDateSort', $this->getSanitizer()->getCheckbox('disableDateSort'));
-        $this->setOption('textDirection', $this->getSanitizer()->getString('textDirection'));
-        $this->setOption('overrideTemplate', $this->getSanitizer()->getCheckbox('overrideTemplate'));
-        $this->setOption('templateId', $this->getSanitizer()->getString('templateId'));
-        $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
-        $this->setOption('noDataMessage_advanced', $this->getSanitizer()->getCheckbox('noDataMessage_advanced'));
-        $this->setRawNode('javaScript', $this->getSanitizer()->getParam('javaScript', ''));
+        $this->setOption('speed', $sanitizedParams->getInt('speed', ['default' => 2]));
+        $this->setOption('name', $sanitizedParams->getString('name'));
+        $this->setOption('effect', $sanitizedParams->getString('effect'));
+        $this->setOption('copyright', $sanitizedParams->getString('copyright'));
+        $this->setOption('numItems', $sanitizedParams->getInt('numItems'));
+        $this->setOption('takeItemsFrom', $sanitizedParams->getString('takeItemsFrom'));
+        $this->setOption('reverseOrder', $sanitizedParams->getCheckbox('reverseOrder'));
+        $this->setOption('durationIsPerItem', $sanitizedParams->getCheckbox('durationIsPerItem'));
+        $this->setOption('randomiseItems', $sanitizedParams->getCheckbox('randomiseItems'));
+        $this->setOption('itemsSideBySide', $sanitizedParams->getCheckbox('itemsSideBySide'));
+        $this->setOption('itemsPerPage', $sanitizedParams->getInt('itemsPerPage'));
+        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat'));
+        $this->setOption('allowedAttributes', $sanitizedParams->getString('allowedAttributes'));
+        $this->setOption('stripTags', $sanitizedParams->getString('stripTags'));
+        $this->setOption('decodeHtml', $sanitizedParams->getCheckbox('decodeHtml'));
+        $this->setOption('backgroundColor', $sanitizedParams->getString('backgroundColor'));
+        $this->setOption('disableDateSort', $sanitizedParams->getCheckbox('disableDateSort'));
+        $this->setOption('textDirection', $sanitizedParams->getString('textDirection'));
+        $this->setOption('overrideTemplate', $sanitizedParams->getCheckbox('overrideTemplate'));
+        $this->setOption('templateId', $sanitizedParams->getString('templateId'));
+        $this->setRawNode('noDataMessage', $request->getParam('noDataMessage', ''));
+        $this->setOption('noDataMessage_advanced', $sanitizedParams->getCheckbox('noDataMessage_advanced'));
+        $this->setRawNode('javaScript', $request->getParam('javaScript', ''));
 
         if ($this->getOption('overrideTemplate') == 1) {
             // Feed tickers should only use the template if they have override set.
-            $this->setRawNode('template', $this->getSanitizer()->getParam('ta_text', $this->getSanitizer()->getParam('template', null)));
-            $this->setOption('ta_text_advanced', $this->getSanitizer()->getCheckbox('ta_text_advanced'));
-            $this->setRawNode('css', $this->getSanitizer()->getParam('ta_css', $this->getSanitizer()->getParam('css', null)));
+            $this->setRawNode('template', $request->getParam('ta_text', $request->getParam('template', null)));
+            $this->setOption('ta_text_advanced', $sanitizedParams->getCheckbox('ta_text_advanced'));
+            $this->setRawNode('css', $request->getParam('ta_css', $request->getParam('css', null)));
         }
         
         // Save the widget
         $this->isValid();
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
@@ -381,10 +386,9 @@ class Ticker extends ModuleWidget
     {
         // Load in the template
         $data = [];
-        $isPreview = ($this->getSanitizer()->getCheckbox('preview') == 1);
 
         // Replace the View Port Width?
-        $data['viewPortWidth'] = ($isPreview) ? $this->region->width : '[[ViewPortWidth]]';
+        $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
 
         // Information from the Module
         $itemsSideBySide = $this->getOption('itemsSideBySide', 0);
@@ -418,13 +422,16 @@ class Ticker extends ModuleWidget
         }
         
         // Parse library references on the template
-        $text = $this->parseLibraryReferences($isPreview, $text);
+        $text = $this->parseLibraryReferences($this->isPreview(), $text);
+        
+        // Parse translations
+        $text = $this->parseTranslations($text);
 
         // Parse library references on the CSS Node
-        $css = $this->parseLibraryReferences($isPreview, $css);
+        $css = $this->parseLibraryReferences($this->isPreview(), $css);
 
         // Get the JavaScript node
-        $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
+        $javaScript = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', ''));
 
         // Handle older layouts that have a direction node but no effect node
         $oldDirection = $this->getOption('direction', 'none');
@@ -504,7 +511,7 @@ class Ticker extends ModuleWidget
         }
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . (($isPreview) ? $this->getApp()->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . (($this->isPreview()) ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
         // Replace the Head Content with our generated javascript
@@ -536,7 +543,6 @@ class Ticker extends ModuleWidget
 
         // Replace the Head Content with our generated javascript
         $data['javaScript'] = $javaScriptContent;
-
         return $this->renderTemplate($data);
     }
 
@@ -887,22 +893,29 @@ class Ticker extends ModuleWidget
     public function isValid()
     {
         // Must have a duration
-        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0) {
             throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
+        }
 
         // Validate the URL
-        if (!v::url()->notEmpty()->validate(urldecode($this->getOption('uri'))))
+        if (!v::url()->notEmpty()->validate(urldecode($this->getOption('uri')))) {
             throw new InvalidArgumentException(__('Please enter a Link for this Ticker'), 'uri');
+        }
 
         // Make sure we have a number in here
-        if (!v::numeric()->validate($this->getOption('numItems', 0)))
+        if (!v::numeric()->validate($this->getOption('numItems', 0))) {
             throw new InvalidArgumentException(__('The value in Number of Items must be numeric.'), 'numItems');
+        }
 
-        if ($this->getOption('updateInterval') !== null && !v::intType()->min(0)->validate($this->getOption('updateInterval', 0)))
-            throw new InvalidArgumentException(__('Update Interval must be greater than or equal to 0'), 'updateInterval');
+        if ($this->getOption('updateInterval') !== null && !v::intType()->min(0)->validate($this->getOption('updateInterval', 0))) {
+            throw new InvalidArgumentException(__('Update Interval must be greater than or equal to 0'),
+                'updateInterval');
+        }
 
-        if ($this->getOption('updateIntervalImages') !== null && !v::intType()->min(0)->validate($this->getOption('updateIntervalImages', 0)))
-            throw new InvalidArgumentException(__('Update Interval Images must be greater than or equal to 0'), 'updateIntervalImages');
+        if ($this->getOption('updateIntervalImages') !== null && !v::intType()->min(0)->validate($this->getOption('updateIntervalImages', 0))) {
+            throw new InvalidArgumentException(__('Update Interval Images must be greater than or equal to 0'),
+                'updateIntervalImages');
+        }
 
         return self::$STATUS_VALID;
     }
@@ -931,5 +944,11 @@ class Ticker extends ModuleWidget
     {
         // Tickers are locked to the feed
         return md5(urldecode($this->getOption('uri')));
+    }
+
+    /** @inheritDoc */
+    public function hasTemplates()
+    {
+        return true;
     }
 }

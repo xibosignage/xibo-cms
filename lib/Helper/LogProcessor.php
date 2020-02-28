@@ -22,31 +22,41 @@
 
 namespace Xibo\Helper;
 
-
-use Slim\Slim;
-
 /**
  * Class LogProcessor
  * @package Xibo\Helper
  */
 class LogProcessor
 {
+    private $route;
+    private $method;
+    private $userId;
+
+    /**
+     * Log Processor
+     * @param $route
+     * @param $method
+     * @param $userId
+     */
+    public function __construct($route, $method, $userId)
+    {
+        $this->route = $route;
+        $this->method = $method;
+        $this->userId = $userId;
+    }
+
     /**
      * @param array $record
      * @return array
      */
     public function __invoke(array $record)
     {
-        $app = Slim::getInstance();
+        $record['extra']['method'] = $this->method;
+        $record['extra']['route'] = $this->route;
 
-        if ($app === null)
-            return $record;
-
-        $record['extra']['method'] = $app->request()->getMethod();
-        $record['extra']['route'] = $app->request()->getResourceUri();
-
-        if ($app->user != null)
-            $record['extra']['userId'] = $app->user->userId;
+        if ($this->userId != null) {
+            $record['extra']['userId'] = $this->userId;
+        }
 
         return $record;
     }

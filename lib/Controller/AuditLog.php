@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2013 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,11 +20,14 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Xibo\Factory\AuditLogFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 
 /**
  * Class AuditLog
@@ -39,47 +43,74 @@ class AuditLog extends Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
      * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param AuditLogFactory $auditLogFactory
+     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $auditLogFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $auditLogFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
         $this->auditLogFactory = $auditLogFactory;
     }
 
-    public function displayPage()
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
+    public function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'auditlog-page';
+
+        return $this->render($request, $response);
     }
 
-    function grid()
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
+    function grid(Request $request, Response $response)
     {
-        $filterFromDt = $this->getSanitizer()->getDate('fromDt');
-        $filterToDt = $this->getSanitizer()->getDate('toDt');
-        $filterUser = $this->getSanitizer()->getString('user');
-        $filterEntity = $this->getSanitizer()->getString('entity');
-        $filterEntityId = $this->getSanitizer()->getString('entityId');
-        $filterMessage = $this->getSanitizer()->getString('message');
+        $sanitizedParams = $this->getSanitizer($request->getQueryParams());
+
+        $filterFromDt = $sanitizedParams->getDate('fromDt');
+        $filterToDt = $sanitizedParams->getDate('toDt');
+        $filterUser = $sanitizedParams->getString('user');
+        $filterEntity = $sanitizedParams->getString('entity');
+        $filterEntityId = $sanitizedParams->getString('entityId');
+        $filterMessage = $sanitizedParams->getString('message');
 
         $search = [];
 
         if ($filterFromDt != null && $filterFromDt == $filterToDt) {
-            $filterToDt->addDay(1);
+            $filterToDt->addDay();
         }
 
         // Get the dates and times
-        if ($filterFromDt == null)
+        if ($filterFromDt == null) {
             $filterFromDt = $this->getDate()->parse()->sub('1 day');
+        }
 
-        if ($filterToDt == null)
+        if ($filterToDt == null) {
             $filterToDt = $this->getDate()->parse();
+        }
 
         $search['fromTimeStamp'] = $filterFromDt->format('U');
         $search['toTimeStamp'] = $filterToDt->format('U');
@@ -100,7 +131,7 @@ class AuditLog extends Base
             $search['message'] = $filterMessage;
         }
 
-        $rows = $this->auditLogFactory->query($this->gridRenderSort(), $this->gridRenderFilter($search));
+        $rows = $this->auditLogFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($search, $request));
 
         // Do some post processing
         foreach ($rows as $row) {
@@ -111,30 +142,52 @@ class AuditLog extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->auditLogFactory->countLast();
         $this->getState()->setData($rows);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Output CSV Form
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function exportForm()
+    public function exportForm(Request $request, Response $response)
     {
         $this->getState()->template = 'auditlog-form-export';
         $this->getState()->setData([
             'help' => $this->getHelp()->link('AuditLog', 'Export')
         ]);
+
+        return $this->render($request, $response);
     }
 
     /**
      * Outputs a CSV of audit trail messages
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function export()
+    public function export(Request $request, Response $response)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // We are expecting some parameters
-        $filterFromDt = $this->getSanitizer()->getDate('filterFromDt');
-        $filterToDt = $this->getSanitizer()->getDate('filterToDt');
+        $filterFromDt = $sanitizedParams->getDate('filterFromDt');
+        $filterToDt = $sanitizedParams->getDate('filterToDt');
 
-        if ($filterFromDt == null || $filterToDt == null)
+        if ($filterFromDt == null || $filterToDt == null) {
             throw new \InvalidArgumentException(__('Please provide a from/to date.'));
+        }
 
         $fromTimeStamp = $filterFromDt->setTime(0, 0, 0)->format('U');
         $toTimeStamp = $filterToDt->setTime(0, 0, 0)->format('U');
@@ -153,11 +206,12 @@ class AuditLog extends Base
         fclose($out);
 
         // We want to output a load of stuff to the browser as a text file.
-        $app = $this->getApp();
-        $app->response()->header('Content-Type', 'text/csv');
-        $app->response()->header('Content-Disposition', 'attachment; filename="audittrail.csv"');
-        $app->response()->header('Content-Transfer-Encoding', 'binary"');
-        $app->response()->header('Accept-Ranges', 'bytes');
+        $response->withHeader('Content-Type', 'text/csv');
+        $response->withHeader('Content-Disposition', 'attachment; filename="audittrail.csv"');
+        $response->withHeader('Content-Transfer-Encoding', 'binary"');
+        $response->withHeader('Accept-Ranges', 'bytes');
         $this->setNoOutput(true);
+
+        return $this->render($request, $response);
     }
 }
