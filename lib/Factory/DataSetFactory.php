@@ -62,6 +62,8 @@ class DataSetFactory extends BaseFactory
     /** @var DateServiceInterface */
     private $date;
 
+    private $sanitizerService;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -86,6 +88,7 @@ class DataSetFactory extends BaseFactory
         $this->permissionFactory = $permissionFactory;
         $this->displayFactory = $displayFactory;
         $this->date = $date;
+        $this->sanitizerService = $sanitizerService;
     }
 
     /**
@@ -101,11 +104,10 @@ class DataSetFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        $array = [];
         return new DataSet(
             $this->getStore(),
             $this->getLog(),
-            $this->getSanitizer($array),
+            $this->sanitizerService,
             $this->config,
             $this->pool,
             $this,

@@ -365,7 +365,7 @@ class DataSetView extends ModuleWidget
         } else {
 
             // Columns
-            $columns = $sanitizedParams->getIntArray('dataSetColumnId');
+            $columns = $sanitizedParams->getIntArray('dataSetColumnId', ['default' => []]);
 
             if (count($columns) == 0) {
                 $this->setOption('columns', '');
@@ -405,8 +405,8 @@ class DataSetView extends ModuleWidget
             }
 
             // Order and Filter criteria
-            $orderClauses = $sanitizedParams->getArray('orderClause');
-            $orderClauseDirections = $sanitizedParams->getArray('orderClauseDirection');
+            $orderClauses = $sanitizedParams->getArray('orderClause', ['default' => []]);
+            $orderClauseDirections = $sanitizedParams->getArray('orderClauseDirection', ['default' => []]);
             $orderClauseMapping = [];
 
             $i = -1;
@@ -425,7 +425,7 @@ class DataSetView extends ModuleWidget
 
             $this->setOption('orderClauses', json_encode($orderClauseMapping));
 
-            $filterClauses = $sanitizedParams->getArray('filterClause');
+            $filterClauses = $sanitizedParams->getArray('filterClause', ['default' => []]);
             $filterClauseOperator = $sanitizedParams->getArray('filterClauseOperator');
             $filterClauseCriteria = $sanitizedParams->getArray('filterClauseCriteria');
             $filterClauseValue = $sanitizedParams->getArray('filterClauseValue');

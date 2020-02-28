@@ -26,7 +26,7 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Entity\Permission;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\InvalidArgumentException;
+
 use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
@@ -37,6 +37,7 @@ use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Campaign
@@ -721,18 +722,20 @@ class Campaign extends Base
      * )
      *
      */
-    public function assignLayout( Request $request, Response $response, $campaignId)
+    public function assignLayout( Request $request, Response $response, $id)
     {
-        $this->getLog()->debug('assignLayout with campaignId ' . $campaignId);
+        $this->getLog()->debug('assignLayout with campaignId ' . $id);
 
-        $campaign = $this->campaignFactory->getById($campaignId);
+        $campaign = $this->campaignFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($campaign))
+        if (!$this->getUser()->checkEditable($campaign)) {
             throw new AccessDeniedException();
+        }
 
         // Make sure this is a non-layout specific campaign
-        if ($campaign->isLayoutSpecific == 1)
-            throw new InvalidArgumentException(__('You cannot change the assignment of a Layout Specific Campaign'),'campaignId');
+        if ($campaign->isLayoutSpecific == 1) {
+            throw new InvalidArgumentException(__('You cannot change the assignment of a Layout Specific Campaign'), 'campaignId');
+        }
 
         $campaign->setChildObjectDependencies($this->layoutFactory);
 
@@ -886,10 +889,12 @@ class Campaign extends Base
         $layouts = $request->getParam('layoutId', null);
         $layouts = is_array($layouts) ? $layouts : [];
         foreach ($layouts as $object) {
-            $layout = $this->layoutFactory->getById($sanitizedParams->getInt('layoutId', $object));
+            $sanitizedObject = $this->getSanitizer($object);
+            $layout = $this->layoutFactory->getById($sanitizedObject->getInt('layoutId'));
 
-            if (!$this->getUser()->checkViewable($layout) && !$campaign->isLayoutAssigned($layout))
+            if (!$this->getUser()->checkViewable($layout) && !$campaign->isLayoutAssigned($layout)) {
                 throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
+            }
 
             // Set the Display Order
             $layout->displayOrder = $sanitizedParams->getInt('displayOrder', $object);

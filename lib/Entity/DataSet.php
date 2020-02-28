@@ -212,8 +212,8 @@ class DataSet implements \JsonSerializable
     /** @var array Blacklist for SQL */
     private $blackList = array(';', 'INSERT', 'UPDATE', 'SELECT', 'DELETE', 'TRUNCATE', 'TABLE', 'FROM', 'WHERE');
 
-    /** @var  SanitizerService */
-    private $sanitizer;
+    /** @var  \Xibo\Helper\SanitizerService */
+    private $sanitizerService;
 
     /** @var  ConfigServiceInterface */
     private $config;
@@ -240,7 +240,7 @@ class DataSet implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerInterface $sanitizer
+     * @param $sanitizerService
      * @param ConfigServiceInterface $config
      * @param PoolInterface $pool
      * @param DataSetFactory $dataSetFactory
@@ -249,10 +249,10 @@ class DataSet implements \JsonSerializable
      * @param DisplayFactory $displayFactory
      * @param DateServiceInterface $date
      */
-    public function __construct($store, $log, $sanitizer, $config, $pool, $dataSetFactory, $dataSetColumnFactory, $permissionFactory, $displayFactory, $date)
+    public function __construct($store, $log, $sanitizerService, $config, $pool, $dataSetFactory, $dataSetColumnFactory, $permissionFactory, $displayFactory, $date)
     {
         $this->setCommonDependencies($store, $log);
-        $this->sanitizer = $sanitizer;
+        $this->sanitizerService = $sanitizerService;
         $this->config = $config;
         $this->pool = $pool;
         $this->dataSetFactory = $dataSetFactory;
@@ -260,6 +260,15 @@ class DataSet implements \JsonSerializable
         $this->permissionFactory = $permissionFactory;
         $this->displayFactory = $displayFactory;
         $this->date = $date;
+    }
+
+    /**
+     * @param $array
+     * @return \Xibo\Support\Sanitizer\SanitizerInterface
+     */
+    protected function getSanitizer($array)
+    {
+        return $this->sanitizerService->getSanitizer($array);
     }
 
     /**
@@ -394,11 +403,14 @@ class DataSet implements \JsonSerializable
      */
     public function getData($filterBy = [], $options = [])
     {
-        $start = $this->sanitizer->getInt('start', ['default' => 0]);
-        $size = $this->sanitizer->getInt('size', ['default' => 0]);
-        $filter = $this->sanitizer->getString('filter');
-        $ordering = $this->sanitizer->getString('order');
-        $displayId = $this->sanitizer->getInt('displayId', ['default' => 0]);
+
+        $sanitizer = $this->getSanitizer($filterBy);
+
+        $start = $sanitizer->getInt('start', ['default' => 0]);
+        $size = $sanitizer->getInt('size', ['default' => 0]);
+        $filter = $sanitizer->getString('filter');
+        $ordering = $sanitizer->getString('order');
+        $displayId = $sanitizer->getInt('displayId', ['default' => 0]);
 
         $options = array_merge([
             'includeFormulaColumns' => true,
@@ -472,9 +484,9 @@ class DataSet implements \JsonSerializable
 
         // Filter by ID
         if (
-            $this->sanitizer->getInt('id', $filterBy) !== null) {
+            $sanitizer->getInt('id') !== null) {
             $body .= ' AND id = :id ';
-            $params['id'] = $this->sanitizer->getInt('id', $filterBy);
+            $params['id'] = $sanitizer->getInt('id');
         }
 
         // Ordering
@@ -1016,7 +1028,7 @@ class DataSet implements \JsonSerializable
      */
     public function editRow($rowId, $row)
     {
-        $this->getLog()->debug('Editing row %s', var_export($row, true));
+        $this->getLog()->debug(sprintf('Editing row %s', var_export($row, true)));
 
         // Update the last edit date on this dataSet
         $this->lastDataEdit = time();

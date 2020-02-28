@@ -62,6 +62,7 @@ $app->setBasePath(\Xibo\Middleware\State::determineBasePath());
 $request = new Request(new ServerRequest('GET', $app->getBasePath()));
 $request = $request->withAttribute('name', 'xmds');
 $container->set('name', 'xmds');
+$startTime = microtime(true);
 // Set state
 \Xibo\Middleware\State::setState($app, $request);
 
@@ -255,7 +256,8 @@ try {
 
     // Get the stats for this connection
     $stats = $container->get('store')->stats();
-    $stats['length'] = microtime(true) - $app->startTime;
+
+    $stats['length'] = microtime(true) - $startTime;
 
     $container->get('logService')->info('PDO stats: %s.', json_encode($stats, JSON_PRETTY_PRINT));
 

@@ -441,9 +441,8 @@ class DataSetData extends Base
 
         // Expect input for each value-column
         foreach ($dataSet->getColumn() as $column) {
+            $existingValue = $existingRow[$column->heading];
             /* @var \Xibo\Entity\DataSetColumn $column */
-            $existingValue = $request->getParam($column->heading, null);
-
             if ($column->dataSetColumnTypeId == 1) {
 
                 // Pull out the value
@@ -454,35 +453,23 @@ class DataSetData extends Base
                 // Sanitize accordingly
                 if ($column->dataTypeId == 2) {
                     // Number
-                    if ($value === null)
-                        $value = $existingValue;
-
-                    $value = $sanitizedParams->getDouble($value);
+                    $value = $sanitizedParams->getDouble('dataSetColumnId_' . $column->dataSetColumnId);
                 }
                 else if ($column->dataTypeId == 3) {
                     // Date
-                    if ($value === null) {
-                        // Keep it as it was
-                        $value = $existingValue;
-                    } else {
-                        // Parse the new date and convert to a local date/time
-                        $value = $this->getDate()->getLocalDate($this->getDate()->parse($value));
-                    }
+                    $value = $this->getDate()->getLocalDate($this->getDate()->parse($value));
                 }
                 else if ($column->dataTypeId == 5) {
                     // Media Id
                     if (isset($value)) {
-                        $value = $sanitizedParams->getInt($value);
+                        $value = $sanitizedParams->getInt('dataSetColumnId_' . $column->dataSetColumnId);
                     } else {
                         $value = null;
                     }
                 }
                 else {
                     // String
-                    if ($value === null)
-                        $value = $existingValue;
-
-                    $value = $sanitizedParams->getString($value);
+                    $value = $sanitizedParams->getString('dataSetColumnId_' . $column->dataSetColumnId);
                 }
 
                 $row[$column->heading] = $value;

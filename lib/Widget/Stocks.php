@@ -101,7 +101,7 @@ class Stocks extends AlphaVantageBase
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $apiKey = $sanitizedParams->getString('apiKey');
-        $cachePeriod = $sanitizedParams->getInt('cachePeriod', 14400);
+        $cachePeriod = $sanitizedParams->getInt('cachePeriod', ['default' => 14400]);
 
         if ($this->module->enabled != 0) {
             if ($apiKey == '')

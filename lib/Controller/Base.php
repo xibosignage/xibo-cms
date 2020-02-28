@@ -203,7 +203,7 @@ class Base
      */
     protected function isApi(Request $request)
     {
-        return ($request->getAttribute('name') == 'API');
+        return ($request->getAttribute('name') != 'web');
     }
 
     /**
@@ -218,18 +218,6 @@ class Base
     {
         $routeParser = RouteContext::fromRequest($request)->getRouteParser();
         return $routeParser->urlFor($route, $data, $params);
-    }
-
-    /**
-     * Get Flash Message
-     * @param $key
-     * @return string
-     */
-    protected function getFlash($key)
-    {
-        // TODO
-        $template = $this->getApp()->view()->get('flash');
-        return isset($template[$key]) ? $template[$key] : '';
     }
 
     /**
@@ -262,7 +250,7 @@ class Base
      */
     public function render(Request $request, Response $response)
     {
-        $parsedBody = $this->getSanitizer($request->getParsedBody());
+        $parsedBody = $this->getSanitizer($request->getParams());
 
         // TODO not sure what to do with it yet  $this->rendered:o
         if ($this->noOutput) {
@@ -493,7 +481,7 @@ class Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Don't envelope unless requested
-        if ($jsonPCallback != null ||  $request->getParam('envelope', 0) == 1) {
+        if ($jsonPCallback != null ||  $request->getParam('envelope', 0) == 1 || $request->getAttribute('name') === 'test') {
             // Envelope
 
             // append error bool

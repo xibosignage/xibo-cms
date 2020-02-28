@@ -20,6 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
+use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Flash\Messages;
@@ -66,11 +67,11 @@ class Login extends Base
     /** @var \Stash\Interfaces\PoolInterface */
     private $pool;
 
-    /** @var Messages */
-    private $flash;
-
     /** @var Twig */
     private $view;
+
+    /** @var ContainerInterface */
+    private $container;
 
     /**
      * Set common dependencies.
@@ -86,9 +87,9 @@ class Login extends Base
      * @param \Stash\Interfaces\PoolInterface $pool
      * @param StorageServiceInterface $store
      * @param Twig $view
-     * @param Messages $flash
+     * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $pool, $store, $view, $flash)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $pool, $store, $view, ContainerInterface $container)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
@@ -96,8 +97,18 @@ class Login extends Base
         $this->userFactory = $userFactory;
         $this->pool = $pool;
         $this->store = $store;
-        $this->flash = $flash;
         $this->view  = $view;
+        $this->container = $container;
+    }
+
+    /**
+     * Get Flash Message
+     *
+     * @return Messages
+     */
+    protected function getFlash()
+    {
+        return $this->container->get('flash');
     }
 
     /**
@@ -130,10 +141,10 @@ class Login extends Base
 
             if ($cache->isMiss()) {
                 $this->getLog()->error('Expired nonce used.');
-                $this->flash->addMessageNow('login_message', __('This link has expired.'));
+                $this->getFlash()->addMessageNow('login_message', __('This link has expired.'));
             } else if (!password_verify($nonce[1], $validated['hash'])) {
                 $this->getLog()->error('Invalid nonce used.');
-                $this->flash->addMessageNow('login_message', __('This link has expired.'));
+                $this->getFlash()->addMessageNow('login_message', __('This link has expired.'));
             } else {
                 // We're valid.
                 $this->pool->deleteItem('/nonce/' . $nonce[0]);
@@ -144,7 +155,7 @@ class Login extends Base
                     // Dooh user
                     if ($user->userTypeId === 4) {
                         $this->getLog()->error('Cannot log in as this User type');
-                        $this->flash->addMessageNow('login_message', __('Invalid User Type'));
+                        $this->getFlash()->addMessageNow('login_message', __('Invalid User Type'));
                     }
 
                     // Log in this user
@@ -176,7 +187,7 @@ class Login extends Base
                     return $response->withRedirect($this->urlFor($request, 'home'));
                 } catch (NotFoundException $notFoundException) {
                     $this->getLog()->error('Valid nonce for non-existing user');
-                    $this->flash->addMessageNow('login_message', __('This link has expired.'));
+                    $this->getFlash()->addMessageNow('login_message', __('This link has expired.'));
                 }
             }
         }
@@ -235,7 +246,7 @@ class Login extends Base
                 // check if 2FA is enabled
                 if ($user->twoFactorTypeId != 0) {
                     $_SESSION['tfaUsername'] = $user->userName;
-                    $this->flash->addMessage('priorRoute', $priorRoute);
+                    $this->getFlash()->addMessage('priorRoute', $priorRoute);
                     return $response->withRedirect($routeParser->urlFor('tfa'));
                 }
 
@@ -253,14 +264,14 @@ class Login extends Base
             // Modify our return message depending on whether we're a DOOH user or not
             // we do this because a DOOH user is not allowed to log into the web UI directly and is API only.
             if ($user === null || $user->userTypeId != 4) {
-               $this->flash->addMessage('login_message', __('Username or Password incorrect'));
+               $this->getFlash()->addMessage('login_message', __('Username or Password incorrect'));
             } else {
-                $this->flash->addMessage('login_message', __($e->getMessage()));
+                $this->getFlash()->addMessage('login_message', __($e->getMessage()));
             }
-            $this->flash->addMessage('priorRoute', $priorRoute);
+            $this->getFlash()->addMessage('priorRoute', $priorRoute);
         }
         catch (\Xibo\Exception\FormExpiredException $e) {
-            $this->flash->addMessage('priorRoute', $priorRoute);
+            $this->getFlash()->addMessage('priorRoute', $priorRoute);
         }
         $this->setNoOutput(true);
         $this->getLog()->debug('Redirect to ' . $redirect);
@@ -273,8 +284,10 @@ class Login extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException
-     * @throws \Xibo\Exception\XiboException
      * @throws \PHPMailer\PHPMailer\Exception
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      */
     public function forgottenPassword(Request $request, Response $response)
     {
@@ -349,7 +362,7 @@ class Login extends Base
             if (!$mail->send()) {
                 throw new ConfigurationException('Unable to send password reminder to ' . $user->email);
             } else {
-                $this->flash->addMessage('login_message', __('Reminder email has been sent to your email address'));
+                $this->getFlash()->addMessage('login_message', __('Reminder email has been sent to your email address'));
             }
 
             // Audit Log
@@ -360,7 +373,7 @@ class Login extends Base
 
         } catch (XiboException $xiboException) {
             $this->getLog()->debug($xiboException->getMessage());
-            $this->flash->addMessage('login_message', __('User not found'));
+            $this->getFlash()->addMessage('login_message', __('User not found'));
         }
 
         $this->setNoOutput(true);
@@ -470,6 +483,9 @@ class Login extends Base
      * @param $subject
      * @param $body
      * @return string
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      */
     private function generateEmailBody($subject, $body)
     {
@@ -505,7 +521,7 @@ class Login extends Base
     public function twoFactorAuthForm(Request $request, Response $response)
     {
         if (!isset($_SESSION['tfaUsername'])) {
-            $this->flash->addMessage('login_message', __('Session has expired, please log in again'));
+            $this->getFlash()->addMessage('login_message', __('Session has expired, please log in again'));
             return $response->withRedirect($this->urlFor($request, 'login'));
         }
 
@@ -663,7 +679,7 @@ class Login extends Base
             return $response->withRedirect($redirect);
         } else {
             $this->getLog()->error('Authentication code incorrect, redirecting to login page');
-            $this->flash->addMessage('login_message', __('Authentication code incorrect'));
+            $this->getFlash()->addMessage('login_message', __('Authentication code incorrect'));
             return $response->withRedirect($this->urlFor($request, 'login'));
         }
     }

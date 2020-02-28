@@ -1165,7 +1165,7 @@ class Module extends Base
 
         // Pull in the parameters we are expecting from the form.
         $mediaId = $sanitizedParams->getInt('mediaId');
-        $volume = $sanitizedParams->getInt('volume', 100);
+        $volume = $sanitizedParams->getInt('volume', ['default' => 100]);
         $loop = $sanitizedParams->getCheckbox('loop');
 
         // Remove existing audio records.

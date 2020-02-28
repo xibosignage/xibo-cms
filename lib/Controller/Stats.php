@@ -610,6 +610,8 @@ class Stats extends Base
         $fromDt = $sanitizedParams->getDate('fromDt');
         $toDt = $sanitizedParams->getDate('toDt');
         $displayId = $sanitizedParams->getInt('displayId');
+       // header( "Content-Type: text/csv;charset=utf-8" );
+      //  header( 'Content-Disposition:attachment; filename=stats.csv');
 
         // Do not filter by display if super admin and no display is selected
         // Super admin will be able to see stat records of deleted display, we will not filter by display later
@@ -698,11 +700,12 @@ class Stats extends Base
         fclose($out);
 
         // We want to output a load of stuff to the browser as a text file.
-        $response
-            ->withHeader('Content-Type', 'text/csv')
-            ->withHeader('Content-Disposition', 'attachment; filename="stats.csv"')
-            ->withHeader('Content-Transfer-Encoding', 'binary"')
-            ->withHeader('Accept-Ranges', 'bytes');
+        $response = $response
+                        ->withHeader('Content-Type', 'text/csv')
+                        ->withHeader('Content-Disposition', 'attachment; filename=stats.csv')
+                        ->withHeader('Content-Transfer-Encoding', 'binary')
+                        ->withHeader('Accept-Ranges', 'bytes');
+
         $this->setNoOutput(true);
 
         return $this->render($request, $response);

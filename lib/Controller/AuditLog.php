@@ -178,12 +178,14 @@ class AuditLog extends Base
      * @throws \Xibo\Exception\ConfigurationException
      * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function export(Request $request, Response $response)
+    public function export(Request $request, Response $response) : Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // We are expecting some parameters
         $filterFromDt = $sanitizedParams->getDate('filterFromDt');
         $filterToDt = $sanitizedParams->getDate('filterToDt');
+      //  header( "Content-Type: text/csv;charset=utf-8" );
+      //  header( 'Content-Disposition:attachment; filename=audittrail.csv');
 
         if ($filterFromDt == null || $filterToDt == null) {
             throw new \InvalidArgumentException(__('Please provide a from/to date.'));
@@ -204,12 +206,13 @@ class AuditLog extends Base
         }
 
         fclose($out);
-
         // We want to output a load of stuff to the browser as a text file.
-        $response->withHeader('Content-Type', 'text/csv');
-        $response->withHeader('Content-Disposition', 'attachment; filename="audittrail.csv"');
-        $response->withHeader('Content-Transfer-Encoding', 'binary"');
-        $response->withHeader('Accept-Ranges', 'bytes');
+        $response = $response->withHeader('Content-Type', 'text/csv;charset=utf-8')
+                             ->withHeader('Content-Disposition', 'attachment; filename="audittrail.csv"')
+                             ->withHeader('Content-Transfer-Encoding', 'binary')
+                             ->withHeader('Accept-Ranges', 'bytes')
+                             ->withHeader('Connection', 'Keep-Alive');
+
         $this->setNoOutput(true);
 
         return $this->render($request, $response);
