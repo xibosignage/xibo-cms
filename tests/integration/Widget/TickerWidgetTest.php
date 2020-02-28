@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -265,16 +266,16 @@ class TickerWidgetTest extends LocalWebTestCase
         $this->getLogger()->debug('testEditFeed - IN');
 
         // Edit ticker widget
-        $this->client->put('/playlist/widget/' . $this->widgetId, $newWidgetOptions, ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+        $response = $this->sendRequest('PUT','/playlist/widget/' . $this->widgetId, $newWidgetOptions, ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
         $this->getLogger()->debug('Check Response');
 
         // Check response
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->getBody());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
 
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
 
         // Get the edited ticker back out again.
         /** @var XiboTicker $editedTicker */

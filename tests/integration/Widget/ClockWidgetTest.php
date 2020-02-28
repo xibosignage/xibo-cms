@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -83,34 +83,43 @@ class ClockWidgetTest extends LocalWebTestCase
     {
         # Sets of data used in testAdd
         return [
-            'Analogue' => ['Api Analogue clock', 20, 1, 1, 1, 0, '', 0, 'TwentyFourHourClock'],
-            'Digital' => ['API digital clock', 20, 1, 0, 2, 0, '[HH:mm]', 0, 'TwentyFourHourClock'],
-            'Flip 24h' => ['API Flip clock 24h', 5, 1, 0, 3, 0, '', 1, 'TwentyFourHourClock'],
-            'Flip counter' => ['API Flip clock Minute counter', 50, 1, 0, 3, 0, '', 1, 'MinuteCounter']
+            'Analogue' => ['Api Analogue clock', 20, 1, 1, 1, null, null, 0, 'TwentyFourHourClock'],
+            'Digital' => ['API digital clock', 20, 1, 0, 2, null, '[HH:mm]', 0, 'TwentyFourHourClock'],
+            'Flip 24h' => ['API Flip clock 24h', 5, 1, 0, 3, null, null, 1, 'TwentyFourHourClock'],
+            'Flip counter' => ['API Flip clock Minute counter', 50, 1, 0, 3, null, null, 1, 'MinuteCounter']
         ];
     }
 
     /**
-     * @throws \Xibo\OAuth2\Client\Exception\XiboApiException
+     * @param $name
+     * @param $duration
+     * @param $useDuration
+     * @param $theme
+     * @param $clockTypeId
+     * @param $offset
+     * @param $format
+     * @param $showSeconds
+     * @param $clockFace
      * @dataProvider provideSuccessCases
      */
     public function testEdit($name, $duration, $useDuration, $theme, $clockTypeId, $offset, $format, $showSeconds, $clockFace)
     {
-        $response = $this->client->put('/playlist/widget/' . $this->widgetId, [
-        	'name' => $name,
-        	'duration' => $duration,
-        	'themeId' => $theme,
-        	'clockTypeId' => $clockTypeId,
-        	'offset' => $offset,
-        	'format' => $format,
-        	'showSeconds' => $showSeconds,
-        	'clockFace' => $clockFace
-        	], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+        $response = $this->sendRequest('PUT', '/playlist/widget/' . $this->widgetId, [
+            'name' => $name,
+            'useDuration' => $useDuration,
+            'duration' => $duration,
+            'themeId' => $theme,
+            'clockTypeId' => $clockTypeId,
+            'offset' => $offset,
+            'format' => $format,
+            'showSeconds' => $showSeconds,
+            'clockFace' => $clockFace
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
 
         /** @var XiboClock $checkWidget */
         $response = $this->getEntityProvider()->get('/playlist/widget', ['widgetId' => $this->widgetId]);
@@ -119,8 +128,10 @@ class ClockWidgetTest extends LocalWebTestCase
         foreach ($checkWidget->widgetOptions as $option) {
             if ($option['option'] == 'clockTypeId') {
                 $this->assertSame($clockTypeId, intval($option['value']));
-            } else if ($option['option'] == 'name') {
-                $this->assertSame($name, $option['value']);
+            } else {
+                if ($option['option'] == 'name') {
+                    $this->assertSame($name, $option['value']);
+                }
             }
         }
     }

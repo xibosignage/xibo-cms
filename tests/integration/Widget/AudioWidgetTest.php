@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -106,7 +106,7 @@ class AudioWidgetTest extends LocalWebTestCase
         $mute = 0;
         $loop = 0;
 
-        $this->client->put('/playlist/widget/' . $this->widgetId, [
+        $response = $this->sendRequest('PUT','/playlist/widget/' . $this->widgetId, [
             'name' => $name,
             'duration' => $duration,
             'useDuration' => $useDuration,
@@ -115,11 +115,11 @@ class AudioWidgetTest extends LocalWebTestCase
             ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']
         );
 
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
 
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
 
         /** @var XiboImage $widgetOptions */
         $response = $this->getEntityProvider()->get('/playlist/widget', ['widgetId' => $this->widgetId]);
@@ -154,17 +154,17 @@ class AudioWidgetTest extends LocalWebTestCase
         $loop = 1;
 
         // Add audio to image assigned to a playlist
-        $this->client->put('/playlist/widget/' . $this->widgetId . '/audio', [
+        $response = $this->sendRequest('PUT','/playlist/widget/' . $this->widgetId . '/audio', [
             'mediaId' => $this->audio->mediaId,
             'volume' => $volume,
             'loop' => $loop,
             ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']
         );
 
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
 
         $response = $this->getEntityProvider()->get('/playlist/widget', ['widgetId' => $this->widgetId]);
 

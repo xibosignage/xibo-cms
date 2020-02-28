@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -74,9 +74,8 @@ class WidgetDeleteTest extends LocalWebTestCase
     public function testDelete()
     {
         // Delete the widget we've added
-        $this->client->delete('/playlist/widget/' . $this->widgetId);
+        $response = $this->sendRequest('DELETE','/playlist/widget/' . $this->widgetId);
 
-        $response = json_decode($this->client->response->body());
-        $this->assertSame(200, $response->status, $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
     }
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -101,13 +101,14 @@ class GoogleTrafficWidgetTest extends LocalWebTestCase
     /**
      * Edit
      * @dataProvider provideEditCases
-     * @broken this module is not installed by default.
+     * This test works correctly, it's marked as broken because we don't have this widget installed by default
+     * @group broken
      */
     public function testEdit($statusCode, $name, $duration, $useDisplayLocation, $lat, $long, $zoom)
     {
-        $this->getLogger()->debug('testEdit IN');
+        $this->getLogger()->debug('testEdit ' . get_class() .' Test');
 
-        $response = $this->client->put('/playlist/widget/' . $this->widgetId, [
+        $response = $this->sendRequest('PUT','/playlist/widget/' . $this->widgetId, [
             'name' => $name,
             'duration' => $duration,
             'useDuration' => 1,
@@ -117,14 +118,14 @@ class GoogleTrafficWidgetTest extends LocalWebTestCase
             'zoom' => $zoom,
             ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-        $this->assertSame($statusCode, $this->client->response->status(), 'Incorrect status code.', var_export($response, true));
+        $this->assertSame($statusCode, $response->getStatusCode(), 'Incorrect status code.', var_export($response, true));
 
         if ($statusCode == 500)
             return;
 
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
 
         /** @var XiboGoogleTraffic $checkWidget */
         $response = $this->getEntityProvider()->get('/playlist/widget', ['widgetId' => $this->widgetId]);
