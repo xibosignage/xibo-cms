@@ -41,8 +41,17 @@
                             {% set title %}{% trans "ID" %}{% endset %}
                             {{ inline.number("tagId", title) }}
 
-                            {% set title %}{% trans "Name" %}{% endset %}
-                            {{ inline.input("tag", title) }}
+                            <div class="form-group ">
+                                <label class="control-label" title="" for="tag" accesskey="">{% trans "Name" %}</label>
+                                <div>
+                                    <div class="input-group">
+                                        <input class="form-control" name="tag" type="text" id="tag" value="">
+                                        <span class="input-group-addon">
+                                            <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
 
                             {% set title %}{% trans "Show System tags?" %}{% endset %}
                             {{ inline.checkbox("isSystem", title, 0) }}

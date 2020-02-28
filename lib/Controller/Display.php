@@ -527,6 +527,7 @@ class Display extends Base
         $filter = [
             'displayId' => $parsedQueryParams->getInt('displayId'),
             'display' => $parsedQueryParams->getString('display'),
+            'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'macAddress' => $parsedQueryParams->getString('macAddress'),
             'license' => $parsedQueryParams->getString('hardwareKey'),
             'displayGroupId' => $parsedQueryParams->getInt('displayGroupId'),

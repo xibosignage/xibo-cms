@@ -160,6 +160,7 @@ class DataSet extends Base
         $filter = [
             'dataSetId' => $sanitizedParams->getInt('dataSetId'),
             'dataSet' => $sanitizedParams->getString('dataSet'),
+            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
             'code' => $sanitizedParams->getString('code'),
         ];
 

@@ -125,6 +125,7 @@ class Logging extends Base
             'runNo' => $parsedQueryParams->getString('runNo'),
             'message' => $parsedQueryParams->getString('message'),
             'display' => $parsedQueryParams->getString('display'),
+            'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'displayGroupId' => $parsedQueryParams->getInt('displayGroupId'),
         ], $request));
 

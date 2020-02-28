@@ -192,6 +192,7 @@ class Campaign extends Base
         $filter = [
             'campaignId' => $parsedParams->getInt('campaignId'),
             'name' => $parsedParams->getString('name'),
+            'useRegexForName' => $parsedParams->getCheckbox('useRegexForName'),
             'tags' => $parsedParams->getString('tags'),
             'hasLayouts' => $parsedParams->getInt('hasLayouts'),
             'isLayoutSpecific' => $parsedParams->getInt('isLayoutSpecific'),

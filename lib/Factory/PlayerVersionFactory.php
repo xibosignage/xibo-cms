@@ -222,7 +222,7 @@ class PlayerVersionFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('playerShowVersion') !== null) {
             $terms = explode(',', $sanitizedFilter->getString('playerShowVersion'));
-            $this->nameFilter('player_software', 'playerShowVersion', $terms, $body, $params);
+            $this->nameFilter('player_software', 'playerShowVersion', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         // Sorting?

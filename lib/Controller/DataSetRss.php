@@ -156,13 +156,15 @@ class DataSetRss extends Base
     public function grid(Request $request, Response $response, $id)
     {
         $dataSet = $this->dataSetFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getQueryParams());
 
         if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
         }
         
         $feeds = $this->dataSetRssFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
-            'dataSetId' => $id
+            'dataSetId' => $id,
+            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName')
         ], $request), $request);
 
         foreach ($feeds as $feed) {

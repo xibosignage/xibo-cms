@@ -264,7 +264,7 @@ class CampaignFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('name') != '') {
             $terms = explode(',', $sanitizedFilter->getString('name'));
-            $this->nameFilter('campaign', 'Campaign', $terms, $body, $params);
+            $this->nameFilter('campaign', 'Campaign', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         // Exclude templates by default

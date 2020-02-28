@@ -311,14 +311,15 @@ class User extends Base
      */
     function grid(Request $request, Response $response)
     {
-        $sanitizedPrams = $this->getSanitizer($request->getQueryParams());
+        $sanitizedParams = $this->getSanitizer($request->getQueryParams());
 
         // Filter our users?
         $filterBy = [
-            'userId' => $sanitizedPrams->getInt('userId'),
-            'userTypeId' => $sanitizedPrams->getInt('userTypeId'),
-            'userName' => $sanitizedPrams->getString('userName'),
-            'retired' => $sanitizedPrams->getInt('retired')
+            'userId' => $sanitizedParams->getInt('userId'),
+            'userTypeId' => $sanitizedParams->getInt('userTypeId'),
+            'userName' => $sanitizedParams->getString('userName'),
+            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
+            'retired' => $sanitizedParams->getInt('retired')
         ];
 
         // Load results into an array

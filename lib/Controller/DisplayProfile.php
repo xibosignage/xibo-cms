@@ -171,6 +171,7 @@ class DisplayProfile extends Base
         $filter = [
             'displayProfileId' => $parsedQueryParams->getInt('displayProfileId'),
             'displayProfile' => $parsedQueryParams->getString('displayProfile'),
+            'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'type' => $parsedQueryParams->getString('type')
         ];
 

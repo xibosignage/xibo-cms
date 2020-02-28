@@ -133,7 +133,7 @@ class DataSetRssFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('title', $filterBy) != null) {
             $terms = explode(',', $sanitizedFilter->getString('title'));
-            $this->nameFilter('datasetrss', 'title', $terms, $body, $params);
+            $this->nameFilter('datasetrss', 'title', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         // Sorting?
