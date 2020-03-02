@@ -114,29 +114,6 @@ jQuery.fn.extend({
 
         options = $.extend({}, defaults, options);
 
-        // Calculate the dimensions of this item based on the preview/original dimensions
-        var width = 0;
-        var height = 0;
-        if (options.previewWidth === 0 || options.previewHeight === 0) {
-            width = options.originalWidth;
-            height = options.originalHeight;
-        } else {
-            width = options.previewWidth;
-            height = options.previewHeight;
-        }
-
-        if (options.scaleOverride !== 0) {
-            width = width / options.scaleOverride;
-            height = height / options.scaleOverride;
-        }
-
-        if (options.widgetDesignWidth > 0 && options.widgetDesignHeight > 0) {
-            options.widgetDesignWidth = options.widgetDesignWidth;
-            options.widgetDesignHeight = options.widgetDesignHeight;
-            width = options.widgetDesignWidth;
-            height = options.widgetDesignHeight;
-        }
-
         // For each matched element
         this.each(function() {
 

@@ -1,0 +1,10 @@
+{
+    "id": "worldclock2",
+    "value": "Date and time clock",
+    "mainTemplate": "<div class=\"clockContainer\">\n<p><span class=\"label\"></span></p>\n<p>[DD MMMM, YYYY]</p>\n<p>[HH:mm:ss]</p>\n</div>",
+    "css": ".clockContainer {\n  color: #f9f9f9;\n  background: #222;\n  font-size: 14px;\n  padding: 10px;\n  text-align: left;\n}\n\n.label {\n  color: #2993c3;\n  font-size: 16px;\n}\n\n.highlighted .label {\n  font-weight: bold;\n  font-size: 20px;\n}\n\n.clockContainer p {\n  margin: 0;\n}",
+    "widgetOriginalWidth": "200",
+    "widgetOriginalHeight": "80",
+    "image": "modules/worldclock/template-thumbs/worldclock2.png",
+    "defaultVisualEditor": false
+}
