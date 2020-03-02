@@ -1,0 +1,10 @@
+{
+    "id": "countdown4",
+    "value": "Days Countdown",
+    "template": "<div id=\"clockdiv\">\n    <div>[DD]\n        <div class=\"smalltext\">||Days||</div>\n    </div>\n\n    <div>[hh]\n        <div class=\"smalltext\">||Hours||</div>\n    </div>\n    <div>[mm]\n        <div class=\"smalltext\">||Minutes||</div>\n    </div>\n\n    <div>[ss]\n        <div class=\"smalltext\">||Seconds||</div>\n    </div>\n</div>",
+    "css": "#clockdiv {\n    font-family: sans-serif;\n    color: #333;\n    display: inline-block;\n    text-align: center;\n    font-size: 0;\n}\n#clockdiv > div {\n    padding: 12px 8px;\n    display: inline-block;\n    width: 150px;\n    font-size: 70px;\n}\n#clockdiv div > span {\n    text-align: center;\n    padding: 10px 0px;\n    width: 100%;\n    border-radius: 20px;\n    font-weight: bold;\n    display: inline-block;\n    color: #1b1e56;\n    border: 2px solid #1b1e56;\n}\n.smalltext {\n    padding-top: 10px;\n    font-size: 30px;\n}\n.warning > #clockdiv > div > span {\n    border-color: darkgoldenrod;\n    color: darkgoldenrod;\n}\n.finished > #clockdiv > div > span {\n    border-color: darkred;\n    color: darkred;\n}",
+    "widgetOriginalWidth": "600",
+    "widgetOriginalHeight": "200",
+    "image": "modules/countdown/template-thumbs/countdown4.png",
+    "defaultVisualEditor": false
+}

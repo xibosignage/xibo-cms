@@ -1,0 +1,110 @@
+{#
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+<script type="text/javascript">
+
+    // Runs after form opens
+    function worldclock_form_edit_open() {
+        // Set duration field, using the helper ()
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
+
+        // Set clock type input field, using the helper ()
+        formHelpers.setupObjectValueInputFields($(this), '#clockType', ['.digital-control-group', '.analogue-control-group'], [1, 2]);
+
+        // Set override template field, using the helper ()
+        formHelpers.setupCheckboxInputFields($(this), '#overrideTemplate', '.template-override-controls', '.template-selector-control');
+        
+        // Setup form Editor
+        formHelpers.setupDualTypeTextArea(this, 'mainTemplate');
+
+        // Init color inputs
+        $(this).find('.clock-color-input input').colorpicker();
+
+        // Setup template override
+        formHelpers.setupTemplateOverriding(this, '#overrideTemplate', '#templateId', 
+            {
+                '#mainTemplate': 'mainTemplate',
+                '#styleSheet': 'css',
+                '#widgetOriginalWidth': 'widgetOriginalWidth',
+                '#widgetOriginalHeight': 'widgetOriginalHeight'
+            });
+
+        // Setup analogue clock special fields
+        formHelpers.setupCheckboxInputFields($(this), '#showSecondsHand', '.seconds-fields');
+        formHelpers.setupCheckboxInputFields($(this), '#showSteps', '.steps-fields');
+        formHelpers.setupCheckboxInputFields($(this), '#showMiniDigitalClock', '.inner-digital-fields');
+        formHelpers.setupCheckboxInputFields($(this), '#showLabel', '.label-fields');
+
+        // Setup multiple clocks
+        configureMultipleWorldClocks($(this));
+    }
+
+    function configureMultipleWorldClocks(container, translations) {
+        if(container.length == 0)
+            return;
+
+        const $worldClocksContainer = container.find('#worldClocksContainer');
+        const worldClockTemplate = formHelpers.getTemplate('worldClockTemplate');
+        const worldClocks = container.data().extra.worldClocks;
+        const timezones = container.data().extra.timezones;
+
+        if(worldClocks.length == 0) {
+            // Add a template row
+            var context = {title: "1", clockTimezone: "", timezones: timezones, buttonGlyph: "fa-plus"};
+            $worldClocksContainer.append(worldClockTemplate(context));
+        } else {
+            // For each of the existing codes, create form components
+            var i = 0;
+            $.each(worldClocks, function(index, field) {
+                i++;
+                
+                var context = {title: i, clockTimezone: field.clockTimezone, clockHighlight: field.clockHighlight, clockLabel: field.clockLabel, timezones: timezones, buttonGlyph: ((i == 1) ? "fa-plus" : "fa-minus")};
+
+                $worldClocksContainer.append(worldClockTemplate(context));
+            });
+
+            updateClockCountLabel(container);
+        }
+
+        // Nabble the resulting buttons
+        $worldClocksContainer.on("click", "button", function(e) {
+            e.preventDefault();
+
+            // find the gylph
+            if($(this).find("i").hasClass("fa-plus")) {
+                var context = {title: $worldClocksContainer.find('.form-inline').length + 1, clockTimezone: "", timezones: timezones, buttonGlyph: "fa-minus"};
+                $worldClocksContainer.append(worldClockTemplate(context));
+            } else {
+                // Remove this row
+                $(this).closest(".form-inline").remove();
+            }
+
+            updateClockCountLabel(container);
+        });
+    }
+
+    function updateClockCountLabel(container) {
+        const clockCount = container.find('#worldClocksContainer').find('.form-inline').length;
+        container.find('.clockCount').html((clockCount > 1) ? '(' + clockCount + ')' : '');
+    }
+</script>

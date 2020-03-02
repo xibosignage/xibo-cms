@@ -106,7 +106,9 @@
                 showSeconds: (showSeconds === 1)
             });
 
-            clock.setTime(clock.getTime() + (offset * 60 * 1000));
+            var date = new Date(clock.getTime().time);
+
+            clock.setTime(new Date(date.valueOf() + (offset * 60 * 1000)));
         } else {
             var duration;
             if (isNaN(offset)) {
