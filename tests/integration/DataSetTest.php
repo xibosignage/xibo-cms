@@ -148,7 +148,7 @@ class DataSetTest extends LocalWebTestCase
         $response = $this->sendRequest('DELETE','/dataset/' . $data2->dataSetId);
         # This should return 204 for success
         $object = json_decode($response->getBody());
-        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $this->assertSame(204, $object->status, $response->getBody());
         # Check only one remains
         $dataSets = (new XiboDataSet($this->getEntityProvider()))->get();
         $this->assertEquals(count($this->startDataSets) + 1, count($dataSets));

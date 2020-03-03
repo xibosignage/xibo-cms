@@ -197,6 +197,8 @@ class CampaignTest extends LocalWebTestCase
         $response = $this->sendRequest('DELETE', '/campaign/' . $camp2->campaignId);
         # This should return 204 for success
         $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertSame(204, $object->status, $response->getBody());
 
         # Check only one remains
         $campaigns = (new XiboCampaign($this->getEntityProvider()))->get();

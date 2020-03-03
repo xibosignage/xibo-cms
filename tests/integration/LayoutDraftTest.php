@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -17,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- * (LayoutDraftTest.php)
  */
 namespace Xibo\Tests\integration;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
@@ -56,14 +56,16 @@ class LayoutDraftTest extends LocalWebTestCase
     public function testAddRegionCheckoutParent()
     {
         // Add region to our layout with data from regionSuccessCases
-        $this->client->post('/region/' . $this->layout->layoutId, [
+        $response = $this->sendRequest('POST','/region/' . $this->layout->layoutId, [
             'width' => 100,
             'height' => 100,
             'top' => 10,
             'left' => 10
         ]);
-
-        $this->assertSame(500, $this->client->response->status(), 'Status Incorrect');
+        $this->assertSame(422, $response->getStatusCode(), 'Status Incorrect');
+        $object = json_decode($response->getBody());
+        $this->assertSame(false, $object->success);
+        $this->assertSame(422, $object->status);
     }
 
     /**
@@ -75,14 +77,14 @@ class LayoutDraftTest extends LocalWebTestCase
         $layout = $this->getDraft($this->layout);
 
         // Add region to our layout with data from regionSuccessCases
-        $this->client->post('/region/' . $layout->layoutId, [
+        $response = $this->sendRequest('POST','/region/' . $layout->layoutId, [
             'width' => 100,
             'height' => 100,
             'top' => 10,
             'left' => 10
         ]);
 
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->getBody());
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
     }
 
     /**
@@ -91,11 +93,15 @@ class LayoutDraftTest extends LocalWebTestCase
     public function testPublishLayoutWithError()
     {
         // Do nothing and try to publish
-        $this->client->put('/layout/publish/' . $this->layout->layoutId, [
+        $response = $this->sendRequest('PUT','/layout/publish/' . $this->layout->layoutId, [
             'publishNow' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
         // Expected invalid argument
-        $this->assertSame(500, $this->client->response->status(), $this->client->response->getBody());
+        $this->assertSame(422, $response->getStatusCode(), $response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertSame(false, $object->success);
+        $this->assertSame(422, $object->status);
+        $this->assertContains('There is an error with this Layout: Empty Region', $object->error);
     }
 }

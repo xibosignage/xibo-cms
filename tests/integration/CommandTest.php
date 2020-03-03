@@ -151,7 +151,7 @@ class CommandTest extends LocalWebTestCase
             'code' => $commandCode
         ]);
         # Check if commands are failing as expected
-        $this->assertSame(500, $response->getStatusCode(), 'Expecting failure, received ' . $response->getStatusCode());
+        $this->assertSame(422, $response->getStatusCode(), 'Expecting failure, received ' . $response->getStatusCode());
     }
 
     /**
@@ -259,7 +259,7 @@ class CommandTest extends LocalWebTestCase
         $response = $this->sendRequest('DELETE','/command/' . $command2->commandId);
         # This should return 204 for success
         $object = json_decode($response->getBody());
-        $this->assertSame(200, $object->status, $response->getBody());
+        $this->assertSame(204, $object->status, $response->getBody());
         # Check only one remains
         $commands = (new XiboCommand($this->getEntityProvider()))->get();
         $this->assertEquals(count($this->startCommands) + 1, count($commands));
