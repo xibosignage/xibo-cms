@@ -31,6 +31,7 @@ use PHPUnit\Framework\TestCase as PHPUnit_TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Slim\App;
 use Slim\Http\Factory\DecoratedResponseFactory;
 use Slim\Http\Response;
@@ -46,6 +47,7 @@ use Xibo\Middleware\Storage;
 use Xibo\OAuth2\Client\Provider\XiboEntityProvider;
 use Xibo\Storage\PdoStorageService;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Tests\Helper\MockPlayerActionService;
 use Xibo\Tests\Middleware\TestAuthMiddleware;
 use Xibo\Tests\Xmds\XmdsWrapper;
@@ -288,7 +290,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
 
 
             $container->set('user', $user);
-        } catch (\Xibo\Exception\NotFoundException $e) {
+        } catch (NotFoundException $e) {
             // Create the phpunit user with a random password
             /** @var \Xibo\Entity\User $user */
             $user = $container->get('userFactory')->create();
@@ -310,7 +312,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
             /** @var User $admin */
             $admin = $container->get('userFactory')->getByName('phpunit');
 
-        } catch (\Xibo\Exception\NotFoundException $e) {
+        } catch (NotFoundException $e) {
             die ('Cant proceed without the phpunit user');
         }
 
@@ -318,7 +320,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
         /** @var Application $application */
         try {
             $application = $container->get('applicationFactory')->getByName('phpunit');
-        } catch (\Xibo\Exception\NotFoundException $e) {
+        } catch (NotFoundException $e) {
             // Add it
             $application = $container->get('applicationFactory')->create();
             $application->name = ('phpunit');
@@ -388,14 +390,18 @@ class LocalWebTestCase extends PHPUnit_TestCase
 
     /**
      * @return LoggerInterface
+     * @throws \Exception
      */
     public function getLogger()
     {
         // Create if necessary
-
+        if (self::$logger === null) {
+            if (isset($_SERVER['PHPUNIT_LOG_TO_CONSOLE']) && $_SERVER['PHPUNIT_LOG_TO_CONSOLE']) {
                 self::$logger = new Logger('TESTS', [new \Monolog\Handler\StreamHandler(STDERR, Logger::DEBUG)]);
-
-
+            } else {
+                self::$logger = new NullLogger();
+            }
+        }
 
         return self::$logger;
     }
@@ -404,6 +410,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
      * This function is using MockPlayerActionService, which returns an array of displayId on processQueue
      *
      * @return int[]
+     * @throws \Xibo\Support\Exception\DeadlockException
      */
     public function getPlayerActionQueue()
     {
