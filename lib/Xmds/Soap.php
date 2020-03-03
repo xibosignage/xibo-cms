@@ -1474,6 +1474,7 @@ class Soap
         $document->loadXML($statXml);
 
         $layoutIdsNotFound = [];
+        $widgetIdsNotFound = [];
 
         foreach ($document->documentElement->childNodes as $node) {
             /* @var \DOMElement $node */
@@ -1564,9 +1565,15 @@ class Soap
                     }
 
                 } catch (NotFoundException $notFoundException) {
+
                     // Widget isn't found
                     // we can only log this and move on
-                    $this->getLog()->error('Stat for a widgetId that doesnt exist: ' . $widgetId);
+                    // only logging this message one time
+                    if (!in_array($widgetId, $widgetIdsNotFound)) {
+                        $widgetIdsNotFound[] = $widgetId;
+                        $this->getLog()->error('Stat for a widgetId that doesnt exist: ' . $widgetId);
+                    }
+
                     continue;
                 }
             }

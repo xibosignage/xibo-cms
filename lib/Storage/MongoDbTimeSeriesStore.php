@@ -67,6 +67,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     private $widgets = [];
     private $layouts = [];
     private $displayGroups = [];
+    private $layoutsNotFound = [];
+    private $mediaItemsNotFound = [];
 
     /** @var  MediaFactory */
     protected $mediaFactory;
@@ -161,10 +163,12 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                     $this->mediaItems[$statData['mediaId']] = $media;
 
                 } catch (NotFoundException $error) {
-                    // Media not found ignore and log the stat
-                    $this->log->error('Media not found. Media Id: '. $statData['mediaId'] .',Layout Id: '. $statData['layoutId']
-                        .', FromDT: '.$statData['start'].', ToDt: '.$statData['end'].', Type: '.$statData['type']
-                        .', Duration: '.$statData['duration'] .', Count '.$statData['count']);
+
+                    // Cache Media not found, ignore and log the stat
+                    if (!in_array($statData['mediaId'], $this->mediaItemsNotFound)) {
+                        $this->mediaItemsNotFound[] = $statData['mediaId'];
+                        $this->log->error('Media not found. Media Id: '. $statData['mediaId']);
+                    }
 
                     return;
                 }
@@ -247,10 +251,22 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                     // All we can do here is log
                     // we shouldn't ever get in this situation because the campaignId we used above will have
                     // already been looked up in the layouthistory table.
-                    $this->log->alert('Error processing statistic into MongoDB. Layout not found. Stat is: ' . json_encode($statData));
+
+                    // Cache layouts not found
+                    if (!in_array($statData['layoutId'], $this->layoutsNotFound)) {
+                        $this->layoutsNotFound[] = $statData['layoutId'];
+                        $this->log->alert('Error processing statistic into MongoDB. Layout not found. Layout Id: ' . $statData['layoutId']);
+                    }
+
                     return;
                 } catch (XiboException $error) {
-                    $this->log->error('Layout not found. Layout Id: '. $statData['layoutId']);
+
+                    // Cache layouts not found
+                    if (!in_array($statData['layoutId'], $this->layoutsNotFound)) {
+                        $this->layoutsNotFound[] = $statData['layoutId'];
+                        $this->log->error('Layout not found. Layout Id: '. $statData['layoutId']);
+                    }
+
                     return;
                 }
             }
