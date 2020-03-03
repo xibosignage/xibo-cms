@@ -22,7 +22,7 @@
 
 namespace Xibo\XTR;
 use Xibo\Entity\ScheduleReminder;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\ScheduleFactory;

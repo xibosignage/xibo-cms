@@ -23,7 +23,7 @@
 namespace Xibo\XTR;
 use Xibo\Entity\Task;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TaskFactory;

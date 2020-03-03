@@ -21,15 +21,10 @@
 
 namespace Xibo\XTR;
 
-use Nyholm\Psr7\Factory\Psr17Factory;
-use Nyholm\Psr7\ServerRequest;
-use Slim\Http\Factory\DecoratedResponseFactory;
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Region;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
+use Xibo\Support\Exception\GeneralException;
 
 /**
  * Class WidgetSyncTask
@@ -161,7 +156,7 @@ class WidgetSyncTask implements TaskInterface
                         }
                     }
                 }
-            } catch (XiboException $xiboException) {
+            } catch (GeneralException $xiboException) {
                 // Log and skip to the next layout
                 $this->log->debug($xiboException->getTraceAsString());
                 $this->log->error('Cannot process layoutId ' . $layoutId . ', E = ' . $xiboException->getMessage());

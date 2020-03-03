@@ -189,6 +189,10 @@ class ReportScheduleTask implements TaskInterface
      * @param $reportSchedule
      * @param $savedReport
      * @param $media
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     private function createPdfAndNotification($reportSchedule, $savedReport, $media)
     {

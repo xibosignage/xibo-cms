@@ -24,7 +24,7 @@
 namespace Xibo\XTR;
 
 use Xibo\Entity\DataSet;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\UserFactory;
@@ -137,7 +137,7 @@ class RemoteDataSetFetchTask implements TaskInterface
                     $this->log->debug('Sync not required for ' . $dataSet->dataSetId);
                 }
 
-            } catch (XiboException $e) {
+            } catch (GeneralException $e) {
                 $this->appendRunMessage(__('Error syncing DataSet %s', $dataSet->dataSet));
                 $this->log->error('Error syncing DataSet ' . $dataSet->dataSetId . '. E = ' . $e->getMessage());
                 $this->log->debug($e->getTraceAsString());

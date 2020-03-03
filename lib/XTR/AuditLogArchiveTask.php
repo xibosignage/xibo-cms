@@ -24,8 +24,8 @@
 namespace Xibo\XTR;
 use Jenssegers\Date\Date;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\TaskRunException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\TaskRunException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
 
@@ -116,6 +116,7 @@ class AuditLogArchiveTask implements TaskInterface
      * Export stats to the library
      * @param Date $fromDt
      * @param Date $toDt
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     private function exportAuditLogToLibrary($fromDt, $toDt)
     {
