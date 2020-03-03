@@ -104,16 +104,17 @@
 
                         {# Campaign / Layout list. We want to build two arrays for us to use. #}
                         {% set attributes = [
-                            { name: "data-search-url", value:  url_for("schedule.campaign.search") }
+                            { name: "data-search-url", value:  url_for("schedule.campaign.search") },
+                            { name: "data-search-is-layout-specific", value: -1 },
+                            { name: "data-trans-layout", value: "Layout"|trans },
+                            { name: "data-trans-layout-help-text", value: "Please select a Layout for this Event to show"|trans },
+                            { name: "data-trans-layout", value: "Campaign"|trans },
+                            { name: "data-trans-layout-help-text", value: "Please select a Campaign for this Event to show"|trans },
                         ] %}
 
                         {% set title %}{% trans "Layout" %}{% endset %}
                         {% set helpText %}{% trans "Please select a Layout for this Event to show" %}{% endset %}
                         {{ forms.dropdown("campaignId", "single", title, "", null, "id", "value", helpText, "layout-control", "", "", "", attributes) }}
-
-                        {% set title %}{% trans "Share of Voice" %}{% endset %}
-                        {% set helpText %}{% trans "The percentage of time this Layout should be shown." %}{% endset %}
-                        {{ forms.number("shareOfVoice", title, 0, helpText, "interrupt-control") }}
 
                         <div class="form-group preview-button-container">
                             <div class="col-md-offset-2 col-md-10">
@@ -121,6 +122,10 @@
                                 <span class="help-block">{% trans "Preview your selection in a new tab" %}</span>
                             </div>
                         </div>
+
+                        {% set title %}{% trans "Share of Voice" %}{% endset %}
+                        {% set helpText %}{% trans "The percentage of time this Layout should be shown." %}{% endset %}
+                        {{ forms.number("shareOfVoice", title, 0, helpText, "interrupt-control") }}
 
                         {% set title %}{% trans "Command" %}{% endset %}
                         {% set helpText %}{% trans "Please select a command for this Event." %}{% endset %}

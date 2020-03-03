@@ -438,82 +438,7 @@ $(document).ready(function() {
  * Callback for the schedule form
  */
 var setupScheduleForm = function(dialog) {
-
-    var $eventTypeId = $('#eventTypeId').val();
-    var $layoutSpecific = -1;
-    var $layoutControl = $(".layout-control");
-
-    if ($eventTypeId == 1) {
-
-        // Load Layouts only
-        $layoutSpecific = 1;
-
-        // Change Label and Helptext when Layout event type is selected
-        $layoutControl.children("label").text('Layout');
-        $layoutControl.children("div").children(".help-block").text('Please select a Layout for this Event to show');
-
-    } else if ($eventTypeId == 4) {
-
-        // Load Layouts only
-        $layoutSpecific = 1;
-
-        // Change Label and Helptext when Layout event type is selected
-        $layoutControl.children("label").text('Layout');
-        $layoutControl.children("div").children(".help-block").text('Please select a Layout for this Event to show');
-
-    } else if ($eventTypeId == 5) {
-
-        // Load Campaigns only
-        $layoutSpecific = 0;
-
-        // Change Label and Helptext when Campaign event type is selected
-        $layoutControl.children("label").text('Campaign');
-        $layoutControl.children("div").children(".help-block").text('Please select a Campaign for this Event to show');
-
-    } else {
-
-        // Load both Layouts and Campaigns
-        $layoutSpecific = -1;
-
-    }
-
-    $('#eventTypeId').change(function() {
-        $eventTypeId = $('#eventTypeId').val();
-
-        if ($eventTypeId == 1) {
-
-            // Load Layouts only
-            $layoutSpecific = 1;
-
-            // Change Label and Helptext when Layout event type is selected
-            $layoutControl.children("label").text('Layout');
-            $layoutControl.children("div").children(".help-block").text('Please select a Layout for this Event to show');
-
-        } else if ($eventTypeId == 4) {
-
-            // Load Layouts only
-            $layoutSpecific = 1;
-
-            // Change Label and Helptext when Layout event type is selected
-            $layoutControl.children("label").text('Layout');
-            $layoutControl.children("div").children(".help-block").text('Please select a Layout for this Event to show');
-
-        } else if ($eventTypeId == 5) {
-
-            // Load Campaigns only
-            $layoutSpecific = 0;
-
-            // Change Label and Helptext when Campaign event type is selected
-            $layoutControl.children("label").text('Campaign');
-            $layoutControl.children("div").children(".help-block").text('Please select a Campaign for this Event to show');
-
-        } else {
-
-            // Load both Layouts and Campaigns
-            $layoutSpecific = -1;
-
-        }
-    });
+    console.log("Setup schedule form");
 
     // geo schedule
     let $isGeoAware = $('#isGeoAware').is(':checked');
@@ -550,7 +475,7 @@ var setupScheduleForm = function(dialog) {
             dataType: "json",
             data: function(params) {
                 var query = {
-                    isLayoutSpecific: $layoutSpecific,
+                    isLayoutSpecific: $campaignSelect.data("searchIsLayoutSpecific"),
                     retired: 0,
                     totalDuration: 0,
                     name: params.term,
@@ -584,41 +509,16 @@ var setupScheduleForm = function(dialog) {
                 return query;
             },
             processResults: function(data, params) {
-                var results = [];
-                var campaigns = [];
-                var layouts = [];
+                let results = [];
 
-                $.each(data.data, function(index, element) {
-                    if (element.isLayoutSpecific === 1) {
-                        layouts.push({
-                            "id": element.campaignId,
-                            "text": element.campaign
-                        });
-                    } else {
-                        campaigns.push({
-                            "id": element.campaignId,
-                            "text": element.campaign
-                        });
-                    }
+                $.each(data.data, function(index, el) {
+                    results.push({
+                        "id": el["campaignId"],
+                        "text": el["campaign"]
+                    });
                 });
 
-                if (campaigns.length > 0 && $eventTypeId != 4) {
-                    results.push({
-                        "text": $campaignSelect.data('transCampaigns'),
-                        "children": campaigns
-                    })
-                }
-
-                if (layouts.length > 0) {
-                    results.push({
-                        "text": $campaignSelect.data('transLayouts'),
-                        "children": layouts
-                    })
-                }
-
-                console.log(results);
-
-                var page = params.page || 1;
+                let page = params.page || 1;
                 page = (page > 1) ? page - 1 : page;
 
                 return {
@@ -715,12 +615,12 @@ var setupScheduleForm = function(dialog) {
     
     // Hide/Show form elements according to the selected options
     // Initial state of the components
-    processScheduleFormElements($("#recurrenceType"));
-    processScheduleFormElements($("#eventTypeId"));
-    processScheduleFormElements($("#campaignId"));
+    processScheduleFormElements($("#recurrenceType", dialog));
+    processScheduleFormElements($("#eventTypeId", dialog));
+    processScheduleFormElements($("#campaignId", dialog));
 
     // Events on change
-    $("#recurrenceType, #eventTypeId, #dayPartId, #campaignId").on("change", function() { processScheduleFormElements($(this)) });
+    $("#recurrenceType, #eventTypeId, #dayPartId, #campaignId", dialog).on("change", function() { processScheduleFormElements($(this)) });
 
     // Handle the repeating monthly selector
     // Run when the tab changes
@@ -822,7 +722,7 @@ var beforeSubmitScheduleForm = function(form) {
 
     var reminderEventTemplate = Handlebars.compile($("#reminderEventTemplate").html());
 
-    console.log(reminderFields.data().reminders.length);
+    //console.log(reminderFields.data().reminders.length);
     if(reminderFields.data().reminders.length == 0) {
         // Add a template row
         var context = {
@@ -897,7 +797,6 @@ var processScheduleFormElements = function(el) {
             var startTimeControlDisplay = (fieldVal == 2) ? "block" : "block";
             var dayPartControlDisplay = (fieldVal == 2) ? "none" : "block";
             var commandControlDisplay = (fieldVal == 2) ? "block" : "none";
-            var previewControlDisplay = (fieldVal == 2) ? "none" : "block";
             var scheduleSyncControlDisplay = (fieldVal == 1) ? "block" : "none";
             let interruptControlDisplay = (fieldVal == 4) ? "block" : "none";
 
@@ -907,27 +806,22 @@ var processScheduleFormElements = function(el) {
             $(".starttime-control").css('display', startTimeControlDisplay);
             $(".day-part-control").css('display', dayPartControlDisplay);
             $(".command-control").css('display', commandControlDisplay);
-            $(".preview-button-container").css('display', previewControlDisplay);
             $(".sync-schedule-control").css('display', scheduleSyncControlDisplay);
             $(".interrupt-control").css('display', interruptControlDisplay);
 
-            // Depending on the event type selected we either want to filter in or filter out the
-            // campaigns.
-            $('#campaignId').parent().find(".bootstrap-select li").each(function() {
-                if (fieldVal == 1) {
-                    // Normal layout event - everything is visible.
-                    $(this).css("display", "block");
-                } else if (fieldVal == 3) {
-                    // Overlay layout, hide all campaigns
-                    if ($(this).data("optgroup") == 1)
-                        $(this).css("display", "none");
-                }
-            });
-
             // If the fieldVal is 2 (command), then we should set the dayPartId to be 0 (custom)
-            if (fieldVal == 2) {
-                console.log('Setting dayPartId to custom');
-                $("#dayPartId").val(0);
+            if (fieldVal === 2) {
+                // Determine what the custom day part is.
+                let $dayPartId = $("#dayPartId");
+                let customDayPartId = 0;
+                $dayPartId.find("option").each(function(i, el) {
+                    if ($(el).data("isCustom") === 1) {
+                        customDayPartId = $(el).val();
+                    }
+                });
+
+                console.log('Setting dayPartId to custom: ' + customDayPartId);
+                $dayPartId.val(customDayPartId);
 
                 var $startTime = $(".starttime-control");
                 $startTime.find("input[name=fromDt_Link2]").show();
@@ -936,6 +830,31 @@ var processScheduleFormElements = function(el) {
             
             // Call funtion for the daypart ID 
             processScheduleFormElements($('#dayPartId'));
+
+            // Change the help text and label of the campaignId dropdown
+            let $campaignSelect = el.closest("form").find("#campaignId");
+            let $layoutControl = $(".layout-control");
+            let searchIsLayoutSpecific = -1;
+
+            if (fieldVal === "1" || fieldVal === "3" || fieldVal === "4") {
+                // Load Layouts only
+                searchIsLayoutSpecific = 1;
+
+                // Change Label and Help text when Layout event type is selected
+                $layoutControl.children("label").text($campaignSelect.data("transLayout"));
+                $layoutControl.children("div").children(".help-block").text($campaignSelect.data("transLayoutHelpText"));
+
+            } else {
+                // Load Campaigns only
+                searchIsLayoutSpecific = 0;
+
+                // Change Label and Help text when Campaign event type is selected
+                $layoutControl.children("label").text('Campaign');
+                $layoutControl.children("div").children(".help-block").text('Please select a Campaign for this Event to show');
+            }
+
+            // Set the search criteria
+            $campaignSelect.data("searchIsLayoutSpecific", searchIsLayoutSpecific);
             
             break;
         
@@ -976,6 +895,8 @@ var processScheduleFormElements = function(el) {
             break;
 
         case 'campaignId':
+            console.log('Process: campaignId, val = ' + fieldVal + ', visibility = ' + el.is(":visible"));
+
             // Update the preview button URL
             var $previewButton = $("#previewButton");
 
@@ -988,7 +909,7 @@ var processScheduleFormElements = function(el) {
 
             break;
     }
-}
+};
 
 var duplicateScheduledEvent = function() {
     // Set the edit form URL to that of the add form
