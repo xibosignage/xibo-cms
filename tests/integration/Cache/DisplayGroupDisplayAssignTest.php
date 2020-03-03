@@ -127,9 +127,12 @@ class DisplayGroupDisplayAssignTest extends LocalWebTestCase
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
 
         // Add the Layout we have prepared to the Display Group
-        $this->sendRequest('POST','/displaygroup/ . ' . $this->displayGroup->displayGroupId . '/display/assign', [
+        $response = $this->sendRequest('POST','/displaygroup/' . $this->displayGroup->displayGroupId . '/display/assign', [
             'displayId' => [$this->display->displayId]
         ]);
+
+        $object = json_decode($response->getBody());
+        $this->assertSame(204, $object->status);
 
         // Validate the display status afterwards
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_PENDING), 'Display Status isnt as expected');

@@ -229,7 +229,7 @@ class LayoutProofOfPlayXMLMediaInheritWidgetOffTest extends LocalWebTestCase
         $response = $this->sendRequest('PUT','/layout/publish/' . $this->layoutOff->layoutId, [
             'publishNow' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-        $response = json_decode($response, true);
+        $response = json_decode($response->getBody(), true);
 
         $this->layoutOff = $this->constructLayoutFromResponse($response['data']);
 
@@ -258,7 +258,7 @@ class LayoutProofOfPlayXMLMediaInheritWidgetOffTest extends LocalWebTestCase
         $response = $this->sendRequest('PUT','/layout/publish/' . $this->layoutOn->layoutId, [
             'publishNow' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-        $response = json_decode($response, true);
+        $response = json_decode($response->getBody(), true);
 
         $this->layoutOn = $this->constructLayoutFromResponse($response['data']);
 

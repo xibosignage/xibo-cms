@@ -133,7 +133,7 @@ class ScheduleChangeInsideRfTest extends LocalWebTestCase
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
 
         // Change the Schedule
-        $this->sendRequest('PUT','/schedule/' . $this->event->eventId, [
+        $response = $this->sendRequest('PUT','/schedule/' . $this->event->eventId, [
             'fromDt' => date('Y-m-d H:i:s', $this->event->fromDt),
             'toDt' => date('Y-m-d H:i:s', $this->event->toDt),
             'eventTypeId' => 1,
@@ -143,6 +143,7 @@ class ScheduleChangeInsideRfTest extends LocalWebTestCase
             'isPriority' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
         // Check the Layout Status
         // Validate the layout status afterwards
         $this->assertTrue($this->layoutStatusEquals($this->layout, 1), 'Layout Status isnt as expected');

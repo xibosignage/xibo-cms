@@ -131,9 +131,10 @@ class LayoutBuildTest extends LocalWebTestCase
         $response = $this->sendRequest('PUT','/layout/publish/' . $this->layout->layoutId, [
             'publishNow' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-        $response = json_decode($response, true);
 
-        $this->layout = $this->constructLayoutFromResponse($response['data']);
+        $object = json_decode($response->getBody(), true);
+
+        $this->layout = $this->constructLayoutFromResponse($object['data']);
 
         // Check the Layout Status
         // Validate the layout status afterwards

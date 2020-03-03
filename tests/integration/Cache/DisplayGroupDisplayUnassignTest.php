@@ -96,7 +96,7 @@ class DisplayGroupDisplayUnassignTest extends LocalWebTestCase
         $this->display = $this->createDisplay();
 
         // Assign my Display to the Group
-        $this->getEntityProvider()->post('/displaygroup/ . ' . $this->displayGroup->displayGroupId . '/display/assign', [
+        $this->getEntityProvider()->post('/displaygroup/' . $this->displayGroup->displayGroupId . '/display/assign', [
             'displayId' => [$this->display->displayId]
         ]);
 
@@ -132,7 +132,7 @@ class DisplayGroupDisplayUnassignTest extends LocalWebTestCase
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
 
         // Unassign
-        $this->sendRequest('POST','/displaygroup/ . ' . $this->displayGroup->displayGroupId . '/display/unassign', [
+        $this->sendRequest('POST','/displaygroup/' . $this->displayGroup->displayGroupId . '/display/unassign', [
             'displayId' => [$this->display->displayId]
         ]);
 

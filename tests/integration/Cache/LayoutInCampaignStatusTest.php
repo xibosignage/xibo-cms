@@ -148,7 +148,7 @@ class LayoutInCampaignStatusTest extends LocalWebTestCase
         
         $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getStatusCode() . $response->getBody()->getContents());
 
-        $response = json_decode($response, true);
+        $response = json_decode($response->getBody(), true);
         $this->layout = $this->constructLayoutFromResponse($response['data']);
 
         // Check the Layout Status
