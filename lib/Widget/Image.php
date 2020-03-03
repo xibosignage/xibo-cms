@@ -277,7 +277,7 @@ class Image extends ModuleWidget
             return self::$STATUS_PLAYER;
         } elseif ($this->getMedia()->released == 2) {
             $resizeLimit = $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT');
-            $this->statusMessage = __('%s is too large. Please ensure that none of the images in your layout are larger than %s pixels on their longest edge. Please check the allowed Resize Limit in Administration -> Settings', $this->getMedia()->name, $resizeLimit), 'name');
+            $this->statusMessage = __('%s is too large. Please ensure that none of the images in your layout are larger than %s pixels on their longest edge. Please check the allowed Resize Limit in Administration -> Settings', $this->getMedia()->name, $resizeLimit);
             throw new InvalidArgumentException(__('%s is too large. Please ensure that none of the images in your layout are larger than %s pixels on their longest edge. Please check the allowed Resize Limit in Administration -> Settings', $this->getMedia()->name, $resizeLimit), 'name');
         }
 
