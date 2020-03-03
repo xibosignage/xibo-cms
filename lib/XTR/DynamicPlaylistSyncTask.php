@@ -98,7 +98,7 @@ class DynamicPlaylistSyncTask implements TaskInterface
             $lastPlaylistUpdate = $this->date->parse($lastPlaylistUpdate);
             $lastTaskRun = $this->date->parse($this->getTask()->lastRunDt, 'U');
 
-            if ($lastMediaUpdate->lessThan($lastTaskRun) && $lastPlaylistUpdate->lessThan($lastTaskRun)) {
+            if ($lastMediaUpdate->lessThanOrEqualTo($lastTaskRun) && $lastPlaylistUpdate->lessThanOrEqualTo($lastTaskRun)) {
                 $this->appendRunMessage('No library media/playlist updates since we last ran');
                 return;
             }
@@ -190,7 +190,12 @@ class DynamicPlaylistSyncTask implements TaskInterface
                     }
 
                     if ($assignmentMade) {
-                        $playlist->save();
+                        // We've made an assignment change, so audit this change
+                        // don't audit any downstream save operations
+                        $playlist->save([
+                            'auditPlaylist' => true,
+                            'audit' => false
+                        ]);
                     }
                 } else {
                     $this->log->debug('No differences detected');
