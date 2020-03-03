@@ -27,7 +27,8 @@ namespace Xibo\Xmds;
 use Stash\Invalidation;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Helper\Random;
 
 class Soap5 extends Soap4
@@ -45,8 +46,9 @@ class Soap5 extends Soap4
      * @param string $xmrChannel
      * @param string $xmrPubKey
      * @return string
+     * @throws NotFoundException
      * @throws \SoapFault
-     * @throws \Xibo\Exception\XiboException
+     * @throws GeneralException
      */
     public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress, $xmrChannel = null, $xmrPubKey = null)
     {
@@ -368,9 +370,10 @@ class Soap5 extends Soap4
 
     /**
      * Returns the schedule for the hardware key specified
-     * @return string
      * @param string $serverKey
      * @param string $hardwareKey
+     * @return string
+     * @throws NotFoundException
      * @throws \SoapFault
      */
     function Schedule($serverKey, $hardwareKey)

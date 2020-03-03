@@ -34,11 +34,11 @@ use Xibo\Entity\Display;
 use Xibo\Entity\Schedule;
 use Xibo\Entity\Stat;
 use Xibo\Entity\Widget;
-use Xibo\Exception\ControllerNotImplemented;
-use Xibo\Exception\DeadlockException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\DeadlockException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\BandwidthFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DayPartFactory;
@@ -422,7 +422,7 @@ class Soap
                     } else {
                         $scheduleEvents = $schedule->getEvents($this->fromFilter, $this->toFilter);
                     }
-                } catch (XiboException $e) {
+                } catch (GeneralException $e) {
                     $this->getLog()->error('Unable to getEvents for ' . $schedule->eventId);
                     continue;
                 }
@@ -731,7 +731,7 @@ class Soap
                 // Add to paths added
                 $pathsAdded[] = $layoutId;
 
-            } catch (XiboException $e) {
+            } catch (GeneralException $e) {
                 $this->getLog()->error('Layout not found - ID: ' . $layoutId . ', skipping.');
                 continue;
             }
@@ -956,7 +956,7 @@ class Soap
                     } else {
                         $scheduleEvents = $schedule->getEvents($this->fromFilter, $this->toFilter);
                     }
-                } catch (XiboException $e) {
+                } catch (GeneralException $e) {
                     $this->getLog()->error('Unable to getEvents for ' . $schedule->eventId);
                     continue;
                 }
