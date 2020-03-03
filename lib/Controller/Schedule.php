@@ -252,7 +252,7 @@ class Schedule extends Base
      */
     function eventData(Request $request, Response $response)
     {
-        $response->withHeader('Content-Type', 'application/json');
+        $response = $response->withHeader('Content-Type', 'application/json');
         $this->setNoOutput();
         $sanitizedParams = $this->getSanitizer($request->getParams());
 

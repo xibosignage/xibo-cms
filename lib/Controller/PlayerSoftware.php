@@ -299,6 +299,21 @@ class PlayerSoftware extends Base
         $version->load();
         $media->load();
 
+        // Unset player version from Display Profile
+        $displayProfiles = $this->displayProfileFactory->query();
+
+        foreach($displayProfiles as $displayProfile) {
+            if (in_array($displayProfile->type, ['android', 'lg', 'sssp'])) {
+
+                $currentVersionId = $displayProfile->getSetting('versionMediaId');
+
+                if ($currentVersionId === $media->mediaId) {
+                    $displayProfile->setSetting('versionMediaId', null);
+                    $displayProfile->save();
+                }
+            }
+        }
+
         // Delete
         $version->delete();
         $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
@@ -450,9 +465,12 @@ class PlayerSoftware extends Base
 
             $versionInformation = $this->playerVersionFactory->getByMediaId($mediaId);
 
-            $this->outputSsspXml($versionInformation->version . '.' . $versionInformation->code, $media->fileSize);
+            $xml = $this->outputSsspXml($versionInformation->version . '.' . $versionInformation->code, $media->fileSize);
+            $response = $response
+                ->withHeader('Content-Type', 'application/xml')
+                ->write($xml);
         } else {
-            $response->withStatus(404);
+            return $response->withStatus(404);
         }
 
         $this->setNoOutput(true);
@@ -484,10 +502,10 @@ class PlayerSoftware extends Base
 
             // Create a widget from media and call getResource on it
             $widget = $this->moduleFactory->createWithMedia($media);
-            $response = $widget->getResource($request, $response);
+            $response = $widget->download($request, $response);
 
         } else {
-            $response->withStatus(404);
+            return $response->withStatus(404);
         }
 
         $this->setNoOutput(true);
@@ -499,6 +517,7 @@ class PlayerSoftware extends Base
      * Upgrade Route for SSSP XML
      * @param Request $request
      * @param Response $response
+     * @param $nonce
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws InvalidArgumentException
      * @throws NotFoundException
@@ -508,16 +527,15 @@ class PlayerSoftware extends Base
      * @throws \Xibo\Exception\ConfigurationException
      * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function getSssp(Request $request, Response $response)
+    public function getSssp(Request $request, Response $response, $nonce)
     {
-        $nonce = $request->getParam('nonce');
         // Use the cache to get the displayId for this nonce
         $cache = $this->pool->getItem('/playerVersion/' . $nonce);
 
         if ($cache->isMiss()) {
-            $response->withStatus(404);
+            $response = $response->withStatus(404);
             $this->setNoOutput(true);
-            return $response;
+            return $this->render($request, $response);
         }
 
         $displayId = $cache->get();
@@ -531,7 +549,7 @@ class PlayerSoftware extends Base
         }
 
         // Add the correct header
-        $response->withHeader('content-type', 'application/xml');
+        $response = $response->withHeader('content-type', 'application/xml');
 
         // get the media ID from display profile
         $mediaId = $display->getSetting('versionMediaId', null, ['displayOverride' => true]);
@@ -541,10 +559,10 @@ class PlayerSoftware extends Base
 
             $versionInformation = $this->playerVersionFactory->getByMediaId($mediaId);
 
-            $this->outputSsspXml($versionInformation->version . '.' . $versionInformation->code, $media->fileSize);
+            $xml = $this->outputSsspXml($versionInformation->version . '.' . $versionInformation->code, $media->fileSize);
+            $response = $response->write($xml);
         } else {
-            $response->withStatus(404);
-            return $response;
+            return $response->withStatus(404);
         }
 
         $this->setNoOutput(true);
@@ -556,6 +574,7 @@ class PlayerSoftware extends Base
      * Upgrade Route for SSSP WGT
      * @param Request $request
      * @param Response $response
+     * @param $nonce
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
      * @throws \Twig\Error\LoaderError
@@ -564,16 +583,15 @@ class PlayerSoftware extends Base
      * @throws \Xibo\Exception\ConfigurationException
      * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function getVersionFile(Request $request, Response $response)
+    public function getVersionFile(Request $request, Response $response, $nonce)
     {
-        $nonce = $request->getParam('nonce');
         // Use the cache to get the displayId for this nonce
         $cache = $this->pool->getItem('/playerVersion/' . $nonce);
 
         if ($cache->isMiss()) {
-            $response->withStatus(404);
+            $response = $response->withStatus(404);
             $this->setNoOutput(true);
-            return $response;
+            return $this->render($request, $response);
         }
 
         $displayId = $cache->get();
@@ -586,10 +604,9 @@ class PlayerSoftware extends Base
             $media = $this->mediaFactory->getById($mediaId);
             // Create a widget from media and call getResource on it
             $widget = $this->moduleFactory->createWithMedia($media);
-            $response = $widget->getResource($request, $response);
+            $response = $widget->download($request, $response);
         } else {
-            $response->withStatus(404);
-            return $response;
+            return $response->withStatus(404);
         }
 
         $this->setNoOutput(true);
@@ -597,10 +614,10 @@ class PlayerSoftware extends Base
     }
 
     /**
-     * Output the SSP XML
+     * Output the SSSP XML
      * @param $version
      * @param $size
-     * @param $widgetName
+     * @return string
      */
     private function outputSsspXml($version, $size)
     {
@@ -620,8 +637,6 @@ class PlayerSoftware extends Base
         $versionNode->appendChild($ssspDocument->createElement('webtype', 'tizen'));
         $ssspDocument->formatOutput = true;
 
-        //$this->getApp()->response()->header('Content-Type', 'application/xml');
-
-        echo $ssspDocument->saveXML();
+        return $ssspDocument->saveXML();
     }
 }

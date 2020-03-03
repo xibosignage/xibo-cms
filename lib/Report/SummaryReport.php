@@ -301,21 +301,20 @@ class SummaryReport implements ReportInterface
     }
 
     /** @inheritDoc */
-    public function getResults($filterCriteria, Request $request)
+    public function getResults($filterCriteria)
     {
         $this->getLog()->debug('Filter criteria: '. json_encode($filterCriteria, JSON_PRETTY_PRINT));
 
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-        $sanitizedCriteria = $this->getSanitizer($filterCriteria);
+        $sanitizedParams = $this->getSanitizer($filterCriteria);
 
-        $type = strtolower($sanitizedParams->getString('type',  ['default' => $sanitizedCriteria->getString('type')]));
-        $layoutId = $sanitizedParams->getInt('layoutId', ['default' => $sanitizedCriteria->getInt('layoutId')]);
-        $mediaId = $sanitizedParams->getInt('mediaId', ['default' => $sanitizedCriteria->getInt('mediaId')]);
-        $eventTag = $sanitizedParams->getString('eventTag', ['default' => $sanitizedCriteria->getString('eventTag')]);
+        $type = strtolower($sanitizedParams->getString('type'));
+        $layoutId = $sanitizedParams->getInt('layoutId');
+        $mediaId = $sanitizedParams->getInt('mediaId');
+        $eventTag = $sanitizedParams->getString('eventTag');
         // Get an array of display id this user has access to.
         $displayIds = [];
 
-        foreach ($this->displayFactory->query(null, [], $request) as $display) {
+        foreach ($this->displayFactory->query() as $display) {
             $displayIds[] = $display->displayId;
         }
 
@@ -328,7 +327,7 @@ class SummaryReport implements ReportInterface
         // --------------------------
         // Our report has a range filter which determins whether or not the user has to enter their own from / to dates
         // check the range filter first and set from/to dates accordingly.
-        $reportFilter = $sanitizedParams->getString('reportFilter', ['default' => $sanitizedCriteria->getString('reportFilter')]);
+        $reportFilter = $sanitizedParams->getString('reportFilter');
 
         // Use the current date as a helper
         $now = $this->getDate()->parse();
@@ -358,7 +357,7 @@ class SummaryReport implements ReportInterface
                 $toDt = $fromDt->copy()->addMonth();
 
                 // User can pick their own group by filter when they provide a manual range
-                $groupByFilter = $sanitizedParams->getString('groupByFilter', ['default' => $sanitizedCriteria->getString('groupByFilter')]);
+                $groupByFilter = $sanitizedParams->getString('groupByFilter');
                 break;
 
             case 'thisyear':
@@ -366,7 +365,7 @@ class SummaryReport implements ReportInterface
                 $toDt = $fromDt->copy()->addYear();
 
                 // User can pick their own group by filter when they provide a manual range
-                $groupByFilter = $sanitizedParams->getString('groupByFilter', ['default' => $sanitizedCriteria->getString('groupByFilter')]);
+                $groupByFilter = $sanitizedParams->getString('groupByFilter');
                 break;
 
             case 'lastweek':
@@ -380,7 +379,7 @@ class SummaryReport implements ReportInterface
                 $toDt = $fromDt->copy()->addMonth();
 
                 // User can pick their own group by filter when they provide a manual range
-                $groupByFilter = $sanitizedParams->getString('groupByFilter', ['default' => $sanitizedCriteria->getString('groupByFilter')]);
+                $groupByFilter = $sanitizedParams->getString('groupByFilter');
                 break;
 
             case 'lastyear':
@@ -388,7 +387,7 @@ class SummaryReport implements ReportInterface
                 $toDt = $fromDt->copy()->addYear();
 
                 // User can pick their own group by filter when they provide a manual range
-                $groupByFilter = $sanitizedParams->getString('groupByFilter', ['default' => $sanitizedCriteria->getString('groupByFilter')]);
+                $groupByFilter = $sanitizedParams->getString('groupByFilter');
                 break;
 
             case '':

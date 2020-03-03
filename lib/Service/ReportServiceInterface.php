@@ -109,7 +109,7 @@ interface ReportServiceInterface
      * @param int $userId
      * @return array
      */
-    public function runReport($reportName, $filterCriteria, $userId, Request $request = null);
+    public function runReport($reportName, $filterCriteria, $userId);
 
     /**
      * Get report email template twig file name

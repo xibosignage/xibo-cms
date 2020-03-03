@@ -379,7 +379,7 @@ class Stats extends Base
         $displayIds = [];
         if (!$this->getUser()->isSuperAdmin()) {
             // Get an array of display id this user has access to.
-            foreach ($this->displayFactory->query(null, [], $request) as $display) {
+            foreach ($this->displayFactory->query() as $display) {
                 $displayIds[] = $display->displayId;
             }
 
@@ -738,7 +738,7 @@ class Stats extends Base
             // Library Size in Bytes
             $params = [];
             $sql = 'SELECT IFNULL(SUM(FileSize), 0) AS SumSize, type FROM `media` WHERE 1 = 1 ';
-            $this->mediaFactory->viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId', [], $request);
+            $this->mediaFactory->viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId');
             $sql .= ' GROUP BY type ';
 
             $sth = $this->store->getConnection()->prepare($sql);

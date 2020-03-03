@@ -336,16 +336,15 @@ class ProofOfPlay implements ReportInterface
 
 
     /** @inheritdoc */
-    public function getResults($filterCriteria, Request $request)
+    public function getResults($filterCriteria)
     {
-        $sanitizedCriteria = $this->getSanitizer($filterCriteria);
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-        $displayId = $sanitizedParams->getInt('displayId', ['default' => $sanitizedCriteria->getInt('displayId')]);
-        $layoutIds = $sanitizedParams->getIntArray('layoutId',  ['default' => $sanitizedCriteria->getIntArray('layoutId', ['default' => []])]);
-        $mediaIds = $sanitizedParams->getIntArray('mediaId',  ['default' => $sanitizedCriteria->getIntArray('mediaId', ['default' => []])]);
-        $type = strtolower($sanitizedParams->getString('type',  ['default' => $sanitizedCriteria->getString('type')]));
-        $tags = $sanitizedParams->getString('tags',  ['default' => $sanitizedCriteria->getString('tags')]);
-        $tagsType = $sanitizedParams->getString('tagsType',  ['default' => $sanitizedCriteria->getString('tagsType')]);
+        $sanitizedParams = $this->getSanitizer($filterCriteria);
+        $displayId = $sanitizedParams->getInt('displayId');
+        $layoutIds = $sanitizedParams->getIntArray('layoutId',  ['default' => [] ]);
+        $mediaIds = $sanitizedParams->getIntArray('mediaId',  ['default' => [] ]);
+        $type = strtolower($sanitizedParams->getString('type'));
+        $tags = $sanitizedParams->getString('tags');
+        $tagsType = $sanitizedParams->getString('tagsType');
         $exactTags = $sanitizedParams->getCheckbox('exactTags');
 
         // Do not filter by display if super admin and no display is selected
@@ -354,17 +353,19 @@ class ProofOfPlay implements ReportInterface
 
         // Get user
         $userId = $this->getUserId();
+
         if ($userId == null) {
-            $user = $this->userFactory->getUser($request);
+            $user = $this->userFactory->getUser();
         } else {
             $user = $this->userFactory->getById($userId);
         }
+
         $displayFactory = clone $this->displayFactory;
         $displayFactory->setAclDependencies($user, $this->userFactory);
 
         if ($user->userTypeId != 1) {
             // Get an array of display id this user has access to.
-            foreach ($displayFactory->query(null, [], $request) as $display) {
+            foreach ($displayFactory->query() as $display) {
                 $displayIds[] = $display->displayId;
             }
 
@@ -386,30 +387,24 @@ class ProofOfPlay implements ReportInterface
             }
         }
 
-        // Sorting?
-
-        if($filterCriteria == []) {
-
-            $filterBy = $this->gridRenderFilter($request);
-            $sortOrder = $this->gridRenderSort($request);
-            $sanitizedFilter = $this->getSanitizer($filterBy);
-
+        // web
+        if ($sanitizedParams->getString('sortBy') == null) {
+            // Sorting?
+            $sortOrder = $this->gridRenderSort($filterCriteria);
             $columns = [];
-            if (is_array($sortOrder))
+
+            if (is_array($sortOrder)) {
                 $columns = $sortOrder;
+            }
 
             // Paging
-            $start = 0;
-            $length = 0;
-            if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-
-                $start = intval($sanitizedFilter->getInt('start'), 0);
-                $length = $sanitizedFilter->getInt('length', ['default' => 10]);
-            }
+            $start = intval($sanitizedParams->getInt('start'), 0);
+            $length = $sanitizedParams->getInt('length', ['default' => 10]);
         } else {
+            // xtr
             $start = 0;
             $length = -1;
-            $sortBy = $sanitizedCriteria->getString('sortBy');
+            $sortBy = $sanitizedParams->getString('sortBy');
 
             $columns = ($sortBy == '') ? ['widgetId'] : [$sortBy];
         }
@@ -419,7 +414,7 @@ class ProofOfPlay implements ReportInterface
         // --------------------------
         // Our report has a range filter which determins whether or not the user has to enter their own from / to dates
         // check the range filter first and set from/to dates accordingly.
-        $reportFilter = $sanitizedParams->getString('reportFilter', ['default' => $sanitizedCriteria->getString('reportFilter')]);
+        $reportFilter = $sanitizedParams->getString('reportFilter');
 
         // Use the current date as a helper
         $now = $this->getDate()->parse();

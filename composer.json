@@ -74,6 +74,7 @@
     "abraham/twitteroauth": "^0.6.4",
     "symfony/event-dispatcher": "^3.1",
     "xibosignage/support": "dev-master",
+    "xibosignage/oauth2-xibo-cms": "dev-feature/3.0",
     "mtdowling/cron-expression": "^1.1",
     "ralouphie/mimey": "^1.0",
     "robmorgan/phinx": "^0.9.2",

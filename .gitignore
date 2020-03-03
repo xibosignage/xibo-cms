@@ -1,5 +1,5 @@
 library/
-vendor
+/vendor
 settings.php
 .project/
 .vagrant/

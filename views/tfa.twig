@@ -53,15 +53,17 @@
 <body>
 <div class="container">
         <form id="login-form" class="form-signin text-center" action="{{ url_for("tfa.auth.validate") }}" method="post">
-            <input name="priorRoute" type="hidden" value="{{ flash.priorRoute }}" />
+            {% for priorRoute in flash('priorRoute') %}
+                <input name="priorRoute" type="hidden" value="{{ priorRoute }}" />
+            {% endfor %}
             <input type="hidden" name="{{ csrfKey }}" value="{{ csrfToken }}" />
             <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ theme.uri("img/xibologo.png") }}"></a></p>
 
             <p>{% trans "Please provide your Two Factor Authorisation Code" %}</p>
             <input id="code" class="form-control input-block-level" name="code" type="text" placeholder="{% trans "Code" %}" autofocus>
 
-            {% if flash.login_message %}
-                <div class="alert alert-danger">{{ flash.login_message }}</div>
+            {% if message != '' %}
+                <div class="alert alert-danger">{{ message }}</div>
             {% endif %}
 
             <p><button class="btn btn-large btn-primary" type="submit">{% trans "Verify" %}</button></p>
@@ -70,15 +72,18 @@
         </form>
 
     <form id="recovery-form" class="form-signin text-center hidden" action="{{ url_for("tfa.auth.validate") }}" method="post">
+        {% for priorRoute in flash('priorRoute') %}
+            <input name="priorRoute" type="hidden" value="{{ priorRoute }}" />
+        {% endfor %}
         <input type="hidden" name="{{ csrfKey }}" value="{{ csrfToken }}" />
         <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ theme.uri("img/xibologo.png") }}"></a></p>
 
         <p>{% trans "Please provide your Two Factor Authorisation Recovery Code" %}</p>
         <input id="recoveryCode" class="form-control input-block-level" name="recoveryCode" type="text" placeholder="{% trans "Recovery Code" %}" autofocus>
 
-        {% if flash.login_message %}
-            <div class="alert alert-danger">{{ flash.login_message }}</div>
-        {% endif %}
+        {% for loginMessage in flash('2fa_message') %}
+            <div class="alert alert-danger">{{ loginMessage }}</div>
+        {% endfor %}
 
         <p><button class="btn btn-large btn-primary" type="submit">{% trans "Verify" %}</button></p>
 

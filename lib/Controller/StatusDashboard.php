@@ -162,7 +162,7 @@ class StatusDashboard extends Base
                   ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID
                WHERE month > :month AND displaygroup.isDisplaySpecific = 1';
 
-            $this->displayFactory->viewPermissionSql('Xibo\Entity\DisplayGroup', $sql, $params, '`lkdisplaydg`.displayGroupId', null, [], $request);
+            $this->displayFactory->viewPermissionSql('Xibo\Entity\DisplayGroup', $sql, $params, '`lkdisplaydg`.displayGroupId');
 
             $sql .= ' GROUP BY MONTH(FROM_UNIXTIME(month)) ORDER BY MIN(month); ';
 
@@ -245,7 +245,7 @@ class StatusDashboard extends Base
             // Library Size in Bytes
             $params = [];
             $sql = 'SELECT IFNULL(SUM(FileSize), 0) AS SumSize, type FROM `media` WHERE 1 = 1 ';
-         //   $this->mediaFactory->viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId', $request);
+            $this->mediaFactory->viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId');
             $sql .= ' GROUP BY type ';
 
             $sth = $dbh->prepare($sql);
@@ -327,7 +327,7 @@ class StatusDashboard extends Base
                    WHERE 1 = 1
             ';
 
-   //         $this->displayFactory->viewPermissionSql('Xibo\Entity\DisplayGroup', $sql, $params, '`lkscheduledisplaygroup`.displayGroupId', $request);
+            $this->displayFactory->viewPermissionSql('Xibo\Entity\DisplayGroup', $sql, $params, '`lkscheduledisplaygroup`.displayGroupId');
 
             $sql .= ' ) ';
 
@@ -529,7 +529,7 @@ class StatusDashboard extends Base
                 }
             }
 
-     //       $this->displayFactory->viewPermissionSql('Xibo\Entity\DisplayGroup', $sql, $params, '`lkdisplaydg`.displayGroupId');
+            $this->displayFactory->viewPermissionSql('Xibo\Entity\DisplayGroup', $sql, $params, '`lkdisplaydg`.displayGroupId');
 
             $sql .= ' ORDER BY displaygroup.DisplayGroup ';
 

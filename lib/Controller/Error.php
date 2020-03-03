@@ -25,6 +25,8 @@ namespace Xibo\Controller;
 
 use League\OAuth2\Server\Exception\OAuthException;
 use Psr\Container\ContainerInterface;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\FormExpiredException;
@@ -38,8 +40,6 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\HelpServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
 
 /**
  * Class Error
@@ -103,7 +103,7 @@ class Error extends Base
     {
         $message = __('Not found');
 
-        switch ($request->getAttribute('name')) {
+        switch ($this->container->get('name')) {
 
             case 'web':
 
@@ -162,9 +162,12 @@ class Error extends Base
     {
         //$handled = $this->handledError($e);
         $message = $this->container->get('session')->get('exceptionMessage');
+        $exceptionClass = $this->container->get('session')->get('exceptionClass');
+        $priorRoute = $this->container->get('session')->get('priorRoute');
+
         // redirect to homepage (or login), if we are visiting this page with no errors to show
         // mostly for post phinx upgrade refresh.
-        if (!$message || $this->container->get('session')->isExpired() == 1) {
+        if (!$message || ( $this->container->get('session')->isExpired() == 1 && !in_array($priorRoute, $request->getAttribute('publicRoutes')) ) ) {
             return $response->withRedirect('/');
         }
 
@@ -186,8 +189,6 @@ class Error extends Base
                 } else {
                     // Template depending on whether one exists for the type of exception
                     // get the exception class
-                    $exceptionClass = $this->container->get('session')->get('exceptionClass');
-
                     $this->getLog()->debug('Loading error template ' . $exceptionClass);
 
                     if (file_exists(PROJECT_ROOT . '/views/' . $exceptionClass . '.twig')) {
@@ -204,6 +205,7 @@ class Error extends Base
                 $this->container->get('session')->unSet('exceptionMessage');
                 $this->container->get('session')->unSet('exceptionClass');
                 $this->container->get('session')->unSet('exceptionCode');
+                $this->container->get('session')->unSet('priorRoute');
                 $this->getState()->setCommitState(false);
 
                 return $this->render($request, $response);

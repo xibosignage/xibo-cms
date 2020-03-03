@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (CsrfGuard.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,11 +23,17 @@
 
 namespace Xibo\Middleware;
 
-use Slim\Middleware;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\MiddlewareInterface as Middleware;
+use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Slim\App as App;
+use Slim\Routing\RouteContext;
 use Xibo\Exception\TokenExpiredException;
 use Xibo\Helper\Environment;
+use Xibo\Support\Exception\InvalidArgumentException;
 
-class CsrfGuard extends Middleware
+class CsrfGuard implements Middleware
 {
     /**
      * CSRF token key name.
@@ -35,42 +42,38 @@ class CsrfGuard extends Middleware
      */
     protected $key;
 
+    /* @var App $app */
+    private $app;
+
     /**
      * Constructor.
      *
-     * @param string    $key        The CSRF token key name.
+     * @param App $app
+     * @param string $key The CSRF token key name.
      */
-    public function __construct($key = 'csrfToken')
+    public function __construct($app, $key = 'csrfToken')
     {
         if (! is_string($key) || empty($key) || preg_match('/[^a-zA-Z0-9\-\_]/', $key)) {
             throw new \OutOfBoundsException('Invalid CSRF token key "' . $key . '"');
         }
 
         $this->key = $key;
+        $this->app = $app;
     }
 
     /**
      * Call middleware.
      *
-     * @return void
+     * @param Request $request
+     * @param RequestHandler $handler
+     * @return Response
+     * @throws InvalidArgumentException
      */
-    public function call()
+    public function process(Request $request, RequestHandler $handler): Response
     {
-        // Attach as hook.
-        $this->app->hook('slim.before.dispatch', array($this, 'check'));
-
-        // Call next middleware.
-        $this->next->call();
-    }
-
-    /**
-     * Check CSRF token is valid.
-     * @throws TokenExpiredException
-     */
-    public function check()
-    {
-        $session = $this->app->session;
+        $container = $this->app->getContainer();
         /* @var \Xibo\Helper\Session $session */
+        $session = $this->app->getContainer()->get('session');
 
         if (!$session->get($this->key)) {
             $session->set($this->key, bin2hex(random_bytes(20)));
@@ -79,32 +82,43 @@ class CsrfGuard extends Middleware
         $token = $session->get($this->key);
 
         // Validate the CSRF token.
-        if (in_array($this->app->request()->getMethod(), array('POST', 'PUT', 'DELETE'))) {
+        if (in_array($request->getMethod(), ['POST', 'PUT', 'DELETE'])) {
             // Validate the token unless we are on an excluded route
-            $route = $this->app->router()->getCurrentRoute()->getPattern();
+            // Get the current route pattern
+            $routeContext = RouteContext::fromRequest($request);
+            $route = $routeContext->getRoute();
+            $resource = $route->getPattern();
 
-            $excludedRoutes = $this->app->excludedCsrfRoutes;
-            if (($excludedRoutes !== null && is_array($excludedRoutes) && in_array($route, $excludedRoutes))
-                || (Environment::isDevMode() && $route === '/login')
+            $excludedRoutes = $request->getAttribute('excludedCsrfRoutes');
+
+            if (($excludedRoutes !== null && is_array($excludedRoutes) && in_array($resource, $excludedRoutes))
+                || (Environment::isDevMode() && $resource === '/login')
             ) {
-                $this->app->getLog()->info('Route excluded from CSRF: ' . $route);
+                $container->get('logger')->info('Route excluded from CSRF: ' . $resource);
             } else {
                 // Checking CSRF
-                $userToken = $this->app->request()->headers('X-XSRF-TOKEN');
+                $userToken = $request->getHeaderLine('X-XSRF-TOKEN');
+
                 if ($userToken == '') {
-                    $userToken = $this->app->request()->params($this->key);
+                    $parsedBody = $request->getParsedBody();
+                    foreach ($parsedBody as $param => $value) {
+                        if ($param == $this->key) {
+                            $userToken = $value;
+                        }
+                    }
                 }
 
                 if ($token !== $userToken) {
-                    throw new TokenExpiredException('Sorry the form has expired. Please refresh.');
+                    throw new InvalidArgumentException(__('Sorry the form has expired. Please refresh.'), 'token');
                 }
             }
         }
 
         // Assign CSRF token key and value to view.
-        $this->app->view()->appendData(array(
-            'csrfKey'=> $this->key,
-            'csrfToken' => $token
-        ));
+        $container->get('view')->offsetSet('csrfKey', $this->key);
+        $container->get('view')->offsetSet('csrfToken',$token);
+
+        // Call next middleware.
+        return $handler->handle($request);
     }
 }

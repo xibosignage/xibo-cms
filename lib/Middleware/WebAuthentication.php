@@ -104,10 +104,7 @@ class WebAuthentication implements Middleware
 
                 return $handler->handle($newRequest);
             } else {
-                // TODO Store the current route so we can come back to it after login
-                //  $app->flash('priorRoute', $app->request()->getRootUri() . $app->request()->getResourceUri());
-                $app->getContainer()->get('flash')->addMessage('priorRoute', $request->getUri() . $resource);
-
+                $app->getContainer()->get('flash')->addMessage('priorRoute', $resource);
                 $request->withAttribute('name', 'web');
 
                 $app->getContainer()->get('logger')->debug('not in public routes, expired, should redirect to login ');
@@ -167,7 +164,6 @@ class WebAuthentication implements Middleware
             } else {
                 return $handler->handle(
                     $request
-                        ->withAttribute('currentUser', $user)
                         ->withAttribute('name', 'web')
                 );
             }

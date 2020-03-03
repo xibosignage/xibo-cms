@@ -28,6 +28,7 @@ use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Helper\HttpCacheProvider;
 
 /**
  * Class Image
@@ -232,9 +233,11 @@ class Image extends ModuleWidget
 
                     $this->getLog()->debug('Outputting Image Response');
 
-                    // Output Etags TODO
-                   // $this->getApp()->etag($media->md5 . $width . $height . $proportional . $preview);
-                   // $this->getApp()->expires('+1 week');
+                    // Output Etags
+                    /** @var $httpCache HttpCacheProvider*/
+                    $httpCache = $this->container->get('httpCache');
+                    $response = $httpCache->withEtag($response, $media->md5 . $width . $height . $proportional . $preview);
+                    $response = $httpCache->withExpires($response,'+1 week');
 
                     // Should we cache?
                     if ($cache) {

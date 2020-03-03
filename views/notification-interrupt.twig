@@ -36,7 +36,9 @@
             </div>
             <div class="row">
                 <div class="col-md-12">
-                    <p><a href="{{ flash.interruptedUrl }}">{% trans "Continue..." %}</a></p>
+                    {% for interruptedUrl in flash('interruptedUrl') %}
+                        <p><a href="{{ interruptedUrl }}">{% trans "Continue..." %}</a></p>
+                    {% endfor %}
                 </div>
             </div>
         </div>

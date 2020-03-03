@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2019 Spring Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  * Author: Emmanuel Blindauer
  * Based on SAMLAuthentication.php
  *
@@ -24,13 +24,20 @@
 
 namespace Xibo\Middleware;
 
-
-use Slim\Middleware;
+use Nyholm\Psr7\Factory\Psr17Factory;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\MiddlewareInterface as Middleware;
+use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Slim\App;
+use Slim\Http\Factory\DecoratedResponseFactory;
+use Slim\Http\Response as SlimResponse;
+use Slim\Http\ServerRequest as SlimRequest;
+use Slim\Routing\RouteContext;
 use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\ApplicationState;
-use Xibo\Helper\Random;
 
 /**
  * Class CASAuthentication
@@ -38,8 +45,16 @@ use Xibo\Helper\Random;
  *
  * Provide CAS authentication to Xibo configured via settings.php.
  */
-class CASAuthentication extends Middleware
+class CASAuthentication implements Middleware
 {
+    /* @var App $app */
+    private $app;
+
+    public function __construct($app)
+    {
+        $this->app = $app;
+    }
+
     public static function casRoutes()
     {
         return array(
@@ -53,26 +68,36 @@ class CASAuthentication extends Middleware
      * Uses a Hook to check every call for authorization
      * Will redirect to the login route if the user is unauthorized
      *
-     * @throws \RuntimeException if there isn't a login route
+     * @param Request $request
+     * @param RequestHandler $handler
+     * @return Response
+     * @throws NotFoundException
+     * @throws \Xibo\Exception\ConfigurationException
      */
-    public function call()
+    public function process(Request $request, RequestHandler $handler): Response
     {
         $app = $this->app;
 
-        // Create a user
-        $app->user = $app->userFactory->create();
+        $container = $app->getContainer();
+
+        /** @var User $user */
+        $user = $container->get('userFactory')->create();
+        // Get the current route pattern
+        $routeContext = RouteContext::fromRequest($request);
+        $route = $routeContext->getRoute();
+        $resource = $route->getPattern();
 
         // Register CAS routes.
-        $app->excludedCsrfRoutes = CASAuthentication::casRoutes();
+        $request = $request->withAttribute('excludedCsrfRoutes', CASAuthentication::casRoutes());
         $app->logoutRoute = 'cas.logout';
 
-        $app->map('/cas/login', function () use ($app) {
+        $app->map(['GET', 'POST'],'/cas/login', function (SlimRequest $request, SlimResponse $response) use ($app) {
 
             // Initiate CAS SSO
-            $sso_host = $app->configService->casSettings['config']['server'];
-            $sso_port = $app->configService->casSettings['config']['port'];
-            $sso_uri = $app->configService->casSettings['config']['uri'];
-            \phpCAS::client(CAS_VERSION_2_0, $sso_host, intval($sso_port), $sso_uri, true, null);
+            $sso_host = $app->getContainer()->get('configService')->casSettings['config']['server'];
+            $sso_port = $app->getContainer()->get('configService')->casSettings['config']['port'];
+            $sso_uri = $app->getContainer()->get('configService')->casSettings['config']['uri'];
+            \phpCAS::client(CAS_VERSION_2_0, $sso_host, intval($sso_port), $sso_uri, true);
             \phpCAS::setNoCasServerValidation();
 
             //Login happens here
@@ -81,114 +106,139 @@ class CASAuthentication extends Middleware
             $username = \phpCAS::getUser();
 
             try {
-                $user = $app->userFactory->getByName($username);
+                /** @var User $user */
+                $user = $app->getContainer()->get('userFactory')->getByName($username);
             } catch (NotFoundException $e) {
                 throw new AccessDeniedException("Unknown user");
             }
+
             if (isset($user) && $user->userId > 0) {
                 // Load User
-                $user->setChildAclDependencies($app->userGroupFactory, $app->pageFactory);
+                $user->setChildAclDependencies($app->getContainer()->get('userGroupFactory'), $app->getContainer()->get('pageFactory'));
                 $user->load();
 
                 // Overwrite our stored user with this new object.
-                $this->app->user = $user;
+                $app->getContainer()->set('user', $user);
 
                 // Set the user factory ACL dependencies (used for working out intra-user permissions)
-                $app->userFactory->setAclDependencies($user, $app->userFactory);
+                $app->getContainer()->get('userFactory')->setAclDependencies($user, $app->getContainer()->get('userFactory'));
 
                 // Switch Session ID's
-                $this->app->session->setIsExpired(0);
-                $this->app->session->regenerateSessionId();
-                $this->app->session->setUser($user->userId);
+                $app->getContainer()->get('session')->setIsExpired(0);
+                $app->getContainer()->get('session')->regenerateSessionId();
+                $app->getContainer()->get('session')->setUser($user->userId);
 
                 // Audit Log
                 // Set the userId on the log object
-                $this->app->logService->setUserId($user->userId);
-                $this->app->logService->audit('User', $user->userId, 'Login Granted via CAS', [
-                    'IPAddress' => $this->app->request()->getIp(),
-                    'UserAgent' => $this->app->request()->getUserAgent()
+                $app->getContainer()->get('logService')->setUserId($user->userId);
+                $app->getContainer()->get('logService')->audit('User', $user->userId, 'Login Granted via SAML', [
+                    'IPAddress' => $request->getAttribute('ip_address'),
+                    'UserAgent' => $request->getHeader('User-Agent')
                 ]);
             }
-            $app->redirect($app->urlFor('home'));
-        })->via('GET','POST')->setName('cas.login');;
+
+            $routeParser = $app->getRouteCollector()->getRouteParser();
+            return $response->withRedirect($routeParser->urlFor('home'));
+
+        })->setName('cas.login');;
 
         // Service for the logout of the user.
         // End the CAS session and the application session
-        $app->get('/cas/logout', function () use ($app) {
+        $app->get('/cas/logout', function (SlimRequest $request, SlimResponse $response) use ($app) {
             // The order is first: local session to destroy, second the cas session
             // because phpCAS::logout() redirects to CAS server
-            $loginController = $app->container->get('\Xibo\Controller\Login');
-            $loginController->logout(false);
-            $sso_host = $app->configService->casSettings['config']['server'];
-            $sso_port = $app->configService->casSettings['config']['port'];
-            $sso_uri = $app->configService->casSettings['config']['uri'];
-            \phpCAS::client(CAS_VERSION_2_0, $sso_host, intval($sso_port), $sso_uri, true, null);
+            $loginController = $app->getContainer()->get('\Xibo\Controller\Login');
+            $loginController->logout($request, $response);
+            $sso_host = $app->getContainer()->get('configService')->casSettings['config']['server'];
+            $sso_port = $app->getContainer()->get('configService')->casSettings['config']['port'];
+            $sso_uri = $app->getContainer()->get('configService')->casSettings['config']['uri'];
+
+            \phpCAS::client(CAS_VERSION_2_0, $sso_host, intval($sso_port), $sso_uri, true);
             \phpCAS::logout();
 
         })->setName('cas.logout');
 
         // Create a function which we will call should the request be for a protected page
         // and the user not yet be logged in.
-        $redirectToLogin = function () use ($app) {
-            if ($app->request->isAjax()) {
-                $state = $app->state;
+        $redirectToLogin = function (Request $request, SlimResponse $response) use ($app) {
+
+            if ($this->isAjax($request)) {
+                /* @var ApplicationState $state */
+                $state = $app->getContainer()->get('state');
                 /* @var ApplicationState $state */
                 // Return a JSON response which tells the App to redirect to the login page
-                $app->response()->header('Content-Type', 'application/json');
+                $response = $response->withHeader('Content-Type', 'application/json');
                 $state->Login();
-                echo $state->asJson();
-                $app->stop();
+                return $response->withJson($state->asArray());
             }
             else {
-                // We redirect to login and not cas.login to let the user choose
-                // the source of authentication
-                $app->redirect($app->urlFor('login'));
+                $routeParser = $app->getRouteCollector()->getRouteParser();
+                return $response->withRedirect($routeParser->urlFor('login'));
             }
         };
 
-        // Define a callable to check the route requested in before.dispatch
-        $isAuthorised = function () use ($app, $redirectToLogin) {
-            /** @var \Xibo\Entity\User $user */
-            $user = $app->user;
+        if (!in_array($resource, $request->getAttribute('publicRoutes', [])) && !in_array($resource, $request->getAttribute('excludedCsrfRoutes', [])) ) {
 
-            // Get the current route pattern
-            $resource = $app->router->getCurrentRoute()->getPattern();
+            $request = $request->withAttribute('public', false);
 
-            // Pass the page factory into the user object, so that it can check its page permissions
-            $user->setChildAclDependencies($app->userGroupFactory, $app->pageFactory);
+            // Need to check
+            if ($user->hasIdentity() && $container->get('session')->isExpired() == 0) {
 
-            // Check to see if this is a public resource (there are only a few, so we have them in an array)
-            if (!in_array($resource, $app->publicRoutes) && !in_array($resource, CASAuthentication::casRoutes())) {
-                $app->public = false;
-                // Need to check
-                if ($user->hasIdentity() && !$app->session->isExpired()) {
-                    // Replace our user with a fully loaded one
-                    $user = $app->userFactory->getById($user->userId);
-                    $user->setChildAclDependencies($app->userGroupFactory, $app->pageFactory);
-                    $user->load();
-                    $app->logService->setUserId($user->userId);
-                    $user->routeAuthentication($resource);
+                // Replace our user with a fully loaded one
+                $user = $container->get('userFactory')->getById($user->userId);
 
-                    // We are authenticated, override with the populated user object
-                    $app->user = $user;
-                }
-                else {
-                    // Store the current route so we can come back to it after login
-                    $app->flash('priorRoute', $app->request()->getRootUri() . $app->request()->getResourceUri());
-                    $redirectToLogin();
-                }
+                // Pass the page factory into the user object, so that it can check its page permissions
+                $user->setChildAclDependencies($container->get('userGroupFactory'), $container->get('pageFactory'));
+
+                // Load the user
+                $user->load(false);
+
+                // Configure the log service with the logged in user id
+                $container->get('logService')->setUserId($user->userId);
+
+                // Do they have permission?
+                $user->routeAuthentication($resource);
+
+                // We are authenticated, override with the populated user object
+                $container->set('user', $user);
+
+                $request = $request->withAttribute('name', 'web');
+
+                return $handler->handle($request);
+            } else {
+                $app->getContainer()->get('flash')->addMessage('priorRoute', $resource);
+                $request->withAttribute('name', 'web');
+
+                $nyholmFactory = new Psr17Factory();
+                $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
+                $response = $decoratedResponseFactory->createResponse();
+
+                return $redirectToLogin($request, $response);
             }
-            else {
-                $app->public = true;
-                // If we are expired and come from ping/clock, then we redirect
-                if ($app->session->isExpired() && ($resource == '/login/ping' || $resource == 'clock')) {
-                    $redirectToLogin();
-                }
+        } else {
+            $request = $request->withAttribute('public', true);
+
+            // If we are expired and come from ping/clock, then we redirect
+            if ($container->get('session')->isExpired() && ($resource == '/login/ping' || $resource == 'clock')) {
+                $app->getContainer()->get('logger')->debug('should redirect to login , resource is ' . $resource);
+
+                $nyholmFactory = new Psr17Factory();
+                $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
+                $response = $decoratedResponseFactory->createResponse();
+
+                return $redirectToLogin($request, $response);
             }
-        };
+        }
 
-        $app->hook('slim.before.dispatch', $isAuthorised);
+        return $handler->handle($request);
+    }
 
-        $this->next->call();
+    /**
+     * @param \Psr\Http\Message\ServerRequestInterface $request
+     * @return bool
+     */
+    private function isAjax(Request $request)
+    {
+        return strtolower($request->getHeaderLine('X-Requested-With')) === 'xmlhttprequest';
     }
 }
