@@ -28,9 +28,9 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Entity\Task;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -43,8 +43,8 @@ use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\GeneralException;
 
 /**
  * Class Maintenance
@@ -123,11 +123,8 @@ class Maintenance extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
      * @throws ControllerNotImplemented
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
+     * @throws GeneralException
      */
     public function run(Request $request, Response $response)
     {
@@ -194,7 +191,8 @@ class Maintenance extends Base
      * @param $class
      * @param Request $request
      * @param Response $response
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      */
     private function runTask($class, Request $request, Response $response)
     {
@@ -223,11 +221,8 @@ class Maintenance extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
      * @throws ControllerNotImplemented
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
+     * @throws GeneralException
      */
     public function tidyLibraryForm(Request $request, Response $response)
     {
@@ -244,12 +239,10 @@ class Maintenance extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
      * @throws ControllerNotImplemented
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function tidyLibrary(Request $request, Response $response)
     {
@@ -425,11 +418,9 @@ class Maintenance extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
      * @throws ControllerNotImplemented
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
+     * @throws GeneralException
      */
     public function exportForm(Request $request, Response $response)
     {
@@ -448,9 +439,7 @@ class Maintenance extends Base
      * @param Response $response
      * @throws ConfigurationException
      * @throws ControllerNotImplemented
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
+     * @throws GeneralException
      */
     public function export(Request $request, Response $response)
     {

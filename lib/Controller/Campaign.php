@@ -25,9 +25,9 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Entity\Permission;
-use Xibo\Exception\AccessDeniedException;
-
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
@@ -38,6 +38,7 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Campaign
@@ -84,6 +85,7 @@ class Campaign extends Base
      * @param PermissionFactory $permissionFactory
      * @param UserGroupFactory $userGroupFactory
      * @param TagFactory $tagFactory
+     * @param Twig $view
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $campaignFactory, $layoutFactory, $permissionFactory, $userGroupFactory, $tagFactory, Twig $view)
     {
@@ -180,12 +182,9 @@ class Campaign extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws GeneralException
+     * @throws ControllerNotImplemented
+     * @throws NotFoundException
      */
     public function grid(Request $request, Response $response)
     {
@@ -309,11 +308,8 @@ class Campaign extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      */
     public function addForm(Request $request, Response $response)
     {
@@ -359,14 +355,12 @@ class Campaign extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function add(Request $request, Response $response)
     {
@@ -401,12 +395,10 @@ class Campaign extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
      */
     public function editForm(Request $request, Response $response, $id)
     {
@@ -463,14 +455,12 @@ class Campaign extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @SWG\Put(
      *  path="/campaign/{campaignId}",
      *  operationId="campaignEdit",
@@ -532,12 +522,10 @@ class Campaign extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
      */
     function deleteForm(Request $request, Response $response, $id)
     {
@@ -561,12 +549,12 @@ class Campaign extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @SWG\Delete(
      *  path="/campaign/{campaignId}",
      *  operationId="campaignDelete",
@@ -585,14 +573,14 @@ class Campaign extends Base
      *      description="successful operation"
      *  )
      * )
-     *
      */
     public function delete(Request $request, Response $response, $id)
     {
         $campaign = $this->campaignFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($campaign))
+        if (!$this->getUser()->checkDeleteable($campaign)) {
             throw new AccessDeniedException();
+        }
 
         $campaign->setChildObjectDependencies($this->layoutFactory);
 
@@ -613,19 +601,18 @@ class Campaign extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
      */
     public function layoutsForm(Request $request, Response $response, $id)
     {
         $campaign = $this->campaignFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($campaign))
+        if (!$this->getUser()->checkEditable($campaign)) {
             throw new AccessDeniedException();
+        }
 
         $layouts = [];
         foreach ($this->layoutFactory->getByCampaignId($id, false) as $layout) {
@@ -671,17 +658,14 @@ class Campaign extends Base
      * Assigns a layout to a Campaign
      * @param Request $request
      * @param Response $response
-     * @param int $campaignId
-     *
+     * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @SWG\Post(
      *  path="/campaign/layout/assign/{campaignId}",
      *  operationId="campaignAssignLayout",
@@ -720,7 +704,6 @@ class Campaign extends Base
      *      description="successful operation"
      *  )
      * )
-     *
      */
     public function assignLayout( Request $request, Response $response, $id)
     {
@@ -819,49 +802,16 @@ class Campaign extends Base
 
     /**
      * Unassign a layout to a Campaign
-     * @param int $campaignId
-     *
-     * SWG\Post(
-     *  path="/campaign/layout/unassign/{campaignId}",
-     *  operationId="campaignUnassignLayout",
-     *  tags={"campaign"},
-     *  summary="Unassign Layouts",
-     *  description="Unassign Layouts from a Campaign",
-     *  SWG\Parameter(
-     *      name="campaignId",
-     *      in="path",
-     *      description="The Campaign ID",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  SWG\Parameter(
-     *      name="layoutId",
-     *      in="formData",
-     *      description="Array of Layout IDs to Unassign",
-     *      type="array",
-     *      required=true,
-     *      SWG\Items(
-     *          ref="#/definitions/LayoutAssignmentArray"
-     *      )
-     *   ),
-     *  SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
-     * )
-     *
      * @param Request $request
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function unassignLayout(Request $request, Response $response, $id)
     {
@@ -920,12 +870,9 @@ class Campaign extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
      */
     public function preview(Request $request, Response $response, $id)
     {
@@ -964,12 +911,10 @@ class Campaign extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
      */
     public function copyForm(Request $request, Response $response, $id)
     {
@@ -993,13 +938,12 @@ class Campaign extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function copy(Request $request, Response $response, $id)
     {

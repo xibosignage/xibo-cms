@@ -21,7 +21,7 @@
  */
 namespace Xibo\Controller;
 
-use Xibo\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
@@ -38,6 +38,7 @@ trait DisplayProfileConfigFields
      * @param Request $request
      * @return null|array
      * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function editConfigFields($displayProfile, $config = null, Request $request)
     {

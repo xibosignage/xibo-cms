@@ -27,10 +27,10 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 //use Xibo\Entity\DataSetColumn;
 use Slim\Views\Twig;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\SanitizerService;
@@ -77,12 +77,10 @@ class DataSetData extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function displayPage(Request $request, Response $response, $id)
     {
@@ -109,12 +107,10 @@ class DataSetData extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Get(
      *  path="/dataset/data/{dataSetId}",
      *  operationId="dataSetData",
@@ -133,7 +129,6 @@ class DataSetData extends Base
      *      description="successful operation"
      *  )
      * )
-     *
      */
     public function grid(Request $request, Response $response, $id)
     {
@@ -197,12 +192,10 @@ class DataSetData extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function addForm(Request $request, Response $response, $id)
     {
@@ -228,14 +221,12 @@ class DataSetData extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @SWG\Post(
      *  path="/dataset/data/{dataSetId}",
      *  operationId="dataSetDataAdd",
@@ -266,7 +257,6 @@ class DataSetData extends Base
      *      )
      *  )
      * )
-     *
      */
     public function add(Request $request, Response $response, $id)
     {
@@ -335,12 +325,10 @@ class DataSetData extends Base
      * @param $id
      * @param $rowId
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function editForm(Request $request, Response $response, $id, $rowId)
     {
@@ -385,14 +373,12 @@ class DataSetData extends Base
      * @param int $rowId
      *
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @SWG\Put(
      *  path="/dataset/data/{dataSetId}/{rowId}",
      *  operationId="dataSetDataEdit",
@@ -425,7 +411,6 @@ class DataSetData extends Base
      *      description="successful operation"
      *  )
      * )
-     *
      */
     public function edit(Request $request, Response $response, $id, $rowId)
     {
@@ -453,11 +438,19 @@ class DataSetData extends Base
                 // Sanitize accordingly
                 if ($column->dataTypeId == 2) {
                     // Number
-                    $value = $sanitizedParams->getDouble('dataSetColumnId_' . $column->dataSetColumnId);
+                    if ($value != null) {
+                        $value = $sanitizedParams->getDouble('dataSetColumnId_' . $column->dataSetColumnId);
+                    } else {
+                        $value = $existingValue;
+                    }
                 }
                 else if ($column->dataTypeId == 3) {
                     // Date
-                    $value = $this->getDate()->getLocalDate($this->getDate()->parse($value));
+                    if ($value != null) {
+                        $value = $sanitizedParams->getDate('dataSetColumnId_' . $column->dataSetColumnId);
+                    } else {
+                        $value = $existingValue;
+                    }
                 }
                 else if ($column->dataTypeId == 5) {
                     // Media Id
@@ -469,7 +462,11 @@ class DataSetData extends Base
                 }
                 else {
                     // String
-                    $value = $sanitizedParams->getString('dataSetColumnId_' . $column->dataSetColumnId);
+                    if ($value != null) {
+                        $value = $sanitizedParams->getString('dataSetColumnId_' . $column->dataSetColumnId);
+                    } else {
+                        $value = $existingValue;
+                    }
                 }
 
                 $row[$column->heading] = $value;
@@ -504,12 +501,10 @@ class DataSetData extends Base
      * @param $id
      * @param int $rowId
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function deleteForm(Request $request, Response $response, $id, $rowId)
     {
@@ -538,14 +533,12 @@ class DataSetData extends Base
      * @param $rowId
      *
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @SWG\Delete(
      *  path="/dataset/data/{dataSetId}/{rowId}",
      *  operationId="dataSetDataDelete",
