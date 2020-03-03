@@ -173,7 +173,8 @@ class LayoutTest extends LocalWebTestCase
         $layoutResolutionId = $this->getResolutionId($layoutResolutionType);
 
         # Create layouts with arguments from provideFailureCases
-        $request = $this->createRequest('POST','/layout', [
+        $request = $this->createRequest('POST','/layout');
+        $request->withParsedBody([
             'name' => $layoutName,
             'description' => $layoutDescription,
             'layoutId' => $layoutTemplateId,

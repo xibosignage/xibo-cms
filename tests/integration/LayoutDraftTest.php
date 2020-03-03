@@ -65,7 +65,7 @@ class LayoutDraftTest extends LocalWebTestCase
         $this->assertSame(422, $response->getStatusCode(), 'Status Incorrect');
         $object = json_decode($response->getBody());
         $this->assertSame(false, $object->success);
-        $this->assertSame(422, $object->status);
+        $this->assertSame(422, $object->httpStatus);
     }
 
     /**
@@ -101,7 +101,7 @@ class LayoutDraftTest extends LocalWebTestCase
         $this->assertSame(422, $response->getStatusCode(), $response->getBody());
         $object = json_decode($response->getBody());
         $this->assertSame(false, $object->success);
-        $this->assertSame(422, $object->status);
+        $this->assertSame(422, $object->httpStatus);
         $this->assertContains('There is an error with this Layout: Empty Region', $object->error);
     }
 }

@@ -243,7 +243,7 @@ class DataSetTest extends LocalWebTestCase
             'formula' => $columnFormula
         ]);
         # Check if cases are failing as expected
-        $this->assertSame(500, $response->getStatusCode(), 'Expecting failure, received ' . $response->getStatusCode());
+        $this->assertSame(422, $response->getStatusCode(), 'Expecting failure, received ' . $response->getStatusCode());
     }
 
     /**
@@ -470,7 +470,7 @@ class DataSetTest extends LocalWebTestCase
         # Delete row
         $response = $this->sendRequest('DELETE','/dataset/data/' . $dataSet->dataSetId . '/' . $row['id']);
         $object = json_decode($response->getBody());
-        $this->assertSame(200, $object->status, $response->getBody());
+        $this->assertSame(204, $object->status, $response->getBody());
         # Clean up as we no longer need it, deleteWData will delete dataset even if it has data assigned to it
         $dataSet->deleteWData();
     }
