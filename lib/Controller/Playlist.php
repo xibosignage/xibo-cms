@@ -800,10 +800,11 @@ class Playlist extends Base
             throw new AccessDeniedException();
 
         // Load the playlist for Copy
-        $playlist->load();
+        $playlist->load(['loadTags' => false]);
         $playlist = clone $playlist;
 
         $playlist->name = $this->getSanitizer()->getString('name');
+        $playlist->setOwner($this->getUser()->userId);
 
         // Copy the media on the playlist and change the assignments.
         if ($this->getSanitizer()->getCheckbox('copyMediaFiles') == 1) {
@@ -821,6 +822,23 @@ class Playlist extends Base
                 $widget->setOptionValue('uri', 'attrib', $media->storedAs);
             }
         }
+
+        // Handle tags
+        $tags = '';
+
+        $arrayOfTags = array_filter(explode(',', $playlist->tags));
+        $arrayOfTagValues = array_filter(explode(',', $playlist->tagValues));
+
+        for ($i=0; $i<count($arrayOfTags); $i++) {
+            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
+                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
+                $tags .= ',';
+            } else {
+                $tags .= $arrayOfTags[$i] . ',';
+            }
+        }
+
+        $playlist->replaceTags($this->tagFactory->tagsFromString($tags));
 
         // Set from global setting
         if ($playlist->enableStat == null) {
