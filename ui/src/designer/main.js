@@ -521,6 +521,9 @@ lD.checkoutLayout = function() {
     // replace id if necessary/exists
     requestPath = requestPath.replace(':id', lD.layout.layoutId);
 
+    // Deselect previous selected object
+    lD.selectObject();
+
     $.ajax({
         url: requestPath,
         type: linkToAPI.type
@@ -567,6 +570,9 @@ lD.publishLayout = function() {
     let requestPath = linkToAPI.url;
 
     lD.common.showLoadingScreen();
+
+    // Deselect previous selected object
+    lD.selectObject();
 
     // replace id if necessary/exists
     requestPath = requestPath.replace(':id', lD.layout.parentLayoutId);
@@ -616,6 +622,9 @@ lD.discardLayout = function() {
     let requestPath = linkToAPI.url;
 
     lD.common.showLoadingScreen();
+
+    // Deselect previous selected object
+    lD.selectObject();
 
     // replace id if necessary/exists
     requestPath = requestPath.replace(':id', lD.layout.parentLayoutId);
