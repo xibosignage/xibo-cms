@@ -10,7 +10,7 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Session;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
@@ -79,7 +79,6 @@ class SessionFactory extends BaseFactory
      * @param array $sortOrder
      * @param array $filterBy
      * @return Session[]
-     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
     {

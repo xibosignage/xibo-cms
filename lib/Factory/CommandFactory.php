@@ -25,7 +25,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Command;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -87,10 +87,12 @@ class CommandFactory extends BaseFactory
 
         return $commands[0];
     }
+
     /**
      * Get by Display Profile Id
      * @param $displayProfileId
      * @return array[Command]
+     * @throws NotFoundException
      */
     public function getByDisplayProfileId($displayProfileId)
     {

@@ -54,7 +54,6 @@ class ContainerFactory
     /**
      * Create DI Container with definitions
      *
-     * @param $channel
      * @return ContainerInterface
      * @throws Exception
      */

@@ -24,7 +24,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\PlayerVersion;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
@@ -149,6 +149,7 @@ class PlayerVersionFactory extends BaseFactory
      * @param null $sortOrder
      * @param array $filterBy
      * @return PlayerVersion[]
+     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
     {

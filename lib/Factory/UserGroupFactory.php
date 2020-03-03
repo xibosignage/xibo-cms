@@ -25,7 +25,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\User;
 use Xibo\Entity\UserGroup;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -151,7 +151,6 @@ class UserGroupFactory extends BaseFactory
      * Get by User Id
      * @param int $userId
      * @return array[UserGroup]
-     * @throws NotFoundException
      */
     public function getByUserId($userId)
     {

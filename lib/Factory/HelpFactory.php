@@ -25,7 +25,7 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Help;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -73,7 +73,6 @@ class HelpFactory extends BaseFactory
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[Transition]
-     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
     {

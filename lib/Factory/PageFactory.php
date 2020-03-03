@@ -23,12 +23,11 @@
 
 namespace Xibo\Factory;
 
-use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Page;
-use Xibo\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class PageFactory
@@ -90,6 +89,7 @@ class PageFactory extends BaseFactory
 
     /**
      * @return Page[]
+     * @throws NotFoundException
      */
     public function getForHomepage()
     {

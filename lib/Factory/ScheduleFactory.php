@@ -25,7 +25,7 @@ namespace Xibo\Factory;
 use Jenssegers\Date\Date;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Schedule;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -131,7 +131,6 @@ class ScheduleFactory extends BaseFactory
     /**
      * @param int $displayGroupId
      * @return array[Schedule]
-     * @throws NotFoundException
      */
     public function getByDisplayGroupId($displayGroupId)
     {
@@ -142,7 +141,6 @@ class ScheduleFactory extends BaseFactory
      * Get by Campaign ID
      * @param int $campaignId
      * @return array[Schedule]
-     * @throws NotFoundException
      */
     public function getByCampaignId($campaignId)
     {
@@ -153,7 +151,6 @@ class ScheduleFactory extends BaseFactory
      * Get by OwnerId
      * @param int $ownerId
      * @return array[Schedule]
-     * @throws NotFoundException
      */
     public function getByOwnerId($ownerId)
     {
@@ -164,7 +161,6 @@ class ScheduleFactory extends BaseFactory
      * Get by DayPartId
      * @param int $dayPartId
      * @return Schedule[]
-     * @throws NotFoundException
      */
     public function getByDayPartId($dayPartId)
     {

@@ -159,7 +159,7 @@ class BaseFactory
      * @param $idColumn
      * @param null $ownerColumn
      * @param array $filterBy
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function viewPermissionSql($entity, &$sql, &$params, $idColumn, $ownerColumn = null, $filterBy = [])
     {

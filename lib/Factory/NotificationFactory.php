@@ -26,7 +26,7 @@ namespace Xibo\Factory;
 use Jenssegers\Date\Date;
 use Xibo\Entity\Notification;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -124,6 +124,7 @@ class NotificationFactory extends BaseFactory
      * @param int $fromDt
      * @param int $toDt
      * @return Notification[]
+     * @throws NotFoundException
      */
     public function getBySubjectAndDate($subject, $fromDt, $toDt)
     {
@@ -131,9 +132,10 @@ class NotificationFactory extends BaseFactory
     }
 
     /**
-     * @param array[Optional] $sortOrder
-     * @param array[Optional] $filterBy
+     * @param null $sortOrder
+     * @param array $filterBy
      * @return Notification[]
+     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
     {

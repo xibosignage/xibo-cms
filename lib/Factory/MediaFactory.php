@@ -28,7 +28,7 @@ use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Pool;
 use Xibo\Entity\Media;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
@@ -196,6 +196,10 @@ class MediaFactory extends BaseFactory
      * @param $expiry
      * @param array $requestOptions
      * @return Media
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     public function queueDownload($name, $uri, $expiry, $requestOptions = [])
     {
@@ -429,6 +433,7 @@ class MediaFactory extends BaseFactory
      * Get by Type
      * @param string $type
      * @return array[Media]
+     * @throws NotFoundException
      */
     public function getByMediaType($type)
     {
@@ -439,6 +444,7 @@ class MediaFactory extends BaseFactory
      * Get by Display Group Id
      * @param int $displayGroupId
      * @return array[Media]
+     * @throws NotFoundException
      */
     public function getByDisplayGroupId($displayGroupId)
     {
@@ -450,6 +456,7 @@ class MediaFactory extends BaseFactory
      * @param int $layoutId
      * @param int $edited
      * @return array[Media]
+     * @throws NotFoundException
      */
     public function getByLayoutId($layoutId, $edited = -1)
     {
@@ -460,6 +467,7 @@ class MediaFactory extends BaseFactory
      * @param null $sortOrder
      * @param array $filterBy
      * @return Media[]
+     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
     {

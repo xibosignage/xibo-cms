@@ -25,12 +25,12 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Display;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DisplayFactory
@@ -142,6 +142,7 @@ class DisplayFactory extends BaseFactory
      * @param array $sortOrder
      * @param array $filterBy
      * @return Display[]
+     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
     {
