@@ -576,7 +576,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 $query[]['$limit'] = $length;
             }
 
-            $cursor = $collection->aggregate($query);
+            $cursor = $collection->aggregate($query, ['allowDiskUse' => true]);
 
             $result = new TimeSeriesMongoDbResults($cursor);
 
@@ -584,6 +584,9 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $result->totalCount = $total;
 
         } catch (\MongoDB\Exception\RuntimeException $e) {
+            $this->log->error($e->getMessage());
+            throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
+        } catch (\Exception $e) {
             $this->log->error($e->getMessage());
             throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
         }

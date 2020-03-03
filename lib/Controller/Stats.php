@@ -231,7 +231,7 @@ class Stats extends Base
      *  @SWG\Parameter(
      *      name="type",
      *      in="query",
-     *      description="The type of stat to return. Layout|Media|Widget or All",
+     *      description="The type of stat to return. Layout|Media|Widget",
      *      type="string",
      *      required=false
      *   ),
@@ -338,7 +338,7 @@ class Stats extends Base
         // What if the fromdt and todt are exactly the same?
         // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
         if ($fromDt != null && $toDt != null && $fromDt == $toDt) {
-            $toDt->addDay(1);
+            $toDt->addDay();
         }
 
         // Do not filter by display if super admin and no display is selected
@@ -541,6 +541,7 @@ class Stats extends Base
         $fromDt = $this->getSanitizer()->getDate('fromDt');
         $toDt = $this->getSanitizer()->getDate('toDt');
         $displayId = $this->getSanitizer()->getInt('displayId');
+        $isExport = $this->getSanitizer()->getInt('isExport', 1);
 
         // Do not filter by display if super admin and no display is selected
         // Super admin will be able to see stat records of deleted display, we will not filter by display later
@@ -582,56 +583,70 @@ class Stats extends Base
         }
 
         // Get result set
-        $resultSet =  $this->timeSeriesStore->getStats([
-            'fromDt'=> $fromDt,
-            'toDt'=> $toDt,
+        $resultSet = $this->timeSeriesStore->getStats([
+            'fromDt' => $fromDt,
+            'toDt' => $toDt,
             'displayIds' => $displayIds,
         ]);
 
-        $out = fopen('php://output', 'w');
-        fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'Engagements']);
+        // We only export if isExport is 1 else we return the count of stats
+        if (!empty($isExport)) {
 
-        while ($row = $resultSet->getNextRow() ) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'Engagements']);
 
-            $displayName = isset($row['display']) ? $this->getSanitizer()->string($row['display']) : '';
-            $layoutName = isset($row['layout']) ? $this->getSanitizer()->string($row['layout']) : '';
+            while ($row = $resultSet->getNextRow()) {
 
-            // Read the columns
-            $type = $this->getSanitizer()->string($row['type']);
-            if ($this->timeSeriesStore->getEngine() == 'mongodb') {
+                $displayName = isset($row['display']) ? $this->getSanitizer()->string($row['display']) : '';
+                $layoutName = isset($row['layout']) ? $this->getSanitizer()->string($row['layout']) : '';
 
-                $statDate = isset($row['statDate']) ? $this->getDate()->parse($row['statDate']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s') : null;
-                $fromDt = $this->getDate()->parse($row['start']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
-                $toDt = $this->getDate()->parse($row['end']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
-                $engagements = isset($row['engagements']) ? json_encode($row['engagements']): '[]';
-            } else {
+                // Read the columns
+                $type = $this->getSanitizer()->string($row['type']);
+                if ($this->timeSeriesStore->getEngine() == 'mongodb') {
 
-                $statDate = isset($row['statDate']) ?$this->getDate()->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : null;
-                $fromDt = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
-                $toDt = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
-                $engagements = isset($row['engagements']) ? $row['engagements']: '[]';
+                    $statDate = isset($row['statDate']) ? $this->getDate()->parse($row['statDate']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s') : null;
+                    $fromDt = $this->getDate()->parse($row['start']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
+                    $toDt = $this->getDate()->parse($row['end']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
+                    $engagements = isset($row['engagements']) ? json_encode($row['engagements']) : '[]';
+                } else {
+
+                    $statDate = isset($row['statDate']) ? $this->getDate()->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : null;
+                    $fromDt = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
+                    $toDt = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
+                    $engagements = isset($row['engagements']) ? $row['engagements'] : '[]';
+                }
+
+                $layout = ($layoutName != '') ? $layoutName : __('Not Found');
+                $display = ($displayName != '') ? $displayName : __('Not Found');
+                $media = isset($row['media']) ? $this->getSanitizer()->string($row['media']) : '';
+                $tag = isset($row['tag']) ? $this->getSanitizer()->string($row['tag']) : '';
+
+                $duration = isset($row['duration']) ? $this->getSanitizer()->string($row['duration']) : '';
+                $count = isset($row['count']) ? $this->getSanitizer()->string($row['count']) : '';
+
+                fputcsv($out, [$statDate, $type, $fromDt, $toDt, $layout, $display, $media, $tag, $duration, $count, $engagements]);
             }
 
-            $layout = ($layoutName != '') ? $layoutName :  __('Not Found');
-            $display = ($displayName != '') ? $displayName : __('Not Found');
-            $media = isset($row['media']) ? $this->getSanitizer()->string($row['media']): '';
-            $tag = isset($row['tag']) ? $this->getSanitizer()->string($row['tag']): '';
+            fclose($out);
 
-            $duration = isset($row['duration']) ? $this->getSanitizer()->string($row['duration']): '';
-            $count = isset($row['count']) ? $this->getSanitizer()->string($row['count']): '';
 
-            fputcsv($out, [$statDate, $type, $fromDt, $toDt, $layout, $display, $media, $tag, $duration, $count, $engagements]);
+            // We want to output a load of stuff to the browser as a text file.
+            $app = $this->getApp();
+            $app->response()->header('Content-Type', 'text/csv');
+            $app->response()->header('Content-Disposition', 'attachment; filename="stats.csv"');
+            $app->response()->header('Content-Transfer-Encoding', 'binary"');
+            $app->response()->header('Accept-Ranges', 'bytes');
+            $this->setNoOutput(true);
+
+        } else {
+            $response = [
+                'total' => $resultSet->getTotalCount()
+            ];
+
+            $this->getState()->template = 'statistics-form-export'; // TODO what should be the template
+            $this->getState()->recordsTotal = $resultSet->getTotalCount();
+            $this->getState()->setData($response);
         }
-
-        fclose($out);
-
-        // We want to output a load of stuff to the browser as a text file.
-        $app = $this->getApp();
-        $app->response()->header('Content-Type', 'text/csv');
-        $app->response()->header('Content-Disposition', 'attachment; filename="stats.csv"');
-        $app->response()->header('Content-Transfer-Encoding', 'binary"');
-        $app->response()->header('Accept-Ranges', 'bytes');
-        $this->setNoOutput(true);
     }
 
     /**
