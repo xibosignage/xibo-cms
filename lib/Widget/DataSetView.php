@@ -25,8 +25,8 @@ use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\DataSetColumn;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DataSetView
@@ -565,6 +565,10 @@ class DataSetView extends ModuleWidget
      * Get the Data Set Table
      * @param int $displayId
      * @return array
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     private function dataSetTableHtml($displayId = 0)
     {

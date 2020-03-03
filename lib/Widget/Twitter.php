@@ -28,8 +28,8 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Invalidation;
 use Xibo\Entity\Media;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\GeneralException;
 
 /**
  * Class Twitter
@@ -107,7 +107,7 @@ class Twitter extends TwitterBase
                 $this->getLog()->debug('Deleting old emoji svg file');
                 $oldSvg->delete();
             }
-        } catch (XiboException $xiboException) {
+        } catch (GeneralException $xiboException) {
             $this->getLog()->error('Unable to delete old SVG reference during Twitter install. E = ' . $xiboException->getMessage());
             $this->getLog()->debug($xiboException->getTraceAsString());
         }
@@ -453,13 +453,17 @@ class Twitter extends TwitterBase
      * @param int $displayId
      * @param bool $isPreview
      * @return array|false
-     * @throws \Xibo\Exception\XiboException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
     protected function getTwitterFeed($displayId = 0, $isPreview = true)
     {
         // Do we need to add a geoCode?
         $geoCode = '';
+        $template = null;
+        $resultContent = null;
+
         $distance = $this->getOption('tweetDistance');
         if ($distance != 0) {
             // Use the display ID or the default.
@@ -744,6 +748,11 @@ class Twitter extends TwitterBase
     /** @inheritdoc */
     public function getResource($displayId = 0)
     {
+        $css = null;
+        $widgetOriginalWidth = null;
+        $widgetOriginalHeight = null;
+        $widgetOriginalPadding = null;
+
         // Make sure we are set up correctly
         if ($this->getSetting('apiKey') == '' || $this->getSetting('apiSecret') == '') {
             $this->getLog()->error('Twitter Module not configured. Missing API Keys');

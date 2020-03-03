@@ -24,8 +24,10 @@ namespace Xibo\Widget;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Widget;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\ValueTooLargeException;
 
 /**
  * Class Playlist
@@ -91,7 +93,7 @@ class SubPlaylist extends ModuleWidget
     /**
      * @param int[] $playlistIds
      * @return $this
-     * @throws \Xibo\Exception\ValueTooLargeException
+     * @throws ValueTooLargeException
      */
     protected function setAssignedPlaylistIds($playlistIds)
     {
@@ -372,8 +374,8 @@ class SubPlaylist extends ModuleWidget
     /**
      * @param int $parentWidgetId this tracks the top level widgetId
      * @return Widget[] $widgets
-     * @throws \Xibo\Exception\NotFoundException
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws NotFoundException
+     * @throws GeneralException
      */
     public function getSubPlaylistResolvedWidgets($parentWidgetId = 0)
     {
@@ -683,7 +685,8 @@ class SubPlaylist extends ModuleWidget
 
     /**
      * @return int
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws NotFoundException
+     * @throws GeneralException
      */
     public function getSubPlaylistResolvedDuration()
     {

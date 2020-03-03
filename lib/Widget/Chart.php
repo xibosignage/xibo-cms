@@ -26,8 +26,8 @@ use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\DataSetColumn;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Chart

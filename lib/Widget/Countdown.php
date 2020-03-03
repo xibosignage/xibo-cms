@@ -36,7 +36,7 @@ namespace Xibo\Widget;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Countdown
@@ -271,6 +271,12 @@ class Countdown extends ModuleWidget
     {
         $data = [];
 
+        // Set the null values for template variables.
+        $mainTemplate = null;
+        $styleSheet = null;
+        $widgetOriginalWidth = null;
+        $widgetOriginalHeight = null;
+
         // Replace the View Port Width?
         $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
 
@@ -280,7 +286,7 @@ class Countdown extends ModuleWidget
         if($this->getOption('overrideTemplate') == 0) {
             
             $template = $this->getTemplateById($this->getOption('templateId'));
-            
+
             if (isset($template)) {
                 $mainTemplate = $template['template'];
                 $styleSheet = $template['css'];
@@ -298,7 +304,7 @@ class Countdown extends ModuleWidget
         // Run through each item and substitute with the template
         $mainTemplate = $this->parseLibraryReferences($this->isPreview(), $mainTemplate);
 
-        // Make subsitutions
+        // Make substitutions
         $mainTemplate = $this->makeSubstitutions($mainTemplate);
 
         // Parse translations

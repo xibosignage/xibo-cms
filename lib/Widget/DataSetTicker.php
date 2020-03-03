@@ -25,8 +25,9 @@ use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\DataSetColumn;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DataSetTicker
@@ -73,7 +74,7 @@ class DataSetTicker extends ModuleWidget
     /**
      * Get Data Set Columns
      * @return \Xibo\Entity\DataSetColumn[]
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function dataSetColumns()
     {
@@ -104,7 +105,7 @@ class DataSetTicker extends ModuleWidget
     /**
      * Get Extra content for the form
      * @return array
-     * @throws \Xibo\Exception\XiboException
+     * @throws GeneralException
      */
     public function getExtra()
     {
@@ -600,6 +601,10 @@ class DataSetTicker extends ModuleWidget
      * @param $displayId
      * @param $text
      * @return array
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     private function getDataSetItems($displayId, $text)
     {
@@ -864,7 +869,7 @@ class DataSetTicker extends ModuleWidget
 
     /**
      * @inheritdoc
-     * @throws \Xibo\Exception\XiboException
+     * @throws GeneralException
      */
     public function getModifiedDate($displayId)
     {

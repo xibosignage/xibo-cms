@@ -54,6 +54,8 @@ class Flash extends ModuleWidget
         $this->setOption('name', $sanitizedParams->getString('name'));
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
