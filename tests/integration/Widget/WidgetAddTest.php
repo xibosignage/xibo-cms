@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -74,14 +74,14 @@ class WidgetAddTest extends LocalWebTestCase
 
         $this->getLogger()->debug('testAdd - ' . $playlistId);
 
-        $this->client->post('/playlist/widget/text/' . $playlistId);
+        $response = $this->sendRequest('POST','/playlist/widget/text/' . $playlistId);
 
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
 
 
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
 
         $this->getLogger()->debug('testAdd - finished.');
     }
@@ -95,9 +95,9 @@ class WidgetAddTest extends LocalWebTestCase
 
         $this->getLogger()->debug('testAddNonRegionSpecific - ' . $playlistId);
 
-        $this->client->post('/playlist/widget/audio/' . $playlistId);
+        $response = $this->sendRequest('POST','/playlist/widget/audio/' . $playlistId);
 
-        $this->assertSame(500, $this->client->response->status(), 'Status Code isnt correct: ' . $this->client->response->status());
+        $this->assertSame(500, $response->getStatusCode(), 'Status Code isnt correct: ' . $response->getStatusCode());
 
         $this->getLogger()->debug('testAddNonRegionSpecific - finished.');
     }

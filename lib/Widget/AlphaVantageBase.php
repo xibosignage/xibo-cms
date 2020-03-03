@@ -28,8 +28,8 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Jenssegers\Date\Date;
 use Stash\Invalidation;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\GeneralException;
 
 /**
  * Class AlphaVantageBase
@@ -43,7 +43,7 @@ abstract class AlphaVantageBase extends ModuleWidget
      * @param $toCurrency
      * @return array
      * @throws ConfigurationException
-     * @throws XiboException
+     * @throws GeneralException
      */
     protected function getCurrencyExchangeRate($fromCurrency, $toCurrency)
     {
@@ -85,14 +85,14 @@ abstract class AlphaVantageBase extends ModuleWidget
             return $data;
 
         } catch (GuzzleException $guzzleException) {
-            throw new XiboException('Guzzle exception getting currency exchange rate. E = ' . $guzzleException->getMessage(), $guzzleException->getCode(), $guzzleException);
+            throw new GeneralException('Guzzle exception getting currency exchange rate. E = ' . $guzzleException->getMessage(), $guzzleException->getCode(), $guzzleException);
         }
     }
     /**
      * @param $symbol
      * @return array
      * @throws ConfigurationException
-     * @throws XiboException
+     * @throws GeneralException
      */
     protected function getStockQuote($symbol)
     {
@@ -132,7 +132,7 @@ abstract class AlphaVantageBase extends ModuleWidget
 
             return $data;
         } catch (GuzzleException $guzzleException) {
-            throw new XiboException('Guzzle exception getting currency exchange rate. E = ' . $guzzleException->getMessage(), $guzzleException->getCode(), $guzzleException);
+            throw new GeneralException('Guzzle exception getting currency exchange rate. E = ' . $guzzleException->getMessage(), $guzzleException->getCode(), $guzzleException);
         }
     }
 
@@ -155,7 +155,7 @@ abstract class AlphaVantageBase extends ModuleWidget
      * @param $base
      * @param $pairs
      * @return mixed
-     * @throws XiboException
+     * @throws GeneralException
      */
     protected function getPriorDay($base, $pairs)
     {
@@ -203,7 +203,7 @@ abstract class AlphaVantageBase extends ModuleWidget
             return $return;
 
         } catch (GuzzleException $guzzleException) {
-            throw new XiboException('Guzzle exception getting currency exchange rate. E = ' . $guzzleException->getMessage(), $guzzleException->getCode(), $guzzleException);
+            throw new GeneralException('Guzzle exception getting currency exchange rate. E = ' . $guzzleException->getMessage(), $guzzleException->getCode(), $guzzleException);
         }
     }
 }

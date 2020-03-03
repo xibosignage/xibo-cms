@@ -129,8 +129,7 @@ class Audio extends ModuleWidget
         }
 
         $this->saveWidget();
-
-        //return $response;
+        return $response;
     }
 
     /**
@@ -163,7 +162,7 @@ class Audio extends ModuleWidget
         $file = $info->analyze($fileName);
 
         $file = $this->getSanitizer($file);
-        return intval($file->getString('playtime_seconds', ['default' => 0]));
+        return intval($file->getDouble('playtime_seconds', ['default' => 0]));
     }
 
     /** @inheritDoc */

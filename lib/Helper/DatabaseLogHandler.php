@@ -35,7 +35,7 @@ use Xibo\Storage\PdoStorageService;
 class DatabaseLogHandler extends AbstractProcessingHandler
 {
     private static $statement;
-    protected $level;
+    protected $level = Logger::ERROR;
 
     public function __construct($level = Logger::ERROR)
     {

@@ -26,7 +26,7 @@ use database;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
-use Xibo\Exception\AccessDeniedException;
+use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
@@ -69,12 +69,10 @@ class Preview extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function show(Request $request, Response $response, $id )
     {
@@ -105,14 +103,11 @@ class Preview extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\InvalidArgumentException
-     * @throws \Xibo\Exception\NotFoundException
-     * @throws \Xibo\Exception\XiboException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function getXlf(Request $request, Response $response, $id )
     {

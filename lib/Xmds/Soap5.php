@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (Soap5.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -12,7 +27,8 @@ namespace Xibo\Xmds;
 use Stash\Invalidation;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Helper\Random;
 
 class Soap5 extends Soap4
@@ -30,8 +46,9 @@ class Soap5 extends Soap4
      * @param string $xmrChannel
      * @param string $xmrPubKey
      * @return string
+     * @throws NotFoundException
      * @throws \SoapFault
-     * @throws \Xibo\Exception\XiboException
+     * @throws GeneralException
      */
     public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress, $xmrChannel = null, $xmrPubKey = null)
     {
@@ -353,9 +370,10 @@ class Soap5 extends Soap4
 
     /**
      * Returns the schedule for the hardware key specified
-     * @return string
      * @param string $serverKey
      * @param string $hardwareKey
+     * @return string
+     * @throws NotFoundException
      * @throws \SoapFault
      */
     function Schedule($serverKey, $hardwareKey)

@@ -25,7 +25,7 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
@@ -115,6 +115,7 @@ class UserFactory extends BaseFactory
     /**
      * Load by client Id
      * @param string $clientId
+     * @return mixed
      * @throws NotFoundException
      */
     public function loadByClientId($clientId)

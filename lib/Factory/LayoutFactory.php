@@ -31,15 +31,15 @@ use Xibo\Entity\Layout;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
-use Xibo\Exception\DuplicateEntityException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\DuplicateEntityException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class LayoutFactory
@@ -195,7 +195,7 @@ class LayoutFactory extends BaseFactory
      * @param string $tags
      * @return Layout
      *
-     * @throws XiboException
+     * @throws NotFoundException
      */
     public function createFromResolution($resolutionId, $ownerId, $name, $description, $tags)
     {
@@ -266,8 +266,8 @@ class LayoutFactory extends BaseFactory
      * Get CampaignId from layout history
      * @param int $layoutId
      * @return int campaignId
-     * @throws \Xibo\Exception\NotFoundException
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
     public function getCampaignIdFromLayoutHistory($layoutId)
     {
@@ -289,8 +289,6 @@ class LayoutFactory extends BaseFactory
      * Get layout by layout history
      * @param int $layoutId
      * @return Layout
-     * @throws \Xibo\Exception\NotFoundException
-     * @throws \Xibo\Exception\InvalidArgumentException
      * @throws NotFoundException
      */
     public function getByLayoutHistory($layoutId)
@@ -310,8 +308,8 @@ class LayoutFactory extends BaseFactory
      * Get latest layoutId by CampaignId from layout history
      * @param int campaignId
      * @return int layoutId
-     * @throws \Xibo\Exception\NotFoundException
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
     public function getLatestLayoutIdFromLayoutHistory($campaignId)
     {
@@ -429,7 +427,7 @@ class LayoutFactory extends BaseFactory
      * Get by Display Group Id
      * @param int $displayGroupId
      * @return Layout[]
-     * @throws XiboException
+     * @throws NotFoundException
      */
     public function getByDisplayGroupId($displayGroupId)
     {
@@ -440,7 +438,7 @@ class LayoutFactory extends BaseFactory
      * Get by Background Image Id
      * @param int $backgroundImageId
      * @return Layout[]
-     * @throws XiboException
+     * @throws NotFoundException
      */
     public function getByBackgroundImageId($backgroundImageId)
     {
@@ -957,14 +955,14 @@ class LayoutFactory extends BaseFactory
      * @param \Xibo\Controller\Library $libraryController
      * @return Layout
      * @throws DuplicateEntityException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\ConfigurationException
      */
     public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $libraryController)
     {
-        $this->getLog()->debug('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName);
+        $this->getLog()->debug(sprintf('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName));
 
         $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION') . 'temp/';
 
@@ -1109,7 +1107,7 @@ class LayoutFactory extends BaseFactory
             try {
                 $media = $this->mediaFactory->getByName($intendedMediaName);
 
-                $this->getLog()->debug('Media already exists with name: %s', $intendedMediaName);
+                $this->getLog()->debug('Media already exists with name: ' .  $intendedMediaName);
 
                 if ($replaceExisting && !$isFont) {
                     // Media with this name already exists, but we don't want to use it.
@@ -1119,7 +1117,7 @@ class LayoutFactory extends BaseFactory
 
             } catch (NotFoundException $e) {
                 // Create it instead
-                $this->getLog()->debug('Media does not exist in Library, add it. %s', $file['file']);
+                $this->getLog()->debug('Media does not exist in Library, add it ' .  $file['file']);
 
                 $media = $this->mediaFactory->create($intendedMediaName, $file['file'], $file['type'], $userId, $file['duration']);
                 $media->tags[] = $this->tagFactory->tagFromString('imported');

@@ -55,7 +55,7 @@ interface ReportServiceInterface
     /**
      * Get report by report name
      * @param string $reportName
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function getReportByName($reportName);
 
@@ -75,6 +75,7 @@ interface ReportServiceInterface
     /**
      * Populate form title and hidden fields
      * @param string $reportName
+     * @param Request $request
      * @return array
      */
     public function getReportScheduleFormData($reportName, Request $request);
@@ -82,6 +83,7 @@ interface ReportServiceInterface
     /**
      * Set Report Schedule form data
      * @param string $reportName
+     * @param Request $request
      * @return array
      */
     public function setReportScheduleFormData($reportName, Request $request);

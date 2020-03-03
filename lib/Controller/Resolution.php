@@ -26,7 +26,7 @@ use Kit;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
-use Xibo\Exception\AccessDeniedException;
+use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Factory\ResolutionFactory;
 use Xibo\Helper\Form;
 use Xibo\Helper\SanitizerService;
@@ -69,11 +69,8 @@ class Resolution extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     function displayPage(Request $request, Response $response)
     {
@@ -124,11 +121,8 @@ class Resolution extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     function grid(Request $request, Response $response)
     {
@@ -181,11 +175,8 @@ class Resolution extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     function addForm(Request $request, Response $response)
     {
@@ -203,12 +194,10 @@ class Resolution extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function editForm(Request $request, Response $response, $id)
     {
@@ -233,12 +222,10 @@ class Resolution extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function deleteForm(Request $request, Response $response, $id)
     {
@@ -301,11 +288,9 @@ class Resolution extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     function add(Request $request, Response $response)
     {
@@ -336,12 +321,11 @@ class Resolution extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
      * @SWG\Put(
      *  path="/resolution/{resolutionId}",
      *  operationId="resolutionEdit",
@@ -415,12 +399,10 @@ class Resolution extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      * @SWG\Delete(
      *  path="/resolution/{resolutionId}",
      *  operationId="resolutionDelete",

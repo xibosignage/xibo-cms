@@ -25,10 +25,10 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\User;
 use Xibo\Entity\UserNotification;
-use Xibo\Exception\AccessDeniedException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
 
 /**
  * Class UserGroupNotificationFactory

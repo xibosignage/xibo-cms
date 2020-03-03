@@ -26,9 +26,9 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Respect\Validation\Validator as v;
 use Slim\Views\Twig;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
@@ -83,11 +83,8 @@ class Settings extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function displayPage(Request $request, Response $response)
     {
@@ -200,12 +197,10 @@ class Settings extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws InvalidArgumentException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function update(Request $request, Response $response)
     {

@@ -34,12 +34,12 @@ use Stash\Invalidation;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\Widget;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\LibraryFullException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\LibraryFullException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
@@ -345,11 +345,8 @@ class Library extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     function displayPage(Request $request, Response $response)
     {
@@ -371,15 +368,13 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @SWG\Put(
      *  path="/library/setenablestat/{mediaId}",
      *  operationId="mediaSetEnableStat",
@@ -405,7 +400,6 @@ class Library extends Base
      *      description="successful operation"
      *  )
      * )
-     *
      */
     public function setEnableStat(Request $request, Response $response, $id)
     {
@@ -437,12 +431,10 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function setEnableStatForm(Request $request, Response $response, $id)
     {
@@ -556,11 +548,9 @@ class Library extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     function grid(Request $request, Response $response)
     {
@@ -740,13 +730,10 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function deleteForm(Request $request, Response $response, $id)
     {
@@ -774,13 +761,13 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws ConfigurationException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @SWG\Delete(
      *  path="/library/{mediaId}",
      *  operationId="libraryDelete",
@@ -847,12 +834,10 @@ class Library extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/library",
      *  operationId="libraryAdd",
@@ -913,7 +898,6 @@ class Library extends Base
      *      description="successful operation"
      *  )
      * )
-     *
      */
     public function add(Request $request, Response $response)
     {
@@ -993,12 +977,10 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function editForm(Request $request, Response $response, $id)
     {
@@ -1105,15 +1087,13 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -1178,10 +1158,9 @@ class Library extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function tidyForm(Request $request, Response $response)
     {
@@ -1245,12 +1224,9 @@ class Library extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function tidy(Request $request, Response $response)
     {
@@ -1379,12 +1355,10 @@ class Library extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function download(Request $request, Response $response)
     {
@@ -1451,7 +1425,12 @@ class Library extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface
-     * @throws XiboException
+     * @throws ConfigurationException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function fontCss(Request $request, Response $response)
     {
@@ -1481,13 +1460,11 @@ class Library extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function fontList(Request $request, Response $response)
     {
@@ -1506,7 +1483,11 @@ class Library extends Base
      * Get font CKEditor config
      * @param Request|null $request
      * @return string
-     * @throws XiboException
+     * @throws ConfigurationException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function fontCKEditorConfig(Request $request = null)
     {
@@ -1522,9 +1503,10 @@ class Library extends Base
      * @param Request|null $request
      * @return array
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws XiboException
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function installFonts($options = [], Request $request = null)
     {
@@ -1727,8 +1709,15 @@ class Library extends Base
     }
 
     /**
-     * @param $mediaId
-     * @throws LibraryFullException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @throws AccessDeniedException
+     * @throws ConfigurationException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function mcaas(Request $request, Response $response, $id)
     {
@@ -1788,15 +1777,13 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function tag(Request $request, Response $response, $id)
     {
@@ -1864,15 +1851,13 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function untag(Request $request, Response $response, $id)
     {
@@ -1913,12 +1898,10 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function usageForm(Request $request, Response $response, $id)
     {
@@ -1964,12 +1947,10 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function usage(Request $request, Response $response, $id)
     {
@@ -2012,7 +1993,7 @@ class Library extends Base
             if ($mediaDate !== null) {
                 try {
                     $scheduleEvents = $row->getEvents($mediaDate, $toDate);
-                } catch (XiboException $e) {
+                } catch (GeneralException $e) {
                     $this->getLog()->error('Unable to getEvents for ' . $row->eventId);
                     continue;
                 }
@@ -2081,12 +2062,10 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function usageLayouts(Request $request, Response $response, $id)
     {
@@ -2143,12 +2122,10 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function copyForm(Request $request, Response $response, $id)
     {
@@ -2230,15 +2207,13 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function copy(Request $request, Response $response, $id)
     {
@@ -2305,12 +2280,10 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function isUsed(Request $request, Response $response, $id)
     {
@@ -2339,11 +2312,8 @@ class Library extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function uploadFromUrlForm(Request $request, Response $response)
     {
@@ -2423,13 +2393,12 @@ class Library extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws LibraryFullException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function uploadFromUrl(Request $request, Response $response)
     {

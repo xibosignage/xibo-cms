@@ -36,12 +36,6 @@ use Twig\Error\Error;
 use Xibo\Entity\Media;
 use Xibo\Entity\User;
 use Xibo\Event\Event;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\ControllerNotImplemented;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\ValueTooLargeException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
@@ -64,6 +58,12 @@ use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\ValueTooLargeException;
 
 /**
  * Class ModuleWidget
@@ -246,6 +246,8 @@ abstract class ModuleWidget implements ModuleInterface
      * @param PermissionFactory $permissionFactory
      * @param UserGroupFactory $userGroupFactory
      * @param PlaylistFactory $playlistFactory
+     * @param Twig $view
+     * @param ContainerInterface $container
      */
     public function __construct($store, $pool, $log, $config, $date, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, Twig $view, ContainerInterface $container)
     {
@@ -463,7 +465,7 @@ abstract class ModuleWidget implements ModuleInterface
      * Set the duration
      * @param int $duration
      * @return $this
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     final protected function setDuration($duration)
     {
@@ -490,6 +492,7 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * @param $userId
      * @return \Xibo\Entity\Playlist[]
+     * @throws NotFoundException
      */
     final public function getAssignablePlaylists($userId)
     {
@@ -514,8 +517,9 @@ abstract class ModuleWidget implements ModuleInterface
      */
     final protected function setOption($name, $value)
     {
-        if (strlen($value) > 67108864)
+        if (strlen($value) > 67108864) {
             throw new ValueTooLargeException(__('Value too large for %s', $name), $name);
+        }
 
         $this->widget->setOptionValue($name, 'attrib', $value);
 
@@ -653,8 +657,7 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * @return array
-     * @throws \Xibo\Exception\NotFoundException
-     * @throws \Xibo\Exception\XiboException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     final public function getMediaTags()
     {
@@ -800,7 +803,7 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * Get Name
      * @return string
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws NotFoundException
      */
     public function getName()
     {
@@ -935,7 +938,7 @@ abstract class ModuleWidget implements ModuleInterface
      * @param $data
      * @param string $template
      * @return string
-     * @throws \Xibo\Exception\ConfigurationException
+     * @throws ConfigurationException
      */
     protected function renderTemplate($data, $template = 'get-resource')
     {
@@ -986,7 +989,7 @@ abstract class ModuleWidget implements ModuleInterface
      * Default behaviour for install / upgrade
      * this should be overridden for new modules
      * @param ModuleFactory $moduleFactory
-     * @throws ControllerNotImplemented
+     * @throws GeneralException
      */
     public function installOrUpdate($moduleFactory)
     {
@@ -996,6 +999,7 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Installs any files specific to this module
+     * @throws GeneralException
      */
     public function installFiles()
     {
@@ -1004,7 +1008,7 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Validates and Installs a Module
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function installModule()
     {
@@ -1012,19 +1016,19 @@ abstract class ModuleWidget implements ModuleInterface
 
         // Validate some things.
         if ($this->module->type == '')
-            throw new \InvalidArgumentException(__('Module has not set the module type'));
+            throw new InvalidArgumentException(__('Module has not set the module type'));
 
         if ($this->module->name == '')
-            throw new \InvalidArgumentException(__('Module has not set the module name'));
+            throw new InvalidArgumentException(__('Module has not set the module name'));
 
         if ($this->module->description == '')
-            throw new \InvalidArgumentException(__('Module has not set the description'));
+            throw new InvalidArgumentException(__('Module has not set the description'));
 
         if (!is_numeric($this->module->previewEnabled))
-            throw new \InvalidArgumentException(__('Preview Enabled variable must be a number'));
+            throw new InvalidArgumentException(__('Preview Enabled variable must be a number'));
 
         if (!is_numeric($this->module->assignable))
-            throw new \InvalidArgumentException(__('Assignable variable must be a number'));
+            throw new InvalidArgumentException(__('Assignable variable must be a number'));
 
         // Save the module
         $this->module->save();
@@ -1334,7 +1338,7 @@ abstract class ModuleWidget implements ModuleInterface
      * Download an image for this template
      * @param string $templateId
      * @return ResponseInterface
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws NotFoundException
      */
     public function getTemplateImage(string $templateId): ResponseInterface
     {
@@ -1535,7 +1539,7 @@ abstract class ModuleWidget implements ModuleInterface
 
                     // If the resource is false, then don't cache it for as long (most likely an error)
                     if ($resource === false)
-                        throw new XiboException('GetResource generated FALSE');
+                        throw new GeneralException('GetResource generated FALSE');
 
                     // Cache to the library
                     $hash = null;
@@ -1592,7 +1596,7 @@ abstract class ModuleWidget implements ModuleInterface
                 if ($exception instanceof ConfigurationException)
                     throw $exception;
                 else
-                    throw new XiboException($exception->getMessage(), $exception->getCode(), $exception);
+                    throw new GeneralException($exception->getMessage(), $exception->getCode(), $exception);
             }
         } else {
             $this->getLog()->debug('No need to regenerate, cached until ' . $this->getDate()->getLocalDate($cachedDt->addSeconds($cacheDuration)));
@@ -1617,7 +1621,7 @@ abstract class ModuleWidget implements ModuleInterface
      * @param int $ttl seconds
      * @param int $wait seconds
      * @param int $tries
-     * @throws XiboException
+     * @throws GeneralException
      */
     private function concurrentRequestLock($ttl = 300, $wait = 2, $tries = 5)
     {
@@ -1653,7 +1657,7 @@ abstract class ModuleWidget implements ModuleInterface
 
             if ($tries <= 0) {
                 // We've waited long enough
-                throw new XiboException('Concurrent record locked, time out.');
+                throw new GeneralException('Concurrent record locked, time out.');
             } else {
                 $this->getLog()->debug('Unable to get a lock, trying again. Remaining retries: ' . $tries);
 
@@ -1735,7 +1739,7 @@ abstract class ModuleWidget implements ModuleInterface
      * Finalise getResource
      * @param string $templateName an optional template name
      * @return string the rendered template
-     * @throws \Xibo\Exception\ConfigurationException
+     * @throws ConfigurationException
      */
     protected function finaliseGetResource($templateName = 'get-resource')
     {

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,7 +24,7 @@ namespace Xibo\Entity;
 use Respect\Validation\Validator as v;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\DisplayProfileLoadedEvent;
-use Xibo\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -154,6 +154,7 @@ class DisplayProfile implements \JsonSerializable
      * @param null $default
      * @param bool $fromDefault
      * @return mixed
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function getSetting($setting, $default = null, $fromDefault = false)
     {
@@ -178,6 +179,7 @@ class DisplayProfile implements \JsonSerializable
      * @param boolean $ownConfig if provided will set the values on this object and not on the member config object
      * @param array|null $config
      * @return $this
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function setSetting($setting, $value, $ownConfig = true, &$config = null)
     {
@@ -275,6 +277,7 @@ class DisplayProfile implements \JsonSerializable
     /**
      * Assign Command
      * @param Command $command
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function assignCommand($command)
     {
@@ -299,6 +302,7 @@ class DisplayProfile implements \JsonSerializable
     /**
      * Unassign Command
      * @param Command $command
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function unassignCommand($command)
     {
@@ -316,6 +320,7 @@ class DisplayProfile implements \JsonSerializable
     /**
      * Load
      * @param array $options
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function load($options = [])
     {
@@ -365,7 +370,7 @@ class DisplayProfile implements \JsonSerializable
 
     /**
      * Validate
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function validate()
     {
@@ -403,7 +408,7 @@ class DisplayProfile implements \JsonSerializable
     /**
      * Save
      * @param bool $validate
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function save($validate = true)
     {

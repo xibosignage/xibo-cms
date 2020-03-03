@@ -23,7 +23,7 @@
 
 namespace Xibo\Factory;
 use Xibo\Entity\Task;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;

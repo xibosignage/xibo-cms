@@ -25,8 +25,8 @@ use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Helper\XiboUploadHandler;
 
 /**
@@ -68,6 +68,7 @@ class PlaylistDashboard extends Base
      * @param $layoutFactory
      * @param $displayGroupFactory
      * @param Twig $view
+     * @param ContainerInterface $container
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playlistFactory, $moduleFactory, $widgetFactory, $layoutFactory, $displayGroupFactory, Twig $view, ContainerInterface $container)
     {
@@ -89,7 +90,7 @@ class PlaylistDashboard extends Base
             if ($playlistId->value != 0) {
                 $playlist = $this->playlistFactory->getById($playlistId->value);
             }
-        } catch (XiboException $exception) {
+        } catch (GeneralException $exception) {
             $this->getLog()->error('Problem getting playlistDashboardSelectedPlaylistId user option. e = ' . $exception->getMessage());
         }
 
@@ -107,11 +108,9 @@ class PlaylistDashboard extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function grid(Request $request, Response $response)
     {
@@ -135,12 +134,10 @@ class PlaylistDashboard extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function show(Request $request, Response $response, $id)
     {
@@ -148,7 +145,7 @@ class PlaylistDashboard extends Base
         try {
             $this->getUser()->setOptionValue('playlistDashboardSelectedPlaylistId', $id);
             $this->getUser()->save();
-        } catch (XiboException $exception) {
+        } catch (GeneralException $exception) {
             $this->getLog()->error('Problem setting playlistDashboardSelectedPlaylistId user option. e = ' . $exception->getMessage());
         }
 
@@ -222,12 +219,10 @@ class PlaylistDashboard extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function deletePlaylistWidgetForm(Request $request, Response $response, $id)
     {
@@ -255,11 +250,8 @@ class PlaylistDashboard extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function upload(Request $request, Response $response)
     {

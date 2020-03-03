@@ -25,7 +25,7 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Jenssegers\Date\Date;
 use Slim\Views\Twig;
-use Xibo\Exception\AccessDeniedException;
+use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Factory\SessionFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
@@ -74,11 +74,8 @@ class Sessions extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     function displayPage(Request $request, Response $response)
     {
@@ -91,12 +88,8 @@ class Sessions extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     function grid(Request $request, Response $response)
     {
@@ -139,11 +132,9 @@ class Sessions extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     function confirmLogoutForm(Request $request, Response $response, $id)
     {
@@ -166,12 +157,10 @@ class Sessions extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function logout(Request $request, Response $response, $id)
     {

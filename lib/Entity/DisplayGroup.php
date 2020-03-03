@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (DisplayGroup.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -10,10 +25,6 @@ namespace Xibo\Entity;
 
 
 use Respect\Validation\Validator as v;
-use Xibo\Exception\DuplicateEntityException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -23,6 +34,10 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\DuplicateEntityException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DisplayGroup
@@ -271,6 +286,7 @@ class DisplayGroup implements \JsonSerializable
     /**
      * Set the Owner of this Group
      * @param Display $display
+     * @throws NotFoundException
      */
     public function setDisplaySpecificDisplay($display)
     {
@@ -306,6 +322,7 @@ class DisplayGroup implements \JsonSerializable
     /**
      * Assign Display
      * @param Display $display
+     * @throws NotFoundException
      */
     public function assignDisplay($display)
     {
@@ -326,6 +343,7 @@ class DisplayGroup implements \JsonSerializable
     /**
      * Unassign Display
      * @param Display $display
+     * @throws NotFoundException
      */
     public function unassignDisplay($display)
     {
@@ -350,6 +368,7 @@ class DisplayGroup implements \JsonSerializable
     /**
      * Assign DisplayGroup
      * @param DisplayGroup $displayGroup
+     * @throws NotFoundException
      */
     public function assignDisplayGroup($displayGroup)
     {
@@ -362,6 +381,7 @@ class DisplayGroup implements \JsonSerializable
     /**
      * Unassign DisplayGroup
      * @param DisplayGroup $displayGroup
+     * @throws NotFoundException
      */
     public function unassignDisplayGroup($displayGroup)
     {
@@ -386,6 +406,7 @@ class DisplayGroup implements \JsonSerializable
     /**
      * Assign Media
      * @param Media $media
+     * @throws NotFoundException
      */
     public function assignMedia($media)
     {
@@ -402,6 +423,7 @@ class DisplayGroup implements \JsonSerializable
     /**
      * Unassign Media
      * @param Media $media
+     * @throws NotFoundException
      */
     public function unassignMedia($media)
     {
@@ -426,6 +448,7 @@ class DisplayGroup implements \JsonSerializable
     /**
      * Assign Layout
      * @param Layout $layout
+     * @throws NotFoundException
      */
     public function assignLayout($layout)
     {
@@ -442,6 +465,7 @@ class DisplayGroup implements \JsonSerializable
     /**
      * Unassign Layout
      * @param Layout $layout
+     * @throws NotFoundException
      */
     public function unassignLayout($layout)
     {
@@ -467,6 +491,7 @@ class DisplayGroup implements \JsonSerializable
      * Does the campaign have the provided tag?
      * @param $searchTag
      * @return bool
+     * @throws NotFoundException
      */
     public function hasTag($searchTag)
     {
@@ -593,6 +618,8 @@ class DisplayGroup implements \JsonSerializable
 
     /**
      * Validate this display
+     * @throws DuplicateEntityException
+     * @throws InvalidArgumentException
      */
     public function validate()
     {
@@ -621,7 +648,7 @@ class DisplayGroup implements \JsonSerializable
     /**
      * Save
      * @param array $options
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function save($options = [])
     {

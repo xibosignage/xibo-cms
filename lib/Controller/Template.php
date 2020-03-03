@@ -24,15 +24,14 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 
 /**
  * Class Template
@@ -76,11 +75,8 @@ class Template extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     function displayPage(Request $request, Response $response)
     {
@@ -111,13 +107,9 @@ class Template extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function grid(Request $request, Response $response)
     {
@@ -239,12 +231,10 @@ class Template extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function addTemplateForm(Request $request, Response $response, $id)
     {
@@ -286,13 +276,10 @@ class Template extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\NotFoundException
      * @SWG\Post(
      *  path="/template/{layoutId}",
      *  operationId="template.add.from.layout",
@@ -345,7 +332,6 @@ class Template extends Base
      *      )
      *  )
      * )
-     *
      */
     function add(Request $request, Response $response, $id)
     {

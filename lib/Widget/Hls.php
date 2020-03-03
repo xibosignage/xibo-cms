@@ -25,7 +25,7 @@ namespace Xibo\Widget;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Hls

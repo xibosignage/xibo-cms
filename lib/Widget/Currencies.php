@@ -26,10 +26,11 @@ namespace Xibo\Widget;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\DuplicateEntityException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
 
 /**
  * Class Currencies
@@ -418,7 +419,7 @@ class Currencies extends AlphaVantageBase
 
                 $this->getLog()->debug('Percentage change requested, prior day is ' . var_export($priorDay, true));
 
-            } catch (XiboException $requestException) {
+            } catch (GeneralException $requestException) {
                 $this->getLog()->error('Problem getting percentage change currency information. E = ' . $requestException->getMessage());
                 $this->getLog()->debug($requestException->getTraceAsString());
             }
@@ -476,7 +477,7 @@ class Currencies extends AlphaVantageBase
             }
         } catch (ConfigurationException $configurationException) {
             throw $configurationException;
-        } catch (XiboException $requestException) {
+        } catch (GeneralException $requestException) {
             $this->getLog()->error('Problem getting currency information. E = ' . $requestException->getMessage());
             $this->getLog()->debug($requestException->getTraceAsString());
 
@@ -494,10 +495,10 @@ class Currencies extends AlphaVantageBase
      * @param $source
      * @param $baseCurrency
      * @return mixed
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\DuplicateEntityException
-     * @throws \Xibo\Exception\InvalidArgumentException
-     * @throws \Xibo\Exception\XiboException
+     * @throws ConfigurationException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws DuplicateEntityException
      */
     private function makeSubstitutions($data, $source, $baseCurrency)
     {
@@ -698,8 +699,10 @@ class Currencies extends AlphaVantageBase
 
     /**
      * @inheritdoc
-     * @throws \Xibo\Exception\NotFoundException
-     * @throws \Xibo\Exception\ConfigurationException
+     * @param $tab
+     * @return array
+     * @throws ConfigurationException
+     * @throws NotFoundException
      */
     public function getTab($tab)
     {
@@ -714,6 +717,14 @@ class Currencies extends AlphaVantageBase
     public function getResource($displayId = 0)
     {
         $data = [];
+
+        // Set the null values for template variables.
+        $mainTemplate = null;
+        $itemTemplate = null;
+        $styleSheet = null;
+        $widgetOriginalWidth = null;
+        $widgetOriginalHeight = null;
+        $maxItemsPerPage = null;
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';

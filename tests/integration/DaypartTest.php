@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (DaypartTest.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 namespace Xibo\Tests\Integration;
@@ -66,7 +81,7 @@ class DaypartTest extends LocalWebTestCase
     public function testAddSuccess($name, $description, $startTime, $endTime, $exceptionDays,  $exceptionStartTimes, $exceptionEndTimes)
     {
         # Create daypart with arguments from provideSuccessCases
-        $response = $this->client->post('/daypart', [
+        $response = $this->sendRequest('POST','/daypart', [
 			'name' => $name,
 			'description' => $description,
 			'startTime' => $startTime,
@@ -75,8 +90,8 @@ class DaypartTest extends LocalWebTestCase
 			'exceptionStartTimes' => $exceptionStartTimes,
 			'exceptionEndTimes' => $exceptionEndTimes
         ]);
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         $this->assertSame($name, $object->data->name);
@@ -99,7 +114,7 @@ class DaypartTest extends LocalWebTestCase
     public function testAddFailure($name, $description, $startTime, $endTime, $exceptionDays,  $exceptionStartTimes, $exceptionEndTimes)
     {
         # Create daypart with arguments from provideFailureCases
-        $response = $this->client->post('/daypart', [
+        $response = $this->sendRequest('POST','/daypart', [
 			'name' => $name,
 			'description' => $description,
 			'startTime' => $startTime,
@@ -109,7 +124,7 @@ class DaypartTest extends LocalWebTestCase
 			'exceptionEndTimes' => $exceptionEndTimes
         ]);
         # check if they fail as expected
-        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
+        $this->assertSame(422, $response->getStatusCode(), 'Expecting failure, received ' . $response->getStatusCode());
     }
 
     /**
@@ -133,11 +148,12 @@ class DaypartTest extends LocalWebTestCase
     public function provideFailureCases()
     {
         # Data for testAddfailure, easily expandable - just add another set of data below
+        // TODO we should probably validate description and day names in daypart Controller.
         return [
             'Empty title' => [NULL, 'should be invalid', '07:00', '10:00', NULL, NULL, NULL],
-           // 'Description over 254 characters' => ['Too long description', Random::generateString(255), '07:00', '10:00', NULL, NULL, NULL],
-           // 'Wrong time data type' => ['Time as integer','should be incorrect', 21, 22, NULL, NULL, NULL],
-           // 'Wrong day name' => ['phpunit daypart exception', NULL, '02:00', '06:00', ['Cabbage'], ['00:01'], ['23:59']]
+            //'Description over 254 characters' => ['Too long description', Random::generateString(258), '07:00', '10:00', NULL, NULL, NULL],
+            'Wrong time data type' => ['Time as integer','should be incorrect', 21, 22, NULL, NULL, NULL],
+            //'Wrong day name' => ['phpunit daypart exception', NULL, '02:00', '06:00', ['Cabbage'], ['00:01'], ['23:59']]
         ];
     }
 
@@ -151,7 +167,7 @@ class DaypartTest extends LocalWebTestCase
         # Change the daypart name and description
         $name = Random::generateString(8, 'phpunit');
         $description = Random::generateString(8, 'description');
-        $this->client->put('/daypart/' . $daypart->dayPartId, [
+        $response = $this->sendRequest('PUT','/daypart/' . $daypart->dayPartId, [
             'name' => $name,
             'description' => $description,
             'startTime' => '02:00',
@@ -161,8 +177,8 @@ class DaypartTest extends LocalWebTestCase
 			'exceptionEndTimes' => $daypart->exceptionEndTimes
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
         
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
+        $object = json_decode($response->getBody());
         # Examine the returned object and check that it's what we expect
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
@@ -188,10 +204,10 @@ class DaypartTest extends LocalWebTestCase
         $daypart1 = (new XiboDaypart($this->getEntityProvider()))->create($name1, 'API', '02:00', '06:00', NULL, NULL, NULL);
         $daypart2 = (new XiboDaypart($this->getEntityProvider()))->create($name2, 'API', '12:00', '16:00', NULL, NULL, NULL);
         # Delete the one we created last
-        $this->client->delete('/daypart/' . $daypart2->dayPartId);
+        $response = $this->sendRequest('DELETE','/daypart/' . $daypart2->dayPartId);
         # This should return 204 for success
-        $response = json_decode($this->client->response->body());
-        $this->assertSame(204, $response->status, $this->client->response->body());
+        $object = json_decode($response->getBody());
+        $this->assertSame(204, $object->status, $response->getBody());
         # Check only one remains
         $dayparts = (new XiboDaypart($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
         $this->assertEquals(count($this->startDayparts) + 1, count($dayparts));

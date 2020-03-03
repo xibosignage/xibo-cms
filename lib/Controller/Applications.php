@@ -21,18 +21,16 @@
  */
 namespace Xibo\Controller;
 
+use League\OAuth2\Server\AuthorizationServer;
+use League\OAuth2\Server\Grant\AuthCodeGrant;
 use League\OAuth2\Server\RequestTypes\AuthorizationRequest;
+use League\OAuth2\Server\Util\RedirectUri;
 use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use League\OAuth2\Server\AuthorizationServer;
-use League\OAuth2\Server\Grant\AuthCodeGrant;
-use League\OAuth2\Server\Util\RedirectUri;
 use Slim\Views\Twig;
 use Xibo\Entity\Application;
 use Xibo\Entity\ApplicationScope;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\ApplicationRedirectUriFactory;
 use Xibo\Factory\ApplicationScopeFactory;
@@ -42,15 +40,13 @@ use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\ApiAccessTokenStorage;
-use Xibo\Storage\ApiAuthCodeStorage;
 use Xibo\Storage\ApiClientStorage;
-use Xibo\Storage\ApiScopeStorage;
-use Xibo\Storage\ApiSessionStorage;
 use Xibo\Storage\AuthCodeRepository;
 use Xibo\Storage\RefreshTokenRepository;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\UserEntity;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Applications
@@ -121,11 +117,8 @@ class Applications extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function displayPage(Request $request, Response $response)
     {
@@ -139,11 +132,8 @@ class Applications extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function grid(Request $request, Response $response)
     {
@@ -190,17 +180,16 @@ class Applications extends Base
      * Display the Authorize form.
      * @param Request $request
      * @param Response $response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function authorizeRequest(Request $request, Response $response)
     {
         // Pull authorize params from our session
         if (!$authParams = $this->session->get('authParams'))
-            throw new \InvalidArgumentException(__('Authorisation Parameters missing from session.'));
+            throw new InvalidArgumentException(__('Authorisation Parameters missing from session.'), 'authParams');
 
         // Get, show page
         $this->getState()->template = 'applications-authorize-page';
@@ -222,7 +211,7 @@ class Applications extends Base
     {
         // Pull authorize params from our session
         if (!$authParams = $this->session->get('authParams')) {
-            throw new \InvalidArgumentException(__('Authorisation Parameters missing from session.'));
+            throw new InvalidArgumentException(__('Authorisation Parameters missing from session.'), 'authParams');
         }
 
         $sanitizedQueryParams = $this->getSanitizer($request->getParams());
@@ -231,7 +220,7 @@ class Applications extends Base
         /** @var AuthorizationRequest $authRequest */
         $authRequest = $this->session->get('authParams');
 
-        $apiKeyPaths = $this->getConfig()->apiKeyPaths;
+        $apiKeyPaths = $this->getConfig()->getApiKeyDetails();
 
         $privateKey = $apiKeyPaths['privateKeyPath'];
         $encryptionKey = $apiKeyPaths['publicKeyPath'];
@@ -280,11 +269,8 @@ class Applications extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function addForm(Request $request, Response $response)
     {
@@ -302,12 +288,10 @@ class Applications extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function editForm(Request $request, Response $response, $id)
     {
@@ -354,12 +338,10 @@ class Applications extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function deleteForm(Request $request, Response $response, $id)
     {
@@ -384,11 +366,8 @@ class Applications extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws InvalidArgumentException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function add(Request $request, Response $response)
     {
@@ -418,11 +397,8 @@ class Applications extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function addDoohForm(Request $request, Response $response)
     {
@@ -440,12 +416,9 @@ class Applications extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws InvalidArgumentException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function addDooh(Request $request, Response $response)
     {
@@ -484,13 +457,11 @@ class Applications extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws InvalidArgumentException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -590,12 +561,10 @@ class Applications extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function delete(Request $request, Response $response, $id)
     {

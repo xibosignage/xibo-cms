@@ -25,7 +25,7 @@ namespace Xibo\Widget;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Helper\Translate;
 
 /**
@@ -198,6 +198,11 @@ class WorldClock extends ModuleWidget
     public function getResource($displayId = 0)
     {
         $data = [];
+        // Set the null values for template variables.
+        $mainTemplate = null;
+        $styleSheet = null;
+        $widgetOriginalWidth = null;
+        $widgetOriginalHeight = null;
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';

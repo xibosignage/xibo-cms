@@ -25,7 +25,8 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Region;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
@@ -92,7 +93,7 @@ class RegionFactory extends BaseFactory
 
     /**
      * Create a new region
-     * @param int $ownerId;
+     * @param int $ownerId ;
      * @param string $name
      * @param int $width
      * @param int $height
@@ -100,18 +101,19 @@ class RegionFactory extends BaseFactory
      * @param int $left
      * @param int $zIndex
      * @return Region
+     * @throws InvalidArgumentException
      */
     public function create($ownerId, $name, $width, $height, $top, $left, $zIndex = 0)
     {
         // Validation
         if (!is_numeric($width) || !is_numeric($height) || !is_numeric($top) || !is_numeric($left))
-            throw new \InvalidArgumentException(__('Size and coordinates must be generic'));
+            throw new InvalidArgumentException(__('Size and coordinates must be generic'));
 
         if ($width <= 0)
-            throw new \InvalidArgumentException(__('Width must be greater than 0'));
+            throw new InvalidArgumentException(__('Width must be greater than 0'));
 
         if ($height <= 0)
-            throw new \InvalidArgumentException(__('Height must be greater than 0'));
+            throw new InvalidArgumentException(__('Height must be greater than 0'));
 
         $region = $this->createEmpty();
         $region->ownerId = $ownerId;
@@ -151,7 +153,7 @@ class RegionFactory extends BaseFactory
      * Load a region
      * @param int $regionId
      * @return Region
-     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function loadByRegionId($regionId)
     {

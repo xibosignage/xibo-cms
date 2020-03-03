@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -82,7 +82,7 @@ class LayoutProofOfPlayXMLMediaOnWidgetOnTest extends LocalWebTestCase
         $this->getLogger()->debug('Setup test for ' . get_class() .' Test');
 
         // Set global widget enable stat set to On
-        self::$container->configService->changeSetting('WIDGET_STATS_ENABLED_DEFAULT', 'On');
+        self::$container->get('configService')->changeSetting('WIDGET_STATS_ENABLED_DEFAULT', 'On');
         $this->getStore()->commitIfNecessary();
 
         // Create a Layout with enableStat Off (by default)
@@ -198,7 +198,7 @@ class LayoutProofOfPlayXMLMediaOnWidgetOnTest extends LocalWebTestCase
         $this->media->deleteAssigned();
 
         // Set global widget enable stat set to Inherit
-        self::$container->configService->changeSetting('WIDGET_STATS_ENABLED_DEFAULT', 'Inherit');
+        self::$container->get('configService')->changeSetting('WIDGET_STATS_ENABLED_DEFAULT', 'Inherit');
         $this->getStore()->commitIfNecessary();
 
     }
@@ -236,10 +236,10 @@ class LayoutProofOfPlayXMLMediaOnWidgetOnTest extends LocalWebTestCase
     public function testLayoutOff()
     {
         // Publish layout
-        $response = $this->client->put('/layout/publish/' . $this->layoutOff->layoutId, [
+        $response = $this->sendRequest('PUT','/layout/publish/' . $this->layoutOff->layoutId, [
             'publishNow' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-        $response = json_decode($response, true);
+        $response = json_decode($response->getBody(), true);
 
         $this->layoutOff = $this->constructLayoutFromResponse($response['data']);
 
@@ -265,10 +265,10 @@ class LayoutProofOfPlayXMLMediaOnWidgetOnTest extends LocalWebTestCase
     {
 
         // Publish layout
-        $response = $this->client->put('/layout/publish/' . $this->layoutOn->layoutId, [
+        $response = $this->sendRequest('PUT','/layout/publish/' . $this->layoutOn->layoutId, [
             'publishNow' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-        $response = json_decode($response, true);
+        $response = json_decode($response->getBody(), true);
 
         $this->layoutOn = $this->constructLayoutFromResponse($response['data']);
 

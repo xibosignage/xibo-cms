@@ -25,7 +25,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Campaign;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -66,6 +66,7 @@ class CampaignFactory extends BaseFactory
      * @param PermissionFactory $permissionFactory
      * @param ScheduleFactory $scheduleFactory
      * @param DisplayFactory $displayFactory
+     * @param $tagFactory
      */
     public function __construct($store, $log, $sanitizerService, $user, $userFactory, $permissionFactory, $scheduleFactory, $displayFactory, $tagFactory)
     {
@@ -129,6 +130,7 @@ class CampaignFactory extends BaseFactory
      * Get Campaign by Owner Id
      * @param int $ownerId
      * @return array[Campaign]
+     * @throws NotFoundException
      */
     public function getByOwnerId($ownerId)
     {
@@ -139,6 +141,7 @@ class CampaignFactory extends BaseFactory
      * Get Campaign by Layout
      * @param int $layoutId
      * @return array[Campaign]
+     * @throws NotFoundException
      */
     public function getByLayoutId($layoutId)
     {
@@ -149,7 +152,9 @@ class CampaignFactory extends BaseFactory
      * Query Campaigns
      * @param array $sortOrder
      * @param array $filterBy
+     * @param array $options
      * @return array[Campaign]
+     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [], $options = [])
     {

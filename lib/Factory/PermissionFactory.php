@@ -26,7 +26,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Permission;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -98,6 +98,7 @@ class PermissionFactory extends BaseFactory
      * @param int $edit
      * @param int $delete
      * @return Permission
+     * @throws NotFoundException
      */
     public function createForEveryone($userGroupFactory, $entity, $objectId, $view, $edit, $delete)
     {
@@ -126,6 +127,7 @@ class PermissionFactory extends BaseFactory
      * @param string $level
      * @param UserGroupFactory $userGroupFactory
      * @return array[Permission]
+     * @throws NotFoundException
      */
     public function createForNewEntity($user, $entity, $objectId, $level, $userGroupFactory)
     {

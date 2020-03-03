@@ -12,7 +12,7 @@ namespace Xibo\Factory;
 use League\OAuth2\Server\Util\SecureKey;
 use Xibo\Entity\Application;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -38,6 +38,7 @@ class ApplicationFactory extends BaseFactory
      * @param SanitizerServiceInterface $sanitizerService
      * @param User $user
      * @param ApplicationRedirectUriFactory $applicationRedirectUriFactory
+     * @param $applicationScopeFactory
      */
     public function __construct($store, $log, $sanitizerService, $user, $applicationRedirectUriFactory, $applicationScopeFactory)
     {

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -97,16 +97,17 @@ class PdfWidgetTest extends LocalWebTestCase
         $name = 'Edited Name: ' . Random::generateString(5);
         $duration = 80;
 
-        $response = $this->client->put('/playlist/widget/' . $this->widgetId, [
+        $response = $this->sendRequest('PUT','/playlist/widget/' . $this->widgetId, [
             'name' => $name,
             'duration' => $duration,
             ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-        $this->getLogger()->debug('testEdit Finished');
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
 
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->getLogger()->debug('testEdit Finished');
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
 
         /** @var XiboPdf $checkWidget */
         $response = $this->getEntityProvider()->get('/playlist/widget', ['widgetId' => $this->widgetId]);

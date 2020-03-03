@@ -27,10 +27,10 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Entity\Media;
 use Xibo\Entity\PlayerVersion;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
@@ -100,6 +100,7 @@ class PlayerSoftware extends Base
      * @param DisplayGroupFactory $displayGroupFactory
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
+     * @param Twig $view
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $pool, $mediaFactory, $playerVersionFactory, $displayProfileFactory, $moduleFactory, $layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory, Twig $view)
     {
@@ -122,11 +123,8 @@ class PlayerSoftware extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     function displayPage(Request $request, Response $response)
     {
@@ -144,12 +142,9 @@ class PlayerSoftware extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     function grid(Request $request, Response $response)
     {
@@ -226,12 +221,10 @@ class PlayerSoftware extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function deleteForm(Request $request, Response $response, $id)
     {
@@ -259,13 +252,11 @@ class PlayerSoftware extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Delete(
      *  path="/playersoftware/{versionId}",
      *  operationId="playerSoftwareDelete",
@@ -334,12 +325,10 @@ class PlayerSoftware extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function editForm(Request $request, Response $response, $id)
     {
@@ -367,12 +356,10 @@ class PlayerSoftware extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/playersoftware/{versionId}",
      *  operationId="playersoftwareEdit",
@@ -445,12 +432,9 @@ class PlayerSoftware extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function getSsspInstall(Request $request, Response $response)
     {
@@ -482,12 +466,9 @@ class PlayerSoftware extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function getSsspInstallDownload(Request $request, Response $response)
     {
@@ -519,13 +500,10 @@ class PlayerSoftware extends Base
      * @param Response $response
      * @param $nonce
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function getSssp(Request $request, Response $response, $nonce)
     {
@@ -576,12 +554,9 @@ class PlayerSoftware extends Base
      * @param Response $response
      * @param $nonce
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function getVersionFile(Request $request, Response $response, $nonce)
     {

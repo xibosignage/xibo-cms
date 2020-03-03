@@ -25,7 +25,7 @@ namespace Xibo\Widget;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Factory\NotificationFactory;
 
 /**
@@ -202,6 +202,7 @@ class NotificationView extends ModuleWidget
      * @param $isPreview
      * @param $displayId
      * @return array
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     private function getNotifications($isPreview, $displayId = null)
     {

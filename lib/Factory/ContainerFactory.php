@@ -44,13 +44,16 @@ use Xibo\Twig\ByteFormatterTwigExtension;
 use Xibo\Twig\DateFormatTwigExtension;
 use Xibo\Twig\TransExtension;
 use Xibo\Twig\UrlDecodeTwigExtension;
-define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
+
+if (!defined('PROJECT_ROOT')) {
+    define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
+}
+
 class ContainerFactory
 {
     /**
      * Create DI Container with definitions
      *
-     * @param $channel
      * @return ContainerInterface
      * @throws Exception
      */

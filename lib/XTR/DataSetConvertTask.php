@@ -8,7 +8,7 @@
 
 namespace Xibo\XTR;
 use Xibo\Entity\DataSet;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\DataSetFactory;
 
 /**
@@ -65,7 +65,7 @@ class DataSetConvertTask implements TaskInterface
      * Data Set Results
      * @param DataSet $dataSet
      * @return array
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function getExistingData($dataSet)
     {

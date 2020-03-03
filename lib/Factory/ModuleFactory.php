@@ -24,6 +24,7 @@
 namespace Xibo\Factory;
 
 
+use Illuminate\Support\Str;
 use Psr\Container\ContainerInterface;
 use Slim\Views\Twig;
 use Xibo\Entity\Media;
@@ -31,8 +32,8 @@ use Xibo\Entity\Module;
 use Xibo\Entity\Region;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ModuleServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
@@ -332,8 +333,8 @@ class ModuleFactory extends BaseFactory
      * @param int $playlistId
      * @param int $regionId
      * @return \Xibo\Widget\ModuleWidget
-     * @throws \Xibo\Exception\NotFoundException
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
     public function createForWidget($type, $widgetId = 0, $ownerId = 0, $playlistId = null, $regionId = 0)
     {
@@ -449,7 +450,7 @@ class ModuleFactory extends BaseFactory
     /**
      * Get module by name
      * @param string $name
-     * @return ModuleWidget
+     * @return Module
      * @throws NotFoundException
      */
     public function getByType($name)
@@ -518,7 +519,7 @@ class ModuleFactory extends BaseFactory
         $modules = $this->query();
         $paths = array_map(function ($module) {
             /* @var Module $module */
-            return str_replace_first('..', PROJECT_ROOT, $module->viewPath);
+            return Str::replaceFirst('..', PROJECT_ROOT, $module->viewPath);
         }, $modules);
 
         $paths = array_unique($paths);

@@ -25,7 +25,7 @@ namespace Xibo\Factory;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -85,6 +85,7 @@ class ReportScheduleFactory extends BaseFactory
     /**
      * Loads only the reportSchedule information
      * @param int $reportScheduleId
+     * @param int $disableUserCheck
      * @return ReportSchedule
      * @throws NotFoundException
      */
@@ -108,6 +109,7 @@ class ReportScheduleFactory extends BaseFactory
      * @param null $sortOrder
      * @param array $filterBy
      * @return ReportSchedule[]
+     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
     {

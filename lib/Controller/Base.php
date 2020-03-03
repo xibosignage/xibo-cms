@@ -26,14 +26,17 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 use Xibo\Entity\User;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\GeneralException;
 
 /**
  * Class Base
@@ -41,9 +44,6 @@ use Xibo\Service\LogServiceInterface;
  *
  * Base for all Controllers.
  *
- * Controllers are initialised with setApp($app) where $app is the hosting Slim application.
- * Controllers should manipulate the Slim applications $app->state object to represent the data which will be output
- * to the view layer (either app or API).
  */
 class Base
 {
@@ -57,7 +57,7 @@ class Base
      */
     private $log;
 
-    /** @var  \Xibo\Helper\SanitizerService */
+    /** @var  SanitizerService */
     private $sanitizerService;
 
     /**
@@ -109,7 +109,7 @@ class Base
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
-     * @param \Xibo\Helper\SanitizerService $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
@@ -199,11 +199,10 @@ class Base
      * Is this the Api?
      * @param Request $request
      * @return bool
-     * @throws ConfigurationException
      */
     protected function isApi(Request $request)
     {
-        return ($request->getAttribute('name') == 'API');
+        return ($request->getAttribute('name') != 'web');
     }
 
     /**
@@ -218,18 +217,6 @@ class Base
     {
         $routeParser = RouteContext::fromRequest($request)->getRouteParser();
         return $routeParser->urlFor($route, $data, $params);
-    }
-
-    /**
-     * Get Flash Message
-     * @param $key
-     * @return string
-     */
-    protected function getFlash($key)
-    {
-        // TODO
-        $template = $this->getApp()->view()->get('flash');
-        return isset($template[$key]) ? $template[$key] : '';
     }
 
     /**
@@ -254,15 +241,12 @@ class Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
      * @throws ControllerNotImplemented if the controller is not implemented correctly
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
+     * @throws GeneralException
      */
     public function render(Request $request, Response $response)
     {
-        $parsedBody = $this->getSanitizer($request->getParsedBody());
+        $parsedBody = $this->getSanitizer($request->getParams());
 
         // TODO not sure what to do with it yet  $this->rendered:o
         if ($this->noOutput) {
@@ -306,7 +290,7 @@ class Base
             ]);
 
            // $this->getApp()->render('', $data, $state->httpStatus);
-            return $this->renderApiResponse($request, $response);
+            return $this->renderApiResponse($request, $response->withStatus($state->httpStatus));
         } else if ($request->isXhr()) {
             // WEB Ajax
 
@@ -339,7 +323,11 @@ class Base
             $data['clock'] = $this->getDate()->getLocalDate(null, 'H:i T');
             $data['currentUser'] = $this->getUser();
 
-            $response = $this->view->render($response, $state->template . '.twig', $data);
+            try {
+                $response = $this->view->render($response, $state->template . '.twig', $data);
+            } catch (LoaderError | RuntimeError | SyntaxError $e) {
+                throw new GeneralException(__('Twig Error ') . $e->getMessage());
+            }
         }
         $this->rendered = true;
         return $response;
@@ -399,9 +387,7 @@ class Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ControllerNotImplemented
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
+     * @throws GeneralException
      */
     public function renderTwigAjaxReturn(Request $request, Response $response)
     {
@@ -412,7 +398,12 @@ class Base
         $data['currentUser'] = $this->getUser();
 
         // Render the view manually with Twig, parse it and pull out various bits
-        $view = $this->view->render($response,$state->template . '.twig', $data);
+        try {
+            $view = $this->view->render($response,$state->template . '.twig', $data);
+        } catch (LoaderError | RuntimeError | SyntaxError $e) {
+            throw new GeneralException(__('Twig Error ') . $e->getMessage());
+        }
+
         $view = $view->getBody();
         // Log Rendered View
          $this->getLog()->debug(sprintf('%s View: %s', $state->template, $view));
@@ -462,7 +453,7 @@ class Base
         }
 
         $json = json_decode($state->asJson());
-        return $response->withJson($json, 200);
+        return $response = $response->withJson($json, 200);
     }
 
     /**
@@ -493,7 +484,7 @@ class Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Don't envelope unless requested
-        if ($jsonPCallback != null ||  $request->getParam('envelope', 0) == 1) {
+        if ($jsonPCallback != null ||  $request->getParam('envelope', 0) == 1 || $request->getAttribute('name') === 'test') {
             // Envelope
 
             // append error bool

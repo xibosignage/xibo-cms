@@ -40,10 +40,10 @@ use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Media;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Helper\Translate;
 
 /**
@@ -461,7 +461,7 @@ class ForecastIo extends ModuleWidget
      * Get the forecast data for the provided display id
      * @param int $displayId
      * @return array|boolean
-     * @throws XiboException
+     * @throws GeneralException
      */
     private function getForecastData($displayId)
     {
@@ -667,9 +667,16 @@ class ForecastIo extends ModuleWidget
      */
     public function getResource($displayId = 0)
     {
+        $body = null;
+        $dailyTemplate = null;
+        $styleSheet = null;
+        $widgetOriginalWidth = null;
+        $widgetOriginalHeight = null;
+
         // Behave exactly like the client.
-        if (!$foreCast = $this->getForecastData($displayId))
+        if (!$foreCast = $this->getForecastData($displayId)) {
             return '';
+        }
 
         // Do we need to override the language?
         // TODO: I don't like this date fix, the library should really check the file exists?

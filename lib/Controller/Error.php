@@ -28,11 +28,10 @@ use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\FormExpiredException;
-use Xibo\Exception\InstanceSuspendedException;
-use Xibo\Exception\TokenExpiredException;
-use Xibo\Exception\UpgradePendingException;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ExpiredException;
+use Xibo\Support\Exception\InstanceSuspendedException;
+use Xibo\Support\Exception\UpgradePendingException;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Environment;
 use Xibo\Helper\SanitizerService;
@@ -80,12 +79,10 @@ class Error extends Base
             return $e->handledException();
 
         return ($e instanceof \InvalidArgumentException
-            || $e instanceof OAuthException
-            || $e instanceof FormExpiredException
+            || $e instanceof ExpiredException
             || $e instanceof AccessDeniedException
             || $e instanceof InstanceSuspendedException
             || $e instanceof UpgradePendingException
-            || $e instanceof TokenExpiredException
         );
     }
 
@@ -93,11 +90,8 @@ class Error extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function notFoundPage(Request $request, Response $response)
     {
@@ -152,11 +146,8 @@ class Error extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function errorPage(Request $request, Response $response)
     {

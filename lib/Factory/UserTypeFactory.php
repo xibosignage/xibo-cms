@@ -26,7 +26,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\User;
 use Xibo\Entity\UserType;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -58,6 +58,7 @@ class UserTypeFactory extends BaseFactory
 
     /**
      * @return User[]
+     * @throws NotFoundException
      */
     public function getAllRoles()
     {
@@ -66,6 +67,7 @@ class UserTypeFactory extends BaseFactory
 
     /**
      * @return User[]
+     * @throws NotFoundException
      */
     public function getNonAdminRoles()
     {

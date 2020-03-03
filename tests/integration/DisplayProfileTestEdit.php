@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -54,15 +54,15 @@ class DisplayProfileTestEdit extends \Xibo\Tests\LocalWebTestCase
     {
         // Call edit on the profile.
         $name = Random::generateString(8, 'phpunit');
-        $this->client->put('/displayprofile/' . $this->displayProfile->displayProfileId, [
+        $response = $this->sendRequest('PUT','/displayprofile/' . $this->displayProfile->displayProfileId, [
             'name' => $name,
             'type' => $this->displayProfile->type,
             'isDefault' => $this->displayProfile->isDefault
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
 
-        $object = json_decode($this->client->response->body());
+        $object = json_decode($response->getBody());
 
         // Examine the returned object and check that it's what we expect
         $this->assertObjectHasAttribute('data', $object);
@@ -82,16 +82,16 @@ class DisplayProfileTestEdit extends \Xibo\Tests\LocalWebTestCase
     {
         // Call edit on the profile.
         $name = Random::generateString(8, 'phpunit');
-        $this->client->put('/displayprofile/' . $this->displayProfile->displayProfileId, [
+        $response = $this->sendRequest('PUT','/displayprofile/' . $this->displayProfile->displayProfileId, [
             'name' => $name,
             'type' => $this->displayProfile->type,
             'isDefault' => $this->displayProfile->isDefault,
             'emailAddress' => 'phpunit@xibo.org.uk'
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getStatusCode());
 
-        $object = json_decode($this->client->response->body());
+        $object = json_decode($response->getBody());
 
         // Examine the returned object and check that it's what we expect
         $this->assertObjectHasAttribute('data', $object);

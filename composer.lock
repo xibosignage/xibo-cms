@@ -5013,12 +5013,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/PeterMis/support.git",
-                "reference": "52604ab163f26bae10fd0028101c9b251e87644f"
+                "reference": "ba9fd84d4f74d26ae53b5d17c0b171a5f874be82"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PeterMis/support/zipball/52604ab163f26bae10fd0028101c9b251e87644f",
-                "reference": "52604ab163f26bae10fd0028101c9b251e87644f",
+                "url": "https://api.github.com/repos/PeterMis/support/zipball/ba9fd84d4f74d26ae53b5d17c0b171a5f874be82",
+                "reference": "ba9fd84d4f74d26ae53b5d17c0b171a5f874be82",
                 "shasum": ""
             },
             "require": {
@@ -5051,7 +5051,7 @@
             "support": {
                 "source": "https://github.com/PeterMis/support/tree/master"
             },
-            "time": "2020-02-25T10:57:08+00:00"
+            "time": "2020-03-02T12:12:59+00:00"
         },
         {
             "name": "xibosignage/xibo-xmr",

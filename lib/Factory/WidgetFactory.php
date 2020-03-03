@@ -26,7 +26,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
@@ -112,6 +112,7 @@ class WidgetFactory extends BaseFactory
      * Load widgets by Playlist ID
      * @param int $playlistId
      * @return array[Widget]
+     * @throws NotFoundException
      */
     public function getByPlaylistId($playlistId)
     {
@@ -122,6 +123,7 @@ class WidgetFactory extends BaseFactory
      * Load widgets by MediaId
      * @param int $mediaId
      * @return array[Widget]
+     * @throws NotFoundException
      */
     public function getByMediaId($mediaId)
     {
@@ -135,7 +137,7 @@ class WidgetFactory extends BaseFactory
      *  in either case, if we find a widget that isn't a media record, then still throw not found
      * @param int $widgetId
      * @return int|null
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws NotFoundException
      */
     public function getWidgetForStat($widgetId)
     {
@@ -174,6 +176,7 @@ class WidgetFactory extends BaseFactory
      * Get widget by widget id
      * @param $widgetId
      * @return Widget
+     * @throws NotFoundException
      */
     public function getById($widgetId)
     {
@@ -224,6 +227,7 @@ class WidgetFactory extends BaseFactory
      * @param null $sortOrder
      * @param array $filterBy
      * @return Widget[]
+     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
     {

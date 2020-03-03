@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -73,12 +73,12 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
     public function testListAll()
     {
         # Get list of all display profiles
-        $this->client->get('/displayprofile');
+        $response = $this->sendRequest('GET','/displayprofile');
 
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
     }
 
 
@@ -98,13 +98,13 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
             }
         }
 
-        $response = $this->client->post('/displayprofile', [
+        $response = $this->sendRequest('POST','/displayprofile', [
             'name' => $profileName,
             'type' => $profileType,
             'isDefault' => $profileIsDefault
         ]);
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $object = json_decode($response->getBody());
         
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
@@ -144,13 +144,13 @@ class DisplayProfileTest extends \Xibo\Tests\LocalWebTestCase
     public function testAddFailure($profileName, $profileType, $profileIsDefault)
     {
         # Add new display profile with arguments from provideFailureCases
-        $response = $this->client->post('/displayprofile', [
+        $response = $this->sendRequest('POST','/displayprofile', [
             'name' => $profileName,
             'type' => $profileType,
             'isDefault' => $profileIsDefault
         ]);
         # Check if it fails as expected
-        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
+        $this->assertSame(422, $response->getStatusCode(), 'Expecting failure, received ' . $response->getStatusCode());
     }
 
     /**

@@ -36,6 +36,7 @@ interface PlayerActionServiceInterface
 
     /**
      * Process the Queue of Actions
+     * @throws \Xibo\Support\Exception\DeadlockException
      */
     public function processQueue();
 }

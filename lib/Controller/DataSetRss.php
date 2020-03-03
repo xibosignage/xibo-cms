@@ -31,10 +31,10 @@ use PicoFeed\Syndication\Rss20FeedBuilder;
 use PicoFeed\Syndication\Rss20ItemBuilder;
 use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DataSetRssFactory;
@@ -94,12 +94,10 @@ class DataSetRss extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function displayPage(Request $request, Response $response, $id)
     {
@@ -123,12 +121,10 @@ class DataSetRss extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Get(
      *  path="/dataset/{dataSetId}/rss",
      *  operationId="dataSetRSSSearch",
@@ -151,7 +147,6 @@ class DataSetRss extends Base
      *      )
      *  )
      * )
-     *
      */
     public function grid(Request $request, Response $response, $id)
     {
@@ -201,12 +196,10 @@ class DataSetRss extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function addForm(Request $request, Response $response, $id)
     {
@@ -244,13 +237,11 @@ class DataSetRss extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/dataset/{dataSetId}/rss",
      *  operationId="dataSetRssAdd",
@@ -310,7 +301,6 @@ class DataSetRss extends Base
      *      )
      *  )
      * )
-     *
      */
     public function add(Request $request, Response $response, $id)
     {
@@ -358,6 +348,8 @@ class DataSetRss extends Base
     }
 
     /**
+     * @param Request $request
+     * @param Response $response
      * @param \Xibo\Entity\DataSetRss $feed
      */
     private function handleFormFilterAndOrder(Request $request, Response $response, $feed)
@@ -425,12 +417,10 @@ class DataSetRss extends Base
      * @param $id
      * @param $rssId
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function editForm(Request $request, Response $response, $id, $rssId)
     {
@@ -468,13 +458,11 @@ class DataSetRss extends Base
      * @param $rssId
      *
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/dataset/{dataSetId}/rss/{rssId}",
      *  operationId="dataSetRssEdit",
@@ -542,7 +530,6 @@ class DataSetRss extends Base
      *      description="successful operation"
      *  )
      * )
-     *
      */
     public function edit(Request $request, Response $response, $id, $rssId)
     {
@@ -597,12 +584,10 @@ class DataSetRss extends Base
      * @param $rssId
      *
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function deleteForm(Request $request, Response $response, $id, $rssId)
     {
@@ -631,12 +616,10 @@ class DataSetRss extends Base
      * @param $rssId
      *
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Delete(
      *  path="/dataset/{dataSetId}/rss/{rssId}",
      *  operationId="dataSetRSSDelete",
@@ -662,7 +645,6 @@ class DataSetRss extends Base
      *      description="successful operation"
      *  )
      * )
-     *
      */
     public function delete(Request $request, Response $response, $id, $rssId)
     {
@@ -688,7 +670,10 @@ class DataSetRss extends Base
     }
 
     /**
+     * @param Request $request
+     * @param Response $response
      * @param $psk
+     * @throws \Exception
      */
     public function feed(Request $request, Response $response, $psk)
     {
@@ -737,7 +722,7 @@ class DataSetRss extends Base
      * @param Date $dataSetEditDate
      * @param \Xibo\Entity\DataSet $dataSet
      * @return string
-     * @throws XiboException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     private function generateFeed($feed, $dataSetEditDate, $dataSet)
     {
