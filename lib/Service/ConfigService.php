@@ -77,7 +77,7 @@ class ConfigService implements ConfigServiceInterface
     public $cacheDrivers = null;
     public $timeSeriesStore = null;
     public $cacheNamespace = 'Xibo';
-    public $apiKeyPaths = null;
+    private $apiKeyPaths = null;
 
     /**
      * Theme Specific Config
@@ -545,6 +545,26 @@ class ConfigService implements ConfigServiceInterface
         }
 
         return $httpOptions;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getApiKeyDetails()
+    {
+        if ($this->apiKeyPaths == null) {
+            // We load the defaults
+            $libraryLocation = $this->getSetting('LIBRARY_LOCATION');
+
+            // We use the defaults
+            $this->apiKeyPaths = [
+                'publicKeyPath' => $libraryLocation . '/certs/public.key',
+                'privateKeyPath' => $libraryLocation . '/certs/private.key',
+                'encryptionKey' => file_get_contents($libraryLocation . '/certs/encryption.key')
+            ];
+        }
+
+        return $this->apiKeyPaths;
     }
 
     private function testItem(&$results, $item, $result, $advice, $fault = true)

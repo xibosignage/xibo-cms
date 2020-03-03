@@ -21,13 +21,13 @@
  */
 namespace Xibo\Controller;
 
+use League\OAuth2\Server\AuthorizationServer;
+use League\OAuth2\Server\Grant\AuthCodeGrant;
 use League\OAuth2\Server\RequestTypes\AuthorizationRequest;
+use League\OAuth2\Server\Util\RedirectUri;
 use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use League\OAuth2\Server\AuthorizationServer;
-use League\OAuth2\Server\Grant\AuthCodeGrant;
-use League\OAuth2\Server\Util\RedirectUri;
 use Slim\Views\Twig;
 use Xibo\Entity\Application;
 use Xibo\Entity\ApplicationScope;
@@ -42,11 +42,7 @@ use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\ApiAccessTokenStorage;
-use Xibo\Storage\ApiAuthCodeStorage;
 use Xibo\Storage\ApiClientStorage;
-use Xibo\Storage\ApiScopeStorage;
-use Xibo\Storage\ApiSessionStorage;
 use Xibo\Storage\AuthCodeRepository;
 use Xibo\Storage\RefreshTokenRepository;
 use Xibo\Storage\StorageServiceInterface;
@@ -231,7 +227,7 @@ class Applications extends Base
         /** @var AuthorizationRequest $authRequest */
         $authRequest = $this->session->get('authParams');
 
-        $apiKeyPaths = $this->getConfig()->apiKeyPaths;
+        $apiKeyPaths = $this->getConfig()->getApiKeyDetails();
 
         $privateKey = $apiKeyPaths['privateKeyPath'];
         $encryptionKey = $apiKeyPaths['publicKeyPath'];

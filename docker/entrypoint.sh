@@ -46,6 +46,24 @@ then
   /bin/sed -i "s/define('SECRET_KEY','');/define('SECRET_KEY','$SECRET_KEY');/" /var/www/cms/web/settings.php
 fi
 
+# Check to see if we have a public/private key pair and encryption key
+if [ ! -f "/var/www/cms/library/certs/private.key" ]
+then
+  # Make the dir
+  mkdir -p /var/www/cms/library/certs
+
+  # Create the Keys
+  openssl genrsa -out /var/www/cms/library/certs/private.key 2048
+  openssl rsa -in /var/www/cms/library/certs/private.key -pubout -out /var/www/cms/library/certs/public.key
+
+  php -r 'echo base64_encode(random_bytes(32)), PHP_EOL;' >> /var/www/cms/library/certs/encryption.key
+fi
+
+# Set the correct permissions on the public/private key
+chmod 600 /var/www/cms/library/certs/private.key
+chmod 660 /var/www/cms/library/certs/public.key
+chown -R apache.apache /var/www/cms/library/certs
+
 # Check if there's a database file to import
 if [ -f "/var/www/backup/import.sql" ] && [ "$CMS_DEV_MODE" == "false" ]
 then

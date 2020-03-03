@@ -82,6 +82,7 @@ RUN apk update && apk upgrade && apk add tar \
     apache2 \
     ca-certificates \
     tzdata \
+    openssl \
     && rm -rf /var/cache/apk/*
 
 RUN apk add --no-cache build-base php7-dev php7-pear openssl-dev \
