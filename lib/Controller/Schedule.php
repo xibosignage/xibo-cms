@@ -27,9 +27,6 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\ScheduleReminder;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DayPartFactory;
@@ -45,6 +42,10 @@ use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Schedule
@@ -148,11 +149,8 @@ class Schedule extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws ControllerNotImplemented
      */
     function displayPage(Request $request, Response $response)
     {
@@ -244,11 +242,6 @@ class Schedule extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     function eventData(Request $request, Response $response)
     {
@@ -313,7 +306,7 @@ class Schedule extends Base
             // Generate this event
             try {
                 $scheduleEvents = $row->getEvents($start, $end);
-            } catch (XiboException $e) {
+            } catch (GeneralException $e) {
                 $this->getLog()->error('Unable to getEvents for ' . $row->eventId);
                 continue;
             }
@@ -337,7 +330,7 @@ class Schedule extends Base
             }
 
             // Event Permissions
-            $editable = $this->isEventEditable($row->displayGroups, $request);
+            $editable = $this->isEventEditable($row->displayGroups);
 
             // Event Title
             if ($row->campaignId == 0) {
@@ -446,12 +439,10 @@ class Schedule extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      * @SWG\Get(
      *  path="/schedule/{displayGroupId}/events",
      *  operationId="scheduleCalendarDataDisplayGroup",
@@ -475,11 +466,9 @@ class Schedule extends Base
      *      description="successful response"
      *  )
      * )
-     *
      */
     public function eventList(Request $request, Response $response, $id)
     {
-        // TODO Agenda view complains
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -542,7 +531,7 @@ class Schedule extends Base
             // Get scheduled events based on recurrence
             try {
                 $scheduleEvents = $schedule->getEvents($date, $date);
-            } catch (XiboException $e) {
+            } catch (GeneralException $e) {
                 $this->getLog()->error('Unable to getEvents for ' . $schedule->eventId);
                 continue;
             }
@@ -727,12 +716,9 @@ class Schedule extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
     function addForm(Request $request, Response $response)
     {
@@ -948,13 +934,9 @@ class Schedule extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
      */
     public function add(Request $request, Response $response)
     {
@@ -1126,12 +1108,10 @@ class Schedule extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
     function editForm(Request $request, Response $response, $id)
     {
@@ -1143,7 +1123,7 @@ class Schedule extends Base
         $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
-        if (!$this->isEventEditable($schedule->displayGroups, $request)) {
+        if (!$this->isEventEditable($schedule->displayGroups)) {
             throw new AccessDeniedException();
         }
 
@@ -1195,12 +1175,10 @@ class Schedule extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
     function deleteRecurrenceForm(Request $request, Response $response, $id)
     {
@@ -1212,7 +1190,7 @@ class Schedule extends Base
         $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
-        if (!$this->isEventEditable($schedule->displayGroups, $request)) {
+        if (!$this->isEventEditable($schedule->displayGroups)) {
             throw new AccessDeniedException();
         }
 
@@ -1233,12 +1211,10 @@ class Schedule extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      * @SWG\Delete(
      *  path="/schedulerecurrence/{eventId}",
      *  operationId="schedulerecurrenceDelete",
@@ -1263,7 +1239,7 @@ class Schedule extends Base
         $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
-        if (!$this->isEventEditable($schedule->displayGroups, $request)) {
+        if (!$this->isEventEditable($schedule->displayGroups)) {
             throw new AccessDeniedException();
         }
 
@@ -1291,13 +1267,10 @@ class Schedule extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      * @SWG\Put(
      *  path="/schedule/{eventId}",
      *  operationId="scheduleEdit",
@@ -1459,7 +1432,7 @@ class Schedule extends Base
         ]);
 
 
-        if (!$this->isEventEditable($schedule->displayGroups, $request)) {
+        if (!$this->isEventEditable($schedule->displayGroups)) {
             throw new AccessDeniedException();
         }
 
@@ -1555,7 +1528,7 @@ class Schedule extends Base
 
         // Get form reminders
         $rows = [];
-        for ($i=0; $i < count($sanitizedParams->getIntArray('reminder_value')); $i++) {
+        for ($i=0; $i < count($sanitizedParams->getIntArray('reminder_value',['default' => []])); $i++) {
 
             $entry = [];
 
@@ -1601,7 +1574,7 @@ class Schedule extends Base
         $rows = [];
         if ($this->isApi($request)) {
 
-            $reminders =  $sanitizedParams->getArray('scheduleReminders');
+            $reminders =  $sanitizedParams->getArray('scheduleReminders', ['default' => []]);
             foreach ($reminders as $i => $reminder) {
 
                 $rows[$i]['reminder_scheduleReminderId'] = isset($reminder['reminder_scheduleReminderId']) ? (int) $reminder['reminder_scheduleReminderId'] : null;
@@ -1674,19 +1647,17 @@ class Schedule extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
     function deleteForm(Request $request, Response $response, $id)
     {
         $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
-        if (!$this->isEventEditable($schedule->displayGroups, $request)) {
+        if (!$this->isEventEditable($schedule->displayGroups)) {
             throw new AccessDeniedException();
         }
 
@@ -1705,12 +1676,10 @@ class Schedule extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      * @SWG\Delete(
      *  path="/schedule/{eventId}",
      *  operationId="scheduleDelete",
@@ -1735,7 +1704,7 @@ class Schedule extends Base
         $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
-        if (!$this->isEventEditable($schedule->displayGroups, $request)) {
+        if (!$this->isEventEditable($schedule->displayGroups)) {
             throw new AccessDeniedException();
         }
 
@@ -1755,10 +1724,9 @@ class Schedule extends Base
     /**
      * Is this event editable?
      * @param array[\Xibo\Entity\DisplayGroup] $displayGroups
-     * @param Request $request
      * @return bool
      */
-    private function isEventEditable($displayGroups, Request $request)
+    private function isEventEditable($displayGroups)
     {
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
 
@@ -1787,12 +1755,9 @@ class Schedule extends Base
      * @param int $id The Id
      *
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
     public function scheduleNowForm(Request $request, Response $response,$from, $id)
     {
@@ -1800,7 +1765,7 @@ class Schedule extends Base
         $displays = [];
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
 
-        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1], $request) as $displayGroup) {
+        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
             /* @var \Xibo\Entity\DisplayGroup $\Xibo\Entity\DisplayGroup */
 
             // Can't schedule with view, but no edit permissions
@@ -1830,9 +1795,13 @@ class Schedule extends Base
         return $this->render($request, $response);
     }
 
-    /*
-     * @param  \Xibo\Entity\Schedule $schedule
-     *
+    /**
+     * @param \Xibo\Entity\Schedule $schedule
+     * @param ScheduleReminder $scheduleReminder
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     private function saveReminder($schedule, $scheduleReminder)
     {
@@ -1861,7 +1830,7 @@ class Schedule extends Base
                 $type = ScheduleReminder::$MONTH;
                 break;
             default:
-                throw new \Xibo\Exception\NotFoundException('Unknown type');
+                throw new NotFoundException('Unknown type');
         }
 
         // Remind seconds that we will subtract/add from schedule fromDt/toDt to get reminderDt

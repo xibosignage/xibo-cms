@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2012-2016 Spring Signage Ltd - http://www.springsignage.com
  *
  * This file is part of Xibo.
  *
@@ -21,8 +22,6 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -32,6 +31,8 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class DayPart
@@ -194,6 +195,9 @@ class DayPart implements \JsonSerializable
         $this->userId = $ownerId;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function validate()
     {
         $this->getLog()->debug('Validating daypart ' . $this->name);
@@ -225,6 +229,7 @@ class DayPart implements \JsonSerializable
     /**
      * Save
      * @param array $options
+     * @throws InvalidArgumentException
      */
     public function save($options = [])
     {

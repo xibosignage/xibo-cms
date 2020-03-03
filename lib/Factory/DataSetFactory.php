@@ -28,9 +28,9 @@ use GuzzleHttp\Exception\RequestException;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Helper\Environment;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
@@ -62,6 +62,8 @@ class DataSetFactory extends BaseFactory
     /** @var DateServiceInterface */
     private $date;
 
+    private $sanitizerService;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -86,6 +88,7 @@ class DataSetFactory extends BaseFactory
         $this->permissionFactory = $permissionFactory;
         $this->displayFactory = $displayFactory;
         $this->date = $date;
+        $this->sanitizerService = $sanitizerService;
     }
 
     /**
@@ -101,11 +104,10 @@ class DataSetFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        $array = [];
         return new DataSet(
             $this->getStore(),
             $this->getLog(),
-            $this->getSanitizer($array),
+            $this->sanitizerService,
             $this->config,
             $this->pool,
             $this,
@@ -168,6 +170,7 @@ class DataSetFactory extends BaseFactory
     /**
      * @param $userId
      * @return DataSet[]
+     * @throws NotFoundException
      */
     public function getByOwnerId($userId)
     {
@@ -180,6 +183,7 @@ class DataSetFactory extends BaseFactory
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[DataSet]
+     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
     {
@@ -303,13 +307,12 @@ class DataSetFactory extends BaseFactory
     /**
      * Makes a call to a Remote Dataset and returns all received data as a JSON decoded Object.
      * In case of an Error, null is returned instead.
-     * @param \Xibo\Entity\DataSet $dataSet The Dataset to get Data for
-     * @param \Xibo\Entity\DataSet|null $dependant The Dataset $dataSet depends on
+     * @param DataSet $dataSet The Dataset to get Data for
+     * @param DataSet|null $dependant The Dataset $dataSet depends on
      * @param bool $enableCaching Should we cache check the results and store the resulting cache
+     * @return \stdClass{entries:[],number:int}
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @return \stdClass{entries:[],number:int}
-     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function callRemoteService(DataSet $dataSet, DataSet $dependant = null, $enableCaching = true)
     {
@@ -507,12 +510,12 @@ class DataSetFactory extends BaseFactory
     /**
      * Tries to process received Data against the configured DataSet with all Columns
      *
-     * @param \Xibo\Entity\DataSet $dataSet The RemoteDataset to process
+     * @param DataSet $dataSet The RemoteDataset to process
      * @param \stdClass $results A simple Object with one Property 'entries' which contains all results
-     * @param $save
-     * @throws XiboException
+     * @param bool $save
+     * @throws InvalidArgumentException
      */
-    public function processResults(\Xibo\Entity\DataSet $dataSet, \stdClass $results, $save = true) {
+    public function processResults(DataSet $dataSet, \stdClass $results, $save = true) {
         $results->processed = [];
 
         if (property_exists($results, 'entries') && is_array($results->entries)) {
@@ -651,16 +654,16 @@ class DataSetFactory extends BaseFactory
                 }
 
                 $this->getLog()->debug('Resolved value: ' . var_export($value, true));
-
+                $sanitizer = $this->getSanitizer($value);
                 // Only add it to the result if we where able to process the field
                 if (($value != null) && ($value[1] !== null)) {
                     switch ($column->dataTypeId) {
                         case 2:
-                            $result[$column->heading] = $this->getSanitizer()->double($value[1]);
+                            $result[$column->heading] = $sanitizer->getDouble(1);
                             break;
                         case 3:
                             // This expects an ISO date
-                            $date = $this->getSanitizer()->string($value[1]);
+                            $date =  $sanitizer->getDate($value[1]);
                             try {
                                 $result[$column->heading] = $this->date->parse($date);
                             } catch (\Exception $e) {
@@ -669,14 +672,14 @@ class DataSetFactory extends BaseFactory
                             }
                             break;
                         case 5:
-                            $result[$column->heading] = $this->getSanitizer()->int($value[1]);
+                            $result[$column->heading] = $sanitizer->getInt(1);
                             break;
                         case 6:
                             // HTML, without any sanitization
                             $result[$column->heading] = $value[1];
                             break;
                         default:
-                            $result[$column->heading] = $this->getSanitizer()->string($value[1]);
+                            $result[$column->heading] = $sanitizer->getString(1);
                     }
                 }
             } else {
@@ -724,12 +727,12 @@ class DataSetFactory extends BaseFactory
      * This Method *sums* or *counts* all same entries and returns them.
      * If no consolidation function is configured, nothing is done here.
      *
-     * @param \Xibo\Entity\DataSet $dataSet the current DataSet
+     * @param DataSet $dataSet the current DataSet
      * @param array $entries All processed entries which may be consolidated
      * @param array $columns The columns form this DataSet
      * @return array which contains all Entries to be added to the DataSet
      */
-    private function consolidateEntries(\Xibo\Entity\DataSet $dataSet, array $entries, array $columns) {
+    private function consolidateEntries(DataSet $dataSet, array $entries, array $columns) {
         // Do we need to consolidate?
         if ((count($entries) > 0) && $dataSet->doConsolidate()) {
             // Yes

@@ -8,7 +8,7 @@
 
 namespace Xibo\Factory;
 use Xibo\Entity\ApplicationScope;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -59,7 +59,6 @@ class ApplicationScopeFactory extends BaseFactory
      * Get by Client Id
      * @param $clientId
      * @return array[ApplicationScope]
-     * @throws NotFoundException
      */
     public function getByClientId($clientId)
     {

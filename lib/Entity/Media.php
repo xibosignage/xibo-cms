@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,11 +22,12 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\DuplicateEntityException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\DuplicateEntityException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\UpgradePendingException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -353,6 +354,7 @@ class Media implements \JsonSerializable
 
     /**
      * @return int
+     * @throws GeneralException
      */
     private function countUsages()
     {
@@ -365,6 +367,7 @@ class Media implements \JsonSerializable
      * Is this media used
      * @param int $usages threshold
      * @return bool
+     * @throws GeneralException
      */
     public function isUsed($usages = 0)
     {
@@ -375,7 +378,7 @@ class Media implements \JsonSerializable
      * Assign Tag
      * @param Tag $tag
      * @return $this
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function assignTag($tag)
     {
@@ -397,7 +400,7 @@ class Media implements \JsonSerializable
      * Unassign tag
      * @param Tag $tag
      * @return $this
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function unassignTag($tag)
     {
@@ -445,7 +448,7 @@ class Media implements \JsonSerializable
     /**
      * Validate
      * @param array $options
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function validate($options)
     {
@@ -479,7 +482,7 @@ class Media implements \JsonSerializable
     /**
      * Load
      * @param array $options
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function load($options = [])
     {
@@ -525,7 +528,7 @@ class Media implements \JsonSerializable
      * @throws ConfigurationException
      * @throws DuplicateEntityException
      * @throws InvalidArgumentException
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function save($options = [])
     {
@@ -591,6 +594,10 @@ class Media implements \JsonSerializable
      * Save Async
      * @param array $options
      * @return $this
+     * @throws ConfigurationException
+     * @throws DuplicateEntityException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
      */
     public function saveAsync($options = [])
     {
@@ -607,7 +614,7 @@ class Media implements \JsonSerializable
     /**
      * Delete
      * @param array $options
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws GeneralException
      */
     public function delete($options = [])
     {
@@ -713,7 +720,6 @@ class Media implements \JsonSerializable
 
     /**
      * Add
-     * @throws ConfigurationException
      */
     private function add()
     {

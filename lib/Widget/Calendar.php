@@ -30,8 +30,8 @@ use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Invalidation;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Calendar
@@ -336,10 +336,12 @@ class Calendar extends ModuleWidget
 
         $this->isValid();
         $this->saveWidget();
+
+        return $response;
     }
 
-    /** @inheritdoc
-     * @throws \Xibo\Exception\ConfigurationException
+    /**
+     * @inheritdoc
      */
     public function getResource($displayId = 0)
     {

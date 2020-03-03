@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -19,16 +19,10 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\DuplicateEntityException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\LibraryFullException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
@@ -49,6 +43,13 @@ use Xibo\Helper\Pbkdf2Hash;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\DuplicateEntityException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\LibraryFullException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class User
@@ -420,6 +421,7 @@ class User implements \JsonSerializable
      * @param WidgetFactory $widgetFactory
      * @param PlayerVersionFactory $playerVersionFactory
      * @param PlaylistFactory $playlistFactory
+     * @param $dataSetFactory
      * @return $this
      */
     public function setChildObjectDependencies($campaignFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $displayFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory, $dataSetFactory)
@@ -509,6 +511,7 @@ class User implements \JsonSerializable
      * @param string $option
      * @param mixed $default
      * @return mixed
+     * @throws NotFoundException
      */
     public function getOptionValue($option, $default)
     {
@@ -545,7 +548,8 @@ class User implements \JsonSerializable
     /**
      * Set a new password
      * @param string $password
-     * @param string[Optional] $oldPassword
+     * @param null $oldPassword
+     * @throws GeneralException
      */
     public function setNewPassword($password, $oldPassword = null)
     {
@@ -574,8 +578,10 @@ class User implements \JsonSerializable
     /**
      * Check password
      * @param string $password
-     * @throws NotFoundException if the user has not been loaded
      * @throws AccessDeniedException if the passwords don't match
+     * @throws DuplicateEntityException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException if the user has not been loaded
      */
     public function checkPassword($password)
     {
@@ -615,6 +621,8 @@ class User implements \JsonSerializable
     /**
      * Update hash if required
      * @param string $password
+     * @throws DuplicateEntityException
+     * @throws InvalidArgumentException
      */
     private function updateHashIfRequired($password)
     {
@@ -687,6 +695,7 @@ class User implements \JsonSerializable
     /**
      * Does this User have any children
      * @return int
+     * @throws NotFoundException
      */
     public function countChildren()
     {
@@ -701,7 +710,11 @@ class User implements \JsonSerializable
     /**
      * Reassign all
      * @param User $user
-     * @throws XiboException
+     * @throws ConfigurationException
+     * @throws DuplicateEntityException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
     public function reassignAllTo($user)
     {
@@ -769,7 +782,8 @@ class User implements \JsonSerializable
 
     /**
      * Validate
-     * @throws XiboException
+     * @throws DuplicateEntityException
+     * @throws InvalidArgumentException
      */
     public function validate()
     {
@@ -806,7 +820,8 @@ class User implements \JsonSerializable
     /**
      * Save User
      * @param array $options
-     * @throws \Xibo\Exception\XiboException
+     * @throws DuplicateEntityException
+     * @throws InvalidArgumentException
      */
     public function save($options = [])
     {
@@ -847,9 +862,11 @@ class User implements \JsonSerializable
 
     /**
      * Delete User
+     * @throws ConfigurationException
+     * @throws DuplicateEntityException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
      */
     public function delete()
     {
@@ -1075,8 +1092,9 @@ class User implements \JsonSerializable
      * @param $route string
      * @param $method string
      * @param $scopes array[ScopeEntity]
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws ConfigurationException
+     * @throws NotFoundException
      */
     public function routeAuthentication($route, $method = null, $scopes = null)
     {
@@ -1108,6 +1126,7 @@ class User implements \JsonSerializable
      * @param $route string
      * @return bool
      * @throws ConfigurationException
+     * @throws NotFoundException
      */
     public function routeViewable($route)
     {
@@ -1155,7 +1174,8 @@ class User implements \JsonSerializable
      * Given an array of routes, count the ones that are viewable
      * @param $routes
      * @return int
-     * @throws \Xibo\Exception\ConfigurationException
+     * @throws ConfigurationException
+     * @throws NotFoundException
      */
     public function countViewable($routes)
     {
@@ -1255,7 +1275,6 @@ class User implements \JsonSerializable
      * Check the given object is viewable
      * @param object $object
      * @return bool
-     * @throws \Xibo\Exception\NotFoundException
      */
     public function checkViewable($object)
     {
@@ -1285,7 +1304,6 @@ class User implements \JsonSerializable
      * Check the given object is editable
      * @param object $object
      * @return bool
-     * @throws \Xibo\Exception\NotFoundException
      */
     public function checkEditable($object)
     {
@@ -1315,7 +1333,6 @@ class User implements \JsonSerializable
      * Check the given object is delete-able
      * @param object $object
      * @return bool
-     * @throws \Xibo\Exception\NotFoundException
      */
     public function checkDeleteable($object)
     {
@@ -1346,7 +1363,6 @@ class User implements \JsonSerializable
      * Check the given objects permissions are modify-able
      * @param object $object
      * @return bool
-     * @throws \Xibo\Exception\NotFoundException
      */
     public function checkPermissionsModifyable($object)
     {

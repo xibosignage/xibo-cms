@@ -56,11 +56,11 @@ class DisplayProfileTestDelete extends \Xibo\Tests\LocalWebTestCase
     public function testDelete()
     {
         // Delete the one we created last
-        $this->client->delete('/displayprofile/' . $this->displayProfile->displayProfileId);
+        $response = $this->sendRequest('DELETE','/displayprofile/' . $this->displayProfile->displayProfileId);
 
         // This should return 204 for success
-        $response = json_decode($this->client->response->body());
-        $this->assertSame(204, $response->status, $this->client->response->body());
+        $object = json_decode($response->getBody());
+        $this->assertSame(204, $object->status, $response->getBody());
 
         // Check only one remains
         try {

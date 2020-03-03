@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -26,6 +27,8 @@ use Xibo\OAuth2\Client\Entity\XiboCampaign;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboResolution;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
 
@@ -114,11 +117,11 @@ class LayoutTest extends LocalWebTestCase
             return;
         }
 
-        $this->client->get('/layout');
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $response = $this->sendRequest('GET','/layout');
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
         # There should be one default layout in the system
         $this->assertEquals(1, $object->data->recordsTotal);
     }
@@ -132,16 +135,16 @@ class LayoutTest extends LocalWebTestCase
         $layoutResolutionId = $this->getResolutionId($layoutResolutionType);
 
         # Create layouts with arguments from provideSuccessCases
-        $this->client->post('/layout', [
+        $response = $this->sendRequest('POST','/layout', [
             'name' => $layoutName,
             'description' => $layoutDescription,
             'layoutId' => $layoutTemplateId,
             'resolutionId' => $layoutResolutionId
         ]);
 
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $this->client->response->status() . $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
 
-        $object = json_decode($this->client->response->body());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
 
@@ -170,15 +173,23 @@ class LayoutTest extends LocalWebTestCase
         $layoutResolutionId = $this->getResolutionId($layoutResolutionType);
 
         # Create layouts with arguments from provideFailureCases
-        $this->client->post('/layout', [
+        $request = $this->createRequest('POST','/layout');
+        $request->withParsedBody([
             'name' => $layoutName,
             'description' => $layoutDescription,
             'layoutId' => $layoutTemplateId,
             'resolutionId' => $layoutResolutionId
         ]);
 
-        # check if they fail as expected
-        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
+        try {
+            $this->app->handle($request);
+        } catch (InvalidArgumentException $e) {
+            # check if they fail as expected
+            $this->assertSame(422, $e->getCode(), 'Expecting failure, received ' . $e->getMessage());
+        } catch (NotFoundException $e ) {
+            $this->assertSame(404, $e->getCode(), 'Expecting failure, received ' . $e->getMessage());
+        }
+
     }
 
     /**
@@ -204,11 +215,11 @@ class LayoutTest extends LocalWebTestCase
             }
         }
 
-        $this->client->get('/layout');
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $response = $this->sendRequest('GET','/layout');
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
 
         # There should be as many layouts as we created plus the number we started with in the system
         $this->assertEquals(count($layouts) + count($this->startLayouts), $object->data->recordsTotal);
@@ -244,12 +255,12 @@ class LayoutTest extends LocalWebTestCase
         }
 
         // Fitler for our specific layout
-        $this->client->get('/layout', ['name' => $layoutName]);
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
+        $response = $this->sendRequest('GET','/layout', ['name' => $layoutName]);
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
 
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
 
         # There should be at least one match
         $this->assertGreaterThanOrEqual(1, $object->data->recordsTotal);
@@ -329,11 +340,14 @@ class LayoutTest extends LocalWebTestCase
         # Load in a known layout if it's not there already
         if ($flag)
             (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit layout', '', $this->getResolutionId('landscape'));
-        $this->client->post('/layout', [
+        $response = $this->sendRequest('POST','/layout', [
             'name' => 'phpunit layout',
             'description' => 'phpunit layout'
         ]);
-        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status() . '. Body = ' . $this->client->response->body());
+        $this->assertSame(409, $response->getStatusCode(), 'Expecting failure, received ' . $response->getStatusCode() . '. Body = ' . $response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertSame(false, $object->success);
+        $this->assertContains('You already own a Layout called ', $object->error);
     }
 
     /**
@@ -349,13 +363,13 @@ class LayoutTest extends LocalWebTestCase
         // Change the layout name and description
         $name = Random::generateString(8, 'phpunit');
         $description = Random::generateString(8, 'description');
-        $this->client->put('/layout/' . $layout->layoutId, [
+        $response = $this->sendRequest('PUT','/layout/' . $layout->layoutId, [
             'name' => $name,
             'description' => $description
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
         
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
+        $object = json_decode($response->getBody());
         
         # Examine the returned object and check that it's what we expect
         $this->assertObjectHasAttribute('data', $object);
@@ -380,12 +394,12 @@ class LayoutTest extends LocalWebTestCase
         $layout = $this->createLayout();
 
         // Set a background z-index that is outside parameters
-        $this->client->put('/layout/' . $layout->layoutId, [
+        $response = $this->sendRequest('PUT','/layout/' . $layout->layoutId, [
             'backgroundColor' => $layout->backgroundColor,
             'backgroundzIndex' => -1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
+        $this->assertSame(422, $response->getStatusCode(), 'Expecting failure, received ' . $response->getBody());
     }
 
     /**
@@ -400,10 +414,10 @@ class LayoutTest extends LocalWebTestCase
         $layout1 = (new XiboLayout($this->getEntityProvider()))->create($name1, 'phpunit description', '', $this->getResolutionId('landscape'));
         $layout2 = (new XiboLayout($this->getEntityProvider()))->create($name2, 'phpunit description', '', $this->getResolutionId('landscape'));
         # Delete the one we created last
-        $this->client->delete('/layout/' . $layout2->layoutId);
+        $response = $this->sendRequest('DELETE','/layout/' . $layout2->layoutId);
         # This should return 204 for success
-        $response = json_decode($this->client->response->body());
-        $this->assertSame(204, $response->status, $this->client->response->body());
+        $object = json_decode($response->getBody());
+        $this->assertSame(204, $object->status, $response->getBody());
         # Check only one remains
         $layouts = (new XiboLayout($this->getEntityProvider()))->get(['start' => 0, 'length' => 10000]);
         $this->assertEquals(count($this->startLayouts) + 1, count($layouts));
@@ -436,10 +450,10 @@ class LayoutTest extends LocalWebTestCase
         $campaignCheck = (new XiboCampaign($this->getEntityProvider()))->getById($campaign->campaignId);
         $this->assertSame(1, $campaignCheck->numberLayouts);
         # Try to Delete the layout assigned to the campaign
-        $this->client->delete('/layout/' . $layout->layoutId);
+        $response = $this->sendRequest('DELETE','/layout/' . $layout->layoutId);
         # This should return 204 for success
-        $response = json_decode($this->client->response->body());
-        $this->assertSame(204, $response->status, $this->client->response->body());
+        $object = json_decode($response->getBody());
+        $this->assertSame(204, $object->status, $response->getBody());
     }
 
     /**
@@ -451,8 +465,8 @@ class LayoutTest extends LocalWebTestCase
         $layout = $this->createLayout();
 
         // Call retire
-        $this->client->put('/layout/retire/' . $layout->layoutId, [], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-        $this->assertSame(200, $this->client->response->status());
+        $response = $this->sendRequest('PUT','/layout/retire/' . $layout->layoutId, [], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+        $this->assertSame(200, $response->getStatusCode());
 
         // Get the same layout again and make sure its retired = 1
         $layout = (new XiboLayout($this->getEntityProvider()))->getById($layout->layoutId);
@@ -472,17 +486,17 @@ class LayoutTest extends LocalWebTestCase
         $this->getEntityProvider()->put('/layout/retire/' . $layout->layoutId);
 
         // Call layout edit with this Layout
-        $this->client->put('/layout/unretire/' . $layout->layoutId, [], [
+        $response = $this->sendRequest('PUT','/layout/unretire/' . $layout->layoutId, [], [
             'CONTENT_TYPE' => 'application/x-www-form-urlencoded'
         ]);
 
         // Make sure that was successful
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
 
         // Get the same layout again and make sure its retired = 0
         $layout = (new XiboLayout($this->getEntityProvider()))->getById($layout->layoutId);
 
-        $this->assertSame(0, $layout->retired, 'Retired flag not updated. ' . $this->client->response->body());
+        $this->assertSame(0, $layout->retired, 'Retired flag not updated. ' . $response->getBody());
     }
     
     /**
@@ -496,15 +510,15 @@ class LayoutTest extends LocalWebTestCase
         $layout = $this->getDraft($layout);
 
         // Add region to our layout with data from regionSuccessCases
-        $this->client->post('/region/' . $layout->layoutId, [
+        $response = $this->sendRequest('POST','/region/' . $layout->layoutId, [
             'width' => $regionWidth,
             'height' => $regionHeight,
             'top' => $regionTop,
             'left' => $regionLeft
         ]);
 
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->getBody());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         # Check if region has intended values
@@ -541,7 +555,7 @@ class LayoutTest extends LocalWebTestCase
         $layout = $this->getDraft($layout);
 
         # Add region to our layout with datafrom regionFailureCases
-        $response = $this->client->post('/region/' . $layout->layoutId, [
+        $response = $this->sendRequest('POST','/region/' . $layout->layoutId, [
             'width' => $regionWidth,
             'height' => $regionHeight,
             'top' => $regionTop,
@@ -549,9 +563,9 @@ class LayoutTest extends LocalWebTestCase
         ]);
 
         # Check if we receive failure as expected
-        $this->assertSame($expectedHttpCode, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
+        $this->assertSame($expectedHttpCode, $response->getStatusCode(), 'Expecting failure, received ' . $response->getBody());
         if ($expectedHttpCode == 200) {
-            $object = json_decode($this->client->response->body());
+            $object = json_decode($response->getBody());
             $this->assertObjectHasAttribute('data', $object);
             $this->assertObjectHasAttribute('id', $object);
             $this->assertSame($expectedWidth, $object->data->width);
@@ -569,7 +583,7 @@ class LayoutTest extends LocalWebTestCase
         return [
             // various incorrect regions
             'region no size' => [NULL, NULL, 20, 420, 200, 250, 250],
-            'region negative dimensions' => [-69, -420, 20, 420, 500, null, null]
+            'region negative dimensions' => [-69, -420, 20, 420, 422, null, null]
         ];
     }
 
@@ -586,7 +600,7 @@ class LayoutTest extends LocalWebTestCase
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200,300,75,125);
 
         # Edit region
-        $this->client->put('/region/' . $region->regionId, [
+        $response = $this->sendRequest('PUT','/region/' . $region->regionId, [
             'width' => 700,
             'height' => 500,
             'top' => 400,
@@ -596,8 +610,8 @@ class LayoutTest extends LocalWebTestCase
             ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
         # Check if successful
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         # Check if region has updated values
@@ -619,7 +633,7 @@ class LayoutTest extends LocalWebTestCase
         # Add region to our layout
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200,300,75,125);
         # Edit region
-        $this->client->put('/region/' . $region->regionId, [
+        $response = $this->sendRequest('PUT','/region/' . $region->regionId, [
             'width' => 700,
             'height' => 500,
             'top' => 400,
@@ -628,7 +642,7 @@ class LayoutTest extends LocalWebTestCase
             'zIndex' => -1
             ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
         # Check if it failed
-        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
+        $this->assertSame(422, $response->getStatusCode(), 'Expecting failure, received ' . $response->getBody());
     }
   
     /**
@@ -643,8 +657,10 @@ class LayoutTest extends LocalWebTestCase
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200, 670, 100, 100);
 
         # Delete region
-        $this->client->delete('/region/' . $region->regionId);
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+        $response = $this->sendRequest('DELETE','/region/' . $region->regionId);
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertSame(204, $object->status);
     }
 
     /**
@@ -656,17 +672,16 @@ class LayoutTest extends LocalWebTestCase
         $name = Random::generateString(8, 'phpunit');
         $layout = (new XiboLayout($this->getEntityProvider()))->create($name, 'phpunit description', '', $this->getResolutionId('landscape'));
         # Assign new tag to our layout 
-        $this->client->post('/layout/' . $layout->layoutId . '/tag' , [
+        $response = $this->sendRequest('POST','/layout/' . $layout->layoutId . '/tag' , [
             'tag' => ['API']
-            ]);
+        ]);
         $layout = (new XiboLayout($this->getEntityProvider()))->getById($layout->layoutId);
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
         $this->assertSame('API', $layout->tags);
     }
 
     /**
      * Delete tags from layout
-     * @group broken
      */
     public function testDeleteTag()
     {
@@ -675,12 +690,12 @@ class LayoutTest extends LocalWebTestCase
         $tag = 'API';
         $layout->addTag($tag);
         $layout = (new XiboLayout($this->getEntityProvider()))->getById($layout->layoutId);
-        print_r($layout->tags);
-        $this->client->delete('/layout/' . $layout->layoutId . '/untag', [
-            'tag' => [$tag]
-            ]);
 
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
+        $response = $this->sendRequest('POST','/layout/' . $layout->layoutId . '/untag', [
+            'tag' => [$tag]
+        ]);
+
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
         $layout->delete();
     }
 
@@ -693,8 +708,8 @@ class LayoutTest extends LocalWebTestCase
         $name = Random::generateString(8, 'phpunit');
         $layout = (new XiboLayout($this->getEntityProvider()))->create($name, 'phpunit description', '', $this->getResolutionId('landscape'));
         # Calculate layouts status
-        $this->client->get('/layout/status/' . $layout->layoutId);
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+        $response = $this->sendRequest('GET','/layout/status/' . $layout->layoutId);
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
     }
 
     /**
@@ -715,16 +730,14 @@ class LayoutTest extends LocalWebTestCase
         $nameCopy = Random::generateString(8, 'phpunit');
 
         // Call copy
-        $this->client->post('/layout/copy/' . $layout->layoutId, [
-                'name' => $nameCopy,
-                'description' => 'Copy',
-                'copyMediaFiles' => 1
-            ], [
-                'CONTENT_TYPE' => 'application/x-www-form-urlencoded'
-            ]);
+        $response = $this->sendRequest('POST','/layout/copy/' . $layout->layoutId, [
+            'name' => $nameCopy,
+            'description' => 'Copy',
+            'copyMediaFiles' => 1
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-        $this->assertSame(200, $this->client->response->status());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
 
@@ -766,15 +779,15 @@ class LayoutTest extends LocalWebTestCase
                     ]
                 ]);
 
-        $this->client->put('/region/position/all/' . $layout->layoutId, [
-                'regions' => $regionJson
-            ], [
-                'CONTENT_TYPE' => 'application/x-www-form-urlencoded'
-            ]);
+        $response = $this->sendRequest('PUT','/region/position/all/' . $layout->layoutId, [
+            'regions' => $regionJson
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
         # Check if successful
-        $this->assertSame(200, $this->client->response->status());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertSame(true, $object->success);
+        $this->assertSame(200, $object->status);
     }
 
     /**
@@ -806,14 +819,14 @@ class LayoutTest extends LocalWebTestCase
                     ]
                 ]);
 
-        $this->client->put('/region/position/all/' . $layout->layoutId, [
-                'regions' => $regionJson
-            ], [
-                'CONTENT_TYPE' => 'application/x-www-form-urlencoded'
-            ]);
+        $response = $this->sendRequest('PUT','/region/position/all/' . $layout->layoutId, [
+            'regions' => $regionJson
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
         # Check if it fails as expected 
-        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(422, $response->getStatusCode(), 'Expecting failure, received ' . $response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertSame(false, $object->success);
+        $this->assertSame(422, $object->httpStatus);
     }
 }

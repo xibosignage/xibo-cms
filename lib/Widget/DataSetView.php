@@ -25,8 +25,8 @@ use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\DataSetColumn;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DataSetView
@@ -365,7 +365,7 @@ class DataSetView extends ModuleWidget
         } else {
 
             // Columns
-            $columns = $sanitizedParams->getIntArray('dataSetColumnId');
+            $columns = $sanitizedParams->getIntArray('dataSetColumnId', ['default' => []]);
 
             if (count($columns) == 0) {
                 $this->setOption('columns', '');
@@ -405,8 +405,8 @@ class DataSetView extends ModuleWidget
             }
 
             // Order and Filter criteria
-            $orderClauses = $sanitizedParams->getArray('orderClause');
-            $orderClauseDirections = $sanitizedParams->getArray('orderClauseDirection');
+            $orderClauses = $sanitizedParams->getArray('orderClause', ['default' => []]);
+            $orderClauseDirections = $sanitizedParams->getArray('orderClauseDirection', ['default' => []]);
             $orderClauseMapping = [];
 
             $i = -1;
@@ -425,7 +425,7 @@ class DataSetView extends ModuleWidget
 
             $this->setOption('orderClauses', json_encode($orderClauseMapping));
 
-            $filterClauses = $sanitizedParams->getArray('filterClause');
+            $filterClauses = $sanitizedParams->getArray('filterClause', ['default' => []]);
             $filterClauseOperator = $sanitizedParams->getArray('filterClauseOperator');
             $filterClauseCriteria = $sanitizedParams->getArray('filterClauseCriteria');
             $filterClauseValue = $sanitizedParams->getArray('filterClauseValue');
@@ -565,6 +565,10 @@ class DataSetView extends ModuleWidget
      * Get the Data Set Table
      * @param int $displayId
      * @return array
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     private function dataSetTableHtml($displayId = 0)
     {

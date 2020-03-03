@@ -23,7 +23,6 @@
 
 namespace Xibo\XTR;
 use Psr\Container\ContainerInterface;
-use Slim\Helper\Set;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Task;
 use Xibo\Entity\User;

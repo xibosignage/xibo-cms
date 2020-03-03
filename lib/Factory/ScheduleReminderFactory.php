@@ -25,7 +25,7 @@ namespace Xibo\Factory;
 use Jenssegers\Date\Date;
 use Xibo\Entity\ScheduleReminder;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
@@ -115,7 +115,6 @@ class ScheduleReminderFactory extends BaseFactory
      * Get due reminders
      * @param Date $nextRunDate
      * @return array[ScheduleReminder]
-     * @throws NotFoundException
      */
     public function getDueReminders($nextRunDate)
     {

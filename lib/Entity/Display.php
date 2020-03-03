@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,10 +24,10 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Exception\DeadlockException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\DeadlockException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
@@ -642,7 +642,7 @@ class Display implements \JsonSerializable
     /**
      * Save
      * @param array $options
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function save($options = [])
     {
@@ -692,7 +692,7 @@ class Display implements \JsonSerializable
 
     /**
      * Delete
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function delete()
     {
@@ -871,7 +871,7 @@ class Display implements \JsonSerializable
      * Get the Settings Profile for this Display
      * @param array $options
      * @return array
-     * @throws \Xibo\Exception\XiboException
+     * @throws GeneralException
      */
     public function getSettings($options = [])
     {

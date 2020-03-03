@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -24,8 +25,8 @@ use Intervention\Image\ImageManagerStatic as Img;
 use Jenssegers\Date\Date;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Helper\Random;
 
 /**
@@ -267,7 +268,7 @@ class Soap4 extends Soap
      * @param string $hardwareKey Display Hardware Key
      * @return string $requiredXml Xml Formatted String
      * @throws \SoapFault
-     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function RequiredFiles($serverKey, $hardwareKey)
     {
@@ -284,10 +285,10 @@ class Soap4 extends Soap
      * @param int $chunkOffset The Offset of the Chunk Requested
      * @param string $chunkSize The Size of the Chunk Requested
      * @return mixed
-     * @throws NotFoundException
-     * @throws XiboException
      * @throws \SoapFault
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function GetFile($serverKey, $hardwareKey, $fileId, $fileType, $chunkOffset, $chunkSize)
     {
@@ -390,10 +391,11 @@ class Soap4 extends Soap
 
     /**
      * Returns the schedule for the hardware key specified
-     * @return string
      * @param string $serverKey
      * @param string $hardwareKey
+     * @return string
      * @throws \SoapFault
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function Schedule($serverKey, $hardwareKey)
     {
@@ -409,6 +411,7 @@ class Soap4 extends Soap
      * @param string $reason
      * @return bool
      * @throws \SoapFault
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason)
     {
@@ -417,11 +420,12 @@ class Soap4 extends Soap
 
     /**
      * Submit client logging
-     * @return bool
      * @param string $serverKey
      * @param string $hardwareKey
      * @param string $logXml
+     * @return bool
      * @throws \SoapFault
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function SubmitLog($serverKey, $hardwareKey, $logXml)
     {
@@ -430,11 +434,12 @@ class Soap4 extends Soap
 
     /**
      * Submit display statistics to the server
-     * @return bool
      * @param string $serverKey
      * @param string $hardwareKey
      * @param string $statXml
+     * @return bool
      * @throws \SoapFault
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function SubmitStats($serverKey, $hardwareKey, $statXml)
     {
@@ -448,6 +453,7 @@ class Soap4 extends Soap
      * @param string $inventory
      * @return bool
      * @throws \SoapFault
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function MediaInventory($serverKey, $hardwareKey, $inventory)
     {
@@ -462,8 +468,8 @@ class Soap4 extends Soap
      * @param string $regionId
      * @param string $mediaId
      * @return mixed
-     * @throws NotFoundException
      * @throws \SoapFault
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function GetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId)
     {
@@ -476,8 +482,9 @@ class Soap4 extends Soap
      * @param string $hardwareKey
      * @param string $status
      * @return bool
-     * @throws NotFoundException
      * @throws \SoapFault
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function NotifyStatus($serverKey, $hardwareKey, $status)
     {
@@ -593,7 +600,7 @@ class Soap4 extends Soap
         try {
             if (count($this->display->getChangedProperties()) > 0)
                 $this->display->save(Display::$saveOptionsMinimum);
-        } catch (XiboException $xiboException) {
+        } catch (GeneralException $xiboException) {
             $this->getLog()->error($xiboException->getMessage());
             throw new \SoapFault('Receiver', 'Unable to save status update');
         }
@@ -608,6 +615,8 @@ class Soap4 extends Soap
      * @param string $screenShot
      * @return bool
      * @throws \SoapFault
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function SubmitScreenShot($serverKey, $hardwareKey, $screenShot)
     {

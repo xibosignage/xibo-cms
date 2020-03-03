@@ -66,6 +66,7 @@ class State implements Middleware
      * @return Response
      * @throws InstanceSuspendedException
      * @throws UpgradePendingException
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function process(Request $request, RequestHandler $handler): Response
     {
@@ -748,7 +749,7 @@ class State implements Middleware
                     $c->get('pool'),
                     $c->get('store'),
                     $c->get('view'),
-                    $c->get('flash')
+                    $c
                 );
             },
             '\Xibo\Controller\Maintenance' => function(ContainerInterface $c) {

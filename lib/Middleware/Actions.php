@@ -31,11 +31,10 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
 use Slim\Routing\RouteContext;
 use Xibo\Entity\UserNotification;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\NotFoundException;
 use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\Environment;
 use Xibo\Helper\Translate;
+use Xibo\Support\Exception\AccessDeniedException;
 
 /**
  * Class Actions

@@ -24,8 +24,8 @@ namespace Xibo\XTR;
 use Xibo\Entity\Media;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Task;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlaylistFactory;
@@ -226,7 +226,7 @@ class DynamicPlaylistSyncTask implements TaskInterface
                     $this->log->debug('No differences detected');
                 }
 
-            } catch (XiboException $exception) {
+            } catch (GeneralException $exception) {
                 $this->log->debug($exception->getTraceAsString());
                 $this->log->error('Problem with PlaylistId: ' . $playlist->getId() . ', e = ' . $exception->getMessage());
                 $this->appendRunMessage('Error with Playlist: ' . $playlist->name);

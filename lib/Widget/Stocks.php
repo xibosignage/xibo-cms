@@ -23,10 +23,10 @@ namespace Xibo\Widget;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
 
 /**
  * Class Stocks
@@ -101,7 +101,7 @@ class Stocks extends AlphaVantageBase
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $apiKey = $sanitizedParams->getString('apiKey');
-        $cachePeriod = $sanitizedParams->getInt('cachePeriod', 14400);
+        $cachePeriod = $sanitizedParams->getInt('cachePeriod', ['default' => 14400]);
 
         if ($this->module->enabled != 0) {
             if ($apiKey == '')
@@ -374,7 +374,7 @@ class Stocks extends AlphaVantageBase
             }
         } catch (ConfigurationException $configurationException) {
             throw $configurationException;
-        } catch (XiboException $requestException) {
+        } catch (GeneralException $requestException) {
             $this->getLog()->error('Problem getting stock information. E = ' . $requestException->getMessage());
             $this->getLog()->debug($requestException->getTraceAsString());
 
@@ -523,6 +523,13 @@ class Stocks extends AlphaVantageBase
     public function getResource($displayId = 0)
     {        
         $data = [];
+
+        $mainTemplate = null;
+        $itemTemplate = null;
+        $styleSheet = null;
+        $widgetOriginalWidth = null;
+        $widgetOriginalHeight = null;
+        $maxItemsPerPage = null;
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';

@@ -27,9 +27,9 @@ use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Invalidation;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\GeneralException;
 
 /**
  * Class TwitterMetro
@@ -404,7 +404,7 @@ class TwitterMetro extends TwitterBase
      * @param int $displayId
      * @param bool $isPreview
      * @return array|false
-     * @throws XiboException
+     * @throws GeneralException
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
     protected function getTwitterFeed($displayId = 0, $isPreview = true)

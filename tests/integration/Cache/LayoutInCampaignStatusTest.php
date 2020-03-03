@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2017-18 Spring Signage Ltd
- * (LayoutInCampaignStatusTest.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -127,13 +142,13 @@ class LayoutInCampaignStatusTest extends LocalWebTestCase
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Pre-Display Status isnt as expected');
 
         // Publish (which builds)
-        $response = $this->client->put('/layout/publish/' . $this->layout->layoutId, [
+        $response = $this->sendRequest('PUT','/layout/publish/' . $this->layout->layoutId, [
             'publishNow' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-        $response = json_decode($response, true);
+        
+        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getStatusCode() . $response->getBody()->getContents());
 
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $this->client->response->status() . $this->client->response->body());
-
+        $response = json_decode($response->getBody(), true);
         $this->layout = $this->constructLayoutFromResponse($response['data']);
 
         // Check the Layout Status

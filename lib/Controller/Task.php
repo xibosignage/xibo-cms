@@ -22,12 +22,12 @@
 
 namespace Xibo\Controller;
 
+use Illuminate\Support\Str;
 use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
@@ -40,9 +40,9 @@ use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\XTR\TaskInterface;
 
 /**
@@ -107,6 +107,8 @@ class Task extends Base
      * @param MediaFactory $mediaFactory
      * @param NotificationFactory $notificationFactory
      * @param UserNotificationFactory $userNotificationFactory
+     * @param Twig $view
+     * @param ContainerInterface $container
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $pool, $taskFactory, $userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $mediaFactory, $notificationFactory, $userNotificationFactory, Twig $view, ContainerInterface $container)
     {
@@ -130,11 +132,8 @@ class Task extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function displayPage(Request $request, Response $response)
     {
@@ -148,11 +147,8 @@ class Task extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function grid(Request $request, Response $response)
     {
@@ -205,11 +201,8 @@ class Task extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function addForm(Request $request, Response $response)
     {
@@ -224,7 +217,7 @@ class Task extends Base
             // Add to the list of available tasks
             foreach ($files as $file) {
                 $config = json_decode(file_get_contents($file));
-                $config->file = str_replace_first(PROJECT_ROOT, '', $file);
+                $config->file = Str::replaceFirst(PROJECT_ROOT, '', $file);
 
                 $data['tasksAvailable'][] = $config;
             }
@@ -242,11 +235,9 @@ class Task extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     public function add(Request $request, Response $response)
     {
@@ -281,11 +272,8 @@ class Task extends Base
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function editForm(Request $request, Response $response, $id)
     {
@@ -306,11 +294,9 @@ class Task extends Base
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -355,11 +341,8 @@ class Task extends Base
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function deleteForm(Request $request, Response $response, $id)
     {
@@ -379,11 +362,8 @@ class Task extends Base
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function delete(Request $request, Response $response, $id)
     {
@@ -406,11 +386,8 @@ class Task extends Base
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function runNowForm(Request $request, Response $response, $id)
     {
@@ -430,11 +407,9 @@ class Task extends Base
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     public function runNow(Request $request, Response $response, $id)
     {
@@ -452,8 +427,14 @@ class Task extends Base
     }
 
     /**
-     * @param $taskId
-     * @throws \Exception
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     public function run(Request $request, Response $response, $id)
     {
@@ -526,6 +507,11 @@ class Task extends Base
      * Poll for tasks to run
      *  continue polling until there aren't any more to run
      *  allow for multiple polls to run at the same time
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function poll(Request $request, Response $response)
     {

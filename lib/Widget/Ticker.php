@@ -34,7 +34,7 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Invalidation;
 use Xibo\Controller\Library;
-use Xibo\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Helper\Environment;
 
 /**
@@ -549,7 +549,10 @@ class Ticker extends ModuleWidget
     /**
      * @param $text
      * @return array|mixed|null
-     * @throws \Xibo\Exception\ConfigurationException
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     private function getRssItems($text)
     {

@@ -35,8 +35,8 @@ use Slim\Http\Response as SlimResponse;
 use Slim\Http\ServerRequest as SlimRequest;
 use Slim\Routing\RouteContext;
 use Xibo\Entity\User;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Helper\ApplicationState;
 
 /**

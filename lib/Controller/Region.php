@@ -28,10 +28,10 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 use Xibo\Entity\Permission;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
@@ -128,12 +128,10 @@ class Region extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function editForm(Request $request, Response $response, $id)
     {
@@ -159,12 +157,10 @@ class Region extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function deleteForm(Request $request, Response $response, $id)
     {
@@ -189,14 +185,11 @@ class Region extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/region/{id}",
      *  operationId="regionAdd",
@@ -249,7 +242,6 @@ class Region extends Base
      *      )
      *  )
      * )
-     *
      */
     public function add(Request $request, Response $response, $id)
     {
@@ -323,14 +315,11 @@ class Region extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/region/{id}",
      *  operationId="regionEdit",
@@ -413,7 +402,6 @@ class Region extends Base
      *      @SWG\Schema(ref="#/definitions/Region")
      *  )
      * )
-     *
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -476,14 +464,11 @@ class Region extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Delete(
      *  path="/region/{regionId}",
      *  operationId="regionDelete",
@@ -502,7 +487,6 @@ class Region extends Base
      *      description="successful operation"
      *  )
      * )
-     *
      */
     public function delete(Request $request, Response $response, $id)
     {
@@ -534,14 +518,11 @@ class Region extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/region/position/all/{layoutId}",
      *  operationId="regionPositionAll",
@@ -571,7 +552,6 @@ class Region extends Base
      *      @SWG\Schema(ref="#/definitions/Layout")
      *  )
      * )
-     *
      */
     function positionAll(Request $request, Response $response, $id)
     {
@@ -591,31 +571,30 @@ class Region extends Base
         $regions = $request->getParam('regions', null);
 
         if ($regions == null) {
-            throw new \InvalidArgumentException(__('No regions present'));
+            throw new InvalidArgumentException(__('No regions present'));
         }
-
         $regions = json_decode($regions);
 
         // Go through each region and update the region in the layout we have
         foreach ($regions as $newCoordinates) {
-            $sanitizedParams = $this->getSanitizer($newCoordinates);
+            // TODO attempt to sanitize?
             // Check that the properties we are expecting do actually exist
             if (!property_exists($newCoordinates, 'regionid'))
-                throw new \InvalidArgumentException(__('Missing regionid property'));
+                throw new InvalidArgumentException(__('Missing regionid property'));
 
             if (!property_exists($newCoordinates, 'top'))
-                throw new \InvalidArgumentException(__('Missing top property'));
+                throw new InvalidArgumentException(__('Missing top property'));
 
             if (!property_exists($newCoordinates, 'left'))
-                throw new \InvalidArgumentException(__('Missing left property'));
+                throw new InvalidArgumentException(__('Missing left property'));
 
             if (!property_exists($newCoordinates, 'width'))
-                throw new \InvalidArgumentException(__('Missing width property'));
+                throw new InvalidArgumentException(__('Missing width property'));
 
             if (!property_exists($newCoordinates, 'height'))
-                throw new \InvalidArgumentException(__('Missing height property'));
+                throw new InvalidArgumentException(__('Missing height property'));
 
-            $regionId = $sanitizedParams->getInt($newCoordinates->regionid);
+            $regionId = $newCoordinates->regionid;
 
             // Load the region
             $region = $layout->getRegion($regionId);
@@ -626,10 +605,10 @@ class Region extends Base
             }
 
             // New coordinates
-            $region->top = $sanitizedParams->getDouble($newCoordinates->top);
-            $region->left = $sanitizedParams->getDouble($newCoordinates->left);
-            $region->width = $sanitizedParams->getDouble($newCoordinates->width);
-            $region->height = $sanitizedParams->getDouble($newCoordinates->height);
+            $region->top = $newCoordinates->top;
+            $region->left = $newCoordinates->left;
+            $region->width = $newCoordinates->width;
+            $region->height = $newCoordinates->height;
             $this->getLog()->debug('Set ' . $region);
         }
 
@@ -653,13 +632,8 @@ class Region extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws InvalidArgumentException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function preview(Request $request, Response $response, $id)
     {

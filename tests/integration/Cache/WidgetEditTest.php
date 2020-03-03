@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2017-18 Spring Signage Ltd
- * (WidgetEditTest.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -99,13 +114,13 @@ class WidgetEditTest extends LocalWebTestCase
     public function testInvalidateCache()
     {
         // Edit region
-        $this->client->put('/playlist/widget/' . $this->widget->widgetId, [
+        $response = $this->sendRequest('PUT','/playlist/widget/' . $this->widget->widgetId, [
             'text' => 'Edited Text',
             'duration' => 100,
             'useDuration' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-        $this->assertEquals(200, $this->client->response->status(), 'Transaction Status Incorrect');
+        $this->assertEquals(200, $response->getStatusCode(), 'Transaction Status Incorrect');
 
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
 

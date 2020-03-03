@@ -82,7 +82,7 @@ class LayoutProofOfPlayXMLMediaOffWidgetOffTest extends LocalWebTestCase
         $this->getLogger()->debug('Setup test for ' . get_class() .' Test');
 
         // Set global widget enable stat set to Off
-        self::$container->configService->changeSetting('WIDGET_STATS_ENABLED_DEFAULT', 'Off');
+        self::$container->get('configService')->changeSetting('WIDGET_STATS_ENABLED_DEFAULT', 'Off');
         $this->getStore()->commitIfNecessary();
 
         // Create a Layout with enableStat Off (by default)
@@ -198,7 +198,7 @@ class LayoutProofOfPlayXMLMediaOffWidgetOffTest extends LocalWebTestCase
         $this->media->deleteAssigned();
 
         // Set global widget enable stat set to Inherit
-        self::$container->configService->changeSetting('WIDGET_STATS_ENABLED_DEFAULT', 'Inherit');
+        self::$container->get('configService')->changeSetting('WIDGET_STATS_ENABLED_DEFAULT', 'Inherit');
         $this->getStore()->commitIfNecessary();
 
     }
@@ -236,10 +236,10 @@ class LayoutProofOfPlayXMLMediaOffWidgetOffTest extends LocalWebTestCase
     public function testLayoutOff()
     {
         // Publish layout
-        $response = $this->client->put('/layout/publish/' . $this->layoutOff->layoutId, [
+        $response = $this->sendRequest('PUT','/layout/publish/' . $this->layoutOff->layoutId, [
             'publishNow' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-        $response = json_decode($response, true);
+        $response = json_decode($response->getBody(), true);
 
         $this->layoutOff = $this->constructLayoutFromResponse($response['data']);
 
@@ -265,10 +265,10 @@ class LayoutProofOfPlayXMLMediaOffWidgetOffTest extends LocalWebTestCase
     {
 
         // Publish layout
-        $response = $this->client->put('/layout/publish/' . $this->layoutOn->layoutId, [
+        $response = $this->sendRequest('PUT','/layout/publish/' . $this->layoutOn->layoutId, [
             'publishNow' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-        $response = json_decode($response, true);
+        $response = json_decode($response->getBody(), true);
 
         $this->layoutOn = $this->constructLayoutFromResponse($response['data']);
 

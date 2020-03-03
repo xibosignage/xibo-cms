@@ -8,10 +8,10 @@ use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Event\LibraryReplaceEvent;
 use Xibo\Event\LibraryReplaceWidgetEvent;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\LibraryFullException;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\LibraryFullException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class XiboUploadHandler

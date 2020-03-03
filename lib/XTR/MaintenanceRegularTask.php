@@ -24,7 +24,7 @@
 namespace Xibo\XTR;
 use Xibo\Controller\Display;
 use Xibo\Controller\Library;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
@@ -373,7 +373,7 @@ class MaintenanceRegularTask implements TaskInterface
             try {
                 $playlist->setModuleFactory($this->moduleFactory);
                 $playlist->updateDuration();
-            } catch (XiboException $xiboException) {
+            } catch (GeneralException $xiboException) {
                 $this->log->error('Maintenance cannot update Playlist ' . $playlist->playlistId . ', ' . $xiboException->getMessage());
             }
         }
@@ -383,8 +383,7 @@ class MaintenanceRegularTask implements TaskInterface
 
     /**
      * Publish layouts with set publishedDate
-     * @throws \Xibo\Exception\NotFoundException
-     * @throws XiboException
+     * @throws GeneralException
      */
     private function publishLayouts()
     {
@@ -402,7 +401,7 @@ class MaintenanceRegularTask implements TaskInterface
                     try {
                         // check if draft is valid
                         if ($layout->status === ModuleWidget::$STATUS_INVALID && isset($layout->statusMessage)) {
-                            throw new XiboException(__($layout->statusMessage));
+                            throw new GeneralException(__($layout->statusMessage));
                         } else {
                             // publish the layout
                             $draft = $this->layoutFactory->getByParentId($layout->layoutId);
@@ -412,7 +411,7 @@ class MaintenanceRegularTask implements TaskInterface
 
                             $this->log->info('Published layout ID ' . $layout->layoutId . ' new layout id is ' . $draft->layoutId);
                         }
-                    } catch (XiboException $e) {
+                    } catch (GeneralException $e) {
                         $this->log->error('Error publishing layout ID ' . $layout->layoutId . ' Failed with message: ' . $e->getMessage());
 
                         // create a notification

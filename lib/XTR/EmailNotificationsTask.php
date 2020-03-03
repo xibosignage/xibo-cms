@@ -24,7 +24,7 @@
 namespace Xibo\XTR;
 
 
-use Slim\View;
+use Slim\Views\Twig;
 use Xibo\Entity\UserNotification;
 use Xibo\Factory\UserNotificationFactory;
 
@@ -36,7 +36,7 @@ class EmailNotificationsTask implements TaskInterface
 {
     use TaskTrait;
 
-    /** @var View */
+    /** @var Twig */
     private $view;
 
     /** @var UserNotificationFactory */
@@ -58,7 +58,9 @@ class EmailNotificationsTask implements TaskInterface
         $this->processQueue();
     }
 
-    /** Process Queue of emails */
+    /** Process Queue of emails
+     * @throws \PHPMailer\PHPMailer\Exception
+     */
     private function processQueue()
     {
         // Handle queue of notifications to email.
@@ -142,7 +144,7 @@ class EmailNotificationsTask implements TaskInterface
         ob_start();
 
         // Render the template
-        $this->view->display('email-template.twig', ['config' => $this->config, 'subject' => $subject, 'body' => $body]);
+        $this->view->fetch('email-template.twig', ['config' => $this->config, 'subject' => $subject, 'body' => $body]);
 
         $body = ob_get_contents();
 

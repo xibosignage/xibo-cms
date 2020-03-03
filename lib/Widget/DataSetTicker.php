@@ -25,8 +25,9 @@ use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\DataSetColumn;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DataSetTicker
@@ -73,7 +74,7 @@ class DataSetTicker extends ModuleWidget
     /**
      * Get Data Set Columns
      * @return \Xibo\Entity\DataSetColumn[]
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function dataSetColumns()
     {
@@ -104,7 +105,7 @@ class DataSetTicker extends ModuleWidget
     /**
      * Get Extra content for the form
      * @return array
-     * @throws \Xibo\Exception\XiboException
+     * @throws GeneralException
      */
     public function getExtra()
     {
@@ -397,8 +398,8 @@ class DataSetTicker extends ModuleWidget
             $this->setOption('useFilteringClause', $sanitizedParams->getCheckbox('useFilteringClause'));
 
             // Order and Filter criteria
-            $orderClauses = $sanitizedParams->getArray('orderClause');
-            $orderClauseDirections = $sanitizedParams->getArray('orderClauseDirection');
+            $orderClauses = $sanitizedParams->getArray('orderClause', ['default' => []]);
+            $orderClauseDirections = $sanitizedParams->getArray('orderClauseDirection', ['default' => []]);
             $orderClauseMapping = [];
 
             $i = -1;
@@ -417,7 +418,7 @@ class DataSetTicker extends ModuleWidget
 
             $this->setOption('orderClauses', json_encode($orderClauseMapping));
 
-            $filterClauses = $sanitizedParams->getArray('filterClause');
+            $filterClauses = $sanitizedParams->getArray('filterClause', ['default' => []]);
             $filterClauseOperator = $sanitizedParams->getArray('filterClauseOperator');
             $filterClauseCriteria = $sanitizedParams->getArray('filterClauseCriteria');
             $filterClauseValue = $sanitizedParams->getArray('filterClauseValue');
@@ -451,6 +452,8 @@ class DataSetTicker extends ModuleWidget
 
         // Save the widget
         $this->saveWidget();
+
+        return $response;
     }
 
     /** @inheritdoc */
@@ -598,6 +601,10 @@ class DataSetTicker extends ModuleWidget
      * @param $displayId
      * @param $text
      * @return array
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     private function getDataSetItems($displayId, $text)
     {
@@ -830,16 +837,8 @@ class DataSetTicker extends ModuleWidget
     public function isValid()
     {
         // Must have a duration
-        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0) {
             throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
-
-        // Validate Data Set Selected
-        if ($this->getOption('dataSetId') == 0)
-            throw new InvalidArgumentException(__('Please select a DataSet'), 'dataSetId');
-
-        // Check we have permission to use this DataSetId
-        if (!$this->getUser()->checkViewable($this->dataSetFactory->getById($this->getOption('dataSetId')))) {
-            throw new InvalidArgumentException(__('You do not have permission to use that dataset'), 'dataSetId');
         }
 
         if ($this->widget->widgetId != 0) {
@@ -860,15 +859,17 @@ class DataSetTicker extends ModuleWidget
         }
 
         // Make sure we have a number in here
-        if ($this->getOption('updateInterval') !== null && !v::intType()->min(0)->validate($this->getOption('updateInterval', 0)))
-            throw new InvalidArgumentException(__('Update Interval must be greater than or equal to 0'), 'updateInterval');
+        if ($this->getOption('updateInterval') !== null && !v::intType()->min(0)->validate($this->getOption('updateInterval', 0))) {
+            throw new InvalidArgumentException(__('Update Interval must be greater than or equal to 0'),
+                'updateInterval');
+        }
 
-        return self::$STATUS_VALID;
+        return ($this->hasDataSet()) ? self::$STATUS_VALID : self::$STATUS_INVALID;
     }
 
     /**
      * @inheritdoc
-     * @throws \Xibo\Exception\XiboException
+     * @throws GeneralException
      */
     public function getModifiedDate($displayId)
     {

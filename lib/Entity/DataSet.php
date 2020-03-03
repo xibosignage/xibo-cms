@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (DataSet.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -10,11 +25,11 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\DuplicateEntityException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\DuplicateEntityException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
@@ -212,8 +227,8 @@ class DataSet implements \JsonSerializable
     /** @var array Blacklist for SQL */
     private $blackList = array(';', 'INSERT', 'UPDATE', 'SELECT', 'DELETE', 'TRUNCATE', 'TABLE', 'FROM', 'WHERE');
 
-    /** @var  SanitizerService */
-    private $sanitizer;
+    /** @var  \Xibo\Helper\SanitizerService */
+    private $sanitizerService;
 
     /** @var  ConfigServiceInterface */
     private $config;
@@ -240,7 +255,7 @@ class DataSet implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerInterface $sanitizer
+     * @param $sanitizerService
      * @param ConfigServiceInterface $config
      * @param PoolInterface $pool
      * @param DataSetFactory $dataSetFactory
@@ -249,10 +264,10 @@ class DataSet implements \JsonSerializable
      * @param DisplayFactory $displayFactory
      * @param DateServiceInterface $date
      */
-    public function __construct($store, $log, $sanitizer, $config, $pool, $dataSetFactory, $dataSetColumnFactory, $permissionFactory, $displayFactory, $date)
+    public function __construct($store, $log, $sanitizerService, $config, $pool, $dataSetFactory, $dataSetColumnFactory, $permissionFactory, $displayFactory, $date)
     {
         $this->setCommonDependencies($store, $log);
-        $this->sanitizer = $sanitizer;
+        $this->sanitizerService = $sanitizerService;
         $this->config = $config;
         $this->pool = $pool;
         $this->dataSetFactory = $dataSetFactory;
@@ -260,6 +275,15 @@ class DataSet implements \JsonSerializable
         $this->permissionFactory = $permissionFactory;
         $this->displayFactory = $displayFactory;
         $this->date = $date;
+    }
+
+    /**
+     * @param $array
+     * @return \Xibo\Support\Sanitizer\SanitizerInterface
+     */
+    protected function getSanitizer($array)
+    {
+        return $this->sanitizerService->getSanitizer($array);
     }
 
     /**
@@ -394,11 +418,14 @@ class DataSet implements \JsonSerializable
      */
     public function getData($filterBy = [], $options = [])
     {
-        $start = $this->sanitizer->getInt('start', ['default' => 0]);
-        $size = $this->sanitizer->getInt('size', ['default' => 0]);
-        $filter = $this->sanitizer->getString('filter');
-        $ordering = $this->sanitizer->getString('order');
-        $displayId = $this->sanitizer->getInt('displayId', ['default' => 0]);
+
+        $sanitizer = $this->getSanitizer($filterBy);
+
+        $start = $sanitizer->getInt('start', ['default' => 0]);
+        $size = $sanitizer->getInt('size', ['default' => 0]);
+        $filter = $sanitizer->getString('filter');
+        $ordering = $sanitizer->getString('order');
+        $displayId = $sanitizer->getInt('displayId', ['default' => 0]);
 
         $options = array_merge([
             'includeFormulaColumns' => true,
@@ -472,9 +499,9 @@ class DataSet implements \JsonSerializable
 
         // Filter by ID
         if (
-            $this->sanitizer->getInt('id', $filterBy) !== null) {
+            $sanitizer->getInt('id') !== null) {
             $body .= ' AND id = :id ';
-            $params['id'] = $this->sanitizer->getInt('id', $filterBy);
+            $params['id'] = $sanitizer->getInt('id');
         }
 
         // Ordering
@@ -956,7 +983,7 @@ class DataSet implements \JsonSerializable
 
     /**
      * Rebuild the dataSet table
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function rebuild()
     {
@@ -1016,7 +1043,7 @@ class DataSet implements \JsonSerializable
      */
     public function editRow($rowId, $row)
     {
-        $this->getLog()->debug('Editing row %s', var_export($row, true));
+        $this->getLog()->debug(sprintf('Editing row %s', var_export($row, true)));
 
         // Update the last edit date on this dataSet
         $this->lastDataEdit = time();

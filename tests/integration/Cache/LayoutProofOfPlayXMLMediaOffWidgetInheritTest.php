@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -229,10 +229,10 @@ class LayoutProofOfPlayXMLMediaOffWidgetInheritTest extends LocalWebTestCase
     public function testLayoutOff()
     {
         // Publish layout
-        $response = $this->client->put('/layout/publish/' . $this->layoutOff->layoutId, [
+        $response = $this->sendRequest('PUT','/layout/publish/' . $this->layoutOff->layoutId, [
             'publishNow' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-        $response = json_decode($response, true);
+        $response = json_decode($response->getBody(), true);
 
         $this->layoutOff = $this->constructLayoutFromResponse($response['data']);
 
@@ -257,10 +257,10 @@ class LayoutProofOfPlayXMLMediaOffWidgetInheritTest extends LocalWebTestCase
     public function testLayoutOn()
     {
         // Publish layout
-        $response = $this->client->put('/layout/publish/' . $this->layoutOn->layoutId, [
+        $response = $this->sendRequest('PUT','/layout/publish/' . $this->layoutOn->layoutId, [
             'publishNow' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-        $response = json_decode($response, true);
+        $response = json_decode($response->getBody(), true);
 
         $this->layoutOn = $this->constructLayoutFromResponse($response['data']);
 

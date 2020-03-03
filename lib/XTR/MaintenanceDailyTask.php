@@ -23,7 +23,7 @@
 
 namespace Xibo\XTR;
 use Xibo\Controller\Library;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\UserFactory;
 
@@ -115,7 +115,7 @@ class MaintenanceDailyTask implements TaskInterface
 
     /**
      * Import Layouts
-     * @throws XiboException
+     * @throws GeneralException
      */
     private function importLayouts()
     {

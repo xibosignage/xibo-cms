@@ -25,7 +25,7 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\DataSetRss;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -82,10 +82,12 @@ class DataSetRssFactory extends BaseFactory
 
         return $feeds[0];
     }
+
     /**
      * @param $sortOrder
      * @param $filterBy
      * @return DataSetRss[]
+     * @throws NotFoundException
      */
     public function query($sortOrder, $filterBy)
     {

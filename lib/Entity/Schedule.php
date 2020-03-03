@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,10 +24,10 @@ namespace Xibo\Entity;
 use Jenssegers\Date\Date;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
@@ -406,7 +406,7 @@ class Schedule implements \JsonSerializable
     /**
      * Are the provided dates within the schedule look ahead
      * @return bool
-     * @throws XiboException
+     * @throws GeneralException
      */
     private function inScheduleLookAhead()
     {
@@ -445,6 +445,8 @@ class Schedule implements \JsonSerializable
 
     /**
      * Load
+     * @param array $options
+     * @throws NotFoundException
      */
     public function load($options = [])
     {
@@ -470,6 +472,7 @@ class Schedule implements \JsonSerializable
     /**
      * Assign DisplayGroup
      * @param DisplayGroup $displayGroup
+     * @throws NotFoundException
      */
     public function assignDisplayGroup($displayGroup)
     {
@@ -482,6 +485,7 @@ class Schedule implements \JsonSerializable
     /**
      * Unassign DisplayGroup
      * @param DisplayGroup $displayGroup
+     * @throws NotFoundException
      */
     public function unassignDisplayGroup($displayGroup)
     {
@@ -498,7 +502,7 @@ class Schedule implements \JsonSerializable
 
     /**
      * Validate
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function validate()
     {
@@ -570,7 +574,7 @@ class Schedule implements \JsonSerializable
     /**
      * Save
      * @param array $options
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function save($options = [])
     {
@@ -620,6 +624,7 @@ class Schedule implements \JsonSerializable
                 $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify ' . count($this->displayGroups) . ' display groups');
                 foreach ($this->displayGroups as $displayGroup) {
                     /* @var DisplayGroup $displayGroup */
+                    $this->getLog()->debug('ABOUT TO NOTIFY DISPLAY GROUP ID ' . $displayGroup->displayGroupId . ' name ' .  $displayGroup->displayGroup . ' display specific? ' . $displayGroup->isDisplaySpecific);
                     $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
                 }
             } else {
@@ -772,7 +777,10 @@ class Schedule implements \JsonSerializable
      * @param Date $fromDt
      * @param Date $toDt
      * @return ScheduleEvent[]
-     * @throws XiboException
+     * @throws ConfigurationException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
     public function getEvents($fromDt, $toDt)
     {
@@ -881,7 +889,7 @@ class Schedule implements \JsonSerializable
      * @param Date $generateFromDt
      * @param Date $start
      * @param Date $end
-     * @throws XiboException
+     * @throws GeneralException
      */
     private function generateMonth($generateFromDt, $start, $end)
     {
@@ -1159,7 +1167,7 @@ class Schedule implements \JsonSerializable
      * Calculate the DayPart times
      * @param Date $start
      * @param Date $end
-     * @throws XiboException
+     * @throws GeneralException
      */
     private function calculateDayPartTimes($start, $end)
     {
@@ -1268,7 +1276,7 @@ class Schedule implements \JsonSerializable
     /**
      * Is this event an always daypart event
      * @return bool
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws NotFoundException
      */
     public function isAlwaysDayPart()
     {
@@ -1280,7 +1288,7 @@ class Schedule implements \JsonSerializable
     /**
      * Is this event a custom daypart event
      * @return bool
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws NotFoundException
      */
     public function isCustomDayPart()
     {
@@ -1295,8 +1303,10 @@ class Schedule implements \JsonSerializable
      * @param ScheduleReminder $reminder
      * @param int $remindSeconds
      * @return int|null
+     * @throws ConfigurationException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
      */
     public function getNextReminderDate($now, $reminder, $remindSeconds) {
 
@@ -1375,7 +1385,7 @@ class Schedule implements \JsonSerializable
     /**
      * Get event title
      * @return string
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function getEventTitle() {
 
