@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -41,30 +41,51 @@ class AddPlaylistDashboardPageUserMigration extends AbstractMigration
         $libraryPageId = $result['pageId'];
 
         // Create playlist dashboard page
-        $this->execute(
-            'INSERT INTO `pages` SET `name`=\'playlistdashboard\', `title`= \'Playlist Dashboard\', `asHome`=1;
-                   ');
+        $this->execute('
+            INSERT INTO `pages` 
+                SET `name`=\'playlistdashboard\', `title`= \'Playlist Dashboard\', `asHome`=1;
+        ');
+
         // Get playlist dashboard pageId
         $playlistDashboardPageId = $this->getAdapter()->getConnection()->lastInsertId();
 
         // Create playlist dashboard user group
-        $this->execute(
-            'INSERT INTO `group` SET `group`=\'Playlist Dashboard User\', `isUserSpecific`= 0, `isEveryone`= 0, `isSystemNotification`= 0;
-                   ');
+        $this->execute('
+            INSERT INTO `group` 
+                SET `group`=\'Playlist Dashboard User\', `isUserSpecific`= 0, `isEveryone`= 0, `isSystemNotification`= 0;
+        ');
+
         // Get playlist dashboard user groupId
         $groupId = $this->getAdapter()->getConnection()->lastInsertId();
 
         // Set Permission for playlist dashboard user group
-        // Set Playlist Dashboard Page Permission
-        $this->execute('INSERT INTO `permission` (`entityId`, `groupId`, `objectId`, `view`) SELECT  '.$pageEntityId.', '.$groupId.', '.$playlistDashboardPageId.', 1');
-
-        // Set Library Page Permission
-        $this->execute('INSERT INTO `permission` (`entityId`, `groupId`, `objectId`, `view`) SELECT  '.$pageEntityId.', '.$groupId.', '.$libraryPageId.', 1');
-
-        // Set Users Page Permission
-        $this->execute('INSERT INTO `permission` (`entityId`, `groupId`, `objectId`, `view`) SELECT  '.$pageEntityId.', '.$groupId.', '.$userPageId.', 1');
-
-
+        $permission = $this->table('permission');
+        $permission->insert([
+            [
+                'entityId' => $pageEntityId,
+                'groupId' => $groupId,
+                'objectId' => $playlistDashboardPageId,
+                'view' => 1,
+                'edit' => 0,
+                'delete' => 0
+            ],
+            [
+                'entityId' => $pageEntityId,
+                'groupId' => $groupId,
+                'objectId' => $libraryPageId,
+                'view' => 1,
+                'edit' => 0,
+                'delete' => 0
+            ],
+            [
+                'entityId' => $pageEntityId,
+                'groupId' => $groupId,
+                'objectId' => $userPageId,
+                'view' => 1,
+                'edit' => 0,
+                'delete' => 0
+            ],
+        ])->save();
     }
 }
 

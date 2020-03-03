@@ -304,6 +304,10 @@ $loading-overlay-z-index: 2000;
     @extend .fa-sitemap;
 }
 
+.module-icon-worldclock {
+    @extend .fa-globe;
+}
+
 /* Tools icons */
 .tool-icon-region {
     @extend .fa-clone;

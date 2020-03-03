@@ -91,7 +91,7 @@ class ApiClientStorage implements ClientRepositoryInterface
 
         $result = $this->getStore()->select($sql, $params);
 
-        if ($result[0] === null) {
+        if (count($result) <= 0) {
             $this->getLogger()->debug('Unable to find ' . $clientIdentifier);
             return null;
         }
@@ -110,7 +110,7 @@ class ApiClientStorage implements ClientRepositoryInterface
     {
 
         $client = $this->getClientEntity($clientIdentifier);
-        $this->getLogger()->debug('validateClient for ' . $clientIdentifier . ' secret ' . $clientSecret . ' and hash ' . $client->getHash());
+        $this->getLogger()->debug('validateClient for ' . $clientIdentifier . ' secret ' . $clientSecret);
 
         if ($client === null) {
             return false;

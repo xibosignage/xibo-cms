@@ -52,7 +52,7 @@
                 </button>
             </div>
 
-            <div class="xibo-calendar-controls dropdown pull-right pagedSelect">
+            <div class="xibo-calendar-controls dropdown pull-right">
                 {# Campaign / Layout list. We want to build two arrays for us to use. #}
                 {% set title %}{% trans "Layout / Campaign" %}{% endset %}
                 {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
@@ -69,7 +69,7 @@
                 </select>
             </div>
 
-            <div class="xibo-calendar-controls dropdown pull-right pagedSelect">
+            <div class="xibo-calendar-controls dropdown pull-right">
                 <select id="DisplayList" class="form-control" name="displayGroupIds[]"
                         data-width="150px"
                         data-placeholder="{% trans "Displays" %}"

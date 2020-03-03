@@ -5,7 +5,8 @@ const templates = {
     subPlaylistFormTemplate: require('../templates/form-helpers-sub-playlist-form.hbs'),
     twittermetroColorsTemplate: require('../templates/form-helpers-twitter-metro-colors.hbs'),
     chartColorsTemplate: require('../templates/form-helpers-chart-colors.hbs'),
-    chartGraphConfigTemplate: require('../templates/form-helpers-chart-graph-config.hbs')
+    chartGraphConfigTemplate: require('../templates/form-helpers-chart-graph-config.hbs'),
+    worldClockTemplate: require('../templates/form-helpers-world-clock.hbs')
 };
 
 let formHelpers = function() {

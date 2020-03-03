@@ -52,6 +52,7 @@ RUN apk update && apk upgrade && apk add tar \
     apache2 \
     ca-certificates \
     tzdata \
+    openssl \
     && rm -rf /var/cache/apk/*
 
 RUN apk add --no-cache build-base php7-dev php7-pear openssl-dev \
@@ -94,12 +95,16 @@ ENV CMS_DEV_MODE=true \
     CMS_PHP_UPLOAD_MAX_FILESIZE=2G \
     CMS_PHP_MAX_EXECUTION_TIME=300 \
     CMS_PHP_MEMORY_LIMIT=256M \
+    CMS_PHP_COOKIE_SECURE=Off \
+    CMS_PHP_COOKIE_HTTP_ONLY=On \
+    CMS_PHP_COOKIE_SAMESITE=Lax \
     CMS_APACHE_START_SERVERS=2 \
     CMS_APACHE_MIN_SPARE_SERVERS=5 \
     CMS_APACHE_MAX_SPARE_SERVERS=10 \
     CMS_APACHE_MAX_REQUEST_WORKERS=60 \
     CMS_APACHE_MAX_CONNECTIONS_PER_CHILD=300 \
     CMS_APACHE_TIMEOUT=30 \
+    CMS_APACHE_OPTIONS_INDEXES=false \
     CMS_QUICK_CHART_URL=http://quickchart:3400 \
     XTR_ENABLED=false
 

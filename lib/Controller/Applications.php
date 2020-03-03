@@ -220,7 +220,7 @@ class Applications extends Base
         /** @var AuthorizationRequest $authRequest */
         $authRequest = $this->session->get('authParams');
 
-        $apiKeyPaths = $this->getConfig()->apiKeyPaths;
+        $apiKeyPaths = $this->getConfig()->getApiKeyDetails();
 
         $privateKey = $apiKeyPaths['privateKeyPath'];
         $encryptionKey = $apiKeyPaths['publicKeyPath'];
