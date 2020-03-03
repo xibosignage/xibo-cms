@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,7 +22,7 @@
 
 namespace Xibo\Entity;
 use Respect\Validation\Validator as v;
-use Xibo\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -78,6 +78,7 @@ class ReportSchedule implements \JsonSerializable
     /**
      * Save
      * @param array $options
+     * @throws InvalidArgumentException
      */
     public function save($options = [])
     {

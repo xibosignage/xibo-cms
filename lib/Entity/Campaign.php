@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (Campaign.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -23,9 +24,9 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
@@ -201,7 +202,7 @@ class Campaign implements \JsonSerializable
 
     /**
      * @param array $options
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws NotFoundException
      */
     public function load($options = [])
     {
@@ -348,6 +349,7 @@ class Campaign implements \JsonSerializable
      * Save this Campaign
      * @param array $options
      * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function save($options = [])
     {
@@ -406,7 +408,9 @@ class Campaign implements \JsonSerializable
 
     /**
      * Delete Campaign
+     * @throws InvalidArgumentException
      * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function delete()
     {
@@ -533,7 +537,7 @@ class Campaign implements \JsonSerializable
      * Is the provided layout already assigned to this campaign
      * @param Layout $checkLayout
      * @return bool
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function isLayoutAssigned($checkLayout)
     {

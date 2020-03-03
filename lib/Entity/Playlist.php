@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,9 +22,10 @@
 namespace Xibo\Entity;
 
 
-use Xibo\Exception\DuplicateEntityException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\DuplicateEntityException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
@@ -278,6 +279,7 @@ class Playlist implements \JsonSerializable
     /**
      * Sets the Owner
      * @param int $ownerId
+     * @throws NotFoundException
      */
     public function setOwner($ownerId)
     {
@@ -302,6 +304,7 @@ class Playlist implements \JsonSerializable
     /**
      * Validate this playlist
      * @throws DuplicateEntityException
+     * @throws NotFoundException
      */
     public function validate()
     {
@@ -398,6 +401,7 @@ class Playlist implements \JsonSerializable
     /**
      * @param Widget $widget
      * @param int $displayOrder
+     * @throws NotFoundException
      */
     public function assignWidget($widget, $displayOrder = null)
     {
@@ -431,7 +435,8 @@ class Playlist implements \JsonSerializable
      * @param Widget $widget
      * @param array $options Delete Options
      * @return $this
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
     public function deleteWidget($widget, $options = [])
     {
@@ -484,6 +489,7 @@ class Playlist implements \JsonSerializable
      * Unassign tag
      * @param Tag $tag
      * @return $this
+     * @throws NotFoundException
      */
     public function unassignTag($tag)
     {
@@ -506,6 +512,7 @@ class Playlist implements \JsonSerializable
      * Load
      * @param array $loadOptions
      * @return $this
+     * @throws NotFoundException
      */
     public function load($loadOptions = [])
     {
@@ -547,8 +554,9 @@ class Playlist implements \JsonSerializable
     /**
      * Save
      * @param array $options
-     * @throws \Xibo\Exception\DuplicateEntityException
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws DuplicateEntityException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
     public function save($options = [])
     {
@@ -659,7 +667,9 @@ class Playlist implements \JsonSerializable
     /**
      * Delete
      * @param array $options
+     * @throws DuplicateEntityException
      * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
     public function delete($options = [])
     {
@@ -848,8 +858,8 @@ class Playlist implements \JsonSerializable
      * @param int $parentWidgetId this tracks the top level widgetId
      * @param bool $expandSubplaylists
      * @return Widget[]
-     * @throws InvalidArgumentException
      * @throws NotFoundException
+     * @throws GeneralException
      */
     public function expandWidgets($parentWidgetId = 0, $expandSubplaylists = true)
     {
@@ -892,8 +902,10 @@ class Playlist implements \JsonSerializable
      *  we should edit this playlist duration (noting the delta) and then find all Playlists of which this is
      *  a sub-playlist and update their durations also (cascade upward)
      * @return $this
+     * @throws DuplicateEntityException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Exception\DuplicateEntityException
      */
     public function updateDuration()
     {

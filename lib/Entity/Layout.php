@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -23,10 +24,6 @@ namespace Xibo\Entity;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\LayoutBuildEvent;
 use Xibo\Event\LayoutBuildRegionEvent;
-use Xibo\Exception\DuplicateEntityException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\LayoutFactory;
@@ -41,6 +38,10 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\DuplicateEntityException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\ModuleWidget;
 
 /**
@@ -342,6 +343,7 @@ class Layout implements \JsonSerializable
      * @param LayoutFactory $layoutFactory
      * @param MediaFactory $mediaFactory
      * @param ModuleFactory $moduleFactory
+     * @param $playlistFactory
      */
     public function __construct($store, $log, $config, $date, $eventDispatcher, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory, $playlistFactory)
     {
@@ -419,6 +421,8 @@ class Layout implements \JsonSerializable
      * Sets the Owner of the Layout (including children)
      * @param int $ownerId
      * @param bool $cascade Cascade ownership change down to Playlist records
+     * @throws GeneralException
+     * @throws NotFoundException
      */
     public function setOwner($ownerId, $cascade = false)
     {
@@ -529,7 +533,7 @@ class Layout implements \JsonSerializable
     /**
      * Load this Layout
      * @param array $options
-     * @throws XiboException
+     * @throws NotFoundException
      */
     public function load($options = [])
     {
@@ -543,25 +547,29 @@ class Layout implements \JsonSerializable
         if ($this->loaded || $this->layoutId == 0)
             return;
 
-        $this->getLog()->debug('Loading Layout %d with options %s', $this->layoutId, json_encode($options));
+        $this->getLog()->debug(sprintf('Loading Layout %d with options %s', $this->layoutId, json_encode($options)));
 
         // Load permissions
-        if ($options['loadPermissions'])
+        if ($options['loadPermissions']) {
             $this->permissions = $this->permissionFactory->getByObjectId('Xibo\\Entity\\Campaign', $this->campaignId);
+        }
 
         // Load all regions
         $this->regions = $this->regionFactory->getByLayoutId($this->layoutId);
 
-        if ($options['loadPlaylists'])
+        if ($options['loadPlaylists']) {
             $this->loadPlaylists($options);
+        }
 
         // Load all tags
-        if ($options['loadTags'])
+        if ($options['loadTags']) {
             $this->tags = $this->tagFactory->loadByLayoutId($this->layoutId);
+        }
 
         // Load Campaigns
-        if ($options['loadCampaigns'])
+        if ($options['loadCampaigns']) {
             $this->campaigns = $this->campaignFactory->getByLayoutId($this->layoutId);
+        }
 
         // Set the hash
         $this->hash = $this->hash();
@@ -573,7 +581,7 @@ class Layout implements \JsonSerializable
     /**
      * Load Playlists
      * @param array $options
-     * @throws XiboException
+     * @throws NotFoundException
      */
     public function loadPlaylists($options = [])
     {
@@ -586,7 +594,7 @@ class Layout implements \JsonSerializable
     /**
      * Save this Layout
      * @param array $options
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function save($options = [])
     {
@@ -685,7 +693,7 @@ class Layout implements \JsonSerializable
     /**
      * Delete Layout
      * @param array $options
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function delete($options = [])
     {
@@ -779,7 +787,7 @@ class Layout implements \JsonSerializable
 
     /**
      * Validate this layout
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function validate()
     {
@@ -818,6 +826,7 @@ class Layout implements \JsonSerializable
      * Does the layout have the provided tag?
      * @param $searchTag
      * @return bool
+     * @throws NotFoundException
      */
     public function hasTag($searchTag)
     {
@@ -836,6 +845,7 @@ class Layout implements \JsonSerializable
      * Assign Tag
      * @param Tag $tag
      * @return $this
+     * @throws NotFoundException
      */
     public function assignTag($tag)
     {
@@ -879,7 +889,7 @@ class Layout implements \JsonSerializable
      *  it preserves the current state of widgets before they are removed from the database
      *  that can then be used for proof of play stats, to get back to the original widget name/type and mediaId
      * @param \Xibo\Entity\Layout $parent
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws NotFoundException
      */
     private function addWidgetHistory($parent)
     {
@@ -928,7 +938,7 @@ class Layout implements \JsonSerializable
      * @param Tag $tag
      * @return $this
      * @throws NotFoundException
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function unassignTag($tag)
     {
@@ -976,9 +986,8 @@ class Layout implements \JsonSerializable
     /**
      * Export the Layout as its XLF
      * @return string
-     * @throws InvalidArgumentException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws XiboException
      */
     public function toXlf()
     {
@@ -1080,7 +1089,7 @@ class Layout implements \JsonSerializable
                     if ($module->hasStatusMessage()) {
                         $this->pushStatusMessage($module->getStatusMessage());
                     }
-                } catch (XiboException $xiboException) {
+                } catch (GeneralException $xiboException) {
                     $moduleStatus = ModuleWidget::$STATUS_INVALID;
 
                     // Include the exception on
@@ -1349,8 +1358,11 @@ class Layout implements \JsonSerializable
      * @param DataSetFactory $dataSetFactory
      * @param string $fileName
      * @param array $options
+     * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws XiboException
+     * @throws NotFoundException
+     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws \Xibo\Exception\NotFoundException
      */
     public function toZip($dataSetFactory, $fileName, $options = [])
     {
@@ -1533,7 +1545,7 @@ class Layout implements \JsonSerializable
      * @return string the path
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function xlfToDisk($options = [])
     {
@@ -1631,7 +1643,9 @@ class Layout implements \JsonSerializable
 
     /**
      * Publish the Draft
-     * @throws XiboException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
     public function publishDraft()
     {
@@ -1745,7 +1759,7 @@ class Layout implements \JsonSerializable
 
     /**
      * Discard the Draft
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function discardDraft()
     {
@@ -1772,7 +1786,7 @@ class Layout implements \JsonSerializable
 
     /**
      * Add
-     * @throws XiboException
+     * @throws GeneralException
      */
     private function add()
     {
@@ -1842,7 +1856,7 @@ class Layout implements \JsonSerializable
     /**
      * Update
      * @param array $options
-     * @throws XiboException
+     * @throws GeneralException
      */
     private function update($options = [])
     {

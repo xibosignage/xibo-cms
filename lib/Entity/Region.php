@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (Region.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,9 +23,9 @@
 namespace Xibo\Entity;
 
 
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
@@ -229,7 +230,7 @@ class Region implements \JsonSerializable
      * Sets the Owner
      * @param int $ownerId
      * @param bool $cascade Cascade ownership change down to Playlist records
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function setOwner($ownerId, $cascade = false)
     {
@@ -247,7 +248,7 @@ class Region implements \JsonSerializable
      * Get Option
      * @param string $option
      * @return RegionOption
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function getOption($option)
     {
@@ -269,7 +270,7 @@ class Region implements \JsonSerializable
      * @param string $option
      * @param mixed $default
      * @return mixed
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function getOptionValue($option, $default = null)
     {
@@ -288,7 +289,7 @@ class Region implements \JsonSerializable
      * Set Region Option Value
      * @param string $option
      * @param mixed $value
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function setOptionValue($option, $value)
     {
@@ -303,7 +304,7 @@ class Region implements \JsonSerializable
     /**
      * @param array $options
      * @return Playlist
-     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function getPlaylist($options = [])
     {
@@ -317,7 +318,7 @@ class Region implements \JsonSerializable
     /**
      * Load
      * @param array $options
-     * @throws XiboException
+     * @throws NotFoundException
      */
     public function load($options = [])
     {
@@ -362,7 +363,7 @@ class Region implements \JsonSerializable
     /**
      * Save
      * @param array $options
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function save($options = [])
     {
@@ -446,7 +447,7 @@ class Region implements \JsonSerializable
     /**
      * Delete Region
      * @param array $options
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function delete($options = [])
     {
