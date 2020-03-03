@@ -1,8 +1,23 @@
 {#
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015-2018 Spring Signage Ltd
- * (upgrade-in-progress-page.twig)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
 <!DOCTYPE html>
@@ -17,7 +32,7 @@
 
     <script src="{{ theme.rootUri() }}dist/style.bundle.min.js"></script>
 
-    <!-- Copyright 2006-2018 Spring Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
+    <!-- Copyright 2020 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
     <style type="text/css">
         body {
             padding-top: 40px;
@@ -49,13 +64,16 @@
             margin-bottom: 15px;
             padding: 7px 9px;
         }
+        .login-logo {
+            width: 200px;
+        }
 
     </style>
 </head>
 <body>
 <div class="container">
     <div class="form-signin text-center" action="{{ urlFor("login") }}">
-        <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img src="{{ theme.uri("img/xibologo.png") }}"></a></p>
+        <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ theme.uri("img/xibologo.png") }}"></a></p>
         <h3>{% trans "Configuration Problem" %}</h3>
         <p>
             {{ flash.globalError }}
