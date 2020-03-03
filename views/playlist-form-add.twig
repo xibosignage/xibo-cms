@@ -94,6 +94,9 @@
                         {% set title %}{% trans "Enable Playlist Stats Collection?" %}{% endset %}
                         {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Playlist. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
 
+                        {% set message %}{% trans "If you want to prepopulate your Playlist with Media using a search, then you can do so on the filter tab. Leave the Dynamic checkbox unticked to make it a one-time assignment." %}{% endset %}
+                        {{ forms.alert(message, "info") }}
+                        
                         {% set offOption %}{% trans "Off" %}{% endset %}
                         {% set onOption %}{% trans "On" %}{% endset %}
                         {% set inheritOption %}{% trans "Inherit" %}{% endset %}
@@ -103,9 +106,6 @@
                             { id: "Inherit", value: inheritOption }
                         ] %}
                         {{ forms.dropdown("enableStat", "single", title, theme.getSetting("PLAYLIST_STATS_ENABLED_DEFAULT"), options, "id", "value", helpText) }}
-
-                        {% set message %}{% trans "If you want to prepopulate your Playlist with Media using a search, then you can do so on the filter tab. Leave the Dynamic checkbox unticked to make it a one-time assignment." %}{% endset %}
-                        {{ forms.message(message) }}
                     </div>
                     <div class="tab-pane" id="populate">
                         <div class="dynamic-message">
