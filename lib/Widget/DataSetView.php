@@ -534,6 +534,11 @@ class DataSetView extends ModuleWidget
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
         $headContent .= '<style type="text/css">' . $styleSheet . '</style>';
 
+        // If we are going to cycle between pages, make sure we hide all of the tables initially.
+        if ($rowsPerPage > 0) {
+            $headContent .= '<style type="text/css">table.DataSetTable {visibility:hidden;}</style>';
+        }
+
         $data['head'] = $headContent;
         $data['body'] = $table['html'];
 
