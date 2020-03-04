@@ -236,7 +236,6 @@ class Playlist implements \JsonSerializable
         $this->playlistId = null;
         $this->regionId = null;
         $this->permissions = [];
-        $this->tags = [];
 
         $this->widgets = array_map(function ($object) { return clone $object; }, $this->widgets);
     }
