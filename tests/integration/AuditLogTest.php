@@ -52,8 +52,6 @@ class AuditLogTest extends \Xibo\Tests\LocalWebTestCase
     }
 
     /**
-     * // TODO outouts the response to browser/system output.
-     * @group broken
      */
     public function testExport()
     {

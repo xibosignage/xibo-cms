@@ -346,8 +346,6 @@ class StatisticsTest extends LocalWebTestCase
 
     /**
      * Check if proof of play statistics can be exported
-     * // TODO outouts the response to browser/system output.
-  	 * @group broken
      */
     public function testExport()
     {
@@ -370,8 +368,7 @@ class StatisticsTest extends LocalWebTestCase
         ]);
 
         $this->assertSame(200, $response->getStatusCode());
-
-        $body = $response->getBody();
+        $body = $response->getBody()->getContents();
         $this->assertContains('layout,"2018-02-12', $body);
     }
 
