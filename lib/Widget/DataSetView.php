@@ -522,8 +522,6 @@ class DataSetView extends ModuleWidget
 
         // Work out how many pages we will be showing.
         $pages = $table['countPages'];
-
-        $pages = ($rowsPerPage > 0) ? ceil($pages / $rowsPerPage) : $pages;
         $totalDuration = ($durationIsPerItem == 0) ? $duration : ($duration * $pages);
 
         // Replace and Control Meta options
