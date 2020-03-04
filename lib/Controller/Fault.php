@@ -103,6 +103,7 @@ class Fault extends Base
     /**
      * @param Request $request
      * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
@@ -209,21 +210,13 @@ class Fault extends Base
         // Send via Apache X-Sendfile header?
         if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Apache') {
             header("X-Sendfile: $tempFileName");
-            $response->withStatus(200);
         }
         // Send via Nginx X-Accel-Redirect?
         if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Nginx') {
             header("X-Accel-Redirect: /download/temp/" . basename($tempFileName));
-            $response->withStatus(200);
         }
 
-        // Return the file with PHP
-        // Disable any buffering to prevent OOM errors.
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-        readfile($tempFileName);
-        exit;
+        return $this->render($request, $response);
     }
 
     /**

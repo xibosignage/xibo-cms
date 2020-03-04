@@ -658,10 +658,10 @@ class ModuleFactory extends BaseFactory
             // Identification
             $module->type = strtolower($row['Module']);
 
-            $module->class = $row['class'];
-            $module->viewPath = $row['viewPath'];
-            $module->defaultDuration = $row['defaultDuration'];
-            $module->installName = $row['installName'];
+            $module->class = $parsedRow->getString('class');
+            $module->viewPath = $parsedRow->getString('viewPath');
+            $module->defaultDuration = $parsedRow->getInt('defaultDuration');
+            $module->installName = $parsedRow->getString('installName');
 
             $settings = $row['settings'];
             $module->settings = ($settings == '') ? array() : json_decode($settings, true);

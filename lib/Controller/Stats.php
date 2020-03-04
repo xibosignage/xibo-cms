@@ -344,14 +344,14 @@ class Stats extends Base
         $type = strtolower($sanitizedQueryParams->getString('type'));
 
         $displayId = $sanitizedQueryParams->getInt('displayId');
-        $layoutIds = $sanitizedQueryParams->getIntArray('layoutId');
-        $mediaIds = $sanitizedQueryParams->getIntArray('mediaId');
+        $layoutIds = $sanitizedQueryParams->getIntArray('layoutId[]', ['default' => []]);
+        $mediaIds = $sanitizedQueryParams->getIntArray('mediaId[]', ['default' => []]);
         $statDate = $sanitizedQueryParams->getDate('statDate');
         $statId = $sanitizedQueryParams->getString('statId');
         $campaignId = $sanitizedQueryParams->getInt('campaignId');
 
-        $start = $sanitizedQueryParams->getInt('start', 0);
-        $length = $sanitizedQueryParams->getInt('length', 10);
+        $start = $sanitizedQueryParams->getInt('start', ['default' => 0]);
+        $length = $sanitizedQueryParams->getInt('length', ['default' => 10]);
 
         if ($fromDt != null) {
             $fromDt->startOfDay();

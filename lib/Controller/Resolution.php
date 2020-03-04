@@ -435,6 +435,7 @@ class Resolution extends Base
         // Return
         $this->getState()->hydrate([
             'message' => sprintf(__('Deleted %s'), $resolution->resolution),
+            'httpStatus' => 204,
         ]);
 
         return $this->render($request, $response);

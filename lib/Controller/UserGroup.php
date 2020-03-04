@@ -150,7 +150,6 @@ class UserGroup extends Base
         ];
 
         $groups = $this->userGroupFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filterBy, $request));
-        $this->getLog()->debug('GROUP GRID RESULTS ' . json_encode($groups));
         foreach ($groups as $group) {
             /* @var \Xibo\Entity\UserGroup $group */
 
