@@ -81,15 +81,11 @@
                 toDtLink =  $(dialog).find("#toDt").val();
                 displayId =  $(dialog).find("#displayId").val();
 
-                if (
+                if (!(
                      fromDtLink === null ||  toDtLink === null  ||
                      fromDtLink === '' ||  toDtLink === ''  ||
                      fromDtLink === undefined || toDtLink === undefined
-                ) {
-
-                    //
-
-                } else {
+                )) {
 
                     $(dialog).find(".total-stat").remove();
                     $(dialog).find('.save-button').prop('disabled', true);
@@ -97,25 +93,28 @@
 
                     $.ajax({
                         type: "get",
-                        url: "{{ urlFor("stats.export") }}",
+                        url: "{{ urlFor("stats.totalCount") }}",
                         cache: false,
                         dataType: "json",
                         data: {
                             fromDt: fromDtLink,
                             toDt: toDtLink,
-                            displayId: displayId,
-                            isExport: 0
+                            displayId: displayId
                         },
 
                         success: function(response) {
 
-                            var total = response.data.total;
-
                             $(dialog).find(".loading-overlay").hide();
-                            $(dialog).find("#totalStat").append('<div class="total-stat alert alert-success">{% trans "Total number of records to be exported: <strong> " %}' + total + '</strong></div>');
+
+                            if (response.success === false) {
+                                $(dialog).find("#totalStat").append('<div class="total-stat alert alert-danger">' + response.message + '</strong></div>');
+                                return;
+                            } else {
+                                var total = response.data.total;
+                                $(dialog).find("#totalStat").append('<div class="total-stat alert alert-success">{% trans "Total number of records to be exported: <strong> " %}' + total + '</strong></div>');
+                            }
+
                             $(dialog).find('.save-button').prop('disabled', false);
-
-
                         }
                     });
                 }

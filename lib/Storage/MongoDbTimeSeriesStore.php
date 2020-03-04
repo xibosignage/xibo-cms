@@ -157,6 +157,12 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             } else {
 
                 try {
+
+                    // Media exists in not found cache
+                    if (in_array($statData['mediaId'], $this->mediaItemsNotFound)) {
+                        return;
+                    }
+
                     $media = $this->mediaFactory->getById($statData['mediaId']);
 
                     // Cache media
@@ -238,6 +244,11 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             } else {
 
                 try {
+
+                    // Layout exists in not found cache
+                    if (in_array($statData['layoutId'], $this->layoutsNotFound)) {
+                        return;
+                    }
 
                     // Get the layout campaignId - this can give us a campaignId of a layoutId which id was replaced when draft to published
                     $layout = $this->layoutFactory->getByLayoutHistory($statData['layoutId']);
@@ -539,7 +550,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
 
         // Get total
-        $total = 0;
         try {
             $totalQuery = [
                 $match,
@@ -550,13 +560,17 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                     ]
                 ],
             ];
-            $totalCursor = $collection->aggregate($totalQuery);
+            $totalCursor = $collection->aggregate($totalQuery, ['allowDiskUse' => true]);
 
             $totalCount = $totalCursor->toArray();
             $total = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
 
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
+            throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
+        } catch (\Exception $e) {
+            $this->log->error($e->getMessage());
+            throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
         }
 
         try {
@@ -608,6 +622,150 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         }
 
         return $result;
+    }
+
+    /** @inheritdoc */
+    public function getStatsTotalCount($filterBy = [])
+    {
+        // do we consider that the fromDt and toDt will always be provided?
+        $fromDt = isset($filterBy['fromDt']) ? $filterBy['fromDt'] : null;
+        $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
+        $statDate = isset($filterBy['statDate']) ? $filterBy['statDate'] : null;
+
+        // In the case of user switches from mysql to mongo - laststatId were saved as integer
+        if (isset($filterBy['statId'])) {
+            if (is_numeric($filterBy['statId'])) {
+                throw new InvalidArgumentException(__('Invalid statId provided'), 'statId');
+            }
+            else {
+                $statId = $filterBy['statId'];
+            }
+        } else {
+            $statId = null;
+        }
+
+        $type = isset($filterBy['type']) ? $filterBy['type'] : null;
+        $displayIds = isset($filterBy['displayIds']) ? $filterBy['displayIds'] : [];
+        $layoutIds = isset($filterBy['layoutIds']) ? $filterBy['layoutIds'] : [];
+        $mediaIds = isset($filterBy['mediaIds']) ? $filterBy['mediaIds'] : [];
+        $campaignId = isset($filterBy['campaignId']) ? $filterBy['campaignId'] : null;
+        $eventTag = isset($filterBy['eventTag']) ? $filterBy['eventTag'] : null;
+
+        // Match query
+        $match = [];
+
+        // fromDt/toDt Filter
+        if (($fromDt != null) && ($toDt != null)) {
+            $fromDt = new UTCDateTime($fromDt->format('U')*1000);
+            $match['$match']['end'] = [ '$gt' => $fromDt];
+
+            $toDt = new UTCDateTime($toDt->format('U')*1000);
+            $match['$match']['start'] = [ '$lte' => $toDt];
+        }
+
+        // statDate Filter
+        // get the next stats from the given date
+        if ($statDate != null) {
+            $statDate = new UTCDateTime($statDate->format('U')*1000);
+            $match['$match']['statDate'] = [ '$gte' => $statDate];
+        }
+
+        if (!empty($statId)) {
+            $match['$match']['_id'] = [ '$gt' => new ObjectId($statId)];
+        }
+
+        // Displays Filter
+        if (count($displayIds) != 0) {
+            $match['$match']['displayId'] = [ '$in' => $displayIds ];
+        }
+
+        // Campaign selection
+        // ------------------
+        // Get all the layouts of that campaign.
+        // Then get all the campaigns of the layouts
+        $campaignIds = [];
+        if ($campaignId != null) {
+            try {
+                $campaign = $this->campaignFactory->getById($campaignId);
+                $layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId);
+                if (count($layouts) > 0) {
+                    foreach ($layouts as $layout) {
+                        $campaignIds[] = $layout->campaignId;
+                    }
+                }
+            } catch (NotFoundException $notFoundException) {
+                $this->log->error('Empty campaignIds.');
+            }
+        }
+
+        // Campaign Filter
+        if ($campaignId != null) {
+            if (count($campaignIds) != 0) {
+                $match['$match']['campaignId'] = ['$in' => $campaignIds];
+            } else {
+                // we wont get any match as we store layoutspecific campaignid in stat
+                $match['$match']['campaignId'] = ['$eq' => $campaignId];
+            }
+        }
+
+        // Type Filter
+        if ($type != null) {
+            $match['$match']['type'] = $type;
+        }
+
+        // Event Tag Filter
+        if ($eventTag != null) {
+            $match['$match']['eventName'] = $eventTag;
+        }
+
+        // Layout Filter
+        if (count($layoutIds) != 0) {
+            // Get campaignIds for selected layoutIds
+            $campaignIds = [];
+            foreach ($layoutIds as $layoutId) {
+                try {
+                    $campaignIds[] = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
+                } catch (NotFoundException $notFoundException) {
+                    // Ignore the missing one
+                    $this->getLog()->debug('Filter for Layout without Layout History Record, layoutId is ' . $layoutId);
+                }
+            }
+            $match['$match']['campaignId'] = [ '$in' => $campaignIds ];
+        }
+
+        // Media Filter
+        if (count($mediaIds) != 0) {
+            $match['$match']['mediaId'] = [ '$in' => $mediaIds ];
+        }
+
+        $collection = $this->client->selectCollection($this->config['database'], $this->table);
+
+
+        // Get total
+        try {
+            $totalQuery = [
+                $match,
+                [
+                    '$group' => [
+                        '_id'=> null,
+                        'count' => ['$sum' => 1],
+                    ]
+                ],
+            ];
+            $totalCursor = $collection->aggregate($totalQuery, ['allowDiskUse' => true]);
+
+            $totalCount = $totalCursor->toArray();
+            $total = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
+
+        } catch (\MongoDB\Exception\RuntimeException $e) {
+            $this->log->error($e->getMessage());
+            throw new GeneralException(__('Sorry we encountered an error getting total number of Proof of Play data, please consult your administrator'));
+        } catch (\Exception $e) {
+            $this->log->error($e->getMessage());
+            throw new GeneralException(__('Sorry we encountered an error getting total number of Proof of Play data, please consult your administrator'));
+        }
+
+        return $total;
     }
 
     /** @inheritdoc */
