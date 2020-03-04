@@ -25,10 +25,9 @@ namespace Xibo\Storage;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
-use Xibo\Exception\GeneralException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -249,7 +248,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                     // already been looked up in the layouthistory table.
                     $this->log->alert('Error processing statistic into MongoDB. Layout not found. Stat is: ' . json_encode($statData));
                     return;
-                } catch (XiboException $error) {
+                } catch (GeneralException $error) {
                     $this->log->error('Layout not found. Layout Id: '. $statData['layoutId']);
                     return;
                 }
