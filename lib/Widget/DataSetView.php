@@ -523,7 +523,7 @@ class DataSetView extends ModuleWidget
         $table = $this->dataSetTableHtml($displayId);
 
         // Work out how many pages we will be showing.
-        $pages = $table['countPages'];
+        $pages = ceil($table['countPages']);
         $totalDuration = ($durationIsPerItem == 0) ? $duration : ($duration * $pages);
 
         // Replace and Control Meta options
