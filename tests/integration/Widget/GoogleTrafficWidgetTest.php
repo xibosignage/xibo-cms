@@ -92,9 +92,9 @@ class GoogleTrafficWidgetTest extends LocalWebTestCase
             'Use Display location' => [200, 'Traffic with display location', 2000, 1, null, null, 100],
             'Custom location 1' => [200, 'Traffic with custom location - Italy', 4500, 0, 7.640974, 45.109612, 80],
             'Custom location 2' => [200, 'Traffic with custom location - Japan', 4500, 0, 35.7105, 139.7336, 50],
-            'No zoom provided' => [500, 'no zoom', 2000, 1, null, null, null],
-            'no lat/long' => [500, 'no lat/long provided with useDisplayLocation 0', 3000, 0, null, null, 20],
-            'low min duration' => [500, 'Traffic with display location', 20, 1, null, null, 100],
+            'No zoom provided' => [422, 'no zoom', 2000, 1, null, null, null],
+            'no lat/long' => [422, 'no lat/long provided with useDisplayLocation 0', 3000, 0, null, null, 20],
+            'low min duration' => [422, 'Traffic with display location', 20, 1, null, null, 100],
         ];
     }
 
@@ -120,7 +120,7 @@ class GoogleTrafficWidgetTest extends LocalWebTestCase
 
         $this->assertSame($statusCode, $response->getStatusCode(), 'Incorrect status code.', var_export($response, true));
 
-        if ($statusCode == 500)
+        if ($statusCode == 422)
             return;
 
         $this->assertNotEmpty($response->getBody());

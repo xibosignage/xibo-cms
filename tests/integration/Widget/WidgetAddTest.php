@@ -97,7 +97,7 @@ class WidgetAddTest extends LocalWebTestCase
 
         $response = $this->sendRequest('POST','/playlist/widget/audio/' . $playlistId);
 
-        $this->assertSame(500, $response->getStatusCode(), 'Status Code isnt correct: ' . $response->getStatusCode());
+        $this->assertSame(422, $response->getStatusCode(), 'Status Code isnt correct: ' . $response->getStatusCode());
 
         $this->getLogger()->debug('testAddNonRegionSpecific - finished.');
     }

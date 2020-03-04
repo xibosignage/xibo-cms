@@ -17,62 +17,63 @@ class UserTest extends LocalWebTestCase
 {
     /**
      * Show me
-     * @group broken
      */
     public function testGetMe()
     {
-        $this->client->get('/user/me');
+        $response = $this->sendRequest('GET','/user/me');
 
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
 
-        $object = json_decode($this->client->response->body());
+        $object = json_decode($response->getBody());
 
         $this->assertObjectHasAttribute('data', $object);
+        $this->assertSame('phpunit', $object->data->userName);
     }
 
 	/**
 	* Show all users
-    * @group broken
 	*/
     public function testGetUsers()
     {
-        $this->client->get('/user');
+        $response = $this->sendRequest('GET','/user');
 
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
 
-        $object = json_decode($this->client->response->body());
+        $object = json_decode($response->getBody());
 
         $this->assertObjectHasAttribute('data', $object);
     }
 
     /**
 	* Add new user
-	* @group broken
 	*/
     public function testAdd()
     {
-        // Wrapper, get Users Group
+        $group = $this->getEntityProvider()->get('/group', ['userGroup' => 'Users'])[0];
 
-        $this->client->post('/user', [
-            'userName' => 'Alex',
+        $response = $this->sendRequest('POST','/user', [
+            'userName' => 'newUser',
             'userTypeId' => 3,
             'homePageId' => 29,
-            'password' => 'AlexCabbage',
-            'groupId' => 3,
+            'password' => 'newUserPassword',
+            'groupId' => $group['groupId'],
             'libraryQuota' => 0
         ]);
 
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
 
-        $object = json_decode($this->client->response->body());
+        $object = json_decode($response->getBody());
 
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $this->assertObjectHasAttribute('id', $object, $this->client->response->body());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
+        $this->assertObjectHasAttribute('id', $object, $response->getBody());
 
-        $this->assertSame('Alex', $object->data->userName);
+        $this->assertSame('newUser', $object->data->userName);
         $this->assertSame(3, $object->data->userTypeId);
         $this->assertSame(29, $object->data->homePageId);
+
+        $userCheck = (new XiboUser($this->getEntityProvider()))->getById($object->id);
+        $userCheck->delete();
     }
 }

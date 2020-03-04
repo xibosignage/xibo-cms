@@ -36,7 +36,6 @@ class FaultTest extends \Xibo\Tests\LocalWebTestCase
      */
     public function testCollect()
     {
-        // TODO this is failing
         $response = $this->sendRequest('GET','/fault/collect', ['outputLog' => 'on']);
         $this->assertSame(200, $response->getStatusCode());
     }

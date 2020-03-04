@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -162,14 +162,15 @@ class ProofOfPlayOnOff extends LocalWebTestCase
     {
         $name = Random::generateString(8, 'phpunit');
         $description = Random::generateString(8, 'description');
-        $this->client->put('/layout/' . $this->layout->layoutId, [
+
+        $response = $this->sendRequest('PUT','/layout/' . $this->layout->layoutId, [
             'name' => $name,
             'description' => $description,
             'enableStat' => $enableStat
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertSame($enableStat, $object->data->enableStat);
 
         // Check that the layout enable stat sets to on/off
@@ -186,16 +187,16 @@ class ProofOfPlayOnOff extends LocalWebTestCase
         $name = Random::generateString(8, 'phpunit');
 
         // Edit media file
-        $this->client->put('/library/' . $this->media->mediaId, [
+        $response = $this->sendRequest('PUT','/library/' . $this->media->mediaId, [
             'name' => $name,
             'duration' => 50,
             'updateInLayouts' => 1,
             'enableStat' => $enableStat
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
 
-        $object = json_decode($this->client->response->body());
+        $object = json_decode($response->getBody());
         $this->assertSame($enableStat, $object->data->enableStat);
 
         $media = (new XiboLibrary($this->getEntityProvider()))->getById($this->media->mediaId);
@@ -209,15 +210,15 @@ class ProofOfPlayOnOff extends LocalWebTestCase
     public function testEditWidgetEnableStat($enableStat)
     {
         // Now try to edit our assigned Media Item.
-        $this->client->put('/playlist/widget/' . $this->widgetId, [
+        $response = $this->sendRequest('PUT','/playlist/widget/' . $this->widgetId, [
             'enableStat' => $enableStat,
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']
         );
 
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
 
         /** @var XiboImage $widgetOptions */
         $response = $this->getEntityProvider()->get('/playlist/widget', ['widgetId' => $this->widgetId]);
@@ -239,7 +240,7 @@ class ProofOfPlayOnOff extends LocalWebTestCase
         $nameCopy = Random::generateString(8, 'phpunit');
 
         // Call copy
-        $this->client->post('/layout/copy/' . $this->layout2->layoutId, [
+        $response = $this->sendRequest('POST','/layout/copy/' . $this->layout2->layoutId, [
             'name' => $nameCopy,
             'description' => 'Copy',
             'copyMediaFiles' => 1
@@ -247,10 +248,10 @@ class ProofOfPlayOnOff extends LocalWebTestCase
             'CONTENT_TYPE' => 'application/x-www-form-urlencoded'
         ]);
 
-        $this->assertSame(200, $this->client->response->status());
+        $this->assertSame(200, $response->getStatusCode());
 
         // Check if copied layout has enableStat flag of copying layout
-        $object = json_decode($this->client->response->body());
+        $object = json_decode($response->getBody());
         $this->assertSame($this->layout2->enableStat, $object->data->enableStat);
     }
 
@@ -261,13 +262,13 @@ class ProofOfPlayOnOff extends LocalWebTestCase
     public function testLayoutBulkEnableStat($enableStat)
     {
         // Call Set enable stat
-        $this->client->put('/layout/setenablestat/' . $this->layout->layoutId, [
+        $response = $this->sendRequest('PUT','/layout/setenablestat/' . $this->layout->layoutId, [
             'enableStat' => $enableStat
         ], [
             'CONTENT_TYPE' => 'application/x-www-form-urlencoded'
         ]);
 
-        $this->assertSame(200, $this->client->response->status());
+        $this->assertSame(200, $response->getStatusCode());
 
         $layout = (new XiboLayout($this->getEntityProvider()))->getById($this->layout->layoutId);
         $this->assertSame($enableStat, $layout->enableStat);
@@ -280,13 +281,13 @@ class ProofOfPlayOnOff extends LocalWebTestCase
     public function testMediaBulkEnableStat($enableStat)
     {
         // Call Set enable stat
-        $this->client->put('/library/setenablestat/' . $this->media->mediaId, [
+        $response = $this->sendRequest('PUT','/library/setenablestat/' . $this->media->mediaId, [
             'enableStat' => $enableStat
         ], [
             'CONTENT_TYPE' => 'application/x-www-form-urlencoded'
         ]);
 
-        $this->assertSame(200, $this->client->response->status());
+        $this->assertSame(200, $response->getStatusCode());
 
         $media = (new XiboLibrary($this->getEntityProvider()))->getById($this->media->mediaId);
         $this->assertSame($enableStat, $media->enableStat);

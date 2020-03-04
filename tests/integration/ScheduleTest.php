@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -147,11 +148,11 @@ class ScheduleTest extends LocalWebTestCase
     public function testListAll()
     {
         # list all scheduled events
-        $this->client->get('/schedule/data/events');
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('result', $object, $this->client->response->body());
+        $response = $this->sendRequest('GET','/schedule/data/events');
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('result', $object, $response->getBody());
     }
     
     /**
@@ -170,7 +171,7 @@ class ScheduleTest extends LocalWebTestCase
             /* @var XiboCampaign $campaign */
             $campaign = (new XiboCampaign($this->getEntityProvider()))->create('phpunit');
             # Create new event with data from provideSuccessCasesCampaign where isCampaign is set to true
-            $response = $this->client->post($this->route, [
+            $response = $this->sendRequest('POST', $this->route, [
                 'fromDt' => date('Y-m-d H:i:s', $scheduleFrom),
                 'toDt' => date('Y-m-d H:i:s', $scheduleTo),
                 'eventTypeId' => 1,
@@ -187,7 +188,7 @@ class ScheduleTest extends LocalWebTestCase
             $layout = $this->createLayout();
 
             # Create new event with data from provideSuccessCasesCampaign where isCampaign is set to false
-            $response = $this->client->post($this->route, [
+            $response = $this->sendRequest('POST', $this->route, [
                 'fromDt' => date('Y-m-d H:i:s', $scheduleFrom),
                 'toDt' => date('Y-m-d H:i:s', $scheduleTo),
                 'eventTypeId' => 1,
@@ -201,8 +202,8 @@ class ScheduleTest extends LocalWebTestCase
             ]);
         }
         # Check if call was successful
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         # Clean up
@@ -238,7 +239,7 @@ class ScheduleTest extends LocalWebTestCase
         # Create Display Group
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'phpunit description', 0, '');
         # Create new event with scheduled command and data from provideSuccessCasesCommand
-            $response = $this->client->post($this->route, [
+            $response = $this->sendRequest('POST', $this->route, [
                 'fromDt' => date('Y-m-d H:i:s', $scheduleFrom),
                 'eventTypeId' => 2,
                 'commandId' => $command->commandId,
@@ -250,8 +251,8 @@ class ScheduleTest extends LocalWebTestCase
                 'scheduleRecurrenceRange' => $scheduleRecurrenceRange
             ]);
         # Check if successful
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         # Clean up
@@ -284,7 +285,7 @@ class ScheduleTest extends LocalWebTestCase
         $layout = $this->createLayout();
 
         # Create new event with data from provideSuccessCasesOverlay
-            $response = $this->client->post($this->route, [
+            $response = $this->sendRequest('POST', $this->route, [
                 'fromDt' => date('Y-m-d H:i:s', $scheduleFrom),
                 'toDt' => date('Y-m-d H:i:s', $scheduleTo),
                 'eventTypeId' => 3,
@@ -297,8 +298,8 @@ class ScheduleTest extends LocalWebTestCase
                 'scheduleRecurrenceRange' => $scheduleRecurrenceRange
             ]);
         # Check if call was successful
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         # Clean up
@@ -345,7 +346,7 @@ class ScheduleTest extends LocalWebTestCase
         $fromDt = time() + 3600;
         $toDt = time() + 86400;
         # Edit event
-        $this->client->put($this->route . '/' . $event->eventId, [
+        $response = $this->sendRequest('PUT',$this->route . '/' . $event->eventId, [
             'fromDt' => date('Y-m-d H:i:s', $fromDt),
             'toDt' => date('Y-m-d H:i:s', $toDt),
             'eventTypeId' => 1,
@@ -354,8 +355,8 @@ class ScheduleTest extends LocalWebTestCase
             'displayOrder' => 1,
             'isPriority' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $this->client->response->body());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         # Check if edit was successful
@@ -392,8 +393,8 @@ class ScheduleTest extends LocalWebTestCase
             0
         );
         # Delete event
-        $this->client->delete($this->route . '/' . $event->eventId);
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+        $response = $this->sendRequest('DELETE',$this->route . '/' . $event->eventId);
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
         # Clean up
         $displayGroup->delete();
         $campaign->delete();

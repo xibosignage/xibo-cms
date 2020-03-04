@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -78,7 +79,7 @@ class PlaylistTest extends LocalWebTestCase
     public function testAddPlaylist($statusCode, $name, $tags, $isDynamic, $nameFilter, $tagFilter)
     {
         // Add this Playlist
-        $this->client->post('/playlist', [
+        $response = $this->sendRequest('POST','/playlist', [
             'name' => $name,
             'tags' => $tags,
             'isDynamic' => $isDynamic,
@@ -87,15 +88,15 @@ class PlaylistTest extends LocalWebTestCase
         ]);
 
         // Check the response headers
-        $this->assertSame($statusCode, $this->client->response->status(), "Not successful: " . $this->client->response->status() . $this->client->response->body());
+        $this->assertSame($statusCode, $response->getStatusCode(), "Not successful: " . $response->getStatusCode() . $response->getBody());
 
         // Make sure we have a useful body
-        $object = json_decode($this->client->response->body());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object, 'Missing data');
         $this->assertObjectHasAttribute('id', $object, 'Missing id');
 
         // Add to the list of playlists to clean up
-        if ($this->client->response->status() >= 200 && $this->client->response->status() < 300) {
+        if ($response->getStatusCode() >= 200 && $response->getStatusCode() < 300) {
             $this->playlists[] = (new XiboPlaylist($this->getEntityProvider()))->hydrate((array)$object->data);
         }
 
@@ -103,7 +104,7 @@ class PlaylistTest extends LocalWebTestCase
 
         // Get the Playlists back out from the API, to double check it has been created as we expected
         /** @var XiboPlaylist $playlistCheck */
-        $playlistCheck = (new XiboPlaylist($this->getEntityProvider()))->hydrate($this->getEntityProvider()->get('/playlist?playlistId=' . $object->id)[0]);
+        $playlistCheck = (new XiboPlaylist($this->getEntityProvider()))->hydrate($this->getEntityProvider()->get('/playlist', ['playlistId' => $object->id])[0]);
 
         $this->assertEquals($name, $playlistCheck->name, 'Names are not identical');
     }
@@ -117,7 +118,7 @@ class PlaylistTest extends LocalWebTestCase
         $newName = Random::generateString(5, 'playlist');
 
         // Take the duplicate name playlist, and edit it
-        $this->client->put('/playlist/' . $this->duplicateName->playlistId, [
+        $response = $this->sendRequest('PUT','/playlist/' . $this->duplicateName->playlistId, [
             'name' => $newName,
             'tags' => null,
             'isDynamic' => 0,
@@ -126,10 +127,10 @@ class PlaylistTest extends LocalWebTestCase
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
         // Check the response headers
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $this->client->response->status() . $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getStatusCode() . $response->getBody());
 
         /** @var XiboPlaylist $playlistCheck */
-        $playlistCheck = (new XiboPlaylist($this->getEntityProvider()))->hydrate($this->getEntityProvider()->get('/playlist?playlistId=' . $this->duplicateName->playlistId)[0]);
+        $playlistCheck = (new XiboPlaylist($this->getEntityProvider()))->hydrate($this->getEntityProvider()->get('/playlist', ['playlistId' =>  $this->duplicateName->playlistId])[0]);
 
         $this->assertEquals($newName, $playlistCheck->name, 'Names are not identical');
     }

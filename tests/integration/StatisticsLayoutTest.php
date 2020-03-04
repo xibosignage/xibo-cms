@@ -79,7 +79,7 @@ class StatisticsLayoutTest extends LocalWebTestCase
         $this->deleteDisplay($this->display);
 
         // Delete stat records
-        self::$container->timeSeriesStore->deleteStats(Date::now(), Date::createFromFormat("Y-m-d H:i:s", '2018-02-12 00:00:00'));
+        self::$container->get('timeSeriesStore')->deleteStats(Date::now(), Date::createFromFormat("Y-m-d H:i:s", '2018-02-12 00:00:00'));
 
     }
 
@@ -160,18 +160,18 @@ class StatisticsLayoutTest extends LocalWebTestCase
         $this->assertSame(true, $response);
 
         // Get stats and see if they match with what we expect
-        $this->client->get('/stats' , [
+        $response = $this->sendRequest('GET','/stats' , [
             'fromDt' => '2018-02-12 00:00:00',
             'toDt' => '2018-02-17 00:00:00',
             'displayId' => $this->display->displayId,
             'type' => $type
         ]);
 
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        //$this->getLogger()->debug($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        //$this->getLogger()->debug($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
         $stats = (new XiboStats($this->getEntityProvider()))->get(['fromDt' => '2018-02-12 00:00:00', 'toDt' => '2018-02-17 00:00:00', 'layoutId' => $this->layout->layoutId]);
         // print_r($stats);
         $this->assertNotEquals(0, count($stats));

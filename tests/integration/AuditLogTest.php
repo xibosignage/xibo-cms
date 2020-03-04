@@ -51,6 +51,10 @@ class AuditLogTest extends \Xibo\Tests\LocalWebTestCase
         $this->assertNotEmpty($response);
     }
 
+    /**
+     * // TODO outouts the response to browser/system output.
+     * @group broken
+     */
     public function testExport()
     {
         $response = $this->sendRequest('GET','/audit/export', [

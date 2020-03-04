@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (LibraryTest.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 namespace Xibo\Tests\Integration;
@@ -58,12 +73,12 @@ class LibraryTest extends LocalWebTestCase
     public function testListAll()
     {
         # Get all library items
-        $this->client->get('/library');
+        $response = $this->sendRequest('GET','/library');
 
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
     }
 
     /**
@@ -94,7 +109,7 @@ class LibraryTest extends LocalWebTestCase
     public function testAddEmpty()
     {
         # Using XiboLibrary wrapper to upload new file to the CMS, need to provide (name, file location)
-        $this->setExpectedException('\Xibo\OAuth2\Client\Exception\XiboApiException');
+        $this->expectException('\Xibo\OAuth2\Client\Exception\XiboApiException');
 
         $media = (new XiboLibrary($this->getEntityProvider()))->create('API incorrect file 2', PROJECT_ROOT . '/tests/resources/empty.txt');
     }
@@ -107,12 +122,12 @@ class LibraryTest extends LocalWebTestCase
         # Using XiboLibrary wrapper to upload new file to the CMS, need to provide (name, file location)
         $media = (new XiboLibrary($this->getEntityProvider()))->create('flowers 2', PROJECT_ROOT . '/tests/resources/xts-flowers-001.jpg');
 
-        $this->client->post('/library/' . $media->mediaId . '/tag', [
+        $response = $this->sendRequest('POST','/library/' . $media->mediaId . '/tag', [
             'tag' => ['API']
             ]);
         $media = (new XiboLibrary($this->getEntityProvider()))->getById($media->mediaId);
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertSame('API', $media->tags);
         $media->delete();
@@ -129,13 +144,13 @@ class LibraryTest extends LocalWebTestCase
         $media->AddTag('API');
         $media = (new XiboLibrary($this->getEntityProvider()))->getById($media->mediaId);
         $this->assertSame('API', $media->tags);
-         print_r($media->tags);
-        $this->client->delete('/library/' . $media->mediaId . '/untag', [
+
+        $response = $this->sendRequest('POST','/library/' . $media->mediaId . '/untag', [
             'tag' => ['API']
             ]);
         $media = (new XiboLibrary($this->getEntityProvider()))->getById($media->mediaId);
          print_r($media->tags);
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
         $media->delete();
     }
 
@@ -149,7 +164,7 @@ class LibraryTest extends LocalWebTestCase
         # Generate new random name
         $name = Random::generateString(8, 'phpunit');
         # Edit media file, change the name
-        $this->client->put('/library/' . $media->mediaId, [
+        $response = $this->sendRequest('PUT','/library/' . $media->mediaId, [
             'name' => $name,
             'duration' => 50,
             'retired' => $media->retired,
@@ -157,8 +172,8 @@ class LibraryTest extends LocalWebTestCase
             'updateInLayouts' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertSame($name, $object->data->name);
         $media = (new XiboLibrary($this->getEntityProvider()))->getById($media->mediaId);
@@ -174,8 +189,10 @@ class LibraryTest extends LocalWebTestCase
         # Using XiboLibrary wrapper to upload new file to the CMS, need to provide (name, file location)
         $media = (new XiboLibrary($this->getEntityProvider()))->create('API video 4', PROJECT_ROOT . '/tests/resources/HLH264.mp4');
         # Delete added media file
-        $this->client->delete('/library/' . $media->mediaId);
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+        $response = $this->sendRequest('DELETE','/library/' . $media->mediaId);
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertSame(204, $object->status);
     }
 
     /**
@@ -183,29 +200,31 @@ class LibraryTest extends LocalWebTestCase
     */
     public function testTidy()
     {
-        $this->client->delete('/library/tidy');
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+        $response = $this->sendRequest('DELETE','/library/tidy');
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
     }
 
     public function testUploadFromUrl()
     {
         shell_exec('cp -r ' . PROJECT_ROOT . '/tests/resources/rss/image1.jpg ' . PROJECT_ROOT . '/web');
 
-        $response = $this->getEntityProvider()->post('/library/uploadUrl?envelope=1', [
+        $response = $this->sendRequest('POST','/library/uploadUrl', [
             'url' => 'http://localhost/image1.jpg'
         ]);
 
-        $this->assertSame(201, $response['status'], json_encode($response));
-        $this->assertNotEmpty($response['data'], 'Empty Response');
-        $this->assertSame('image', $response['data']['mediaType']);
-        $this->assertSame(0, $response['data']['expires']);
-        $this->assertSame('image1', $response['data']['name']);
-        $this->assertNotEmpty($response['data']['mediaId'], 'Not successful, MediaId is empty');
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $object = json_decode($response->getBody());
+
+        $this->assertNotEmpty($object->data, 'Empty Response');
+        $this->assertSame('image', $object->data->mediaType);
+        $this->assertSame(0, $object->data->expires);
+        $this->assertSame('image1', $object->data->name);
+        $this->assertNotEmpty($object->data->mediaId, 'Not successful, MediaId is empty');
 
         $module = $this->getEntityProvider()->get('/module', ['name' => 'Image']);
         $moduleDefaultDuration = $module[0]['defaultDuration'];
 
-        $this->assertSame($response['data']['duration'], $moduleDefaultDuration);
+        $this->assertSame($object->data->duration, $moduleDefaultDuration);
 
         shell_exec('rm -r ' . PROJECT_ROOT . '/web/image1.jpg');
     }

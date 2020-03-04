@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -20,6 +21,7 @@
  */
 namespace Xibo\Tests\Integration;
 
+use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboPlaylist;
 use Xibo\Tests\LocalWebTestCase;
 
@@ -40,9 +42,22 @@ class PlaylistWidgetListTest extends LocalWebTestCase
         parent::setup();
 
         // Create a Playlist
-
+        $this->playlist = (new XiboPlaylist($this->getEntityProvider()))->hydrate($this->getEntityProvider()->post('/playlist', [
+            'name' => Random::generateString(5, 'playlist')
+        ]));
 
         // Assign some Widgets
+        $this->getEntityProvider()->post('/playlist/widget/clock/' . $this->playlist->playlistId, [
+            'duration' => 100,
+            'useDuration' => 1
+        ]);
+
+        $text = $this->getEntityProvider()->post('/playlist/widget/text/' .  $this->playlist->playlistId);
+        $this->getEntityProvider()->put('/playlist/widget/' . $text['widgetId'], [
+            'text' => 'Widget A',
+            'duration' => 100,
+            'useDuration' => 1
+        ]);
     }
 
     /**
@@ -57,18 +72,18 @@ class PlaylistWidgetListTest extends LocalWebTestCase
 
 	/**
      * List all items in playlist
-     * @group broken
      */
     public function testGetWidget()
     {
         // Search widgets on our playlist
-        $this->client->get('/playlist/widget', [
+        $response = $this->sendRequest('GET','/playlist/widget', [
         	'playlistId' => $this->playlist->playlistId
         ]);
 
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
+        $this->assertSame(2, $object->data->recordsTotal);
     }
 }

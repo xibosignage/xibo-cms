@@ -65,7 +65,7 @@ class WidgetOnDraftsTest extends LocalWebTestCase
 
         $this->getLogger()->debug('Response from Widget Add is ' . $response->getBody()->getContents());
 
-        $this->assertSame(500, $response->getStatusCode(), $response->getBody());
+        $this->assertSame(422, $response->getStatusCode(), $response->getBody());
     }
 
     /**
