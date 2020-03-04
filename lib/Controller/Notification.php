@@ -23,6 +23,7 @@
 
 namespace Xibo\Controller;
 
+use GuzzleHttp\Psr7\Stream;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
@@ -776,7 +777,7 @@ class Notification extends Base
         return $this->render($request, $response);
     }
 
-    public function exportAttachment($id)
+    public function exportAttachment(Request $request, Response $response, $id)
     {
         $notification = $this->notificationFactory->getById($id);
 
@@ -784,14 +785,15 @@ class Notification extends Base
 
         // Return the file with PHP
         $this->setNoOutput(true);
-        header('Content-Type: application/octet-stream');
-        header("Content-Transfer-Encoding: Binary");
-        header("Content-disposition: attachment; filename=\"" . basename($fileName) . "\"");
-        header('Content-Length: ' . filesize($fileName));
 
-        // Disable any buffering to prevent OOM errors.
-        ob_end_flush();
-        readfile($fileName);
-        exit;
+        $response = $response
+            ->withHeader('Content-Type', 'application/octet-stream')
+            ->withHeader('Content-Disposition', 'attachment; filename='.  basename($fileName))
+            ->withHeader('Content-Transfer-Encoding', 'Binary')
+            ->withHeader('Content-Length', filesize($fileName))
+            ->withBody(new Stream(fopen($fileName, 'r')));
+
+        return $this->render($request, $response);
+
     }
 }

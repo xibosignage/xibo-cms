@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use GuzzleHttp\Psr7\Stream;
 use Parsedown;
 use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
@@ -2086,6 +2087,7 @@ class Layout extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws InvalidArgumentException
@@ -2119,31 +2121,23 @@ class Layout extends Base
         if (ini_get('zlib.output_compression')) {
             ini_set('zlib.output_compression', 'Off');
         }
-
-        header('Content-Type: application/octet-stream');
-        header("Content-Transfer-Encoding: Binary");
-        header("Content-disposition: attachment; filename=\"" . basename($fileName) . "\"");
-        header('Content-Length: ' . filesize($fileName));
+        $response = $response
+            ->withHeader('Content-Type', 'application/octet-stream')
+            ->withHeader('Content-Disposition', 'attachment; filename='.  basename($fileName))
+            ->withHeader('Content-Transfer-Encoding', 'Binary')
+            ->withHeader('Content-Length', filesize($fileName))
+            ->withBody(new Stream(fopen($fileName, 'r')));
 
         // Send via Apache X-Sendfile header?
         if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Apache') {
-            header("X-Sendfile: $fileName");
-            $response->withStatus(200);
+            $response = $response->withHeader('X-Sendfile', $fileName);
         }
         // Send via Nginx X-Accel-Redirect?
         if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Nginx') {
-            header("X-Accel-Redirect: /download/temp/" . basename($fileName));
-            //$this->getApp()->halt(200);
-            $response->withStatus(200);
+            $response = $response->withHeader('X-Accel-Redirect', '/download/temp/' .  basename($fileName));
         }
 
-        // Return the file with PHP
-        // Disable any buffering to prevent OOM errors.
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-        readfile($fileName);
-        exit;
+        return $this->render($request, $response);
     }
 
     /**
