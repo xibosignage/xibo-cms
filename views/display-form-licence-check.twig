@@ -28,7 +28,7 @@
 
 {% block formButtons %}
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#displayLicenceCheckForm").submit()
+    {% trans "Save" %}, displayFormLicenceCheckSubmit($("#displayLicenceCheckForm"))
 {% endblock %}
 
 {% block formHtml %}

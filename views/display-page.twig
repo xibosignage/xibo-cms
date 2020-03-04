@@ -434,6 +434,7 @@
                     },
                     {
                         "data": "commercialLicence",
+                        "name": "commercialLicence",
                         "render": function (data, type, row) {
                             if (type != "display")
                                 return data;
@@ -513,6 +514,14 @@
             $(dialog).find('.modal-body').append($select);
 
             makePagedSelect($select, dialog);
+        }
+
+        function displayFormLicenceCheckSubmit(form) {
+            // Display commercial licence table column 
+            $('table#displays').DataTable().column('commercialLicence:name').visible(true);
+
+            // Submit form
+            form.submit();
         }
 
         function setMoveCmsMultiSelectFormOpen(dialog) {
