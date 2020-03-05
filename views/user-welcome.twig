@@ -37,7 +37,9 @@
         // New wizard tour
         tour = window.tour = new Tour({
             debug: false,
-            storage: window.sessionStorage,
+            framework: "bootstrap3", 
+            showProgressBar: false,     // don't show the progress bar on this step only
+            showProgressText: false,    // don't show the progress text on this step only
             onEnd: function () {
                 setNewUserWizardState();
             },
@@ -89,96 +91,97 @@
                     placement: "top",
                     backdrop: true,
                     title: "",
+                    delayOnElement: {
+                        delayElement: "element",
+                        maxDelay: 10000
+                    },
                     content: "{% trans "This is the layout grid and from here is where you can add new and manage existing layouts." %}",
-                    template: next_template,
-                    path: "/layout/view"
+                    template: next_template
                 }, { // 4
                     element: ".btn-success a",
                     placement: "left",
                     title: "",
                     content: "{% trans "Create a new layout by clicking on <b>Add Layout</b>" %}",
                     reflex: true,
-                    template: no_nav_template,
-                    duration: 5000,
-                    onNext: function(tour) {
-                        customTourWait(tour, 5, function() {
-                            return ($("#name").length > 0); 
-                        });
-                    }
+                    template: no_nav_template
                 }, {
                     element: "#name",
                     placement: "bottom",
                     title: "",
+                    delayOnElement: {
+                        delayElement: "element",
+                        maxDelay: 5000
+                    },
                     content: "{% trans "Name your layout so you can easily identify it for scheduling." %}",
                     reflex: "blur",
                     template: no_nav_template
                 }, { // 6
                     element: ".save-button",
-                    placement: "top",
+                    placement: "left",
                     title: "",
                     content: "{% trans "Press <b>Save</b>." %}",
                     reflex: true,
-                    template: no_nav_template
-                }, {
-                    container: '#layout-editor',
-                    orphan: true,
-                    placement: "auto",
-                    title: "",
-                    content: "{% trans "This is the layout designer screen where you will add and configure content." %}",
-                    onShown: function (tour) {
+                    template: no_nav_template,
+                    delay: {
+                        show: 500,
+                        hide: 5000
+                    },
+                    onHidden: function (tour) {
                         if ($(".form-error").length === 1) {
                             tour.goTo(5);
+                            return false;
                         }
+                    }
+                },
+                {
+                    element: '#layout-editor',
+                    orphan: true,
+                    title: "",
+                    delayOnElement: {
+                        delayElement: "element",
+                        maxDelay: 10000
                     },
-                    delay: 5000,
+                    content: "{% trans "This is the layout designer screen where you will add and configure content." %}",
                     template: next_template
                 }, { // 8
-                    element: '.welcome-screen-modal .modal-dialog',
-                    placement: "bottom",
-                    title: "",
-                    content: "{% trans "By default, your layout is in read-only mode, and needs to be checked out, to enable editing." %}",
-                    template: next_template,
-                    delay: 500
-                }, {
-                    element: '.welcome-screen-modal button[data-bb-handler="checkout"]',
-                    reflex: true,
-                    placement: "bottom",
-                    title: "",
-                    content: "{% trans "Press <b>Checkout</b>." %}",
-                    template: no_nav_template,
-                    delay: 500
-                }, { // 10
                     title: "",
                     content: "{% trans "This is the <b>Preview</b> window, that shows previews for layouts, regions and widgets." %}",
-                    element: "#layout-viewer",
+                    element: "#layout-editor #layout-viewer-container",
                     placement: "bottom",
-                    delay: 100,
+                    delayOnElement: {
+                        delayElement: "element",
+                        maxDelay: 2000
+                    },
                     backdrop: true,
                     template: next_template
                 }, {
                     title: "",
                     content: "{% trans "This is the <b>Editor</b>, where we can change layout properties, region options and assigned widgets." %}",
-                    element: "#properties-panel",
+                    element: "#properties-panel-parent",
                     placement: "bottom",
-                    delay: 100,
+                    delayOnElement: {
+                        delayElement: "element",
+                        maxDelay: 2000
+                    },
                     backdrop: true,
                     template: next_template
-                }, { // 12
+                }, { // 10
                     title: "",
                     content: "{% trans "This is the <b>Layout Timeline</b>, which shows the total layout duration as well as the duration of assigned media." %}",
                     element: "#timeline-container",
                     placement: "top",
-                    delay: 100,
+                    delay: 500,
                     backdrop: true,
                     template: next_template
-                }, { // 13
+                }, {
                     title: "",
                     content: "{% trans "This is the <b>Toolbar</b>, used to interact with the layout designer." %}",
-                    element: "#layout-editor-toolbar nav",
+                    element: "#layout-editor-toolbar",
                     placement: "top",
-                    delay: 100,
+                    delay: 500,
                     backdrop: true,
-                    template: next_template
+                    template: next_template,
+                    onElementUnavailable: tourStepBroken
                 }, {
                     title: "",
                     content: "{% trans "Let's start by opening the Navigator edit mode. Click on the edit button." %}",
@@ -186,7 +189,7 @@
                     placement: "top",
                     reflex: true,
                     template: no_nav_template
-                }, { // 15
+                }, { // 13
                     title: "",
                     content: "{% trans "Click anywhere inside the region to edit it" %}",
                     element: '#layout-navigator div[data-type="region"]',
@@ -199,10 +202,11 @@
                     content: "{% trans "Grab the region handle, and drag to resize." %}",
                     element: '#layout-navigator div[data-type="region"] .ui-resizable-se',
                     placement: "bottom",
-                    delay: 200,
+                    delay: 500,
                     reflex: "mouseup",
-                    template: no_nav_template
-                }, { // 17
+                    template: no_nav_template,
+                    onElementUnavailable: tourStepBroken
+                }, { // 15
                     title: "",
                     content: "{% trans "When you are happy with your positioning, click save to save changes." %}",
                     element: "#properties-panel button[data-action='save']",
@@ -215,8 +219,9 @@
                     element: "#layout-navigator #close-btn",
                     placement: "right",
                     reflex: true,
+                    delay: 4000,
                     template: no_nav_template
-                }, { // 19
+                }, { // 17
                     title: "",
                     container: '#layout-editor',
                     content: "{% trans "You will now have an empty region that has been resized and positioned on a black background. Let's add some content!" %}",
@@ -227,23 +232,32 @@
                     onShown: function (tour) {
                         // If we have a widget already, got to the properties step
                         if ($('#layout-timeline .designer-widget').length > 0) {
-                            tour.goTo(24);
+                            tour.goTo(22);
+                            return false;
                         }
                     }
-                }, { // 20
+                }, { // 18
                     title: "",
                     content: "{% trans "Use the Toolbar tabs to select <b>Widgets</b>" %}",
                     element: "#layout-editor-toolbar #btn-menu-2",
                     placement: "top",
                     reflex: true,
-                    template: no_nav_template
-                }, {
+                    template: no_nav_template,
+                    onShown: function (tour) {
+                        // If widgets are selected already, go to next step
+                        if ($('#layout-editor-toolbar #btn-menu-2.active').length > 0) {
+                            tour.goTo(19);
+                            return false;
+                        }
+                    }
+                }, { // 19
                     title: "",
                     content: "{% trans "These are the widgets you can add. Find the <b>Text</b> widget using the right and left buttons." %}",
                     element: "#layout-editor-toolbar #content-2 .toolbar-pane-content",
                     placement: "top",
-                    template: next_template
-                }, { // 22
+                    template: next_template,
+                    onElementUnavailable: tourStepBroken
+                }, { // 20
                     title: "",
                     content: "{% trans "Add by <b>dragging</b> the widget to a region, or clicking on the <b>plus button</b> and click on the target region. Click <b>Next</b> after adding the widget." %}",
                     element: '#layout-editor-toolbar .toolbar-card[data-sub-type="text"]',
@@ -263,11 +277,12 @@
 
                         // Go back if the element isn't still visible
                         if (!isScrolledIntoView('#layout-editor-toolbar .toolbar-card[data-sub-type="text"]', '.toolbar-pane-content-container')){
-                            tour.goTo(21);
+                            tour.goTo(19);
+                            return false;
                         }
                     },
-                    next: 23
-                }, {
+                    next: 21
+                }, { // 21
                     title: "",
                     content: "{% trans "The Layout Timeline will now show that the Text widget has been added." %}",
                     element: '#layout-timeline',
@@ -277,11 +292,12 @@
                     onShown: function (tour) {
                         // If we don't have widget yet, got to the add step
                         if ($('#layout-timeline .designer-widget').length === 0) {
-                            tour.goTo(20);
+                            tour.goTo(18);
+                            return false;
                         }
                     },
-                    next: 24
-                }, { // 24
+                    next: 22
+                }, { // 22
                     title: "",
                     content: "{% trans "Click on the widget in the Layout Timeline!" %}",
                     element: '#layout-timeline .designer-widget',
@@ -296,12 +312,13 @@
                     onShown: function (tour) {
                         // If properties panel is not the right one, go to previous step
                         if ($('#properties-panel .form-title-widget').length === 0) {
-                            tour.goTo(24);
+                            tour.goTo(22);
+                            return false;
                         }
                     },
                     reflex: true,
                     delay: 1000
-                }, { // 26
+                }, { // 24
                     title: "",
                     content: "{% trans "Add and format your text. The thin red line is showing your region border. Ensure that when you are editing, your text remains within these guidelines." %}",
                     element: '#layout-viewer .viewer-element ',
@@ -315,7 +332,7 @@
                     placement: "right",
                     template: next_template,
                     delay: 500
-                }, { // 28
+                }, { // 26
                     title: "",
                     content: "{% trans "Give an optional name to this widget." %}",
                     element: '#properties-panel input#name',
@@ -329,8 +346,9 @@
                     placement: "left",
                     template: no_nav_template,
                     reflex: true,
-                    delay: 500
-                }, { // 30
+                    delay: 500,
+                    onElementUnavailable: tourStepBroken
+                }, { // 28
                     title: "",
                     content: "{% trans "Let’s override the default time to 30 seconds." %}",
                     element: '#properties-panel input#duration',
@@ -349,10 +367,11 @@
                     onShown: function (tour) {
                         // If the input duration is not visible, go back to the checkbox step
                         if (!$('#properties-panel input#duration').is(":visible")) {
-                            tour.goTo(29);
+                            tour.goTo(27);
+                            return false;
                         }
                     }
-                }, { // 32
+                }, { // 30
                     title: "",
                     content: "{% trans "The Region Timeline will now show the new updated duration for this Text widget." %}",
                     element: '#layout-timeline .designer-widget .widgetLabel .widgetDuration',
@@ -367,7 +386,7 @@
                     template: no_nav_template,
                     reflex: "mousedown",
                     delay: 500
-                }, { // 34
+                }, { // 32
                     title: "",
                     content: "{% trans "Edit options for the layout will open in the Layout Editor." %}",
                     element: '#properties-panel',
@@ -377,7 +396,8 @@
                     onShown: function (tour) {
                         // If properties panel is not the right one, go to previous step
                         if ($('#properties-panel #layoutEditForm').length === 0) {
-                            tour.goTo(33);
+                            tour.goTo(31);
+                            return false;
                         }
                     }
                 }, {
@@ -388,7 +408,7 @@
                     template: no_nav_template,
                     reflex: 'focusout',
                     delay: 500
-                }, { // 36
+                }, { // 34
                     title: "",
                     content: "{% trans "Click <b>Save</b> to save the layout edits." %}",
                     element: '#properties-panel button#save',
@@ -403,13 +423,13 @@
                     placement: "right",
                     delay: 500,
                     template: next_template
-                }, { // 38
+                }, { // 36
                     title: "",
                     content: "{% trans "When happy with your layout you will need to publish before being able to schedule to displays." %}",
                     orphan: true,
                     placement: "top",
                     template: next_template,
-                    delay: {show: 1500, hide: 100}
+                    delay: 1500
                 }, {
                     title: "",
                     content: "{% trans "Select <b>Actions</b> to see the publish option." %}",
@@ -417,7 +437,7 @@
                     placement: "bottom",
                     reflex: true,
                     template: no_nav_template
-                }, { // 40
+                }, { // 38
                     title: "",
                     content: "{% trans "Click on the <b>Publish</b> button to open the form." %}",
                     element: '#layout-editor-topbar #publishLayout',
@@ -434,14 +454,14 @@
                     content: "{% trans "Press <b>Publish</b>." %}",
                     template: no_nav_template,
                     delay: 500
-                }, { // 42
+                }, { // 40
                     title: "",
                     element: '.welcome-screen-modal .modal-dialog',
                     content: "{% trans "Your layout is now ready to be scheduled to displays / display groups!" %}",
                     orphan: true,
                     placement: "bottom",
                     template: next_template,
-                    delay: {show: 3000, hide: 100}
+                    delay: 3000
                 }, {
                     title: "Success!",
                     content: "{% trans "And that is how easy it is to create a basic layout. Ready for more? Jump into the User Manual for guidance and top tips!" %}",
@@ -452,17 +472,12 @@
             ]
         });
 
-        if (hasSeenNewUserWizard === 0) {
-            restartTour(tour);
-        }
-
-        $("#reshowWelcomeMenuItem").on("click", function() {
-            restartTour(tour, true);
-        });
-
         // Layout Designer tour
         layoutDesignerTour = window.layoutDesignerTour = new Tour({
             debug: false,
+            framework: "bootstrap3", 
+            showProgressBar: false,     // don't show the progress bar on this step only
+            showProgressText: false,    // don't show the progress text on this step only
             steps: [
                 {
                     container: '#layout-editor',
@@ -471,7 +486,7 @@
                     title: "",
                     content: "{% trans "This is the layout designer screen where you will add and configure content. By default, your layout is in read-only mode, and needs to be checked out, to enable editing." %}",
                     template: next_template
-                }, {
+                }, { // 1
                     element: '#layout-editor-topbar #actionsSubmenu',
                     reflex: true,
                     placement: "bottom",
@@ -483,6 +498,7 @@
                         // If we don't have checked  out the layout yet, got to the checkout step
                         if (!$('#read-only-message').is(":visible")) {
                             tour.goTo(4);
+                            return false;
                         }
                     }
                 }, {
@@ -505,7 +521,7 @@
                 }, { // 4
                     title: "",
                     content: "{% trans "This is the <b>Preview</b> window, that shows previews for layouts, regions and widgets." %}",
-                    element: "#layout-viewer",
+                    element: "#layout-viewer-container",
                     placement: "bottom",
                     delay: {show: 1500, hide: 100},
                     backdrop: true,
@@ -526,7 +542,7 @@
                     reflex: true,
                     delay: 500,
                     template: no_nav_template
-                }, {
+                }, { //7
                     element: '#layout-navigator',
                     delay: 500,
                     placement: "bottom",
@@ -543,17 +559,17 @@
                 }, {
                     title: "",
                     content: "{% trans "This is the <b>Layout Timeline</b>, which shows the total layout duration as well as the duration of assigned media." %}",
-                    element: "#timeline-container",
+                    element: "#layout-timeline",
                     placement: "bottom",
-                    delay: 100,
+                    delay: 1000,
                     backdrop: true,
                     template: next_template
-                }, {
+                }, { //10
                     title: "",
                     content: "{% trans "This is the <b>Toolbar</b>, used to interact with the layout designer." %}",
-                    element: "#layout-editor-toolbar nav",
+                    element: "#layout-editor-toolbar",
                     placement: "top",
-                    delay: 100,
+                    delay: 500,
                     backdrop: true,
                     template: next_template
                 }, {
@@ -562,7 +578,14 @@
                     element: "#layout-editor-toolbar #btn-menu-2",
                     placement: "top",
                     reflex: true,
-                    template: no_nav_template
+                    template: no_nav_template,
+                    onShown: function (tour) {
+                        // If widgets are selected already, go to next step
+                        if ($('#layout-editor-toolbar #btn-menu-2.active').length > 0) {
+                            tour.goTo(12);
+                            return false;
+                        }
+                    }
                 }, {
                     title: "",
                     content: "{% trans "These are the widgets you can add." %}",
@@ -570,7 +593,7 @@
                     placement: "top",
                     delay: 100,
                     template: next_template
-                }, {
+                }, { //13
                     title: "",
                     content: "{% trans "You can take a look at how your layout will look on your displays by clicking on the Play button on the Preview window." %}",
                     element: '#layout-viewer-navbar #play-btn',
@@ -593,39 +616,36 @@
                 }
             ]
         });
+
+        if (hasSeenNewUserWizard === 0) {
+            restartTour(tour);
+        }
+
+        $("#reshowWelcomeMenuItem").on("click", function() {
+            restartTour(tour, true, true);
+        });
     });
 
-    // Function to wait for a given condition before going to the next step
-    function customTourWait(tour, step, checkCallback, delay) {
-
-        delay = (delay === undefined) ? 500 : delay;
-
-        hasSeenNewUserWizard = -1;
-        tour.end();
-        setTimeout(function(){
-            if(checkCallback()) {
-                hasSeenNewUserWizard = 0;
-                restartTour(tour, true);
-                tour.goTo(step); //next step
-            } else {
-                customTourWait(tour, step, checkCallback, delay);
-            }
-        }, delay); 
+    function tourStepBroken(tour, stepNumber) {
+        restartTour(tour, true, true);
     }
 
     // Restart tour and/or save to prefs
-    function restartTour(tour, saveToPrefs) {
-
+    function restartTour(tour, saveToPrefs, fromStart) {
         saveToPrefs = (saveToPrefs === undefined) ? false : saveToPrefs;
+        fromStart = (fromStart === undefined) ? false : fromStart;
 
         if(saveToPrefs) {
             setNewUserWizardState(false);
         }
 
         // Reshow the user welcome wizard
-            tour.init();
+        if(fromStart) {
             tour.restart();
+        } else {
+            tour.start();
         }
+    }
 
     function setNewUserWizardState(seen) {
         

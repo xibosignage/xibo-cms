@@ -1802,6 +1802,5 @@ lD.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
  */
 lD.resetTour = function() {
     layoutDesignerTour.restart();
-    layoutDesignerTour.goTo(0);
     toastr.info(editorsTrans.resetTourNotification);
 };
