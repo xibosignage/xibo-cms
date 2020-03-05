@@ -112,8 +112,6 @@ class CampaignLayoutAssignTest extends LocalWebTestCase
     {
         $this->getLogger()->debug('Tear Down');
 
-        parent::tearDown();
-
         // Delete the Layout we've been working with
         $this->deleteLayout($this->layout);
 
@@ -122,6 +120,8 @@ class CampaignLayoutAssignTest extends LocalWebTestCase
 
         // Delete the Campaign
         $this->campaign->delete();
+
+        parent::tearDown();
     }
     // </editor-fold>
 

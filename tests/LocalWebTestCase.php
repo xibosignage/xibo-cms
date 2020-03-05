@@ -146,10 +146,9 @@ class LocalWebTestCase extends PHPUnit_TestCase
         \Xibo\Middleware\State::setState($app, $request);
 
        // $this->getLogger()->debug('Setting Middleware');
-
+        $app->add(new Storage($app));
         $app->add(new TestAuthMiddleware($app));
         $app->add(new State($app));
-        $app->add(new Storage($app));
         $app->add($twigMiddleware);
         $app->add(new Middleware\TestXmr($app));
         $app->addRoutingMiddleware();
@@ -159,7 +158,6 @@ class LocalWebTestCase extends PHPUnit_TestCase
             $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
             /** @var Response $response */
             $response = $decoratedResponseFactory->createResponse($exception->getCode());
-            $app->getContainer()->get('state')->setCommitState(false);
 
             return $response->withJson([
                 'success' => false,
@@ -316,9 +314,9 @@ class LocalWebTestCase extends PHPUnit_TestCase
             die ('Cant proceed without the phpunit user');
         }
 
-              // Check to see if there is an API application we can use
-        /** @var Application $application */
+        // Check to see if there is an API application we can use
         try {
+            /** @var Application $application */
             $application = $container->get('applicationFactory')->getByName('phpunit');
         } catch (NotFoundException $e) {
             // Add it
@@ -348,6 +346,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
         $store = $container->get('store');
         $key = $store->select('SELECT value FROM `setting` WHERE `setting` = \'SERVER_KEY\'', [])[0]['value'];
         $store->commitIfNecessary();
+        $store->close();
 
         // Create an XMDS wrapper for the tests to use
         $xmds = new XmdsWrapper('http://localhost/xmds.php', $key);
@@ -368,6 +367,14 @@ class LocalWebTestCase extends PHPUnit_TestCase
         self::$container->get('store')->close();
 
         parent::tearDownAfterClass();
+    }
+
+    public function tearDown()
+    {
+        // Remove the DB
+        self::$container->get('store')->close();
+
+        parent::tearDown();
     }
 
     /**
@@ -410,7 +417,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
      * This function is using MockPlayerActionService, which returns an array of displayId on processQueue
      *
      * @return int[]
-     * @throws \Xibo\Support\Exception\DeadlockException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function getPlayerActionQueue()
     {

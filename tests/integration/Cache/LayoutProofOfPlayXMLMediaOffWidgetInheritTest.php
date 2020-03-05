@@ -176,8 +176,6 @@ class LayoutProofOfPlayXMLMediaOffWidgetInheritTest extends LocalWebTestCase
     {
         $this->getLogger()->debug('Tear Down');
 
-        parent::tearDown();
-
         // Delete the LayoutOff
         $this->deleteLayout($this->layoutOff);
 
@@ -192,6 +190,8 @@ class LayoutProofOfPlayXMLMediaOffWidgetInheritTest extends LocalWebTestCase
 
         // Delete the media record
         $this->media->deleteAssigned();
+
+        parent::tearDown();
 
     }
     // </editor-fold>
