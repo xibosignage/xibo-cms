@@ -238,8 +238,8 @@ class State implements Middleware
 
         // Configure logging
         if (Environment::isForceDebugging() || strtolower($mode) == 'test') {
-           // error_reporting(E_ALL);
-         //   ini_set('display_errors', 1);
+            error_reporting(E_ALL);
+            ini_set('display_errors', 1);
             // log level is set in our database handler construct (in access points), it also has getLevel() and setLevel($level) functions.
             foreach ($logger->getHandlers() as $handler) {
                 if ($handler instanceof DatabaseLogHandler) {
