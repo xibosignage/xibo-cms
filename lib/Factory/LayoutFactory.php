@@ -510,9 +510,11 @@ class LayoutFactory extends BaseFactory
             $region->tempId = $regionNode->getAttribute('id');
 
             // Set the region name if empty
-            if ($region->name == '')
+            if ($region->name == '') {
                 $region->name = count($layout->regions) + 1;
-
+                // make sure we have a string as the region name, otherwise sanitizer will get confused.
+                $region->name = (string)$region->name;
+            }
             // Populate Playlists (XLF doesn't contain any playlists)
             $playlist = $this->playlistFactory->create($region->name, $regionOwnerId);
 
@@ -753,9 +755,11 @@ class LayoutFactory extends BaseFactory
             $region->tempId = $regionJson['tempId'];
 
             // Set the region name if empty
-            if ($region->name == '')
+            if ($region->name == '') {
                 $region->name = count($layout->regions) + 1;
-
+                // make sure we have a string as the region name, otherwise sanitizer will get confused.
+                $region->name = (string)$region->name;
+            }
             // Populate Playlists
             $playlist = $this->playlistFactory->create($region->name, $regionOwnerId);
 
@@ -968,12 +972,12 @@ class LayoutFactory extends BaseFactory
 
         // Do some pre-checks on the arguments we have been provided
         if (!file_exists($zipFile))
-            throw new \InvalidArgumentException(__('File does not exist'));
+            throw new InvalidArgumentException(__('File does not exist'));
 
         // Open the Zip file
         $zip = new \ZipArchive();
         if (!$zip->open($zipFile)) {
-            throw new \InvalidArgumentException(__('Unable to open ZIP'));
+            throw new InvalidArgumentException(__('Unable to open ZIP'));
         }
 
         // Get the layout details
