@@ -1,19 +1,39 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (NotificationTest.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 namespace Xibo\Tests\Integration;
 
 use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
 use Xibo\OAuth2\Client\Entity\XiboNotification;
-use Xibo\OAuth2\Client\Entity\XiboUserGroup;
 use Xibo\Tests\LocalWebTestCase;
 
 class NotificationTest extends LocalWebTestCase
 {
+    /** @var XiboDisplayGroup[] */
+    protected $startDisplayGroups;
+
+    /** @var XiboNotification[] */
+    protected $startNotifications;
+
     /**
      * setUp - called before every test automatically
      */
@@ -85,12 +105,12 @@ class NotificationTest extends LocalWebTestCase
     public function testListAll()
     {
         # Get all notifications
-        $this->client->get('/notification');
+        $response = $this->sendRequest('GET','/notification');
 
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
     }
 
     /**
@@ -102,7 +122,7 @@ class NotificationTest extends LocalWebTestCase
     	$displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'notification description', 0, '');
     	# Add new notification and assign it to our display group
     	$subject = 'API Notification';
-        $this->client->post('/notification', [
+        $response = $this->sendRequest('POST','/notification', [
     		'subject' => $subject,
     		'body' => 'Notification body text',
     		'releaseDt' => '2016-09-01 00:00:00',
@@ -112,10 +132,10 @@ class NotificationTest extends LocalWebTestCase
     	//	'userGroupId' =>
     	]);
 
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
         # Check if the subject is correctly set
         $this->assertSame($subject, $object->data->subject);
     }
@@ -130,8 +150,10 @@ class NotificationTest extends LocalWebTestCase
     	# Create new notification
     	$notification = (new XiboNotification($this->getEntityProvider()))->create('API subject', 'API body', '2016-09-01 00:00:00', 0, 0, [$displayGroup->displayGroupId]);
     	# Delete notification
-        $this->client->delete('/notification/' . $notification->notificationId);
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+        $response = $this->sendRequest('DELETE','/notification/' . $notification->notificationId);
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertSame(204, $object->status);
         # Clean up
         $displayGroup->delete();
     }
@@ -149,7 +171,7 @@ class NotificationTest extends LocalWebTestCase
         # Create new subject
     	$subjectNew = 'Subject edited via API';
     	# Edit our notification
-    	$this->client->put('/notification/' . $notification->notificationId, [
+    	$response = $this->sendRequest('PUT','/notification/' . $notification->notificationId, [
     		'subject' => $subjectNew,
     		'body' => $notification->body,
     		'releaseDt' => $notification->releaseDt,
@@ -158,8 +180,8 @@ class NotificationTest extends LocalWebTestCase
             'displayGroupIds' => [$displayGroup->displayGroupId]
     		], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-    	$this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
-        $object = json_decode($this->client->response->body());
+    	$this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
+        $object = json_decode($response->getBody());
         
         # Examine the returned object and check that it's what we expect
         $this->assertObjectHasAttribute('data', $object);

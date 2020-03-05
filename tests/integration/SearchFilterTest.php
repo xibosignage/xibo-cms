@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -133,11 +133,11 @@ class SearchFilterTest extends LocalWebTestCase
      */
     public function testSearch()
     {
-        $this->client->get('/layout', ['layout' => 'integration']);
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->getBody());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $response = $this->sendRequest('GET','/layout', ['layout' => 'integration']);
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
         $this->assertSame(4, $object->data->recordsFiltered);
     }
 
@@ -148,11 +148,11 @@ class SearchFilterTest extends LocalWebTestCase
      */
     public function testSearchCommaSeparated()
     {
-        $this->client->get('/layout', ['layout' => 'integration,example']);
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->getBody());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $response = $this->sendRequest('GET','/layout', ['layout' => 'integration,example']);
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
         $this->assertSame(5, $object->data->recordsFiltered);
     }
 
@@ -163,11 +163,11 @@ class SearchFilterTest extends LocalWebTestCase
      */
     public function testSearchCommaSeparatedWithSpaces()
     {
-        $this->client->get('/layout', ['layout' => 'integration layout, -3']);
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->getBody());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $response = $this->sendRequest('GET','/layout', ['layout' => 'integration layout, -3']);
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
         $this->assertSame(2, $object->data->recordsFiltered);
     }
 
@@ -178,11 +178,11 @@ class SearchFilterTest extends LocalWebTestCase
      */
     public function testSearchCommaSeparatedWithNotRlike()
     {
-        $this->client->get('/layout', ['layout' => 'integration, -example']);
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->getBody());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $response = $this->sendRequest('GET','/layout', ['layout' => 'integration, -example']);
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
         $this->assertSame(2, $object->data->recordsFiltered);
     }
 
@@ -193,11 +193,11 @@ class SearchFilterTest extends LocalWebTestCase
      */
     public function testSearchCommaSeparatedWithNotRlike2()
     {
-        $this->client->get('/layout', ['layout' => 'example, -layout']);
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->getBody());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $response = $this->sendRequest('GET','/layout', ['layout' => 'example, -layout']);
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
         $this->assertSame(1, $object->data->recordsFiltered);
     }
 
@@ -208,11 +208,11 @@ class SearchFilterTest extends LocalWebTestCase
      */
     public function testSearchPartialMatch()
     {
-        $this->client->get('/layout', ['layout' => 'inte, exa, -5']);
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->getBody());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $response = $this->sendRequest('GET','/layout', ['layout' => 'inte, exa, -5']);
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
         $this->assertSame(4, $object->data->recordsFiltered);
     }
 
@@ -223,11 +223,11 @@ class SearchFilterTest extends LocalWebTestCase
      */
     public function testSearchComplex()
     {
-        $this->client->get('/layout', ['layout' => 'integration, -1, -3, different name']);
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->getBody());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $response = $this->sendRequest('GET','/layout', ['layout' => 'integration, -1, -3, different name']);
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
         $this->assertSame(3, $object->data->recordsFiltered);
     }
 }

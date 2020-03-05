@@ -20,9 +20,11 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
+use GuzzleHttp\Psr7\Stream;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
+use Xibo\Helper\Random;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Factory\AuditLogFactory;
 use Xibo\Helper\SanitizerService;
@@ -174,8 +176,7 @@ class AuditLog extends Base
         // We are expecting some parameters
         $filterFromDt = $sanitizedParams->getDate('filterFromDt');
         $filterToDt = $sanitizedParams->getDate('filterToDt');
-      //  header( "Content-Type: text/csv;charset=utf-8" );
-      //  header( 'Content-Disposition:attachment; filename=audittrail.csv');
+        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/audittrail_' . Random::generateString();
 
         if ($filterFromDt == null || $filterToDt == null) {
             throw new InvalidArgumentException(__('Please provide a from/to date.'), 'filterFromDt');
@@ -186,7 +187,7 @@ class AuditLog extends Base
 
         $rows = $this->auditLogFactory->query('logId', ['fromTimeStamp' => $fromTimeStamp, 'toTimeStamp' => $toTimeStamp]);
 
-        $out = fopen('php://output', 'w');
+        $out = fopen($tempFileName, 'w');
         fputcsv($out, ['ID', 'Date', 'User', 'Entity', 'EntityId', 'Message', 'Object']);
 
         // Do some post processing
@@ -201,7 +202,8 @@ class AuditLog extends Base
                              ->withHeader('Content-Disposition', 'attachment; filename="audittrail.csv"')
                              ->withHeader('Content-Transfer-Encoding', 'binary')
                              ->withHeader('Accept-Ranges', 'bytes')
-                             ->withHeader('Connection', 'Keep-Alive');
+                             ->withHeader('Connection', 'Keep-Alive')
+                             ->withBody(new Stream(fopen($tempFileName, 'r')));
 
         $this->setNoOutput(true);
 

@@ -180,8 +180,6 @@ class LayoutProofOfPlayXMLMediaOffWidgetOffTest extends LocalWebTestCase
     {
         $this->getLogger()->debug('Tear Down');
 
-        parent::tearDown();
-
         // Delete the LayoutOn
         $this->deleteLayout($this->layoutOff);
 
@@ -200,6 +198,8 @@ class LayoutProofOfPlayXMLMediaOffWidgetOffTest extends LocalWebTestCase
         // Set global widget enable stat set to Inherit
         self::$container->get('configService')->changeSetting('WIDGET_STATS_ENABLED_DEFAULT', 'Inherit');
         $this->getStore()->commitIfNecessary();
+
+        parent::tearDown();
 
     }
     // </editor-fold>

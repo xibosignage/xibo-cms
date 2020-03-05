@@ -26,7 +26,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Service\DisplayNotifyService;
 use Xibo\Service\PlayerActionService;
 
@@ -85,7 +85,7 @@ class Xmr implements Middleware
         if ($container->get('displayNotifyService') != null) {
             try {
                 $container->get('displayNotifyService')->processQueue();
-            } catch (XiboException $e) {
+            } catch (GeneralException $e) {
                 $container->get('logService')->error('Unable to Process Queue of Display Notifications due to %s', $e->getMessage());
             }
         }

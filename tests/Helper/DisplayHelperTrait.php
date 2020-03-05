@@ -81,6 +81,7 @@ pbBhRgkIdydXoZZdjQIDAQAB
             'status' => $status
         ]);
         $this->getStore()->commitIfNecessary();
+        $this->getStore()->close();
     }
 
     /**
@@ -95,6 +96,7 @@ pbBhRgkIdydXoZZdjQIDAQAB
             'auditingUntil' => (time() + 86400)
         ]);
         $this->getStore()->commitIfNecessary();
+        $this->getStore()->close();
     }
 
     /**
@@ -108,6 +110,7 @@ pbBhRgkIdydXoZZdjQIDAQAB
             'timeZone' => $timeZone
         ]);
         $this->getStore()->commitIfNecessary();
+        $this->getStore()->close();
     }
 
     /**

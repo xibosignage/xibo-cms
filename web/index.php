@@ -28,7 +28,7 @@ use Slim\Http\Factory\DecoratedResponseFactory;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\TwigMiddleware;
-use Xibo\Exception\UpgradePendingException;
+use Xibo\Support\Exception\UpgradePendingException;
 use Xibo\Factory\ContainerFactory;
 
 DEFINE('XIBO', true);

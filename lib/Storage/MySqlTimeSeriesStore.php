@@ -22,9 +22,9 @@
 
 namespace Xibo\Storage;
 
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Service\DateServiceInterface;
@@ -97,7 +97,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                     // Put layout campaignId to memory
                     $this->layoutCampaignIds[$statData['layoutId']] = $campaignId;
 
-                } catch (XiboException $error) {
+                } catch (GeneralException $error) {
 
                     if (!in_array($statData['layoutId'], $this->layoutIdsNotFound)) {
                         $this->layoutIdsNotFound[] = $statData['layoutId'];

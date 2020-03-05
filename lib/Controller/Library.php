@@ -568,7 +568,7 @@ class Library extends Base
             'exactTags' => $parsedQueryParams->getCheckbox('exactTags'),
             'ownerId' => $parsedQueryParams->getInt('ownerId'),
             'retired' => $parsedQueryParams->getInt('retired'),
-            'duration' => $parsedQueryParams->getString('duration'),
+            'duration' => $parsedQueryParams->getInt('duration'),
             'fileSize' => $parsedQueryParams->getString('fileSize'),
             'ownerUserGroupId' => $parsedQueryParams->getInt('ownerUserGroupId'),
             'assignable' => $parsedQueryParams->getInt('assignable'),
@@ -2412,7 +2412,7 @@ class Library extends Base
         $type = $sanitizedParams->getString('type');
         $optionalName = $sanitizedParams->getString('optionalName');
         $extension = $sanitizedParams->getString('extension');
-        $enableStat = $sanitizedParams->getString('enableStat', $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT'));
+        $enableStat = $sanitizedParams->getString('enableStat', ['default' => $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT')]);
         
         if ($sanitizedParams->getDate('expires') != null ) {
 
@@ -2462,7 +2462,7 @@ class Library extends Base
         }
 
         // if we were provided with optional Media name set it here, otherwise get it from pathinfo
-        if (isset($optionalName)) {
+        if (!empty($optionalName)) {
             $name = $optionalName;
         } else {
             // get the media name from pathinfo

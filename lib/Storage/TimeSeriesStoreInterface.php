@@ -29,6 +29,7 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\GeneralException;
 
 /**
  * Interface TimeSeriesStoreInterface
@@ -74,6 +75,7 @@ interface TimeSeriesStoreInterface
     /**
      * Get statistics
      * @param $filterBy array[mixed]|null
+     * @throws GeneralException
      * @return TimeSeriesResultsInterface
      */
     public function getStats($filterBy = []);

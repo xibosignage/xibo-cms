@@ -94,8 +94,8 @@ class HlsWidgetTest extends LocalWebTestCase
         return [
             'HLS stream' => [200, 'HLS stream', 1, 20, 'http://ceu.xibo.co.uk/hls/big_buck_bunny_adaptive_master.m3u8', 0, 0],
             'HLS stream 512' => [200, 'HLS stream with transparency', 1, 20, 'http://ceu.xibo.co.uk/hls/big_buck_bunny_adaptive_512.m3u8', 0, 1],
-            'No url provided' => [500, 'no uri', 1, 10, '', 0, 0],
-            'No duration provided' => [500, 'no duration with useDuration 1', 1, 0, 'http://ceu.xibo.co.uk/hls/big_buck_bunny_adaptive_512.m3u8', 0, 0],
+            'No url provided' => [422, 'no uri', 1, 10, '', 0, 0],
+            'No duration provided' => [422, 'no duration with useDuration 1', 1, 0, 'http://ceu.xibo.co.uk/hls/big_buck_bunny_adaptive_512.m3u8', 0, 0],
         ];
     }
 
@@ -116,7 +116,7 @@ class HlsWidgetTest extends LocalWebTestCase
 
         $this->assertSame($statusCode, $response->getStatusCode());
 
-        if ($statusCode == 500)
+        if ($statusCode == 422)
             return;
 
         $this->assertNotEmpty($response->getBody());

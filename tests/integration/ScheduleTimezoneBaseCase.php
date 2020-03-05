@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -119,7 +119,7 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
 
         $this->getLogger()->debug('Event start will be at: ' . $date->format('Y-m-d H:i:s'));
 
-        $response = $this->client->post('/schedule', [
+        $response = $this->sendRequest('POST','/schedule', [
             'fromDt' => $date->format('Y-m-d H:i:s'),
             'toDt' => $date->copy()->addMinutes(30)->format('Y-m-d H:i:s'),
             'eventTypeId' => 1,
@@ -133,8 +133,8 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
             'syncTimezone' => 0
         ]);
 
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $response);
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
 
@@ -167,7 +167,7 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
 
         $this->getLogger()->debug('Event start will be at: ' . $date->format('Y-m-d H:i:s'));
 
-        $response = $this->client->post('/schedule', [
+        $response = $this->sendRequest('POST','/schedule', [
             'fromDt' => $date->format('Y-m-d H:i:s'),
             'toDt' => $date->copy()->addMinutes(30)->format('Y-m-d H:i:s'),
             'eventTypeId' => 1,
@@ -181,8 +181,8 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
             'syncTimezone' => 0
         ]);
 
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $response);
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
 
@@ -219,7 +219,7 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
 
         $this->getLogger()->debug('Event start will be at: ' . $date->format('Y-m-d H:i:s') . ' which is ' . $localDate->format('Y-m-d H:i:s') . ' local time.');
 
-        $response = $this->client->post('/schedule', [
+        $response = $this->sendRequest('POST','/schedule', [
             'fromDt' => $date->format('Y-m-d H:i:s'),
             'toDt' => $date->copy()->addMinutes(30)->format('Y-m-d H:i:s'),
             'eventTypeId' => 1,
@@ -233,8 +233,8 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
             'syncTimezone' => 1
         ]);
 
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $response);
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
 
@@ -268,7 +268,7 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
 
         $this->getLogger()->debug('Event start will be at: ' . $date->format('Y-m-d H:i:s') . ' which is ' . $localDate->format('Y-m-d H:i:s') . ' local time.');
 
-        $response = $this->client->post('/schedule', [
+        $response = $this->sendRequest('POST','/schedule', [
             'fromDt' => $date->format('Y-m-d H:i:s'),
             'toDt' => $date->copy()->addMinutes(30)->format('Y-m-d H:i:s'),
             'eventTypeId' => 1,
@@ -282,8 +282,8 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
             'syncTimezone' => 1
         ]);
 
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $response);
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
 

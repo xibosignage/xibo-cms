@@ -21,9 +21,11 @@
  */
 namespace Xibo\Controller;
 
+use GuzzleHttp\Psr7\Stream;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
+use Xibo\Helper\Random;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -344,14 +346,14 @@ class Stats extends Base
         $type = strtolower($sanitizedQueryParams->getString('type'));
 
         $displayId = $sanitizedQueryParams->getInt('displayId');
-        $layoutIds = $sanitizedQueryParams->getIntArray('layoutId');
-        $mediaIds = $sanitizedQueryParams->getIntArray('mediaId');
+        $layoutIds = $sanitizedQueryParams->getIntArray('layoutId[]', ['default' => []]);
+        $mediaIds = $sanitizedQueryParams->getIntArray('mediaId[]', ['default' => []]);
         $statDate = $sanitizedQueryParams->getDate('statDate');
         $statId = $sanitizedQueryParams->getString('statId');
         $campaignId = $sanitizedQueryParams->getInt('campaignId');
 
-        $start = $sanitizedQueryParams->getInt('start', 0);
-        $length = $sanitizedQueryParams->getInt('length', 10);
+        $start = $sanitizedQueryParams->getInt('start', ['default' => 0]);
+        $length = $sanitizedQueryParams->getInt('length', ['default' => 10]);
 
         if ($fromDt != null) {
             $fromDt->startOfDay();
@@ -596,8 +598,7 @@ class Stats extends Base
         $fromDt = $sanitizedParams->getDate('fromDt');
         $toDt = $sanitizedParams->getDate('toDt');
         $displayId = $sanitizedParams->getInt('displayId');
-       // header( "Content-Type: text/csv;charset=utf-8" );
-      //  header( 'Content-Disposition:attachment; filename=stats.csv');
+        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/stats_' . Random::generateString();
 
         // Do not filter by display if super admin and no display is selected
         // Super admin will be able to see stat records of deleted display, we will not filter by display later
@@ -646,7 +647,7 @@ class Stats extends Base
             'displayIds' => $displayIds,
         ]);
 
-        $out = fopen('php://output', 'w');
+        $out = fopen($tempFileName, 'w');
         fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'Engagements']);
 
         while ($row = $resultSet->getNextRow() ) {
@@ -690,7 +691,8 @@ class Stats extends Base
                         ->withHeader('Content-Type', 'text/csv')
                         ->withHeader('Content-Disposition', 'attachment; filename=stats.csv')
                         ->withHeader('Content-Transfer-Encoding', 'binary')
-                        ->withHeader('Accept-Ranges', 'bytes');
+                        ->withHeader('Accept-Ranges', 'bytes')
+                        ->withBody(new Stream(fopen($tempFileName, 'r')));
 
         $this->setNoOutput(true);
 

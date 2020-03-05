@@ -940,6 +940,7 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ConfigurationException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
@@ -999,16 +1000,20 @@ class DataSet extends Base
         // Make sure the library exists
         Library::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
+        $sanitizer = $this->getSanitizer($request->getParams());
+
+
         $options = array(
             'userId' => $this->getUser()->userId,
             'dataSetId' => $id,
             'controller' => $this,
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
-            'script_url' => $this->urlFor($request,'dataSet.import'),
-            'upload_url' => $this->urlFor($request,'dataSet.import'),
+            'script_url' => $this->urlFor($request,'dataSet.import', ['id' => $id]),
+            'upload_url' => $this->urlFor($request,'dataSet.import', ['id' => $id]),
             'image_versions' => array(),
-            'accept_file_types' => '/\.csv/i'
+            'accept_file_types' => '/\.csv/i',
+            'sanitizer' => $sanitizer
         );
 
         try {
@@ -1022,7 +1027,7 @@ class DataSet extends Base
 
         $this->setNoOutput(true);
 
-        $this->render($request, $response);
+        return $this->render($request, $response);
     }
 
 

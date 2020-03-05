@@ -22,7 +22,7 @@ namespace Xibo\Helper;
 
 use Phinx\Console\PhinxApplication;
 use Phinx\Wrapper\TextWrapper;
-use Xibo\Exception\InstallationError;
+use Xibo\Support\Exception\InstallationError;
 use Xibo\Service\ConfigService;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Service\SanitizeService;

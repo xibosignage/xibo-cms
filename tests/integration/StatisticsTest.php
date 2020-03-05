@@ -133,7 +133,7 @@ class StatisticsTest extends LocalWebTestCase
         $this->media2->deleteAssigned();
 
         // Delete stat records
-        self::$container->timeSeriesStore->deleteStats(Date::now(), Date::createFromFormat("Y-m-d H:i:s", '2018-02-12 00:00:00'));
+        self::$container->get('timeSeriesStore')->deleteStats(Date::now(), Date::createFromFormat("Y-m-d H:i:s", '2018-02-12 00:00:00'));
     }
 
     /**
@@ -142,12 +142,12 @@ class StatisticsTest extends LocalWebTestCase
      */
     public function testListAll()
     {
-        $this->client->get('/stats');
+        $response = $this->sendRequest('GET','/stats');
 
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
     }
 
 
@@ -328,17 +328,17 @@ class StatisticsTest extends LocalWebTestCase
         $this->assertSame(true, $response);
 
         // Get stats and see if they match with what we expect
-        $this->client->get('/stats', [
+        $response = $this->sendRequest('GET','/stats', [
             'fromDt' => '2018-02-12 00:00:00',
             'toDt' => '2018-02-17 00:00:00',
             'displayId' => $this->display->displayId
         ]);
 
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        // $this->getLogger()->debug($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        // $this->getLogger()->debug($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
         $stats = (new XiboStats($this->getEntityProvider()))->get(['fromDt' => '2018-02-12 00:00:00', 'toDt' => '2018-02-17 00:00:00', 'layoutId' => $this->layout->layoutId]);
         // print_r($stats);
         $this->assertNotEquals(0, count($stats));
@@ -352,7 +352,7 @@ class StatisticsTest extends LocalWebTestCase
         $hardwareId = $this->display->license;
 
         // One insert
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
+        $xmds = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
                         <stat fromdt="2018-02-12 00:00:00" 
                         todt="2018-02-15 00:00:00" 
@@ -360,15 +360,15 @@ class StatisticsTest extends LocalWebTestCase
                         scheduleid="0" 
                         layoutid="' . $this->layout->layoutId . '" />
                     </stats>');
-        $this->assertSame(true, $response);
+        $this->assertSame(true, $xmds);
 
-        $this->client->get('/stats/export', [
+        $response = $this->sendRequest('GET','/stats/export', [
             'fromDt' => '2018-02-12 00:00:00',
             'toDt' => '2018-02-15 00:00:00'
         ]);
-        $this->assertSame(200, $this->client->response->status());
 
-        $body = $this->client->response->body();
+        $this->assertSame(200, $response->getStatusCode());
+        $body = $response->getBody()->getContents();
         $this->assertContains('layout,"2018-02-12', $body);
     }
 

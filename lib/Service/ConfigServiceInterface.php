@@ -22,7 +22,7 @@
 namespace Xibo\Service;
 
 use Stash\Interfaces\PoolInterface;
-use Xibo\Exception\ConfigurationException;
+use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Storage\StorageServiceInterface;
 
 /**

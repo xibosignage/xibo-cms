@@ -133,7 +133,6 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
 
         // Dump the cache
         foreach ($displayIds as $displayId) {
-            $this->log->debug('dumping cache for ' . $displayId);
             $this->pool->deleteItem(Display::getCachePrefix() . $displayId);
         }
 

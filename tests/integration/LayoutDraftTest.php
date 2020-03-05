@@ -44,10 +44,9 @@ class LayoutDraftTest extends LocalWebTestCase
 
     public function tearDown()
     {
+        parent::tearDown();
         // This should always be the original, regardless of whether we checkout/discard/etc
         $this->layout->delete();
-
-        parent::tearDown();
     }
 
     /**

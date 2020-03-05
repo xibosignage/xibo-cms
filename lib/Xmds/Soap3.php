@@ -21,7 +21,7 @@
 namespace Xibo\Xmds;
 
 use Xibo\Entity\Bandwidth;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Soap3

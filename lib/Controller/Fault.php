@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use GuzzleHttp\Psr7\Stream;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
@@ -103,6 +104,7 @@ class Fault extends Base
     /**
      * @param Request $request
      * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
@@ -201,29 +203,23 @@ class Fault extends Base
             ini_set('zlib.output_compression', 'Off');
         }
 
-        header('Content-Type: application/octet-stream');
-        header("Content-Transfer-Encoding: Binary");
-        header("Content-disposition: attachment; filename=troubleshoot.zip");
-        header('Content-Length: ' . filesize($tempFileName));
+        $response = $response
+            ->withHeader('Content-Type', 'application/octet-stream')
+            ->withHeader('Content-Disposition', 'attachment; filename=troubleshoot.zip')
+            ->withHeader('Content-Transfer-Encoding', 'Binary')
+            ->withHeader('Content-Length', filesize($tempFileName))
+            ->withBody(new Stream(fopen($tempFileName, 'r')));
 
         // Send via Apache X-Sendfile header?
         if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Apache') {
-            header("X-Sendfile: $tempFileName");
-            $response->withStatus(200);
+            $response = $response->withHeader('X-Sendfile', $tempFileName);
         }
         // Send via Nginx X-Accel-Redirect?
         if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Nginx') {
-            header("X-Accel-Redirect: /download/temp/" . basename($tempFileName));
-            $response->withStatus(200);
+            $response = $response->withHeader('X-Accel-Redirect', '/download/temp/' . basename($tempFileName));
         }
 
-        // Return the file with PHP
-        // Disable any buffering to prevent OOM errors.
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-        readfile($tempFileName);
-        exit;
+        return $this->render($request, $response);
     }
 
     /**

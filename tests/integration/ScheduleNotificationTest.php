@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -63,7 +64,7 @@ class ScheduleNotificationTest extends LocalWebTestCase
         $layout = $this->getDraft($this->layout);
 
         $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist->playlistId);
-        $response = $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'], [
+        $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'], [
             'text' => 'Widget A',
             'duration' => 100,
             'useDuration' => 1
@@ -120,7 +121,7 @@ class ScheduleNotificationTest extends LocalWebTestCase
 
         $this->getLogger()->debug('Event start will be at: ' . $date->format('Y-m-d H:i:s'));
 
-        $response = $this->client->post('/schedule', [
+        $response = $this->sendRequest('POST','/schedule', [
             'fromDt' => $date->format('Y-m-d H:i:s'),
             'toDt' => $date->copy()->addMinutes(30)->format('Y-m-d H:i:s'),
             'eventTypeId' => 1,
@@ -149,8 +150,8 @@ class ScheduleNotificationTest extends LocalWebTestCase
             'embed' => 'scheduleReminders'
         ]);
 
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $response);
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
+        $object = json_decode($response->getBody());
 
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
@@ -187,7 +188,7 @@ class ScheduleNotificationTest extends LocalWebTestCase
 
         $this->getLogger()->debug('Event start will be at: ' . $date->format('Y-m-d H:i:s'));
 
-        $response = $this->client->post('/schedule', [
+        $response = $this->sendRequest('POST','/schedule', [
             'fromDt' => $date->format('Y-m-d H:i:s'),
             'toDt' => $date->copy()->addMinutes(30)->format('Y-m-d H:i:s'),
             'eventTypeId' => 1,
@@ -216,8 +217,8 @@ class ScheduleNotificationTest extends LocalWebTestCase
             'embed' => 'scheduleReminders'
         ]);
 
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $response);
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
 

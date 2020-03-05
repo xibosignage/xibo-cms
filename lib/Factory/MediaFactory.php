@@ -611,19 +611,20 @@ class MediaFactory extends BaseFactory
             $dataSets = $this->getStore()->select($dataSetSql, []);
 
             if (count($dataSets) > 0) {
-
                 $body .= ' AND media.mediaID NOT IN (';
 
                 $first = true;
                 foreach ($dataSets as $dataSet) {
+                    $sanitizedDataSet = $this->getSanitizer($dataSet);
 
-                    if (!$first)
+                    if (!$first) {
                         $body .= ' UNION ALL ';
+                    }
 
                     $first = false;
 
-                    $dataSetId = $sanitizedFilter->getInt('dataSetId', $dataSet);
-                    $heading = $sanitizedFilter->getString('heading', $dataSet);
+                    $dataSetId = $sanitizedDataSet->getInt('dataSetId');
+                    $heading = $sanitizedDataSet->getString('heading');
 
                     $body .= ' SELECT `' .  $heading . '` AS mediaId FROM `dataset_' . $dataSetId . '`';
                 }
@@ -764,8 +765,8 @@ class MediaFactory extends BaseFactory
         }
 
         // Duration
-        if ($sanitizedFilter->getString('duration') != null) {
-            $duration = $this->parseComparisonOperator($sanitizedFilter->getString('duration'));
+        if ($sanitizedFilter->getInt('duration') != null) {
+            $duration = $this->parseComparisonOperator($sanitizedFilter->getInt('duration'));
 
             $body .= ' AND `media`.duration ' . $duration['operator'] . ' :duration ';
             $params['duration'] = $duration['variable'];

@@ -21,7 +21,7 @@
  */
 
 namespace Xibo\Tests\Integration;
-use Xibo\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboCampaign;
 use Xibo\OAuth2\Client\Entity\XiboLayout;

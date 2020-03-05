@@ -138,8 +138,6 @@ class LayoutProofOfPlayXMLWithoutMediaTest extends LocalWebTestCase
     {
         $this->getLogger()->debug('Tear Down');
 
-        parent::tearDown();
-
         // Delete the LayoutOff
         $this->deleteLayout($this->layoutOff);
 
@@ -151,6 +149,8 @@ class LayoutProofOfPlayXMLWithoutMediaTest extends LocalWebTestCase
 
         // Delete the Display2
         $this->deleteDisplay($this->display2);
+
+        parent::tearDown();
     }
     // </editor-fold>
 

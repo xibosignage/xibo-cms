@@ -22,6 +22,7 @@
 
 namespace Xibo\Controller;
 
+use GuzzleHttp\Psr7\Stream;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
@@ -890,14 +891,19 @@ class Report extends Base
 
     /**
      * Exports saved report as a PDF file
+     * @param Request $request
+     * @param Response $response
      * @param $id
      * @param $name
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
      * @throws NotFoundException
      * @throws \Twig\Error\LoaderError
      * @throws \Twig\Error\RuntimeError
      * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function savedReportExport($id, $name)
+    public function savedReportExport(Request $request, Response $response, $id, $name)
     {
         $savedReport = $this->savedReportFactory->getById($id);
 
@@ -972,15 +978,14 @@ class Report extends Base
 
         // Return the file with PHP
         $this->setNoOutput(true);
-        header('Content-Type: application/octet-stream');
-        header("Content-Transfer-Encoding: Binary");
-        header("Content-disposition: attachment; filename=\"" . basename($fileName) . "\"");
-        header('Content-Length: ' . filesize($fileName));
+        $response = $response
+            ->withHeader('Content-Type', 'application/octet-stream')
+            ->withHeader('Content-Disposition', 'attachment; filename=' . basename($fileName))
+            ->withHeader('Content-Transfer-Encoding', 'binary')
+            ->withHeader('Content-Length', filesize($fileName))
+            ->withBody(new Stream(fopen($fileName, 'r')));
 
-        // Disable any buffering to prevent OOM errors.
-        ob_end_flush();
-        readfile($fileName);
-        exit;
+        return $this->render($request, $response);
     }
 
     //</editor-fold>

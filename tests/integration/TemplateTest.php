@@ -20,6 +20,7 @@
  */
 
 namespace Xibo\Tests\Integration;
+
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\Tests\Helper\LayoutHelperTrait;
@@ -38,11 +39,11 @@ class TemplateTest extends LocalWebTestCase
      */
     public function testListAll()
     {
-        $this->client->get('/template');
+        $response = $this->sendRequest('GET','/template');
 
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
     }
 
@@ -58,21 +59,23 @@ class TemplateTest extends LocalWebTestCase
         $name2 = Random::generateString(8, 'phpunit');
 
         # Create template using our layout and new name
-        $this->client->post('/template/' . $layout->layoutId, [
+        $response = $this->sendRequest('POST','/template/' . $layout->layoutId, [
             'name' => $name2,
-            'includeWidgets' =>1,
-            'tags' => $layout->tags,
+            'includeWidgets' => 1,
+            'tags' => 'phpunit',
             'description' => $layout->description 
         ]);
 
         # Check if successful
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
 
         # Check if it has edited name
         $this->assertSame($name2, $object->data->layout);
+        // Expect 2 tags phpunit added in this request and template tag.
+        $this->assertSame(2,count($object->data->tags));
 
         $templateId = $object->id;
 
