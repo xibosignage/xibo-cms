@@ -31,10 +31,6 @@ use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
 use Xibo\Entity\Session;
 use Xibo\Entity\Widget;
-use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -51,6 +47,10 @@ use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\ModuleWidget;
 
 /**
@@ -289,6 +289,13 @@ class Layout extends Base
      *      type="integer",
      *      required=false
      *  ),
+     *  @SWG\Parameter(
+     *      name="returnDraft",
+     *      in="formData",
+     *      description="Should we return the Draft Layout or the Published Layout on Success?",
+     *      type="boolean",
+     *      required=false
+     *  ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -403,13 +410,29 @@ class Layout extends Base
         // automatically checkout the new layout for edit
         $this->checkout($request, $response, $layout->layoutId);
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 201,
-            'message' => sprintf(__('Added %s'), $layout->layout),
-            'id' => $layout->layoutId,
-            'data' => $layout
-        ]);
+        if ($sanitizedParams->getCheckbox('returnDraft')) {
+            // This is a workaround really - the call to checkout above ought to be separated into a public/private
+            // method, with the private method returning the draft layout
+            // is it stands the checkout method will have already set the draft layout id to the state data property
+            // we just need to set the message.
+            $this->getState()->hydrate([
+                'httpStatus' => 201,
+                'message' => sprintf(__('Added %s'), $layout->layout),
+            ]);
+        } else {
+            // Make sure we adjust the published status
+            // again, this is a workaround because checkout doesn't return a Layout object
+            $layout->publishedStatus = __('Draft');
+            $layout->publishedStatusId = 2;
+
+            // Return
+            $this->getState()->hydrate([
+                'httpStatus' => 201,
+                'message' => sprintf(__('Added %s'), $layout->layout),
+                'id' => $layout->layoutId,
+                'data' => $layout
+            ]);
+        }
 
         return $this->render($request, $response);
     }
@@ -2366,6 +2389,7 @@ class Layout extends Base
         $draft->parentId = $layout->layoutId;
         $draft->campaignId = $layout->campaignId;
         $draft->publishedStatusId = 2; // Draft
+        $draft->publishedStatus = __('Draft');
         $draft->autoApplyTransitions = $layout->autoApplyTransitions;
 
         // Do not copy any of the tags, these will belong on the parent and are not editable from the draft.
@@ -2429,6 +2453,7 @@ class Layout extends Base
         $this->getState()->hydrate([
             'httpStatus' => 200,
             'message' => sprintf(__('Checked out %s'), $layout->layout),
+            'id' => $draft->layoutId,
             'data' => $draft
         ]);
 

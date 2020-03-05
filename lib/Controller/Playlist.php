@@ -28,10 +28,6 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
-use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
@@ -49,6 +45,10 @@ use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Playlist
@@ -911,10 +911,11 @@ class Playlist extends Base
         }
 
         // Load the playlist for Copy
-        $playlist->load();
+        $playlist->load(['loadTags' => false]);
         $playlist = clone $playlist;
 
         $playlist->name = $sanitizedParams->getString('name');
+        $playlist->setOwner($this->getUser()->userId);
 
         // Copy the media on the playlist and change the assignments.
         if ($sanitizedParams->getCheckbox('copyMediaFiles') == 1) {
@@ -932,6 +933,23 @@ class Playlist extends Base
                 $widget->setOptionValue('uri', 'attrib', $media->storedAs);
             }
         }
+
+        // Handle tags
+        $tags = '';
+
+        $arrayOfTags = array_filter(explode(',', $playlist->tags));
+        $arrayOfTagValues = array_filter(explode(',', $playlist->tagValues));
+
+        for ($i=0; $i<count($arrayOfTags); $i++) {
+            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
+                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
+                $tags .= ',';
+            } else {
+                $tags .= $arrayOfTags[$i] . ',';
+            }
+        }
+
+        $playlist->replaceTags($this->tagFactory->tagsFromString($tags));
 
         // Set from global setting
         if ($playlist->enableStat == null) {

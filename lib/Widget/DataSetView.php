@@ -523,9 +523,7 @@ class DataSetView extends ModuleWidget
         $table = $this->dataSetTableHtml($displayId);
 
         // Work out how many pages we will be showing.
-        $pages = $table['countPages'];
-
-        $pages = ($rowsPerPage > 0) ? ceil($pages / $rowsPerPage) : $pages;
+        $pages = ceil($table['countPages']);
         $totalDuration = ($durationIsPerItem == 0) ? $duration : ($duration * $pages);
 
         // Replace and Control Meta options
@@ -535,6 +533,11 @@ class DataSetView extends ModuleWidget
         $headContent = '<link href="' . (($this->isPreview()) ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
         $headContent .= '<style type="text/css">' . $styleSheet . '</style>';
+
+        // If we are going to cycle between pages, make sure we hide all of the tables initially.
+        if ($rowsPerPage > 0) {
+            $headContent .= '<style type="text/css">table.DataSetTable {visibility:hidden;}</style>';
+        }
 
         $data['head'] = $headContent;
         $data['body'] = $table['html'];
