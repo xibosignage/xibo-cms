@@ -29,7 +29,7 @@ use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
 use Slim\Routing\RouteContext;
-use Xibo\Exception\TokenExpiredException;
+use Xibo\Support\Exception\ExpiredException;
 use Xibo\Helper\Environment;
 use Xibo\Support\Exception\InvalidArgumentException;
 
@@ -67,7 +67,7 @@ class CsrfGuard implements Middleware
      * @param Request $request
      * @param RequestHandler $handler
      * @return Response
-     * @throws InvalidArgumentException
+     * @throws ExpiredException
      */
     public function process(Request $request, RequestHandler $handler): Response
     {
@@ -109,7 +109,7 @@ class CsrfGuard implements Middleware
                 }
 
                 if ($token !== $userToken) {
-                    throw new InvalidArgumentException(__('Sorry the form has expired. Please refresh.'), 'token');
+                    throw new ExpiredException(__('Sorry the form has expired. Please refresh.'), 'token');
                 }
             }
         }
