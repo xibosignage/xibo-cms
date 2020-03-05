@@ -3333,6 +3333,13 @@
                         "description": "If a Template is not provided, provide the resolutionId for this Layout.",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "returnDraft",
+                        "in": "formData",
+                        "description": "Should we return the Draft Layout or the Published Layout on Success?",
+                        "required": false,
+                        "type": "boolean"
                     }
                 ],
                 "responses": {
@@ -6302,7 +6309,7 @@
                     {
                         "name": "type",
                         "in": "query",
-                        "description": "The type of stat to return. Layout|Media|Widget or All",
+                        "description": "The type of stat to return. Layout|Media|Widget",
                         "required": false,
                         "type": "string"
                     },
