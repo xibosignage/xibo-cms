@@ -201,6 +201,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $layoutIds = isset($filterBy['layoutIds']) ? $filterBy['layoutIds'] : [];
         $mediaIds = isset($filterBy['mediaIds']) ? $filterBy['mediaIds'] : [];
         $campaignId = isset($filterBy['campaignId']) ? $filterBy['campaignId'] : null;
+        $eventTag = isset($filterBy['eventTag']) ? $filterBy['eventTag'] : null;
 
         // Limit
         $start = isset($filterBy['start']) ? $filterBy['start'] : null;
@@ -250,6 +251,12 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $body .= ' AND `stat`.type = \'widget\' AND IFNULL(`widget`.widgetId, 0) <> 0 ';
         } else if ($type == 'event') {
             $body .= ' AND `stat`.type = \'event\' ';
+        }
+
+        // Event Tag Filter
+        if ($eventTag) {
+            $body .= ' AND `stat`.tag = :eventTag';
+            $params['eventTag'] = $eventTag;
         }
 
         // Layout Filter
@@ -344,6 +351,35 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $result->totalCount = isset($resTotal[0]['total']) ? $resTotal[0]['total'] : 0;
 
         return $result;
+    }
+
+    /** @inheritdoc */
+    public function getExportStatsCount($filterBy = [])
+    {
+
+        $fromDt = isset($filterBy['fromDt']) ? $filterBy['fromDt'] : null;
+        $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
+        $displayIds = isset($filterBy['displayIds']) ? $filterBy['displayIds'] : [];
+
+        $params = [];
+        $sql = ' SELECT COUNT(*) AS total FROM `stat`  WHERE 1 = 1 ';
+
+        // fromDt/toDt Filter
+        if (($fromDt != null) && ($toDt != null)) {
+            $sql .= ' AND stat.end > '. $fromDt->format('U') . ' AND stat.start <= '. $toDt->format('U');
+        }
+
+        if (count($displayIds) > 0) {
+            $sql .= ' AND stat.displayID IN (' . implode(',', $displayIds) . ')';
+        }
+
+        // Total count
+        $resTotal = $this->store->select($sql, $params);
+
+        // Total
+        $totalCount = isset($resTotal[0]['total']) ? $resTotal[0]['total'] : 0;
+
+        return $totalCount;
     }
 
     /** @inheritdoc */

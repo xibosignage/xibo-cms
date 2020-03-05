@@ -366,7 +366,7 @@ class TagFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('tag') != null) {
             $terms = explode(',', $sanitizedFilter->getString('tag'));
-            $this->nameFilter('tag', 'tag', $terms, $body, $params);
+            $this->nameFilter('tag', 'tag', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         if ($sanitizedFilter->getString('tagExact') != null) {

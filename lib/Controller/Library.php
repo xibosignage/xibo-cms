@@ -562,6 +562,7 @@ class Library extends Base
         $mediaList = $this->mediaFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
             'mediaId' => $parsedQueryParams->getInt('mediaId'),
             'name' => $parsedQueryParams->getString('media'),
+            'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'nameExact' => $parsedQueryParams->getString('nameExact'),
             'type' => $parsedQueryParams->getString('type'),
             'tags' => $parsedQueryParams->getString('tags'),

@@ -364,7 +364,7 @@ class WidgetFactory extends BaseFactory
         // Playlist Like
         if ($sanitizedFilter->getString('playlist') != '') {
             $terms = explode(',', $sanitizedFilter->getString('playlist'));
-            $this->nameFilter('playlist', 'name', $terms, $body, $params);
+            $this->nameFilter('playlist', 'name', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         // Sorting?

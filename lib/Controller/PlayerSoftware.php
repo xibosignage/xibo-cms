@@ -157,6 +157,7 @@ class PlayerSoftware extends Base
             'playerCode' => $sanitizedQueryParams->getInt('playerCode'),
             'versionId' => $sanitizedQueryParams->getInt('versionId'),
             'mediaId' => $sanitizedQueryParams->getInt('mediaId'),
+            'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
             'playerShowVersion' => $sanitizedQueryParams->getString('playerShowVersion')
         ];
 

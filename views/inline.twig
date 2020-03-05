@@ -47,12 +47,23 @@
     </div>
 {% endmacro %}
 
-{% macro inputWithTags(name, title, value, helpText, groupClass, validation, accessKey) %}
+{% macro inputWithTags(name, title, value, helpText, groupClass, validation, accessKey, exactTag, exactTagTitle) %}
     <div class="form-group {{ groupClass }}">
         <label class="control-label" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div class="">
-            <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputInline" {{ validation }} />
-        </div>
+        {% if exactTag %}
+            <div>
+                <div class="input-group">
+                    <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputInline" {{ validation }} />
+                    <span class="input-group-addon">
+                        <input title="{{ exactTagTitle }}" type="checkbox" id="{{ exactTag }}" name="{{ exactTag }}">
+                    </span>
+                </div>
+            </div>
+        {% else %}
+            <div>
+                <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputInline" {{ validation }} />
+            </div>
+        {% endif %}
     </div>
 {% endmacro %}
 

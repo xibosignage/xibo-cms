@@ -262,7 +262,7 @@ class DataSetFactory extends BaseFactory
 
         if ($parsedFilter->getString('dataSet') != null) {
             $terms = explode(',', $parsedFilter->getString('dataSet'));
-            $this->nameFilter('dataset', 'dataSet', $terms, $body, $params);
+            $this->nameFilter('dataset', 'dataSet', $terms, $body, $params, ($parsedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         if ($parsedFilter->getString('dataSetExact') != '') {
