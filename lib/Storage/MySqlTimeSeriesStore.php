@@ -354,6 +354,35 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     }
 
     /** @inheritdoc */
+    public function getExportStatsCount($filterBy = [])
+    {
+
+        $fromDt = isset($filterBy['fromDt']) ? $filterBy['fromDt'] : null;
+        $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
+        $displayIds = isset($filterBy['displayIds']) ? $filterBy['displayIds'] : [];
+
+        $params = [];
+        $sql = ' SELECT COUNT(*) AS total FROM `stat`  WHERE 1 = 1 ';
+
+        // fromDt/toDt Filter
+        if (($fromDt != null) && ($toDt != null)) {
+            $sql .= ' AND stat.end > '. $fromDt->format('U') . ' AND stat.start <= '. $toDt->format('U');
+        }
+
+        if (count($displayIds) > 0) {
+            $sql .= ' AND stat.displayID IN (' . implode(',', $displayIds) . ')';
+        }
+
+        // Total count
+        $resTotal = $this->store->select($sql, $params);
+
+        // Total
+        $totalCount = isset($resTotal[0]['total']) ? $resTotal[0]['total'] : 0;
+
+        return $totalCount;
+    }
+
+    /** @inheritdoc */
     public function deleteStats($maxage, $fromDt = null, $options = [])
     {
         // Set some default options

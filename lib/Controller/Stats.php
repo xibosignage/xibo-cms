@@ -231,7 +231,7 @@ class Stats extends Base
      *  @SWG\Parameter(
      *      name="type",
      *      in="query",
-     *      description="The type of stat to return. Layout|Media|Widget or All",
+     *      description="The type of stat to return. Layout|Media|Widget",
      *      type="string",
      *      required=false
      *   ),
@@ -338,7 +338,7 @@ class Stats extends Base
         // What if the fromdt and todt are exactly the same?
         // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
         if ($fromDt != null && $toDt != null && $fromDt == $toDt) {
-            $toDt->addDay(1);
+            $toDt->addDay();
         }
 
         // Do not filter by display if super admin and no display is selected
@@ -533,6 +533,73 @@ class Stats extends Base
     }
 
     /**
+     * Total count of stats
+     */
+    public function getExportStatsCount()
+    {
+        // We are expecting some parameters
+        $fromDt = $this->getSanitizer()->getDate('fromDt');
+        $toDt = $this->getSanitizer()->getDate('toDt');
+        $displayId = $this->getSanitizer()->getInt('displayId');
+
+        if ($fromDt != null) {
+            $fromDt->startOfDay();
+        }
+
+        if ($toDt != null) {
+            $toDt->addDay()->startOfDay();
+        }
+
+        // What if the fromdt and todt are exactly the same?
+        // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
+        if ($fromDt != null && $toDt != null && $fromDt == $toDt) {
+            $toDt->addDay();
+        }
+
+        // Do not filter by display if super admin and no display is selected
+        // Super admin will be able to see stat records of deleted display, we will not filter by display later
+        $displayIds = [];
+        if (!$this->getUser()->isSuperAdmin()) {
+            // Get an array of display id this user has access to.
+            foreach ($this->displayFactory->query() as $display) {
+                $displayIds[] = $display->displayId;
+            }
+
+            if (count($displayIds) <= 0)
+                throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
+
+            // Set displayIds as [-1] if the user selected a display for which they don't have permission
+            if ($displayId != 0) {
+                if (!in_array($displayId, $displayIds)) {
+                    $displayIds = [-1];
+                } else {
+                    $displayIds = [$displayId];
+                }
+            }
+        } else {
+            if ($displayId != 0) {
+                $displayIds = [$displayId];
+            }
+        }
+
+        // Call the time series interface getStats
+        $resultSet =  $this->timeSeriesStore->getExportStatsCount(
+            [
+                'fromDt'=> $fromDt,
+                'toDt'=> $toDt,
+                'displayIds' => $displayIds
+            ]);
+
+        $response = [
+            'total' => $resultSet
+        ];
+
+        $this->getState()->template = 'statistics-form-export';
+        $this->getState()->recordsTotal = $resultSet;
+        $this->getState()->setData($response);
+    }
+
+    /**
      * Outputs a CSV of stats
      */
     public function export()
@@ -582,16 +649,16 @@ class Stats extends Base
         }
 
         // Get result set
-        $resultSet =  $this->timeSeriesStore->getStats([
-            'fromDt'=> $fromDt,
-            'toDt'=> $toDt,
+        $resultSet = $this->timeSeriesStore->getStats([
+            'fromDt' => $fromDt,
+            'toDt' => $toDt,
             'displayIds' => $displayIds,
         ]);
 
         $out = fopen('php://output', 'w');
         fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'Engagements']);
 
-        while ($row = $resultSet->getNextRow() ) {
+        while ($row = $resultSet->getNextRow()) {
 
             $displayName = isset($row['display']) ? $this->getSanitizer()->string($row['display']) : '';
             $layoutName = isset($row['layout']) ? $this->getSanitizer()->string($row['layout']) : '';
@@ -603,22 +670,22 @@ class Stats extends Base
                 $statDate = isset($row['statDate']) ? $this->getDate()->parse($row['statDate']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s') : null;
                 $fromDt = $this->getDate()->parse($row['start']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
                 $toDt = $this->getDate()->parse($row['end']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
-                $engagements = isset($row['engagements']) ? json_encode($row['engagements']): '[]';
+                $engagements = isset($row['engagements']) ? json_encode($row['engagements']) : '[]';
             } else {
 
-                $statDate = isset($row['statDate']) ?$this->getDate()->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : null;
+                $statDate = isset($row['statDate']) ? $this->getDate()->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : null;
                 $fromDt = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
                 $toDt = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
-                $engagements = isset($row['engagements']) ? $row['engagements']: '[]';
+                $engagements = isset($row['engagements']) ? $row['engagements'] : '[]';
             }
 
-            $layout = ($layoutName != '') ? $layoutName :  __('Not Found');
+            $layout = ($layoutName != '') ? $layoutName : __('Not Found');
             $display = ($displayName != '') ? $displayName : __('Not Found');
-            $media = isset($row['media']) ? $this->getSanitizer()->string($row['media']): '';
-            $tag = isset($row['tag']) ? $this->getSanitizer()->string($row['tag']): '';
+            $media = isset($row['media']) ? $this->getSanitizer()->string($row['media']) : '';
+            $tag = isset($row['tag']) ? $this->getSanitizer()->string($row['tag']) : '';
 
-            $duration = isset($row['duration']) ? $this->getSanitizer()->string($row['duration']): '';
-            $count = isset($row['count']) ? $this->getSanitizer()->string($row['count']): '';
+            $duration = isset($row['duration']) ? $this->getSanitizer()->string($row['duration']) : '';
+            $count = isset($row['count']) ? $this->getSanitizer()->string($row['count']) : '';
 
             fputcsv($out, [$statDate, $type, $fromDt, $toDt, $layout, $display, $media, $tag, $duration, $count, $engagements]);
         }

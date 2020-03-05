@@ -79,6 +79,13 @@ interface TimeSeriesStoreInterface
     public function getStats($filterBy = []);
 
     /**
+     * Get total count of export statistics
+     * @param $filterBy array[mixed]|null
+     * @return TimeSeriesResultsInterface
+     */
+    public function getExportStatsCount($filterBy = []);
+
+    /**
      * Delete statistics
      * @param $toDt \Jenssegers\Date\Date
      * @param $fromDt \Jenssegers\Date\Date|null
