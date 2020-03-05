@@ -584,88 +584,12 @@ class Stats extends Base
     }
 
     /**
-     * @SWG\Definition(
-     *  definition="StatisticsData",
-     *  @SWG\Property(
-     *      property="type",
-     *      type="string"
-     *  ),
-     *  @SWG\Property(
-     *      property="display",
-     *      type="string"
-     *  ),
-     *  @SWG\Property(
-     *      property="displayId",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="layout",
-     *      type="string"
-     *  ),
-     *  @SWG\Property(
-     *      property="layoutId",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="media",
-     *      type="string"
-     *  ),
-     *  @SWG\Property(
-     *      property="mediaId",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="widgetId",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="numberPlays",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="duration",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="minStart",
-     *      type="string"
-     *  ),
-     *  @SWG\Property(
-     *      property="maxEnd",
-     *      type="string"
-     *  ),
-     *  @SWG\Property(
-     *      property="start",
-     *      type="string"
-     *  ),
-     *  @SWG\Property(
-     *      property="end",
-     *      type="string"
-     *  ),
-     *  @SWG\Property(
-     *      property="statDate",
-     *      type="string"
-     *  ),
-     *  @SWG\Property(
-     *      property="tag",
-     *      type="string"
-     *  )
-     * )
-     *
-     *
      * Total count of stats
      *
      * @SWG\Get(
-     *  path="/stats/totalCount",
-     *  operationId="statsTotalCount",
+     *  path="/stats/getExportStatsCount",
+     *  operationId="getExportStatsCount",
      *  tags={"statistics"},
-     *  @SWG\Parameter(
-     *      name="type",
-     *      in="query",
-     *      description="The type of stat to return. Layout|Media|Widget",
-     *      type="string",
-     *      required=false
-     *   ),
      *  @SWG\Parameter(
      *      name="fromDt",
      *      in="query",
@@ -689,19 +613,15 @@ class Stats extends Base
      *   ),
      *  @SWG\Response(
      *      response=200,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(
-     *              ref="#/definitions/StatisticsData"
-     *          )
-     *      )
+     *      description="successful operation"
      *  )
      * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function getExportStatsCount(Request $request, Response $response)
     {
@@ -766,6 +686,9 @@ class Stats extends Base
         $this->getState()->template = 'statistics-form-export';
         $this->getState()->recordsTotal = $resultSet;
         $this->getState()->setData($response);
+
+        return $this->render($request, $response);
+
     }
 
     /**

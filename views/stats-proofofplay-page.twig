@@ -94,7 +94,7 @@
 
                     $.ajax({
                         type: "get",
-                        url: "{{ url_for("stats.totalCount") }}",
+                        url: "{{ url_for("stats.getExportStatsCount") }}",
                         cache: false,
                         dataType: "json",
                         data: {
