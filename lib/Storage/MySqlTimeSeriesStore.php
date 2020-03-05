@@ -362,7 +362,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $displayIds = isset($filterBy['displayIds']) ? $filterBy['displayIds'] : [];
 
         $params = [];
-        $sql = ' SELECT stat.statId FROM stat WHERE 1 = 1 ';
+        $sql = ' SELECT COUNT(*) AS total FROM `stat`  WHERE 1 = 1 ';
 
         // fromDt/toDt Filter
         if (($fromDt != null) && ($toDt != null)) {
@@ -374,9 +374,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         }
 
         // Total count
-        $resTotal = $this->store->select('
-          SELECT COUNT(*) AS total FROM (   ' . $sql. ') total
-        ', $params);
+        $resTotal = $this->store->select($sql, $params);
 
         // Total
         $totalCount = isset($resTotal[0]['total']) ? $resTotal[0]['total'] : 0;
