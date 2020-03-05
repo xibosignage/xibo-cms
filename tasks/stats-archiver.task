@@ -5,6 +5,7 @@
     "periodSizeInDays": 7,
     "maxPeriods": 4,
     "archiveOwner": "",
-    "archiveStats": "Off"
+    "archiveStats": "Off",
+    "periodsToKeep": 1
   }
 }

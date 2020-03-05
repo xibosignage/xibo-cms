@@ -27,6 +27,14 @@
     </div>
 {% endmacro %}
 
+{% macro alert(message, alertType, groupClass) %}
+    <div class="row">
+        <div class="alert alert-{{ alertType }} col-sm-10 col-sm-offset-2 {{ groupClass }}">
+            <p>{{ message }}</p>
+        </div>
+    </div>
+{% endmacro %}
+
 {% macro button(title, type, link, groupClass, id) %}
     <div class="form-group {{ groupClass }}">
         <div class="col-sm-offset-2 col-sm-10">

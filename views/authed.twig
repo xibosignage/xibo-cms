@@ -49,6 +49,7 @@
                             {% include "authed-topbar.twig" %}
 
                             <ul class="nav navbar-nav navbar-right">
+                                {% include "authed-theme-topbar.twig" ignore missing %}
                                 {% if currentUser.routeViewable("/drawer") %}
                                     {% include "authed-notification-drawer.twig" %}
                                 {% endif %}
@@ -86,6 +87,7 @@
                             {% include "authed-notification-drawer.twig" %}
                         </div>
                         {% endif %}
+                        {% include "authed-theme-topbar.twig" ignore missing %}
                     </div>
                 </div>
                 {% endif %}

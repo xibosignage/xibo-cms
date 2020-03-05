@@ -260,6 +260,13 @@ class Layout extends Base
      *      type="integer",
      *      required=false
      *  ),
+     *  @SWG\Parameter(
+     *      name="returnDraft",
+     *      in="formData",
+     *      description="Should we return the Draft Layout or the Published Layout on Success?",
+     *      type="boolean",
+     *      required=false
+     *  ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -365,13 +372,29 @@ class Layout extends Base
         // automatically checkout the new layout for edit
         $this->checkout($layout->layoutId);
 
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 201,
-            'message' => sprintf(__('Added %s'), $layout->layout),
-            'id' => $layout->layoutId,
-            'data' => $layout
-        ]);
+        if ($this->getSanitizer()->getCheckbox('returnDraft')) {
+            // This is a workaround really - the call to checkout above ought to be separated into a public/private
+            // method, with the private method returning the draft layout
+            // is it stands the checkout method will have already set the draft layout id to the state data property
+            // we just need to set the message.
+            $this->getState()->hydrate([
+                'httpStatus' => 201,
+                'message' => sprintf(__('Added %s'), $layout->layout),
+            ]);
+        } else {
+            // Make sure we adjust the published status
+            // again, this is a workaround because checkout doesn't return a Layout object
+            $layout->publishedStatus = __('Draft');
+            $layout->publishedStatusId = 2;
+
+            // Return
+            $this->getState()->hydrate([
+                'httpStatus' => 201,
+                'message' => sprintf(__('Added %s'), $layout->layout),
+                'id' => $layout->layoutId,
+                'data' => $layout
+            ]);
+        }
     }
 
     /**
@@ -2095,6 +2118,7 @@ class Layout extends Base
         $draft->parentId = $layout->layoutId;
         $draft->campaignId = $layout->campaignId;
         $draft->publishedStatusId = 2; // Draft
+        $draft->publishedStatus = __('Draft');
         $draft->autoApplyTransitions = $layout->autoApplyTransitions;
 
         // Do not copy any of the tags, these will belong on the parent and are not editable from the draft.
@@ -2158,6 +2182,7 @@ class Layout extends Base
         $this->getState()->hydrate([
             'httpStatus' => 200,
             'message' => sprintf(__('Checked out %s'), $layout->layout),
+            'id' => $draft->layoutId,
             'data' => $draft
         ]);
     }

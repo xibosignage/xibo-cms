@@ -276,8 +276,9 @@ class Image extends ModuleWidget
             $this->statusMessage = __('%s is pending conversion', $this->getMedia()->name);
             return self::$STATUS_PLAYER;
         } elseif ($this->getMedia()->released == 2) {
-            $this->statusMessage = __('%s is too large, please replace it', $this->getMedia()->name);
-            throw new InvalidArgumentException(__('%s is too large, please replace it', $this->getMedia()->name), 'name');
+            $resizeLimit = $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT');
+            $this->statusMessage = __('%s is too large. Please ensure that none of the images in your layout are larger than %s pixels on their longest edge. Please check the allowed Resize Limit in Administration -> Settings', $this->getMedia()->name, $resizeLimit);
+            throw new InvalidArgumentException(__('%s is too large. Please ensure that none of the images in your layout are larger than %s pixels on their longest edge. Please check the allowed Resize Limit in Administration -> Settings', $this->getMedia()->name, $resizeLimit), 'name');
         }
 
         if (!v::intType()->min(1, true)->validate($this->getDuration()))
