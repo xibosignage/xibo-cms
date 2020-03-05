@@ -1,4 +1,4 @@
-describe.skip('Playlist Editor (Populated)', function() { //FIXME: Tests skipped for now, need update to the new Layout Designer revamp
+describe('Playlist Editor (Populated)', function() {
 
     beforeEach(function() {
         cy.login();
