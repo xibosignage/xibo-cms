@@ -76,7 +76,8 @@
             var toDtLink;
             var displayId;
 
-            $(dialog).on("change", function() {
+            $(dialog).find("input, select").on("change", function() {
+
                 fromDtLink =  $(dialog).find("#fromDt").val();
                 toDtLink =  $(dialog).find("#toDt").val();
                 displayId =  $(dialog).find("#displayId").val();
