@@ -355,7 +355,7 @@ $app->get('/help/form/delete/:id', '\Xibo\Controller\Help:deleteForm')->name('he
 // Stats
 //
 $app->get('/stats/view', '\Xibo\Controller\Stats:displayPage')->name('stats.view');
-$app->get('/stats/totalCount', '\Xibo\Controller\Stats:totalCount')->name('stats.totalCount');
+$app->get('/stats/getExportStatsCount', '\Xibo\Controller\Stats:getExportStatsCount')->name('stats.getExportStatsCount');
 $app->get('/stats/proofofplay/view', '\Xibo\Controller\Stats:displayProofOfPlayPage')->name('stats.proofofplay.view');
 $app->get('/stats/library/view', '\Xibo\Controller\Stats:displayLibraryPage')->name('stats.library.view');
 $app->get('/stats/form/export', '\Xibo\Controller\Stats:exportForm')->name('stats.export.form');

@@ -535,23 +535,12 @@ class Stats extends Base
     /**
      * Total count of stats
      */
-    public function totalCount()
+    public function getExportStatsCount()
     {
         // We are expecting some parameters
         $fromDt = $this->getSanitizer()->getDate('fromDt');
         $toDt = $this->getSanitizer()->getDate('toDt');
-        $type = strtolower($this->getSanitizer()->getString('type'));
-
         $displayId = $this->getSanitizer()->getInt('displayId');
-        $layoutIds = $this->getSanitizer()->getIntArray('layoutId');
-        $mediaIds = $this->getSanitizer()->getIntArray('mediaId');
-        $statDate = $this->getSanitizer()->getDate('statDate');
-        $statId = $this->getSanitizer()->getString('statId');
-        $campaignId = $this->getSanitizer()->getInt('campaignId');
-        $eventTag = $this->getSanitizer()->getString('eventTag');
-
-        $start = $this->getSanitizer()->getInt('start', 0);
-        $length = $this->getSanitizer()->getInt('length', 10);
 
         if ($fromDt != null) {
             $fromDt->startOfDay();
@@ -594,18 +583,11 @@ class Stats extends Base
         }
 
         // Call the time series interface getStats
-        $resultSet =  $this->timeSeriesStore->getStatsTotalCount(
+        $resultSet =  $this->timeSeriesStore->getExportStatsCount(
             [
                 'fromDt'=> $fromDt,
                 'toDt'=> $toDt,
-                'type' => $type,
-                'displayIds' => $displayIds,
-                'layoutIds' => $layoutIds,
-                'mediaIds' => $mediaIds,
-                'statDate' => $statDate,
-                'statId' => $statId,
-                'campaignId' => $campaignId,
-                'eventTag' => $eventTag
+                'displayIds' => $displayIds
             ]);
 
         $response = [
