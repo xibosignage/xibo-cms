@@ -243,12 +243,11 @@ describe('Playlist Editor (Populated)', function() {
         cy.route('/playlist?playlistId=*').as('reloadPlaylist');
 
         // Open toolbar Tools tab
-        cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Widgets').should('be.visible').click();
-        cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
-
+        cy.get('#playlist-editor-toolbar #btn-menu-2').should('be.visible').click();
+        cy.get('#playlist-editor-toolbar #btn-menu-1').should('be.visible').click();
 
         // Activate the Add button
-        cy.get('#playlist-editor-toolbar #content-0 .toolbar-pane-content [data-sub-type="transitionIn"] .add-area').invoke('show').click();
+        cy.get('#playlist-editor-toolbar #content-1 .toolbar-pane-content [data-sub-type="transitionIn"] .add-area').invoke('show').click();
 
             // Click on the widget to add
         cy.get('#timeline-container [data-type="widget"]:nth-child(2)').click();
