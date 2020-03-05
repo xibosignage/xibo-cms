@@ -679,13 +679,13 @@ class Stats extends Base
                 'displayIds' => $displayIds
             ]);
 
-        $response = [
+        $data = [
             'total' => $resultSet
         ];
 
         $this->getState()->template = 'statistics-form-export';
         $this->getState()->recordsTotal = $resultSet;
-        $this->getState()->setData($response);
+        $this->getState()->setData($data);
 
         return $this->render($request, $response);
 
