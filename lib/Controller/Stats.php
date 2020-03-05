@@ -255,7 +255,7 @@ class Stats extends Base
      *  @SWG\Parameter(
      *      name="type",
      *      in="query",
-     *      description="The type of stat to return. Layout|Media|Widget or All",
+     *      description="The type of stat to return. Layout|Media|Widget",
      *      type="string",
      *      required=false
      *   ),
@@ -591,6 +591,258 @@ class Stats extends Base
         $this->getState()->template = 'statistics-form-export';
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * @SWG\Definition(
+     *  definition="StatisticsData",
+     *  @SWG\Property(
+     *      property="type",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="display",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="displayId",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
+     *      property="layout",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="layoutId",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
+     *      property="media",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="mediaId",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
+     *      property="widgetId",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
+     *      property="numberPlays",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
+     *      property="duration",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
+     *      property="minStart",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="maxEnd",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="start",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="end",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="statDate",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="tag",
+     *      type="string"
+     *  )
+     * )
+     *
+     *
+     * Total count of stats
+     *
+     * @SWG\Get(
+     *  path="/stats/totalCount",
+     *  operationId="statsTotalCount",
+     *  tags={"statistics"},
+     *  @SWG\Parameter(
+     *      name="type",
+     *      in="query",
+     *      description="The type of stat to return. Layout|Media|Widget",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="fromDt",
+     *      in="query",
+     *      description="The start date for the filter. Default = 24 hours ago",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="toDt",
+     *      in="query",
+     *      description="The end date for the filter. Default = now.",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="statDate",
+     *      in="query",
+     *      description="The statDate filter returns records that are greater than or equal a particular date",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="statId",
+     *      in="query",
+     *      description="The statId filter returns records that are greater than a particular statId",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      in="query",
+     *      description="An optional display Id to filter",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="layoutId",
+     *      description="An optional array of layout Id to filter",
+     *      in="query",
+     *      required=false,
+     *      type="array",
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *   @SWG\Parameter(
+     *      name="mediaId",
+     *      description="An optional array of media Id to filter",
+     *      in="query",
+     *      required=false,
+     *      type="array",
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *   @SWG\Parameter(
+     *      name="campaignId",
+     *      in="query",
+     *      description="An optional Campaign Id to filter",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(
+     *              ref="#/definitions/StatisticsData"
+     *          )
+     *      )
+     *  )
+     * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Exception\ControllerNotImplemented
+     */
+    public function totalCount(Request $request, Response $response)
+    {
+
+//
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        // We are expecting some parameters
+        $fromDt = $sanitizedParams->getDate('fromDt');
+        $toDt = $sanitizedParams->getDate('toDt');
+        $type = strtolower($sanitizedParams->getString('type'));
+
+        $displayId = $sanitizedParams->getInt('displayId');
+        $layoutIds = $sanitizedParams->getIntArray('layoutId');
+        $mediaIds = $sanitizedParams->getIntArray('mediaId');
+        $statDate = $sanitizedParams->getDate('statDate');
+        $statId = $sanitizedParams->getString('statId');
+        $campaignId = $sanitizedParams->getInt('campaignId');
+        $eventTag = $sanitizedParams->getString('eventTag');
+
+        if ($fromDt != null) {
+            $fromDt->startOfDay();
+        }
+
+        if ($toDt != null) {
+            $toDt->addDay()->startOfDay();
+        }
+
+        // What if the fromdt and todt are exactly the same?
+        // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
+        if ($fromDt != null && $toDt != null && $fromDt == $toDt) {
+            $toDt->addDay();
+        }
+
+        // Do not filter by display if super admin and no display is selected
+        // Super admin will be able to see stat records of deleted display, we will not filter by display later
+        $displayIds = [];
+        if (!$this->getUser()->isSuperAdmin()) {
+            // Get an array of display id this user has access to.
+            foreach ($this->displayFactory->query() as $display) {
+                $displayIds[] = $display->displayId;
+            }
+
+            if (count($displayIds) <= 0)
+                throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
+
+            // Set displayIds as [-1] if the user selected a display for which they don't have permission
+            if ($displayId != 0) {
+                if (!in_array($displayId, $displayIds)) {
+                    $displayIds = [-1];
+                } else {
+                    $displayIds = [$displayId];
+                }
+            }
+        } else {
+            if ($displayId != 0) {
+                $displayIds = [$displayId];
+            }
+        }
+
+        // Call the time series interface getStats
+        $resultSet =  $this->timeSeriesStore->getStatsTotalCount(
+            [
+                'fromDt'=> $fromDt,
+                'toDt'=> $toDt,
+                'type' => $type,
+                'displayIds' => $displayIds,
+                'layoutIds' => $layoutIds,
+                'mediaIds' => $mediaIds,
+                'statDate' => $statDate,
+                'statId' => $statId,
+                'campaignId' => $campaignId,
+                'eventTag' => $eventTag
+            ]);
+
+        $response = [
+            'total' => $resultSet
+        ];
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $resultSet;
+        $this->getState()->setData($response);
+
+        return $this->render($request, $response);
+
     }
 
     /**
