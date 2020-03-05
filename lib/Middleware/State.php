@@ -34,8 +34,8 @@ use Slim\Views\Twig;
 use Stash\Driver\Composite;
 use Stash\Pool;
 use Xibo\Entity\User;
-use Xibo\Exception\InstanceSuspendedException;
-use Xibo\Exception\UpgradePendingException;
+use Xibo\Support\Exception\InstanceSuspendedException;
+use Xibo\Support\Exception\UpgradePendingException;
 use Xibo\Helper\DatabaseLogHandler;
 use Xibo\Helper\Environment;
 use Xibo\Helper\NullSession;
@@ -154,8 +154,8 @@ class State implements Middleware
         // Set the config dependencies
         $container->get('configService')->setDependencies($container->get('store'), $app->rootUri);
 
-        // set the system user for XTR
-        if ($container->get('name') == 'xtr') {
+        // set the system user for XTR/XMDS
+        if ($container->get('name') == 'xtr' || $container->get('name') == 'xmds') {
             // Configure a user
             /** @var User $user */
             $user = $container->get('userFactory')->getSystemUser();
@@ -238,8 +238,8 @@ class State implements Middleware
 
         // Configure logging
         if (Environment::isForceDebugging() || strtolower($mode) == 'test') {
-            error_reporting(E_ALL);
-            ini_set('display_errors', 1);
+           // error_reporting(E_ALL);
+         //   ini_set('display_errors', 1);
             // log level is set in our database handler construct (in access points), it also has getLevel() and setLevel($level) functions.
             foreach ($logger->getHandlers() as $handler) {
                 if ($handler instanceof DatabaseLogHandler) {
