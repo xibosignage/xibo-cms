@@ -1,4 +1,4 @@
-describe.skip('Playlist Editor (Empty)', function() { //FIXME: Tests skipped for now, need update to the new Layout Designer revamp
+describe('Playlist Editor (Empty)', function() {
 
     beforeEach(function() {
         cy.login();
@@ -32,8 +32,8 @@ describe.skip('Playlist Editor (Empty)', function() { //FIXME: Tests skipped for
         cy.route('POST', '**/playlist/widget/embedded/*').as('createWidget');
 
         // Open toolbar Widgets tab
-        cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
-        cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Widgets').should('be.visible').click();
+        cy.get('#playlist-editor-toolbar #btn-menu-1').should('be.visible').click();
+        cy.get('#playlist-editor-toolbar #btn-menu-2').should('be.visible').click();
 
         cy.get('#playlist-editor-toolbar .toolbar-pane-content [data-sub-type="embedded"]').should('be.visible').then(() => {
             cy.dragToElement(
