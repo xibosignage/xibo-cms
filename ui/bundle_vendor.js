@@ -101,7 +101,7 @@ var dt_extras = [
 dt_extras.forEach(function(e) {e(window, window.$);});
 
 // bootstrap-tour
-require('bootstrap-tour/build/js/bootstrap-tour.min.js');
+require('bootstrap-tourist/bootstrap-tourist.js');
 
 //--- Add Local JS files ---
 // jquery-message-queuing

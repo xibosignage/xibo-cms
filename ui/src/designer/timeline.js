@@ -483,6 +483,7 @@ Timeline.prototype.render = function(layout) {
 
     const app = this.parent;
     const self = this;
+    const readOnlyModeOn = (app.readOnlyMode != undefined && app.readOnlyMode === true);
 
     // If starting zoom is not defined, calculate its value based on minimum widget duration
     if(this.properties.zoom === -1) {
@@ -511,6 +512,7 @@ Timeline.prototype.render = function(layout) {
     const html = timelineTemplate({
         layout: layout, 
         properties: this.properties,
+        readOnlyModeOn: readOnlyModeOn,
         trans: timelineTrans,
         timeruler: this.timeruler
     });

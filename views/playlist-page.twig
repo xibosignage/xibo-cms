@@ -58,10 +58,7 @@
                                     {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
                                     {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
                                     {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
-
-                                    {% set title %}{% trans "Exact match?" %}{% endset %}
-                                    {{ inline.checkbox("exactTags", title) }}
-
+                                    
                                     {% set attributes = [
                                     { name: "data-live-search", value: "true" },
                                     { name: "data-selected-text-format", value: "count > 4" }

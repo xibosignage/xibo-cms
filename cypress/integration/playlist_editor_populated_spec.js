@@ -1,4 +1,4 @@
-describe.skip('Playlist Editor (Populated)', function() { //FIXME: Tests skipped for now, need update to the new Layout Designer revamp
+describe('Playlist Editor (Populated)', function() {
 
     beforeEach(function() {
         cy.login();
@@ -134,7 +134,7 @@ describe.skip('Playlist Editor (Populated)', function() { //FIXME: Tests skipped
         });
     });
 
-    it('should add a audio clip to a widget by drag and drop, and adds a link to open the form in the timeline', () => {
+    it('should add an audio clip to a widget by drag and drop, and adds a link to open the form in the timeline', () => {
         
         cy.populateLibraryWithMedia();
 
@@ -143,12 +143,12 @@ describe.skip('Playlist Editor (Populated)', function() { //FIXME: Tests skipped
         cy.route('/playlist?playlistId=*').as('reloadPlaylist');
 
         // Open toolbar Tools tab
-        cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Widgets').should('be.visible').click();
-        cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
+        cy.get('#playlist-editor-toolbar #btn-menu-2').should('be.visible').click();
+        cy.get('#playlist-editor-toolbar #btn-menu-1').should('be.visible').click();
 
         // Open the audio form
         cy.dragToElement(
-            '#playlist-editor-toolbar #content-0 .toolbar-pane-content [data-sub-type="audio"] .drag-area',
+            '#playlist-editor-toolbar #content-1 .toolbar-pane-content [data-sub-type="audio"] .drag-area',
             '#timeline-container [data-type="widget"]:first-child'
         ).then(() => {
 
@@ -175,12 +175,12 @@ describe.skip('Playlist Editor (Populated)', function() { //FIXME: Tests skipped
         cy.route('/playlist?playlistId=*').as('reloadPlaylist');
         
         // Open toolbar Tools tab
-        cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Widgets').should('be.visible').click();
-        cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
+        cy.get('#playlist-editor-toolbar #btn-menu-2').should('be.visible').click();
+        cy.get('#playlist-editor-toolbar #btn-menu-1').should('be.visible').click();
 
         // Open the expiry form
         cy.dragToElement(
-            '#playlist-editor-toolbar #content-0 .toolbar-pane-content [data-sub-type="expiry"] .drag-area',
+            '#playlist-editor-toolbar #content-1 .toolbar-pane-content [data-sub-type="expiry"] .drag-area',
             '#timeline-container [data-type="widget"]:first-child'
         ).then(() => {
 
@@ -210,7 +210,8 @@ describe.skip('Playlist Editor (Populated)', function() { //FIXME: Tests skipped
         cy.route('/playlist?playlistId=*').as('reloadPlaylist');
 
         // Open toolbar Tools tab
-        cy.get('#playlist-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
+        cy.get('#playlist-editor-toolbar #btn-menu-2').should('be.visible').click();
+        cy.get('#playlist-editor-toolbar #btn-menu-1').should('be.visible').click();
 
         // Open the transition form
         cy.dragToElement(
