@@ -69,8 +69,8 @@ $routeParser = $app->getRouteCollector()->getRouteParser();
 $container->set('name', 'API');
 
 $app->add(new \Xibo\Middleware\ApiAuthenticationOAuth($app));
-$app->add(new \Xibo\Middleware\State($app));
 $app->add(new \Xibo\Middleware\Storage($app));
+$app->add(new \Xibo\Middleware\State($app));
 $app->add(new \Xibo\Middleware\Log($app));
 $app->add(new \Xibo\Middleware\Xmr($app));
 
@@ -113,7 +113,7 @@ $app->notFound(function () use ($app) {
 require PROJECT_ROOT . '/lib/routes.php';
 
 $app->get('/', ['\Xibo\Controller\Login','About']);
-$app->post('/library/mcaas/:id', ['\Xibo\Controller\Library','mcaas']);
+$app->post('/library/mcaas/{id}', ['\Xibo\Controller\Library','mcaas']);
 
 // Run app
 $app->run();
