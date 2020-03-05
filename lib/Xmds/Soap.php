@@ -1589,6 +1589,11 @@ class Soap
             } else {
                 // Try to get details for this widget
                 try {
+
+                    if (in_array($widgetId, $widgetIdsNotFound)) {
+                        continue;
+                    }
+
                     $mediaId = $this->widgetFactory->getWidgetForStat($widgetId);
 
                     // If the mediaId is empty, then we can assume we're a stat for a region specific widget

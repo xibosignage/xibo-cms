@@ -76,15 +76,16 @@
             var toDtLink;
             var displayId;
 
-            $(dialog).on("change", function() {
+            $(dialog).find("input, select").on("change", function() {
+
                 fromDtLink =  $(dialog).find("#fromDt").val();
                 toDtLink =  $(dialog).find("#toDt").val();
                 displayId =  $(dialog).find("#displayId").val();
 
                 if (!(
-                    fromDtLink === null ||  toDtLink === null  ||
-                    fromDtLink === '' ||  toDtLink === ''  ||
-                    fromDtLink === undefined || toDtLink === undefined
+                     fromDtLink === null ||  toDtLink === null  ||
+                     fromDtLink === '' ||  toDtLink === ''  ||
+                     fromDtLink === undefined || toDtLink === undefined
                 )) {
 
                     $(dialog).find(".total-stat").remove();

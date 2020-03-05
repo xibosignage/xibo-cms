@@ -691,53 +691,12 @@ class Stats extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
-     *      name="statDate",
-     *      in="query",
-     *      description="The statDate filter returns records that are greater than or equal a particular date",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="statId",
-     *      in="query",
-     *      description="The statId filter returns records that are greater than a particular statId",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
      *      name="displayId",
      *      in="query",
      *      description="An optional display Id to filter",
      *      type="integer",
      *      required=false
      *   ),
-     *   @SWG\Parameter(
-     *      name="layoutId",
-     *      description="An optional array of layout Id to filter",
-     *      in="query",
-     *      required=false,
-     *      type="array",
-     *      @SWG\Items(
-     *          type="integer"
-     *      )
-     *  ),
-     *   @SWG\Parameter(
-     *      name="mediaId",
-     *      description="An optional array of media Id to filter",
-     *      in="query",
-     *      required=false,
-     *      type="array",
-     *      @SWG\Items(
-     *          type="integer"
-     *      )
-     *  ),
-     *   @SWG\Parameter(
-     *      name="campaignId",
-     *      in="query",
-     *      description="An optional Campaign Id to filter",
-     *      type="integer",
-     *      required=false
-     *  ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -753,30 +712,14 @@ class Stats extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws InvalidArgumentException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
      */
-    public function totalCount(Request $request, Response $response)
+    public function getExportStatsCount(Request $request, Response $response)
     {
-
-//
         $sanitizedParams = $this->getSanitizer($request->getParams());
-
         // We are expecting some parameters
         $fromDt = $sanitizedParams->getDate('fromDt');
         $toDt = $sanitizedParams->getDate('toDt');
-        $type = strtolower($sanitizedParams->getString('type'));
-
         $displayId = $sanitizedParams->getInt('displayId');
-        $layoutIds = $sanitizedParams->getIntArray('layoutId');
-        $mediaIds = $sanitizedParams->getIntArray('mediaId');
-        $statDate = $sanitizedParams->getDate('statDate');
-        $statId = $sanitizedParams->getString('statId');
-        $campaignId = $sanitizedParams->getInt('campaignId');
-        $eventTag = $sanitizedParams->getString('eventTag');
 
         if ($fromDt != null) {
             $fromDt->startOfDay();
@@ -819,30 +762,20 @@ class Stats extends Base
         }
 
         // Call the time series interface getStats
-        $resultSet =  $this->timeSeriesStore->getStatsTotalCount(
+        $resultSet =  $this->timeSeriesStore->getExportStatsCount(
             [
                 'fromDt'=> $fromDt,
                 'toDt'=> $toDt,
-                'type' => $type,
-                'displayIds' => $displayIds,
-                'layoutIds' => $layoutIds,
-                'mediaIds' => $mediaIds,
-                'statDate' => $statDate,
-                'statId' => $statId,
-                'campaignId' => $campaignId,
-                'eventTag' => $eventTag
+                'displayIds' => $displayIds
             ]);
 
         $response = [
             'total' => $resultSet
         ];
 
-        $this->getState()->template = 'grid';
+        $this->getState()->template = 'statistics-form-export';
         $this->getState()->recordsTotal = $resultSet;
         $this->getState()->setData($response);
-
-        return $this->render($request, $response);
-
     }
 
     /**

@@ -79,11 +79,11 @@ interface TimeSeriesStoreInterface
     public function getStats($filterBy = []);
 
     /**
-     * Get total count of statistics
+     * Get total count of export statistics
      * @param $filterBy array[mixed]|null
      * @return TimeSeriesResultsInterface
      */
-    public function getStatsTotalCount($filterBy = []);
+    public function getExportStatsCount($filterBy = []);
 
     /**
      * Delete statistics

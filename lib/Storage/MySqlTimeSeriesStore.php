@@ -354,149 +354,27 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     }
 
     /** @inheritdoc */
-    public function getStatsTotalCount($filterBy = [])
+    public function getExportStatsCount($filterBy = [])
     {
 
         $fromDt = isset($filterBy['fromDt']) ? $filterBy['fromDt'] : null;
         $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
-        $statDate = isset($filterBy['statDate']) ? $filterBy['statDate'] : null;
-
-        // In the case of user switches from  mongo to mysql - laststatId were saved as Mongo ObjectId string
-        if (isset($filterBy['statId'])) {
-            if (!is_numeric($filterBy['statId'])) {
-                throw new InvalidArgumentException(__('Invalid statId provided'), 'statId');
-            }
-            else {
-                $statId = $filterBy['statId'];
-            }
-        } else {
-            $statId = null;
-        }
-
-        $type = isset($filterBy['type']) ? $filterBy['type'] : null;
         $displayIds = isset($filterBy['displayIds']) ? $filterBy['displayIds'] : [];
-        $layoutIds = isset($filterBy['layoutIds']) ? $filterBy['layoutIds'] : [];
-        $mediaIds = isset($filterBy['mediaIds']) ? $filterBy['mediaIds'] : [];
-        $campaignId = isset($filterBy['campaignId']) ? $filterBy['campaignId'] : null;
-        $eventTag = isset($filterBy['eventTag']) ? $filterBy['eventTag'] : null;
 
         $params = [];
-        $select = ' SELECT stat.statId, stat.statDate, stat.type, stat.displayId, stat.widgetId, stat.layoutId, stat.mediaId, stat.start as start, stat.end as end, stat.tag, stat.duration, stat.count, stat.engagements, 
-        display.Display as display, layout.Layout as layout, media.Name AS media ';
-
-        $body = '
-        FROM stat
-            LEFT OUTER JOIN display
-            ON stat.DisplayID = display.DisplayID
-            LEFT OUTER JOIN layout
-            ON layout.LayoutID = stat.LayoutID
-            LEFT OUTER JOIN media
-            ON media.mediaID = stat.mediaID
-            LEFT OUTER JOIN widget
-            ON widget.widgetId = stat.widgetId
-         WHERE 1 = 1 ';
+        $sql = ' SELECT COUNT(*) AS total FROM `stat`  WHERE 1 = 1 ';
 
         // fromDt/toDt Filter
         if (($fromDt != null) && ($toDt != null)) {
-            $body .= ' AND stat.end > '. $fromDt->format('U') . ' AND stat.start <= '. $toDt->format('U');
-        }
-
-        // statDate Filter
-        // get the next stats from the given date
-        if ($statDate != null) {
-            $body .= ' AND stat.statDate >= ' . $statDate->format('U');
-        }
-
-        if ($statId != null) {
-            $body .= ' AND stat.statId > '. $statId;
+            $sql .= ' AND stat.end > '. $fromDt->format('U') . ' AND stat.start <= '. $toDt->format('U');
         }
 
         if (count($displayIds) > 0) {
-            $body .= ' AND stat.displayID IN (' . implode(',', $displayIds) . ')';
+            $sql .= ' AND stat.displayID IN (' . implode(',', $displayIds) . ')';
         }
-
-        // Type filter
-        if ($type == 'layout') {
-            $body .= ' AND `stat`.type = \'layout\' ';
-        } else if ($type == 'media') {
-            $body .= ' AND `stat`.type = \'media\' AND IFNULL(`media`.mediaId, 0) <> 0 ';
-        } else if ($type == 'widget') {
-            $body .= ' AND `stat`.type = \'widget\' AND IFNULL(`widget`.widgetId, 0) <> 0 ';
-        } else if ($type == 'event') {
-            $body .= ' AND `stat`.type = \'event\' ';
-        }
-
-        // Event Tag Filter
-        if ($eventTag) {
-            $body .= ' AND `stat`.tag = :eventTag';
-            $params['eventTag'] = $eventTag;
-        }
-
-        // Layout Filter
-        if (count($layoutIds) != 0) {
-
-            $layoutSql = '';
-            $i = 0;
-            foreach ($layoutIds as $layoutId) {
-                $i++;
-                $layoutSql .= ':layoutId_' . $i . ',';
-                $params['layoutId_' . $i] = $layoutId;
-            }
-
-            $body .= '  AND `stat`.campaignId IN (SELECT campaignId from layouthistory where layoutId IN (' . trim($layoutSql, ',') . ')) ';
-        }
-
-        // Media Filter
-        if (count($mediaIds) != 0) {
-
-            $mediaSql = '';
-            $i = 0;
-            foreach ($mediaIds as $mediaId) {
-                $i++;
-                $mediaSql .= ':mediaId_' . $i . ',';
-                $params['mediaId_' . $i] = $mediaId;
-            }
-
-            $body .= ' AND `media`.mediaId IN (' . trim($mediaSql, ',') . ')';
-        }
-
-        // Campaign selection
-        // ------------------
-        // Get all the layouts of that campaign.
-        // Then get all the campaigns of the layouts
-        $campaignIds = [];
-        if ($campaignId != null) {
-            try {
-                $campaign = $this->campaignFactory->getById($campaignId);
-                $layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId);
-                if (count($layouts) > 0) {
-                    foreach ($layouts as $layout) {
-                        $campaignIds[] = $layout->campaignId;
-                    }
-                }
-            } catch (NotFoundException $notFoundException) {
-                $this->log->error('CampaignIds not Found.');
-            }
-        }
-
-        // Campaign Filter
-        if ($campaignId != null) {
-            if (count($campaignIds) != 0) {
-                $body .= ' AND stat.campaignId IN (' . implode(',', $campaignIds) . ')';
-            } else {
-                // we wont get any match as we store layoutspecific campaignid in stat
-                $body .= ' AND stat.campaignId = '. $campaignId;
-            }
-        }
-
-        $body .= " ORDER BY stat.statId ";
-
 
         // Total count
-        $resTotal = $this->store->select('
-          SELECT COUNT(*) AS total FROM (   ' . $select. $body . ') total
-        ', $params);
-
+        $resTotal = $this->store->select($sql, $params);
 
         // Total
         $totalCount = isset($resTotal[0]['total']) ? $resTotal[0]['total'] : 0;
