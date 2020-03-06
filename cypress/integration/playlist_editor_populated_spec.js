@@ -24,13 +24,6 @@ describe('Playlist Editor (Populated)', function() {
         });
     });
 
-/* Disabled for testing speed reasons
-    after(function() {
-        // Remove the created layout
-        cy.deletePlaylist(this.testPlaylistId);
-    });
-*/
-
     it('changes and saves widget properties', () => {
         // Create and alias for reload widget
         cy.server();
