@@ -832,8 +832,9 @@ class Campaign extends Base
 
         $layouts = $sanitizedParams->getIntArray('layoutId');
 
-        if (count($layouts) <= 0)
-            throw new \InvalidArgumentException(__('Layouts not provided'));
+        if (count($layouts) <= 0) {
+            throw new InvalidArgumentException(__('Layouts not provided'), 'layoutId');
+        }
 
         // Check our permissions to see each one
         $layouts = $request->getParam('layoutId', null);

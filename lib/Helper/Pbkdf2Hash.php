@@ -8,6 +8,8 @@
 
 namespace Xibo\Helper;
 
+use Xibo\Support\Exception\InvalidArgumentException;
+
 /**
  * Class Pbkdf2Hash
  * @package Xibo\Helper
@@ -31,12 +33,14 @@ class Pbkdf2Hash
      * @param string $password
      * @param string $hash
      * @return bool
+     * @throws InvalidArgumentException
      */
     public static function verifyPassword($password, $hash)
     {
         $params = explode(':', $hash);
-        if (count($params) < self::HASH_SECTIONS)
-            throw new \InvalidArgumentException('Invalid password hash - not enough hash sections');
+        if (count($params) < self::HASH_SECTIONS) {
+            throw new InvalidArgumentException('Invalid password hash - not enough hash sections');
+        }
 
         $pbkdf2 = base64_decode($params[self::HASH_PBKDF2_INDEX]);
 
@@ -85,14 +89,15 @@ class Pbkdf2Hash
      * @param int $key_length The length of the derived key in bytes.
      * @param bool $raw_output If true, the key is returned in raw binary format. Hex encoded otherwise.
      * @return string A $key_length-byte key derived from the password and salt.
+     * @throws InvalidArgumentException
      */
     public static function pbkdf2($algorithm, $password, $salt, $count, $key_length, $raw_output = false)
     {
         $algorithm = strtolower($algorithm);
         if (!in_array($algorithm, hash_algos(), true))
-            throw new \InvalidArgumentException('PBKDF2 ERROR: Invalid hash algorithm.');
+            throw new InvalidArgumentException('PBKDF2 ERROR: Invalid hash algorithm.');
         if ($count <= 0 || $key_length <= 0)
-            throw new \InvalidArgumentException('PBKDF2 ERROR: Invalid parameters.');
+            throw new InvalidArgumentException('PBKDF2 ERROR: Invalid parameters.');
 
         $hash_length = strlen(hash($algorithm, "", true));
         $block_count = ceil($key_length / $hash_length);

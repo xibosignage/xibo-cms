@@ -807,7 +807,7 @@ class Library extends Base
         $media->load(['deleting' => true]);
 
         if ($media->isUsed() && $this->getSanitizer($request->getParams())->getCheckbox('forceDelete') == 0) {
-            throw new \InvalidArgumentException(__('This library item is in use.'));
+            throw new InvalidArgumentException(__('This library item is in use.'));
         }
 
         // Delete
@@ -1105,7 +1105,7 @@ class Library extends Base
         }
 
         if ($media->mediaType == 'font') {
-            throw new \InvalidArgumentException(__('Sorry, Fonts do not have any editable properties.'));
+            throw new InvalidArgumentException(__('Sorry, Fonts do not have any editable properties.'));
         }
 
         $media->name = $sanitizedParams->getString('name');
@@ -1799,7 +1799,7 @@ class Library extends Base
         $tags = $this->getSanitizer($request->getParams())->getArray('tag');
 
         if (count($tags) <= 0) {
-            throw new \InvalidArgumentException(__('No tags to assign'));
+            throw new InvalidArgumentException(__('No tags to assign'));
         }
 
         foreach ($tags as $tag) {

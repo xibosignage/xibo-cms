@@ -34,6 +34,7 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Fault
@@ -118,8 +119,9 @@ class Fault extends Base
         $zip = new \ZipArchive();
 
         $result = $zip->open($tempFileName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-        if ($result !== true)
-            throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: ' . $result));
+        if ($result !== true) {
+            throw new InvalidArgumentException(__('Can\'t create ZIP. Error Code: ' . $result));
+        }
 
         // Decide what we output based on the options selected.
         $outputVersion = $sanitizedParams->getCheckbox('outputVersion') == 1;
@@ -130,7 +132,7 @@ class Fault extends Base
         $outputDisplayProfile = $sanitizedParams->getCheckbox('outputDisplayProfile') == 1;
 
         if (!$outputVersion && !$outputLog && !$outputEnvCheck && !$outputSettings && !$outputDisplays && !$outputDisplayProfile) {
-            throw new \InvalidArgumentException(__('Please select at least one option'));
+            throw new InvalidArgumentException(__('Please select at least one option'));
         }
 
         $environmentVariables = [

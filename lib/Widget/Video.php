@@ -23,6 +23,7 @@ namespace Xibo\Widget;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Video
@@ -51,7 +52,7 @@ class Video extends ModuleWidget
         $this->module->settings['defaultMute'] = $this->getSanitizer($request->getParams())->getCheckbox('defaultMute');
 
         if ($this->getModule()->defaultDuration !== 0) {
-            throw new \InvalidArgumentException(__('The Video Module must have a default duration of 0 to detect the end of videos.'));
+            throw new InvalidArgumentException(__('The Video Module must have a default duration of 0 to detect the end of videos.'));
         }
 
         // Return an array of the processed settings.

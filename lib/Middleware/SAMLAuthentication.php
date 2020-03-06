@@ -41,6 +41,7 @@ use Xibo\Entity\User;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Random;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -93,8 +94,9 @@ class SAMLAuthentication implements Middleware
      * @param Request $request
      * @param RequestHandler $handler
      * @return Response
+     * @throws AccessDeniedException
+     * @throws ConfigurationException
      * @throws NotFoundException
-     * @throws \Xibo\Exception\ConfigurationException
      */
     public function process(Request $request, RequestHandler $handler): Response
     {
@@ -123,7 +125,7 @@ class SAMLAuthentication implements Middleware
 
                 return $response;
             } else {
-                throw new \Xibo\Exception\ConfigurationException(
+                throw new ConfigurationException(
                     'Invalid SP metadata: '.implode(', ', $errors),
                     Error::METADATA_SP_INVALID
                 );

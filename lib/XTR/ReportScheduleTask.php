@@ -32,6 +32,7 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\ReportServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 
 /**
@@ -146,7 +147,7 @@ class ReportScheduleTask implements TaskInterface
                     $result = $zip->open($zipName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
 
                     if ($result !== true) {
-                        throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
+                        throw new InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
                     }
 
                     $zip->addFile($fileName, 'reportschedule.json');

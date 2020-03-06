@@ -1593,7 +1593,7 @@ class Display extends Base
         }
 
         if ($display->macAddress == '') {
-            throw new \InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'));
+            throw new InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'), 'macAddress');
         }
 
         $this->getState()->template = 'display-form-wakeonlan';
@@ -1643,7 +1643,7 @@ class Display extends Base
         }
 
         if ($display->macAddress == '' || $display->broadCastAddress == '') {
-            throw new \InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'));
+            throw new InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'));
         }
 
         $this->getLog()->notice('About to send WOL packet to ' . $display->broadCastAddress . ' with Mac Address ' . $display->macAddress);

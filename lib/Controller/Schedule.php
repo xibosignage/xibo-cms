@@ -45,6 +45,7 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -996,8 +997,9 @@ class Schedule extends Base
             $toDt = $sanitizedParams->getDate('toDt');
             $recurrenceRange = $sanitizedParams->getDate('recurrenceRange');
 
-            if ($fromDt === null)
-                throw new \InvalidArgumentException(__('Please enter a from date'));
+            if ($fromDt === null) {
+                throw new InvalidArgumentException(__('Please enter a from date'), 'fromDt');
+            }
 
             $this->getLog()->debug('Times received are: FromDt=' . $this->getDate()->getLocalDate($fromDt) . '. ToDt=' . $this->getDate()->getLocalDate($toDt) . '. recurrenceRange=' . $this->getDate()->getLocalDate($recurrenceRange));
 
@@ -1486,7 +1488,7 @@ class Schedule extends Base
             $recurrenceRange = $sanitizedParams->getDate('recurrenceRange');
 
             if ($fromDt === null) {
-                throw new \InvalidArgumentException(__('Please enter a from date'));
+                throw new InvalidArgumentException(__('Please enter a from date'). 'fromDt');
             }
 
             $this->getLog()->debug('Times received are: FromDt=' . $this->getDate()->getLocalDate($fromDt) . '. ToDt=' . $this->getDate()->getLocalDate($toDt) . '. recurrenceRange=' . $this->getDate()->getLocalDate($recurrenceRange));

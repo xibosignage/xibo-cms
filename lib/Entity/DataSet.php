@@ -374,6 +374,7 @@ class DataSet implements \JsonSerializable
     /**
      * @param string[] $columns Column Names to select
      * @return array
+     * @throws InvalidArgumentException
      */
     public function getUniqueColumnValues($columns)
     {
@@ -397,8 +398,9 @@ class DataSet implements \JsonSerializable
                 }
             }
 
-            if (!$found)
-                throw new \InvalidArgumentException(__('Unknown Column ' . $heading));
+            if (!$found) {
+                throw new InvalidArgumentException(__('Unknown Column ' . $heading));
+            }
         }
         $select = rtrim($select, ',');
         // $select is safe

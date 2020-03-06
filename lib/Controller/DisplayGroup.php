@@ -808,7 +808,7 @@ class DisplayGroup extends Base
         }
 
         if ($displayGroup->isDynamic == 1) {
-            throw new \InvalidArgumentException(__('Displays cannot be manually assigned to a Dynamic Group'));
+            throw new InvalidArgumentException(__('Displays cannot be manually assigned to a Dynamic Group'), 'isDynamic');
         }
 
         $modifiedDisplays = [];
@@ -922,7 +922,7 @@ class DisplayGroup extends Base
         }
 
         if ($displayGroup->isDynamic == 1) {
-            throw new \InvalidArgumentException(__('Displays cannot be manually unassigned to a Dynamic Group'));
+            throw new InvalidArgumentException(__('Displays cannot be manually unassigned to a Dynamic Group'), 'isDynamic');
         }
 
         $displays = $sanitizedParams->getIntArray('displayId', ['default' => []]);
@@ -1016,7 +1016,7 @@ class DisplayGroup extends Base
         }
 
         if ($displayGroup->isDynamic == 1) {
-            throw new \InvalidArgumentException(__('DisplayGroups cannot be manually assigned to a Dynamic Group'));
+            throw new InvalidArgumentException(__('DisplayGroups cannot be manually assigned to a Dynamic Group'), 'isDynamic');
         }
 
         $displayGroups = $sanitizedParams->getIntArray('displayGroupId', ['default' => []]);
@@ -1112,7 +1112,7 @@ class DisplayGroup extends Base
         }
 
         if ($displayGroup->isDynamic == 1) {
-            throw new \InvalidArgumentException(__('DisplayGroups cannot be manually unassigned to a Dynamic Group'));
+            throw new InvalidArgumentException(__('DisplayGroups cannot be manually unassigned to a Dynamic Group'), 'isDynamic');
         }
 
         $displayGroups = $sanitizedParams->getIntArray('displayGroupId', ['default' => []]);
@@ -1947,7 +1947,7 @@ class DisplayGroup extends Base
         $downloadRequired = ($sanitizedParams->getCheckbox('downloadRequired') == 1);
 
         if ($layoutId == 0 && $campaignId == 0) {
-            throw new \InvalidArgumentException(__('Please provide a Layout ID or Campaign ID'));
+            throw new InvalidArgumentException(__('Please provide a Layout ID or Campaign ID'), 'isDynamic');
         }
 
         // Check that this user has permissions to see this layout

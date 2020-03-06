@@ -9,6 +9,7 @@
 namespace Xibo\Entity;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 
 /**
@@ -83,10 +84,14 @@ class Transition
         return 1;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function save()
     {
-        if ($this->transitionId == null || $this->transitionId == 0)
-            throw new \InvalidArgumentException();
+        if ($this->transitionId == null || $this->transitionId == 0) {
+            throw new InvalidArgumentException();
+        }
 
         $this->getStore()->update('
             UPDATE `transition` SET AvailableAsIn = :availableAsIn, AvailableAsOut = :availableAsOut WHERE transitionID = :transitionId

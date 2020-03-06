@@ -899,6 +899,7 @@ class DisplayGroup implements \JsonSerializable
 
     /**
      * Manage display group links
+     * @throws InvalidArgumentException
      */
     private function manageDisplayGroupLinks()
     {
@@ -909,7 +910,7 @@ class DisplayGroup implements \JsonSerializable
         // this is a lazy last minute check as we can't really tell if there is a circular reference unless
         // we've inserted the records already.
         if ($this->getStore()->exists('SELECT depth FROM `lkdgdg` WHERE parentId = :parentId AND childId = parentId AND depth > 0', ['parentId' => $this->displayGroupId]))
-            throw new \InvalidArgumentException(__('This assignment creates a circular reference'));
+            throw new InvalidArgumentException(__('This assignment creates a circular reference'));
     }
 
     private function linkDisplays()

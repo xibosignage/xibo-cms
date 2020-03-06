@@ -1872,8 +1872,9 @@ class Layout extends Base
 
         $tags = $sanitizedParams->getArray('tag');
 
-        if (count($tags) <= 0)
-            throw new \InvalidArgumentException(__('No tags to assign'));
+        if (count($tags) <= 0) {
+            throw new InvalidArgumentException(__('No tags to assign'));
+        }
 
         foreach ($tags as $tag) {
             $layout->assignTag($this->tagFactory->tagFromString($tag));

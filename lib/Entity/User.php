@@ -710,10 +710,7 @@ class User implements \JsonSerializable
     /**
      * Reassign all
      * @param User $user
-     * @throws ConfigurationException
-     * @throws DuplicateEntityException
      * @throws GeneralException
-     * @throws InvalidArgumentException
      * @throws NotFoundException
      */
     public function reassignAllTo($user)
@@ -1263,11 +1260,13 @@ class User implements \JsonSerializable
     /**
      * Check that this object can be used with the permissions sytem
      * @param object $object
+     * @throws InvalidArgumentException
      */
     private function checkObjectCompatibility($object)
     {
-        if (!method_exists($object, 'getId') || !method_exists($object, 'getOwnerId') || !method_exists($object, 'permissionsClass'))
-            throw new \InvalidArgumentException(__('Provided Object not under permission management'));
+        if (!method_exists($object, 'getId') || !method_exists($object, 'getOwnerId') || !method_exists($object, 'permissionsClass')) {
+            throw new InvalidArgumentException(__('Provided Object not under permission management'), 'object');
+        }
     }
 
     /**
@@ -1497,6 +1496,7 @@ class User implements \JsonSerializable
     /**
      * Tests the supplied password against the password policy
      * @param string $password
+     * @throws InvalidArgumentException
      */
     public function testPasswordAgainstPolicy($password)
     {
@@ -1508,8 +1508,9 @@ class User implements \JsonSerializable
             $policyError = $this->configService->getSetting('USER_PASSWORD_ERROR');
             $policyError = ($policyError == '') ? __('Your password does not meet the required complexity') : $policyError;
 
-            if(!preg_match($policy, $password, $matches))
-                throw new \InvalidArgumentException($policyError);
+            if(!preg_match($policy, $password, $matches)) {
+                throw new InvalidArgumentException($policyError);
+            }
         }
     }
 

@@ -23,11 +23,11 @@
 namespace Xibo\Service;
 
 use Slim\Http\ServerRequest as Request;
-use Slim\Slim;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Report\ReportInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Support\Exception\GeneralException;
 
 /**
  * Interface ReportServiceInterface
@@ -55,19 +55,21 @@ interface ReportServiceInterface
     /**
      * Get report by report name
      * @param string $reportName
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws GeneralException
      */
     public function getReportByName($reportName);
 
     /**
      * Get report class by report name
      * @param string $reportName
+     * @throws GeneralException
      */
     public function getReportClass($reportName);
 
     /**
      * Create the report object by report classname
      * @param string $className
+     * @throws GeneralException
      * @return ReportInterface
      */
     public function createReportObject($className);
@@ -76,6 +78,7 @@ interface ReportServiceInterface
      * Populate form title and hidden fields
      * @param string $reportName
      * @param Request $request
+     * @throws GeneralException
      * @return array
      */
     public function getReportScheduleFormData($reportName, Request $request);
@@ -84,6 +87,7 @@ interface ReportServiceInterface
      * Set Report Schedule form data
      * @param string $reportName
      * @param Request $request
+     * @throws GeneralException
      * @return array
      */
     public function setReportScheduleFormData($reportName, Request $request);
@@ -92,6 +96,7 @@ interface ReportServiceInterface
      * Generate saved report name
      * @param string $reportName
      * @param string $filterCriteria
+     * @throws GeneralException
      * @return string
      */
     public function generateSavedReportName($reportName, $filterCriteria);
@@ -100,6 +105,7 @@ interface ReportServiceInterface
      * Get saved report results
      * @param int $savedreportId
      * @param string $reportName
+     * @throws GeneralException
      * @return array
      */
     public function getSavedReportResults($savedreportId, $reportName);
@@ -109,6 +115,7 @@ interface ReportServiceInterface
      * @param string $reportName
      * @param string $filterCriteria
      * @param int $userId
+     * @throws GeneralException
      * @return array
      */
     public function runReport($reportName, $filterCriteria, $userId);
@@ -116,6 +123,7 @@ interface ReportServiceInterface
     /**
      * Get report email template twig file name
      * @param string $reportName
+     * @throws GeneralException
      * @return string
      */
     public function getReportEmailTemplate($reportName);
@@ -124,6 +132,7 @@ interface ReportServiceInterface
      * Get chart script
      * @param int $savedreportId
      * @param string $reportName
+     * @throws GeneralException
      * @return array
      */
     public function getReportChartScript($savedreportId, $reportName);

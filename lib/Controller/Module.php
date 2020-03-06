@@ -433,7 +433,7 @@ class Module extends Base
         } else if (file_exists(PROJECT_ROOT . '/custom/' . $name . '.json')) {
             $module = json_decode(file_get_contents(PROJECT_ROOT . '/custom/' . $name . '.json'));
         } else {
-            throw new \InvalidArgumentException(__('Invalid module'));
+            throw new InvalidArgumentException(__('Invalid module'), 'name');
         }
 
         $this->getState()->template = 'module-form-install';
@@ -468,7 +468,7 @@ class Module extends Base
         } else if (file_exists(PROJECT_ROOT . '/custom/' . $name . '.json')) {
             $moduleDetails = json_decode(file_get_contents(PROJECT_ROOT . '/custom/' . $name . '.json'));
         } else {
-            throw new \InvalidArgumentException(__('Invalid module'));
+            throw new InvalidArgumentException(__('Invalid module'), 'name');
         }
 
         // All modules should be capable of autoload
@@ -991,7 +991,7 @@ class Module extends Base
                 break;
 
             default:
-                throw new \InvalidArgumentException(__('Unknown transition type'));
+                throw new InvalidArgumentException(__('Unknown transition type'), 'type');
         }
 
         $widget->save();

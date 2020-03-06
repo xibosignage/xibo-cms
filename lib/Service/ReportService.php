@@ -22,13 +22,13 @@
 
 namespace Xibo\Service;
 
-use Nyholm\Psr7\ServerRequest;
-use Slim\Http\ServerRequest as Request;
 use Psr\Container\ContainerInterface;
-use Xibo\Support\Exception\NotFoundException;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class ReportScheduleService
@@ -252,13 +252,15 @@ class ReportService implements ReportServiceInterface
         $zipFile = $this->config->getSetting('LIBRARY_LOCATION') . $savedReport->storedAs;
 
         // Do some pre-checks on the arguments we have been provided
-        if (!file_exists($zipFile))
-            throw new \InvalidArgumentException(__('File does not exist'));
+        if (!file_exists($zipFile)) {
+            throw new InvalidArgumentException(__('File does not exist'));
+        }
 
         // Open the Zip file
         $zip = new \ZipArchive();
-        if (!$zip->open($zipFile))
-            throw new \InvalidArgumentException(__('Unable to open ZIP'));
+        if (!$zip->open($zipFile)) {
+            throw new InvalidArgumentException(__('Unable to open ZIP'));
+        }
 
         // Get the reportscheduledetails
         $json = json_decode($zip->getFromName('reportschedule.json'), true);

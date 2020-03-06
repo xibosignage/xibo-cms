@@ -24,6 +24,7 @@ use Monolog\Logger;
 use Nyholm\Psr7\ServerRequest;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ContainerFactory;
+use Xibo\Support\Exception\NotFoundException;
 
 define('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
@@ -113,19 +114,19 @@ if (isset($_GET['file'])) {
     try {
         /** @var \Xibo\Entity\RequiredFile $file */
         if (!isset($_REQUEST['displayId']) || !isset($_REQUEST['type']) || !isset($_REQUEST['itemId']))
-            throw new \Xibo\Exception\NotFoundException('Missing params');
+            throw new NotFoundException('Missing params');
 
         // Get the player nonce from the cache
         /** @var \Stash\Item $nonce */
         $nonce = $container->get('pool')->getItem('/display/nonce/' . $_REQUEST['displayId']);
 
         if ($nonce->isMiss()) {
-            throw new \Xibo\Exception\NotFoundException('No nonce cache');
+            throw new NotFoundException('No nonce cache');
         }
 
         // Check the nonce against the nonce we received
         if ($nonce->get() != $_REQUEST['file']) {
-            throw new \Xibo\Exception\NotFoundException('Nonce mismatch');
+            throw new NotFoundException('Nonce mismatch');
         }
 
         switch ($_REQUEST['type']) {
@@ -138,7 +139,7 @@ if (isset($_GET['file'])) {
                 break;
 
             default:
-                throw new \Xibo\Exception\NotFoundException('Unknown type');
+                throw new NotFoundException('Unknown type');
         }
 
         // Only log bandwidth under certain conditions
