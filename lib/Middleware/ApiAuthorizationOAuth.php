@@ -28,9 +28,9 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
-use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Storage\AuthCodeRepository;
 use Xibo\Storage\RefreshTokenRepository;
+use Xibo\Support\Exception\ConfigurationException;
 
 /**
  * Class ApiAuthorizationOAuth

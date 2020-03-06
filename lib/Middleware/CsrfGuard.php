@@ -29,9 +29,8 @@ use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
 use Slim\Routing\RouteContext;
-use Xibo\Support\Exception\ExpiredException;
 use Xibo\Helper\Environment;
-use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\ExpiredException;
 
 class CsrfGuard implements Middleware
 {

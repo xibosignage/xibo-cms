@@ -23,9 +23,9 @@
 
 namespace Xibo\Entity;
 use Respect\Validation\Validator as v;
-use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Help

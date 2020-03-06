@@ -28,11 +28,11 @@ use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Pool;
 use Xibo\Entity\Media;
 use Xibo\Entity\User;
-use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class MediaFactory

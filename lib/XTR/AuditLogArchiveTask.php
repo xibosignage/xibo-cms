@@ -24,10 +24,10 @@
 namespace Xibo\XTR;
 use Jenssegers\Date\Date;
 use Xibo\Entity\User;
-use Xibo\Support\Exception\NotFoundException;
-use Xibo\Support\Exception\TaskRunException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\TaskRunException;
 
 /**
  * Class StatsArchiveTask

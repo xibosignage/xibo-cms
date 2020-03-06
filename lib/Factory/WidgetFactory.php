@@ -26,11 +26,11 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
-use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class WidgetFactory

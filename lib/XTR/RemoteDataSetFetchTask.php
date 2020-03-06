@@ -24,11 +24,11 @@
 namespace Xibo\XTR;
 
 use Xibo\Entity\DataSet;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
+use Xibo\Support\Exception\GeneralException;
 
 /**
  * Class RemoteDataSetFetchTask

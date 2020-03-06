@@ -32,12 +32,12 @@ use Xibo\Entity\Module;
 use Xibo\Entity\Region;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
-use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ModuleServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\ModuleWidget;
 
 /**
@@ -167,7 +167,7 @@ class ModuleFactory extends BaseFactory
     /**
      * Create a Module
      * @param string $type
-     * @return \Xibo\Widget\ModuleWidget
+     * @return ModuleWidget
      * @throws NotFoundException
      */
     public function create($type)
@@ -201,7 +201,7 @@ class ModuleFactory extends BaseFactory
     /**
      * Create a Module
      * @param string $class
-     * @return \Xibo\Widget\ModuleWidget
+     * @return ModuleWidget
      * @throws NotFoundException
      */
     public function createByClass($class)
@@ -235,7 +235,7 @@ class ModuleFactory extends BaseFactory
     /**
      * Create a Module
      * @param string $className
-     * @return \Xibo\Widget\ModuleWidget
+     * @return ModuleWidget
      */
     public function createForInstall($className)
     {
@@ -261,7 +261,7 @@ class ModuleFactory extends BaseFactory
     /**
      * Create a Module
      * @param string $moduleId
-     * @return \Xibo\Widget\ModuleWidget
+     * @return ModuleWidget
      * @throws NotFoundException
      */
     public function createById($moduleId)
@@ -287,7 +287,7 @@ class ModuleFactory extends BaseFactory
     /**
      * Create a Module with a Media Record
      * @param Media $media
-     * @return \Xibo\Widget\ModuleWidget
+     * @return ModuleWidget
      * @throws NotFoundException
      */
     public function createWithMedia($media)
@@ -302,7 +302,7 @@ class ModuleFactory extends BaseFactory
         $widget->assignMedia($media->mediaId);
 
         // Create a module
-        /* @var \Xibo\Widget\ModuleWidget $object */
+        /* @var ModuleWidget $object */
         $module = $modules[0];
         $object = $this->moduleService->get(
             $module,
@@ -332,7 +332,7 @@ class ModuleFactory extends BaseFactory
      * @param int $ownerId
      * @param int $playlistId
      * @param int $regionId
-     * @return \Xibo\Widget\ModuleWidget
+     * @return ModuleWidget
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
@@ -370,7 +370,7 @@ class ModuleFactory extends BaseFactory
      * Create a Module using a Widget
      * @param Widget $widget
      * @param Region|null $region
-     * @return \Xibo\Widget\ModuleWidget
+     * @return ModuleWidget
      * @throws NotFoundException
      */
     public function createWithWidget($widget, $region = null)

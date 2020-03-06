@@ -25,10 +25,10 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\DataSetRss;
-use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 class DataSetRssFactory extends BaseFactory
 {

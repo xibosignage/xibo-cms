@@ -21,8 +21,8 @@
  */
 namespace Xibo\Controller;
 
-use Xibo\Support\Exception\InvalidArgumentException;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**

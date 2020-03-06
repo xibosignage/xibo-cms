@@ -22,7 +22,6 @@
 
 namespace Xibo\XTR;
 use Xibo\Entity\ScheduleReminder;
-use Xibo\Support\Exception\NotFoundException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\ScheduleFactory;
@@ -30,6 +29,7 @@ use Xibo\Factory\ScheduleReminderFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Service\DateServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class ScheduleReminderTask

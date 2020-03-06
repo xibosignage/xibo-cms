@@ -20,13 +20,13 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Exception;
 use GuzzleHttp\Client;
 use PicoFeed\PicoFeedException;
 use PicoFeed\Reader\Reader;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;

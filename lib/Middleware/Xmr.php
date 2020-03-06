@@ -26,9 +26,9 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Service\DisplayNotifyService;
 use Xibo\Service\PlayerActionService;
+use Xibo\Support\Exception\GeneralException;
 
 /**
  * Class Xmr

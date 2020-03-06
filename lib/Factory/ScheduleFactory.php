@@ -25,12 +25,12 @@ namespace Xibo\Factory;
 use Jenssegers\Date\Date;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Schedule;
-use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class ScheduleFactory

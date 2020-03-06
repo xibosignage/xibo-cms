@@ -23,9 +23,9 @@
 
 namespace Xibo\XTR;
 use Xibo\Controller\Library;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Support\Exception\GeneralException;
 
 /**
  * Class MaintenanceDailyTask

@@ -28,10 +28,6 @@ use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
-use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\ExpiredException;
-use Xibo\Support\Exception\InstanceSuspendedException;
-use Xibo\Support\Exception\UpgradePendingException;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Environment;
 use Xibo\Helper\SanitizerService;
@@ -39,6 +35,10 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\HelpServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ExpiredException;
+use Xibo\Support\Exception\InstanceSuspendedException;
+use Xibo\Support\Exception\UpgradePendingException;
 
 /**
  * Class Error

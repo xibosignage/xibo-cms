@@ -35,9 +35,9 @@ use Slim\Http\Response as SlimResponse;
 use Slim\Http\ServerRequest as SlimRequest;
 use Slim\Routing\RouteContext;
 use Xibo\Entity\User;
+use Xibo\Helper\ApplicationState;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\NotFoundException;
-use Xibo\Helper\ApplicationState;
 
 /**
  * Class CASAuthentication

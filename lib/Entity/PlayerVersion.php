@@ -22,7 +22,6 @@
 namespace Xibo\Entity;
 
 
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Service\ConfigServiceInterface;
