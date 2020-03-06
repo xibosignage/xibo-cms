@@ -724,42 +724,65 @@ class User implements \JsonSerializable
 
         $this->getLog()->debug('There are %d children', $this->countChildren());
 
-        // Go through each item and reassign the owner to the provided user.
-        foreach ($this->media as $media) {
-            /* @var Media $media */
-            $media->setOwner($user->getOwnerId());
-            $media->save();
-        }
-        foreach ($this->events as $event) {
-            /* @var Schedule $event */
-            $event->load();
-            $event->setOwner($user->getOwnerId());
-            $event->setDisplayFactory($this->displayFactory);
-            $event->load();
-            $event->save(['generate' => false]);
-        }
-        foreach ($this->layouts as $layout) {
-            /* @var Layout $layout */
-            $layout->setOwner($user->getOwnerId(), true);
-            $layout->save(['saveTags' => false]);
-        }
-        foreach ($this->campaigns as $campaign) {
-            /* @var Campaign $campaign */
-            $campaign->setOwner($user->getOwnerId());
-            $campaign->save(['saveTags' => false]);
-        }
-        foreach ($this->playlists as $playlist) {
-            $playlist->setOwner($user->getOwnerId());
-            $playlist->save(['saveTags' => false]);
-        }
-        foreach($this->displayGroupFactory->getByOwnerId($this->userId) as $displayGroup) {
-            $displayGroup->setOwner($user->getOwnerId());
-            $displayGroup->save(['saveTags' => false, 'manageDynamicDisplayLinks' => false]);
-        }
-        foreach($this->dataSetFactory->getByOwnerId($this->userId) as $dataSet) {
-            $dataSet->setOwner($user->getOwnerId());
-            $dataSet->save();
-        }
+        // Reassign media
+        $this->getStore()->update('UPDATE `media` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign events
+        $this->getStore()->update('UPDATE `schedule` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign layouts
+        $this->getStore()->update('UPDATE `layout` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign regions
+        $this->getStore()->update('UPDATE `region` SET ownerId = :userId WHERE ownerId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign widgets
+        $this->getStore()->update('UPDATE `widget` SET ownerId = :userId WHERE ownerId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign campaigns
+        $this->getStore()->update('UPDATE `campaign` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign playlists
+        $this->getStore()->update('UPDATE `playlist` SET ownerId = :userId WHERE ownerId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign display groups
+        $this->getStore()->update('UPDATE `displaygroup` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign display profiles
+        $this->getStore()->update('UPDATE `displayprofile` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign datasets
+        $this->getStore()->update('UPDATE `dataset` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
 
         // Reassign resolutions
         $this->getStore()->update('UPDATE `resolution` SET userId = :userId WHERE userId = :oldUserId', [
@@ -769,6 +792,12 @@ class User implements \JsonSerializable
 
         // Reassign Dayparts
         $this->getStore()->update('UPDATE `daypart` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign saved_resports
+        $this->getStore()->update('UPDATE `saved_report` SET userId = :userId WHERE userId = :oldUserId', [
             'userId' => $user->userId,
             'oldUserId' => $this->userId
         ]);
