@@ -1070,9 +1070,10 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Default view for edit form
+     * @param Request $request
      * @return string
      */
-    public function editForm()
+    public function editForm(Request $request)
     {
         return $this->getModuleType() . '-form-edit';
     }
