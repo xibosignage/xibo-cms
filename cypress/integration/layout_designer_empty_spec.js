@@ -49,7 +49,7 @@ describe('Layout Designer (Empty)', function() {
         });
     });
 
-    context('Empty layout (draft)', function() { //FIXME: Tests skipped for now, need update to the new Layout Designer revamp
+    context('Empty layout (draft)', function() {
 
         beforeEach(function() {
             // Create random name
@@ -134,9 +134,6 @@ describe('Layout Designer (Empty)', function() {
 
                 // Wait for the layout to reload
                 cy.wait('@reloadLayout');
-
-                // Close navigator edit
-                cy.get('#layout-navigator #close-btn').click();
 
                 // Check that region is not on timeline
                 cy.get('#layout-timeline [data-type="region"]#' + regionId).should('not.exist');
