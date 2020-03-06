@@ -27,9 +27,9 @@ namespace Xibo\Xmds;
 use Stash\Invalidation;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
+use Xibo\Helper\Random;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
-use Xibo\Helper\Random;
 
 class Soap5 extends Soap4
 {

@@ -34,11 +34,6 @@ use Xibo\Entity\Display;
 use Xibo\Entity\Schedule;
 use Xibo\Entity\Stat;
 use Xibo\Entity\Widget;
-use Xibo\Support\Exception\ControllerNotImplemented;
-use Xibo\Support\Exception\DeadlockException;
-use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\BandwidthFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DayPartFactory;
@@ -65,6 +60,11 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\DeadlockException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\ModuleWidget;
 
 /**
@@ -1167,13 +1167,20 @@ class Soap
     protected function doBlackList($serverKey, $hardwareKey, $mediaId, $type, $reason)
     {
         $this->logProcessor->setRoute('BlackList');
+        $sanitized = $this->getSanitizer([
+            'serverKey' => $serverKey,
+            'hardwareKey' => $hardwareKey,
+            'mediaId' => $mediaId,
+            'type' => $type,
+            'reason' => $reason,
+        ]);
 
         // Sanitize
-        $serverKey = $this->getSanitizer()->string($serverKey);
-        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
-        $mediaId = $this->getSanitizer()->string($mediaId);
-        $type = $this->getSanitizer()->string($type);
-        $reason = $this->getSanitizer()->string($reason);
+        $serverKey = $sanitized->getString('serverKey');
+        $hardwareKey = $sanitized->getString('hardwareKey');
+        $mediaId = $sanitized->getInt('mediaId');
+        $type = $sanitized->getString('type');
+        $reason = $sanitized->getString('reason');
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
