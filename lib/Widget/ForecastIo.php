@@ -139,6 +139,8 @@ class ForecastIo extends ModuleWidget
 
         $this->module->settings['apiKey'] = $apiKey;
         $this->module->settings['cachePeriod'] = $cachePeriod;
+
+        return $response;
     }
 
     /**
