@@ -25,9 +25,6 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Entity\Permission;
-use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\ControllerNotImplemented;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
@@ -37,6 +34,9 @@ use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -833,8 +833,9 @@ class Campaign extends Base
 
         $layouts = $sanitizedParams->getIntArray('layoutId');
 
-        if (count($layouts) <= 0)
-            throw new \InvalidArgumentException(__('Layouts not provided'));
+        if (count($layouts) <= 0) {
+            throw new InvalidArgumentException(__('Layouts not provided'), 'layoutId');
+        }
 
         // Check our permissions to see each one
         $layouts = $request->getParam('layoutId', null);

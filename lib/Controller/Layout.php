@@ -1145,7 +1145,6 @@ class Layout extends Base
      * @throws \Twig\Error\LoaderError
      * @throws \Twig\Error\RuntimeError
      * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\NotFoundException
      * @throws \Xibo\Support\Exception\ConfigurationException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
@@ -1897,8 +1896,9 @@ class Layout extends Base
 
         $tags = $sanitizedParams->getArray('tag');
 
-        if (count($tags) <= 0)
-            throw new \InvalidArgumentException(__('No tags to assign'));
+        if (count($tags) <= 0) {
+            throw new InvalidArgumentException(__('No tags to assign'));
+        }
 
         foreach ($tags as $tag) {
             $layout->assignTag($this->tagFactory->tagFromString($tag));

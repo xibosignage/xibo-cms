@@ -25,9 +25,9 @@ use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
+use Xibo\Helper\XiboUploadHandler;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
-use Xibo\Helper\XiboUploadHandler;
 
 /**
  * Class PlaylistDashboard

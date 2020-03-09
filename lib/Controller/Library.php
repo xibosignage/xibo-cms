@@ -34,12 +34,6 @@ use Stash\Invalidation;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\Widget;
-use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\ConfigurationException;
-use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\LibraryFullException;
-use Xibo\Support\Exception\NotFoundException;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
@@ -65,6 +59,12 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\LibraryFullException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Library
@@ -808,7 +808,7 @@ class Library extends Base
         $media->load(['deleting' => true]);
 
         if ($media->isUsed() && $this->getSanitizer($request->getParams())->getCheckbox('forceDelete') == 0) {
-            throw new \InvalidArgumentException(__('This library item is in use.'));
+            throw new InvalidArgumentException(__('This library item is in use.'));
         }
 
         // Delete
@@ -1106,7 +1106,7 @@ class Library extends Base
         }
 
         if ($media->mediaType == 'font') {
-            throw new \InvalidArgumentException(__('Sorry, Fonts do not have any editable properties.'));
+            throw new InvalidArgumentException(__('Sorry, Fonts do not have any editable properties.'));
         }
 
         $media->name = $sanitizedParams->getString('name');
@@ -1800,7 +1800,7 @@ class Library extends Base
         $tags = $this->getSanitizer($request->getParams())->getArray('tag');
 
         if (count($tags) <= 0) {
-            throw new \InvalidArgumentException(__('No tags to assign'));
+            throw new InvalidArgumentException(__('No tags to assign'));
         }
 
         foreach ($tags as $tag) {

@@ -23,11 +23,11 @@
 namespace Xibo\XTR;
 use Xibo\Entity\Task;
 use Xibo\Entity\User;
-use Xibo\Support\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TaskFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class StatsMigrationTask

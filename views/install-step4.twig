@@ -13,11 +13,11 @@
 
                 {% set title %}{% trans "Admin Username" %}{% endset %}
                 {% set helpText %}{% trans "Please enter a user name for the first administrator account." %}{% endset %}
-                {{ forms.input("admin_username",  title, "", helpText) }}
+                {{ forms.input("admin_username",  title, session['db_admin_user'], helpText) }}
 
                 {% set title %}{% trans "Admin Password" %}{% endset %}
                 {% set helpText %}{% trans "Please enter a password for this user. This user will have full access to the system" %}{% endset %}
-                {{ forms.password("admin_password",  title, flash.db_admin_pass, helpText) }}
+                {{ forms.password("admin_password",  title, session['db_admin_pass'], helpText) }}
 
                 {% set title %}{% trans "Next" %}{% endset %}
                 {{ forms.button(title, "submit") }}

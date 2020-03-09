@@ -25,9 +25,9 @@ use Intervention\Image\ImageManagerStatic as Img;
 use Jenssegers\Date\Date;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
-use Xibo\Support\Exception\NotFoundException;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Helper\Random;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Soap4
@@ -45,21 +45,38 @@ class Soap4 extends Soap
      * @param int $clientCode
      * @param string $operatingSystem
      * @param string $macAddress
+     * @param null $xmrChannel
+     * @param null $xmrPubKey
      * @return string
+     * @throws GeneralException
+     * @throws NotFoundException
      * @throws \SoapFault
      */
     public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress, $xmrChannel = null, $xmrPubKey = null)
     {
         $this->logProcessor->setRoute('RegisterDisplay');
 
+        $sanitized = $this->getSanitizer([
+            'serverKey' => $serverKey,
+            'hardwareKey' => $hardwareKey,
+            'displayName' => $displayName,
+            'clientType' => $clientType,
+            'clientVersion' => $clientVersion,
+            'clientCode' => $clientCode,
+            'operatingSystem' => $operatingSystem,
+            'macAddress' => $macAddress,
+            'xmrChannel' => $xmrChannel,
+            'xmrPubKey' => $xmrPubKey
+        ]);
+
         // Sanitize
-        $serverKey = $this->getSanitizer()->string($serverKey);
-        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
-        $displayName = $this->getSanitizer()->string($displayName);
-        $clientType = $this->getSanitizer()->string($clientType);
-        $clientVersion = $this->getSanitizer()->string($clientVersion);
-        $clientCode = $this->getSanitizer()->int($clientCode);
-        $macAddress = $this->getSanitizer()->string($macAddress);
+        $serverKey = $sanitized->getString('serverKey');
+        $hardwareKey = $sanitized->getString('hardwareKey');
+        $displayName = $sanitized->getString('displayName');
+        $clientType = $sanitized->getString('clientType');
+        $clientVersion = $sanitized->getString('clientVersion');
+        $clientCode = $sanitized->getInt('clientCode');
+        $macAddress = $sanitized->getString('macAddress');
         $clientAddress = $this->getIp();
 
         // Check the serverKey matches

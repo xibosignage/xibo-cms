@@ -24,10 +24,6 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
-use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Helper\DataSetUploadHandler;
@@ -35,6 +31,10 @@ use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DataSet
@@ -740,7 +740,7 @@ class DataSet extends Base
         }
 
         if ($dataSet->isLookup) {
-            throw new \InvalidArgumentException(__('Lookup Tables cannot be deleted'));
+            throw new InvalidArgumentException(__('Lookup Tables cannot be deleted'));
         }
 
         // Set the form
@@ -1091,14 +1091,15 @@ class DataSet extends Base
         $body = $request->getParsedBody();
 
         if (empty($body)) {
-            throw new \InvalidArgumentException(__('Missing JSON Body'));
+            throw new InvalidArgumentException(__('Missing JSON Body'));
         }
 
         // Expect 2 parameters
         $data = json_decode($body, true);
 
-        if (!isset($data['rows']) || !isset($data['uniqueKeys']))
-            throw new \InvalidArgumentException(__('Malformed JSON body, rows and uniqueKeys are required'));
+        if (!isset($data['rows']) || !isset($data['uniqueKeys'])) {
+            throw new InvalidArgumentException(__('Malformed JSON body, rows and uniqueKeys are required'));
+        }
 
         $this->getLog()->debug('Import JSON into DataSet with ' . count($data['rows']) . ' and unique keys ' . json_encode($data['uniqueKeys']));
 

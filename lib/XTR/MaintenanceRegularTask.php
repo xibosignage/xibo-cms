@@ -24,7 +24,6 @@
 namespace Xibo\XTR;
 use Xibo\Controller\Display;
 use Xibo\Controller\Library;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
@@ -33,6 +32,7 @@ use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\WakeOnLan;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Widget\ModuleWidget;
 
 /**

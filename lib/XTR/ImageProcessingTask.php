@@ -21,10 +21,8 @@
  */
 
 namespace Xibo\XTR;
-use Xibo\Entity\DisplayGroup;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
-use Xibo\Factory\ScheduleFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\ImageProcessingServiceInterface;
 

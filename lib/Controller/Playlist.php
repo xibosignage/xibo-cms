@@ -254,7 +254,6 @@ class Playlist extends Base
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Exception\NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function grid(Request $request, Response $response)
@@ -1057,7 +1056,6 @@ class Playlist extends Base
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Exception\NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function widgetGrid(Request $request, Response $response)

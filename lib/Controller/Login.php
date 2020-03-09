@@ -21,17 +21,13 @@
  */
 namespace Xibo\Controller;
 use Psr\Container\ContainerInterface;
+use RobThree\Auth\TwoFactorAuth;
+use Slim\Flash\Messages;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Flash\Messages;
-use Slim\Views\Twig;
 use Slim\Routing\RouteContext;
+use Slim\Views\Twig;
 use Xibo\Entity\User;
-use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\ConfigurationException;
-use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\Environment;
 use Xibo\Helper\HttpsDetect;
@@ -42,7 +38,12 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-use RobThree\Auth\TwoFactorAuth;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\ExpiredException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 
 /**
@@ -236,7 +237,7 @@ class Login extends Base
 
                 // DOOH user
                 if ($user->userTypeId === 4) {
-                    throw new AccessDeniedException('Sorry this account does not exist or does not have permission to access the web portal.');
+                    throw new AccessDeniedException(__('Sorry this account does not exist or does not have permission to access the web portal.'));
                 }
 
                 // Check password
@@ -253,7 +254,7 @@ class Login extends Base
                 $this->completeLoginFlow($user, $request);
             }
             catch (NotFoundException $e) {
-                throw new AccessDeniedException('User not found');
+                throw new AccessDeniedException(__('User not found'));
             }
 
             $redirect = ($priorRoute == '' || $priorRoute == '/' || stripos($priorRoute, $routeParser->urlFor('login'))) ? $routeParser->urlFor('home') : $priorRoute;
@@ -269,7 +270,7 @@ class Login extends Base
             }
             $this->getFlash()->addMessage('priorRoute', $priorRoute);
         }
-        catch (\Xibo\Exception\FormExpiredException $e) {
+        catch (ExpiredException $e) {
             $this->getFlash()->addMessage('priorRoute', $priorRoute);
         }
         $this->setNoOutput(true);
@@ -315,7 +316,7 @@ class Login extends Base
 
             // Does this user have an email address associated to their user record?
             if ($user->email == '') {
-                throw new NotFoundException('No email');
+                throw new NotFoundException(__('No email'));
             }
 
             // Nonce parts (nonce isn't ever stored, only the hash of it is stored, it only exists in the email)
@@ -525,7 +526,7 @@ class Login extends Base
         if ($user->twoFactorTypeId === 1) {
 
             if ($user->email == '') {
-                throw new NotFoundException('No email');
+                throw new NotFoundException(__('No email'));
             }
 
             $mailFrom = $this->getConfig()->getSetting('mail_from');

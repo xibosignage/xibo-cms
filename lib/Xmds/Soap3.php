@@ -43,8 +43,13 @@ class Soap3 extends Soap
         $this->logProcessor->setRoute('RegisterDisplay');
 
         // Sanitize
-        $serverKey = $this->getSanitizer()->string($serverKey);
-        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
+        $sanitizer = $this->getSanitizer([
+            'serverKey' => $serverKey,
+            'hardwareKey' => $hardwareKey
+        ]);
+
+        $serverKey = $sanitizer->getString('serverKey');
+        $hardwareKey = $sanitizer->getString('hardwareKey');
 
         // Check the serverKey matches the one we have
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY'))
@@ -120,12 +125,21 @@ class Soap3 extends Soap
         $this->logProcessor->setRoute('GetFile');
 
         // Sanitize
-        $serverKey = $this->getSanitizer()->string($serverKey);
-        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
-        $filePath = $this->getSanitizer()->string($filePath);
-        $fileType = $this->getSanitizer()->string($fileType);
-        $chunkOffset = $this->getSanitizer()->int($chunkOffset);
-        $chunkSize = $this->getSanitizer()->int($chunkSize);
+        $sanitizer = $this->getSanitizer([
+            'serverKey' => $serverKey,
+            'hardwareKey' => $hardwareKey,
+            'filePath' => $filePath,
+            'fileType' => $fileType,
+            'chunkOffset' => $chunkOffset,
+            'chunkSize' => $chunkSize
+        ]);
+
+        $serverKey = $sanitizer->getString('serverKey');
+        $hardwareKey = $sanitizer->getString('hardwareKey');
+        $filePath = $sanitizer->getString('filePath');
+        $fileType = $sanitizer->getString('fileType');
+        $chunkOffset = $sanitizer->getDouble('chunkOffset');
+        $chunkSize = $sanitizer->getDouble('chunkSize');
 
         $libraryLocation = $this->getConfig()->getSetting("LIBRARY_LOCATION");
 
@@ -158,7 +172,7 @@ class Soap3 extends Soap
         try {
             // Handle fetching the file
             if ($fileType == "layout") {
-                $fileId = $this->getSanitizer()->int($filePath);
+                $fileId = (int) $filePath;
 
                 // Validate the nonce
                 $requiredFile = $this->requiredFileFactory->getByDisplayAndLayout($this->display->displayId, $fileId);

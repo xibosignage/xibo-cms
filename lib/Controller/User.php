@@ -33,10 +33,6 @@ use Xibo\Entity\Permission;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
-use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\ConfigurationException;
-use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
@@ -61,6 +57,10 @@ use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class User
@@ -834,7 +834,7 @@ class User extends Base
 
         // Make sure the user has permission to access this page.
         if (!$user->checkViewable($this->pageFactory->getById($user->homePageId))) {
-            throw new \InvalidArgumentException(__('User does not have permission for this homepage'));
+            throw new InvalidArgumentException(__('User does not have permission for this homepage'));
         }
 
         // If we are a super admin
@@ -845,8 +845,9 @@ class User extends Base
 
             if ($newPassword != null && $newPassword != '') {
                 // Make sure they are the same
-                if ($newPassword != $retypeNewPassword)
-                    throw new \InvalidArgumentException(__('Passwords do not match'));
+                if ($newPassword != $retypeNewPassword) {
+                    throw new InvalidArgumentException(__('Passwords do not match'));
+                }
 
                 // Set the new password
                 $user->setNewPassword($newPassword);
@@ -946,8 +947,9 @@ class User extends Base
                 // Check to see if we have any child data that would prevent us from deleting
                 $children = $user->countChildren();
 
-                if ($children > 0)
-                    throw new \InvalidArgumentException(sprintf(__('This user cannot be deleted as it has %d child items'), $children));
+                if ($children > 0) {
+                    throw new InvalidArgumentException(sprintf(__('This user cannot be deleted as it has %d child items'), $children));
+                }
             }
         }
 
@@ -1688,15 +1690,16 @@ class User extends Base
      * @param string $entity
      * @param int $objectId
      * @return string
+     * @throws InvalidArgumentException
      */
     private function parsePermissionsEntity($entity, $objectId)
     {
         if ($entity == '') {
-            throw new \InvalidArgumentException(__('Permissions requested without an entity'));
+            throw new InvalidArgumentException(__('Permissions requested without an entity'));
         }
 
         if ($objectId == 0) {
-            throw new \InvalidArgumentException(__('Permissions form requested without an object'));
+            throw new InvalidArgumentException(__('Permissions form requested without an object'));
         }
 
         // Check to see that we can resolve the entity
@@ -1704,7 +1707,7 @@ class User extends Base
 
         if (!$this->container->has($entity) || !method_exists($this->container->get($entity), 'getById')) {
             $this->getLog()->error(sprintf('Invalid Entity %s', $entity));
-            throw new \InvalidArgumentException(__('Permissions form requested with an invalid entity'));
+            throw new InvalidArgumentException(__('Permissions form requested with an invalid entity'));
         }
 
         return $this->container->get($entity);

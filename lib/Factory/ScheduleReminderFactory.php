@@ -25,11 +25,11 @@ namespace Xibo\Factory;
 use Jenssegers\Date\Date;
 use Xibo\Entity\ScheduleReminder;
 use Xibo\Entity\User;
-use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class ScheduleReminderFactory

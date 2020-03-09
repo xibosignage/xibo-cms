@@ -65,7 +65,7 @@ interface ModuleInterface
      * @param \Slim\Http\ServerRequest $request
      * @param \Slim\Http\Response $response
      * @throws GeneralException
-     * @return mixed
+     * @return \Slim\Http\Response
      */
     public function settings(Request $request, Response $response): Response;
 

@@ -322,7 +322,7 @@ class CampaignTest extends LocalWebTestCase
 
         try {
             $this->app->handle($request);
-        } catch (\Xibo\Support\Exception\InvalidArgumentException $exception) {
+        } catch (InvalidArgumentException $exception) {
             $this->assertSame(422, $exception->getCode(), 'Expecting failure, received ' . $exception->getMessage());
         }
 

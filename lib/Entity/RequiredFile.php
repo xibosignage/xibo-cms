@@ -23,9 +23,9 @@
 
 namespace Xibo\Entity;
 
-use Xibo\Support\Exception\DeadlockException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\DeadlockException;
 
 /**
  * Class RequiredFile

@@ -31,11 +31,6 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\RequiredFile;
-use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\ConfigurationException;
-use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayEventFactory;
 use Xibo\Factory\DisplayFactory;
@@ -60,6 +55,11 @@ use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\PlayerActionServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\XMR\LicenceCheckAction;
 use Xibo\XMR\RekeyAction;
 use Xibo\XMR\ScreenShotAction;
@@ -1006,7 +1006,6 @@ class Display extends Base
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Exception\ConfigurationException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/display/{displayId}",
@@ -1530,7 +1529,6 @@ class Display extends Base
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Exception\ConfigurationException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/display/requestscreenshot/{displayId}",
@@ -1596,7 +1594,7 @@ class Display extends Base
         }
 
         if ($display->macAddress == '') {
-            throw new \InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'));
+            throw new InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'), 'macAddress');
         }
 
         $this->getState()->template = 'display-form-wakeonlan';
@@ -1646,7 +1644,7 @@ class Display extends Base
         }
 
         if ($display->macAddress == '' || $display->broadCastAddress == '') {
-            throw new \InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'));
+            throw new InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'));
         }
 
         $this->getLog()->notice('About to send WOL packet to ' . $display->broadCastAddress . ' with Mac Address ' . $display->macAddress);
@@ -2172,7 +2170,6 @@ class Display extends Base
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Exception\ConfigurationException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function checkLicence(Request $request, Response $response, $id)

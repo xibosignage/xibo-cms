@@ -3,13 +3,13 @@
 namespace Xibo\Report;
 
 use Slim\Http\ServerRequest as Request;
-use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 trait ReportTrait

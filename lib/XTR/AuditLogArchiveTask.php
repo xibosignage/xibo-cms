@@ -24,10 +24,11 @@
 namespace Xibo\XTR;
 use Jenssegers\Date\Date;
 use Xibo\Entity\User;
-use Xibo\Support\Exception\NotFoundException;
-use Xibo\Support\Exception\TaskRunException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\TaskRunException;
 
 /**
  * Class StatsArchiveTask
@@ -169,8 +170,9 @@ class AuditLogArchiveTask implements TaskInterface
 
         $zip = new \ZipArchive();
         $result = $zip->open($fileName . '.zip', \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-        if ($result !== true)
-            throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
+        if ($result !== true) {
+            throw new InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
+        }
 
         $zip->addFile($fileName, 'auditlog.csv');
         $zip->close();

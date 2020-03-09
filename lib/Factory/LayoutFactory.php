@@ -1088,7 +1088,7 @@ class LayoutFactory extends BaseFactory
 
                 $this->getLog()->error($log);
 
-                throw new \InvalidArgumentException(__('Empty file in ZIP'));
+                throw new InvalidArgumentException(__('Empty file in ZIP'));
             }
 
             // Open a file pointer to stream into
@@ -1320,7 +1320,7 @@ class LayoutFactory extends BaseFactory
                     // Validate that the columns are the same
                     if (count($dataSet->columns) != count($existingDataSet->columns)) {
                         $this->getLog()->debug('Columns for Imported DataSet = %s', json_encode($dataSet->columns));
-                        throw new \InvalidArgumentException(sprintf(__('DataSets have different number of columns imported = %d, existing = %d'), count($dataSet->columns), count($existingDataSet->columns)));
+                        throw new InvalidArgumentException(sprintf(__('DataSets have different number of columns imported = %d, existing = %d'), count($dataSet->columns), count($existingDataSet->columns)));
                     }
 
                     // Check the column headings
@@ -1330,8 +1330,9 @@ class LayoutFactory extends BaseFactory
                         return $a->heading == $b->heading;
                     });
 
-                    if (count($diff) > 0)
-                        throw new \InvalidArgumentException(__('DataSets have different column names'));
+                    if (count($diff) > 0) {
+                        throw new InvalidArgumentException(__('DataSets have different column names'));
+                    }
 
                     // Set the prior dataSetColumnId on each column.
                     foreach ($existingDataSet->columns as $column) {

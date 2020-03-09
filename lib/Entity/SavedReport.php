@@ -23,7 +23,6 @@
 namespace Xibo\Entity;
 
 
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Service\ConfigServiceInterface;

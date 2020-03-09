@@ -26,10 +26,11 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Permission;
 use Xibo\Entity\User;
-use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class PermissionFactory
@@ -69,14 +70,16 @@ class PermissionFactory extends BaseFactory
      * @param int $edit
      * @param int $delete
      * @return Permission
+     * @throws InvalidArgumentException
      */
     public function create($groupId, $entity, $objectId, $view, $edit, $delete)
     {
         // Lookup the entityId
         $results = $this->getStore()->select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => $entity]);
 
-        if (count($results) <= 0)
-            throw new \InvalidArgumentException('Entity not found: ' . $entity);
+        if (count($results) <= 0) {
+            throw new InvalidArgumentException('Entity not found: ' . $entity);
+        }
 
         $permission = $this->createEmpty();
         $permission->groupId = $groupId;
@@ -98,6 +101,7 @@ class PermissionFactory extends BaseFactory
      * @param int $edit
      * @param int $delete
      * @return Permission
+     * @throws InvalidArgumentException
      * @throws NotFoundException
      */
     public function createForEveryone($userGroupFactory, $entity, $objectId, $view, $edit, $delete)
@@ -105,8 +109,9 @@ class PermissionFactory extends BaseFactory
         // Lookup the entityId
         $results = $this->getStore()->select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => $entity]);
 
-        if (count($results) <= 0)
-            throw new \InvalidArgumentException('Entity not found: ' . $entity);
+        if (count($results) <= 0) {
+            throw new InvalidArgumentException('Entity not found: ' . $entity);
+        }
 
         $permission = $this->createEmpty();
         $permission->groupId = $userGroupFactory->getEveryone()->groupId;
@@ -128,6 +133,7 @@ class PermissionFactory extends BaseFactory
      * @param UserGroupFactory $userGroupFactory
      * @return array[Permission]
      * @throws NotFoundException
+     * @throws InvalidArgumentException
      */
     public function createForNewEntity($user, $entity, $objectId, $level, $userGroupFactory)
     {
@@ -165,7 +171,7 @@ class PermissionFactory extends BaseFactory
                 break;
 
             default:
-                throw new \InvalidArgumentException(__('Unknown Permissions Level: ' . $level));
+                throw new InvalidArgumentException(__('Unknown Permissions Level: ' . $level));
         }
 
         return $permissions;

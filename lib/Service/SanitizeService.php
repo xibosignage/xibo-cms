@@ -25,6 +25,7 @@ namespace Xibo\Service;
 
 use Jenssegers\Date\Date;
 use Slim\Http\Request;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class SanitizeService
@@ -294,7 +295,7 @@ class SanitizeService implements SanitizerServiceInterface
             return $this->getDateService()->parse($date);
         }
         catch (\Exception $e) {
-            throw new \InvalidArgumentException(__('Expecting a date in %s but received %s.', $param, $date));
+            throw new InvalidArgumentException(__('Expecting a date in %s but received %s.', $param, $date), 'date');
         }
     }
 }

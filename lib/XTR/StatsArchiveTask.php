@@ -24,11 +24,12 @@
 namespace Xibo\XTR;
 use Jenssegers\Date\Date;
 use Xibo\Entity\User;
-use Xibo\Support\Exception\NotFoundException;
-use Xibo\Support\Exception\TaskRunException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\Random;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\TaskRunException;
 
 /**
  * Class StatsArchiveTask
@@ -174,8 +175,9 @@ class StatsArchiveTask implements TaskInterface
         $zipName = $this->config->getSetting('LIBRARY_LOCATION') . 'temp/stats.csv.zip';
         $zip = new \ZipArchive();
         $result = $zip->open($zipName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-        if ($result !== true)
-            throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
+        if ($result !== true) {
+            throw new InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
+        }
 
         $zip->addFile($fileName, 'stats.csv');
         $zip->close();

@@ -28,11 +28,12 @@ use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Pool;
 use Xibo\Entity\Media;
 use Xibo\Entity\User;
-use Xibo\Support\Exception\NotFoundException;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class MediaFactory
@@ -169,13 +170,15 @@ class MediaFactory extends BaseFactory
      * Create module files from folder
      * @param string $folder The path to the folder to add.
      * @return array[Media]
+     * @throws InvalidArgumentException
      */
     public function createModuleFileFromFolder($folder)
     {
         $media = [];
 
-        if (!is_dir($folder))
-            throw new \InvalidArgumentException(__('Not a folder'));
+        if (!is_dir($folder)) {
+            throw new InvalidArgumentException(__('Not a folder'));
+        }
 
         foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
             if (is_dir($folder . DIRECTORY_SEPARATOR . $file)) continue;

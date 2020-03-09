@@ -22,10 +22,9 @@
 namespace Xibo\Controller;
 
 use Jenssegers\Date\Date;
-use Slim\Views\Twig;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Support\Exception\AccessDeniedException;
+use Slim\Views\Twig;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LogFactory;
 use Xibo\Factory\UserFactory;
@@ -34,6 +33,7 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
 
 /**
  * Class Logging

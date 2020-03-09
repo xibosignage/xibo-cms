@@ -22,11 +22,11 @@
 
 
 namespace Xibo\Entity;
-use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Notification

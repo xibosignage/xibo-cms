@@ -8,9 +8,9 @@
 
 namespace Xibo\Entity;
 
-use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
 
 /**
  * Class ApplicationScope

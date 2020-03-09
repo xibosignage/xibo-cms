@@ -22,11 +22,11 @@
 
 
 namespace Xibo\Entity;
-use Xibo\Support\Exception\DuplicateEntityException;
-use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Factory\TagFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\DuplicateEntityException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 
 /**

@@ -2,13 +2,10 @@
 
 namespace Xibo\Report;
 
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
 use MongoDB\BSON\UTCDateTime;
 use Psr\Container\ContainerInterface;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\ReportSchedule;
-use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -22,6 +19,8 @@ use Xibo\Service\ReportServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DistributionReport

@@ -79,11 +79,13 @@ class DataSetView extends ModuleWidget
     /**
      * Get Data Set Columns
      * @return array[DataSetColumn]
+     * @throws InvalidArgumentException
      */
     public function dataSetColumnsSelected()
     {
-        if ($this->getOption('dataSetId') == 0)
-            throw new \InvalidArgumentException(__('DataSet not selected'));
+        if ($this->getOption('dataSetId') == 0) {
+            throw new InvalidArgumentException(__('DataSet not selected'));
+        }
 
         $columns = $this->dataSetColumnFactory->getByDataSetId($this->getOption('dataSetId'));
         $columnsSelected = [];
@@ -106,11 +108,13 @@ class DataSetView extends ModuleWidget
     /**
      * Get Data Set Columns
      * @return array[DataSetColumn]
+     * @throws InvalidArgumentException
      */
     public function dataSetColumnsNotSelected()
     {
-        if ($this->getOption('dataSetId') == 0)
-            throw new \InvalidArgumentException(__('DataSet not selected'));
+        if ($this->getOption('dataSetId') == 0) {
+            throw new InvalidArgumentException(__('DataSet not selected'));
+        }
 
         $columns = $this->dataSetColumnFactory->getByDataSetId($this->getOption('dataSetId'));
 

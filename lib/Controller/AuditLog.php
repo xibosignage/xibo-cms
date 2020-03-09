@@ -24,13 +24,13 @@ use GuzzleHttp\Psr7\Stream;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
-use Xibo\Helper\Random;
-use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Factory\AuditLogFactory;
+use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class AuditLog

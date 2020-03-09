@@ -25,22 +25,19 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Support\Exception\ConfigurationException;
-use Xibo\Support\Exception\DuplicateEntityException;
-use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\Support\Sanitizer\SanitizerInterface;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\DuplicateEntityException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DataSet
@@ -377,6 +374,7 @@ class DataSet implements \JsonSerializable
     /**
      * @param string[] $columns Column Names to select
      * @return array
+     * @throws InvalidArgumentException
      */
     public function getUniqueColumnValues($columns)
     {
@@ -400,8 +398,9 @@ class DataSet implements \JsonSerializable
                 }
             }
 
-            if (!$found)
-                throw new \InvalidArgumentException(__('Unknown Column ' . $heading));
+            if (!$found) {
+                throw new InvalidArgumentException(__('Unknown Column ' . $heading));
+            }
         }
         $select = rtrim($select, ',');
         // $select is safe

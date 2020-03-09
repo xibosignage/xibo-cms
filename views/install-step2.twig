@@ -20,52 +20,52 @@
 
                         {% set title %}{% trans "Create a new database" %}{% endset %}
                         {% set helpText %}{% trans "Select to create a new database" %}{% endset %}
-                        {{ forms.radio("db_create", "db_create1", title, flash.db_create, helpText, "", "", 1) }}
+                        {{ forms.radio("db_create", "db_create1", title, session['db_create'], helpText, "", "", 1) }}
 
                         {% set title %}{% trans "Host" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the hostname for the MySQL server. This is usually localhost." %}{% endset %}
-                        {{ forms.input("host",  title, flash.new_db_host, helpText) }}
+                        {{ forms.input("host",  title, session['new_db_host'], helpText) }}
 
                         {% set title %}{% trans "Admin Username" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the user name of an account that has administrator privileges on the MySQL server." %}{% endset %}
-                        {{ forms.input("admin_username",  title, flash.db_admin_user, helpText) }}
+                        {{ forms.input("admin_username",  title, session['db_admin_user'], helpText) }}
 
                         {% set title %}{% trans "Admin Password" %}{% endset %}
                         {% set helpText %}{% trans "Please enter password for the Admin account." %}{% endset %}
-                        {{ forms.password("admin_password",  title, flash.db_admin_pass, helpText) }}
+                        {{ forms.password("admin_password",  title, session['db_admin_pass'], helpText) }}
 
                         {% set title %}{% trans "Database Name" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the name of the database that should be created." %}{% endset %}
-                        {{ forms.input("db_name",  title, flash.new_db_name, helpText) }}
+                        {{ forms.input("db_name",  title, session['new_db_name'], helpText) }}
 
                         {% set title %}{% trans "Database Username" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the name of the database user that should be created." %}{% endset %}
-                        {{ forms.input("db_username",  title, flash.new_db_user, helpText) }}
+                        {{ forms.input("db_username",  title, session['new_db_user'], helpText) }}
 
                         {% set title %}{% trans "Database Password" %}{% endset %}
                         {% set helpText %}{% trans "Please enter a password for this user." %}{% endset %}
-                        {{ forms.password("db_password",  title, flash.new_db_pass, helpText) }}
+                        {{ forms.password("db_password",  title, session['new_db_pass'], helpText) }}
                     </div>
                     <div class="tab-pane" id="existing">
                         {% set title %}{% trans "Use an existing database" %}{% endset %}
                         {% set helpText %}{% trans "Select to use an existing database. Please note that when you use an existing database it must be empty of all other contents." %}{% endset %}
-                        {{ forms.radio("db_create", "db_create2", title, flash.db_create, helpText, "", "", 2) }}
+                        {{ forms.radio("db_create", "db_create2", title, session['db_create'], helpText, "", "", 2) }}
 
                         {% set title %}{% trans "Host" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the hostname for the MySQL server. This is usually localhost." %}{% endset %}
-                        {{ forms.input("existing_host",  title, flash.existing_db_host, helpText) }}
+                        {{ forms.input("existing_host",  title, session['existing_db_host'], helpText) }}
 
                         {% set title %}{% trans "Database Name" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the name of the database that should be used." %}{% endset %}
-                        {{ forms.input("existing_db_name",  title, flash.existing_db_name, helpText) }}
+                        {{ forms.input("existing_db_name",  title, session['existing_db_name'], helpText) }}
 
                         {% set title %}{% trans "Database Username" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the name of the database user that should be used." %}{% endset %}
-                        {{ forms.input("existing_db_username",  title, flash.existing_db_user, helpText) }}
+                        {{ forms.input("existing_db_username",  title, session['existing_db_user'], helpText) }}
 
                         {% set title %}{% trans "Database Password" %}{% endset %}
                         {% set helpText %}{% trans "Please enter a password for this user." %}{% endset %}
-                        {{ forms.password("existing_db_password",  title, flash.existing_db_pass, helpText) }}
+                        {{ forms.password("existing_db_password",  title, session['existing_db_pass'], helpText) }}
                     </div>
                 </div>
 

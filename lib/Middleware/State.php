@@ -34,8 +34,6 @@ use Slim\Views\Twig;
 use Stash\Driver\Composite;
 use Stash\Pool;
 use Xibo\Entity\User;
-use Xibo\Support\Exception\InstanceSuspendedException;
-use Xibo\Support\Exception\UpgradePendingException;
 use Xibo\Helper\DatabaseLogHandler;
 use Xibo\Helper\Environment;
 use Xibo\Helper\NullSession;
@@ -43,6 +41,8 @@ use Xibo\Helper\Session;
 use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\ReportService;
+use Xibo\Support\Exception\InstanceSuspendedException;
+use Xibo\Support\Exception\UpgradePendingException;
 use Xibo\Twig\TwigMessages;
 
 /**
