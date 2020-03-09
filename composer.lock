@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "02d7da2a14688d791710b5f469f67754",
+    "content-hash": "0925d77cd579f8ef1721d2b2d65c601e",
     "packages": [
         {
             "name": "abraham/twitteroauth",
@@ -5013,12 +5013,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/PeterMis/support.git",
-                "reference": "ba9fd84d4f74d26ae53b5d17c0b171a5f874be82"
+                "reference": "b8fffc8f7b763100424849b2a787368163fad4ec"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/PeterMis/support/zipball/ba9fd84d4f74d26ae53b5d17c0b171a5f874be82",
-                "reference": "ba9fd84d4f74d26ae53b5d17c0b171a5f874be82",
+                "url": "https://api.github.com/repos/PeterMis/support/zipball/b8fffc8f7b763100424849b2a787368163fad4ec",
+                "reference": "b8fffc8f7b763100424849b2a787368163fad4ec",
                 "shasum": ""
             },
             "require": {
@@ -5051,7 +5051,7 @@
             "support": {
                 "source": "https://github.com/PeterMis/support/tree/master"
             },
-            "time": "2020-03-02T12:12:59+00:00"
+            "time": "2020-03-09T11:11:50+00:00"
         },
         {
             "name": "xibosignage/xibo-xmr",
@@ -6577,7 +6577,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": ">=7.0.8",
+        "php": ">=7.1.0",
         "ext-pdo": "*",
         "ext-json": "*",
         "ext-zip": "*"

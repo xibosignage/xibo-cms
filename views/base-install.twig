@@ -33,9 +33,9 @@
         {% endblock %}
 
         <div class="container main-container">
-            {% if flash.error %}
+            {% if session.error %}
                 <div class="alert alert-danger">
-                    {{ flash.error }}
+                    {{ session['error'] }}
                 </div>
             {% endif %}
 

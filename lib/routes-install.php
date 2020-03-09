@@ -1,15 +1,59 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (routes-install.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-$app->map('/(:step)', function($step = 1) use($app) {
+use Psr\Container\ContainerInterface;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
+use Xibo\Storage\PdoStorageService;
+use Xibo\Support\Exception\InstallationError;
 
-    $app->logService->info('Installer Step %s', $step);
+$app->get('/login', function(Request $request, Response $response) use ($app) {
+    // Just a helper to get correct login route url
+    return $response->withStatus(404, 'This function should not be called from install/.');
+})->setName('login');
 
-    $install = new \Xibo\Helper\Install($app->sanitizerService);
+$app->map(['GET', 'POST'],'/{step}', function(Request $request, Response $response, $step = 1) use ($app) {
+    session_start();
+
+    $container = $app->getContainer();
+    $routeParser = $app->getRouteCollector()->getRouteParser();
+
+    $container->set('store', function(ContainerInterface $container) {
+        return (new PdoStorageService($container->get('logService')));
+    });
+
+    $container->get('configService')->setDependencies($container->get('store'), $app->rootUri);
+
+    /** @var Twig $view */
+    $view = $container->get('view');
+
+    $twigEnvironment = $view->getEnvironment();
+    $twigEnvironment->addGlobal('session', $_SESSION);
+    $twigEnvironment->enableAutoReload();
+
+    $container->get('logService')->info('Installer Step %s', $step);
+
+    $install = new \Xibo\Helper\Install($container);
     $settingsExists = $app->settingsExists;
     $template = '';
     $data = [];
@@ -17,9 +61,10 @@ $app->map('/(:step)', function($step = 1) use($app) {
     switch ($step) {
 
         case 1:
-            if ($settingsExists)
-                throw new \Xibo\Exception\InstallationError(__('The CMS has already been installed. Please contact your system administrator.'));
-
+            if ($settingsExists) {
+                throw new InstallationError(__('The CMS has already been installed. Please contact your system administrator.'));
+            }
+            unset($_SESSION['error']);
             // Welcome to the installer (this should only show once)
             // Checks environment
             $template = 'install-step1';
@@ -27,41 +72,41 @@ $app->map('/(:step)', function($step = 1) use($app) {
             break;
 
         case 2:
-            if ($settingsExists)
-                throw new \Xibo\Exception\InstallationError(__('The CMS has already been installed. Please contact your system administrator.'));
+            if ($settingsExists) {
+                throw new InstallationError(__('The CMS has already been installed. Please contact your system administrator.'));
+            }
 
+            unset($_SESSION['error']);
             // Collect details about the database
             $template = 'install-step2';
             $data = $install->Step2();
             break;
 
         case 3:
-            if ($settingsExists)
-                throw new \Xibo\Exception\InstallationError(__('The CMS has already been installed. Please contact your system administrator.'));
+            if ($settingsExists) {
+                throw new InstallationError(__('The CMS has already been installed. Please contact your system administrator.'));
+            }
 
             // Check and validate DB details
             if (defined('MAX_EXECUTION') && MAX_EXECUTION) {
-                $app->logService->info('Setting unlimited max execution time.');
+                $app->getContainer()->get('logService')->info('Setting unlimited max execution time.');
                 set_time_limit(0);
             }
-
+            unset($_SESSION['error']);
             try {
-                // We won't have a storageservice registered with the app yet,
-                // so we create one for this step.
-                $install->Step3((new \Xibo\Storage\PdoStorageService($app->logService)));
+                $install->Step3($request, $response);
 
                 // Redirect to step 4
-                $app->redirectTo('install', ['step' => 4]);
+                $response = $response->withRedirect($routeParser->urlFor('install', ['step' => 4]));
             }
-            catch (\Xibo\Exception\InstallationError $e) {
+            catch (InstallationError $e) {
+                $container->get('logService')->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
 
-                $app->logService->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
-
-                $app->flashNow('error', $e->getMessage());
+                $_SESSION['error'] = $e->getMessage();
 
                 // Add our object properties to the flash vars, so we render the form with them set
                 foreach (\Xibo\Helper\ObjectVars::getObjectVars($install) as $key => $value) {
-                    $app->flashNow($key, $value);
+                    $_SESSION[$key] = $value;
                 }
 
                 // Reload step 2
@@ -78,18 +123,19 @@ $app->map('/(:step)', function($step = 1) use($app) {
             break;
 
         case 5:
+            unset($_SESSION['error']);
             // Create a user account
             try {
-                $install->Step5($app->store);
+                $install->Step5($request, $response);
 
                 // Redirect to step 6
-                $app->redirectTo('install', ['step' => 6]);
+                $response = $response->withRedirect($routeParser->urlFor('install', ['step' => 6]));
             }
-            catch (\Xibo\Exception\InstallationError $e) {
+            catch (InstallationError $e) {
 
-                $app->logService->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
+                $container->get('logService')->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
 
-                $app->flashNow('error', $e->getMessage());
+                $_SESSION['error'] = $e->getMessage();
 
                 // Reload step 4
                 $template = 'install-step4';
@@ -103,23 +149,24 @@ $app->map('/(:step)', function($step = 1) use($app) {
             break;
 
         case 7:
+            unset($_SESSION['error']);
             // Create a user account
             try {
                 $template = 'install-step7';
-                $install->Step7($app->store);
+                $install->Step7($request, $response);
 
                 // Redirect to login
                 // This will always be one folder down
-                $login = str_replace('/install', '', $app->urlFor('login'));
+                $login = str_replace('/install', '', $routeParser->urlFor('login'));
 
-                $app->logService->info('Installation Complete. Redirecting to %s', $login);
+                $container->get('logService')->info('Installation Complete. Redirecting to %s', $login);
 
-                $app->redirect($login);
-            }
-            catch (\Xibo\Exception\InstallationError $e) {
-                $app->logService->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
+                $response = $response->withRedirect($login);
+                session_destroy();
+            } catch (InstallationError $e) {
+                $container->get('logService')->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
 
-                $app->flashNow('error', $e->getMessage());
+                $_SESSION['error'] = $e->getMessage();
 
                 // Reload step 6
                 $template = 'install-step6';
@@ -128,12 +175,8 @@ $app->map('/(:step)', function($step = 1) use($app) {
             break;
     }
 
+    $response = $view->render($response, $template . '.twig', $data);
     // Render
-    $app->render($template . '.twig', $data);
+    return $response;
 
-})->via('GET', 'POST')->name('install');
-
-$app->get('/login', function() use ($app) {
-    // Just a helper to get correct login route url
-    $app->halt(404, __('This function should not be called from install/.'));
-})->name('login');
+})->setName('install');

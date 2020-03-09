@@ -43,7 +43,7 @@ require PROJECT_ROOT . '/vendor/autoload.php';
 if (!file_exists('settings.php')) {
     // Check to see if the install app is available
     if (file_exists(PROJECT_ROOT . '/web/install/index.php')) {
-        header('Location: install/');
+        header('Location: install/1');
         exit();
     } else {
         // We can't do anything here - no install app and no settings file.
