@@ -1169,6 +1169,7 @@ class Layout extends Base
         // Get all layouts
         $layouts = $this->layoutFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
             'layout' => $parsedQueryParams->getString('layout'),
+            'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'userId' => $parsedQueryParams->getInt('userId'),
             'retired' => $parsedQueryParams->getInt('retired'),
             'tags' => $parsedQueryParams->getString('tags'),

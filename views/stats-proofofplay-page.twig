@@ -69,6 +69,60 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+
+        function statsExportFormSelect(dialog) {
+
+            var fromDtLink;
+            var toDtLink;
+            var displayId;
+
+            $(dialog).find("input, select").on("change", function() {
+
+                fromDtLink =  $(dialog).find("#fromDt").val();
+                toDtLink =  $(dialog).find("#toDt").val();
+                displayId =  $(dialog).find("#displayId").val();
+
+                if (!(
+                     fromDtLink === null ||  toDtLink === null  ||
+                     fromDtLink === '' ||  toDtLink === ''  ||
+                     fromDtLink === undefined || toDtLink === undefined
+                )) {
+
+                    $(dialog).find(".total-stat").remove();
+                    $(dialog).find('.save-button').prop('disabled', true);
+                    $(dialog).find(".loading-overlay").show();
+
+                    $.ajax({
+                        type: "get",
+                        url: "{{ url_for("stats.getExportStatsCount") }}",
+                        cache: false,
+                        dataType: "json",
+                        data: {
+                            fromDt: fromDtLink,
+                            toDt: toDtLink,
+                            displayId: displayId
+                        },
+
+                        success: function(response) {
+
+                            $(dialog).find(".loading-overlay").hide();
+
+                            if (response.success === false) {
+                                $(dialog).find("#totalStat").append('<div class="total-stat alert alert-danger">' + response.message + '</strong></div>');
+                                return;
+                            } else {
+                                var total = response.data.total;
+                                $(dialog).find("#totalStat").append('<div class="total-stat alert alert-success">{% trans "Total number of records to be exported: <strong> " %}' + total + '</strong></div>');
+                            }
+
+                            $(dialog).find('.save-button').prop('disabled', false);
+                        }
+                    });
+                }
+            });
+
+        }
+
         function statsExportFormSubmit() {
 
             let form = $("#statisticsExportForm");

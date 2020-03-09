@@ -252,7 +252,7 @@ class Stats extends Base
      *  @SWG\Parameter(
      *      name="type",
      *      in="query",
-     *      description="The type of stat to return. Layout|Media|Widget or All",
+     *      description="The type of stat to return. Layout|Media|Widget",
      *      type="string",
      *      required=false
      *   ),
@@ -351,6 +351,7 @@ class Stats extends Base
         $statDate = $sanitizedQueryParams->getDate('statDate');
         $statId = $sanitizedQueryParams->getString('statId');
         $campaignId = $sanitizedQueryParams->getInt('campaignId');
+        $eventTag = $sanitizedQueryParams->getString('eventTag');
 
         $start = $sanitizedQueryParams->getInt('start', ['default' => 0]);
         $length = $sanitizedQueryParams->getInt('length', ['default' => 10]);
@@ -408,6 +409,7 @@ class Stats extends Base
                 'statDate' => $statDate,
                 'statId' => $statId,
                 'campaignId' => $campaignId,
+                'eventTag' => $eventTag,
                 'start' => $start,
                 'length' => $length,
             ]);
@@ -579,6 +581,114 @@ class Stats extends Base
         $this->getState()->template = 'statistics-form-export';
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Total count of stats
+     *
+     * @SWG\Get(
+     *  path="/stats/getExportStatsCount",
+     *  operationId="getExportStatsCount",
+     *  tags={"statistics"},
+     *  @SWG\Parameter(
+     *      name="fromDt",
+     *      in="query",
+     *      description="The start date for the filter. Default = 24 hours ago",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="toDt",
+     *      in="query",
+     *      description="The end date for the filter. Default = now.",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      in="query",
+     *      description="An optional display Id to filter",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation"
+     *  )
+     * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getExportStatsCount(Request $request, Response $response)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        // We are expecting some parameters
+        $fromDt = $sanitizedParams->getDate('fromDt');
+        $toDt = $sanitizedParams->getDate('toDt');
+        $displayId = $sanitizedParams->getInt('displayId');
+
+        if ($fromDt != null) {
+            $fromDt->startOfDay();
+        }
+
+        if ($toDt != null) {
+            $toDt->addDay()->startOfDay();
+        }
+
+        // What if the fromdt and todt are exactly the same?
+        // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
+        if ($fromDt != null && $toDt != null && $fromDt == $toDt) {
+            $toDt->addDay();
+        }
+
+        // Do not filter by display if super admin and no display is selected
+        // Super admin will be able to see stat records of deleted display, we will not filter by display later
+        $displayIds = [];
+        if (!$this->getUser()->isSuperAdmin()) {
+            // Get an array of display id this user has access to.
+            foreach ($this->displayFactory->query() as $display) {
+                $displayIds[] = $display->displayId;
+            }
+
+            if (count($displayIds) <= 0)
+                throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
+
+            // Set displayIds as [-1] if the user selected a display for which they don't have permission
+            if ($displayId != 0) {
+                if (!in_array($displayId, $displayIds)) {
+                    $displayIds = [-1];
+                } else {
+                    $displayIds = [$displayId];
+                }
+            }
+        } else {
+            if ($displayId != 0) {
+                $displayIds = [$displayId];
+            }
+        }
+
+        // Call the time series interface getStats
+        $resultSet =  $this->timeSeriesStore->getExportStatsCount(
+            [
+                'fromDt'=> $fromDt,
+                'toDt'=> $toDt,
+                'displayIds' => $displayIds
+            ]);
+
+        $data = [
+            'total' => $resultSet
+        ];
+
+        $this->getState()->template = 'statistics-form-export';
+        $this->getState()->recordsTotal = $resultSet;
+        $this->getState()->setData($data);
+
+        return $this->render($request, $response);
+
     }
 
     /**

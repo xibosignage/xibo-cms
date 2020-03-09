@@ -113,6 +113,8 @@
                             {% set title %}{% trans "Criteria Tags" %}{% endset %}
                             {% set helpText %}{% trans "A comma separated set of tags run against the Display tag to determine membership." %}{% endset %}
                             {{ forms.inputWithTags("dynamicCriteriaTags", title, "", helpText, "dynamic-fields") }}
+
+                            {{ forms.hidden("useRegexForName", 1) }}
                         </div>
 
                         <div class="XiboData">
