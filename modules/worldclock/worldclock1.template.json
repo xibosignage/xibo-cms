@@ -1,8 +1,8 @@
 {
     "id": "worldclock1",
     "value": "Text clock",
-    "mainTemplate": "<div class=\"clockContainer\">\n<p class=\"hourText\">[HH:mm]</p>\n<p class=\"label\"></p>\n</div>",
-    "css": ".clockContainer {\n  text-align: center;\n  padding: 10px 0;\n}\n\n.hourText {\n  font-size: 40px;\n  color: #323232;\n}\n\n.label {\n  color: #a1a1a1;\n  font-size: 14px;\n}\n\n.highlighted .hourText {\n  font-weight: bold;\n}\n\n.clockContainer p {\n  margin: 0;\n}",
+    "mainTemplate": "<div class=\"clockContainer\">\n<p class=\"hourText\">[HH:mm]</p>\n<p class=\"world-clock-label\"></p>\n</div>",
+    "css": ".clockContainer {\n  text-align: center;\n  padding: 5px;\n}\n\n.hourText {\n  font-size: 40px;\n  color: #323232;\n  line-height: 45px;\n}\n\n.world-clock-label {\n  color: #a1a1a1;\n  font-size: 14px;\n  line-height: 15px;\n}\n\n.highlighted .hourText {\n  font-weight: bold;\n}\n\n.clockContainer p {\n  margin: 0;\n}",
     "widgetOriginalWidth": "200",
     "widgetOriginalHeight": "80",
     "image": "modules/worldclock/template-thumbs/worldclock1.png",
