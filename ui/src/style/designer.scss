@@ -964,17 +964,27 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
                 
                 #worldClocksContainer {
                     .form-group {
-                        padding: 0;
+                        padding: 2px 0;
                         margin: 0;
                         display: inline-block;
                     }
 
-                    select, input {
+                    select, input[type="text"] {
                         max-width: 95%;
+                    }
+
+                    .select2 {
+                        width: 95% !important;
+                        text-align: left;
                     }
 
                     button {
                         padding: 5px 10px;
+                        margin: 3px 0;
+                    }
+
+                    input[type="checkbox"] {
+                        margin: 8px 0;
                     }
                 }
 

@@ -1,4 +1,4 @@
-describe.skip('Layout Designer (Populated/Unchanged)', function() { //FIXME: Tests skipped for now, need update to the new Layout Designer revamp
+describe('Layout Designer (Populated/Unchanged)', function() {
 
     before(function() {
         // Import existing
@@ -14,7 +14,6 @@ describe.skip('Layout Designer (Populated/Unchanged)', function() { //FIXME: Tes
         });
     */
 
-
     beforeEach(function() {
         cy.login();
         cy.goToLayoutAndLoadPrefs(this.testLayoutId);
@@ -24,7 +23,6 @@ describe.skip('Layout Designer (Populated/Unchanged)', function() { //FIXME: Tes
 
         // Check if the basic elements of the designer loaded
         cy.get('#layout-editor').should('be.visible');
-        cy.get('#layout-navigator').should('be.visible');
         cy.get('#layout-timeline').should('be.visible');
         cy.get('#layout-viewer-container').should('be.visible');
         cy.get('#properties-panel').should('be.visible');
@@ -33,43 +31,11 @@ describe.skip('Layout Designer (Populated/Unchanged)', function() { //FIXME: Tes
     it('shows widget properties in the properties panel when clicking on a widget in the timeline', function() {
 
         // Select the first widget from the first region on timeline ( image )
-        cy.get('#timeline-container [data-type="region"]:first-child [data-type="widget"]:first-child').click();
+        cy.get('#layout-timeline .designer-region:first [data-type="widget"]:first-child').click();
 
         // Check if the properties panel title is Edit Image
         cy.get('#properties-panel').contains('Edit Image');
     });
-
-    it('creates a region using the toolbar, and then revert the change', () => {
-        // Create and alias for reload layout
-        cy.server();
-        cy.route('/layout?layoutId=*').as('reloadLayout');
-
-        // Open toolbar Tools tab
-        cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Widgets').click();
-        cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Tools').click();
-
-        // Drag region to layout to add it
-        cy.dragToElement(
-            '#layout-editor-toolbar #content-0 .toolbar-pane-content [data-sub-type="region"] .drag-area',
-            '#layout-navigator [data-type="layout"]'
-        ).then(() => {
-
-            cy.wait('@reloadLayout').then(() => {
-
-                // Check if there are 2 regions in the timeline ( there was 1 by default )
-                cy.get('#layout-timeline [data-type="region"]').should('have.length', 4);
-
-                cy.get('#layout-editor-toolbar #undoContainer').click();
-
-                // Wait for the layout to reload
-                cy.wait('@reloadLayout').then(() => {
-                    // Check if there is just 1 region
-                    cy.get('#layout-timeline [data-type="region"]').should('have.length', 3);
-                });
-            });
-        });
-    });
-
 
     it('should revert a saved form to a previous state', () => {
         let oldName;
@@ -80,7 +46,7 @@ describe.skip('Layout Designer (Populated/Unchanged)', function() { //FIXME: Tes
         cy.route('PUT', '/playlist/widget/*').as('saveWidget');
 
         // Select the first widget on timeline ( image )
-        cy.get('#timeline-container [data-type="region"]:first-child [data-type="widget"]:first-child').click();
+        cy.get('#layout-timeline .designer-region:first [data-type="widget"]:first-child').click();
 
         // Wait for the widget to load
         cy.wait('@reloadWidget');
@@ -119,14 +85,14 @@ describe.skip('Layout Designer (Populated/Unchanged)', function() { //FIXME: Tes
         cy.populateLibraryWithMedia();
 
         // Open toolbar Widgets tab
-        cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
-        cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Widgets').should('be.visible').click();
+        cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click();
+        cy.get('#layout-editor-toolbar #btn-menu-2').should('be.visible').click();
 
         // Activate the Add button
-        cy.get('#layout-editor-toolbar #content-1 .toolbar-pane-content [data-sub-type="audio"] .add-area').invoke('show').click();
+        cy.get('#layout-editor-toolbar #content-2 .toolbar-pane-content [data-sub-type="audio"] .add-area').invoke('show').click();
 
         // Click on the region to add
-        cy.get('#layout-timeline [data-type="region"]:first-child').click();
+        cy.get('#layout-timeline .designer-region:first').click();
 
         // Check if the form opened
         cy.get('[data-test="uploadFormModal"]').contains('Upload media');
@@ -138,7 +104,7 @@ describe.skip('Layout Designer (Populated/Unchanged)', function() { //FIXME: Tes
         cy.route('POST', '**/playlist/order/*').as('saveOrder');
         cy.route('/layout?layoutId=*').as('reloadLayout');
 
-        cy.get('#layout-timeline [data-type="region"]:first-child [data-type="widget"]:first-child').then(($oldWidget) => {
+        cy.get('#layout-timeline .designer-region:first [data-type="widget"]:first-child').then(($oldWidget) => {
 
             const offsetX = 50;
 
@@ -161,7 +127,7 @@ describe.skip('Layout Designer (Populated/Unchanged)', function() { //FIXME: Tes
             // Reload layout and check if the new first widget has a different Id
             cy.wait('@reloadLayout');
 
-            cy.get('#layout-timeline [data-type="region"]:first-child [data-type="widget"]:first-child').then(($newWidget) => {
+            cy.get('#layout-timeline .designer-region:first [data-type="widget"]:first-child').then(($newWidget) => {
                 expect($oldWidget.attr('id')).not.to.eq($newWidget.attr('id'));
             });
 
@@ -173,7 +139,7 @@ describe.skip('Layout Designer (Populated/Unchanged)', function() { //FIXME: Tes
             cy.wait('@reloadLayout');
 
             // Test if the revert made the name go back to the first widget
-            cy.get('#layout-timeline [data-type="region"]:first-child [data-type="widget"]:first-child').then(($newWidget) => {
+            cy.get('#layout-timeline .designer-region:first [data-type="widget"]:first-child').then(($newWidget) => {
                 expect($oldWidget.attr('id')).to.eq($newWidget.attr('id'));
             });
         });
@@ -182,38 +148,13 @@ describe.skip('Layout Designer (Populated/Unchanged)', function() { //FIXME: Tes
     it('should play a preview in the viewer, in fullscreen mode', () => {
 
         // Click fullscreen button
-        cy.get('#layout-viewer #fs-btn').click();
+        cy.get('#layout-viewer-navbar #fs-btn').click();
 
         // Viewer should have a fullscreen class, and click play
-        cy.get('#layout-viewer-container.fullscreen #layout-viewer #play-btn').click();
+        cy.get('#layout-viewer-container.fullscreen #layout-viewer-navbar #play-btn').click();
 
 
         // Check if the fullscreen iframe has a scr for preview layout
         cy.get('#layout-viewer-container.fullscreen #layout-viewer iframe').should('have.attr', 'src').and('include', '/layout/preview/');
     });
-
-    it('loops through widgets in the viewer', () => {
-
-        cy.server();
-        cy.route('/region/preview/*').as('regionPreview');
-
-        // Select last region
-        cy.get('#layout-navigator [data-type="region"]:last-child').click();
-
-        // Wait for the layout to reload
-        cy.wait('@regionPreview');
-
-        // Check if the widget rendered in the viewer is the clock ( need to access the iframe content )
-        cy.get('#layout-viewer-navbar').contains('clock');
-
-        // Change to second widget
-        cy.get('#layout-viewer-navbar button#right-btn').click();
-
-        // Wait for the layout to reload
-        cy.wait('@regionPreview');
-
-        // Check if the second widget is rendered
-        cy.get('#layout-viewer-navbar').contains('text');
-    });
-
 });

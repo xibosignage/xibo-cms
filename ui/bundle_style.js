@@ -51,7 +51,7 @@ require('datatables.net-buttons-dt/css/buttons.dataTables.min.css');
 require('timepicker/jquery.timepicker.min.css');
 
 // bootstrap-tour
-require('bootstrap-tour/build/css/bootstrap-tour.min.css');
+require('bootstrap-tourist/bootstrap-tourist.css');
 
 require('./src/vendor/calendar/css/calendar.css');
 require('./src/vendor/jquery-file-upload/css/jquery.fileupload.css');

@@ -110,9 +110,6 @@
                             {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
                             {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
 
-                            {% set title %}{% trans "Should Tags filter by exact match?" %}{% endset %}
-                            {{ inline.checkbox("exactTags", title) }}
-
                             {% set title %}{% trans "Only show currently logged in?" %}{% endset %}
                             {{ inline.checkbox("onlyLoggedIn", title) }}
                         </form>
