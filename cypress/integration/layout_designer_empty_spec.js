@@ -11,8 +11,8 @@ describe('Layout Designer (Empty)', function() {
             // Use a huge id to test a layout not found 
             cy.visit('/layout/designer/111111111111');
 
-            // See if the message Layout not found exists
-            cy.contains('Layout not found');
+            // See page not found message
+            cy.contains('Sorry we could not find that page');
         });
     });
 
