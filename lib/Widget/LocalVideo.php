@@ -119,7 +119,7 @@ class LocalVideo extends ModuleWidget
         // Set some options
         $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
         $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
-        $this->setOption('uri', urlencode($sanitizedParams->getString('uri')));
+        $this->setOption('uri', $sanitizedParams->getString('uri'));
         $this->setOption('scaleType', $sanitizedParams->getString('scaleTypeId', ['default' => 'aspect']));
         $this->setOption('mute', $sanitizedParams->getCheckbox('mute'));
         $this->setOption('showFullScreen', $sanitizedParams->getCheckbox('showFullScreen'));

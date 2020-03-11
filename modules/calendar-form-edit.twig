@@ -87,7 +87,7 @@
                     <div class="tab-pane" id="configurationTab">
                         {% set title %}{% trans "Feed URL" %}{% endset %}
                         {% set helpText %}{% trans "The Link for the iCal Feed" %}{% endset %}
-                        {{ forms.input("uri", title, module.getOption("uri")|url_decode, helpText)}}
+                        {{ forms.input("uri", title, module.getOption("uri"), helpText)}}
 
                         {# What range are we looking to return #}
                         {% set title %}{% trans "Interval" %}{% endset %}
