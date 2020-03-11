@@ -575,6 +575,13 @@ class Chart extends ModuleWidget
     public function getResource($displayId = 0)
     {
         $containerId = 'graph-' . $displayId;
+        $chartType = $this->getOption('graphType');
+
+        // Avoid rendering if the chart type isn't selected
+        if($chartType == null) {
+            $this->getLog()->debug('A dataset needs to be selected for widget: ' . $this->getWidgetId() . ' and displayId: ' . $displayId);
+            return '';
+        }
 
         $this->getLog()->debug('Render graph for widgetId: ' . $this->getWidgetId() . ' and displayId: ' . $displayId);
 
@@ -611,7 +618,7 @@ class Chart extends ModuleWidget
 
         // Get data
         $chartData = $this->getChartData($displayId);
-        $chartData->type = $this->getOption('graphType');
+        $chartData->type = $chartType;
 
         // Do we have any chart options to take into consideration?
         $chartData->options = $this->getChartOptions();
