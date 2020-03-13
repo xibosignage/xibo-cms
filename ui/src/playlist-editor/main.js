@@ -828,6 +828,12 @@ pE.close = function() {
     deleteObjectProperties(this.selectedObject);
     deleteObjectProperties(this.toolbar);
 
+    // Remove resize event listener related to the toolbar
+    $(window).off('.toolbar-' + this.mainObjectType);
+
+    // Make sure all remaining objects are pure empty JS objects
+    this.playlist = this.editorContainer = this.timeline = this.propertiesPanel = this.manager = this.selectedObject = this.toolbar = {};
+
     // Restore toastr positioning
     toastr.options.positionClass = this.toastrPosition;
 
