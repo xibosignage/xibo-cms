@@ -288,7 +288,7 @@ $(document).ready(function() {
     });
 
     // Refresh some modules on window resize
-    $(window).resize(_.debounce(function(e) {
+    $(window).on('resize.designer', _.debounce(function(e) {
         if(e.target === window) {
 
             // Refresh navigators and viewer
