@@ -169,7 +169,7 @@ class Hls extends ModuleWidget
         $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
         $this->setOption('name', $sanitizedParams->getString('name'));
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
-        $this->setOption('uri', $sanitizedParams->getString('uri'));
+        $this->setOption('uri', urlencode($sanitizedParams->getString('uri')));
         $this->setOption('mute', $sanitizedParams->getCheckbox('mute'));
 
         // This causes some android devices to switch to a hardware accellerated web view

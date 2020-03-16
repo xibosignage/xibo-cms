@@ -300,7 +300,7 @@ class Calendar extends ModuleWidget
 
         $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
         $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
-        $this->setOption('uri', $sanitizedParams->getString('uri'));
+        $this->setOption('uri', urlencode($sanitizedParams->getString('uri')));
         $this->setOption('name', $sanitizedParams->getString('name'));
         $this->setOption('customInterval', $sanitizedParams->getString('customInterval'));
         $this->setOption('eventLabelNow', $sanitizedParams->getString('eventLabelNow'));

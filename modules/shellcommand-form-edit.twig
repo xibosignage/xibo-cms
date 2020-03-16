@@ -78,7 +78,7 @@
                         
                         {% set title %}{% trans "Windows Command" %}{% endset %}
                         {% set helpText %}{% trans "Enter a Windows Command Line compatible command" %}{% endset %}
-                        {{ forms.input("windowsCommand", title, module.getOption("windowsCommand"), helpText, "non-command-fields") }}
+                        {{ forms.input("windowsCommand", title, module.getOption("windowsCommand")|url_decode, helpText, "non-command-fields") }}
 
                         {% set title %}{% trans "Launch the command via Windows Command Line" %}{% endset %}
                         {% set helpText %}{% trans "On Windows, should the player launch this command through the windows command line (cmd.exe)? This is useful for batch files. If you try to terminate this command only the command line will be terminated." %}{% endset %}
@@ -86,7 +86,7 @@
 
                         {% set title %}{% trans "Android / Linux Command" %}{% endset %}
                         {% set helpText %}{% trans "Enter an Android / Linux Command Line compatible command" %}{% endset %}
-                        {{ forms.input("linuxCommand", title, module.getOption("linuxCommand"), helpText, "non-command-fields") }}
+                        {{ forms.input("linuxCommand", title, module.getOption("linuxCommand")|url_decode, helpText, "non-command-fields") }}
 
                         {% set title %}{% trans "webOS Command" %}{% endset %}
                         {% set helpText %}{% trans "Enter a webOS Command Line compatible command." %}{% endset %}

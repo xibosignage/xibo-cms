@@ -153,10 +153,10 @@ class ShellCommand extends ModuleWidget
         $this->setOption('terminateCommand', $sanitizedParams->getCheckbox('terminateCommand'));
         $this->setOption('useTaskkill', $sanitizedParams->getCheckbox('useTaskkill'));
         $this->setOption('commandCode', $sanitizedParams->getString('commandCode'));
-        $this->setOption('windowsCommand', $windows);
-        $this->setOption('linuxCommand', $linux);
-        $this->setOption('webosCommand', $webos);
-        $this->setOption('tizenCommand', $tizen);
+        $this->setOption('windowsCommand', urlencode($windows));
+        $this->setOption('linuxCommand', urlencode($linux));
+        $this->setOption('webosCommand', urlencode($webos));
+        $this->setOption('tizenCommand', urlencode($tizen));
 
         // Save the widget
         $this->isValid();
