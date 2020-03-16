@@ -67,7 +67,7 @@
                     <div class="tab-pane" id="configurationTab">
                         {% set title %}{% trans "Video Path" %}{% endset %}
                         {% set helpText %}{% trans "A URL to the HLS video stream. Requires Player running Windows 8.1 or later, or Android 6 or later. Earlier Android devices may play HLS via the LocalVideo widget." %}{% endset %}
-                        {% set uri = module.getOption("uri")|url_decode %}
+                        {% set uri = module.getOption("uri") %}
                         {{ forms.input("uri", title, uri, helpText, "", "required") }}
                         
                         {% set title %}{% trans "Mute?" %}{% endset %}
