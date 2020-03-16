@@ -274,7 +274,7 @@ class Playlist extends Base
             'playlistId' => $sanitizedParams->getInt('playlistId'),
             'ownerUserGroupId' => $sanitizedParams->getInt('ownerUserGroupId'),
             'mediaLike' => $sanitizedParams->getString('mediaLike'),
-            'regionSpecific' => 0
+            'regionSpecific' => $sanitizedParams->getInt('regionSpecific', ['default' => 0])
         ], $request), $request);
 
         foreach ($playlists as $playlist) {
