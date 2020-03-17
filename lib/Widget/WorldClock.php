@@ -345,7 +345,7 @@ class WorldClock extends ModuleWidget
                 /* Highlighted */
                 .highlighted .analogue-clock-label {
                     font-weight: bold;
-                    font-size: 22px;
+                    font-size: 20px;
                 }';
 
                 // Show or hide label
@@ -356,7 +356,7 @@ class WorldClock extends ModuleWidget
                             color: ' . $this->getOption('labelTextColor') . ';
                             bottom: -30px;
                             position: relative;
-                            font-size: 20px;
+                            font-size: 18px;
                             width: 80%;
                             left: 10%;
                             text-align: center;
@@ -509,8 +509,8 @@ class WorldClock extends ModuleWidget
             'widgetDesignWidth' => $widgetOriginalWidth,
             'widgetDesignHeight'=> $widgetOriginalHeight,
             'worldClocks' => $worldClocks,
-            'clockCols' => $clockCols,
-            'clockRows' => $clockRows
+            'numCols' => $clockCols,
+            'numRows' => $clockRows
         );
 
         // Replace the head content
@@ -542,7 +542,7 @@ class WorldClock extends ModuleWidget
         $javaScriptContent .= '   var body = ' . json_encode($mainTemplate) . ';';
         $javaScriptContent .= '   moment.locale("' . Translate::GetJsLocale() . '");';
         $javaScriptContent .= '   $(document).ready(function() { ';
-        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("body").xiboWorldClockRender(options, body); $("#content").find("img").xiboImageRender(options); ';
+        $javaScriptContent .= '       $("body").xiboWorldClockRender(options, body); $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options); ';
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= '</script>';
 
