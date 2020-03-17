@@ -64,65 +64,24 @@ jQuery.fn.extend({
 
         options = $.extend({}, defaults, options);
 
-        // Calculate the dimensions of each item based on the preview/original dimensions and col/row number
-        var width = 0;
-        var height = 0;
-
-        if (options.previewWidth === 0 || options.previewHeight === 0) {
-            width = options.widgetDesignWidth;
-            height = options.widgetDesignHeight;
-        } else {
-            width = options.previewWidth;
-            height = options.previewHeight;
-        }
-
-        if (options.scaleOverride !== 0) {
-            width = width / options.scaleOverride;
-            height = height / options.scaleOverride;
-        }
-
-        // Container dimensions
-        const containerWidth = $(this).width();
-        const containerHeight = $(this).height();
-
-        // Element dimensions
-        const elWidth = width;
-        const elHeight = height;
-
-        // Content dimensions and scale ( to create multiple elements based on the body scale fomr the xibo scaler )
-        const contentWidth = (options.clockCols > 1) ? (width * options.clockCols) : width;
-        const contentHeight = (options.clockRows > 1) ? (height * options.clockRows) : height;
-        const contentScaleX = containerWidth / contentWidth;
-        const contentScaleY = containerHeight / contentHeight;
-
         // For each matched element
         this.each(function() {
-            $(this).find('#content').css('transform-origin', 'top left');
-            $(this).find('#content').css('transform', 'scale(' + Math.min(contentScaleX, contentScaleY) + ')');
-            $(this).find('#content').width(contentWidth);
-            $(this).find('#content').height(contentHeight);
 
             for(let index = 0;index < worldClocks.length; index++) {
                 // Append template to the preview
-                let $newItem = $('<div>').attr('id', 'clock' + index).addClass('world-clock').append(body);
+                let $newItem = $('<div>').attr('id', 'clock' + index).addClass('world-clock').addClass('multi-element').append(body);
 
                 // Add label or timezone name
                 $newItem.find('.world-clock-label').html((worldClocks[index].clockLabel != '') ? worldClocks[index].clockLabel : worldClocks[index].clockTimezone);
 
-                // Set dimensions
-                $newItem.width(elWidth);
-                $newItem.height(elHeight);
-                $newItem.css('overflow', 'hidden');
-                $newItem.css('float', 'left');
-                
                 // Check if clock has highlighted class
                 if(worldClocks[index].clockHighlight == 'on') {
                     $newItem.addClass('highlighted');
                 }
 
                 // Check if the element is outside the drawing area ( cols * rows )
-                if((index + 1) > (options.clockCols * options.clockRows)) {
-                    $newItem.hide();
+                if((index + 1) > (options.numCols * options.numRows)) {
+                    $newItem.css('display', 'none');
                 }
 
                 // Add content to the main container
