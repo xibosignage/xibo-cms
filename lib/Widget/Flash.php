@@ -51,26 +51,9 @@ class Flash extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function preview($width, $height, $scaleOverride = 0)
+    public function previewAsClient($width, $height, $scaleOverride = 0)
     {
-        if ($this->module->previewEnabled == 0)
-            return parent::preview($width, $height, $scaleOverride);
-
-        $url = $this->getApp()->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]);
-
-        return '<object width="' . $width . '" height="' . $height . '">
-            <param name="movie" value="' . $url . '"></param>
-            <param name="allowFullScreen" value="false"></param>
-            <param name="allowscriptaccess" value="always"></param>
-            <param name="wmode" value="transaprent"></param>
-            <embed src="' . $url . '"
-                   type="application/x-shockwave-flash"
-                   allowscriptaccess="always"
-                   allowfullscreen="true"
-                   width="' . $width . '" height="' . $height . '"
-                   wmode="transparent">
-            </embed>
-        </object>';
+        return $this->previewIcon();
     }
 
     /**
