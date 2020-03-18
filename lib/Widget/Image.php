@@ -191,7 +191,15 @@ class Image extends ModuleWidget
         $cache = $this->getSanitizer()->getInt('cache', 0) == 1;
         $width = intval($this->getSanitizer()->getDouble('width'));
         $height = intval($this->getSanitizer()->getDouble('height'));
-        $extension = explode('.', $media->storedAs)[1];
+
+        // Get the extension if we can (module files do not have an extension stored with them)
+        if (stripos($media->storedAs, '.') > -1) {
+            $extension = explode('.', $media->storedAs)[1];
+        } else if (stripos($media->fileName, '.')) {
+            $extension = explode('.', $media->fileName)[1];
+        } else {
+            $extension = null;
+        }
 
         // Preview or download?
         if ($preview) {
