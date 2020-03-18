@@ -375,22 +375,17 @@ class Stats extends Base
                $displayIds = $displaysAccessible;
            } else {
                foreach ($displays as $key => $id) {
-
                    if (!in_array($id, $displaysAccessible)) {
-
                        unset($displays[$key]);
-
-                       if (count($displays) <= 0 ) {
-                           $displayIds = [-1];
-                       }
-                   }
-
-                   else {
+                   } else {
                        $displayIds[] = $id;
                    }
                }
-           }
 
+               if (count($displays) <= 0 ) {
+                   $displayIds = [-1];
+               }
+           }
         } else {
             $displayIds = $displays;
         }
