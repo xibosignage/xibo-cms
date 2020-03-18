@@ -828,6 +828,12 @@ class Layout extends Base
             throw new InvalidArgumentException(__('Cannot modify Layout from its Draft'), 'layoutId');
         }
 
+        // Make sure we aren't the global default
+        if ($layout->layoutId == $this->getConfig()->getSetting('DEFAULT_LAYOUT')) {
+            throw new InvalidArgumentException(__('This Layout is used as the global default and cannot be retired'),
+                'layoutId');
+        }
+
         $layout->retired = 1;
         $layout->save([
             'saveLayout' => true,
