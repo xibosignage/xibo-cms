@@ -930,7 +930,7 @@ function XiboFormRender(sourceObj, data) {
                 }
 
                 // Focus in the first input
-                $('input[type=text]', dialog).eq(0).focus();
+                $('input[type=text]', dialog).not(".dateControl").eq(0).focus();
 
                 $('input[type=text]', dialog).each(function(index, el) {
                     formRenderDetectSpacingIssues(el);
