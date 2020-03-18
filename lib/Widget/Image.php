@@ -27,8 +27,8 @@ use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Helper\HttpCacheProvider;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Image
@@ -197,7 +197,15 @@ class Image extends ModuleWidget
         $cache = $sanitizedParams->getInt('cache', ['default' => 0]) == 1;
         $width = intval($sanitizedParams->getDouble('width'));
         $height = intval($sanitizedParams->getDouble('height'));
-        $extension = explode('.', $media->storedAs)[1];
+
+        // Get the extension if we can (module files do not have an extension stored with them)
+        if (stripos($media->storedAs, '.') > -1) {
+            $extension = explode('.', $media->storedAs)[1];
+        } else if (stripos($media->fileName, '.')) {
+            $extension = explode('.', $media->fileName)[1];
+        } else {
+            $extension = null;
+        }
 
         // Preview or download?
         if ($preview) {
