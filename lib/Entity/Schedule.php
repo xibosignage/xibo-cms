@@ -541,6 +541,9 @@ class Schedule implements \JsonSerializable
 
                     if ($dataType !== 'smallint') {
                         $this->store->update('ALTER TABLE `schedule` MODIFY `shareOfVoice` SMALLINT', []);
+
+                        // convert any existing interrupt schedules?
+                        $this->store->update('UPDATE `schedule` SET `shareOfVoice` = 3600 * (shareOfVoice / 100) WHERE shareOfVoice > 0', []);
                     }
                 }
 

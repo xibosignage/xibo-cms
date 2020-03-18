@@ -114,15 +114,15 @@
                         </div>
 
                         <div class="form-group interrupt-control" style="display: block;">
-                            <label class="col-sm-2 control-label" for="shareOfVoice" accesskey="">Share of Voice</label>
+                            <label class="col-sm-2 control-label" for="shareOfVoice" accesskey="">{% trans "Share of Voice" %}</label>
                             <div class="col-sm-5">
                                 <input class="form-control" name="shareOfVoice" type="number" id="shareOfVoice" value="{{ event.shareOfVoice }}">
-                                <span class="help-block">The amount of time this Layout should be shown, in seconds per hour.</span>
+                                <span class="help-block">{% trans "The amount of time this Layout should be shown, in seconds per hour." %}</span>
                             </div>
 
                               <div class="col-sm-5">
                                 <input class="form-control" name="shareOfVoicePercentage" type="number" id="shareOfVoicePercentage" value="">
-                                <span class="help-block">As a percentage</span>
+                                <span class="help-block">{% trans "As a percentage" %}</span>
                             </div>
                         </div>
 
