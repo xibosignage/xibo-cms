@@ -356,9 +356,9 @@ class Stats extends Base
         $type = strtolower($sanitizedQueryParams->getString('type'));
 
         $displayId = $sanitizedQueryParams->getInt('displayId');
-        $displays = $sanitizedQueryParams->getIntArray('displayIds[]', ['default' => []]);
-        $layoutIds = $sanitizedQueryParams->getIntArray('layoutId[]', ['default' => []]);
-        $mediaIds = $sanitizedQueryParams->getIntArray('mediaId[]', ['default' => []]);
+        $displays = $sanitizedQueryParams->getIntArray('displayIds', ['default' => []]);
+        $layoutIds = $sanitizedQueryParams->getIntArray('layoutId', ['default' => []]);
+        $mediaIds = $sanitizedQueryParams->getIntArray('mediaId', ['default' => []]);
         $statDate = $sanitizedQueryParams->getDate('statDate');
         $statId = $sanitizedQueryParams->getString('statId');
         $campaignId = $sanitizedQueryParams->getInt('campaignId');
