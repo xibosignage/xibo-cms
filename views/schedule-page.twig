@@ -325,7 +325,7 @@
                 <span class="pull-right" data-cal-date="<%= data_day %>" data-cal-view="day" data-toggle="tooltip" title="<%= tooltip %>"><%= day %></span>
 
                 <% if (events.length > 0) { %>
-                    <span class="cal-month-day-number-events label label-info" data-toggle="tooltip" title="{% endraw %}{% trans "Number of events" %}{% raw %}"><%= events.length %></span>
+                    <span class="cal-month-day-number-events label label-info" data-toggle="tooltip" title="{% endverbatim %}{% trans "Number of events" %}{% verbatim %}"><%= events.length %></span>
                 <% } %>
 
                 <% if (events.length > 0) { %>
@@ -628,7 +628,7 @@
                                 {% endverbatim %}{% trans "Interrupt Layouts" %}{% verbatim %}
                             <% } %>
                             
-                            <span class="pull-right badge" title="{% endraw %}{% trans "Number of Layouts" %}{% raw %}" data-toggle="tooltip" data-placement="top">
+                            <span class="pull-right badge" title="{% endverbatim %}{% trans "Number of Layouts" %}{% verbatim %}" data-toggle="tooltip" data-placement="top">
                                 <%= layouts.length %>
                             </span>
                         </th>
