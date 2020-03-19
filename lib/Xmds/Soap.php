@@ -1499,8 +1499,8 @@ class Soap
                         /* @var \DOMElement $child */
                         if ($child->nodeName == 'engagement') {
                             $engagements[$i]['tag'] = $child->getAttribute('tag');
-                            $engagements[$i]['duration'] = $child->getAttribute('duration');
-                            $engagements[$i]['count'] = $child->getAttribute('count');
+                            $engagements[$i]['duration'] = (int) $child->getAttribute('duration');
+                            $engagements[$i]['count'] = (int) $child->getAttribute('count');
                             $i++;
                         }
                     }
@@ -1514,7 +1514,7 @@ class Soap
 
             // if fromdt and to dt are same then ignore them
             if ($fromdt == $todt) {
-                $this->getLog()->error('Fromdt (' . $fromdt. ') and ToDt (' . $todt. ') are same. ');
+                $this->getLog()->debug('Ignoring a Stat record because the fromDt (' . $fromdt. ') and toDt (' . $todt. ') are the same');
                 continue;
             }
 

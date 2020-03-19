@@ -1,4 +1,4 @@
-describe.skip('Playlist Editor (Populated)', function() { //FIXME: Tests skipped for now, need update to the new Layout Designer revamp
+describe('Playlist Editor (Populated)', function() {
 
     beforeEach(function() {
         cy.login();
@@ -23,13 +23,6 @@ describe.skip('Playlist Editor (Populated)', function() { //FIXME: Tests skipped
             cy.openPlaylistEditorAndLoadPrefs(res);
         });
     });
-
-/* Disabled for testing speed reasons
-    after(function() {
-        // Remove the created layout
-        cy.deletePlaylist(this.testPlaylistId);
-    });
-*/
 
     it('changes and saves widget properties', () => {
         // Create and alias for reload widget

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-03-05 15:25+0000\n"
+"POT-Creation-Date: 2020-03-18 17:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -415,7 +415,7 @@ msgstr ""
 #: lib/Controller/Report.php:607 lib/Controller/Report.php:613
 #: lib/Controller/UserGroup.php:157 lib/Controller/Command.php:133
 #: lib/Controller/Command.php:139 lib/Controller/DataSetRss.php:167
-#: lib/Controller/Layout.php:1324 lib/Controller/Layout.php:1330
+#: lib/Controller/Layout.php:1330 lib/Controller/Layout.php:1336
 #: lib/Controller/DataSet.php:232 lib/Controller/DataSet.php:238
 #: lib/Controller/Display.php:640 lib/Controller/PlayerSoftware.php:173
 #: lib/Controller/Task.php:164 lib/Controller/Resolution.php:143
@@ -1162,7 +1162,7 @@ msgstr ""
 #: cache/24/2409c524a4777f2605a9a42c5d1cb39ad0ac87c61dce2e0c5720a429c23e43f0.php:602
 #: cache/c6/c6ea77851d49ca2f890734bb7034f9e538cf93fe51d262b27983431af9aaa3f6.php:133
 #: cache/3f/3fc33f1a46a59490d94ca4e637e447f6b899d1c0616a9d79cb16e5f9f17dd70f.php:837
-#: lib/Controller/Layout.php:881
+#: lib/Controller/Layout.php:887
 msgid "Off"
 msgstr ""
 
@@ -1229,7 +1229,7 @@ msgstr ""
 #: cache/24/2409c524a4777f2605a9a42c5d1cb39ad0ac87c61dce2e0c5720a429c23e43f0.php:606
 #: cache/c6/c6ea77851d49ca2f890734bb7034f9e538cf93fe51d262b27983431af9aaa3f6.php:138
 #: cache/3f/3fc33f1a46a59490d94ca4e637e447f6b899d1c0616a9d79cb16e5f9f17dd70f.php:841
-#: lib/Controller/Layout.php:881
+#: lib/Controller/Layout.php:887
 msgid "On"
 msgstr ""
 
@@ -1897,7 +1897,7 @@ msgstr ""
 #: lib/Controller/DisplayGroup.php:280 lib/Controller/Template.php:157
 #: lib/Controller/Library.php:612 lib/Controller/DisplayProfile.php:192
 #: lib/Controller/Campaign.php:246 lib/Controller/Playlist.php:339
-#: lib/Controller/UserGroup.php:166 lib/Controller/Layout.php:1292
+#: lib/Controller/UserGroup.php:166 lib/Controller/Layout.php:1298
 #: lib/Controller/DataSet.php:213
 msgid "Copy"
 msgstr ""
@@ -2218,7 +2218,7 @@ msgstr ""
 
 #: cache/89/8994adbacf162429bde7103c71bb6e7ac305dd941c8c210e9182541c95c7d4b8.php:420
 #: cache/89/891b779ccad6b66c0ea848e11ae83a0f83f03d7daac10e3892016ceb2c2bcd75.php:324
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:480
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:490
 #: cache/55/550e002b39205080e4514ec2e2080183ef6770b00ff2db787edf5ada5344bbfa.php:223
 #: cache/7a/7a79dee0eb33b0aa44d0f2f9aa1c56f10958da4a6823407c632d0ae7959c383c.php:270
 #: cache/7a/7a79dee0eb33b0aa44d0f2f9aa1c56f10958da4a6823407c632d0ae7959c383c.php:421
@@ -2226,7 +2226,7 @@ msgstr ""
 #: cache/9d/9dd59ea370df4a11d28115f5f12b56bf3d7ac7d0a78e84c7414025359866fa58.php:298
 #: cache/f1/f10d234851839c4f1aed2747867d9f73eb925509e0b8e8ca25a8151750bd8f35.php:121
 #: cache/1b/1bff14d244e26ce45812387e2f19d93027c52bd80f5378247ebbac4de6d7efb7.php:204
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:431
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:438
 #: cache/d3/d37324a32bbf00fbb4d8ab336f2491be8c15c519a53496c78c65ff010c9ac959.php:264
 #: cache/d3/d37324a32bbf00fbb4d8ab336f2491be8c15c519a53496c78c65ff010c9ac959.php:415
 #: lib/Widget/ModuleWidget.php:927
@@ -4625,9 +4625,9 @@ msgid "Edit Event"
 msgstr ""
 
 #: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:97
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:470
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:480
 #: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:95
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:421
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:428
 msgid "Repeats"
 msgstr ""
 
@@ -4695,12 +4695,12 @@ msgid "Campaign"
 msgstr ""
 
 #: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:177
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:360
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:370
 #: cache/e8/e82a0c0c85370997d590de1dde7472e250ff44e7179752ce558b41ee8f92309e.php:49
 #: cache/d6/d6323b020dfa6e0dfc55b0947ffa13fa5c5c5f7662683dde947328ab15c757cd.php:84
 #: cache/25/251ca62ef35c9ad6e685266df6b774a717a1222ca39ca701f4e4e4f1054e4440.php:276
 #: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:154
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:337
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:344
 msgid "Command"
 msgstr ""
 
@@ -4799,91 +4799,96 @@ msgstr ""
 msgid "Share of Voice"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:350
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:327
-msgid "The percentage of time this Layout should be shown."
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:354
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:328
+msgid "The amount of time this Layout should be shown, in seconds per hour."
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:365
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:342
-msgid "Please select a command for this Event."
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:362
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:336
+msgid "As a percentage"
 msgstr ""
 
 #: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:375
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:349
+msgid "Please select a command for this Event."
+msgstr ""
+
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:385
 #: cache/52/527248fb81c147890572651660b181a5794aa8cba62084403072f8fae7162f8e.php:293
 #: cache/25/251ca62ef35c9ad6e685266df6b774a717a1222ca39ca701f4e4e4f1054e4440.php:854
 #: cache/66/66d82ddb235acc04d40e3987b4a3dbff3e7eb68a2c0bb3da3c7f8f3703236c61.php:154
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:352
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:359
 msgid "Display Order"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:380
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:357
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:390
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:364
 msgid ""
 "Please select the order this event should appear in relation to others when "
 "there is more than one event scheduled"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:390
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:400
 #: cache/52/527248fb81c147890572651660b181a5794aa8cba62084403072f8fae7162f8e.php:308
 #: cache/25/251ca62ef35c9ad6e685266df6b774a717a1222ca39ca701f4e4e4f1054e4440.php:264
 #: cache/25/251ca62ef35c9ad6e685266df6b774a717a1222ca39ca701f4e4e4f1054e4440.php:858
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:367
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:374
 msgid "Priority"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:395
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:405
 #: cache/52/527248fb81c147890572651660b181a5794aa8cba62084403072f8fae7162f8e.php:313
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:372
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:379
 msgid ""
 "Sets the event priority - events with the highest priority play in "
 "preference to lower priority events."
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:405
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:382
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:415
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:389
 msgid "Run at CMS Time?"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:410
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:387
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:420
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:394
 msgid ""
 "When selected, your event will run according to the timezone set on the CMS, "
 "otherwise the event will run at Display local time"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:423
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:433
 #: cache/52/527248fb81c147890572651660b181a5794aa8cba62084403072f8fae7162f8e.php:326
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:400
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:407
 msgid "Synchronise this event?"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:428
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:438
 #: cache/52/527248fb81c147890572651660b181a5794aa8cba62084403072f8fae7162f8e.php:331
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:405
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:412
 msgid ""
 "When selected, all selected players will attempt to synchronise the output "
 "(Supported on Android player only)"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:446
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:456
 msgid ""
 "Editing the Start and or End date/time will create a new Recurring Event "
 "across the Schedule. Any previously deleted instances of this event will be "
 "recreated with edits made here."
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:475
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:426
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:485
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:433
 msgid "Select the type of Repeat required for this Event."
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:485
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:436
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:495
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:443
 msgid "Per Minute"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:490
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:500
 #: cache/e9/e982aa0de52d614b9d6336db3a4b4e3440b3262624148973819bd69b719957d9.php:141
 #: cache/5f/5fa438a6247f90d1eb23984f7a12303b8f4afe6879d454d1dfcac7fe2ba0d2e5.php:119
 #: cache/7d/7d67387ab5d831e280adf0058486528cfc0dfd37ea1c5b74d59411c19b5d9472.php:941
@@ -4891,13 +4896,13 @@ msgstr ""
 #: cache/7a/7a79dee0eb33b0aa44d0f2f9aa1c56f10958da4a6823407c632d0ae7959c383c.php:566
 #: cache/f0/f07d872b32cebfbd94b2c8b50d8bbf73c0dcf9c6d21b42067758b4746db82f9b.php:119
 #: cache/95/955f2d4b1cfb9211d91a9de4301901bda028aad6bf5296e07fdd6ed55751f3f9.php:130
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:441
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:448
 #: cache/d3/d37324a32bbf00fbb4d8ab336f2491be8c15c519a53496c78c65ff010c9ac959.php:484
 #: cache/d3/d37324a32bbf00fbb4d8ab336f2491be8c15c519a53496c78c65ff010c9ac959.php:557
 msgid "Hourly"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:495
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:505
 #: cache/e9/e982aa0de52d614b9d6336db3a4b4e3440b3262624148973819bd69b719957d9.php:141
 #: cache/5f/5fa438a6247f90d1eb23984f7a12303b8f4afe6879d454d1dfcac7fe2ba0d2e5.php:119
 #: cache/7d/7d67387ab5d831e280adf0058486528cfc0dfd37ea1c5b74d59411c19b5d9472.php:946
@@ -4905,136 +4910,136 @@ msgstr ""
 #: cache/7a/7a79dee0eb33b0aa44d0f2f9aa1c56f10958da4a6823407c632d0ae7959c383c.php:571
 #: cache/f0/f07d872b32cebfbd94b2c8b50d8bbf73c0dcf9c6d21b42067758b4746db82f9b.php:119
 #: cache/95/955f2d4b1cfb9211d91a9de4301901bda028aad6bf5296e07fdd6ed55751f3f9.php:130
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:446
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:453
 #: cache/d3/d37324a32bbf00fbb4d8ab336f2491be8c15c519a53496c78c65ff010c9ac959.php:489
 #: cache/d3/d37324a32bbf00fbb4d8ab336f2491be8c15c519a53496c78c65ff010c9ac959.php:562
 #: lib/Widget/ForecastIo.php:438
 msgid "Daily"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:500
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:510
 #: cache/7a/7a79dee0eb33b0aa44d0f2f9aa1c56f10958da4a6823407c632d0ae7959c383c.php:503
 #: cache/7a/7a79dee0eb33b0aa44d0f2f9aa1c56f10958da4a6823407c632d0ae7959c383c.php:576
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:451
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:458
 #: cache/d3/d37324a32bbf00fbb4d8ab336f2491be8c15c519a53496c78c65ff010c9ac959.php:494
 #: cache/d3/d37324a32bbf00fbb4d8ab336f2491be8c15c519a53496c78c65ff010c9ac959.php:567
 msgid "Weekly"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:505
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:515
 #: cache/7a/7a79dee0eb33b0aa44d0f2f9aa1c56f10958da4a6823407c632d0ae7959c383c.php:513
 #: cache/7a/7a79dee0eb33b0aa44d0f2f9aa1c56f10958da4a6823407c632d0ae7959c383c.php:586
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:456
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:463
 #: cache/d3/d37324a32bbf00fbb4d8ab336f2491be8c15c519a53496c78c65ff010c9ac959.php:504
 #: cache/d3/d37324a32bbf00fbb4d8ab336f2491be8c15c519a53496c78c65ff010c9ac959.php:577
 msgid "Monthly"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:510
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:520
 #: cache/7a/7a79dee0eb33b0aa44d0f2f9aa1c56f10958da4a6823407c632d0ae7959c383c.php:523
 #: cache/7a/7a79dee0eb33b0aa44d0f2f9aa1c56f10958da4a6823407c632d0ae7959c383c.php:596
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:461
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:468
 #: cache/d3/d37324a32bbf00fbb4d8ab336f2491be8c15c519a53496c78c65ff010c9ac959.php:514
 #: cache/d3/d37324a32bbf00fbb4d8ab336f2491be8c15c519a53496c78c65ff010c9ac959.php:587
 msgid "Yearly"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:530
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:540
 msgid ""
 "Use the drop-down to select which days of the week this Event should be "
 "repeated"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:535
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:545
 #: cache/58/58c1b46851ca17663745169ecacf6598428f53fe4712874a6b61fb470037b73a.php:197
 #: cache/95/955f2d4b1cfb9211d91a9de4301901bda028aad6bf5296e07fdd6ed55751f3f9.php:358
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:486
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:493
 msgid "Monday"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:540
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:550
 #: cache/58/58c1b46851ca17663745169ecacf6598428f53fe4712874a6b61fb470037b73a.php:201
 #: cache/95/955f2d4b1cfb9211d91a9de4301901bda028aad6bf5296e07fdd6ed55751f3f9.php:363
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:491
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:498
 msgid "Tuesday"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:545
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:555
 #: cache/58/58c1b46851ca17663745169ecacf6598428f53fe4712874a6b61fb470037b73a.php:205
 #: cache/95/955f2d4b1cfb9211d91a9de4301901bda028aad6bf5296e07fdd6ed55751f3f9.php:368
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:496
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:503
 msgid "Wednesday"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:550
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:560
 #: cache/58/58c1b46851ca17663745169ecacf6598428f53fe4712874a6b61fb470037b73a.php:209
 #: cache/95/955f2d4b1cfb9211d91a9de4301901bda028aad6bf5296e07fdd6ed55751f3f9.php:373
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:501
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:508
 msgid "Thursday"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:555
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:565
 #: cache/58/58c1b46851ca17663745169ecacf6598428f53fe4712874a6b61fb470037b73a.php:213
 #: cache/95/955f2d4b1cfb9211d91a9de4301901bda028aad6bf5296e07fdd6ed55751f3f9.php:378
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:506
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:513
 msgid "Friday"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:560
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:570
 #: cache/58/58c1b46851ca17663745169ecacf6598428f53fe4712874a6b61fb470037b73a.php:217
 #: cache/95/955f2d4b1cfb9211d91a9de4301901bda028aad6bf5296e07fdd6ed55751f3f9.php:383
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:511
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:518
 msgid "Saturday"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:565
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:575
 #: cache/58/58c1b46851ca17663745169ecacf6598428f53fe4712874a6b61fb470037b73a.php:221
 #: cache/95/955f2d4b1cfb9211d91a9de4301901bda028aad6bf5296e07fdd6ed55751f3f9.php:388
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:516
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:523
 msgid "Sunday"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:585
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:595
 msgid ""
 "Should this Event Repeat by Day of the month (eg. Monthly on Day 21) or by a "
 "Weekday in the month (eg. Monthly on the third Thursday)"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:590
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:540
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:600
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:547
 msgid "on the [DAY] day"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:590
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:540
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:600
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:547
 msgid "on the [POSITION] [WEEKDAY]"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:599
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:549
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:609
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:556
 msgid "Repeat every"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:604
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:554
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:614
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:561
 msgid ""
 "Include a number to determine the Repeat frequency required for this Event."
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:614
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:564
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:624
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:571
 msgid "Until"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:619
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:569
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:629
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:576
 msgid ""
 "Provide a date and time to end the Repeat for this Event. Leave empty to "
 "Repeat indefinitely."
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:631
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:581
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:641
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:588
 msgid ""
 "Use the form fields below to create a set of reminders for this event. New "
 "fields can be added by clicking on the + icon at the end of the row. Use the "
@@ -5042,13 +5047,13 @@ msgid ""
 "shown in the message center."
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:647
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:597
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:657
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:604
 msgid "Geo Schedule?"
 msgstr ""
 
-#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:652
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:602
+#: cache/4b/4b2bb0ad31d0e142cde610f3888d509aac73cce23c6153832f9ab5e6df0d6386.php:662
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:609
 msgid ""
 "Should this event be location aware? Enable this checkbox and select an area "
 "by drawing a polygon or rectangle layer on the map below."
@@ -5488,7 +5493,7 @@ msgstr ""
 #: cache/7d/7d67387ab5d831e280adf0058486528cfc0dfd37ea1c5b74d59411c19b5d9472.php:54
 #: cache/35/357a9fb54c79ce20336009eb747819290ecd30d87badd6b3bf099ebf020542eb.php:48
 #: cache/ed/ed54a2887195d5eb4565276a819bd4e77687fa48815d40a2caba59e31771de3c.php:54
-#: lib/Controller/Template.php:198 lib/Controller/Layout.php:1367
+#: lib/Controller/Template.php:198 lib/Controller/Layout.php:1373
 msgid "Export"
 msgstr ""
 
@@ -6023,7 +6028,7 @@ msgstr ""
 
 #: cache/52/527248fb81c147890572651660b181a5794aa8cba62084403072f8fae7162f8e.php:49
 #: cache/13/13a19e9c0bd188164367f43405d072e794463d2c93b6842a546e6adfe3d8f320.php:105
-#: lib/Controller/Campaign.php:218 lib/Controller/Layout.php:1264
+#: lib/Controller/Campaign.php:218 lib/Controller/Layout.php:1270
 #: lib/Controller/Display.php:713
 msgid "Schedule Now"
 msgstr ""
@@ -6157,7 +6162,7 @@ msgstr ""
 
 #: cache/fd/fd51d371d452d3efb1a62b70ffe2528974af33c8522ef11865e30a332de88b29.php:63
 #: cache/c6/c69b38a82ca65a264d590e1727e1e0a8711319df3cadb306a2185de1edf7fd95.php:537
-#: lib/Controller/Layout.php:1230
+#: lib/Controller/Layout.php:1236
 msgid "Discard"
 msgstr ""
 
@@ -6453,7 +6458,7 @@ msgstr ""
 #: lib/Controller/DisplayGroup.php:326 lib/Controller/Template.php:187
 #: lib/Controller/Library.php:639 lib/Controller/DayPart.php:193
 #: lib/Controller/Campaign.php:277 lib/Controller/Playlist.php:387
-#: lib/Controller/Command.php:151 lib/Controller/Layout.php:1376
+#: lib/Controller/Command.php:151 lib/Controller/Layout.php:1382
 #: lib/Controller/DataSet.php:253 lib/Controller/Display.php:779
 #: lib/Controller/PlayerSoftware.php:182
 msgid "Permissions"
@@ -7703,7 +7708,7 @@ msgstr ""
 #: cache/03/0315dc21d30b9b0cdba876527a0e02fd880ca74a0af9a35bda88ca429537f7af.php:48
 #: cache/45/45754543f341c45c018ee59b524de87217e83b9ec5541bb367eef047d6daa989.php:48
 #: cache/3f/3fc33f1a46a59490d94ca4e637e447f6b899d1c0616a9d79cb16e5f9f17dd70f.php:72
-#: lib/XTR/MaintenanceRegularTask.php:242
+#: lib/XTR/MaintenanceRegularTask.php:243
 msgid "Tidy Library"
 msgstr ""
 
@@ -9848,7 +9853,7 @@ msgstr ""
 
 #: cache/aa/aaa17e4dcb6f1481ca508df53adc8fbfb6005964cac609f8f22ff488bc32c899.php:63
 #: cache/13/13a19e9c0bd188164367f43405d072e794463d2c93b6842a546e6adfe3d8f320.php:101
-#: lib/Controller/Layout.php:1241
+#: lib/Controller/Layout.php:1247
 msgid "Checkout"
 msgstr ""
 
@@ -10013,7 +10018,7 @@ msgstr ""
 #: lib/Controller/MediaManager.php:171 lib/Controller/Tag.php:224
 #: lib/Controller/Report.php:212 lib/Controller/Transition.php:91
 #: lib/Controller/UserGroup.php:149 lib/Controller/Command.php:124
-#: lib/Controller/DataSetRss.php:159 lib/Controller/Layout.php:1285
+#: lib/Controller/DataSetRss.php:159 lib/Controller/Layout.php:1291
 #: lib/Controller/DataSet.php:223 lib/Controller/Display.php:631
 #: lib/Controller/PlayerSoftware.php:164 lib/Controller/Task.php:157
 #: lib/Controller/Module.php:208 lib/Controller/Resolution.php:134
@@ -11804,7 +11809,7 @@ msgstr ""
 #: cache/51/51b04a03fb4f697480077759cd44dbf87575347c21eb6ec072d1738a2a980eb1.php:108
 #: cache/fc/fc8bb4f8751c96a05ceac3f42d9dae9138024fe5b2bd9f03a258b8ce02cb4219.php:70
 #: lib/Controller/Library.php:1857 lib/Controller/Playlist.php:1393
-#: lib/Controller/Layout.php:1213
+#: lib/Controller/Layout.php:1219
 msgid "Design"
 msgstr ""
 
@@ -12835,7 +12840,7 @@ msgstr ""
 
 #: cache/3c/3caef3e75ad367c45166af91d357345a0c798d1b20a502f473bc3eb9eb359acd.php:64
 #: cache/c6/c69b38a82ca65a264d590e1727e1e0a8711319df3cadb306a2185de1edf7fd95.php:533
-#: lib/Controller/Layout.php:1224
+#: lib/Controller/Layout.php:1230
 msgid "Publish"
 msgstr ""
 
@@ -12864,7 +12869,7 @@ msgid "Delete %layout%"
 msgstr ""
 
 #: cache/3c/3c813904dce4794ae6178800ae8edc5c77d131506cb590a6bd93b4ddaf531a97.php:65
-#: lib/Controller/Layout.php:1300 lib/Controller/Layout.php:1306
+#: lib/Controller/Layout.php:1306 lib/Controller/Layout.php:1312
 msgid "Retire"
 msgstr ""
 
@@ -12891,13 +12896,13 @@ msgstr ""
 msgid "Schedule Event"
 msgstr ""
 
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:481
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:488
 msgid ""
 "Use the drop-down to select which days of the week this Event should be "
 "repeated."
 msgstr ""
 
-#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:536
+#: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:543
 msgid ""
 "Should this Event Repeat by Day of the month (eg. Monthly on Day 21) or by a "
 "Weekday in the month (eg. Monthly on the third Thursday)."
@@ -12998,7 +13003,7 @@ msgid ""
 msgstr ""
 
 #: cache/13/13a19e9c0bd188164367f43405d072e794463d2c93b6842a546e6adfe3d8f320.php:109
-#: lib/Controller/Layout.php:1359
+#: lib/Controller/Layout.php:1365
 msgid "Save Template"
 msgstr ""
 
@@ -14028,7 +14033,7 @@ msgid "Please enter countdown date."
 msgstr ""
 
 #: lib/Widget/Pdf.php:107 lib/Widget/Embedded.php:166 lib/Widget/Text.php:304
-#: lib/Widget/Image.php:285 lib/Widget/LocalVideo.php:135
+#: lib/Widget/Image.php:293 lib/Widget/LocalVideo.php:135
 #: lib/Widget/WebPage.php:251 lib/Widget/HtmlPackage.php:102
 #: lib/Widget/VideoIn.php:150 lib/Widget/Chart.php:948
 #: lib/Widget/NotificationView.php:166
@@ -14137,12 +14142,12 @@ msgstr ""
 msgid "Please enter some text"
 msgstr ""
 
-#: lib/Widget/Image.php:276
+#: lib/Widget/Image.php:284
 #, php-format
 msgid "%s is pending conversion"
 msgstr ""
 
-#: lib/Widget/Image.php:280 lib/Widget/Image.php:281
+#: lib/Widget/Image.php:288 lib/Widget/Image.php:289
 #, php-format
 msgid ""
 "%s is too large. Please ensure that none of the images in your layout are "
@@ -14977,49 +14982,49 @@ msgstr ""
 msgid "Can not have an end time earlier than your start time"
 msgstr ""
 
-#: lib/Entity/Schedule.php:536
-msgid "Share of Voice must be a whole number between 0 and 100"
+#: lib/Entity/Schedule.php:551
+msgid "Share of Voice must be a whole number between 0 and 3600"
 msgstr ""
 
-#: lib/Entity/Schedule.php:543
+#: lib/Entity/Schedule.php:558
 msgid "Please select a Command for this event."
 msgstr ""
 
-#: lib/Entity/Schedule.php:550
+#: lib/Entity/Schedule.php:565
 msgid "Please select the Event Type"
 msgstr ""
 
-#: lib/Entity/Schedule.php:555
+#: lib/Entity/Schedule.php:570
 msgid "Repeats selection is invalid for Always or Daypart events"
 msgstr ""
 
-#: lib/Entity/Schedule.php:559
+#: lib/Entity/Schedule.php:574
 msgid "Display Order must be 0 or a positive number"
 msgstr ""
 
-#: lib/Entity/Schedule.php:563
+#: lib/Entity/Schedule.php:578
 msgid "Priority must be 0 or a positive number"
 msgstr ""
 
-#: lib/Entity/Schedule.php:567
+#: lib/Entity/Schedule.php:582
 msgid "Repeat every must be a positive number"
 msgstr ""
 
-#: lib/Entity/Schedule.php:791
+#: lib/Entity/Schedule.php:806
 msgid "Cache pool not available"
 msgstr ""
 
-#: lib/Entity/Schedule.php:794
+#: lib/Entity/Schedule.php:809
 msgid "Unable to generate schedule, unknown event"
 msgstr ""
 
-#: lib/Entity/Schedule.php:1402 lib/Entity/Schedule.php:1413
+#: lib/Entity/Schedule.php:1417 lib/Entity/Schedule.php:1428
 #: lib/Controller/Schedule.php:319 lib/Controller/Schedule.php:330
 #, php-format
 msgid "%s scheduled on %s"
 msgstr ""
 
-#: lib/Entity/Schedule.php:1411 lib/Controller/Schedule.php:328
+#: lib/Entity/Schedule.php:1426 lib/Controller/Schedule.php:328
 #: lib/Controller/Schedule.php:537
 msgid "Private Item"
 msgstr ""
@@ -15202,27 +15207,27 @@ msgstr ""
 msgid "Build Layouts"
 msgstr ""
 
-#: lib/XTR/MaintenanceRegularTask.php:267
+#: lib/XTR/MaintenanceRegularTask.php:268
 msgid "Library allowance exceeded"
 msgstr ""
 
-#: lib/XTR/MaintenanceRegularTask.php:313
+#: lib/XTR/MaintenanceRegularTask.php:314
 #, php-format
 msgid "%s is downloading %d files too many times"
 msgstr ""
 
-#: lib/XTR/MaintenanceRegularTask.php:318
+#: lib/XTR/MaintenanceRegularTask.php:319
 #, php-format
 msgid ""
 "Please check the bandwidth graphs and display status for %s to investigate "
 "the issue."
 msgstr ""
 
-#: lib/XTR/MaintenanceRegularTask.php:345
+#: lib/XTR/MaintenanceRegularTask.php:346
 msgid "Playlist Duration Updates"
 msgstr ""
 
-#: lib/XTR/MaintenanceRegularTask.php:367
+#: lib/XTR/MaintenanceRegularTask.php:368
 msgid "Publishing layouts with set publish dates"
 msgstr ""
 
@@ -15592,7 +15597,7 @@ msgstr ""
 
 #: lib/Controller/Library.php:655 lib/Controller/Library.php:661
 #: lib/Controller/Playlist.php:346 lib/Controller/Playlist.php:352
-#: lib/Controller/Layout.php:1340 lib/Controller/Layout.php:1346
+#: lib/Controller/Layout.php:1346 lib/Controller/Layout.php:1352
 msgid "Enable stats collection?"
 msgstr ""
 
@@ -15626,20 +15631,20 @@ msgstr ""
 msgid "Route is available through the API"
 msgstr ""
 
-#: lib/Controller/Library.php:1609 lib/Controller/Layout.php:1707
+#: lib/Controller/Library.php:1609 lib/Controller/Layout.php:1713
 msgid "No tags to assign"
 msgstr ""
 
-#: lib/Controller/Library.php:1619 lib/Controller/Layout.php:1717
+#: lib/Controller/Library.php:1619 lib/Controller/Layout.php:1723
 #, php-format
 msgid "Tagged %s"
 msgstr ""
 
-#: lib/Controller/Library.php:1671 lib/Controller/Layout.php:1772
+#: lib/Controller/Library.php:1671 lib/Controller/Layout.php:1778
 msgid "No tags to unassign"
 msgstr ""
 
-#: lib/Controller/Library.php:1681 lib/Controller/Layout.php:1782
+#: lib/Controller/Library.php:1681 lib/Controller/Layout.php:1788
 #, php-format
 msgid "Untagged %s"
 msgstr ""
@@ -15649,12 +15654,12 @@ msgid "Specified Media item is not in use."
 msgstr ""
 
 #: lib/Controller/Library.php:1867 lib/Controller/Playlist.php:1403
-#: lib/Controller/Layout.php:1254
+#: lib/Controller/Layout.php:1260
 msgid "Preview Layout"
 msgstr ""
 
 #: lib/Controller/Library.php:1996 lib/Controller/Playlist.php:868
-#: lib/Controller/Layout.php:1652
+#: lib/Controller/Layout.php:1658
 #, php-format
 msgid "Copied as %s"
 msgstr ""
@@ -16193,7 +16198,7 @@ msgstr ""
 msgid "Please enter author name"
 msgstr ""
 
-#: lib/Controller/Layout.php:387 lib/Controller/Layout.php:2121
+#: lib/Controller/Layout.php:387 lib/Controller/Layout.php:2127
 msgid "Draft"
 msgstr ""
 
@@ -16206,11 +16211,11 @@ msgid "You do not have permissions to delete this layout"
 msgstr ""
 
 #: lib/Controller/Layout.php:647 lib/Controller/Layout.php:735
-#: lib/Controller/Layout.php:767 lib/Controller/Layout.php:808
-#: lib/Controller/Layout.php:867 lib/Controller/Layout.php:896
-#: lib/Controller/Layout.php:2067 lib/Controller/Layout.php:2107
-#: lib/Controller/Layout.php:2201 lib/Controller/Layout.php:2257
-#: lib/Controller/Layout.php:2303 lib/Controller/Layout.php:2345
+#: lib/Controller/Layout.php:773 lib/Controller/Layout.php:814
+#: lib/Controller/Layout.php:873 lib/Controller/Layout.php:902
+#: lib/Controller/Layout.php:2073 lib/Controller/Layout.php:2113
+#: lib/Controller/Layout.php:2207 lib/Controller/Layout.php:2263
+#: lib/Controller/Layout.php:2309 lib/Controller/Layout.php:2351
 msgid "You do not have permissions to edit this layout"
 msgstr ""
 
@@ -16218,91 +16223,95 @@ msgstr ""
 msgid "Cannot delete Layout from its Draft, delete the parent"
 msgstr ""
 
-#: lib/Controller/Layout.php:739 lib/Controller/Layout.php:812
-#: lib/Controller/Layout.php:871
+#: lib/Controller/Layout.php:739 lib/Controller/Layout.php:818
+#: lib/Controller/Layout.php:877
 msgid "Cannot modify Layout from its Draft"
 msgstr ""
 
-#: lib/Controller/Layout.php:752
+#: lib/Controller/Layout.php:743
+msgid "This Layout is used as the global default and cannot be retired"
+msgstr ""
+
+#: lib/Controller/Layout.php:758
 #, php-format
 msgid "Retired %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:826
+#: lib/Controller/Layout.php:832
 #, php-format
 msgid "Unretired %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:881
+#: lib/Controller/Layout.php:887
 #, php-format
 msgid "For Layout %s Enable Stats Collection is set to %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:1174 lib/Controller/Layout.php:1826
+#: lib/Controller/Layout.php:1180 lib/Controller/Layout.php:1832
 msgid "This Layout is ready to play"
 msgstr ""
 
-#: lib/Controller/Layout.php:1178 lib/Controller/Layout.php:1830
+#: lib/Controller/Layout.php:1184 lib/Controller/Layout.php:1836
 msgid "There are items on this Layout that can only be assessed by the Display"
 msgstr ""
 
-#: lib/Controller/Layout.php:1182 lib/Controller/Layout.php:1834
+#: lib/Controller/Layout.php:1188 lib/Controller/Layout.php:1840
 msgid "This Layout has not been built yet"
 msgstr ""
 
-#: lib/Controller/Layout.php:1186 lib/Controller/Layout.php:1838
+#: lib/Controller/Layout.php:1192 lib/Controller/Layout.php:1844
 msgid "This Layout is invalid and should not be scheduled"
 msgstr ""
 
-#: lib/Controller/Layout.php:1192
+#: lib/Controller/Layout.php:1198
 msgid "This Layout has enable stat collection set to ON"
 msgstr ""
 
-#: lib/Controller/Layout.php:1196
+#: lib/Controller/Layout.php:1202
 msgid "This Layout has enable stat collection set to OFF"
 msgstr ""
 
-#: lib/Controller/Layout.php:1200
+#: lib/Controller/Layout.php:1206
 #, php-format
 msgid "Publishing %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:1201
+#: lib/Controller/Layout.php:1207
 msgid "Publish failed "
 msgstr ""
 
-#: lib/Controller/Layout.php:1272
+#: lib/Controller/Layout.php:1278
 msgid "Assign to Campaign"
 msgstr ""
 
-#: lib/Controller/Layout.php:1314
+#: lib/Controller/Layout.php:1320
 msgid "Unretire"
 msgstr ""
 
-#: lib/Controller/Layout.php:2111
+#: lib/Controller/Layout.php:2117
 msgid "Layout is already checked out"
 msgstr ""
 
-#: lib/Controller/Layout.php:2184
+#: lib/Controller/Layout.php:2190
 #, php-format
 msgid "Checked out %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:2279
+#: lib/Controller/Layout.php:2285
 #, php-format
 msgid "Published %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:2286
+#: lib/Controller/Layout.php:2292
 #, php-format
 msgid "Layout will be published on %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:2349
+#: lib/Controller/Layout.php:2355
 msgid "Layout is not checked out"
 msgstr ""
 
-#: lib/Controller/Layout.php:2360
+#: lib/Controller/Layout.php:2366
 #, php-format
 msgid "Discarded %s"
 msgstr ""

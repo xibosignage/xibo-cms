@@ -6349,6 +6349,16 @@
                         "type": "integer"
                     },
                     {
+                        "name": "displayIds",
+                        "in": "query",
+                        "description": "An optional array of display Id to filter",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    {
                         "name": "layoutId",
                         "in": "query",
                         "description": "An optional array of layout Id to filter",
@@ -12661,7 +12671,7 @@
                     "type": "integer"
                 },
                 "shareOfVoice": {
-                    "description": "Percentage (0-100) of each full hour that is scheduled that this Layout should occupy",
+                    "description": "Seconds (0-3600) of each full hour that is scheduled that this Layout should occupy",
                     "type": "integer"
                 },
                 "isGeoAware": {
