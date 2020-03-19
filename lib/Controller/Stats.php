@@ -356,7 +356,7 @@ class Stats extends Base
         $type = strtolower($sanitizedQueryParams->getString('type'));
 
         $displayId = $sanitizedQueryParams->getInt('displayId');
-        $displays = $sanitizedQueryParams->getIntArray('displayIds');
+        $displays = $sanitizedQueryParams->getIntArray('displayIds[]', ['default' => []]);
         $layoutIds = $sanitizedQueryParams->getIntArray('layoutId[]', ['default' => []]);
         $mediaIds = $sanitizedQueryParams->getIntArray('mediaId[]', ['default' => []]);
         $statDate = $sanitizedQueryParams->getDate('statDate');
@@ -379,11 +379,6 @@ class Stats extends Base
         // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
         if ($fromDt != null && $toDt != null && $fromDt == $toDt) {
             $toDt->addDay();
-        }
-
-        // sanitizer returns null instead of [] when no displays is passed
-        if ($displays == null) {
-            $displays = [];
         }
 
         // Merge displayId and displayIds
