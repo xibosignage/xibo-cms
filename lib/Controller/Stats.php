@@ -381,6 +381,11 @@ class Stats extends Base
             $toDt->addDay();
         }
 
+        // sanitizer returns null instead of [] when no displays is passed
+        if ($displays == null) {
+            $displays = [];
+        }
+
         // Merge displayId and displayIds
         if ($displayId != 0) {
             $displays = array_unique(array_merge($displays, [$displayId]));
