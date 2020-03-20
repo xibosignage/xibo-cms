@@ -161,7 +161,22 @@ class BaseFactory
 
         $permissionSql = '';
 
-        if ($this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0 && (!$user->isSuperAdmin())) {
+        // Has the user check been disabled? 0 = no it hasn't
+        $performUserCheck = $this->getSanitizer()->getCheckbox('disableUserCheck', 0, $filterBy) == 0;
+
+        // Check the whether we need to restrict to the DOOH user.
+        // we only do this for entities which have an owner, and only if the user check hasn't been disabled.
+        if ($ownerColumn !== null && $performUserCheck) {
+            if (($user->userTypeId == 1 && $user->showContentFrom == 2) || $user->userTypeId == 4) {
+                // DOOH only
+                $permissionSql .= ' AND ' . $ownerColumn . ' IN (SELECT userId FROM user WHERE userTypeId = 4) ';
+            } else {
+                // Standard only
+                $permissionSql .= ' AND ' . $ownerColumn . ' IN (SELECT userId FROM user WHERE userTypeId <> 4) ';
+            }
+        }
+
+        if ($performUserCheck && !$user->isSuperAdmin()) {
             $permissionSql .= '
               AND (' . $idColumn . ' IN (
                 SELECT `permission`.objectId
