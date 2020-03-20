@@ -101,6 +101,8 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
     this.transitionOut = data.transitionOut;
     this.transitionDurationIn = data.transitionDurationIn;
     this.transitionDurationOut = data.transitionDurationOut;
+    // Interactive actions
+    this.actions = data.actions;
 
     /**
      * Get transitions from options

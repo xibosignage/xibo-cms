@@ -138,6 +138,7 @@ $app->post('/region/{id}', ['\Xibo\Controller\Region','add'])->setName('region.a
 $app->put('/region/{id}', ['\Xibo\Controller\Region','edit'])->setName('region.edit');
 $app->delete('/region/{id}', ['\Xibo\Controller\Region','delete'])->setName('region.delete');
 $app->put('/region/position/all/{id}', ['\Xibo\Controller\Region','positionAll'])->setName('region.position.all');
+$app->post('/region/drawer/{id}', ['\Xibo\Controller\Region','addDrawer'])->setName('region.add.drawer');
 
 /**
  * playlist
@@ -561,3 +562,16 @@ $app->put('/tag/{id}', ['\Xibo\Controller\Tag','edit'])->setName('tag.edit');
 $app->delete('/tag/{id}', ['\Xibo\Controller\Tag','delete'])->setName('tag.delete');
 $app->get('/tag/name', ['\Xibo\Controller\Tag','loadTagOptions'])->setName('tag.getByName');
 
+
+/**
+ * Actions
+ * @SWG\Tag(
+ *  name="actions",
+ *  description="Actions"
+ * )
+ */
+// Actions
+$app->get('/action', ['\Xibo\Controller\Action', 'grid'])->setName('action.search');
+$app->post('/action/{source}/{id}', ['\Xibo\Controller\Action', 'add'])->setName('action.add');
+$app->put('/action/{id}', ['\Xibo\Controller\Action', 'edit'])->setName('action.edit');
+$app->delete('/action/{id}', ['\Xibo\Controller\Action', 'delete'])->setName('action.delete');

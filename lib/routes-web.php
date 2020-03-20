@@ -431,5 +431,10 @@ $app->get('/tag/form/edit/{id}', ['\Xibo\Controller\Tag','editForm'])->setName('
 $app->get('/tag/form/delete/{id}', ['\Xibo\Controller\Tag','deleteForm'])->setName('tag.delete.form');
 
 // Errors
-$app->get('/notFound', ['\Xibo\Controller\Error', 'notFoundPage'])->setName('error.notFound');
+$app->any('/notFound', ['\Xibo\Controller\Error', 'notFoundPage'])->setName('error.notFound');
 $app->any('/error', ['\Xibo\Controller\Error', 'errorPage'])->setName('error');
+
+// Actions
+$app->get('/action/form/add/{source}/{id}', ['\Xibo\Controller\Action', 'addForm'])->setName('action.add.form');
+$app->get('/action/form/edit/{id}', ['\Xibo\Controller\Action', 'editForm'])->setName('action.edit.form');
+$app->get('/action/form/delete/{id}', ['\Xibo\Controller\Action', 'deleteForm'])->setName('action.delete.form');

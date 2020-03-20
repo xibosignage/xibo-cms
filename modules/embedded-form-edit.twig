@@ -43,6 +43,7 @@
                     <li><a href="#headContentTab" role="tab" data-toggle="tab"><span>{% trans "HEAD content to Embed" %}</span></a></li>
                 </ul>
             </li>
+            <li><a href="#actionTab" role="tab" data-toggle="tab" class="layout-designer-only"><span>{% trans "Action" %}</span></a></li>
         </ul>
         <div class="col-md-12">
             <form id="embeddedFormEdit" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
@@ -134,6 +135,10 @@
 
                         {% set helpText %}{% trans "HEAD content to Embed (including script tags)" %}{% endset %}
                         {{ forms.textarea("embedScript", "", module.getRawNode('embedScript'), helpText, "", "", 10) }}
+                    </div>
+
+                    <div class="tab-pane layout-designer-only" id="actionTab">
+                        {% include "action-form-grid.twig" with {'source' : 'widget', 'sourceId': module.widget.widgetId} %}
                     </div>
                 </div>
             </form>

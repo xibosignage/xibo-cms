@@ -205,6 +205,11 @@ PropertiesPanel.prototype.render = function(element, step) {
         // Append layout html to the main div
         self.DOMObject.html(html);
 
+        // Hide any elements with layout-designer-only class, hides actions tab in Playlist editor
+        if(app.mainObjectType === 'playlist') {
+            self.DOMObject.find('.layout-designer-only').hide();
+        }
+
         // Store the extra
         self.DOMObject.data("extra", res.extra);
 

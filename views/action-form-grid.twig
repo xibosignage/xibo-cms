@@ -1,0 +1,135 @@
+{#
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+#}
+{% import "forms.twig" as forms %}
+
+{% block formHtml %}
+
+            <div class="col-md-10" style="width: 100%">
+                <div class="XiboGrid" id="{{ random() }}">
+                    <div class="XiboData">
+                        <table id="actions" class="table table-striped" >
+                            <thead>
+                            <tr>
+                                <th>{% trans "Action ID" %}</th>
+                                <th>{% trans "Owner ID" %}</th>
+                                <th>{% trans "Trigger Type" %}</th>
+                                <th>{% trans "Trigger Code" %}</th>
+                                <th>{% trans "Action Type" %}</th>
+                                <th>{% trans "Target" %}</th>
+                                <th>{% trans "Target ID" %}</th>
+                                <th>{% trans "Row Manu" %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <ul class="nav nav-pills pull-left" style="margin-left: 5px;">
+                    <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" style="padding: 7px 7px; background-color:#5cb85c;" title="{% trans "Click to Add a new Action" %}" href="{{ url_for('action.add.form', {'source': source , 'id':sourceId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Action" %}</a></li>
+                </ul>
+
+            </div>
+
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        // create the table only when we are on Action tab
+        $('.nav-tabs a').on('shown.bs.tab', function(event) {
+            if ($(event.target).text() === 'Action') {
+
+                // initialize the table only if it's not already initialized
+                if (!$.fn.DataTable.isDataTable('#actions')) {
+                    // Configure the DataTable
+                    let table = $("#actions").DataTable({
+                        "language": dataTablesLanguage,
+                        serverSide: true,
+                        stateSave: true,
+                        stateDuration: 0,
+                        stateLoadCallback: function (settings, callback) {
+                            var data = {};
+                            $.ajax({
+                                type: "GET",
+                                async: false,
+                                url: "{{ url_for("user.pref") }}?preference=actionGrid",
+                                dataType: 'json',
+                                success: function (json) {
+                                    try {
+                                        if (json.success) {
+                                            data = JSON.parse(json.data.value);
+                                        }
+                                    } catch (e) {
+                                        // Do nothing
+                                    }
+                                }
+                            });
+                            return data;
+                        },
+                        stateSaveCallback: function (settings, data) {
+                            $.ajax({
+                                type: "POST",
+                                url: "{{ url_for("user.pref") }}",
+                                data: {
+                                    preference: [{
+                                        option: "actionGrid",
+                                        value: JSON.stringify(data)
+                                    }]
+                                }
+                            });
+                        },
+                        "filter": false,
+                        searchDelay: 3000,
+                        "order": [[0, "asc"]],
+                        ajax: {
+                            url: "{{ url_for("action.search") }}",
+                            "data": function (d) {
+                                $.extend(d, {
+                                    "source": "{{ source }}",
+                                    "sourceId": {{ sourceId }}
+                                });
+                            }
+                        },
+                        "columns": [
+                            {"data": "actionId",},
+                            {"data": "ownerId", "visible": false},
+                            {"data": "triggerType"},
+                            {"data": "triggerCode", "visible": false},
+                            {"data": "actionType"},
+                            {"data": "target"},
+                            {"data": "targetId"},
+                            {
+                                "orderable": false,
+                                "data": dataTableButtonsColumn
+                            }
+                        ]
+                    });
+                    table.on('draw', dataTableDraw);
+                    table.on('processing.dt', dataTableProcessing);
+                    dataTableAddButtons(table, $('#actions_wrapper').find('.col-sm-6').eq(1));
+                }
+            }
+        });
+
+    </script>
+{% endblock %}

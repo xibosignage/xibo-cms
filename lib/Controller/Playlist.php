@@ -283,11 +283,13 @@ class Playlist extends Base
 
                 $loadPermissions = in_array('permissions', $embed);
                 $loadTags = in_array('tags', $embed);
+                $loadActions = in_array('actions', $embed);
 
                 $playlist->load([
                     'loadPermissions' => $loadPermissions,
                     'loadWidgets' => true,
-                    'loadTags' => $loadTags
+                    'loadTags' => $loadTags,
+                    'loadActions' => $loadActions
                 ]);
 
                 foreach ($playlist->widgets as $widget) {

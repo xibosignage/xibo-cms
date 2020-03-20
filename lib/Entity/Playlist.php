@@ -516,31 +516,35 @@ class Playlist implements \JsonSerializable
      */
     public function load($loadOptions = [])
     {
-        if ($this->playlistId == null || $this->loaded)
+        if ($this->playlistId == null || $this->loaded) {
             return $this;
+        }
 
         // Options
         $options = array_merge([
             'loadPermissions' => true,
             'loadWidgets' => true,
-            'loadTags' => true
+            'loadTags' => true,
+            'loadActions' => true
         ], $loadOptions);
 
         $this->getLog()->debug('Load Playlist with ' . json_encode($options));
 
         // Load permissions
-        if ($options['loadPermissions'])
+        if ($options['loadPermissions']) {
             $this->permissions = $this->permissionFactory->getByObjectId(get_class(), $this->playlistId);
+        }
 
         // Load all tags
-        if ($options['loadTags'])
+        if ($options['loadTags']) {
             $this->tags = $this->tagFactory->loadByPlaylistId($this->playlistId);
+        }
 
         // Load the widgets
         if ($options['loadWidgets']) {
             foreach ($this->widgetFactory->getByPlaylistId($this->playlistId) as $widget) {
                 /* @var Widget $widget */
-                $widget->load();
+                $widget->load($options['loadActions']);
                 $this->widgets[] = $widget;
             }
         }

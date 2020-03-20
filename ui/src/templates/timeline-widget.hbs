@@ -28,7 +28,11 @@ width: {{ durationPercentage }}%;">
         {{#if audio}}
             <i class="fa fa-volume-up editProperty" data-property="Audio"></i>
         {{/if}}
-    
+
+        {{#if actions }}
+            <i class="fa fa-paper-plane editProperty" data-toggle="tooltip" title="Actions" >{{ actions.length}}</i>
+        {{/if}}
+
         {{#gt expireStatus 0}}
             <i class="fa {{expireStatusIcon}} editProperty" 
             data-toggle="tooltip" data-container="body" 
