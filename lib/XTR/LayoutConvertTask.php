@@ -136,7 +136,7 @@ class LayoutConvertTask implements TaskInterface
                 }
 
                 // We need one final pass through all widgets on the layout so that we can set the durations properly.
-                foreach ($layout->getWidgets() as $widget) {
+                foreach ($layout->getRegionWidgets() as $widget) {
                     $module = $this->moduleFactory->createWithWidget($widget);
                     $widget->calculateDuration($module, true);
 
