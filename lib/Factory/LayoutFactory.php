@@ -1943,15 +1943,7 @@ class LayoutFactory extends BaseFactory
             $body .= " AND `layout`.publishedDate IS NOT NULL ";
         }
 
-        $user = $this->getUser();
-
-        if ( ($user->userTypeId == 1 && $user->showContentFrom == 2) || $user->userTypeId == 4 ) {
-            $body .= ' AND user.userTypeId = 4 ';
-        } else {
-            $body .= ' AND user.userTypeId <> 4 ';
-        }
-
-        if ($parsedFilter->getInt('activeDisplayGroupId') !== null) {
+        if ($this->getSanitizer()->getInt('activeDisplayGroupId', $filterBy) !== null) {
 
             $date = $this->getDate()->parse()->format('U');
 
