@@ -180,7 +180,7 @@ class BaseFactory
         $permissionSql = '';
 
         // Has the user check been disabled? 0 = no it hasn't
-        $performUserCheck = !$parsedBody->getCheckbox('disableUserCheck');
+        $performUserCheck = $parsedBody->getCheckbox('disableUserCheck') == 0;
 
         // Check the whether we need to restrict to the DOOH user.
         // we only do this for entities which have an owner, and only if the user check hasn't been disabled.
