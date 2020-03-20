@@ -380,5 +380,7 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
         $newLayoutId = $body->id;
         $newLayout = $this->getEntityProvider()->get('/layout', ['layoutId' => $newLayoutId, 'embed' => 'regions,actions'])[0];
         $this->assertNotEmpty($newLayout['actions']);
+        // delete the copied layout
+        (new XiboLayout($this->getEntityProvider()))->getById($newLayoutId)->delete();
     }
 }
