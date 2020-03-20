@@ -121,9 +121,17 @@
                                     ] %}
                                     {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
 
-
-                                    {% set title %}{% trans "Display Name" %}{% endset %}
-                                    {{ inline.input("display", title) }}
+                                    <div class="form-group ">
+                                        <label class="control-label" title="" for="display" accesskey="">{% trans "Display Name" %}</label>
+                                        <div>
+                                            <div class="input-group">
+                                                <input class="form-control" name="display" type="text" id="display" value="">
+                                                <span class="input-group-addon">
+                                                    <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     {% set title %}{% trans "Display Group" %}{% endset %}
                                     {% set attributes = [

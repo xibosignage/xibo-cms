@@ -240,6 +240,7 @@ class DisplayGroup extends Base
         $filter = [
             'displayGroupId' => $parsedQueryParams->getInt('displayGroupId'),
             'displayGroup' => $parsedQueryParams->getString('displayGroup'),
+            'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'displayId' => $parsedQueryParams->getInt('displayId'),
             'nestedDisplayId' => $parsedQueryParams->getInt('nestedDisplayId'),
             'dynamicCriteria' => $parsedQueryParams->getString('dynamicCriteria'),

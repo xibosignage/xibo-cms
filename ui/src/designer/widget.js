@@ -265,7 +265,15 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
         this.expireStatus = status;
 
         // save status message
-        this.expireStatusTitle = EXPIRE_STATUS_MSG_MAP[status];
+        this.expireStatusTitle = '<p>' + EXPIRE_STATUS_MSG_MAP[status] + '</p>';
+        
+        if(this.fromDt > this.DATE_MIN) {
+            this.expireStatusTitle += '<p>' + widgetStatusTrans.startTime + ': ' + moment.unix(this.fromDt).format(jsDateFormat) + '</p>';
+        }
+
+        if(this.toDt < this.DATE_MAX) {
+            this.expireStatusTitle += '<p>' + widgetStatusTrans.endTime + ': ' + moment.unix(this.toDt).format(jsDateFormat) + '</p>';
+        }
 
         // save status icon
         this.expireStatusIcon = EXPIRE_STATUS_ICON_MAP[status];

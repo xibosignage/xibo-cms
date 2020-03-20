@@ -907,11 +907,18 @@ function XiboFormRender(sourceObj, data) {
                             extrabutton.click(function(e) {
                                 e.preventDefault();
 
-                                if ($(this).hasClass("save-button")) {
-                                    $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
-                                    // Disable the button
-                                    // https://github.com/xibosignage/xibo/issues/1467
-                                    $(this).addClass("disabled");
+                                let $button = $(this);
+
+                                if ($button.hasClass("save-button")) {
+                                    if ($button.hasClass("disabled")) {
+                                        return false;
+                                    } else {
+                                        $button.append(' <span class="saving fa fa-cog fa-spin"></span>');
+
+                                        // Disable the button
+                                        // https://github.com/xibosignage/xibo/issues/1467
+                                        $button.addClass("disabled");
+                                    }
                                 }
 
                                 if (value.indexOf("DialogClose") > -1 && (lastForm.indexOf("playlist/widget/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1) && timelineForm != null) {
@@ -930,7 +937,7 @@ function XiboFormRender(sourceObj, data) {
                 }
 
                 // Focus in the first input
-                $('input[type=text]', dialog).eq(0).focus();
+                $('input[type=text]', dialog).not(".dateControl").eq(0).focus();
 
                 $('input[type=text]', dialog).each(function(index, el) {
                     formRenderDetectSpacingIssues(el);

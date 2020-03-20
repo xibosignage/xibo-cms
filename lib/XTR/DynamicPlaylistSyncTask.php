@@ -99,7 +99,7 @@ class DynamicPlaylistSyncTask implements TaskInterface
             $lastPlaylistUpdate = $this->date->parse($lastPlaylistUpdate);
             $lastTaskRun = $this->date->parse($this->getTask()->lastRunDt, 'U');
 
-            if ($lastMediaUpdate->lessThan($lastTaskRun) && $lastPlaylistUpdate->lessThan($lastTaskRun)) {
+            if ($lastMediaUpdate->lessThanOrEqualTo($lastTaskRun) && $lastPlaylistUpdate->lessThanOrEqualTo($lastTaskRun)) {
                 $this->appendRunMessage('No library media/playlist updates since we last ran');
                 return;
             }
@@ -116,22 +116,22 @@ class DynamicPlaylistSyncTask implements TaskInterface
                 $this->log->debug('Assessing Playlist: ' . $playlist->name);
 
                 // Query for media which would be assigned to this Playlist and see if there are any differences
-                $media = $this->mediaFactory->query(null,
-                    ['name' => $playlist->filterMediaName, 'tags' => $playlist->filterMediaTags]);
+                $media = [];
+                $mediaIds = [];
+                foreach ($this->mediaFactory->query(null, [
+                    'name' => $playlist->filterMediaName,
+                    'tags' => $playlist->filterMediaTags
+                ]) as $item) {
+                    $media[$item->mediaId] = $item;
+                    $mediaIds[] = $item->mediaId;
+                }
 
                 // Work out if the set of widgets is different or not.
                 // This is only the first loose check
                 $different = (count($playlist->widgets) !== count($media));
 
-                $this->log->debug('There are ' . count($media) . ' that should be assigned and ' . count($playlist->widgets) . ' currently assigned. Difference is ' . var_export($different,
-                        true));
-
-                // Get a simple array of mediaId's out of our complex array of media
-                $mediaIds = array_map(function ($element) {
-                    /** @var $element Media */
-                    return $element->mediaId;
-                }, $media);
-
+                $this->log->debug('There are ' . count($media) . ' that should be assigned and ' . count($playlist->widgets)
+                    . ' currently assigned. First check difference is ' . var_export($different, true));
 
                 if (!$different) {
                     // Try a more complete check, using mediaIds
@@ -140,7 +140,8 @@ class DynamicPlaylistSyncTask implements TaskInterface
                     // ordering should be the same, so the first time we get one out of order, we can stop
                     foreach ($playlist->widgets as $widget) {
                         try {
-                            if ($widget->getPrimaryMediaId() !== $compareMediaIds[0]) {
+                            $widgetMediaId = $widget->getPrimaryMediaId();
+                            if ($widgetMediaId !== $compareMediaIds[0] || $widget->duration !== $media[$widgetMediaId]->duration) {
                                 $different = true;
                                 break;
                             }
@@ -156,8 +157,11 @@ class DynamicPlaylistSyncTask implements TaskInterface
                     }
                 }
 
+                $this->log->debug('Second check difference is ' . var_export($different, true));
+
                 if ($different) {
                     // We will update this Playlist
+                    $assignmentMade = false;
                     $count++;
 
                     // Remove the ones no-longer present, add the ones we're missing
@@ -170,8 +174,30 @@ class DynamicPlaylistSyncTask implements TaskInterface
                             if (!in_array($widgetMediaId, $mediaIds)) {
                                 $playlist->deleteWidget($widget);
                             } else {
-                                // It's present in the array, so pop it off
+                                // It's present in the array
+                                // Check to see if the duration is different
+                                if ($widget->duration !== $media[$widgetMediaId]->duration) {
+                                    // The media duration has changed, so update the widget
+                                    $widget->useDuration = 1;
+                                    $widget->duration = $media[$widgetMediaId]->duration;
+                                    $widget->calculatedDuration = $widget->duration;
+                                    $widget->save([
+                                        'saveWidgetOptions' => false,
+                                        'saveWidgetAudio' => false,
+                                        'saveWidgetMedia' => false,
+                                        'notify' => false,
+                                        'notifyPlaylists' => false,
+                                        'notifyDisplays' => false,
+                                        'audit' => true,
+                                        'alwaysUpdate' => true
+                                    ]);
+                                }
+
+                                // Pop it off the list of ones to assign.
                                 $mediaIds = array_diff($mediaIds, [$widgetMediaId]);
+
+                                // We do want to save the Playlist here.
+                                $assignmentMade = true;
                             }
 
                         } catch (NotFoundException $exception) {
@@ -182,7 +208,6 @@ class DynamicPlaylistSyncTask implements TaskInterface
 
                     // Do we have any mediaId's left which should be assigned and aren't?
                     // Add the ones we have left
-                    $assignmentMade = false;
                     foreach ($media as $item) {
                         if (in_array($item->mediaId, $mediaIds)) {
                             $assignmentMade = true;
@@ -191,7 +216,12 @@ class DynamicPlaylistSyncTask implements TaskInterface
                     }
 
                     if ($assignmentMade) {
-                        $playlist->save();
+                        // We've made an assignment change, so audit this change
+                        // don't audit any downstream save operations
+                        $playlist->save([
+                            'auditPlaylist' => true,
+                            'audit' => false
+                        ]);
                     }
                 } else {
                     $this->log->debug('No differences detected');
@@ -226,8 +256,13 @@ class DynamicPlaylistSyncTask implements TaskInterface
             $mediaDuration = ($media->duration == 0) ? $module->determineDuration() : $media->duration;
 
             // Create a widget
-            $widget = $this->widgetFactory->create($playlist->getOwnerId(), $playlist->playlistId, $media->mediaType,
-                $mediaDuration);
+            $widget = $this->widgetFactory->create(
+                $playlist->getOwnerId(),
+                $playlist->playlistId,
+                $media->mediaType,
+                $mediaDuration
+            );
+
             $widget->assignMedia($media->mediaId);
             $widget->displayOrder = $displayOrder;
 
@@ -237,8 +272,10 @@ class DynamicPlaylistSyncTask implements TaskInterface
             // Set default options (this sets options on the widget)
             $module->setDefaultWidgetOptions();
 
-            // Calculate the duration
-            $widget->calculateDuration($module);
+            // Set the duration to be equal to the Library duration of this media
+            $module->widget->useDuration = 1;
+            $module->widget->duration = $mediaDuration;
+            $module->widget->calculatedDuration = $mediaDuration;
 
             // Assign the widget to the playlist
             $playlist->assignWidget($widget);

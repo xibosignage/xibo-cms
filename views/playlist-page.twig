@@ -41,16 +41,24 @@
                             </ul>
                             <div class="tab-content">
                                 <div class="tab-pane active" id="general-filter">
-                                    {% set title %}{% trans "Name" %}{% endset %}
-                                    {{ inline.input("name", title) }}
+
+                                    <div class="form-group ">
+                                        <label class="control-label" title="" for="name" accesskey="">{% trans "Name" %}</label>
+                                        <div>
+                                            <div class="input-group">
+                                                <input class="form-control" name="name" type="text" id="name" value="">
+                                                <span class="input-group-addon">
+                                                    <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     {% set title %}{% trans "Tags" %}{% endset %}
+                                    {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
                                     {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                                    {{ inline.inputWithTags("tags", title, null, helpText) }}
-
-                                    {% set title %}{% trans "Exact match?" %}{% endset %}
-                                    {{ inline.checkbox("exactTags", title) }}
-
+                                    {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                                    
                                     {% set attributes = [
                                     { name: "data-live-search", value: "true" },
                                     { name: "data-selected-text-format", value: "count > 4" }
@@ -227,7 +235,7 @@
                             else
                                 icon = "fa-level-down";
 
-                            return "<span class='fa " + icon + "' title='" + (data.enableStatDescription) + "'></span>";
+                            return '<span class="fa ' + icon + '" title="' + (data.enableStatDescription) + '"></span>';
                         }
                     },
                     {

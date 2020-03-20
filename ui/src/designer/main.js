@@ -111,9 +111,6 @@ $(document).ready(function() {
         .done(function(res) {
 
             if(res.data != null && res.data.length > 0) {
-
-                lD.common.hideLoadingScreen();
-
                 // Append layout html to the main div
                 lD.editorContainer.html(designerMainTemplate());
 
@@ -269,6 +266,8 @@ $(document).ready(function() {
                     lD.showErrorMessage();
                 }
             }
+
+            lD.common.hideLoadingScreen();
         }).fail(function(jqXHR, textStatus, errorThrown) {
 
             // Output error to console
@@ -289,7 +288,7 @@ $(document).ready(function() {
     });
 
     // Refresh some modules on window resize
-    $(window).resize(_.debounce(function(e) {
+    $(window).on('resize.designer', _.debounce(function(e) {
         if(e.target === window) {
 
             // Refresh navigators and viewer
@@ -452,9 +451,6 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
 
     $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + "&embed=regions,playlists,widgets,widget_validity,tags,permissions,actions")
         .done(function(res) {
-            
-            lD.common.hideLoadingScreen();
-            
             if(res.data != null && res.data.length > 0) {
                 lD.layout = new Layout(layoutId, res.data[0]);
 
@@ -498,6 +494,8 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
                     lD.showErrorMessage();
                 }
             }
+
+            lD.common.hideLoadingScreen();
         }).fail(function(jqXHR, textStatus, errorThrown) {
 
             lD.common.hideLoadingScreen();
@@ -523,14 +521,16 @@ lD.checkoutLayout = function() {
     // replace id if necessary/exists
     requestPath = requestPath.replace(':id', lD.layout.layoutId);
 
+    // Deselect previous selected object
+    lD.selectObject();
+
     $.ajax({
         url: requestPath,
         type: linkToAPI.type
     }).done(function(res) {
-
-        lD.common.hideLoadingScreen();
-
         if(res.success) {
+            bootbox.hideAll();
+
             toastr.success(res.message);
 
             // Turn off read only mode
@@ -542,8 +542,6 @@ lD.checkoutLayout = function() {
             
             // Reload layout
             lD.reloadData(res.data);
-
-            bootbox.hideAll();
         } else {
             // Login Form needed?
             if(res.login) {
@@ -552,6 +550,8 @@ lD.checkoutLayout = function() {
             } else {
                 toastr.error(res.message);
             }
+
+            lD.common.hideLoadingScreen();
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
         lD.common.hideLoadingScreen();
@@ -571,6 +571,9 @@ lD.publishLayout = function() {
 
     lD.common.showLoadingScreen();
 
+    // Deselect previous selected object
+    lD.selectObject();
+
     // replace id if necessary/exists
     requestPath = requestPath.replace(':id', lD.layout.parentLayoutId);
 
@@ -582,16 +585,16 @@ lD.publishLayout = function() {
         data: serializedData
     }).done(function(res) {
 
-        lD.common.hideLoadingScreen();
-
         if(res.success) {
-            
+            bootbox.hideAll();
+
             toastr.success(res.message);
 
             // Redirect to the new published layout ( read only mode )
             window.location.href = urlsForApi.layout.designer.url.replace(':id', res.data.layoutId) + '?vM=1';
         } else {
-
+            lD.common.hideLoadingScreen();
+            
             // Login Form needed?
             if(res.login) {
                 window.location.href = window.location.href;
@@ -620,6 +623,9 @@ lD.discardLayout = function() {
 
     lD.common.showLoadingScreen();
 
+    // Deselect previous selected object
+    lD.selectObject();
+
     // replace id if necessary/exists
     requestPath = requestPath.replace(':id', lD.layout.parentLayoutId);
 
@@ -631,11 +637,8 @@ lD.discardLayout = function() {
         data: serializedData
     }).done(function(res) {
 
-        lD.common.hideLoadingScreen();
-
         if(res.success) {
-
-            console.log('discardLayout success');
+            bootbox.hideAll();
 
             toastr.success(res.message);
 
@@ -654,6 +657,8 @@ lD.discardLayout = function() {
                 bootbox.hideAll();
             }
         }
+
+        lD.common.hideLoadingScreen();
     }).fail(function(jqXHR, textStatus, errorThrown) {
         lD.common.hideLoadingScreen();
 
@@ -969,9 +974,6 @@ lD.undoLastAction = function() {
     lD.common.showLoadingScreen('undoLastAction');
 
     lD.manager.revertChange().then((res) => { // Success
-
-        lD.common.hideLoadingScreen('undoLastAction');
-
         toastr.success(res.message);
 
         // Refresh designer according to local or API revert
@@ -980,6 +982,8 @@ lD.undoLastAction = function() {
         } else {
             lD.reloadData(lD.layout);
         }
+
+        lD.common.hideLoadingScreen('undoLastAction');
     }).catch((error) => { // Fail/error
 
         lD.common.hideLoadingScreen('undoLastAction');
@@ -1076,15 +1080,14 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
 
                         // Delete element from the layout
                         lD.layout.deleteElement(objectType, objectId, options).then((res) => { // Success
-
-                            lD.common.hideLoadingScreen('deleteObject');
-
                             // Reset timeline zoom
                             lD.timeline.resetZoom();
                             
                             // Behavior if successful
                             toastr.success(res.message);
                             lD.reloadData(lD.layout);
+
+                            lD.common.hideLoadingScreen('deleteObject');
                         }).catch((error) => { // Fail/error
 
                             lD.common.hideLoadingScreen('deleteObject');
@@ -1197,15 +1200,14 @@ lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
                     toastr.success(editorsTrans.allChangesSaved);
 
                     lD.layout.addElement('region', positionToAdd).then((res) => { // Success
-
-                        lD.common.hideLoadingScreen('addRegionToLayout'); 
-
                         // Behavior if successful 
                         toastr.success(res.message);
 
                         lD.selectedObject.id = 'region_' + res.data.regionId;
                         lD.selectedObject.type = 'region';
                         lD.reloadData(lD.layout, true);
+
+                        lD.common.hideLoadingScreen('addRegionToLayout'); 
                     }).catch((error) => { // Fail/error
 
                         lD.common.hideLoadingScreen('addRegionToLayout'); 
@@ -1340,9 +1342,6 @@ lD.addModuleToPlaylist = function(playlistId, moduleType, moduleData, addToPosit
                 }
             }
         ).then((res) => { // Success
-
-            lD.common.hideLoadingScreen('addModuleToPlaylist');
-
             // Behavior if successful 
             toastr.success(res.message);
 
@@ -1352,6 +1351,8 @@ lD.addModuleToPlaylist = function(playlistId, moduleType, moduleData, addToPosit
             lD.selectedObject.id = 'widget_' + lD.selectedObject.regionId + '_' + res.data.widgetId;
             lD.selectedObject.type = 'widget';
             lD.reloadData(lD.layout, true);
+
+            lD.common.hideLoadingScreen('addModuleToPlaylist');
         }).catch((error) => { // Fail/error
 
             lD.common.hideLoadingScreen('addModuleToPlaylist');
@@ -1420,9 +1421,6 @@ lD.addMediaToPlaylist = function(playlistId, media, addToPosition = null) {
             updateTargetType: 'widget'
         }
     ).then((res) => { // Success
-
-        lD.common.hideLoadingScreen('addMediaToPlaylist');
-
         // Behavior if successful 
         toastr.success(res.message);
 
@@ -1432,6 +1430,8 @@ lD.addMediaToPlaylist = function(playlistId, media, addToPosition = null) {
 
         lD.timeline.resetZoom();
         lD.reloadData(lD.layout, true);
+
+        lD.common.hideLoadingScreen('addMediaToPlaylist');
     }).catch((error) => { // Fail/error
 
         lD.common.hideLoadingScreen('addMediaToPlaylist');
@@ -1802,6 +1802,5 @@ lD.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
  */
 lD.resetTour = function() {
     layoutDesignerTour.restart();
-    layoutDesignerTour.goTo(0);
     toastr.info(editorsTrans.resetTourNotification);
 };

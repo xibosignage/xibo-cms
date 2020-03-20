@@ -35,7 +35,7 @@ width: {{ durationPercentage }}%;">
 
         {{#gt expireStatus 0}}
             <i class="fa {{expireStatusIcon}} editProperty" 
-            data-toggle="tooltip" data-container="body" 
+            data-toggle="tooltip" data-container="body" data-html="true" 
             title="{{expireStatusTitle}}"
             data-property="Expiry"></i>
         {{/gt}}

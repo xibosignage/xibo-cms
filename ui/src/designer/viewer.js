@@ -307,6 +307,7 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
 Viewer.prototype.renderNavbar = function(element, data) {
 
     const app = this.parent;
+    const readOnlyModeOn = (app.readOnlyMode != undefined && app.readOnlyMode === true);
     
     // Stop if navbar container does not exist
     if(this.navbarContainer === null || this.navbarContainer === undefined || (element.type == 'widget' && data.extra.empty)) {
@@ -327,6 +328,7 @@ Viewer.prototype.renderNavbar = function(element, data) {
                 extra: data.extra,
                 type: element.type,
                 pagingEnable: (totalItems > 1),
+                readOnlyModeOn: readOnlyModeOn,
                 trans: viewerTrans
             }
         ));
@@ -348,6 +350,7 @@ Viewer.prototype.renderNavbar = function(element, data) {
                 type: element.type,
                 name: element.name,
                 trans: viewerTrans,
+                readOnlyModeOn: readOnlyModeOn,
                 renderLayout: true
             }
         ));
@@ -373,6 +376,7 @@ Viewer.prototype.renderNavbar = function(element, data) {
             {
                 type: element.type,
                 name: element.name,
+                readOnlyModeOn: readOnlyModeOn,
                 trans: viewerTrans
             }
         ));

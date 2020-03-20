@@ -44,8 +44,18 @@
                             {% set title %}{% trans "ID" %}{% endset %}
                             {{ inline.number("reportScheduleId", title ) }}
 
-                            {% set title %}{% trans "Name" %}{% endset %}
-                            {{ inline.input("name", title) }}
+                            <div class="form-group ">
+                                <label class="control-label" title="" for="name" accesskey="">{% trans "Name" %}</label>
+                                <div>
+                                    <div class="input-group">
+                                        <input class="form-control" name="name" type="text" id="name" value="">
+
+                                        <span class="input-group-addon">
+                                            <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
 
                             {% set title %}{% trans "Owner" %}{% endset %}
                             {% set helpText %}{% trans "Show items owned by the selected User." %}{% endset %}
@@ -186,7 +196,7 @@
                             else
                                 icon = "fa-times";
 
-                            return "<span class='fa " + icon + "' title='" + (row.isActiveDescription) + "'></span>";
+                            return '<span class="fa ' + icon + '" title="' + (row.isActiveDescription) + '"></span>';
                         },
                         "visible": false
                     },
@@ -202,7 +212,7 @@
                             else
                                 icon = "";
 
-                            return "<span class='fa " + icon + "' title='" + (row.message) + "'></span>";
+                            return '<span class="fa ' + icon + '" title="' + (row.message) + '"></span>';
                         },
                         "visible": false
                     },

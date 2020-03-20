@@ -1863,7 +1863,7 @@ class LayoutFactory extends BaseFactory
         // Layout Like
         if ($parsedFilter->getString('layout') != '') {
             $terms = explode(',', $parsedFilter->getString('layout'));
-            $this->nameFilter('layout', 'layout', $terms, $body, $params);
+            $this->nameFilter('layout', 'layout', $terms, $body, $params, ($parsedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         if ($parsedFilter->getString('layoutExact', $filterBy) != '') {

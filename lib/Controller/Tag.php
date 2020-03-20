@@ -216,6 +216,7 @@ class Tag extends Base
         $filter = [
             'tagId' => $sanitizedQueryParams->getInt('tagId'),
             'tag' => $sanitizedQueryParams->getString('tag'),
+            'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
             'isSystem' => $sanitizedQueryParams->getCheckbox('isSystem'),
             'isRequired' => $sanitizedQueryParams->getCheckbox('isRequired'),
             'haveOptions' => $sanitizedQueryParams->getCheckbox('haveOptions')

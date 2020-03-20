@@ -234,7 +234,7 @@ class UserGroupFactory extends BaseFactory
         // Filter by Group Name
         if ($parsedFilter->getString('group') != null) {
             $terms = explode(',', $parsedFilter->getString('group'));
-            $this->nameFilter('group', 'group', $terms, $body, $params);
+            $this->nameFilter('group', 'group', $terms, $body, $params, ($parsedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         if ($parsedFilter->getString('exactGroup') != null) {

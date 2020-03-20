@@ -40,8 +40,18 @@
                 <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {% set title %}{% trans "Name" %}{% endset %}
-                            {{ inline.input("userName", title) }}
+
+                            <div class="form-group ">
+                                <label class="control-label" title="" for="userName" accesskey="">{% trans "Name" %}</label>
+                                <div>
+                                    <div class="input-group">
+                                        <input class="form-control" name="userName" type="text" id="userName" value="">
+                                        <span class="input-group-addon">
+                                            <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
 
                             {% set title %}{% trans "User Type" %}{% endset %}
                             {{ inline.dropdown("userTypeId", "single", title, "", [{userTypeId:null, userType:""}]|merge(userTypes), "userTypeId", "userType") }}
@@ -166,7 +176,7 @@
                             else
                                 icon = "fa-times";
 
-                            return "<span class='fa " + icon + "' title='" + (row.twoFactorDescription) + "'></span>";
+                            return '<span class="fa ' + icon + '" title="' + (row.twoFactorDescription) + '"></span>';
                         }
                     },
                     {"data": "firstName", "visible": false},

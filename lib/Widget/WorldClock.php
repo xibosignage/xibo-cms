@@ -117,7 +117,7 @@ class WorldClock extends ModuleWidget
 
         // Clocks
         $clockTimezones = $sanitizedParams->getArray('clockTimezone');
-        $clockHighlight = $sanitizedParams->getArray('clockHighlight');
+        $clockHighlight = $sanitizedParams->getArray('clockHighlightValue');
         $clockLabel = $sanitizedParams->getArray('clockLabel');
         $worldClocks = [];
 
@@ -283,7 +283,7 @@ class WorldClock extends ModuleWidget
 
             // Clock label
             if ($this->getOption('showLabel') == 1) {
-                $mainTemplate .= '<div class="analogue-clock-label label"></div>';
+                $mainTemplate .= '<div class="analogue-clock-label world-clock-label"></div>';
             }
 
             // Build stylesheet

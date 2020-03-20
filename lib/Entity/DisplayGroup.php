@@ -857,7 +857,7 @@ class DisplayGroup implements \JsonSerializable
 
             // Update the linked displays based on the filter criteria
             // these displays must be permission checked based on the owner of the group NOT the logged in user
-            $this->displays = $this->displayFactory->query(null, ['display' => $this->dynamicCriteria, 'tags' => $this->dynamicCriteriaTags, 'userCheckUserId' => $this->getOwnerId()]);
+            $this->displays = $this->displayFactory->query(null, ['display' => $this->dynamicCriteria, 'tags' => $this->dynamicCriteriaTags, 'userCheckUserId' => $this->getOwnerId(), 'useRegexForName' => true]);
 
             $this->getLog()->debug('There are %d original displays and %d displays that match the filter criteria now.', count($originalDisplays), count($this->displays));
 

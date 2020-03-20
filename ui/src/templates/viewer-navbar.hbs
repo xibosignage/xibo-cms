@@ -5,9 +5,11 @@
             <button type="button" id="play-btn" class="btn btn-sm  tooltip-always-on" data-toggle="tooltip" data-placement="right" title="{{ trans.playPreviewLayout }}">
                 <i class="fa fa-play-circle"></i>
             </button>
-            <button type="button" id="navigator-edit-btn" class="btn btn-sm  tooltip-always-on hide-on-fs" data-toggle="tooltip" data-placement="bottom" title="{{ trans.editLayout }}">
-                <i class="fa fa-edit"></i>
-            </button>
+            {{#unless readOnlyModeOn}}
+                <button type="button" id="navigator-edit-btn" class="btn btn-sm  tooltip-always-on hide-on-fs" data-toggle="tooltip" data-placement="bottom" title="{{ trans.editLayout }}">
+                    <i class="fa fa-edit"></i>
+                </button>
+            {{/unless}}
         {{else}}
             <button type="button" id="back-btn" class="btn btn-sm  tooltip-always-on" data-toggle="tooltip" data-placement="right" title="{{ trans.backToLayout }}">
                 <i class="fa-arrow-alt-circle-left fas"></i>

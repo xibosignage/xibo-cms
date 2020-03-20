@@ -1508,6 +1508,7 @@ class Soap
         $document->loadXML($statXml);
 
         $layoutIdsNotFound = [];
+        $widgetIdsNotFound = [];
 
         foreach ($document->documentElement->childNodes as $node) {
             /* @var \DOMElement $node */
@@ -1547,7 +1548,7 @@ class Soap
 
             // if fromdt and to dt are same then ignore them
             if ($fromdt == $todt) {
-                $this->getLog()->error('Fromdt (' . $fromdt. ') and ToDt (' . $todt. ') are same. ');
+                $this->getLog()->debug('Ignoring a Stat record because the fromDt (' . $fromdt. ') and toDt (' . $todt. ') are the same');
                 continue;
             }
 
@@ -1590,6 +1591,11 @@ class Soap
             } else {
                 // Try to get details for this widget
                 try {
+
+                    if (in_array($widgetId, $widgetIdsNotFound)) {
+                        continue;
+                    }
+
                     $mediaId = $this->widgetFactory->getWidgetForStat($widgetId);
 
                     // If the mediaId is empty, then we can assume we're a stat for a region specific widget
@@ -1600,7 +1606,11 @@ class Soap
                 } catch (NotFoundException $notFoundException) {
                     // Widget isn't found
                     // we can only log this and move on
-                    $this->getLog()->error('Stat for a widgetId that doesnt exist: ' . $widgetId);
+                    // only logging this message one time
+                    if (!in_array($widgetId, $widgetIdsNotFound)) {
+                        $widgetIdsNotFound[] = $widgetId;
+                        $this->getLog()->error('Stat for a widgetId that doesnt exist: ' . $widgetId);
+                    }
                     continue;
                 }
             }

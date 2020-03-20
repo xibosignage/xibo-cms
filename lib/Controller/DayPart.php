@@ -157,6 +157,7 @@ class DayPart extends Base
         $filter = [
             'dayPartId' => $sanitizedParams->getInt('dayPartId'),
             'name' => $sanitizedParams->getString('name'),
+            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
             'isAlways' => $sanitizedParams->getInt('isAlways'),
             'isCustom' => $sanitizedParams->getInt('isCustom')
         ];
