@@ -219,6 +219,7 @@ class State implements Middleware
         $container->get('logService')->setMode($mode);
 
         if ($container->get('name') == 'web') {
+
             $container->set('flash', function () {
                 return new \Slim\Flash\Messages();
             });
@@ -227,9 +228,14 @@ class State implements Middleware
             $view = $container->get('view');
             $view->addExtension(new TwigMessages(new \Slim\Flash\Messages()));
 
+            $twigEnvironment = $view->getEnvironment();
+
+            // add the urldecode filter to Twig.
+            $filter = new \Twig\TwigFilter('url_decode', 'urldecode');
+            $twigEnvironment->addFilter($filter);
+
             // set Twig auto reload if we are in test mode
             if(strtolower($mode) == 'test') {
-                $twigEnvironment = $view->getEnvironment();
                 $twigEnvironment->enableAutoReload();
             }
         }
