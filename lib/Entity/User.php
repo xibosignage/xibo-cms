@@ -799,6 +799,12 @@ class User implements \JsonSerializable
             'oldUserId' => $this->userId
         ]);
 
+        // Reassign Actions
+        $this->getStore()->update('UPDATE `action` SET ownerId = :userId WHERE ownerId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
         // Load again
         $this->loaded = false;
         $this->load(true);
@@ -899,8 +905,9 @@ class User implements \JsonSerializable
         $this->getLog()->debug('Deleting %d', $this->userId);
 
         // We must ensure everything is loaded before we delete
-        if ($this->hash == null)
+        if ($this->hash == null) {
             $this->load(true);
+        }
 
         // Remove the user specific group
         $group = $this->userGroupFactory->getById($this->groupId);
@@ -960,6 +967,9 @@ class User implements \JsonSerializable
         foreach($this->dataSetFactory->getByOwnerId($this->userId) as $dataSet) {
             $dataSet->delete();
         }
+
+        // Delete Actions
+        $this->getStore()->update('DELETE FROM `action` WHERE ownerId = :userId', ['userId' => $this->userId]);
 
         // Delete user specific entities
         $this->getStore()->update('DELETE FROM `resolution` WHERE userId = :userId', ['userId' => $this->userId]);
