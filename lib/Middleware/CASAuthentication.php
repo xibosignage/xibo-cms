@@ -71,8 +71,9 @@ class CASAuthentication implements Middleware
      * @param Request $request
      * @param RequestHandler $handler
      * @return Response
+     * @throws AccessDeniedException
      * @throws NotFoundException
-     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\ConfigurationException
      */
     public function process(Request $request, RequestHandler $handler): Response
     {

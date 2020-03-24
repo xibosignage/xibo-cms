@@ -2057,6 +2057,13 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
     public function addViaCodeForm(Request $request, Response $response)
     {
         $this->getState()->template = 'display-form-addViaCode';

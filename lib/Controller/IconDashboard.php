@@ -53,6 +53,13 @@ class IconDashboard extends Base
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
     public function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'dashboard-icon-page';

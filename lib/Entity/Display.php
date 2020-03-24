@@ -721,6 +721,10 @@ class Display implements \JsonSerializable
         $this->getLog()->audit('Display', $this->displayId, 'Display Deleted', ['displayId' => $this->displayId]);
     }
 
+    /**
+     * @throws GeneralException
+     * @throws NotFoundException
+     */
     private function add()
     {
         $this->displayId = $this->getStore()->insert('
@@ -764,6 +768,10 @@ class Display implements \JsonSerializable
     }
 
 
+    /**
+     * @throws GeneralException
+     * @throws NotFoundException
+     */
     private function edit()
     {
         $this->getStore()->update('

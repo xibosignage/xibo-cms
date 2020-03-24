@@ -199,6 +199,7 @@ class LayoutConvertTask implements TaskInterface
 
     /**
      * Disables and saves this task immediately
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     private function disableTask()
     {

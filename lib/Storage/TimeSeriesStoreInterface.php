@@ -83,6 +83,7 @@ interface TimeSeriesStoreInterface
     /**
      * Get total count of export statistics
      * @param $filterBy array[mixed]|null
+     * @throws GeneralException
      * @return TimeSeriesResultsInterface
      */
     public function getExportStatsCount($filterBy = []);
@@ -92,6 +93,7 @@ interface TimeSeriesStoreInterface
      * @param $toDt \Jenssegers\Date\Date
      * @param $fromDt \Jenssegers\Date\Date|null
      * @param $options array
+     * @throws GeneralException
      * @return int number of deleted stat records
      * @throws \Exception
      */
@@ -100,6 +102,7 @@ interface TimeSeriesStoreInterface
     /**
      * Execute query
      * @param $options array|[]
+     * @throws GeneralException
      * @return array
      */
     public function executeQuery($options = []);

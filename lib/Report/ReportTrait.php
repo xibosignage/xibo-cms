@@ -236,7 +236,7 @@ trait ReportTrait
      * @param \Jenssegers\Date\Date $toDt
      * @param string $groupByFilter
      * @return string
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function getTemporaryPeriodsTable($fromDt, $toDt, $groupByFilter)
     {

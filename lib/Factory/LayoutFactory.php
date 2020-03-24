@@ -307,7 +307,7 @@ class LayoutFactory extends BaseFactory
         $layouts = $this->query(null, array('disableUserCheck' => 1, 'layoutHistoryId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
 
         if (count($layouts) <= 0) {
-            throw new NotFoundException(\__('Layout not found'));
+            throw new NotFoundException(__('Layout not found'));
         }
 
         // Set our layout
@@ -2152,6 +2152,7 @@ class LayoutFactory extends BaseFactory
      * @return \Xibo\Entity\Playlist
      * @throws DuplicateEntityException
      * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
     private function setOwnerAndSavePlaylist($newPlaylist)
     {

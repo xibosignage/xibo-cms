@@ -32,7 +32,9 @@ use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DayPart
@@ -230,6 +232,8 @@ class DayPart implements \JsonSerializable
      * Save
      * @param array $options
      * @throws InvalidArgumentException
+     * @throws GeneralException
+     * @throws NotFoundException
      */
     public function save($options = [])
     {
@@ -318,6 +322,8 @@ class DayPart implements \JsonSerializable
 
     /**
      * Handles schedules effected by an update
+     * @throws NotFoundException
+     * @throws GeneralException
      */
     private function handleEffectedSchedules()
     {

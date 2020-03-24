@@ -176,6 +176,10 @@ class Action implements \JsonSerializable
         }
     }
 
+    /**
+     * @param array $options
+     * @throws InvalidArgumentException
+     */
     public function save($options = [])
     {
         $options = array_merge([

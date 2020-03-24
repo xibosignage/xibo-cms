@@ -71,6 +71,7 @@ class Theme implements Middleware
      * @param App $app
      * @param Request $request
      * @throws \Twig\Error\LoaderError
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public static function setTheme(App $app, Request $request)
     {

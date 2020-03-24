@@ -99,6 +99,9 @@ class ReportScheduleTask implements TaskInterface
 
     /**
      * Run report schedule
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     private function runReportSchedule()
     {
@@ -193,7 +196,7 @@ class ReportScheduleTask implements TaskInterface
      * @throws \Twig\Error\LoaderError
      * @throws \Twig\Error\RuntimeError
      * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     private function createPdfAndNotification($reportSchedule, $savedReport, $media)
     {

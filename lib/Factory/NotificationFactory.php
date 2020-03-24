@@ -77,6 +77,7 @@ class NotificationFactory extends BaseFactory
      * @param bool $isEmail
      * @param bool $addGroups
      * @return Notification
+     * @throws NotFoundException
      */
     public function createSystemNotification($subject, $body, $date, $isEmail = true, $addGroups = true)
     {

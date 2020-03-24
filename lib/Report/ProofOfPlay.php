@@ -875,6 +875,8 @@ class ProofOfPlay implements ReportInterface
      * @param $start int
      * @param $length int
      * @return array[array result, date periodStart, date periodEnd, int count, int totalStats]
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     private function getProofOfPlayReportMongoDb($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $start, $length)
     {

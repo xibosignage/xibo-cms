@@ -2146,8 +2146,6 @@ class Layout extends Base
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Exception\InvalidArgumentException
-     * @throws \Xibo\Exception\NotFoundException
      */
     public function export(Request $request, Response $response, $id)
     {

@@ -22,6 +22,7 @@
 
 namespace Xibo\Service;
 
+use Illuminate\Support\Str;
 use Psr\Container\ContainerInterface;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\SavedReportFactory;
@@ -108,7 +109,7 @@ class ReportService implements ReportServiceInterface
         foreach ($files as $file) {
 
             $config = json_decode(file_get_contents($file));
-            $config->file = str_replace_first(PROJECT_ROOT, '', $file);
+            $config->file = Str::replaceFirst(PROJECT_ROOT, '', $file);
 
             $reports[] = $config;
         }
