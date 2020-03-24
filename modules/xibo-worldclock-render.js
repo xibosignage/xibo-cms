@@ -104,10 +104,10 @@ jQuery.fn.extend({
 
             for(let index = 0;index < worldClocks.length; index++) {
                 // Append template to the preview
-                let $newItem = $('<div>').attr('id', 'clock' + index).append(body);
+                let $newItem = $('<div>').attr('id', 'clock' + index).addClass('world-clock').append(body);
 
                 // Add label or timezone name
-                $newItem.find('.label').html((worldClocks[index].clockLabel != '') ? worldClocks[index].clockLabel : worldClocks[index].clockTimezone);
+                $newItem.find('.world-clock-label').html((worldClocks[index].clockLabel != '') ? worldClocks[index].clockLabel : worldClocks[index].clockTimezone);
 
                 // Set dimensions
                 $newItem.width(elWidth);

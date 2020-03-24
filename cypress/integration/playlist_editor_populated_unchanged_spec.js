@@ -1,4 +1,4 @@
-describe.skip('Playlist Editor (Populated/Unchanged)', function() { //FIXME: Tests skipped for now, need update to the new Layout Designer revamp
+describe('Playlist Editor (Populated/Unchanged)', function() {
 
     before(function() {
         cy.login();
@@ -41,7 +41,9 @@ describe.skip('Playlist Editor (Populated/Unchanged)', function() { //FIXME: Tes
 
         cy.populateLibraryWithMedia();
 
-        cy.get('#playlist-editor-toolbar #btn-menu-new-tab').click();
+        // Open library search tab
+        cy.get('#playlist-editor-toolbar #btn-menu-1').should('be.visible').click();
+        cy.get('#playlist-editor-toolbar #btn-menu-0').should('be.visible').click();
 
         // Select and search image items
         cy.get('.toolbar-pane.active .input-type').select('audio');
@@ -52,26 +54,24 @@ describe.skip('Playlist Editor (Populated/Unchanged)', function() { //FIXME: Tes
         cy.get('#playlist-editor-toolbar .media-table tbody tr:first').should('be.visible').contains('audio');
     });
 
-    it('creates multiple tabs and then closes them all', () => {
+    it('creates multiple tabs', () => {
 
-        cy.get('#playlist-editor-toolbar [data-test="toolbarTabs"]').then(($el) => {
+        // Open library search tab
+        cy.get('#playlist-editor-toolbar #btn-menu-1').should('be.visible').click();
+        cy.get('#playlist-editor-toolbar #btn-menu-0').should('be.visible').click();
+
+        cy.get('#playlist-editor-toolbar .media-tab-name').then(($el) => {
 
             const numTabs = $el.length;
 
             // Create 3 tabs
-            cy.get('#playlist-editor-toolbar #btn-menu-new-tab').click();
-            cy.get('#playlist-editor-toolbar #btn-menu-new-tab').click();
-            cy.get('#playlist-editor-toolbar #btn-menu-new-tab').click();
+            cy.get('#playlist-editor-toolbar .btn-window-new-tab').click();
+            cy.get('#playlist-editor-toolbar .btn-window-new-tab').click();
+            cy.get('#playlist-editor-toolbar .btn-window-new-tab').click();
 
             // Check if there are 4 tabs in the toolbar ( widgets default one and the 3 created )
-            cy.get('#playlist-editor-toolbar [data-test="toolbarTabs"]').should('be.visible').should('have.length', numTabs + 3);
-
-            // Close all tabs using the toolbar button and chek if there is just one tab
-            cy.get('#playlist-editor-toolbar #deleteAllTabs').click().then(() => {
-                cy.get('#playlist-editor-toolbar [data-test="toolbarTabs"]').should('be.visible').should('have.length', numTabs);
-            });
+            cy.get('#playlist-editor-toolbar .media-tab-name').should('be.visible').should('have.length', numTabs + 3);
         });
-
     });
 
     it('creates a new widget by selecting a searched media from the toolbar to the editor, and then reverts the change', () => {
@@ -84,11 +84,15 @@ describe.skip('Playlist Editor (Populated/Unchanged)', function() { //FIXME: Tes
         cy.route('DELETE', '/playlist/widget/*').as('deleteWidget');
         cy.route('/library?assignable=1&retired=0&draw=2&*').as('mediaLoad');
 
+        // Open library search tab
+        cy.get('#playlist-editor-toolbar #btn-menu-1').should('be.visible').click();
+        cy.get('#playlist-editor-toolbar #btn-menu-0').should('be.visible').click();
+
         // Open a new tab
-        cy.get('#playlist-editor-toolbar #btn-menu-new-tab').click();
+        cy.get('#playlist-editor-toolbar .btn-window-new-tab').click();
 
         // Select and search image items
-        cy.get('.toolbar-pane.active .input-type').select('image');
+        cy.get('.media-search-form:not(.hidden) .input-type').select('image');
 
         cy.wait('@mediaLoad');
 

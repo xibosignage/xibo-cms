@@ -117,14 +117,17 @@ let Toolbar = function(parent, container, customActions = {}, showOptions = fals
 
     // Refresh opened menu and clear selections on window resize
     const self = this;
-    $(window).resize(_.debounce(function(e) {
+    $(window).on('resize.toolbar-' + self.parent.mainObjectType, _.debounce(function(e) {
         if(e.target === window) {
-            // Deselect previous selections
-            self.deselectCardsAndDropZones();
+            // Resize only if toolbar is visible
+            if(self.DOMObject.is(':visible')) {
+                // Deselect previous selections
+                self.deselectCardsAndDropZones();
 
-            // If there was a opened menu in the toolbar, open that tab
-            if(self.openedMenu != -1) {
-                self.openMenu(self.openedMenu, true);
+                // If there was a opened menu in the toolbar, open that tab
+                if(self.openedMenu != undefined && self.openedMenu != -1) {
+                    self.openMenu(self.openedMenu, true);
+                }
             }
         }
     }, 250));
