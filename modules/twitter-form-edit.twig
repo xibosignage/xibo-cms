@@ -49,7 +49,6 @@
                 </ul>
             </li>
             <li><a href="#cacheTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
-            <li><a href="#actionTab" role="tab" data-toggle="tab" class="layout-designer-only"><span>{% trans "Action" %}</span></a></li>
         </ul>
 
         <div class="col-md-12">
@@ -306,9 +305,6 @@
                         {{ forms.number("updateInterval", title, module.getOption("updateInterval", 60), helpText, "", "required") }}
                     </div>
 
-                     <div class="tab-pane layout-designer-only" id="actionTab">
-                         {% include "action-form-grid.twig" with {'source' : 'widget', 'sourceId': module.widget.widgetId} %}
-                     </div>
                 </div>
             </form>
         </div>

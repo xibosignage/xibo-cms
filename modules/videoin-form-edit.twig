@@ -32,7 +32,6 @@
     <div class="row">
         <ul class="nav nav-tabs" role="tablist">
             <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-            <li><a href="#actionTab" role="tab" data-toggle="tab" class="layout-designer-only"><span>{% trans "Action" %}</span></a></li>
         </ul>
         <div class="col-md-12">
             <form id="videoinEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
@@ -83,9 +82,6 @@
                         {{ forms.message(message, "alert alert-info") }}
                     </div>
 
-                    <div class="tab-pane layout-designer-only" id="actionTab">
-                        {% include "action-form-grid.twig" with {'source' : 'widget', 'sourceId': module.widget.widgetId} %}
-                    </div>
                 </div>
             </form>
         </div>

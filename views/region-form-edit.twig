@@ -35,7 +35,6 @@
             <li class="active"><a href="#generalTab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
             <li><a href="#positioningTab" role="tab" data-toggle="tab"><span>{% trans "Positioning" %}</span></a></li>
             <li><a href="#transitionTab" role="tab" data-toggle="tab"><span>{% trans "Transition" %}</span></a></li>
-            <li><a href="#actionTab" role="tab" data-toggle="tab"><span>{% trans "Action" %}</span></a></li>
         </ul>
 
         <div class="col-md-12">
@@ -98,9 +97,6 @@
                         {% set title %}{% trans "Direction" %}{% endset %}
                         {% set helpText %}{% trans "The direction for this transition. Only appropriate for transitions that move, such as Fly." %}{% endset %}
                         {{ forms.dropdown("transitionDirection", "single", title, region.getOptionValue("transitionDirection"), transitions.compassPoints, "id", "name", helpText, "transition-group transition-direction") }}
-                    </div>
-                    <div class="tab-pane" id="actionTab">
-                        {% include "action-form-grid.twig" with {'source' : 'region', 'sourceId': region.regionId} %}
                     </div>
                 </div>
             </form>

@@ -32,7 +32,6 @@
     <div class="row">
         <ul class="nav nav-tabs" role="tablist">
             <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-            <li><a href="#actionTab" role="tab" data-toggle="tab" class="layout-designer-only"><span>{% trans "Action" %}</span></a></li>
         </ul>
         <div class="col-md-12">
             <form id="spacerEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
@@ -62,10 +61,6 @@
                             { id: "Inherit", value: inheritOption }
                         ] %}
                         {{ forms.dropdown("enableStat", "single", title, module.getOption("enableStat", theme.getSetting("WIDGET_STATS_ENABLED_DEFAULT")), options, "id", "value", helpText) }}
-                    </div>
-
-                    <div class="tab-pane layout-designer-only" id="actionTab">
-                        {% include "action-form-grid.twig" with {'source' : 'widget', 'sourceId': module.widget.widgetId} %}
                     </div>
 
                 </div>

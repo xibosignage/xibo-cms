@@ -50,7 +50,6 @@
             <li><a href="#orderCriteria" role="tab" data-toggle="tab"><span>{% trans "Order" %}</span></a></li>
             <li><a href="#filterCriteria" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
             <li><a href="#cachingTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
-            <li><a href="#actionTab" role="tab" data-toggle="tab" class="layout-designer-only"><span>{% trans "Action" %}</span></a></li>
         </ul>
         <div class="col-md-12">
             <form id="dataSetTickerForm2" class="XiboForm form-horizontal" data-form-step="2" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
@@ -318,9 +317,6 @@
 
                     </div>
 
-                    <div class="tab-pane layout-designer-only" id="actionTab">
-                        {% include "action-form-grid.twig" with {'source' : 'widget', 'sourceId': module.widget.widgetId} %}
-                    </div>
                 </div>
                 
                 <input type="hidden" name="step" value="2" />

@@ -43,4 +43,51 @@
         }
     }
 
+    function showActionsGrid(source, sourceId) {
+        // create the table only when we are on Action tab
+        $('.nav-tabs a').on('shown.bs.tab', function(event) {
+            if ($(event.target).text() === 'Actions') {
+                // initialize the table only if it's not already initialized
+                if (!$.fn.DataTable.isDataTable('#actions')) {
+                    // Configure the DataTable
+                    let table = $("#actions").DataTable({
+                        "language": dataTablesLanguage,
+                        serverSide: true,
+                        stateSave: true,
+                        stateDuration: 0,
+                        "filter": false,
+                        searchDelay: 3000,
+                        "order": [[0, "asc"]],
+                        ajax: {
+                            url: "{{ url_for("action.search") }}",
+                            "data": function (d) {
+                                $.extend(d, {
+                                    "source": source,
+                                    "sourceId": sourceId
+                                });
+                            }
+                        },
+                        "columns": [
+                            {"data": "actionId",},
+                            {"data": "ownerId", "visible": false},
+                            {"data": "triggerType"},
+                            {"data": "triggerCode", "visible": false},
+                            {"data": "actionType"},
+                            {"data": "target"},
+                            {"data": "targetId"},
+                            {
+                                "orderable": false,
+                                "data": dataTableButtonsColumn
+                            }
+                        ]
+                    });
+                    table.on('draw', dataTableDraw);
+                    table.on('processing.dt', dataTableProcessing);
+                    dataTableAddButtons(table, $('#actions_wrapper').find('.col-sm-6').eq(1));
+                }
+            }
+        });
+    }
+
+
 </script>

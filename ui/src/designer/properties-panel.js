@@ -2,6 +2,7 @@
 
 const loadingTemplate = require('../templates/loading.hbs');
 const propertiesPanel = require('../templates/properties-panel.hbs');
+const actionsTemplate = require('../templates/actions-form-template.hbs');
 
 /**
  * Properties panel contructor
@@ -205,9 +206,30 @@ PropertiesPanel.prototype.render = function(element, step) {
         // Append layout html to the main div
         self.DOMObject.html(html);
 
-        // Hide any elements with layout-designer-only class, hides actions tab in Playlist editor
-        if(app.mainObjectType === 'playlist') {
-            self.DOMObject.find('.layout-designer-only').hide();
+        if (app.mainObjectType === 'layout') {
+            // the url to Action Add Form
+            let actionFormAddRequest = urlsForApi[element.type].addActionForm.url;
+            actionFormAddRequest = actionFormAddRequest.replace(':id', element[element.type + 'Id']);
+
+            // append new tab
+            let tabName = actionsTranslations.tableHeaders.name;
+            const tabList = self.DOMObject.find('.nav-tabs');
+            let tabHtml = '<li><a href="#actionTab" role="tab" data-toggle="tab"><span id="actionTabName"></span></a></li>';
+            $(tabHtml).appendTo(tabList);
+            $('#actionTabName').text(tabName);
+
+            // render the html from actions template
+            const actionsHtml = actionsTemplate({
+                addUrl: actionFormAddRequest,
+                trans: actionsTranslations
+            });
+
+            // append Action tab html to tab content in edit form
+            const tabContent = self.DOMObject.find('.tab-content');
+            $(actionsHtml).appendTo(tabContent);
+
+            // call the javascript to render the datatable when on Actions tab
+            showActionsGrid(element.type, element[element.type + 'Id']);
         }
 
         // Store the extra

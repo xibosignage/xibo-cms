@@ -43,7 +43,6 @@
                     <li><a href="#optionalStylesheetTab" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a></li>
                 </ul>
             </li>
-            <li><a href="#actionTab" role="tab" data-toggle="tab"><span>{% trans "Action" %}</span></a></li>
         </ul>
         <div class="col-md-12">
             <form id="notificationForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
@@ -215,9 +214,6 @@
                         {{ forms.textarea("embedStyle", "", module.getRawNode('embedStyle'), helpText, "", "", 10) }}
                     </div>
 
-                    <div class="tab-pane layout-designer-only" id="actionTab">
-                        {% include "action-form-grid.twig" with {'source' : 'widget', 'sourceId': module.widget.widgetId} %}
-                    </div>
                 </div>
             </form>
         </div>
