@@ -108,6 +108,7 @@ class Help extends Base
                 // Test
                 $row->buttons[] = array(
                     'id' => 'help_button_test',
+                    'linkType' => '_self', 'external' => true,
                     'url' => $this->getHelp()->link($row->topic, $row->category),
                     'text' => __('Test')
                 );
