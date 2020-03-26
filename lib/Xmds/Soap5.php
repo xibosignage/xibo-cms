@@ -24,6 +24,7 @@
 namespace Xibo\Xmds;
 
 
+use Illuminate\Support\Str;
 use Stash\Invalidation;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
@@ -79,7 +80,7 @@ class Soap5 extends Soap4
         $xmrChannel = $sanitized->getString('xmrChannel');
         $xmrPubKey = trim($sanitized->getString('xmrPubKey'));
 
-        if ($xmrPubKey != '' && !str_contains($xmrPubKey, 'BEGIN PUBLIC KEY')) {
+        if ($xmrPubKey != '' && !Str::contains($xmrPubKey, 'BEGIN PUBLIC KEY')) {
             $xmrPubKey = "-----BEGIN PUBLIC KEY-----\n" . $xmrPubKey . "\n-----END PUBLIC KEY-----\n";
         }
 

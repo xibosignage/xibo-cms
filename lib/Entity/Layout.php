@@ -24,6 +24,7 @@ namespace Xibo\Entity;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\LayoutBuildEvent;
 use Xibo\Event\LayoutBuildRegionEvent;
+use Xibo\Factory\ActionFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\LayoutFactory;
@@ -248,6 +249,12 @@ class Layout implements \JsonSerializable
     /** @var Region[]  */
     public $regions = [];
 
+    /** @var Region[]  */
+    public $drawers = [];
+
+    /** @var Action[] */
+    public $actions = [];
+
     public $tags = [];
     public $permissions = [];
     public $campaigns = [];
@@ -329,6 +336,9 @@ class Layout implements \JsonSerializable
     /** @var PlaylistFactory */
     private $playlistFactory;
 
+    /** @var ActionFactory */
+    private $actionFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -343,9 +353,10 @@ class Layout implements \JsonSerializable
      * @param LayoutFactory $layoutFactory
      * @param MediaFactory $mediaFactory
      * @param ModuleFactory $moduleFactory
-     * @param $playlistFactory
+     * @param PlaylistFactory $playlistFactory
+     * @param ActionFactory $actionFactory
      */
-    public function __construct($store, $log, $config, $date, $eventDispatcher, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory, $playlistFactory)
+    public function __construct($store, $log, $config, $date, $eventDispatcher, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory, $playlistFactory, $actionFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->setPermissionsClass('Xibo\Entity\Campaign');
@@ -360,6 +371,7 @@ class Layout implements \JsonSerializable
         $this->mediaFactory = $mediaFactory;
         $this->moduleFactory = $moduleFactory;
         $this->playlistFactory = $playlistFactory;
+        $this->actionFactory = $actionFactory;
     }
 
     public function __clone()
@@ -375,6 +387,10 @@ class Layout implements \JsonSerializable
 
         // Clone the regions
         $this->regions = array_map(function ($object) { return clone $object; }, $this->regions);
+        // Clone drawers
+        $this->drawers = array_map(function ($object) { return clone $object; }, $this->drawers);
+        // Clone actions
+        $this->actions = array_map(function ($object) { return clone $object; }, $this->actions);
     }
 
     /**
@@ -384,11 +400,12 @@ class Layout implements \JsonSerializable
     {
         $countRegions = is_array($this->regions) ? count($this->regions) : 0;
         $countTags = is_array($this->tags) ? count($this->tags) : 0;
+        $countDrawers = is_array($this->drawers) ? count($this->drawers) : 0;
 
         $statusMessages = $this->getStatusMessage();
         $countMessages = is_array($statusMessages) ? count($statusMessages) : 0;
 
-        return sprintf('Layout %s - %d x %d. Regions = %d, Tags = %d. layoutId = %d. Status = %d, messages %d', $this->layout, $this->width, $this->height, $countRegions, $countTags, $this->layoutId, $this->status, $countMessages);
+        return sprintf('Layout %s - %d x %d. Regions = %d, Drawers = %d, Tags = %d. layoutId = %d. Status = %d, messages %d', $this->layout, $this->width, $this->height, $countRegions, $countDrawers, $countTags, $this->layoutId, $this->status, $countMessages);
     }
 
     /**
@@ -396,7 +413,7 @@ class Layout implements \JsonSerializable
      */
     private function hash()
     {
-        return md5($this->layoutId . $this->ownerId . $this->campaignId . $this->backgroundImageId . $this->backgroundColor . $this->width . $this->height . $this->status . $this->description . json_encode($this->statusMessage) . $this->publishedStatusId);
+        return md5($this->layoutId . $this->ownerId . $this->campaignId . $this->backgroundImageId . $this->backgroundColor . $this->width . $this->height . $this->status . $this->description . json_encode($this->statusMessage) . $this->publishedStatusId . json_encode($this->actions));
     }
 
     /**
@@ -430,7 +447,9 @@ class Layout implements \JsonSerializable
 
         $this->load();
 
-        foreach ($this->regions as $region) {
+        $allRegions = array_merge($this->regions, $this->drawers);
+
+        foreach ($allRegions as $region) {
             /* @var Region $region */
             $region->setOwner($ownerId, $cascade);
         }
@@ -454,24 +473,78 @@ class Layout implements \JsonSerializable
     {
         foreach ($this->regions as $region) {
             /* @var Region $region */
-            if ($region->regionId == $regionId)
+            if ($region->regionId == $regionId) {
                 return $region;
+            }
         }
 
         throw new NotFoundException(__('Cannot find region'));
     }
 
     /**
-     * Get Widgets assigned to this Layout
+     * Load Drawers from a Layout
+     * @param int $regionId
+     * @return Region
+     * @throws NotFoundException
+     */
+    public function getDrawer($regionId)
+    {
+        foreach ($this->drawers as $drawer) {
+            /* @var Region $drawer */
+            if ($drawer->regionId == $regionId) {
+                return $drawer;
+            }
+        }
+
+        throw new NotFoundException(__('Cannot find drawer region'));
+    }
+
+    /**
+     * Get All Widgets assigned to this Layout
      * @return Widget[]
      * @throws NotFoundException
      */
-    public function getWidgets()
+    public function getAllWidgets()
+    {
+        $widgets = [];
+
+        $allRegions = array_merge($this->regions, $this->drawers);
+
+        /** @var Region $region */
+        foreach ($allRegions as $region) {
+            $widgets = array_merge($region->getPlaylist()->widgets, $widgets);
+        }
+
+        return $widgets;
+    }
+
+    /**
+     * Get Region Widgets assigned to this Layout
+     * @return Widget[]
+     * @throws NotFoundException
+     */
+    public function getRegionWidgets()
     {
         $widgets = [];
 
         foreach ($this->regions as $region) {
             $widgets = array_merge($region->getPlaylist()->widgets, $widgets);
+        }
+
+        return $widgets;
+    }
+
+    /**
+     * Get Drawer Widgets assigned to this Layout
+     * @return Widget[]
+     * @throws NotFoundException
+     */
+    public function getDrawerWidgets()
+    {
+        $widgets = [];
+
+        foreach ($this->drawers as $drawer) {
+            $widgets = array_merge($drawer->getPlaylist()->widgets, $widgets);
         }
 
         return $widgets;
@@ -500,11 +573,13 @@ class Layout implements \JsonSerializable
      */
     public function getStatusMessage()
     {
-        if ($this->statusMessage === null || empty($this->statusMessage))
+        if ($this->statusMessage === null || empty($this->statusMessage)) {
             return [];
+        }
 
-        if (is_array($this->statusMessage))
+        if (is_array($this->statusMessage)) {
             return $this->statusMessage;
+        }
 
         $this->statusMessage = json_decode($this->statusMessage, true);
 
@@ -541,11 +616,13 @@ class Layout implements \JsonSerializable
             'loadPlaylists' => true,
             'loadTags' => true,
             'loadPermissions' => true,
-            'loadCampaigns' => true
+            'loadCampaigns' => true,
+            'loadActions' => true,
         ], $options);
 
-        if ($this->loaded || $this->layoutId == 0)
+        if ($this->loaded || $this->layoutId == 0) {
             return;
+        }
 
         $this->getLog()->debug(sprintf('Loading Layout %d with options %s', $this->layoutId, json_encode($options)));
 
@@ -556,6 +633,9 @@ class Layout implements \JsonSerializable
 
         // Load all regions
         $this->regions = $this->regionFactory->getByLayoutId($this->layoutId);
+
+        // load all drawers
+        $this->drawers = $this->regionFactory->getDrawersByLayoutId($this->layoutId);
 
         if ($options['loadPlaylists']) {
             $this->loadPlaylists($options);
@@ -571,6 +651,11 @@ class Layout implements \JsonSerializable
             $this->campaigns = $this->campaignFactory->getByLayoutId($this->layoutId);
         }
 
+        // Load Actions
+        if ($options['loadActions']) {
+            $this->actions = $this->actionFactory->getBySourceAndSourceId('layout', $this->layoutId);
+        }
+
         // Set the hash
         $this->hash = $this->hash();
         $this->loaded = true;
@@ -579,11 +664,39 @@ class Layout implements \JsonSerializable
     }
 
     /**
-     * Load Playlists
+     * Load All Playlists
      * @param array $options
      * @throws NotFoundException
      */
     public function loadPlaylists($options = [])
+    {
+        $allRegions = array_merge($this->regions, $this->drawers);
+
+        foreach ($allRegions as $region) {
+            /* @var Region $region */
+            $region->load($options);
+        }
+    }
+
+    /**
+     * Load Region Playlists
+     * @param array $options
+     * @throws NotFoundException
+     */
+    public function loadDrawerPlaylists($options = [])
+    {
+        foreach ($this->drawers as $drawer) {
+            /* @var Region $region */
+            $drawer->load($options);
+        }
+    }
+
+    /**
+     * Load Drawer Playlists
+     * @param array $options
+     * @throws NotFoundException
+     */
+    public function loadRegionPlaylists($options = [])
     {
         foreach ($this->regions as $region) {
             /* @var Region $region */
@@ -609,11 +722,13 @@ class Layout implements \JsonSerializable
             'audit' => true
         ], $options);
 
-        if ($options['validate'])
+        if ($options['validate']) {
             $this->validate();
+        }
 
-        if ($options['setBuildRequired'])
+        if ($options['setBuildRequired']) {
             $this->setBuildRequired();
+        }
 
         $this->getLog()->debug('Saving ' . $this . ' with options ' . json_encode($options, JSON_PRETTY_PRINT));
 
@@ -650,8 +765,10 @@ class Layout implements \JsonSerializable
         if ($options['saveRegions']) {
             $this->getLog()->debug('Saving Regions on ' . $this);
 
-            // Update the regions
-            foreach ($this->regions as $region) {
+            $allRegions = array_merge($this->regions, $this->drawers);
+
+            // Update all regions
+            foreach ($allRegions as $region) {
                 /* @var Region $region */
 
                 // Assert the Layout Id
@@ -698,14 +815,16 @@ class Layout implements \JsonSerializable
     public function delete($options = [])
     {
         // We must ensure everything is loaded before we delete
-        if (!$this->loaded)
+        if (!$this->loaded) {
             $this->load();
+        }
 
         $this->getLog()->debug('Deleting ' . $this);
 
         // We cannot delete the default default
-        if ($this->layoutId == $this->config->getSetting('DEFAULT_LAYOUT'))
+        if ($this->layoutId == $this->config->getSetting('DEFAULT_LAYOUT')) {
             throw new InvalidArgumentException(__('This layout is used as the global default and cannot be deleted'), 'layoutId');
+        }
 
         // Delete our draft if we have one
         // this is recursive, so be careful!
@@ -731,8 +850,10 @@ class Layout implements \JsonSerializable
             $tag->save();
         }
 
+        $allRegions = array_merge($this->regions, $this->drawers);
+
         // Delete Regions
-        foreach ($this->regions as $region) {
+        foreach ($allRegions as $region) {
             /* @var Region $region */
             $region->delete($options);
         }
@@ -772,14 +893,19 @@ class Layout implements \JsonSerializable
             $this->getStore()->update('DELETE FROM `lkcampaignlayout` WHERE layoutId = :layoutId', ['layoutId' => $this->layoutId]);
         }
 
+        foreach ($this->actions as $action) {
+            $action->delete();
+        }
+
         // Remove the Layout (now it is orphaned it can be deleted safely)
         $this->getStore()->update('DELETE FROM `layout` WHERE layoutid = :layoutId', array('layoutId' => $this->layoutId));
 
         $this->getLog()->audit('Layout', $this->layoutId, 'Layout Deleted', ['layoutId' => $this->layoutId]);
 
         // Delete the cached file (if there is one)
-        if (file_exists($this->getCachePath()))
+        if (file_exists($this->getCachePath())) {
             @unlink($this->getCachePath());
+        }
 
         // Audit the Delete
         $this->audit($this->layoutId, 'Deleted' . (($this->parentId !== null) ? ' draft for ' . $this->parentId : ''));
@@ -792,15 +918,18 @@ class Layout implements \JsonSerializable
     public function validate()
     {
         // We must provide either a template or a resolution
-        if ($this->width == 0 || $this->height == 0)
+        if ($this->width == 0 || $this->height == 0) {
             throw new InvalidArgumentException(__('The layout dimensions cannot be empty'), 'width/height');
+        }
 
         // Validation
-        if (strlen($this->layout) > 50 || strlen($this->layout) < 1)
+        if (strlen($this->layout) > 50 || strlen($this->layout) < 1) {
             throw new InvalidArgumentException(__("Layout Name must be between 1 and 50 characters"), 'name');
+        }
 
-        if (strlen($this->description) > 254)
+        if (strlen($this->description) > 254) {
             throw new InvalidArgumentException(__("Description can not be longer than 254 characters"), 'description');
+        }
 
         // Check for duplicates
         // exclude our own duplicate (if we're a draft)
@@ -910,7 +1039,7 @@ class Layout implements \JsonSerializable
         $layoutHistoryId = intval($layoutHistoryId[0]['layoutHistoryId']);
 
         // Add records in the widget history table representing all widgets on this Layout
-        foreach ($parent->getWidgets() as $widget) {
+        foreach ($parent->getAllWidgets() as $widget) {
 
             // Does this widget have a mediaId
             $mediaId = null;
@@ -1031,10 +1160,40 @@ class Layout implements \JsonSerializable
         // Track module status within the layout
         $status = 0;
         $this->clearStatusMessage();
+        $layoutActionNode = null;
+        if (is_array($this->actions) && count($this->actions) > 0) {
+            // actions on Layout
+            foreach ($this->actions as $action) {
+                $layoutActionNode = $document->createElement('action');
+                $layoutActionNode->setAttribute('triggerCode', $action->triggerCode);
+                $layoutActionNode->setAttribute('targetId', $action->targetId);
+                $layoutActionNode->setAttribute('target', $action->target);
+                $layoutActionNode->setAttribute('sourceId', $action->sourceId);
+                $layoutActionNode->setAttribute('source', $action->source);
+                $layoutActionNode->setAttribute('actionType', $action->actionType);
+                $layoutActionNode->setAttribute('triggerType', $action->triggerType);
+                $layoutActionNode->setAttribute('id', $action->actionId);
+            }
 
-        foreach ($this->regions as $region) {
+            if ($layoutActionNode != null) {
+                $layoutNode->appendChild($layoutActionNode);
+            }
+        }
+
+        // merge regions and drawers into one array and go through it.
+        $allRegions = array_merge($this->regions, $this->drawers);
+
+        foreach ($allRegions as $region) {
             /* @var Region $region */
-            $regionNode = $document->createElement('region');
+
+            // drawer
+            if ($region->isDrawer === 1) {
+                $regionNode = $document->createElement('drawer');
+                // normal region
+            } else {
+                $regionNode = $document->createElement('region');
+            }
+
             $regionNode->setAttribute('id', $region->regionId);
             $regionNode->setAttribute('width', $region->width);
             $regionNode->setAttribute('height', $region->height);
@@ -1042,8 +1201,26 @@ class Layout implements \JsonSerializable
             $regionNode->setAttribute('left', $region->left);
 
             // Only set the zIndex if present
-            if ($region->zIndex != 0)
+            if ($region->zIndex != 0) {
                 $regionNode->setAttribute('zindex', $region->zIndex);
+            }
+
+            $regionActionNode = null;
+
+            foreach ($region->actions as $action) {
+                $regionActionNode = $document->createElement('action');
+                $regionActionNode->setAttribute('targetId', $action->targetId);
+                $regionActionNode->setAttribute('target', $action->target);
+                $regionActionNode->setAttribute('sourceId', $action->sourceId);
+                $regionActionNode->setAttribute('source', $action->source);
+                $regionActionNode->setAttribute('actionType', $action->actionType);
+                $regionActionNode->setAttribute('triggerType', $action->triggerType);
+                $regionActionNode->setAttribute('id', $action->actionId);
+            }
+
+            if ($regionActionNode != null) {
+                $regionNode->appendChild($regionActionNode);
+            }
 
             $layoutNode->appendChild($regionNode);
 
@@ -1114,15 +1291,18 @@ class Layout implements \JsonSerializable
                     $widgetDuration = Widget::$widgetMinDuration;
                 }
 
-                // Region duration
-                $region->duration = $region->duration + $widget->calculatedDuration;
+                if ($region->isDrawer === 0) {
+                    // Region duration
+                    $region->duration = $region->duration + $widget->calculatedDuration;
 
-                // We also want to add any transition OUT duration
-                // only the OUT duration because IN durations do not get added to the widget duration by the player
-                // https://github.com/xibosignage/xibo/issues/705
-                if ($widget->getOptionValue('transOut', '') != '') {
-                    // Transition durations are in milliseconds
-                    $region->duration = $region->duration + ($widget->getOptionValue('transOutDuration', 0) / 1000);
+
+                    // We also want to add any transition OUT duration
+                    // only the OUT duration because IN durations do not get added to the widget duration by the player
+                    // https://github.com/xibosignage/xibo/issues/705
+                    if ($widget->getOptionValue('transOut', '') != '') {
+                        // Transition durations are in milliseconds
+                        $region->duration = $region->duration + ($widget->getOptionValue('transOutDuration', 0) / 1000);
+                    }
                 }
 
                 // Create media xml node for XLF.
@@ -1135,6 +1315,22 @@ class Layout implements \JsonSerializable
                 // Set the duration according to whether we are using widget duration or not
                 $mediaNode->setAttribute('duration', $widgetDuration);
                 $mediaNode->setAttribute('useDuration', $widget->useDuration);
+                $widgetActionNode = null;
+
+                foreach ($widget->actions as $action) {
+                    $widgetActionNode = $document->createElement('action');
+                    $widgetActionNode->setAttribute('targetId', $action->targetId);
+                    $widgetActionNode->setAttribute('target', $action->target);
+                    $widgetActionNode->setAttribute('sourceId', $action->sourceId);
+                    $widgetActionNode->setAttribute('source', $action->source);
+                    $widgetActionNode->setAttribute('actionType', $action->actionType);
+                    $widgetActionNode->setAttribute('triggerType', $action->triggerType);
+                    $widgetActionNode->setAttribute('id', $action->actionId);
+                }
+
+                if ($widgetActionNode != null) {
+                    $mediaNode->appendChild($widgetActionNode);
+                }
 
                 // Set a from/to date
                 if ($widget->fromDt != null || $widget->fromDt === Widget::$DATE_MIN) {
@@ -1308,8 +1504,9 @@ class Layout implements \JsonSerializable
                     $audioNodes->appendChild($audioNode);
                 }
 
-                if ($audioNodes != null)
+                if ($audioNodes != null) {
                     $mediaNode->appendChild($audioNodes);
+                }
 
                 $regionNode->appendChild($mediaNode);
             }
@@ -1318,8 +1515,9 @@ class Layout implements \JsonSerializable
 
             // Track the max duration within the layout
             // Test this duration against the layout duration
-            if ($this->duration < $region->duration)
+            if ($this->duration < $region->duration) {
                 $this->duration = $region->duration;
+            }
 
             $event = new LayoutBuildRegionEvent($region->regionId, $regionNode);
             $this->dispatcher->dispatch($event::NAME, $event);
@@ -1361,8 +1559,6 @@ class Layout implements \JsonSerializable
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Exception\InvalidArgumentException
-     * @throws \Xibo\Exception\NotFoundException
      */
     public function toZip($dataSetFactory, $fileName, $options = [])
     {
@@ -1386,11 +1582,19 @@ class Layout implements \JsonSerializable
             $regionMapping[$region->regionId] = $region->name;
         }
 
+        // Add a mapping file for the drawer region names
+        $drawerMapping = [];
+        foreach ($this->drawers as $drawer) {
+            /** @var Region $region */
+            $drawerMapping[$drawer->regionId] = $drawer->name;
+        }
+
         // Add layout information to the ZIP
         $zip->addFromString('layout.json', json_encode([
             'layout' => $this->layout,
             'description' => $this->description,
             'regions' => $regionMapping,
+            'drawers' => $drawerMapping,
             'layoutDefinitions' => $this
         ]));
 
@@ -1478,15 +1682,16 @@ class Layout implements \JsonSerializable
         $playlistDefinitions = [];
         $nestedPlaylistDefinitions = [];
 
-        foreach ($this->getWidgets() as $widget) {
+        foreach ($this->getAllWidgets() as $widget) {
             /** @var Widget $widget */
             if ($widget->type == 'datasetview' || $widget->type == 'datasetticker' || $widget->type == 'chart') {
                 $dataSetId = $widget->getOptionValue('dataSetId', 0);
 
                 if ($dataSetId != 0) {
 
-                    if (in_array($dataSetId, $dataSetIds))
+                    if (in_array($dataSetId, $dataSetIds)) {
                         continue;
+                    }
 
                     // Export the structure for this dataSet
                     $dataSet = $dataSetFactory->getById($dataSetId);
@@ -1924,8 +2129,9 @@ class Layout implements \JsonSerializable
     /**
      * Handle the Playlist closure table for specified Layout object
      *
-     * @param $layout
+     * @param Layout $layout
      * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
     public function managePlaylistClosureTable($layout)
     {
@@ -1933,7 +2139,7 @@ class Layout implements \JsonSerializable
         // we only need to set the closure table records for the playlists assigned directly to the regionPlaylist here
         // all other relations between Playlists themselves are handled on import before layout is created
         // as the SQL we run here is recursive everything will end up with correct parent/child relation and depth level.
-        foreach ($layout->getWidgets() as $widget) {
+        foreach ($layout->getAllWidgets() as $widget) {
             if ($widget->type == 'subplaylist') {
                 $assignedPlaylists = json_decode($widget->getOptionValue('subPlaylistIds', '[]'));
                 $assignedPlaylists = implode(',', $assignedPlaylists);
@@ -1970,6 +2176,213 @@ class Layout implements \JsonSerializable
                     'parentId' => $parentId,
                     'childId' => $childId
                 ]);
+            }
+        }
+    }
+
+    /**
+     * This function will adjust the Action sourceId and targetId in all relevant objects in our imported Layout
+     *
+     * @param Layout $layout
+     * @throws NotFoundException
+     */
+    public function manageActions(Layout $layout)
+    {
+        $oldRegionIds = [];
+        $newRegionIds = [];
+        $newWidgetIds = [];
+        $oldWidgetIds = [];
+
+        // get all regionIds including drawers
+        $allNewRegions = array_merge($layout->regions, $layout->drawers);
+
+        // create an array of new and old (from import) Region and Widget ids
+        /** @var Region $region */
+        foreach ($allNewRegions as $region) {
+            $newRegionIds[] = $region->regionId;
+            $oldRegionIds[] = $region->tempId;
+
+            /** @var Widget $widget */
+            foreach ($region->getPlaylist()->widgets as $widget) {
+                $newWidgetIds[] = $widget->widgetId;
+                $oldWidgetIds[] = $widget->tempWidgetId;
+            }
+        }
+
+        // combine the arrays into $old=>$new key value arrays
+        $combined = array_combine($oldRegionIds, $newRegionIds);
+        $combinedWidgets = array_combine($oldWidgetIds, $newWidgetIds);
+
+        // get Actions with Layout
+        $layoutActions = $this->actionFactory->query(null, ['source' => 'importLayout']);
+
+        // go through all imported actions on a Layout and replace the source/target Ids with the new ones
+        foreach ($layoutActions as $action) {
+            $action->source = 'layout';
+            $action->sourceId = $layout->layoutId;
+
+            if ($action->targetId != null) {
+                foreach ($combined as $old => $new) {
+                    if ($old == $action->targetId) {
+                        $this->getLog()->debug('Layout Import, switching Layout Action target ID from ' . $old . ' to ' . $new);
+                        $action->targetId = $new;
+                    }
+                }
+            }
+
+            $action->save();
+        }
+
+        // Actions with Region
+        $regionActions = $this->actionFactory->query(null, ['source' => 'importRegion']);
+
+        // go through all imported actions on a Region and replace the source/target Ids with the new ones
+        foreach ($regionActions as $action) {
+            $action->source = 'region';
+            foreach ($combined as $old => $new) {
+                if ($old == $action->targetId) {
+                    $this->getLog()->debug('Layout Import, switching Region Action target ID from ' . $old . ' to ' . $new);
+                    $action->targetId = $new;
+                }
+
+                if ($action->sourceId === $old) {
+                    $this->getLog()->debug('Layout Import, switching Region Action source ID from ' . $old . ' to ' . $new);
+                    $action->sourceId = $new;
+                }
+            }
+            $action->save();
+        }
+
+        // Actions with Widget
+        $widgetActions = $this->actionFactory->query(null, ['source' => 'importWidget']);
+
+        // go through all imported actions on a Widget and replace the source/target Ids with the new ones
+        foreach ($widgetActions as $action) {
+            $action->source = 'widget';
+
+            // switch source Id
+            foreach ($combinedWidgets as $old => $new) {
+                if ($action->sourceId == $old) {
+                    $this->getLog()->debug('Layout Import, switching Widget Action source ID from ' . $old . ' to ' . $new);
+                    $action->sourceId = $new;
+                }
+            }
+
+            // if we had targetId (regionId) then switch it
+            if ($action->targetId != null) {
+                foreach ($combined as $old => $new) {
+                    if ($old == $action->targetId) {
+                        $this->getLog()->debug('Layout Import, switching Widget Action target ID from ' . $old . ' to ' . $new);
+                        $action->targetId = $new;
+                    }
+                }
+            }
+
+            $action->save();
+        }
+    }
+
+    /**
+     * Adjust source and target id in copied Layout (checkout / copy )
+     *
+     * @param Layout $newLayout
+     * @param Layout $originalLayout
+     * @throws NotFoundException
+     */
+    public function copyActions(Layout $newLayout, Layout $originalLayout)
+    {
+        $oldRegionIds = [];
+        $newRegionIds = [];
+
+        $this->getLog()->debug('Copy Actions from ' . $originalLayout->layoutId . ' To ' . $newLayout->layoutId);
+        // go through all regions and build array of old and new regionIds - we need that to update Action table later on.
+        /** @var Region $region */
+        foreach ($newLayout->regions as $region) {
+            // Match our original region id to the id in the parent layout
+            $original = $originalLayout->getRegion($region->getOriginalValue('regionId'));
+
+            $oldRegionIds[] = $original->regionId;
+            $newRegionIds[] = $region->regionId;
+        }
+
+        $combined = array_combine($oldRegionIds, $newRegionIds);
+
+        /** @var Region[] $allRegions */
+        $allRegions = array_merge($newLayout->regions, $newLayout->drawers);
+
+        // Permissions && Sub-Playlists
+        // Layout level permissions are managed on the Campaign entity, so we do not need to worry about that
+        // Regions/Widgets need to copy down our layout permissions
+        foreach ($allRegions as $region) {
+            // Match our original region id to the id in the parent layout
+            if ($region->isDrawer === 0) {
+                $original = $originalLayout->getRegion($region->getOriginalValue('regionId'));
+            } else {
+                $original = $originalLayout->getDrawer($region->getOriginalValue('regionId'));
+            }
+
+            // Interactive Actions on Layout
+            foreach ($newLayout->actions as $action) {
+
+                // switch source Id
+                if ($action->sourceId === $originalLayout->layoutId) {
+                    $action->sourceId = $newLayout->layoutId;
+                }
+
+                // if we had targetId (regionId) then switch it
+                if ($action->targetId != null) {
+                    foreach ($combined as $old => $new) {
+                        if ($old == $action->targetId) {
+                            $action->targetId = $new;
+                        }
+                    }
+                }
+
+                $action->save();
+            }
+
+            // Interactive Actions on Region
+            foreach ($region->actions as $action) {
+
+                // switch source Id
+                if ($action->sourceId === $original->regionId) {
+                    $action->sourceId = $region->regionId;
+                }
+
+                // if we had targetId (regionId) then switch it
+                if ($action->targetId != null) {
+                    foreach ($combined as $old => $new) {
+                        if ($old == $action->targetId) {
+                            $action->targetId = $new;
+                        }
+                    }
+                }
+
+                $action->save();
+            }
+
+            // Widgets
+            foreach ($region->getPlaylist()->widgets as $widget) {
+                $originalWidget = $original->getPlaylist()->getWidget($widget->getOriginalValue('widgetId'));
+
+                // Interactive Actions on Widget
+                foreach ($widget->actions as $action) {
+                    // switch source Id
+                    if ($action->sourceId === $originalWidget->widgetId) {
+                        $action->sourceId = $widget->widgetId;
+                    }
+
+                    // if we had targetId (regionId) then switch it
+                    if ($action->targetId != null) {
+                        foreach ($combined as $old => $new) {
+                            if ($old == $action->targetId) {
+                                $action->targetId = $new;
+                            }
+                        }
+                    }
+
+                    $action->save();
+                }
             }
         }
     }

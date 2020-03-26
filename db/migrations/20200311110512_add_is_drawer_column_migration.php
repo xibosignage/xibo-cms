@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2018 Spring Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,13 +20,19 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Exception;
+use Phinx\Migration\AbstractMigration;
 
-/**
- * Class ValueTooLargeException
- * @package Xibo\Exception
- */
-class ValueTooLargeException extends InvalidArgumentException
+class AddIsDrawerColumnMigration extends AbstractMigration
 {
+    /** @inheritdoc */
+    public function change()
+    {
+        $regionTable = $this->table('region');
 
+        if (!$regionTable->hasColumn('isDrawer')) {
+            $regionTable
+                ->addColumn('isDrawer', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'null' => false, 'default' => 0])
+                ->save();
+        }
+    }
 }

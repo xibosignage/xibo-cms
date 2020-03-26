@@ -604,6 +604,9 @@ class SummaryReport implements ReportInterface
      * @param $eventTag
      * @param $reportFilter
      * @return array
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     private function getSummaryReportMongoDb($fromDt, $toDt, $groupByFilter, $displayIds, $type, $layoutId, $mediaId, $eventTag, $reportFilter)
     {

@@ -21,6 +21,7 @@
  */
 namespace Xibo\Entity;
 
+use Xibo\Factory\ActionFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
@@ -182,6 +183,9 @@ class Widget implements \JsonSerializable
      */
     public $playlist;
 
+    /** @var Action[] */
+    public $actions = [];
+
     /**
      * Hash Key of Media Assignments
      * @var string
@@ -189,10 +193,16 @@ class Widget implements \JsonSerializable
     private $mediaHash = null;
 
     /**
-     * Temporary Id used during import/upgrade/sub-playlist ordering
+     * Temporary media Id used during import/upgrade/sub-playlist ordering
      * @var string read only string
      */
     public $tempId = null;
+
+    /**
+     * Temporary widget Id used during import/upgrade/sub-playlist ordering
+     * @var string read only string
+     */
+    public $tempWidgetId = null;
 
     /**
      * Flag to indicate whether the widget is newly added
@@ -242,6 +252,9 @@ class Widget implements \JsonSerializable
 
     /** @var  PlaylistFactory */
     private $playlistFactory;
+
+    /** @var ActionFactory */
+    private $actionFactory;
     //</editor-fold>
 
     /**
@@ -254,8 +267,9 @@ class Widget implements \JsonSerializable
      * @param WidgetAudioFactory $widgetAudioFactory
      * @param PermissionFactory $permissionFactory
      * @param DisplayFactory $displayFactory
+     * @param ActionFactory $actionFactory
      */
-    public function __construct($store, $log, $date, $widgetOptionFactory, $widgetMediaFactory, $widgetAudioFactory, $permissionFactory, $displayFactory)
+    public function __construct($store, $log, $date, $widgetOptionFactory, $widgetMediaFactory, $widgetAudioFactory, $permissionFactory, $displayFactory, $actionFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->excludeProperty('module');
@@ -265,6 +279,7 @@ class Widget implements \JsonSerializable
         $this->widgetAudioFactory = $widgetAudioFactory;
         $this->permissionFactory = $permissionFactory;
         $this->displayFactory = $displayFactory;
+        $this->actionFactory = $actionFactory;
     }
 
     /**
@@ -287,6 +302,9 @@ class Widget implements \JsonSerializable
         // No need to clone the media, but we should empty the original arrays of ids
         $this->originalMediaIds = [];
         $this->originalAudio = [];
+
+        // Clone actions
+        $this->actions = array_map(function ($object) { return clone $object; }, $this->actions);
     }
 
     /**
@@ -315,6 +333,7 @@ class Widget implements \JsonSerializable
             . $this->fromDt
             . $this->toDt
             . json_encode($this->widgetOptions)
+            . json_encode($this->actions)
         );
     }
 
@@ -666,11 +685,13 @@ class Widget implements \JsonSerializable
 
     /**
      * Load the Widget
+     * @param bool $loadActions
      */
-    public function load()
+    public function load($loadActions = true)
     {
-        if ($this->loaded || $this->widgetId == null || $this->widgetId == 0)
+        if ($this->loaded || $this->widgetId == null || $this->widgetId == 0) {
             return;
+        }
 
         // Load permissions
         $this->permissions = $this->permissionFactory->getByObjectId(get_class(), $this->widgetId);
@@ -686,6 +707,10 @@ class Widget implements \JsonSerializable
         // Load any widget audio assignments
         $this->audio = $this->widgetAudioFactory->getByWidgetId($this->widgetId);
         $this->originalAudio = $this->audio;
+
+        if ($loadActions) {
+            $this->actions = $this->actionFactory->getBySourceAndSourceId('widget', $this->widgetId);
+        }
 
         $this->hash = $this->hash();
         $this->mediaHash = $this->mediaHash();
@@ -858,6 +883,10 @@ class Widget implements \JsonSerializable
             // Assert the widgetId
             $audio->widgetId = $this->widgetId;
             $audio->delete();
+        }
+
+        foreach ($this->actions as $action) {
+            $action->delete();
         }
 
         // Unlink Media

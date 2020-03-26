@@ -125,6 +125,7 @@ class DisplayProfileFactory extends BaseFactory
     /**
      * @param $clientType
      * @return DisplayProfile
+     * @throws NotFoundException
      */
     public function getUnknownProfile($clientType)
     {

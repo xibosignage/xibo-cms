@@ -28,6 +28,7 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 use Xibo\Entity\Permission;
+use Xibo\Factory\ActionFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
@@ -91,6 +92,11 @@ class Region extends Base
     private $userGroupFactory;
 
     /**
+     * @var ActionFactory
+     */
+    private $actionFactory;
+
+    /**
      * Set common dependencies.
      * @param LogServiceInterface $log
      * @param SanitizerService $sanitizerService
@@ -108,8 +114,9 @@ class Region extends Base
      * @param LayoutFactory $layoutFactory
      * @param UserGroupFactory $userGroupFactory
      * @param Twig $view
+     * @param ActionFactory $actionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $regionFactory, $widgetFactory, $permissionFactory, $transitionFactory, $moduleFactory, $layoutFactory, $userGroupFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $regionFactory, $widgetFactory, $permissionFactory, $transitionFactory, $moduleFactory, $layoutFactory, $userGroupFactory, Twig $view, $actionFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
@@ -121,6 +128,7 @@ class Region extends Base
         $this->layoutFactory = $layoutFactory;
         $this->moduleFactory = $moduleFactory;
         $this->userGroupFactory = $userGroupFactory;
+        $this->actionFactory = $actionFactory;
     }
 
     /**
@@ -138,8 +146,9 @@ class Region extends Base
     {
         $region = $this->regionFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($region))
+        if (!$this->getUser()->checkEditable($region)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'region-form-edit';
         $this->getState()->setData([
@@ -493,8 +502,9 @@ class Region extends Base
     {
         $region = $this->regionFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($region))
+        if (!$this->getUser()->checkDeleteable($region)) {
             throw new AccessDeniedException();
+        }
 
         // Check that this Regions Layout is in an editable state
         $layout = $this->layoutFactory->getById($region->layoutId);
@@ -737,5 +747,112 @@ class Region extends Base
                 array('id' => 'NW', 'name' => __('North West'))
             )
         ];
+    }
+
+    /**
+     * Add a drawer
+
+     * @SWG\Post(
+     *  path="/region/drawer/{id}",
+     *  operationId="regionDrawerAdd",
+     *  tags={"layout"},
+     *  summary="Add drawer Region",
+     *  description="Add a drawer Region to a Layout",
+     *  @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      description="The Layout ID to add the Region to",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Region"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws ControllerNotImplemented
+     */
+    public function addDrawer(Request $request, Response $response, $id) :Response
+    {
+        $layout = $this->layoutFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        if (!$this->getUser()->checkEditable($layout)) {
+            throw new AccessDeniedException();
+        }
+
+        if (!$layout->isChild()) {
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
+
+        $layout->load([
+            'loadPlaylists' => true,
+            'loadTags' => false,
+            'loadPermissions' => true,
+            'loadCampaigns' => false
+        ]);
+
+        // Add a new region
+        $drawer = $this->regionFactory->create(
+            $this->getUser()->userId, $layout->layout . '-' . (count($layout->regions) + 1 . ' - drawer'),
+            $sanitizedParams->getInt('width', ['default' => 250]),
+            $sanitizedParams->getInt('height', ['default' => 250]),
+            $sanitizedParams->getInt('top', ['default' => 50]),
+            $sanitizedParams->getInt('left', ['default' => 50]),
+            0,
+            1
+        );
+
+        $layout->drawers[] = $drawer;
+        $layout->save([
+            'saveTags' => false
+        ]);
+
+        // Permissions
+        if ($this->getConfig()->getSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
+
+            $this->getLog()->debug('Applying permissions from parent, there are ' . count($layout->permissions));
+
+            // Apply permissions from the Parent
+            foreach ($layout->permissions as $permission) {
+                /* @var Permission $permission */
+                $permission = $this->permissionFactory->create($permission->groupId, get_class($drawer), $drawer->getId(), $permission->view, $permission->edit, $permission->delete);
+                $permission->save();
+            }
+        }
+        else {
+            $this->getLog()->debug('Applying default permissions');
+
+            // Apply the default permissions
+            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($drawer), $drawer->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
+                /* @var Permission $permission */
+                $permission->save();
+            }
+        }
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => sprintf(__('Added drawer %s'), $drawer->name),
+            'id' => $drawer->regionId,
+            'data' => $drawer
+        ]);
+
+        return $this->render($request, $response);
     }
 }

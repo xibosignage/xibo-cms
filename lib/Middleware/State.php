@@ -66,7 +66,7 @@ class State implements Middleware
      * @return Response
      * @throws InstanceSuspendedException
      * @throws UpgradePendingException
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function process(Request $request, RequestHandler $handler): Response
     {
@@ -142,7 +142,7 @@ class State implements Middleware
      * @param App $app
      * @param \Psr\Http\Message\ServerRequestInterface $request
      * @return \Psr\Http\Message\ServerRequestInterface
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public static function setState(App $app, Request $request): Request
     {
@@ -219,6 +219,7 @@ class State implements Middleware
         $container->get('logService')->setMode($mode);
 
         if ($container->get('name') == 'web') {
+
             $container->set('flash', function () {
                 return new \Slim\Flash\Messages();
             });
@@ -227,9 +228,14 @@ class State implements Middleware
             $view = $container->get('view');
             $view->addExtension(new TwigMessages(new \Slim\Flash\Messages()));
 
+            $twigEnvironment = $view->getEnvironment();
+
+            // add the urldecode filter to Twig.
+            $filter = new \Twig\TwigFilter('url_decode', 'urldecode');
+            $twigEnvironment->addFilter($filter);
+
             // set Twig auto reload if we are in test mode
             if(strtolower($mode) == 'test') {
-                $twigEnvironment = $view->getEnvironment();
                 $twigEnvironment->enableAutoReload();
             }
         }
@@ -386,6 +392,22 @@ class State implements Middleware
     public static function registerControllersWithDi()
     {
         return [
+            '\Xibo\Controller\Action' => function(ContainerInterface $c) {
+                return new \Xibo\Controller\Action(
+                    $c->get('logService'),
+                    $c->get('sanitizerService'),
+                    $c->get('state'),
+                    $c->get('user'),
+                    $c->get('helpService'),
+                    $c->get('dateService'),
+                    $c->get('configService'),
+                    $c->get('actionFactory'),
+                    $c->get('layoutFactory'),
+                    $c->get('regionFactory'),
+                    $c->get('widgetFactory'),
+                    $c->get('view')
+                );
+            },
             '\Xibo\Controller\Applications' => function(ContainerInterface $c) {
                 return new \Xibo\Controller\Applications(
                     $c->get('logService'),
@@ -684,7 +706,8 @@ class State implements Middleware
                     $c->get('campaignFactory'),
                     $c->get('displayGroupFactory'),
                     $c->get('view'),
-                    $c
+                    $c,
+                    $c->get('actionFactory')
                 );
             },
             '\Xibo\Controller\Library' => function(ContainerInterface $c) {
@@ -930,7 +953,8 @@ class State implements Middleware
                     $c->get('moduleFactory'),
                     $c->get('layoutFactory'),
                     $c->get('userGroupFactory'),
-                    $c->get('view')
+                    $c->get('view'),
+                    $c->get('actionFactory')
                 );
             },
             '\Xibo\Controller\Report' => function(ContainerInterface $c) {
@@ -1185,6 +1209,15 @@ class State implements Middleware
     public static function registerFactoriesWithDi()
     {
         return [
+            'actionFactory' => function(ContainerInterface $c) {
+                return new \Xibo\Factory\ActionFactory(
+                    $c->get('store'),
+                    $c->get('logService'),
+                    $c->get('sanitizerService'),
+                    $c->get('user'),
+                    $c->get('userFactory')
+                );
+            },
             'applicationFactory' => function(ContainerInterface $c) {
                 return new \Xibo\Factory\ApplicationFactory(
                     $c->get('store'),
@@ -1370,7 +1403,8 @@ class State implements Middleware
                     $c->get('widgetFactory'),
                     $c->get('widgetOptionFactory'),
                     $c->get('playlistFactory'),
-                    $c->get('widgetAudioFactory')
+                    $c->get('widgetAudioFactory'),
+                    $c->get('actionFactory')
                 );
             },
             'logFactory' => function(ContainerInterface $c) {
@@ -1475,7 +1509,8 @@ class State implements Middleware
                     $c->get('dateService'),
                     $c->get('permissionFactory'),
                     $c->get('regionOptionFactory'),
-                    $c->get('playlistFactory')
+                    $c->get('playlistFactory'),
+                    $c->get('actionFactory')
                 );
             },
             'regionOptionFactory' => function(ContainerInterface $c) {
@@ -1638,7 +1673,8 @@ class State implements Middleware
                     $c->get('widgetMediaFactory'),
                     $c->get('widgetAudioFactory'),
                     $c->get('permissionFactory'),
-                    $c->get('displayFactory')
+                    $c->get('displayFactory'),
+                    $c->get('actionFactory')
                 );
             },
             'widgetMediaFactory' => function(ContainerInterface $c) {

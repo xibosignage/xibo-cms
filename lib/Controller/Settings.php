@@ -602,7 +602,7 @@ class Settings extends Base
         // Have we changed log level? If so, were we also provided the elevate until setting?
         if ($newElevateUntil === null && $currentLogLevel != $newLogLevel) {
             // We haven't provided an elevate until (meaning it is not visible)
-            $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', $this->getDate()->parse()->addHour(1)->format('U'));
+            $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', $this->getDate()->parse()->addHour()->format('U'));
         }
 
         if ($this->getConfig()->isSettingEditable('SERVER_MODE')) {

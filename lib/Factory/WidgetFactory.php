@@ -63,6 +63,9 @@ class WidgetFactory extends BaseFactory
     /** @var  DisplayFactory */
     private $displayFactory;
 
+    /** @var ActionFactory */
+    private $actionFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -76,9 +79,9 @@ class WidgetFactory extends BaseFactory
      * @param WidgetAudioFactory $widgetAudioFactory
      * @param PermissionFactory $permissionFactory
      * @param DisplayFactory $displayFactory
-     *
+     * @param ActionFactory $actionFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $date, $widgetOptionFactory, $widgetMediaFactory, $widgetAudioFactory, $permissionFactory, $displayFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $date, $widgetOptionFactory, $widgetMediaFactory, $widgetAudioFactory, $permissionFactory, $displayFactory, $actionFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
@@ -88,6 +91,7 @@ class WidgetFactory extends BaseFactory
         $this->widgetAudioFactory = $widgetAudioFactory;
         $this->permissionFactory = $permissionFactory;
         $this->displayFactory = $displayFactory;
+        $this->actionFactory = $actionFactory;
     }
 
     /**
@@ -104,7 +108,8 @@ class WidgetFactory extends BaseFactory
             $this->widgetMediaFactory,
             $this->widgetAudioFactory,
             $this->permissionFactory,
-            $this->displayFactory
+            $this->displayFactory,
+            $this->actionFactory
         );
     }
 

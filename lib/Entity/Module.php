@@ -152,10 +152,14 @@ class Module implements \JsonSerializable
         return sprintf('%s - %s', $this->type, $this->name);
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function validate()
     {
-        if (!v::intType()->validate($this->defaultDuration))
+        if (!v::intType()->validate($this->defaultDuration)) {
             throw new InvalidArgumentException(__('Default Duration is a required field.'), 'defaultDuration');
+        }
 
         if (!empty($this->validExtensions) && !v::alnum(',')->validate($this->validExtensions)) {
             throw new InvalidArgumentException(__('Comma separated file extensions only please, without the .'), 'validExtensions');

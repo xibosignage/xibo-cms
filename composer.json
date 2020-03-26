@@ -28,7 +28,7 @@
   ],
   "repositories": [{
     "type": "vcs",
-    "url": "https://github.com/PeterMis/support"
+    "url": "https://github.com/xibosignage/support"
   }],
   "config": {
       "platform": {

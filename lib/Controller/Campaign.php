@@ -98,6 +98,13 @@ class Campaign extends Base
         $this->tagFactory = $tagFactory;
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     */
     public function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'campaign-page';

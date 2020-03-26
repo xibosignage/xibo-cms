@@ -233,7 +233,7 @@ class Fault extends Base
      */
     public function debugOn(Request $request, Response $response)
     {
-        $this->getConfig()->changeSetting('audit', 'DEBUG');
+        $this->getConfig()->changeSetting('audit', 'debug');
         $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', $this->getDate()->parse()->addMinutes(30)->format('U'));
 
         // Return

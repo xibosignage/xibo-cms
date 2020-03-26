@@ -118,16 +118,22 @@ class Resolution implements \JsonSerializable
         return $this->userId;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function validate()
     {
-        if (!v::stringType()->notEmpty()->validate($this->resolution))
+        if (!v::stringType()->notEmpty()->validate($this->resolution)) {
             throw new InvalidArgumentException(__('Please provide a name'), 'name');
+        }
 
-        if (!v::intType()->notEmpty()->min(1)->validate($this->width))
+        if (!v::intType()->notEmpty()->min(1)->validate($this->width)) {
             throw new InvalidArgumentException(__('Please provide a width'), 'width');
+        }
 
-        if (!v::intType()->notEmpty()->min(1)->validate($this->height))
+        if (!v::intType()->notEmpty()->min(1)->validate($this->height)) {
             throw new InvalidArgumentException(__('Please provide a height'), 'height');
+        }
 
         // Set the designer width and height
         $factor = min (800 / $this->width, 800 / $this->height);

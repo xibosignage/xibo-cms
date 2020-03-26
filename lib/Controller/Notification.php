@@ -777,6 +777,15 @@ class Notification extends Base
         return $this->render($request, $response);
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
     public function exportAttachment(Request $request, Response $response, $id)
     {
         $notification = $this->notificationFactory->getById($id);

@@ -76,8 +76,9 @@ class LayoutUploadHandler extends BlueImpUploadHandler
                 $this->options['libraryController']
             );
 
-            $layout->save();
+            $layout->save(['saveActions' => false]);
             $layout->managePlaylistClosureTable($layout);
+            $layout->manageActions($layout);
 
             @unlink($controller->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $fileName);
 
@@ -86,7 +87,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
             $file->id = $layout->layoutId;
 
         } catch (Exception $e) {
-            $controller->getLog()->error('Error importing Layout: %s', $e->getMessage());
+            $controller->getLog()->error(sprintf('Error importing Layout: %s', $e->getMessage()));
             $controller->getLog()->debug($e->getTraceAsString());
 
             $file->error = $e->getMessage();

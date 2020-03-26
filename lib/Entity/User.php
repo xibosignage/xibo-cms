@@ -799,6 +799,12 @@ class User implements \JsonSerializable
             'oldUserId' => $this->userId
         ]);
 
+        // Reassign Actions
+        $this->getStore()->update('UPDATE `action` SET ownerId = :userId WHERE ownerId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
         // Load again
         $this->loaded = false;
         $this->load(true);
@@ -899,8 +905,9 @@ class User implements \JsonSerializable
         $this->getLog()->debug('Deleting %d', $this->userId);
 
         // We must ensure everything is loaded before we delete
-        if ($this->hash == null)
+        if ($this->hash == null) {
             $this->load(true);
+        }
 
         // Remove the user specific group
         $group = $this->userGroupFactory->getById($this->groupId);
@@ -961,6 +968,9 @@ class User implements \JsonSerializable
             $dataSet->delete();
         }
 
+        // Delete Actions
+        $this->getStore()->update('DELETE FROM `action` WHERE ownerId = :userId', ['userId' => $this->userId]);
+
         // Delete user specific entities
         $this->getStore()->update('DELETE FROM `resolution` WHERE userId = :userId', ['userId' => $this->userId]);
         $this->getStore()->update('DELETE FROM `daypart` WHERE userId = :userId', ['userId' => $this->userId]);
@@ -1007,6 +1017,9 @@ class User implements \JsonSerializable
 
     /**
      * Update user
+     * @throws DuplicateEntityException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
     private function update()
     {
@@ -1273,6 +1286,7 @@ class User implements \JsonSerializable
      * Get a permission object
      * @param object $object
      * @return \Xibo\Entity\Permission
+     * @throws InvalidArgumentException
      */
     public function getPermission($object)
     {
@@ -1303,6 +1317,7 @@ class User implements \JsonSerializable
      * Check the given object is viewable
      * @param object $object
      * @return bool
+     * @throws InvalidArgumentException
      */
     public function checkViewable($object)
     {
@@ -1332,6 +1347,7 @@ class User implements \JsonSerializable
      * Check the given object is editable
      * @param object $object
      * @return bool
+     * @throws InvalidArgumentException
      */
     public function checkEditable($object)
     {
@@ -1361,6 +1377,7 @@ class User implements \JsonSerializable
      * Check the given object is delete-able
      * @param object $object
      * @return bool
+     * @throws InvalidArgumentException
      */
     public function checkDeleteable($object)
     {
@@ -1391,6 +1408,7 @@ class User implements \JsonSerializable
      * Check the given objects permissions are modify-able
      * @param object $object
      * @return bool
+     * @throws InvalidArgumentException
      */
     public function checkPermissionsModifyable($object)
     {

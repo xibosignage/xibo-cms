@@ -1397,6 +1397,8 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Set Default Widget Options
+     * @throws InvalidArgumentException
+     * @throws ValueTooLargeException
      */
     public function setDefaultWidgetOptions()
     {

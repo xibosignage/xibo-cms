@@ -336,7 +336,7 @@ class Ticker extends ModuleWidget
         $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
         $this->setOption('xmds', true);
-        $this->setOption('uri', $sanitizedParams->getString('uri'));
+        $this->setOption('uri', urlencode($sanitizedParams->getString('uri')));
         $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 120]));
 
         if ($sanitizedParams->getInt('updateIntervalImages') !== null) {

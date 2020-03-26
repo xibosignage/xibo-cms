@@ -32,6 +32,7 @@ use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
 use Xibo\Entity\Session;
 use Xibo\Entity\Widget;
+use Xibo\Factory\ActionFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -115,6 +116,9 @@ class Layout extends Base
     /** @var  DisplayGroupFactory */
     private $displayGroupFactory;
 
+    /** @var  ActionFactory */
+    private $actionFactory;
+
     /** ContainerInterface */
     private  $container;
 
@@ -141,8 +145,9 @@ class Layout extends Base
      * @param $displayGroupFactory
      * @param Twig $view
      * @param ContainerInterface $container
+     * @param ActionFactory $actionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory, $campaignFactory, $displayGroupFactory, Twig $view, ContainerInterface $container)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory, $campaignFactory, $displayGroupFactory, Twig $view, ContainerInterface $container, $actionFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
 
@@ -158,6 +163,7 @@ class Layout extends Base
         $this->dataSetFactory = $dataSetFactory;
         $this->campaignFactory = $campaignFactory;
         $this->displayGroupFactory = $displayGroupFactory;
+        $this->actionFactory = $actionFactory;
         $this->container = $container;
     }
 
@@ -626,12 +632,14 @@ class Layout extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Make sure we have permission
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException();
+        }
 
         // Check that this Layout is a Draft
-        if (!$layout->isChild())
+        if (!$layout->isChild()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
 
         $layout->backgroundColor = $sanitizedParams->getString('backgroundColor');
         $layout->backgroundImageId = $sanitizedParams->getInt('backgroundImageId');
@@ -1188,7 +1196,7 @@ class Layout extends Base
             'publishedStatusId' => $parsedQueryParams->getInt('publishedStatusId'),
             'activeDisplayGroupId' => $parsedQueryParams->getInt('activeDisplayGroupId'),
             'campaignId' => $parsedQueryParams->getInt('campaignId'),
-        ], $request), $request);
+        ], $request));
 
         foreach ($layouts as $layout) {
             /* @var \Xibo\Entity\Layout $layout */
@@ -1199,7 +1207,8 @@ class Layout extends Base
                     'loadCampaigns' => in_array('campaigns', $embed),
                     'loadPermissions' => in_array('permissions', $embed),
                     'loadTags' => in_array('tags', $embed),
-                    'loadWidgets' => in_array('widgets', $embed)
+                    'loadWidgets' => in_array('widgets', $embed),
+                    'loadActions' => in_array('actions', $embed)
                 ]);
             }
 
@@ -1208,7 +1217,7 @@ class Layout extends Base
 
             // Annotate each Widget with its validity, tags and permissions
             if (in_array('widget_validity', $embed) || in_array('tags', $embed) || in_array('permissions', $embed)) { 
-                foreach ($layout->getWidgets() as $widget) {
+                foreach ($layout->getAllWidgets() as $widget) {
                     /* @var Widget $widget */
                     $module = $this->moduleFactory->createWithWidget($widget);
 
@@ -1258,8 +1267,10 @@ class Layout extends Base
                     }
                 }
 
+                $allRegions = array_merge($layout->regions, $layout->drawers);
+
                 // Augment regions with permissions
-                foreach ($layout->regions as $region) {
+                foreach ($allRegions as $region) {
                     if (in_array('permissions', $embed)) {
                         // Augment with editable flag
                         $region->isEditable = $this->getUser()->checkEditable($region);
@@ -1274,8 +1285,9 @@ class Layout extends Base
 
             }
 
-            if ($this->isApi($request))
+            if ($this->isApi($request)) {
                 continue;
+            }
 
             $layout->includeProperty('buttons');
             //$layout->excludeProperty('regions');
@@ -1583,8 +1595,9 @@ class Layout extends Base
         }
 
         // Check Permissions
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'layout-form-edit';
         $this->getState()->setData([
@@ -1732,12 +1745,14 @@ class Layout extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($layout))
+        if (!$this->getUser()->checkViewable($layout)) {
             throw new AccessDeniedException();
+        }
 
         // Make sure we're not a draft
-        if ($layout->isChild())
+        if ($layout->isChild()) {
             throw new InvalidArgumentException('Cannot copy a Draft Layout', 'layoutId');
+        }
 
         // Load the layout for Copy
         $layout->load(['loadTags' => false]);
@@ -1767,7 +1782,7 @@ class Layout extends Base
         // Copy the media on the layout and change the assignments.
         // https://github.com/xibosignage/xibo/issues/1283
         if ($sanitizedParams->getCheckbox('copyMediaFiles') == 1) {
-            foreach ($layout->getWidgets() as $widget) {
+            foreach ($layout->getAllWidgets() as $widget) {
                 // Copy the media
                     if ( $widget->type === 'image' || $widget->type === 'video' || $widget->type === 'pdf' || $widget->type === 'powerpoint' || $widget->type === 'audio' ) {
                         $oldMedia = $this->mediaFactory->getById($widget->getPrimaryMediaId());
@@ -1797,11 +1812,20 @@ class Layout extends Base
         // Save the new layout
         $layout->save();
 
-        // Sub-Playlist
-        foreach ($layout->regions as $region) {
-            // Match our original region id to the id in the parent layout
-            $original = $originalLayout->getRegion($region->getOriginalValue('regionId'));
+        $allRegions = array_merge($layout->regions, $layout->drawers);
 
+        // this will adjusted source/target Ids in the copied layout
+        $layout->copyActions($layout, $originalLayout);
+
+        // Sub-Playlist
+        /** @var Region $region */
+        foreach ($allRegions as $region) {
+            // Match our original region id to the id in the parent layout
+            if ($region->isDrawer === 0) {
+                $original = $originalLayout->getRegion($region->getOriginalValue('regionId'));
+            } else {
+                $original = $originalLayout->getDrawer($region->getOriginalValue('regionId'));
+            }
             // Make sure Playlist closure table from the published one are copied over
             $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
         }
@@ -1812,7 +1836,7 @@ class Layout extends Base
             $permission->save();
         }
 
-        foreach ($layout->regions as $region) {
+        foreach ($allRegions as $region) {
             /* @var Region $region */
             foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
                 /* @var Permission $permission */
@@ -2122,8 +2146,6 @@ class Layout extends Base
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Exception\InvalidArgumentException
-     * @throws \Xibo\Exception\NotFoundException
      */
     public function export(Request $request, Response $response, $id)
     {
@@ -2134,8 +2156,9 @@ class Layout extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($layout))
+        if (!$this->getUser()->checkViewable($layout)) {
             throw new AccessDeniedException();
+        }
 
         // Make sure we're not a draft
         if ($layout->isChild()) {
@@ -2413,12 +2436,20 @@ class Layout extends Base
             'notify' => false
         ]);
 
+        /** @var Region[] $allRegions */
+        $allRegions = array_merge($draft->regions, $draft->drawers);
+        $draft->copyActions($draft, $layout);
+
         // Permissions && Sub-Playlists
         // Layout level permissions are managed on the Campaign entity, so we do not need to worry about that
         // Regions/Widgets need to copy down our layout permissions
-        foreach ($draft->regions as $region) {
+        foreach ($allRegions as $region) {
             // Match our original region id to the id in the parent layout
-            $original = $layout->getRegion($region->getOriginalValue('regionId'));
+            if ($region->isDrawer === 0) {
+                $original = $layout->getRegion($region->getOriginalValue('regionId'));
+            } else {
+                $original = $layout->getDrawer($region->getOriginalValue('regionId'));
+            }
 
             // Make sure Playlist closure table from the published one are copied over
             $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
@@ -2440,7 +2471,6 @@ class Layout extends Base
             // Widgets
             foreach ($region->getPlaylist()->widgets as $widget) {
                 $originalWidget = $original->getPlaylist()->getWidget($widget->getOriginalValue('widgetId'));
-
                 // Copy over original permissions
                 foreach ($originalWidget->permissions as $permission) {
                     $new = clone $permission;

@@ -1646,6 +1646,8 @@ class Library extends Base
 
     /**
      * Installs all files related to the enabled modules
+     * @throws NotFoundException
+     * @throws GeneralException
      */
     public function installAllModuleFiles()
     {
@@ -1696,6 +1698,8 @@ class Library extends Base
 
     /**
      * Removes all expired media files
+     * @throws NotFoundException
+     * @throws GeneralException
      */
     public function removeExpiredFiles()
     {
