@@ -172,7 +172,13 @@ class BaseFactory
                 $permissionSql .= ' AND ' . $ownerColumn . ' IN (SELECT userId FROM user WHERE userTypeId = 4) ';
             } else {
                 // Standard only
-                $permissionSql .= ' AND ' . $ownerColumn . ' IN (SELECT userId FROM user WHERE userTypeId <> 4) ';
+                // workaround for a historical issue where the displaygroup.userId field is 0
+                // Note: this does not get cherry-picked into v3
+                if ($ownerColumn === '`displaygroup`.userId') {
+                    $permissionSql .= ' AND (`displaygroup`.userId = 0 OR `displaygroup`.userId IN (SELECT userId FROM user WHERE userTypeId <> 4)) ';
+                } else {
+                    $permissionSql .= ' AND ' . $ownerColumn . ' IN (SELECT userId FROM user WHERE userTypeId <> 4) ';
+                }
             }
         }
 
