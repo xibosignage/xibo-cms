@@ -236,7 +236,12 @@ class StatisticsMediaTest extends LocalWebTestCase
         $object = json_decode($response->getBody());
 
         $this->assertObjectHasAttribute('data', $object, $response->getBody());
-        $stats = (new XiboStats($this->getEntityProvider()))->get(['fromDt' => '2018-02-12 00:00:00', 'toDt' => '2018-02-17 00:00:00', 'layoutId' => $this->layout->layoutId]);
+        $stats = (new XiboStats($this->getEntityProvider()))->get([
+            'fromDt' => '2018-02-12 00:00:00',
+            'toDt' => '2018-02-17 00:00:00',
+            'displayId' => $this->display->displayId,
+            'type' => $type
+        ]);
         $this->assertNotEquals(0, count($stats));
 
     }
