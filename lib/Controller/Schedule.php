@@ -350,7 +350,11 @@ class Schedule extends Base
                 $title = __('%s scheduled on %s', $row->campaign, $displayGroupList);
             }
 
-            if ($row->recurrenceType == 'Minute' || $row->recurrenceType == 'Hour') {
+            // Day diff from start date to end date
+            $diff = $end->diff($start)->days;
+
+            // Show all Hourly repeats on the day view
+            if ($row->recurrenceType == 'Minute' || ($diff > 1 && $row->recurrenceType == 'Hour')) {
                 $title .= __(', Repeats every %s %s', $row->recurrenceDetail, $row->recurrenceType);
             }
 
@@ -384,7 +388,7 @@ class Schedule extends Base
                 $this->getLog()->debug(sprintf('End date is ' . $toDt->toRssString() . ' ' . $scheduleEvent->toDt));
 
                 // For a minute/hourly repeating events show only 1 event per day
-                if ($row->recurrenceType == 'Minute' || $row->recurrenceType == 'Hour')  {
+                if ($row->recurrenceType == 'Minute' || ($diff > 1 && $row->recurrenceType == 'Hour')) {
                     if (array_key_exists($fromDtDay, $days)) {
                         continue;
                     } else {
