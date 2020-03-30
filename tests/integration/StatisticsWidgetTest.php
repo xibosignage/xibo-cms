@@ -153,6 +153,7 @@ class StatisticsWidgetTest extends LocalWebTestCase
             'fromDt' => '2018-02-12 00:00:00',
             'toDt' => '2018-02-17 00:00:00',
             'displayId' => $this->display->displayId,
+            'layoutId' => [$this->layout->layoutId],
             'type' => $type
         ]);
 
@@ -165,6 +166,7 @@ class StatisticsWidgetTest extends LocalWebTestCase
             'fromDt' => '2018-02-12 00:00:00',
             'toDt' => '2018-02-17 00:00:00',
             'displayId' => $this->display->displayId,
+            'layoutId' => [$this->layout->layoutId],
             'type' => $type
         ]);
         $this->assertNotEquals(0, count($stats));

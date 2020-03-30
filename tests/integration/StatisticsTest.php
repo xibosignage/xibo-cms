@@ -331,7 +331,8 @@ class StatisticsTest extends LocalWebTestCase
         $response = $this->sendRequest('GET','/stats', [
             'fromDt' => '2018-02-12 00:00:00',
             'toDt' => '2018-02-17 00:00:00',
-            'displayId' => $this->display->displayId
+            'displayId' => $this->display->displayId,
+            'layoutId' => [$this->layout->layoutId]
         ]);
 
         $this->assertSame(200, $response->getStatusCode());
@@ -343,6 +344,7 @@ class StatisticsTest extends LocalWebTestCase
             'fromDt' => '2018-02-12 00:00:00',
             'toDt' => '2018-02-17 00:00:00',
             'displayId' => $this->display->displayId,
+            'layoutId' => [$this->layout->layoutId]
         ]);
         $this->assertNotEquals(0, count($stats));
     }
@@ -374,5 +376,4 @@ class StatisticsTest extends LocalWebTestCase
         $body = $response->getBody()->getContents();
         $this->assertContains('layout,"2018-02-12', $body);
     }
-
 }
