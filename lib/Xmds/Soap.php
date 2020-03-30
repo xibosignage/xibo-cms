@@ -1533,8 +1533,8 @@ class Soap
                         /* @var \DOMElement $child */
                         if ($child->nodeName == 'engagement') {
                             $engagements[$i]['tag'] = $child->getAttribute('tag');
-                            $engagements[$i]['duration'] = $child->getAttribute('duration');
-                            $engagements[$i]['count'] = $child->getAttribute('count');
+                            $engagements[$i]['duration'] = (int) $child->getAttribute('duration');
+                            $engagements[$i]['count'] = (int) $child->getAttribute('count');
                             $i++;
                         }
                     }

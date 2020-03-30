@@ -292,6 +292,16 @@ class Stats extends Base
      *      required=false
      *   ),
      *   @SWG\Parameter(
+     *      name="displayIds",
+     *      description="An optional array of display Id to filter",
+     *      in="query",
+     *      required=false,
+     *      type="array",
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *   @SWG\Parameter(
      *      name="layoutId",
      *      description="An optional array of layout Id to filter",
      *      in="query",
@@ -346,8 +356,9 @@ class Stats extends Base
         $type = strtolower($sanitizedQueryParams->getString('type'));
 
         $displayId = $sanitizedQueryParams->getInt('displayId');
-        $layoutIds = $sanitizedQueryParams->getIntArray('layoutId[]', ['default' => []]);
-        $mediaIds = $sanitizedQueryParams->getIntArray('mediaId[]', ['default' => []]);
+        $displays = $sanitizedQueryParams->getIntArray('displayIds', ['default' => []]);
+        $layoutIds = $sanitizedQueryParams->getIntArray('layoutId', ['default' => []]);
+        $mediaIds = $sanitizedQueryParams->getIntArray('mediaId', ['default' => []]);
         $statDate = $sanitizedQueryParams->getDate('statDate');
         $statId = $sanitizedQueryParams->getString('statId');
         $campaignId = $sanitizedQueryParams->getInt('campaignId');
@@ -370,31 +381,42 @@ class Stats extends Base
             $toDt->addDay();
         }
 
+        // Merge displayId and displayIds
+        if ($displayId != 0) {
+            $displays = array_unique(array_merge($displays, [$displayId]));
+        }
+
         // Do not filter by display if super admin and no display is selected
         // Super admin will be able to see stat records of deleted display, we will not filter by display later
         $displayIds = [];
+        $displaysAccessible = [];
         if (!$this->getUser()->isSuperAdmin()) {
             // Get an array of display id this user has access to.
             foreach ($this->displayFactory->query() as $display) {
-                $displayIds[] = $display->displayId;
+                $displaysAccessible[] = $display->displayId;
             }
 
-            if (count($displayIds) <= 0) {
+            if (count($displaysAccessible) <= 0)
                 throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
-            }
 
             // Set displayIds as [-1] if the user selected a display for which they don't have permission
-            if ($displayId != 0) {
-                if (!in_array($displayId, $displayIds)) {
+            if (count($displays) <= 0) {
+                $displayIds = $displaysAccessible;
+            } else {
+                foreach ($displays as $key => $id) {
+                    if (!in_array($id, $displaysAccessible)) {
+                        unset($displays[$key]);
+                    } else {
+                        $displayIds[] = $id;
+                    }
+                }
+
+                if (count($displays) <= 0 ) {
                     $displayIds = [-1];
-                } else {
-                    $displayIds = [$displayId];
                 }
             }
         } else {
-            if ($displayId != 0) {
-                $displayIds = [$displayId];
-            }
+            $displayIds = $displays;
         }
 
         // Call the time series interface getStats

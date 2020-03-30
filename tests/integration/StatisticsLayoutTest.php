@@ -164,6 +164,7 @@ class StatisticsLayoutTest extends LocalWebTestCase
             'fromDt' => '2018-02-12 00:00:00',
             'toDt' => '2018-02-17 00:00:00',
             'displayId' => $this->display->displayId,
+            'layoutId' => [$this->layout->layoutId],
             'type' => $type
         ]);
 
@@ -172,8 +173,13 @@ class StatisticsLayoutTest extends LocalWebTestCase
         $object = json_decode($response->getBody());
         //$this->getLogger()->debug($response->getBody());
         $this->assertObjectHasAttribute('data', $object, $response->getBody());
-        $stats = (new XiboStats($this->getEntityProvider()))->get(['fromDt' => '2018-02-12 00:00:00', 'toDt' => '2018-02-17 00:00:00', 'layoutId' => $this->layout->layoutId]);
-        // print_r($stats);
+        $stats = (new XiboStats($this->getEntityProvider()))->get([
+            'fromDt' => '2018-02-12 00:00:00',
+            'toDt' => '2018-02-17 00:00:00',
+            'displayId' => $this->display->displayId,
+            'layoutId' => [$this->layout->layoutId],
+            'type' => $type
+        ]);
         $this->assertNotEquals(0, count($stats));
     }
 }
