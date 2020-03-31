@@ -999,14 +999,15 @@ class Schedule extends Base
             // Handle the dates
             $fromDt = $sanitizedParams->getDate('fromDt');
             $toDt = $sanitizedParams->getDate('toDt');
-            $this->getLog()->debug('SCHEDULE ADD< FROM DT IS ' . json_encode($fromDt) . ' and TODT IS ' . json_encode($toDt));
             $recurrenceRange = $sanitizedParams->getDate('recurrenceRange');
 
             if ($fromDt === null) {
                 throw new InvalidArgumentException(__('Please enter a from date'), 'fromDt');
             }
 
-            $this->getLog()->debug('Times received are: FromDt=' . $fromDt->format($dateHelper->getSystemFormat()) . '. ToDt=' . $toDt->format($dateHelper->getSystemFormat())  . '. recurrenceRange=' . (isset($recurrenceRange)) ?? $recurrenceRange->format($dateHelper->getSystemFormat()) );
+            $logToDt = isset($toDt) ? $toDt->format($dateHelper->getSystemFormat()) : null;
+            $logRecurrenceRange = isset($recurrenceRange) ? $recurrenceRange->format($dateHelper->getSystemFormat()) : null;
+            $this->getLog()->debug('Times received are: FromDt=' . $fromDt->format($dateHelper->getSystemFormat()) . '. ToDt=' . $logToDt . '. recurrenceRange=' . $logRecurrenceRange);
 
             if (!$schedule->isCustomDayPart() && !$schedule->isAlwaysDayPart()) {
                 // Daypart selected
@@ -1025,22 +1026,29 @@ class Schedule extends Base
                 $this->getLog()->debug('Date format does not include seconds, removing them');
                 $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
 
-                if ($toDt !== null)
+                if ($toDt !== null) {
                     $schedule->toDt = $toDt->setTime($toDt->hour, $toDt->minute, 0)->format('U');
+                }
 
-                if ($recurrenceRange != null)
+                if ($recurrenceRange != null) {
                     $schedule->recurrenceRange = $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
+                }
+
             } else {
                 $schedule->fromDt = $fromDt->format('U');
 
-                if ($toDt !== null)
+                if ($toDt !== null) {
                     $schedule->toDt = $toDt->format('U');
+                }
 
-                if ($recurrenceRange != null)
+                if ($recurrenceRange != null) {
                     $schedule->recurrenceRange = $recurrenceRange->format('U');
+                }
             }
 
-            $this->getLog()->debug('Processed times are: FromDt=' . $fromDt->format($dateHelper->getSystemFormat()) . '. ToDt=' .  $toDt->format($dateHelper->getSystemFormat()) . '. recurrenceRange=' . (isset($recurrenceRange)) ?? $recurrenceRange->format($dateHelper->getSystemFormat()) );
+            $logToDt = isset($toDt) ? $toDt->format($dateHelper->getSystemFormat()) : null;
+            $logRecurrenceRange = isset($recurrenceRange) ? $recurrenceRange->format($dateHelper->getSystemFormat()) : null;
+            $this->getLog()->debug('Processed times are: FromDt=' . $fromDt->format($dateHelper->getSystemFormat()) . '. ToDt=' . $logToDt . '. recurrenceRange=' . $logRecurrenceRange );
         }
 
         // Ready to do the add
@@ -1499,7 +1507,9 @@ class Schedule extends Base
                 throw new InvalidArgumentException(__('Please enter a from date'). 'fromDt');
             }
 
-            $this->getLog()->debug('Times received are: FromDt=' . $fromDt->format($dateHelper->getSystemFormat()) . '. ToDt=' . $toDt->format($dateHelper->getSystemFormat()) . '. recurrenceRange=' . (isset($recurrenceRange)) ?? $recurrenceRange->format($dateHelper->getSystemFormat()));
+            $logToDt = isset($toDt) ? $toDt->format($dateHelper->getSystemFormat()) : null;
+            $logRecurrenceRange = isset($recurrenceRange) ? $recurrenceRange->format($dateHelper->getSystemFormat()) : null;
+            $this->getLog()->debug('Times received are: FromDt=' . $fromDt->format($dateHelper->getSystemFormat()) . '. ToDt=' . $logToDt . '. recurrenceRange=' . $logRecurrenceRange);
 
             if (!$schedule->isCustomDayPart() && !$schedule->isAlwaysDayPart()) {
                 // Daypart selected

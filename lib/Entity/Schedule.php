@@ -596,7 +596,6 @@ class Schedule implements \JsonSerializable
                 $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify ' . count($this->displayGroups) . ' display groups');
                 foreach ($this->displayGroups as $displayGroup) {
                     /* @var DisplayGroup $displayGroup */
-                    $this->getLog()->debug('ABOUT TO NOTIFY DISPLAY GROUP ID ' . $displayGroup->displayGroupId . ' name ' .  $displayGroup->displayGroup . ' display specific? ' . $displayGroup->isDisplaySpecific);
                     $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
                 }
             } else {
