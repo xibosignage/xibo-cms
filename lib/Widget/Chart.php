@@ -22,6 +22,7 @@
  */
 namespace Xibo\Widget;
 
+use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -1029,7 +1030,7 @@ class Chart extends ModuleWidget
         // Remote dataSets are kept "active" by required files
         $dataSet->setActive();
 
-        return $this->getDate()->parse($widgetModifiedDt, 'U');
+        return Carbon::createFromTimestamp($widgetModifiedDt);
     }
 }
 

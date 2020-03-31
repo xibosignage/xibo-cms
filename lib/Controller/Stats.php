@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use GuzzleHttp\Psr7\Stream;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -32,10 +33,10 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ReportServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -94,7 +95,6 @@ class Stats extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param TimeSeriesStoreInterface $timeSeriesStore
@@ -107,9 +107,9 @@ class Stats extends Base
      * @param DisplayGroupFactory $displayGroupFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $reportService, $displayFactory, $layoutFactory, $mediaFactory, $userFactory, $userGroupFactory, $displayGroupFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $timeSeriesStore, $reportService, $displayFactory, $layoutFactory, $mediaFactory, $userFactory, $userGroupFactory, $displayGroupFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->store = $store;
         $this->timeSeriesStore = $timeSeriesStore;
@@ -135,9 +135,9 @@ class Stats extends Base
         $data = [
             // List of Displays this user has permission for
             'defaults' => [
-                'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
-                'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
-                'toDate' => $this->getDate()->getLocalDate()
+                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
+                'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
+                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
             ]
         ];
 
@@ -160,9 +160,9 @@ class Stats extends Base
         $data = [
             // List of Displays this user has permission for
             'defaults' => [
-                'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
-                'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
-                'toDate' => $this->getDate()->getLocalDate(),
+                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
+                'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
+                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
                 'availableReports' => $this->reportService->listReports()
             ]
         ];
@@ -351,8 +351,8 @@ class Stats extends Base
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
 
-        $fromDt = $sanitizedQueryParams->getDate('fromDt', ['default' => $sanitizedQueryParams->getDate('statsFromDt', ['default' => $this->getDate()->parse()->subDay()])]);
-        $toDt = $sanitizedQueryParams->getDate('toDt', ['default' => $sanitizedQueryParams->getDate('statsToDt', ['default' => $this->getDate()->parse()])]);
+        $fromDt = $sanitizedQueryParams->getDate('fromDt', ['default' => $sanitizedQueryParams->getDate('statsFromDt', ['default' => Carbon::now()->subDay()])]);
+        $toDt = $sanitizedQueryParams->getDate('toDt', ['default' => $sanitizedQueryParams->getDate('statsToDt', ['default' => Carbon::now()])]);
         $type = strtolower($sanitizedQueryParams->getString('type'));
 
         $displayId = $sanitizedQueryParams->getInt('displayId');
@@ -458,15 +458,15 @@ class Stats extends Base
             $entry['media'] = $widgetName;
             $entry['numberPlays'] = $sanitizedRow->getInt('count');
             $entry['duration'] = $sanitizedRow->getInt('duration');
-            $entry['minStart'] = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
-            $entry['maxEnd'] = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
-            $entry['start'] = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
-            $entry['end'] = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
+            $entry['minStart'] = Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat());
+            $entry['maxEnd'] = Carbon::createFromTimestamp($row['end'], 'U')->format(DateFormatHelper::getSystemFormat());
+            $entry['start'] = Carbon::createFromTimestamp($row['start'], 'U')->format(DateFormatHelper::getSystemFormat());
+            $entry['end'] = Carbon::createFromTimestamp($row['end'], 'U')->format(DateFormatHelper::getSystemFormat());
             $entry['layoutId'] = $sanitizedRow->getInt('layoutId');
             $entry['widgetId'] = $sanitizedRow->getInt('widgetId');
             $entry['mediaId'] = $sanitizedRow->getInt('mediaId');
             $entry['tag'] = $sanitizedRow->getString('tag');
-            $entry['statDate'] = isset($row['statDate']) ? $this->getDate()->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : '';
+            $entry['statDate'] = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate'])->format(DateFormatHelper::getSystemFormat()) : '';
             $entry['engagements'] = $row['engagements'];
 
             $rows[] = $entry;
@@ -499,7 +499,7 @@ class Stats extends Base
         // Get an array of display id this user has access to.
         $displayIds = [];
 
-        foreach ($this->displayFactory->query(null, [], $request) as $display) {
+        foreach ($this->displayFactory->query(null, []) as $display) {
             $displayIds[] = $display->displayId;
         }
 
@@ -512,8 +512,8 @@ class Stats extends Base
 
         $displayId = $sanitizedParams->getInt('displayId');
         $params = array(
-            'month' => $this->getDate()->getLocalDate($fromDt->setDateTime($fromDt->year, $fromDt->month, 1, 0, 0), 'U'),
-            'month2' => $this->getDate()->getLocalDate($toDt->addMonth()->setDateTime($toDt->year, $toDt->month, 1, 0, 0), 'U')
+            'month' => $fromDt->setDateTime($fromDt->year, $fromDt->month, 1, 0, 0)->format('U'),
+            'month2' => $toDt->addMonth()->setDateTime($toDt->year, $toDt->month, 1, 0, 0)->format('U')
         );
 
         $SQL = 'SELECT display.display, IFNULL(SUM(Size), 0) AS size ';
@@ -792,15 +792,15 @@ class Stats extends Base
             $type = $sanitizedRow->getString('type');
             if ($this->timeSeriesStore->getEngine() == 'mongodb') {
 
-                $statDate = isset($row['statDate']) ? $this->getDate()->parse($row['statDate']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s') : null;
-                $fromDt = $this->getDate()->parse($row['start']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
-                $toDt = $this->getDate()->parse($row['end']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
+                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate']->toDateTime())->format(DateFormatHelper::getSystemFormat()) : null;
+                $fromDt = Carbon::createFromTimestamp($row['start']->toDateTime())->format(DateFormatHelper::getSystemFormat());
+                $toDt = Carbon::createFromTimestamp($row['end']->toDateTime())->format(DateFormatHelper::getSystemFormat());
                 $engagements = isset($row['engagements']) ? json_encode($row['engagements']): '[]';
             } else {
 
-                $statDate = isset($row['statDate']) ?$this->getDate()->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : null;
-                $fromDt = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
-                $toDt = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
+                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate'])->format(DateFormatHelper::getSystemFormat()) : null;
+                $fromDt = Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat());
+                $toDt = Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat());
                 $engagements = isset($row['engagements']) ? $row['engagements']: '[]';
             }
 
@@ -1053,16 +1053,16 @@ class Stats extends Base
         $tags = $sanitizedQueryParams->getString('tags');
         $onlyLoggedIn = $sanitizedQueryParams->getCheckbox('onlyLoggedIn') == 1;
 
-        $currentDate = $this->getDate()->parse()->startOfDay()->format('Y-m-d');
+        $currentDate = Carbon::now()->startOfDay()->format('Y-m-d');
 
         // fromDt is always start of selected day
-        $fromDt = $this->getDate()->parse($fromDt)->startOfDay();
+        $fromDt = $fromDt->startOfDay();
 
         // If toDt is current date then make it current datetime
-        if ($this->getDate()->parse($toDt)->startOfDay()->format('Y-m-d') == $currentDate) {
-            $toDt = $this->getDate()->parse();
+        if ($toDt->startOfDay()->format('Y-m-d') == $currentDate) {
+            $toDt = Carbon::now();
         } else {
-            $toDt = $this->getDate()->parse()->startOfDay();
+            $toDt =  Carbon::now()->startOfDay();
         }
 
         // Get an array of display id this user has access to.

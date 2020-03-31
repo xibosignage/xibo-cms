@@ -25,8 +25,9 @@ namespace Xibo\Widget;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Translate;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class WorldClock
@@ -585,7 +586,7 @@ class WorldClock extends ModuleWidget
     {
         // A list of timezones
         $timeZones = [];
-        foreach ($this->getDate()->timezoneList() as $key => $value) {
+        foreach (DateFormatHelper::timezoneList() as $key => $value) {
             $timeZones[] = ['id' => $key, 'value' => $value];
         }
 

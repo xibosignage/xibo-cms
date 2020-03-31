@@ -21,6 +21,8 @@
  */
 namespace Xibo\Widget;
 
+use Carbon\Carbon;
+use GuzzleHttp\Psr7\Stream;
 use Intervention\Image\ImageManagerStatic as Img;
 use Mimey\MimeTypes;
 use Psr\Container\ContainerInterface;
@@ -51,12 +53,12 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\HttpCacheProvider;
+use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\ControllerNotImplemented;
@@ -149,11 +151,6 @@ abstract class ModuleWidget implements ModuleInterface
     private $configService;
 
     /**
-     * @var DateServiceInterface
-     */
-    private $dateService;
-
-    /**
      * @var SanitizerService
      */
     private $sanitizerService;
@@ -232,8 +229,7 @@ abstract class ModuleWidget implements ModuleInterface
      * @param PoolInterface $pool
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
-     * @param DateServiceInterface $date
-     * @param SanitizerServiceInterface $sanitizer
+     * @param SanitizerService $sanitizer
      * @param EventDispatcherInterface $dispatcher
      * @param ModuleFactory $moduleFactory
      * @param MediaFactory $mediaFactory
@@ -249,13 +245,12 @@ abstract class ModuleWidget implements ModuleInterface
      * @param Twig $view
      * @param ContainerInterface $container
      */
-    public function __construct($store, $pool, $log, $config, $date, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, Twig $view, ContainerInterface $container)
+    public function __construct($store, $pool, $log, $config, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, Twig $view, ContainerInterface $container)
     {
         $this->store = $store;
         $this->pool = $pool;
         $this->logService = $log;
         $this->configService = $config;
-        $this->dateService = $date;
         $this->sanitizerService = $sanitizer;
         $this->dispatcher = $dispatcher;
 
@@ -342,15 +337,6 @@ abstract class ModuleWidget implements ModuleInterface
     public function getConfig()
     {
         return $this->configService;
-    }
-
-    /**
-     * Get Date
-     * @return DateServiceInterface
-     */
-    protected function getDate()
-    {
-        return $this->dateService;
     }
 
     /**
@@ -1208,6 +1194,15 @@ abstract class ModuleWidget implements ModuleInterface
             foreach ($headers as $header => $value) {
                 $response = $response->withHeader($header, $value);
             }
+
+            $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/library_download_' . Random::generateString();
+            // Return the file to the browser as a file
+            $out = fopen($tempFileName, 'w');
+            fputs($out, $libraryPath);
+            fclose($out);
+
+            $response = $response->withBody(new Stream(fopen($tempFileName, 'r')));
+
             return $response;
         }
     }
@@ -1443,7 +1438,7 @@ abstract class ModuleWidget implements ModuleInterface
     public function getModifiedDate($displayId)
     {
         // Default behaviour is to assume we use the widget modified date
-        return $this->getDate()->parse($this->widget->modifiedDt, 'U');
+        return Carbon::createFromTimestamp($this->widget->modifiedDt);
     }
 
     /** @inheritdoc */
@@ -1454,19 +1449,19 @@ abstract class ModuleWidget implements ModuleInterface
 
         // If not cached set it to have cached a long time in the past
         if ($date === null)
-            return $this->getDate()->parse()->subYear();
+            return Carbon::now()->subYear();
 
         // Parse the date
-        return $this->getDate()->parse($date, 'Y-m-d H:i:s');
+        return Carbon::createFromFormat( DateFormatHelper::getSystemFormat(), $date);
     }
 
     /** @inheritdoc */
     public final function setCacheDate($displayId)
     {
-        $now = $this->getDate()->parse();
+        $now = Carbon::now();
         $item = $this->getPool()->getItem($this->makeCacheKey('html/' . $this->getCacheKey($displayId)));
 
-        $item->set($now->format('Y-m-d H:i:s'));
+        $item->set($now->format(DateFormatHelper::getSystemFormat()));
         $item->expiresAt($now->addYear());
 
         $this->getPool()->save($item);
@@ -1481,7 +1476,7 @@ abstract class ModuleWidget implements ModuleInterface
         $resource = null;
 
         // Have we changed since we last cached this widget
-        $now = $this->getDate()->parse();
+        $now = Carbon::now();
         $modifiedDt = $this->getModifiedDate($displayId);
         $cachedDt = $this->getCacheDate($displayId);
         $cacheDuration = $this->getCacheDuration();
@@ -1500,8 +1495,8 @@ abstract class ModuleWidget implements ModuleInterface
         // location wouldn't though, which is why we base this on the width/height.
         $cacheFile = $cacheKey . '_' . $this->region->width . '_' . $this->region->height;
 
-        $this->getLog()->debug('Cache details - modifiedDt: ' . $modifiedDt->format('Y-m-d H:i:s')
-            . ', cacheDt: ' . $cachedDt->format('Y-m-d H:i:s')
+        $this->getLog()->debug('Cache details - modifiedDt: ' . $modifiedDt->format(DateFormatHelper::getSystemFormat())
+            . ', cacheDt: ' . $cachedDt->format(DateFormatHelper::getSystemFormat())
             . ', cacheDuration: ' . $cacheDuration
             . ', cacheKey: ' . $cacheKey
             . ', cacheFile: ' . $cacheFile);
@@ -1601,7 +1596,7 @@ abstract class ModuleWidget implements ModuleInterface
                     throw new GeneralException($exception->getMessage(), $exception->getCode(), $exception);
             }
         } else {
-            $this->getLog()->debug('No need to regenerate, cached until ' . $this->getDate()->getLocalDate($cachedDt->addSeconds($cacheDuration)));
+            $this->getLog()->debug('No need to regenerate, cached until ' . $cachedDt->addSeconds($cacheDuration)->format(DateFormatHelper::getSystemFormat()));
 
             $resource = file_get_contents($cachePath . $cacheFile);
         }
@@ -1652,7 +1647,7 @@ abstract class ModuleWidget implements ModuleInterface
             //sleep(30);
         } else {
             // We are a hit - we must be locked
-            $this->getLog()->debug('LOCK hit for ' . $key . ' expires ' . $this->lock->getExpiration()->format('Y-m-d H:i:s') . ', created ' . $this->lock->getCreation()->format('Y-m-d H:i:s'));
+            $this->getLog()->debug('LOCK hit for ' . $key . ' expires ' . $this->lock->getExpiration()->format(DateFormatHelper::getSystemFormat()) . ', created ' . $this->lock->getCreation()->format(DateFormatHelper::getSystemFormat()));
 
             // Try again?
             $tries--;

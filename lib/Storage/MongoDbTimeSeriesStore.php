@@ -34,7 +34,6 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 
 /**
@@ -45,9 +44,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 {
     /** @var LogServiceInterface */
     private $log;
-
-    /** @var DateServiceInterface */
-    private $dateService;
 
     /** @var array */
     private $config;
@@ -99,10 +95,9 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     /**
      * @inheritdoc
      */
-    public function setDependencies($log, $date, $layoutFactory = null, $campaignFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null, $displayGroupFactory = null)
+    public function setDependencies($log, $layoutFactory = null, $campaignFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null, $displayGroupFactory = null)
     {
         $this->log = $log;
-        $this->dateService = $date;
         $this->mediaFactory = $mediaFactory;
         $this->widgetFactory = $widgetFactory;
         $this->layoutFactory = $layoutFactory;

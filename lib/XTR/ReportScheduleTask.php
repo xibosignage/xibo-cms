@@ -22,6 +22,7 @@
 
 namespace Xibo\XTR;
 
+use Carbon\Carbon;
 use Slim\Views\Twig;
 use Xibo\Controller\Library;
 use Xibo\Factory\MediaFactory;
@@ -30,7 +31,7 @@ use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
-use Xibo\Service\DateServiceInterface;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ReportServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 
@@ -45,9 +46,6 @@ class ReportScheduleTask implements TaskInterface
 
     /** @var Twig */
     private $view;
-
-    /** @var DateServiceInterface */
-    private $date;
 
     /** @var MediaFactory */
     private $mediaFactory;
@@ -74,7 +72,6 @@ class ReportScheduleTask implements TaskInterface
     public function setFactories($container)
     {
         $this->view = $container->get('view');
-        $this->date = $container->get('dateService');
         $this->userFactory = $container->get('userFactory');
         $this->mediaFactory = $container->get('mediaFactory');
         $this->savedReportFactory = $container->get('savedReportFactory');
@@ -113,7 +110,7 @@ class ReportScheduleTask implements TaskInterface
 
             $cron = \Cron\CronExpression::factory($reportSchedule->schedule);
             $nextRunDt = $cron->getNextRunDate(\DateTime::createFromFormat('U', $reportSchedule->lastRunDt))->format('U');
-            $now = time();
+            $now = Carbon::now()->format('U');
 
             if ($nextRunDt <= $now) {
 
@@ -126,7 +123,7 @@ class ReportScheduleTask implements TaskInterface
                 // execute the report
                 $rs = $this->reportScheduleFactory->getById($reportSchedule->reportScheduleId, 1);
                 $rs->previousRunDt = $rs->lastRunDt;
-                $rs->lastRunDt = time();
+                $rs->lastRunDt = Carbon::now()->format('U');
 
                 $this->log->debug('Last run date is updated to '. $rs->lastRunDt);
 
@@ -159,14 +156,14 @@ class ReportScheduleTask implements TaskInterface
                     // Remove the JSON file
                     unlink($fileName);
 
-                    $runDateTimestamp = $this->date->parse()->format('U');
+                    $runDateTimestamp = Carbon::now()->format('U');
 
                     // Upload to the library
                     $media = $this->mediaFactory->create(__('reportschedule_' . $reportSchedule->reportScheduleId . '_' . $runDateTimestamp ), 'reportschedule.json.zip', 'savedreport', $reportSchedule->userId);
                     $media->save();
 
                     // Save Saved report
-                    $savedReport = $this->savedReportFactory->create($saveAs, $reportSchedule->reportScheduleId, $media->mediaId, time(), $reportSchedule->userId);
+                    $savedReport = $this->savedReportFactory->create($saveAs, $reportSchedule->reportScheduleId, $media->mediaId, Carbon::now()->format('U'), $reportSchedule->userId);
                     $savedReport->save();
 
                     $this->createPdfAndNotification($reportSchedule, $savedReport, $media);
@@ -235,7 +232,7 @@ class ReportScheduleTask implements TaskInterface
                     'title' => $savedReport->saveAs,
                     'periodStart' => $savedReportData['chartData']['periodStart'],
                     'periodEnd' => $savedReportData['chartData']['periodEnd'],
-                    'generatedOn' => $this->date->parse($savedReport->generatedOn, 'U')->format('Y-m-d H:i:s'),
+                    'generatedOn' => Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $savedReport->generatedOn),
                     'tableData' => isset($tableData) ? $tableData : null,
                     'src' => isset($src) ? $src : null,
                     'placeholder' => isset($placeholder) ? $placeholder : null
@@ -270,8 +267,8 @@ class ReportScheduleTask implements TaskInterface
                     $notification = $this->notificationFactory->createEmpty();
                     $notification->subject = $report->description;
                     $notification->body = __('Attached please find the report for %s', $savedReport->saveAs);
-                    $notification->createdDt = $this->date->getLocalDate(null, 'U');
-                    $notification->releaseDt = time();
+                    $notification->createdDt = Carbon::now()->format('U');
+                    $notification->releaseDt = Carbon::now()->format('U');
                     $notification->isEmail = 1;
                     $notification->isInterrupt = 0;
                     $notification->userId = $savedReport->userId; // event owner

@@ -21,16 +21,16 @@
  */
 namespace Xibo\Controller;
 
-use Jenssegers\Date\Date;
+use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LogFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -64,7 +64,6 @@ class Logging extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param LogFactory $logFactory
@@ -72,9 +71,9 @@ class Logging extends Base
      * @param UserFactory $userFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $logFactory, $displayFactory, $userFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $logFactory, $displayFactory, $userFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->store = $store;
         $this->logFactory = $logFactory;
@@ -99,6 +98,13 @@ class Logging extends Base
         return $this->render($request, $response);
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
     function grid(Request $request, Response $response)
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
@@ -106,10 +112,10 @@ class Logging extends Base
         // Date time criteria
         $seconds = $parsedQueryParams->getInt('seconds', ['default' => 120]);
         $intervalType = $parsedQueryParams->getInt('intervalType', ['default' => 1]);
-        $fromDt = $parsedQueryParams->getDate('fromDt', ['default' => new Date($this->getDate()->getLocalDate())]);
+        $fromDt = $parsedQueryParams->getDate('fromDt', ['default' => Carbon::now()]);
 
         $logs = $this->logFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
-            'fromDt' => $fromDt->format('U') - ($seconds * $intervalType),
+            'fromDt' => $fromDt->addSeconds($seconds * $intervalType)->format('U'),
             'toDt' => $fromDt->format('U'),
             'type' => $parsedQueryParams->getString('level'),
             'page' => $parsedQueryParams->getString('page'),
@@ -127,7 +133,7 @@ class Logging extends Base
 
         foreach ($logs as $log) {
             // Normalise the date
-            $log->logDate = $this->getDate()->getLocalDate(Date::createFromFormat($this->getDate()->getSystemFormat(), $log->logDate));
+            $log->logDate = Carbon::createFromTimeString($log->logDate)->format(DateFormatHelper::getSystemFormat());
         }
 
         $this->getState()->template = 'grid';

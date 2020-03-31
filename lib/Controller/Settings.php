@@ -22,6 +22,7 @@
 
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -29,9 +30,9 @@ use Slim\Views\Twig;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -59,16 +60,15 @@ class Settings extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param LayoutFactory $layoutFactory
      * @param UserGroupFactory $userGroupFactory
      * @param TransitionFactory $transitionfactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $layoutFactory, $userGroupFactory, $transitionfactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $layoutFactory, $userGroupFactory, $transitionfactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->layoutFactory = $layoutFactory;
         $this->userGroupFactory = $userGroupFactory;
@@ -120,7 +120,7 @@ class Settings extends Base
 
         // A list of timezones
         $timeZones = [];
-        foreach ($this->getDate()->timezoneList() as $key => $value) {
+        foreach (DateFormatHelper::timezoneList() as $key => $value) {
             $timeZones[] = ['id' => $key, 'value' => $value];
         }
 
@@ -168,10 +168,10 @@ class Settings extends Base
         if ($elevateLogUntil != null) {
             $elevateLogUntil = intval($elevateLogUntil);
 
-            if ($elevateLogUntil <= time()) {
+            if ($elevateLogUntil <= Carbon::now()->format('U')) {
                 $elevateLogUntil = null;
             } else {
-                $elevateLogUntil = $this->getDate()->getLocalDate($elevateLogUntil);
+                $elevateLogUntil = Carbon::createFromTimestamp($elevateLogUntil)->format(DateFormatHelper::getSystemFormat());
             }
         }
 
@@ -602,7 +602,7 @@ class Settings extends Base
         // Have we changed log level? If so, were we also provided the elevate until setting?
         if ($newElevateUntil === null && $currentLogLevel != $newLogLevel) {
             // We haven't provided an elevate until (meaning it is not visible)
-            $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', $this->getDate()->parse()->addHour()->format('U'));
+            $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', Carbon::now()->addHour()->format('U'));
         }
 
         if ($this->getConfig()->isSettingEditable('SERVER_MODE')) {

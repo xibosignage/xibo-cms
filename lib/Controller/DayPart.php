@@ -32,7 +32,6 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 
@@ -67,7 +66,6 @@ class DayPart extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param DayPartFactory $dayPartFactory
      * @param DisplayGroupFactory $displayGroupFactory
@@ -77,9 +75,9 @@ class DayPart extends Base
      * @param ScheduleFactory $scheduleFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $dayPartFactory, $displayGroupFactory, $displayFactory, $layoutFactory, $mediaFactory, $scheduleFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $dayPartFactory, $displayGroupFactory, $displayFactory, $layoutFactory, $mediaFactory, $scheduleFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->dayPartFactory = $dayPartFactory;
         $this->displayGroupFactory = $displayGroupFactory;
@@ -494,7 +492,6 @@ class DayPart extends Base
     public function edit(Request $request, Response $response, $id)
     {
         $dayPart = $this->dayPartFactory->getById($id)
-            ->setDateService($this->getDate())
             ->setChildObjectDependencies($this->displayGroupFactory, $this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->dayPartFactory)
             ->load();
 
@@ -619,7 +616,6 @@ class DayPart extends Base
         }
 
         $dayPart
-            ->setDateService($this->getDate())
             ->setScheduleFactory($this->scheduleFactory)
             ->delete();
 

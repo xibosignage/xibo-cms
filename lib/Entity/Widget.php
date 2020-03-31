@@ -21,6 +21,7 @@
  */
 namespace Xibo\Entity;
 
+use Carbon\Carbon;
 use Xibo\Factory\ActionFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\PermissionFactory;
@@ -28,7 +29,7 @@ use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\WidgetAudioFactory;
 use Xibo\Factory\WidgetMediaFactory;
 use Xibo\Factory\WidgetOptionFactory;
-use Xibo\Service\DateServiceInterface;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
@@ -226,8 +227,6 @@ class Widget implements \JsonSerializable
     public static $widgetMinDuration = 1;
 
     //<editor-fold desc="Factories and Dependencies">
-    /** @var  DateServiceInterface */
-    private $dateService;
 
     /**
      * @var WidgetOptionFactory
@@ -261,7 +260,6 @@ class Widget implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param DateServiceInterface $date
      * @param WidgetOptionFactory $widgetOptionFactory
      * @param WidgetMediaFactory $widgetMediaFactory
      * @param WidgetAudioFactory $widgetAudioFactory
@@ -269,11 +267,10 @@ class Widget implements \JsonSerializable
      * @param DisplayFactory $displayFactory
      * @param ActionFactory $actionFactory
      */
-    public function __construct($store, $log, $date, $widgetOptionFactory, $widgetMediaFactory, $widgetAudioFactory, $permissionFactory, $displayFactory, $actionFactory)
+    public function __construct($store, $log, $widgetOptionFactory, $widgetMediaFactory, $widgetAudioFactory, $permissionFactory, $displayFactory, $actionFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->excludeProperty('module');
-        $this->dateService = $date;
         $this->widgetOptionFactory = $widgetOptionFactory;
         $this->widgetMediaFactory = $widgetMediaFactory;
         $this->widgetAudioFactory = $widgetAudioFactory;
@@ -627,7 +624,7 @@ class Widget implements \JsonSerializable
      */
     public function isExpired()
     {
-        return ($this->toDt !== self::$DATE_MAX && $this->dateService->parse($this->toDt, 'U') < $this->dateService->parse());
+        return ($this->toDt !== self::$DATE_MAX && Carbon::createFromTimestamp($this->toDt)->format('U') < Carbon::now()->format('U'));
     }
 
     /**
@@ -931,7 +928,7 @@ class Widget implements \JsonSerializable
             // Notify the Playlist
             $this->getStore()->update('UPDATE `playlist` SET requiresDurationUpdate = 1, `modifiedDT` = :modifiedDt WHERE playlistId = :playlistId', [
                 'playlistId' => $this->playlistId,
-                'modifiedDt' => $this->dateService->getLocalDate()
+                'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
             ]);
         }
 
@@ -952,7 +949,7 @@ class Widget implements \JsonSerializable
                 )
             ', [
                 'playlistId' => $this->playlistId,
-                'modifiedDt' => $this->dateService->getLocalDate()
+                'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
             ]);
         }
 
@@ -985,8 +982,8 @@ class Widget implements \JsonSerializable
             'calculatedDuration' => $this->calculatedDuration,
             'fromDt' => ($this->fromDt == null) ? self::$DATE_MIN : $this->fromDt,
             'toDt' => ($this->toDt == null) ? self::$DATE_MAX : $this->toDt,
-            'createdDt' => ($this->createdDt === null) ? time() : $this->createdDt,
-            'modifiedDt' => time()
+            'createdDt' => ($this->createdDt === null) ? Carbon::now()->format('U') : $this->createdDt,
+            'modifiedDt' => Carbon::now()->format('U')
         ));
     }
 
@@ -1019,7 +1016,7 @@ class Widget implements \JsonSerializable
             'calculatedDuration' => $this->calculatedDuration,
             'fromDt' => ($this->fromDt == null) ? self::$DATE_MIN : $this->fromDt,
             'toDt' => ($this->toDt == null) ? self::$DATE_MAX : $this->toDt,
-            'modifiedDt' => time()
+            'modifiedDt' => Carbon::now()->format('U')
         ];
 
         $this->getStore()->update($sql, $params);

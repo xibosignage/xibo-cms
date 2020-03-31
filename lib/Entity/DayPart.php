@@ -21,6 +21,7 @@
  */
 namespace Xibo\Entity;
 
+use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
@@ -28,7 +29,6 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\ConfigurationException;
@@ -74,9 +74,6 @@ class DayPart implements \JsonSerializable
 
     private $timeHash;
 
-    /** @var  DateServiceInterface */
-    private $dateService;
-
     /** @var  ScheduleFactory */
     private $scheduleFactory;
 
@@ -113,28 +110,6 @@ class DayPart implements \JsonSerializable
     {
         $this->scheduleFactory = $scheduleFactory;
         return $this;
-    }
-
-    /**
-     * @param DateServiceInterface $dateService
-     * @return $this
-     */
-    public function setDateService($dateService)
-    {
-        $this->dateService = $dateService;
-        return $this;
-    }
-
-    /**
-     * @return DateServiceInterface
-     * @throws ConfigurationException
-     */
-    private function getDate()
-    {
-        if ($this->dateService == null)
-            throw new ConfigurationException('Application Error: Date Service is not set on DayPart Entity');
-
-        return $this->dateService;
     }
 
     /**
@@ -327,7 +302,7 @@ class DayPart implements \JsonSerializable
      */
     private function handleEffectedSchedules()
     {
-        $now = time();
+        $now = Carbon::now()->format('U');
 
         // Get all schedules that use this dayPart and exist after the current time.
         $schedules = $this->scheduleFactory->query(null, ['dayPartId' => $this->dayPartId, 'futureSchedulesFrom' => $now]);
@@ -350,7 +325,7 @@ class DayPart implements \JsonSerializable
                 $schedule->save();
 
                 // Adjusting the fromdt on the new event
-                $newSchedule->fromDt = $this->getDate()->parse()->addDay()->format('U');
+                $newSchedule->fromDt = Carbon::now()->addDay()->format('U');
                 $newSchedule->save();
             } else {
                 $this->getLog()->debug('Schedule is for a single event');

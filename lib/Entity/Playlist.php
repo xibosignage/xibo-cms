@@ -22,13 +22,14 @@
 namespace Xibo\Entity;
 
 
+use Carbon\Carbon;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\DuplicateEntityException;
@@ -161,11 +162,6 @@ class Playlist implements \JsonSerializable
     //<editor-fold desc="Factories and Dependencies">
 
     /**
-     * @var DateServiceInterface
-     */
-    private $dateService;
-
-    /**
      * @var PermissionFactory
      */
     private $permissionFactory;
@@ -199,19 +195,17 @@ class Playlist implements \JsonSerializable
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
-     * @param DateServiceInterface $date
      * @param PermissionFactory $permissionFactory
      * @param PlaylistFactory $playlistFactory
      * @param WidgetFactory $widgetFactory
      * @param TagFactory $tagFactory
 
      */
-    public function __construct($store, $log, $config, $date, $permissionFactory, $playlistFactory, $widgetFactory, $tagFactory)
+    public function __construct($store, $log, $config, $permissionFactory, $playlistFactory, $widgetFactory, $tagFactory)
     {
         $this->setCommonDependencies($store, $log);
 
         $this->config = $config;
-        $this->dateService = $date;
         $this->permissionFactory = $permissionFactory;
         $this->playlistFactory = $playlistFactory;
         $this->widgetFactory = $widgetFactory;
@@ -762,7 +756,7 @@ class Playlist implements \JsonSerializable
     {
         $this->getLog()->debug('Adding Playlist ' . $this->name);
 
-        $time = date('Y-m-d H:i:s');
+        $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
 
         $sql = '
         INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `createdDt`, `modifiedDt`, `requiresDurationUpdate`, `enableStat`) 
@@ -819,7 +813,7 @@ class Playlist implements \JsonSerializable
             'isDynamic' => $this->isDynamic,
             'filterMediaName' => $this->filterMediaName,
             'filterMediaTags' => $this->filterMediaTags,
-            'modifiedDt' => date('Y-m-d H:i:s'),
+            'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'requiresDurationUpdate' => $this->requiresDurationUpdate,
             'enableStat' => $this->enableStat
         ));
@@ -837,7 +831,7 @@ class Playlist implements \JsonSerializable
         // Notify the Playlist
         $this->getStore()->update('UPDATE `playlist` SET requiresDurationUpdate = 1, `modifiedDT` = :modifiedDt WHERE playlistId = :playlistId', [
             'playlistId' => $this->playlistId,
-            'modifiedDt' => $this->dateService->getLocalDate()
+            'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
         ]);
 
         $this->getStore()->update('
@@ -852,7 +846,7 @@ class Playlist implements \JsonSerializable
             )
         ', [
             'playlistId' => $this->playlistId,
-            'modifiedDt' => $this->dateService->getLocalDate()
+            'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
         ]);
     }
 

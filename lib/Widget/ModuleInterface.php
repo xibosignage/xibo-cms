@@ -22,7 +22,7 @@
 
 namespace Xibo\Widget;
 
-use Jenssegers\Date\Date;
+use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Support\Exception\GeneralException;
@@ -129,14 +129,14 @@ interface ModuleInterface
     /**
      * Get the Modified Date of this Widget
      * @param int $displayId The displayId, or 0 for preview
-     * @return Date the date this widgets was modified
+     * @return Carbon the date this widgets was modified
      */
     public function getModifiedDate($displayId);
 
     /**
      * Get the Cache Date for this Widget using the cache key
      * @param int $displayId The displayId we're requesting for, or 0 for preview
-     * @return Date
+     * @return Carbon
      */
     public function getCacheDate($displayId);
 

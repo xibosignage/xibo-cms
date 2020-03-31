@@ -22,12 +22,12 @@
 
 namespace Xibo\Storage;
 
+use Carbon\Carbon;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\GeneralException;
 
@@ -46,14 +46,13 @@ interface TimeSeriesStoreInterface
     /**
      * Set Time series Dependencies
      * @param LogServiceInterface $logger
-     * @param DateServiceInterface $date
      * @param MediaFactory $mediaFactory
      * @param WidgetFactory $widgetFactory
      * @param LayoutFactory $layoutFactory
      * @param DisplayFactory $displayFactory
      * @param CampaignFactory $campaignFactory
      */
-    public function setDependencies($logger, $date, $layoutFactory = null, $campaignFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null);
+    public function setDependencies($logger, $layoutFactory = null, $campaignFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null);
 
     /**
      * Process and add a single statdata to array
@@ -90,8 +89,8 @@ interface TimeSeriesStoreInterface
 
     /**
      * Delete statistics
-     * @param $toDt \Jenssegers\Date\Date
-     * @param $fromDt \Jenssegers\Date\Date|null
+     * @param $toDt Carbon
+     * @param $fromDt Carbon|null
      * @param $options array
      * @throws GeneralException
      * @return int number of deleted stat records

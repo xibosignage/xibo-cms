@@ -23,6 +23,7 @@
 
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use GuzzleHttp\Psr7\Stream;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -33,9 +34,9 @@ use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\AttachmentUploadHandler;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\DisplayNotifyService;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -69,7 +70,6 @@ class Notification extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param NotificationFactory $notificationFactory
      * @param UserNotificationFactory $userNotificationFactory
@@ -78,9 +78,9 @@ class Notification extends Base
      * @param DisplayNotifyService $displayNotifyService
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $notificationFactory, $userNotificationFactory, $displayGroupFactory, $userGroupFactory, $displayNotifyService, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $notificationFactory, $userNotificationFactory, $displayGroupFactory, $userGroupFactory, $displayNotifyService, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->notificationFactory = $notificationFactory;
         $this->userNotificationFactory = $userNotificationFactory;
@@ -119,7 +119,7 @@ class Notification extends Base
         $notification = $this->userNotificationFactory->getByNotificationId($id);
 
         // Mark it as read
-        $notification->setRead($this->getDate()->getLocalDate(null, 'U'));
+        $notification->setRead(Carbon::now()->format('U'));
         $notification->save();
 
         $this->getState()->template = 'notification-interrupt';
@@ -143,7 +143,7 @@ class Notification extends Base
         $notification = $this->userNotificationFactory->getByNotificationId($id);
 
         // Mark it as read
-        $notification->setRead($this->getDate()->getLocalDate(null, 'U'));
+        $notification->setRead(Carbon::now()->format('U'));
         $notification->save();
 
         $this->getState()->template = 'notification-form-show';
@@ -317,8 +317,8 @@ class Notification extends Base
         $notification->load();
 
         // Adjust the dates
-        $notification->createdDt = $this->getDate()->getLocalDate($notification->createdDt);
-        $notification->releaseDt = $this->getDate()->getLocalDate($notification->releaseDt);
+        $notification->createdDt = Carbon::createFromTimestamp($notification->createdDt)->format(DateFormatHelper::getSystemFormat());
+        $notification->releaseDt = Carbon::createFromTimestamp($notification->releaseDt)->format(DateFormatHelper::getSystemFormat());
 
         if (!$this->getUser()->checkEditable($notification)) {
             throw new AccessDeniedException();
@@ -515,7 +515,7 @@ class Notification extends Base
         $notification = $this->notificationFactory->createEmpty();
         $notification->subject = $sanitizedParams->getString('subject');
         $notification->body = $request->getParam('body', '');
-        $notification->createdDt = $this->getDate()->getLocalDate(null, 'U');
+        $notification->createdDt = Carbon::now()->format('U');
         $notification->releaseDt = $sanitizedParams->getDate('releaseDt');
 
         if ($notification->releaseDt !== null) {
@@ -684,7 +684,7 @@ class Notification extends Base
 
         $notification->subject = $sanitizedParams->getString('subject');
         $notification->body = $request->getParam('body', '');
-        $notification->createdDt = $this->getDate()->getLocalDate(null, 'U');
+        $notification->createdDt = Carbon::now()->format('U');
         $notification->releaseDt = $sanitizedParams->getDate('releaseDt')->format('U');
         $notification->isEmail = $sanitizedParams->getCheckbox('isEmail');
         $notification->isInterrupt = $sanitizedParams->getCheckbox('isInterrupt');

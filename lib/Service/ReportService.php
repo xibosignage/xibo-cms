@@ -26,6 +26,7 @@ use Illuminate\Support\Str;
 use Psr\Container\ContainerInterface;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\SavedReportFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -67,12 +68,7 @@ class ReportService implements ReportServiceInterface
     private $config;
 
     /**
-     * @var DateServiceInterface
-     */
-    private $date;
-
-    /**
-     * @var SanitizerServiceInterface
+     * @var SanitizerService
      */
     private $sanitizer;
 
@@ -84,7 +80,7 @@ class ReportService implements ReportServiceInterface
     /**
      * @inheritdoc
      */
-    public function __construct($container, $state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer, $savedReportFactory)
+    public function __construct($container, $state, $store, $timeSeriesStore, $log, $config, $sanitizer, $savedReportFactory)
     {
         $this->container = $container;
         $this->state = $state;
@@ -92,7 +88,6 @@ class ReportService implements ReportServiceInterface
         $this->timeSeriesStore = $timeSeriesStore;
         $this->log = $log;
         $this->config = $config;
-        $this->date = $date;
         $this->sanitizer = $sanitizer;
         $this->savedReportFactory = $savedReportFactory;
     }
@@ -183,7 +178,6 @@ class ReportService implements ReportServiceInterface
             $this->timeSeriesStore,
             $this->log,
             $this->config,
-            $this->date,
             $this->sanitizer);
 
         $object->setFactories($this->container);

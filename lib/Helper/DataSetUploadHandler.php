@@ -22,6 +22,7 @@
 
 namespace Xibo\Helper;
 
+use Carbon\Carbon;
 use Exception;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -142,7 +143,7 @@ class DataSetUploadHandler extends BlueImpUploadHandler
             // TODO: update list content definitions
 
             // Save the dataSet
-            $dataSet->lastDataEdit = time();
+            $dataSet->lastDataEdit = Carbon::now()->format('U');
             $dataSet->save(['validate' => false, 'saveColumns' => false]);
 
             // Tidy up the temporary file

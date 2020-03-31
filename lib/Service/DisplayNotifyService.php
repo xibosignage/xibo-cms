@@ -22,6 +22,7 @@
 
 
 namespace Xibo\Service;
+use Carbon\Carbon;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Display;
 use Xibo\Support\Exception\DeadlockException;
@@ -51,9 +52,6 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     /** @var  PlayerActionServiceInterface */
     private $playerActionService;
 
-    /** @var  DateServiceInterface */
-    private $dateService;
-
     /** @var  ScheduleFactory */
     private $scheduleFactory;
 
@@ -73,14 +71,13 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     private $keysProcessed = [];
 
     /** @inheritdoc */
-    public function __construct($config, $log, $store, $pool, $playerActionService, $dateService, $scheduleFactory, $dayPartFactory)
+    public function __construct($config, $log, $store, $pool, $playerActionService, $scheduleFactory, $dayPartFactory)
     {
         $this->config = $config;
         $this->log = $log;
         $this->store = $store;
         $this->pool = $pool;
         $this->playerActionService = $playerActionService;
-        $this->dateService = $dateService;
         $this->scheduleFactory = $scheduleFactory;
         $this->dayPartFactory = $dayPartFactory;
     }
@@ -305,7 +302,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
              WHERE `lkcampaignlayout`.campaignId = :assignedCampaignId
         ';
 
-        $currentDate = $this->dateService->parse();
+        $currentDate = Carbon::now();
         $rfLookAhead = $currentDate->copy()->addSeconds($this->config->getSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         $params = [
@@ -454,7 +451,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                     AND `widgetoption`.value = :activeDataSetId3
         ';
 
-        $currentDate = $this->dateService->parse();
+        $currentDate = Carbon::now();
         $rfLookAhead = $currentDate->copy()->addSeconds($this->config->getSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         $params = [
@@ -586,7 +583,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
              WHERE `playlist`.playlistId = :playlistId
         ';
 
-        $currentDate = $this->dateService->parse();
+        $currentDate = Carbon::now();
         $rfLookAhead = $currentDate->copy()->addSeconds($this->config->getSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         $params = [

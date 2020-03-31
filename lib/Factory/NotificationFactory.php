@@ -23,11 +23,11 @@
 
 namespace Xibo\Factory;
 
-use Jenssegers\Date\Date;
+use Carbon\Carbon;
 use Xibo\Entity\Notification;
 use Xibo\Entity\User;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -47,7 +47,7 @@ class NotificationFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param UserGroupFactory $userGroupFactory
@@ -73,7 +73,7 @@ class NotificationFactory extends BaseFactory
     /**
      * @param string $subject
      * @param string $body
-     * @param Date $date
+     * @param Carbon $date
      * @param bool $isEmail
      * @param bool $addGroups
      * @return Notification

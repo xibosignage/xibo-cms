@@ -25,10 +25,9 @@ namespace Xibo\Factory;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Entity\User;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -46,28 +45,23 @@ class ReportScheduleFactory extends BaseFactory
     /** @var PoolInterface  */
     private $pool;
 
-    /** @var  DateServiceInterface */
-    private $dateService;
-
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
      * @param PoolInterface $pool
-     * @param DateServiceInterface $date
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $pool, $date)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $pool)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
 
         $this->config = $config;
         $this->pool = $pool;
-        $this->dateService = $date;
     }
 
     /**

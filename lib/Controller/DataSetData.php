@@ -28,9 +28,9 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
@@ -58,15 +58,14 @@ class DataSetData extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param DataSetFactory $dataSetFactory
      * @param MediaFactory $mediaFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $dataSetFactory, $mediaFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $dataSetFactory, $mediaFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->dataSetFactory = $dataSetFactory;
         $this->mediaFactory = $mediaFactory;
@@ -282,7 +281,7 @@ class DataSetData extends Base
                 }
                 else if ($column->dataTypeId == 3) {
                     // Date
-                    $value = $this->getDate()->getLocalDate($sanitizedParams->getDate('dataSetColumnId_' . $column->dataSetColumnId));
+                    $value = $sanitizedParams->getDate('dataSetColumnId_' . $column->dataSetColumnId)->format(DateFormatHelper::getSystemFormat());
                 }
                 else if ($column->dataTypeId == 5) {
                     // Media Id

@@ -22,6 +22,7 @@
 
 namespace Xibo\Widget;
 
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use PicoFeed\Config\Config;
@@ -354,7 +355,7 @@ class Ticker extends ModuleWidget
         $this->setOption('randomiseItems', $sanitizedParams->getCheckbox('randomiseItems'));
         $this->setOption('itemsSideBySide', $sanitizedParams->getCheckbox('itemsSideBySide'));
         $this->setOption('itemsPerPage', $sanitizedParams->getInt('itemsPerPage'));
-        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat'));
+        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat', ['defaultOnEmptyString' => true]));
         $this->setOption('allowedAttributes', $sanitizedParams->getString('allowedAttributes'));
         $this->setOption('stripTags', $sanitizedParams->getString('stripTags'));
         $this->setOption('decodeHtml', $sanitizedParams->getCheckbox('decodeHtml'));
@@ -460,6 +461,8 @@ class Ticker extends ModuleWidget
 
         // Generate a JSON string of substituted items.
         $items = $this->getRssItems($text);
+        // If due to errors we have $items set to false, change it to an empty array instead - to avoid php warnings
+        $items = (!$items) ? [] : $items;
 
         // Return empty string if there are no items to show.
         if (count($items) == 0) {
@@ -698,12 +701,11 @@ class Ticker extends ModuleWidget
         $dateFormat = $this->getOption('dateFormat', $this->getConfig()->getSetting('DATE_FORMAT'));
 
         // Set an expiry time for the media
-        $expiresImage = $this->getDate()->parse()->addMinutes($this->getOption('updateIntervalImages', $this->getSetting('updateIntervalImages', 1440)))->format('U');
+        $expiresImage = Carbon::now()->addMinutes($this->getOption('updateIntervalImages', $this->getSetting('updateIntervalImages', 1440)))->format('U');
 
         // Render the content now
         foreach ($feedItems as $item) {
             /* @var Item $item */
-
             // Substitute for all matches in the template
             $rowString = $text;
 
@@ -820,7 +822,8 @@ class Ticker extends ModuleWidget
                             break;
 
                         case '[Date]':
-                            $replace = $this->getDate()->getLocalDate($item->getDate()->format('U'), $dateFormat);
+                            $replace = Carbon::createFromTimestamp($item->getDate()->format('U'))->format($dateFormat);
+
                             break;
 
                         case '[PermaLink]':

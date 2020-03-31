@@ -23,6 +23,7 @@
 namespace Xibo\Service;
 
 
+use Carbon\Carbon;
 use Monolog\Logger;
 use Xibo\Storage\PdoStorageService;
 
@@ -102,7 +103,7 @@ class LogService implements LogServiceInterface
         PdoStorageService::incrementStatStatic('auditlog', 'insert');
 
         $this->_auditLogStatement->execute([
-            'logDate' => time(),
+            'logDate' => Carbon::now()->format('U'),
             'userId' => $this->userId,
             'entity' => $entity,
             'message' => $message,

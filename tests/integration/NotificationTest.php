@@ -22,6 +22,8 @@
 
 namespace Xibo\Tests\Integration;
 
+use Carbon\Carbon;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
 use Xibo\OAuth2\Client\Entity\XiboNotification;
 use Xibo\Tests\LocalWebTestCase;
@@ -167,7 +169,7 @@ class NotificationTest extends LocalWebTestCase
     	$displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'phpunit description', 0, '');
     	# Create new notification
     	$notification = (new XiboNotification($this->getEntityProvider()))->create('API subject', 'API body', '2016-09-01 00:00:00', 0, 0, [$displayGroup->displayGroupId]);
-    	$notification->releaseDt = date('Y-m-d H:i:s', $notification->releaseDt);
+    	$notification->releaseDt = Carbon::createFromTimestamp($notification->releaseDt)->format(DateFormatHelper::getSystemFormat());
         # Create new subject
     	$subjectNew = 'Subject edited via API';
     	# Edit our notification

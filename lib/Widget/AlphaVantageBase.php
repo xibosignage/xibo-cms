@@ -24,9 +24,9 @@
 namespace Xibo\Widget;
 
 
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
-use Jenssegers\Date\Date;
 use Stash\Invalidation;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
@@ -75,7 +75,7 @@ abstract class AlphaVantageBase extends ModuleWidget
 
                 // Cache this and expire in the cache period
                 $cache->set($data);
-                $cache->expiresAt(Date::now()->addSeconds($this->getSetting('cachePeriod', 14400)));
+                $cache->expiresAt(Carbon::now()->addSeconds($this->getSetting('cachePeriod', 14400)));
 
                 $this->getPool()->save($cache);
             } else {
@@ -123,7 +123,7 @@ abstract class AlphaVantageBase extends ModuleWidget
 
                 // Cache this and expire in the cache period
                 $cache->set($data);
-                $cache->expiresAt(Date::now()->addSeconds($this->getSetting('cachePeriod', 14400)));
+                $cache->expiresAt(Carbon::now()->addSeconds($this->getSetting('cachePeriod', 14400)));
 
                 $this->getPool()->save($cache);
             } else {
@@ -159,7 +159,7 @@ abstract class AlphaVantageBase extends ModuleWidget
      */
     protected function getPriorDay($base, $pairs)
     {
-        $yesterday = Date::yesterday()->format('Y-m-d');
+        $yesterday = Carbon::yesterday()->format('Y-m-d');
 
         try {
             $cache = $this->getPool()->getItem($this->makeCacheKey(md5($base . $yesterday)));
@@ -187,7 +187,7 @@ abstract class AlphaVantageBase extends ModuleWidget
 
                 // Cache this and expire tomorrow (results are valid for the entire day regardless of settings)
                 $cache->set($data);
-                $cache->expiresAt(Date::tomorrow());
+                $cache->expiresAt(Carbon::tomorrow());
 
                 $this->getPool()->save($cache);
             } else {

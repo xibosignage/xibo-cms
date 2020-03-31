@@ -25,8 +25,8 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\DataSetColumn;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -46,7 +46,7 @@ class DataSetColumnFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param DataTypeFactory $dataTypeFactory
      * @param DataSetColumnTypeFactory $dataSetColumnTypeFactory
      */
