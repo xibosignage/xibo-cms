@@ -25,9 +25,8 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Session;
-use Xibo\Service\DateServiceInterface;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -38,22 +37,14 @@ use Xibo\Support\Exception\NotFoundException;
 class SessionFactory extends BaseFactory
 {
     /**
-     * @var DateServiceInterface
-     */
-    private $date;
-
-    /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
-     * @param DateServiceInterface $dateService
+     * @param SanitizerService $sanitizerService
      */
-    public function __construct($store, $log, $sanitizerService, $dateService)
+    public function __construct($store, $log, $sanitizerService)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
-
-        $this->date = $dateService;
     }
 
     /**
@@ -126,7 +117,7 @@ class SessionFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('fromDt') != null) {
             $body .= ' AND session.LastAccessed >= :lastAccessed ';
-            $params['lastAccessed'] = $this->date->getLocalDate($sanitizedFilter->getDate('fromDt')->setTime(0, 0, 0));
+            $params['lastAccessed'] = $sanitizedFilter->getDate('fromDt')->setTime(0, 0, 0)->format('Y-m-d H:i:s');
         }
 
         if ($sanitizedFilter->getString('type') != null) {

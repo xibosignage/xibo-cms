@@ -32,7 +32,6 @@ use Xibo\Factory\RegionFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 
 /**
@@ -63,7 +62,6 @@ class MediaManager extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param ModuleFactory $moduleFactory
      * @param LayoutFactory $layoutFactory
@@ -72,9 +70,9 @@ class MediaManager extends Base
      * @param WidgetFactory $widgetFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $moduleFactory, $layoutFactory, $regionFactory, $playlistFactory, $widgetFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $moduleFactory, $layoutFactory, $regionFactory, $playlistFactory, $widgetFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
         $this->moduleFactory = $moduleFactory;
         $this->layoutFactory = $layoutFactory;
         $this->regionFactory = $regionFactory;

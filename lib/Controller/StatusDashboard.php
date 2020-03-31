@@ -20,6 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
+use Carbon\Carbon;
 use Exception;
 use GuzzleHttp\Client;
 use PicoFeed\PicoFeedException;
@@ -33,9 +34,9 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -82,7 +83,6 @@ class StatusDashboard extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param PoolInterface $pool
@@ -92,9 +92,9 @@ class StatusDashboard extends Base
      * @param MediaFactory $mediaFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $displayFactory, $displayGroupFactory, $mediaFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $pool, $userFactory, $displayFactory, $displayGroupFactory, $mediaFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->store = $store;
         $this->pool = $pool;
@@ -184,9 +184,7 @@ class StatusDashboard extends Base
 
             foreach ($results as $row) {
                 $sanitizedRow = $this->getSanitizer($row);
-                $timestamp = $this->getDate()->parse($sanitizedRow->getString('month'))->format('U');
-
-                $labels[] = $this->getDate()->getLocalDate($timestamp, 'F');
+                $labels[] = Carbon::createFromTimeString($sanitizedRow->getString('month'))->format('F');
 
                 $size = ((double)$row['size']) / (pow(1024, $base));
                 $usage[] = round($size, 2);
@@ -196,7 +194,7 @@ class StatusDashboard extends Base
 
             // What if we are empty?
             if (count($results) == 0) {
-                $labels[] = $this->getDate()->getLocalDate(null, 'F');
+                $labels[] = Carbon::createFromTimestamp(time())->format('F');
                 $usage[] = 0;
                 $limit[] = 0;
             }
@@ -377,7 +375,7 @@ class StatusDashboard extends Base
                                 'title' => $item->getTitle(),
                                 'description' => $content,
                                 'link' => $item->getUrl(),
-                                'date' => $this->getDate()->getLocalDate($item->getDate()->format('U'))
+                                'date' => Carbon::createFromTimestamp($item->getDate()->format('U'))
                             );
                         }
 

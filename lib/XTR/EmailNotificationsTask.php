@@ -24,6 +24,7 @@
 namespace Xibo\XTR;
 
 
+use Carbon\Carbon;
 use Slim\Views\Twig;
 use Xibo\Entity\UserNotification;
 use Xibo\Factory\UserNotificationFactory;
@@ -124,7 +125,7 @@ class EmailNotificationsTask implements TaskInterface
             }
 
             // Mark as sent
-            $notification->setEmailed($this->date->getLocalDate(null, 'U'));
+            $notification->setEmailed(Carbon::createFromTimestamp(time())->format('U'));
             $notification->save();
         }
 

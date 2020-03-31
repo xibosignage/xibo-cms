@@ -22,7 +22,7 @@
 
 namespace Xibo\Tests\Integration;
 
-use Jenssegers\Date\Date;
+use Carbon\Carbon;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboStats;
@@ -79,7 +79,7 @@ class StatisticsLayoutTest extends LocalWebTestCase
         $this->deleteDisplay($this->display);
 
         // Delete stat records
-        self::$container->get('timeSeriesStore')->deleteStats(Date::now(), Date::createFromFormat("Y-m-d H:i:s", '2018-02-12 00:00:00'));
+        self::$container->get('timeSeriesStore')->deleteStats(Carbon::now(), Carbon::createFromFormat("Y-m-d H:i:s", '2018-02-12 00:00:00'));
 
     }
 

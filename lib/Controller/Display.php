@@ -21,9 +21,9 @@
  */
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Intervention\Image\ImageManagerStatic as Img;
-use Jenssegers\Date\Date;
 use Respect\Validation\Validator as v;
 use RobThree\Auth\TwoFactorAuth;
 use Slim\Http\Response as Response;
@@ -46,12 +46,12 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\WakeOnLan;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\PlayerActionServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -152,7 +152,6 @@ class Display extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param PoolInterface $pool
@@ -173,9 +172,9 @@ class Display extends Base
      * @param DayPartFactory $dayPartFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory, $dayPartFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory, $dayPartFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->store = $store;
         $this->pool = $pool;
@@ -357,12 +356,12 @@ class Display extends Base
         $this->getState()->setData([
             'requiredFiles' => [],
             'display' => $display,
-            'timeAgo' => $this->getDate()->parse($display->lastAccessed, 'U')->diffForHumans(),
+            'timeAgo' => Carbon::createFromTimestamp($display->lastAccessed)->diffForHumans(),
             'errorSearch' => http_build_query([
                 'displayId' => $display->displayId,
                 'type' => 'ERROR',
-                'fromDt' => $this->getDate()->getLocalDate($this->getDate()->parse()->subHours(12)),
-                'toDt' => $this->getDate()->getLocalDate()
+                'fromDt' => Carbon::createFromTimestamp(time())->subHours(12)->format('Y-m-d H:i:s'),
+                'toDt' => Carbon::createFromTimestamp(time())->format('Y-m-d H:i:s')
             ]),
             'inventory' => [
                 'layouts' => $layouts,
@@ -377,9 +376,9 @@ class Display extends Base
                 'sizeRemaining' => round((double)($totalSize - $completeSize) / (pow(1024, $base)), 2),
             ],
             'defaults' => [
-                'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
-                'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
-                'toDate' => $this->getDate()->getLocalDate()
+                'fromDate' => Carbon::createFromTimestamp(time() - (86400 * 35))->format('Y-m-d H:i:s'),
+                'fromDateOneDay' => Carbon::createFromTimestamp(time() - 86400)->format('Y-m-d H:i:s'),
+                'toDate' => Carbon::createFromTimestamp(time())->format('Y-m-d H:i:s')
             ]
         ]);
 
@@ -573,8 +572,8 @@ class Display extends Base
             $display->getCurrentLayoutId($this->pool);
 
             if ($this->isApi($request)) {
-                $display->lastAccessed = $this->getDate()->getLocalDate($display->lastAccessed);
-                $display->auditingUntil = ($display->auditingUntil == 0) ? 0 : $this->getDate()->getLocalDate($display->auditingUntil);
+                $display->lastAccessed = Carbon::createFromTimestamp($display->lastAccessed)->format('Y-m-d H:i:s');
+                $display->auditingUntil = ($display->auditingUntil == 0) ? 0 :  Carbon::createFromTimestamp($display->auditingUntil)->format('Y-m-d H:i:s');
                 $display->storageAvailableSpace = ByteFormatter::format($display->storageAvailableSpace);
                 $display->storageTotalSpace = ByteFormatter::format($display->storageTotalSpace);
                 continue;
@@ -889,14 +888,15 @@ class Display extends Base
         }
 
         // Dates
-        $display->auditingUntilIso = $this->getDate()->getLocalDate($display->auditingUntil);
+        $display->auditingUntilIso =  Carbon::createFromTimestamp($display->auditingUntil)->format('Y-m-d H:i:s');
 
         // Get the settings from the profile
         $profile = $display->getSettings();
+        $dateFormatHelper = new DateFormatHelper();
 
         // Get a list of timezones
         $timeZones = [];
-        foreach ($this->getDate()->timezoneList() as $key => $value) {
+        foreach ($dateFormatHelper->timezoneList() as $key => $value) {
             $timeZones[] = ['id' => $key, 'value' => $value];
         }
 
@@ -1179,6 +1179,7 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id, true);
         $sanitizedParams = $this->getSanitizer($request->getParams());
+        $dateHelper = new DateFormatHelper();
 
         if (!$this->getUser()->checkEditable($display)) {
             throw new AccessDeniedException();
@@ -1217,8 +1218,9 @@ class Display extends Base
         // Tags are stored on the displaygroup, we're just passing through here
         $display->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
 
-        if ($display->auditingUntil !== null)
+        if ($display->auditingUntil !== null) {
             $display->auditingUntil = $display->auditingUntil->format('U');
+        }
 
         // Should we invalidate this display?
         if ($display->hasPropertyChanged('defaultLayoutId')) {
@@ -1242,8 +1244,8 @@ class Display extends Base
         $display->save();
 
         if ($this->isApi($request)) {
-            $display->lastAccessed = $this->getDate()->getLocalDate($display->lastAccessed);
-            $display->auditingUntil = ($display->auditingUntil == 0) ? 0 : $this->getDate()->getLocalDate($display->auditingUntil);
+            $display->lastAccessed = Carbon::createFromTimestamp($display->lastAccessed)->format($dateHelper->getSystemFormat());
+            $display->auditingUntil = ($display->auditingUntil == 0) ? 0 : Carbon::createFromTimestamp($display->auditingUntil)->format($dateHelper->getSystemFormat());
         }
 
         // Return
@@ -1507,7 +1509,7 @@ class Display extends Base
             $nextCollect = __('once it has connected for the first time');
         } else {
             $collectionInterval = $display->getSetting('collectionInterval', 5);
-            $nextCollect = $this->getDate()->parse($display->lastAccessed, 'U')->addMinutes($collectionInterval)->diffForHumans();
+            $nextCollect = Carbon::createFromTimestamp($display->lastAccessed)->addMinutes($collectionInterval)->diffForHumans();
         }
 
         $this->getState()->template = 'display-form-request-screenshot';
@@ -1718,24 +1720,24 @@ class Display extends Base
                         $dayPart = $this->dayPartFactory->getById($dayPartId);
 
                         $startTimeArray = explode(':', $dayPart->startTime);
-                        $startTime = Date::now()->setTime(intval($startTimeArray[0]), intval($startTimeArray[1]));
+                        $startTime = Carbon::now()->setTime(intval($startTimeArray[0]), intval($startTimeArray[1]));
 
                         $endTimeArray = explode(':', $dayPart->endTime);
-                        $endTime = Date::now()->setTime(intval($endTimeArray[0]), intval($endTimeArray[1]));
+                        $endTime = Carbon::now()->setTime(intval($endTimeArray[0]), intval($endTimeArray[1]));
 
-                        $now = Date::now();
+                        $now = Carbon::now();
 
                         // exceptions
                         foreach ($dayPart->exceptions as $exception) {
 
                             // check if we are on exception day and if so override the start and endtime accordingly
-                            if ($exception['day'] == Date::now()->format('D')) {
+                            if ($exception['day'] == Carbon::now()->format('D')) {
 
                                 $exceptionsStartTime = explode(':', $exception['start']);
-                                $startTime = Date::now()->setTime(intval($exceptionsStartTime[0]), intval($exceptionsStartTime[1]));
+                                $startTime = Carbon::now()->setTime(intval($exceptionsStartTime[0]), intval($exceptionsStartTime[1]));
 
                                 $exceptionsEndTime = explode(':', $exception['end']);
-                                $endTime = Date::now()->setTime(intval($exceptionsEndTime[0]), intval($exceptionsEndTime[1]));
+                                $endTime = Carbon::now()->setTime(intval($exceptionsEndTime[0]), intval($exceptionsEndTime[1]));
                             }
                         }
 
@@ -1761,10 +1763,10 @@ class Display extends Base
                     if ($operatingHours) {
                         $subject = sprintf(__("Alert for Display %s"), $display->display);
                         $body = sprintf(__("Display ID %d is offline since %s."), $display->displayId,
-                            $this->getDate()->getLocalDate($display->lastAccessed));
+                            Carbon::createFromTimestamp($display->lastAccessed)->format('Y-m-d H:i:s'));
 
                         // Add to system
-                        $notification = $this->notificationFactory->createSystemNotification($subject, $body, $this->getDate()->parse());
+                        $notification = $this->notificationFactory->createSystemNotification($subject, $body, Carbon::createFromTimestamp(time()));
 
                         // Add in any displayNotificationGroups, with permissions
                         foreach ($this->userGroupFactory->getDisplayNotificationGroups($display->displayGroupId) as $group) {

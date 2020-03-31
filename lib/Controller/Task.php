@@ -22,6 +22,7 @@
 
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
@@ -38,7 +39,6 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
@@ -94,7 +94,6 @@ class Task extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param TimeSeriesStoreInterface $timeSeriesStore
@@ -110,9 +109,9 @@ class Task extends Base
      * @param Twig $view
      * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $pool, $taskFactory, $userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $mediaFactory, $notificationFactory, $userNotificationFactory, Twig $view, ContainerInterface $container)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $timeSeriesStore, $pool, $taskFactory, $userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $mediaFactory, $notificationFactory, $userNotificationFactory, Twig $view, ContainerInterface $container)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
         $this->taskFactory = $taskFactory;
         $this->store = $store;
         $this->timeSeriesStore = $timeSeriesStore;
@@ -461,7 +460,6 @@ class Task extends Base
                 ->setUser($this->getUser())
                 ->setConfig($this->getConfig())
                 ->setLogger($this->getLog())
-                ->setDate($this->getDate())
                 ->setPool($this->pool)
                 ->setStore($this->store)
                 ->setTimeSeriesStore($this->timeSeriesStore)
@@ -490,13 +488,13 @@ class Task extends Base
             $task->lastRunStatus = \Xibo\Entity\Task::$STATUS_ERROR;
         }
 
-        $task->lastRunDt = $this->getDate()->getLocalDate(null, 'U');
+        $task->lastRunDt = Carbon::createFromTimestamp(time())->format('U');
         $task->runNow = 0;
 
         // Save (on the XTR connection)
         $task->save(['connection' => 'xtr', 'validate' => false, 'reconnect' => true]);
 
-        $this->getLog()->debug('Finished Task ' . $task->name . ' [' . $task->taskId . '] Run Dt: ' . $this->getDate()->getLocalDate());
+        $this->getLog()->debug('Finished Task ' . $task->name . ' [' . $task->taskId . '] Run Dt: ' . Carbon::createFromTimestamp(time())->format('Y-m-d H:i:s'));
 
         // No output
         $this->setNoOutput(true);
@@ -561,7 +559,7 @@ class Task extends Base
                     $this->store->update('UPDATE `task` SET status = :status, lastRunStartDt = :lastRunStartDt WHERE taskId = :taskId', [
                         'taskId' => $taskId,
                         'status' => \Xibo\Entity\Task::$STATUS_RUNNING,
-                        'lastRunStartDt' => $this->getDate()->getLocalDate(null, 'U')
+                        'lastRunStartDt' => Carbon::createFromTimestamp(time())->format('U')
                     ], 'xtr');
                     $this->store->commitIfNecessary('xtr');
 
@@ -629,7 +627,7 @@ class Task extends Base
 
         $command->execute([
             'status' => \Xibo\Entity\Task::$STATUS_RUNNING,
-            'timeout' => $this->getDate()->parse()->subHours(12)->format('U')
+            'timeout' => Carbon::createFromTimestamp(time())->subHours(12)->format('U')
         ]);
 
         foreach ($command->fetchAll(\PDO::FETCH_ASSOC) as $task) {

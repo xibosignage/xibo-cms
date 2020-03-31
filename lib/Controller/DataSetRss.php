@@ -23,8 +23,8 @@
 
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use Carbon\Exceptions\InvalidDateException;
-use Jenssegers\Date\Date;
 use PicoFeed\Syndication\Rss20FeedBuilder;
 use PicoFeed\Syndication\Rss20ItemBuilder;
 use Slim\Http\Response as Response;
@@ -36,7 +36,6 @@ use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DataSetRssFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -68,7 +67,6 @@ class DataSetRss extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param DataSetRssFactory $dataSetRssFactory
      * @param DataSetFactory $dataSetFactory
@@ -77,9 +75,9 @@ class DataSetRss extends Base
      * @param StorageServiceInterface $store
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $dataSetRssFactory, $dataSetFactory, $dataSetColumnFactory, $pool, $store, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $dataSetRssFactory, $dataSetFactory, $dataSetColumnFactory, $pool, $store, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->dataSetRssFactory = $dataSetRssFactory;
         $this->dataSetFactory = $dataSetFactory;
@@ -691,7 +689,7 @@ class DataSetRss extends Base
             $dataSet = $this->dataSetFactory->getById($feed->dataSetId);
 
             // What is the edit date of this data set
-            $dataSetEditDate = ($dataSet->lastDataEdit == 0) ? $this->getDate()->parse()->subMonths(2) : $this->getDate()->parse($dataSet->lastDataEdit, 'U');
+            $dataSetEditDate = ($dataSet->lastDataEdit == 0) ? Carbon::createFromTimestamp(time())->subMonths(2) : Carbon::createFromTimestamp($dataSet->lastDataEdit);
 
             // Do we have this feed in the cache?
             $cache = $this->pool->getItem('/dataset/rss/' . $feed->id);
@@ -721,7 +719,7 @@ class DataSetRss extends Base
 
     /**
      * @param \Xibo\Entity\DataSetRss $feed
-     * @param Date $dataSetEditDate
+     * @param Carbon $dataSetEditDate
      * @param \Xibo\Entity\DataSet $dataSet
      * @return string
      * @throws \Xibo\Support\Exception\NotFoundException
@@ -859,9 +857,9 @@ class DataSetRss extends Base
         ];
 
         // Set the timezone for SQL
-        $dateNow = $this->getDate()->parse();
+        $dateNow = Carbon::now();
 
-        $this->store->setTimeZone($this->getDate()->getLocalDate($dateNow, 'P'));
+        $this->store->setTimeZone($dateNow->format('P'));
 
         // Get the data (complete table, filtered)
         $dataSetResults = $dataSet->getData($filter);
@@ -887,7 +885,7 @@ class DataSetRss extends Base
                         $item->withContent($value);
                     } else if ($mappings[$key]['dataSetColumnId'] === $feed->publishedDateColumnId) {
                         try {
-                            $date = $this->getDate()->parse($value, 'U');
+                            $date = Carbon::createFromTimestamp($value);
                         } catch (InvalidDateException $dateException) {
                             $date = $dataSetEditDate;
                         }

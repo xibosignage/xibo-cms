@@ -23,7 +23,7 @@
 
 namespace Xibo\Tests\integration\Cache;
 
-use Jenssegers\Date\Date;
+use Carbon\Carbon;
 use Xibo\Entity\Display;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
@@ -87,7 +87,7 @@ class ScheduleChangeOutsideRfTest extends LocalWebTestCase
         $this->display = $this->createDisplay();
 
         // Dates outside of RF
-        $date = Date::now()->addMonth(1);
+        $date = Carbon::now()->addMonth();
 
         // Schedule the Layout "always" onto our display
         //  deleting the layout will remove this at the end

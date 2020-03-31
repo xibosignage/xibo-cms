@@ -38,7 +38,6 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
@@ -88,7 +87,6 @@ class PlayerSoftware extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param \Stash\Interfaces\PoolInterface $pool
      * @param MediaFactory $mediaFactory
@@ -102,9 +100,9 @@ class PlayerSoftware extends Base
      * @param ScheduleFactory $scheduleFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $pool, $mediaFactory, $playerVersionFactory, $displayProfileFactory, $moduleFactory, $layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $pool, $mediaFactory, $playerVersionFactory, $displayProfileFactory, $moduleFactory, $layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->pool = $pool;
         $this->mediaFactory = $mediaFactory;

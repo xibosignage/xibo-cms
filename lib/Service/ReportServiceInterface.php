@@ -24,6 +24,7 @@ namespace Xibo\Service;
 
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\SavedReportFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Report\ReportInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
@@ -43,11 +44,10 @@ interface ReportServiceInterface
      * @param TimeSeriesStoreInterface $timeSeriesStore
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
-     * @param DateServiceInterface $date
-     * @param SanitizerServiceInterface $sanitizer
+     * @param SanitizerService $sanitizer
      * @param SavedReportFactory $savedReportFactory
  */
-    public function __construct($app, $state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer, $savedReportFactory);
+    public function __construct($app, $state, $store, $timeSeriesStore, $log, $config, $sanitizer, $savedReportFactory);
 
     // List all reports that are available
     public function listReports();

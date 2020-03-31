@@ -22,7 +22,7 @@
 
 namespace Xibo\Tests\integration;
 
-use Jenssegers\Date\Date;
+use Carbon\Carbon;
 use Xibo\Entity\Display;
 use Xibo\Tests\Helper\DisplayHelperTrait;
 use Xibo\Tests\Helper\LayoutHelperTrait;
@@ -114,7 +114,7 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
     {
         // Our CMS is in GMT
         // Create a schedule one hours time in my player timezone
-        $localNow = Date::now()->setTimezone($this->timeZone);
+        $localNow = Carbon::now()->setTimezone($this->timeZone);
         $date = $localNow->copy()->addHour()->startOfHour();
 
         $this->getLogger()->debug('Event start will be at: ' . $date->format('Y-m-d H:i:s'));
@@ -162,7 +162,7 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
         // Our CMS is in GMT
         // Create a schedule one hours time in my player timezone
         // we start this schedule the day before
-        $localNow = Date::now()->setTimezone($this->timeZone);
+        $localNow = Carbon::now()->setTimezone($this->timeZone);
         $date = $localNow->copy()->subDay()->addHour()->startOfHour();
 
         $this->getLogger()->debug('Event start will be at: ' . $date->format('Y-m-d H:i:s'));
@@ -210,11 +210,11 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
     {
         // Our CMS is in GMT
         // Create a schedule one hours time in my CMS timezone
-        $localNow = Date::now()->setTimezone($this->timeZone);
+        $localNow = Carbon::now()->setTimezone($this->timeZone);
 
         // If this was 8AM local CMS time, we would expect the resulting date/times in the XML to have the equivilent
         // timezone specific date/times
-        $date = Date::now()->copy()->addHour()->startOfHour();
+        $date = Carbon::now()->copy()->addHour()->startOfHour();
         $localDate = $date->copy()->timezone($this->timeZone);
 
         $this->getLogger()->debug('Event start will be at: ' . $date->format('Y-m-d H:i:s') . ' which is ' . $localDate->format('Y-m-d H:i:s') . ' local time.');
@@ -259,11 +259,11 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
     {
         // Our CMS is in GMT
         // Create a schedule one hours time in my CMS timezone
-        $localNow = Date::now()->setTimezone($this->timeZone);
+        $localNow = Carbon::now()->setTimezone($this->timeZone);
 
         // If this was 8AM local CMS time, we would expect the resulting date/times in the XML to have the equivilent
         // timezone specific date/times
-        $date = Date::now()->copy()->subDay()->addHour()->startOfHour();
+        $date = Carbon::now()->copy()->subDay()->addHour()->startOfHour();
         $localDate = $date->copy()->timezone($this->timeZone);
 
         $this->getLogger()->debug('Event start will be at: ' . $date->format('Y-m-d H:i:s') . ' which is ' . $localDate->format('Y-m-d H:i:s') . ' local time.');

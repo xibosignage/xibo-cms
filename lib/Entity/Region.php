@@ -23,12 +23,13 @@
 namespace Xibo\Entity;
 
 
+use Carbon\Carbon;
 use Xibo\Factory\ActionFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\RegionOptionFactory;
-use Xibo\Service\DateServiceInterface;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\GeneralException;
@@ -143,8 +144,6 @@ class Region implements \JsonSerializable
     public $regionPlaylist = null;
 
     //<editor-fold desc="Factories and Dependencies">
-    /**  @var DateServiceInterface */
-    private $dateService;
 
     /**
      * @var RegionFactory
@@ -174,17 +173,15 @@ class Region implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param DateServiceInterface $date
      * @param RegionFactory $regionFactory
      * @param PermissionFactory $permissionFactory
      * @param RegionOptionFactory $regionOptionFactory
      * @param PlaylistFactory $playlistFactory
      * @param ActionFactory $actionFactory
      */
-    public function __construct($store, $log, $date, $regionFactory, $permissionFactory, $regionOptionFactory, $playlistFactory, $actionFactory)
+    public function __construct($store, $log, $regionFactory, $permissionFactory, $regionOptionFactory, $playlistFactory, $actionFactory)
     {
         $this->setCommonDependencies($store, $log);
-        $this->dateService = $date;
         $this->regionFactory = $regionFactory;
         $this->permissionFactory = $permissionFactory;
         $this->regionOptionFactory = $regionOptionFactory;
@@ -583,11 +580,13 @@ class Region implements \JsonSerializable
      */
     public function notifyLayout()
     {
+        $dateHelper = new DateFormatHelper();
+
         $this->getStore()->update('
             UPDATE `layout` SET `status` = 3, `modifiedDT` = :modifiedDt WHERE layoutId = :layoutId
         ', [
             'layoutId' => $this->layoutId,
-            'modifiedDt' => $this->dateService->getLocalDate()
+            'modifiedDt' => Carbon::createFromTimestamp(time())->format($dateHelper->getSystemFormat())
         ]);
     }
 }

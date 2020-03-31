@@ -25,10 +25,9 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Playlist;
 use Xibo\Entity\User;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -38,11 +37,6 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class PlaylistFactory extends BaseFactory
 {
-    /**
-     * @var DateServiceInterface
-     */
-    public $dateService;
-
     /**
      * @var PermissionFactory
      */
@@ -66,21 +60,19 @@ class PlaylistFactory extends BaseFactory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
-     * @param DateServiceInterface $date
      * @param PermissionFactory $permissionFactory
      * @param WidgetFactory $widgetFactory
      * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $config, $sanitizerService, $user, $userFactory, $date, $permissionFactory, $widgetFactory, $tagFactory)
+    public function __construct($store, $log, $config, $sanitizerService, $user, $userFactory, $permissionFactory, $widgetFactory, $tagFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
 
         $this->config = $config;
-        $this->dateService = $date;
         $this->permissionFactory = $permissionFactory;
         $this->widgetFactory = $widgetFactory;
         $this->tagFactory = $tagFactory;
@@ -95,7 +87,6 @@ class PlaylistFactory extends BaseFactory
             $this->getStore(),
             $this->getLog(),
             $this->config,
-            $this->dateService,
             $this->permissionFactory,
             $this,
             $this->widgetFactory,

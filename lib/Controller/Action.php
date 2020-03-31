@@ -34,7 +34,6 @@ use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\HelpServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\GeneralException;
@@ -69,7 +68,6 @@ class Action  extends Base
      * @param ApplicationState $state
      * @param User $user
      * @param HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param ActionFactory $actionFactory
      * @param LayoutFactory $layoutFactory
@@ -77,9 +75,9 @@ class Action  extends Base
      * @param WidgetFactory $widgetFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $actionFactory, $layoutFactory, $regionFactory, $widgetFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $actionFactory, $layoutFactory, $regionFactory, $widgetFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->actionFactory = $actionFactory;
         $this->layoutFactory = $layoutFactory;

@@ -21,14 +21,15 @@
  */
 namespace Xibo\Controller;
 
-use Jenssegers\Date\Date;
+use Carbon\Carbon;
+
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Factory\SessionFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -56,15 +57,14 @@ class Sessions extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param SessionFactory $sessionFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $sessionFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $sessionFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->store = $store;
         $this->sessionFactory = $sessionFactory;
@@ -94,6 +94,7 @@ class Sessions extends Base
     function grid(Request $request, Response $response)
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
+        $dateHelper = new DateFormatHelper();
 
         $sessions = $this->sessionFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
             'type' => $sanitizedQueryParams->getString('type'),
@@ -104,7 +105,7 @@ class Sessions extends Base
             /* @var \Xibo\Entity\Session $row */
 
             // Normalise the date
-            $row->lastAccessed = $this->getDate()->getLocalDate(Date::createFromFormat($this->getDate()->getSystemFormat(), $row->lastAccessed));
+            $row->lastAccessed = Carbon::createFromFormat($dateHelper->getSystemFormat(), $row->lastAccessed);
 
             if (!$this->isApi($request) && $this->getUser()->isSuperAdmin()) {
 

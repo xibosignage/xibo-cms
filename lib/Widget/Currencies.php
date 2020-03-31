@@ -24,6 +24,7 @@
  */
 namespace Xibo\Widget;
 
+use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Support\Exception\ConfigurationException;
@@ -338,7 +339,7 @@ class Currencies extends AlphaVantageBase
         $this->setOption('speed', $sanitizedParams->getInt('speed'));
         $this->setOption('backgroundColor', $sanitizedParams->getString('backgroundColor'));
         $this->setOption('noRecordsMessage', $sanitizedParams->getString('noRecordsMessage'));
-        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat'));
+        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat', ['defaultOnEmptyString' => true]));
         $this->setOption('reverseConversion', $sanitizedParams->getCheckbox('reverseConversion'));
         $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 60]));
         $this->setOption('templateId', $sanitizedParams->getString('templateId'));
@@ -532,7 +533,7 @@ class Currencies extends AlphaVantageBase
                 if (stripos($replace, 'time|') > -1) {
                     $timeSplit = explode('|', $replace);
 
-                    $time = $this->getDate()->parse($data['time']. 'Y-m-d H:i:s')->format($timeSplit[1]);
+                    $time = Carbon::createFromFormat('Y-m-d H:i:s', $data['time'])->format($timeSplit[1]);
 
                     $replacement = $time;
 

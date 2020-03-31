@@ -22,7 +22,8 @@
 
 
 namespace Xibo\XTR;
-use Jenssegers\Date\Date;
+
+use Carbon\Carbon;
 use Xibo\Entity\User;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
@@ -86,12 +87,12 @@ class StatsArchiveTask implements TaskInterface
                 return;
             }
 
-            /** @var Date $earliestDate */
-            $earliestDate = $this->date->parse($earliestDate['minDate'], 'U')->setTime(0, 0, 0);
+            /** @var Carbon $earliestDate */
+            $earliestDate = Carbon::createFromTimestamp($earliestDate['minDate'])->setTime(0, 0, 0);
 
             // Take the earliest date and roll forward until the current time
-            /** @var Date $now */
-            $now = $this->date->parse()->subDay($periodSizeInDays * $periodsToKeep)->setTime(0, 0, 0);
+            /** @var Carbon $now */
+            $now = Carbon::createFromTimestamp(time())->subDays($periodSizeInDays * $periodsToKeep)->setTime(0, 0, 0);
             $i = 0;
 
             while ($earliestDate < $now && $i < $maxPeriods) {
@@ -115,13 +116,13 @@ class StatsArchiveTask implements TaskInterface
 
     /**
      * Export stats to the library
-     * @param Date $fromDt
-     * @param Date $toDt
+     * @param Carbon $fromDt
+     * @param Carbon $toDt
      * @throws \Xibo\Support\Exception\GeneralException
      */
     private function exportStatsToLibrary($fromDt, $toDt)
     {
-        $this->runMessage .= ' - ' . $this->date->getLocalDate($fromDt) . ' / ' . $this->date->getLocalDate($toDt) . PHP_EOL;
+        $this->runMessage .= ' - ' . $fromDt->format('Y-m-d H:i:s') . ' / ' . $toDt->format('Y-m-d H:i:s') . PHP_EOL;
 
         $resultSet = $this->timeSeriesStore->getStats([
             'fromDt'=> $fromDt,
@@ -140,14 +141,14 @@ class StatsArchiveTask implements TaskInterface
 
             if ($this->timeSeriesStore->getEngine() == 'mongodb') {
 
-                $statDate = isset($row['statDate']) ? $this->date->parse($row['statDate']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s') : null;
-                $start = $this->date->parse($row['start']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
-                $end = $this->date->parse($row['end']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
+                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate']->toDateTime()->format('U'))->format('Y-m-d H:i:s') : null;
+                $start = Carbon::createFromTimestamp($row['start']->toDateTime()->format('U'))->format('Y-m-d H:i:s');
+                $end = Carbon::createFromTimestamp($row['end']->toDateTime()->format('U'))->format('Y-m-d H:i:s');
             } else {
 
-                $statDate = isset($row['statDate']) ?$this->date->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : null;
-                $start = $this->date->parse($row['start'], 'U')->format('Y-m-d H:i:s');
-                $end = $this->date->parse($row['end'], 'U')->format('Y-m-d H:i:s');
+                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate'])->format('Y-m-d H:i:s') : null;
+                $start = Carbon::createFromTimestamp($row['start'])->format('Y-m-d H:i:s');
+                $end = Carbon::createFromTimestamp($row['end'])->format('Y-m-d H:i:s');
             }
 
             // Read the columns
@@ -234,7 +235,7 @@ class StatsArchiveTask implements TaskInterface
 
         if ($this->config->getSetting('MAINTENANCE_STAT_MAXAGE') != 0) {
 
-            $maxage = Date::now()->subDays(intval($this->config->getSetting('MAINTENANCE_STAT_MAXAGE')));
+            $maxage = Carbon::now()->subDays(intval($this->config->getSetting('MAINTENANCE_STAT_MAXAGE')));
             $maxAttempts = $this->getOption('statsDeleteMaxAttempts', 10);
             $statsDeleteSleep = $this->getOption('statsDeleteSleep', 3);
 

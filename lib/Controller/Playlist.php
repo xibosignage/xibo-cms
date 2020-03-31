@@ -23,6 +23,7 @@
 
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
@@ -41,9 +42,9 @@ use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
@@ -118,7 +119,6 @@ class Playlist extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param PlaylistFactory $playlistFactory
      * @param RegionFactory $regionFactory
@@ -135,10 +135,10 @@ class Playlist extends Base
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playlistFactory, $regionFactory, $mediaFactory, $permissionFactory,
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $playlistFactory, $regionFactory, $mediaFactory, $permissionFactory,
         $transitionFactory, $widgetFactory, $moduleFactory, $userGroupFactory, $userFactory, $tagFactory, Twig $view, $layoutFactory, $displayFactory, $scheduleFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->playlistFactory = $playlistFactory;
         $this->regionFactory = $regionFactory;
@@ -1064,6 +1064,7 @@ class Playlist extends Base
     {
         $this->getState()->template = 'grid';
         $sanitizedParams = $this->getSanitizer($request->getParams());
+        $dateHelper = new DateFormatHelper();
 
         $widgets = $this->widgetFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
             'playlistId' => $sanitizedParams->getInt('playlistId'),
@@ -1083,10 +1084,10 @@ class Playlist extends Base
             $widget->transition = sprintf('%s / %s', $widget->module->getTransition('in'), $widget->module->getTransition('out'));
 
             if ($this->isApi($request)) {
-                $widget->createdDt = $this->getDate()->getLocalDate($widget->createdDt);
-                $widget->modifiedDt = $this->getDate()->getLocalDate($widget->modifiedDt);
-                $widget->fromDt = $this->getDate()->getLocalDate($widget->fromDt);
-                $widget->toDt = $this->getDate()->getLocalDate($widget->toDt);
+                $widget->createdDt = Carbon::createFromTimestamp($widget->createdDt)->format($dateHelper->getSystemFormat());
+                $widget->modifiedDt = Carbon::createFromTimestamp($widget->modifiedDt)->format($dateHelper->getSystemFormat());
+                $widget->fromDt = Carbon::createFromTimestamp($widget->fromDt)->format($dateHelper->getSystemFormat());
+                $widget->toDt = Carbon::createFromTimestamp($widget->toDt)->format($dateHelper->getSystemFormat());
             }
         }
 

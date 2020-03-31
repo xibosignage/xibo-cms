@@ -107,7 +107,6 @@ class Storage implements Middleware
             if ($c->get('configService')->timeSeriesStore == null) {
                 return (new MySqlTimeSeriesStore())
                     ->setDependencies($c->get('logService'),
-                        $c->get('dateService'),
                         $c->get('layoutFactory'),
                         $c->get('campaignFactory'))
                     ->setStore($c->get('store'));
@@ -117,7 +116,6 @@ class Storage implements Middleware
 
                 return $timeSeriesStore->setDependencies(
                     $c->get('logService'),
-                    $c->get('dateService'),
                     $c->get('layoutFactory'),
                     $c->get('campaignFactory'),
                     $c->get('mediaFactory'),

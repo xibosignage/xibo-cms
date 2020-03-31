@@ -22,8 +22,7 @@
 
 namespace Xibo\Tests\integration;
 
-
-use Jenssegers\Date\Date;
+use Carbon\Carbon;
 use Xibo\Entity\Display;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDaypart;
@@ -89,7 +88,7 @@ class ScheduleDayPartTest extends LocalWebTestCase
         // calculate a few hours either side of now
         // must be tomorrow
         // must not cross the day boundary
-        $now = Date::now()->startOfDay()->addDay()->addHour();
+        $now = Carbon::now()->startOfDay()->addDay()->addHour();
 
         $this->dayPart = (new XiboDaypart($this->getEntityProvider()))->create(
             Random::generateString(5),
@@ -122,7 +121,7 @@ class ScheduleDayPartTest extends LocalWebTestCase
     {
         // Our CMS is in GMT
         // Create a schedule one hours time in my player timezone
-        $date = Date::now()->addDay()->setTime(0,0,0);
+        $date = Carbon::now()->addDay()->setTime(0,0,0);
 
         $this->getLogger()->debug('Event start will be at: ' . $date->format('Y-m-d H:i:s'));
 

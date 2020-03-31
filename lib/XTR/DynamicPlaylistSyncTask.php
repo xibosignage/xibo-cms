@@ -22,6 +22,7 @@
 
 namespace Xibo\XTR;
 
+use Carbon\Carbon;
 use Xibo\Entity\Media;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Task;
@@ -29,7 +30,6 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
@@ -47,9 +47,6 @@ class DynamicPlaylistSyncTask implements TaskInterface
     /** @var StorageServiceInterface */
     private $store;
 
-    /** @var DateServiceInterface */
-    private $date;
-
     /** @var PlaylistFactory */
     private $playlistFactory;
 
@@ -66,7 +63,6 @@ class DynamicPlaylistSyncTask implements TaskInterface
     public function setFactories($container)
     {
         $this->store = $container->get('store');
-        $this->date = $container->get('dateService');
         $this->playlistFactory = $container->get('playlistFactory');
         $this->mediaFactory = $container->get('mediaFactory');
         $this->moduleFactory = $container->get('moduleFactory');
@@ -95,9 +91,9 @@ class DynamicPlaylistSyncTask implements TaskInterface
             $this->log->debug('Last media updated date is ' . $lastMediaUpdate);
             $this->log->debug('Last playlist updated date is ' . $lastPlaylistUpdate);
 
-            $lastMediaUpdate = $this->date->parse($lastMediaUpdate);
-            $lastPlaylistUpdate = $this->date->parse($lastPlaylistUpdate);
-            $lastTaskRun = $this->date->parse($this->getTask()->lastRunDt, 'U');
+            $lastMediaUpdate = Carbon::createFromTimeString($lastMediaUpdate);
+            $lastPlaylistUpdate = Carbon::createFromTimeString($lastPlaylistUpdate);
+            $lastTaskRun = Carbon::createFromTimestamp($this->getTask()->lastRunDt);
 
             if ($lastMediaUpdate->lessThanOrEqualTo($lastTaskRun) && $lastPlaylistUpdate->lessThanOrEqualTo($lastTaskRun)) {
                 $this->appendRunMessage('No library media/playlist updates since we last ran');

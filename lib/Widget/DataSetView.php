@@ -21,6 +21,7 @@
  */
 namespace Xibo\Widget;
 
+use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -710,7 +711,7 @@ class DataSetView extends ModuleWidget
             }
 
             // Set the timezone for SQL
-            $dateNow = $this->getDate()->parse();
+            $dateNow = Carbon::createFromTimestamp(time());
             if ($displayId != 0) {
                 $display = $this->displayFactory->getById($displayId);
                 $timeZone = $display->getSetting('displayTimeZone', '');
@@ -719,7 +720,7 @@ class DataSetView extends ModuleWidget
                 $this->getLog()->debug(sprintf('Display Timezone Resolved: %s. Time: %s.', $timeZone, $dateNow->toDateTimeString()));
             }
 
-            $this->getStore()->setTimeZone($this->getDate()->getLocalDate($dateNow, 'P'));
+            $this->getStore()->setTimeZone($dateNow->format('P'));
 
             // Get the data (complete table, filtered)
             $dataSetResults = $dataSet->getData($filter);
@@ -904,7 +905,7 @@ class DataSetView extends ModuleWidget
         // Remote dataSets are kept "active" by required files
         $dataSet->setActive();
 
-        return $this->getDate()->parse($widgetModifiedDt, 'U');
+        return Carbon::createFromTimestamp($widgetModifiedDt);
     }
 
     /** @inheritdoc */

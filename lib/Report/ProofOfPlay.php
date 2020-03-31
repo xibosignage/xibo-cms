@@ -2,6 +2,7 @@
 
 namespace Xibo\Report;
 
+use Carbon\Carbon;
 use MongoDB\BSON\UTCDateTime;
 use Psr\Container\ContainerInterface;
 use Slim\Http\ServerRequest as Request;
@@ -13,11 +14,10 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ReportServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -87,12 +87,11 @@ class ProofOfPlay implements ReportInterface
      * @param TimeSeriesStoreInterface $timeSeriesStore
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
-     * @param DateServiceInterface $date
-     * @param SanitizerServiceInterface $sanitizer
+     * @param SanitizerService $sanitizer
      */
-    public function __construct($state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer)
+    public function __construct($state, $store, $timeSeriesStore, $log, $config, $sanitizer)
     {
-        $this->setCommonDependencies($state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer);
+        $this->setCommonDependencies($state, $store, $timeSeriesStore, $log, $config, $sanitizer);
     }
 
     /** @inheritdoc */
@@ -129,9 +128,9 @@ class ProofOfPlay implements ReportInterface
         return [
             'template' => 'proofofplay-report-form',
             'data' =>  [
-                'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
-                'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
-                'toDate' => $this->getDate()->getLocalDate(),
+                'fromDate' => Carbon::createFromTimestamp(time() - (86400 * 35))->format('Y-m-d H:i:s'),
+                'fromDateOneDay' => Carbon::createFromTimestamp(time() - 86400)->format('Y-m-d H:i:s'),
+                'toDate' => Carbon::createFromTimestamp(time())->format('Y-m-d H:i:s'),
                 'availableReports' => $this->reportService->listReports()
             ]
         ];
@@ -325,7 +324,7 @@ class ProofOfPlay implements ReportInterface
             'chartData' => [
                 'savedReport' => $savedReport,
                 'filterInfo' => $filterInfo,
-                'generatedOn' => $this->dateService->parse($savedReport->generatedOn, 'U')->format('Y-m-d H:i:s'),
+                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format('Y-m-d H:i:s'),
                 'periodStart' => isset($json['periodStart']) ? $json['periodStart'] : '',
                 'periodEnd' => isset($json['periodEnd']) ? $json['periodEnd'] : '',
                 'result' => json_encode($json['result']),
@@ -416,7 +415,7 @@ class ProofOfPlay implements ReportInterface
         $reportFilter = $sanitizedParams->getString('reportFilter');
 
         // Use the current date as a helper
-        $now = $this->getDate()->parse();
+        $now = Carbon::now();
 
         switch ($reportFilter) {
 
@@ -463,10 +462,10 @@ class ProofOfPlay implements ReportInterface
             case '':
             default:
                 // Expect dates to be provided.
-                $fromDt = $sanitizedParams->getDate('statsFromDt', ['default' => $this->getDate()->parse()->subDay()]);
+                $fromDt = $sanitizedParams->getDate('statsFromDt', ['default' => Carbon::now()->subDay()]);
                 $fromDt->startOfDay();
 
-                $toDt = $sanitizedParams->getDate('statsToDt', ['default' => $this->getDate()->parse()]);
+                $toDt = $sanitizedParams->getDate('statsToDt', ['default' => Carbon::now()]);
                 $toDt->startOfDay();
 
                 $fromDtTime = $sanitizedParams->getString('statsFromDtTime');
@@ -524,8 +523,8 @@ class ProofOfPlay implements ReportInterface
             $entry['tag'] = $sanitizedRow->getString('tag');
             $entry['numberPlays'] = $sanitizedRow->getInt('numberPlays');
             $entry['duration'] = $sanitizedRow->getInt('duration');
-            $entry['minStart'] = $this->getDate()->parse($row['minStart'], 'U')->format('Y-m-d H:i:s');
-            $entry['maxEnd'] = $this->getDate()->parse($row['maxEnd'], 'U')->format('Y-m-d H:i:s');
+            $entry['minStart'] = Carbon::createFromTimestamp($row['minStart'])->format('Y-m-d H:i:s');
+            $entry['maxEnd'] =  Carbon::createFromTimestamp($row['maxEnd'])->format('Y-m-d H:i:s');
             $entry['mediaId'] = $sanitizedRow->getInt('mediaId');
 
             $rows[] = $entry;
@@ -543,8 +542,8 @@ class ProofOfPlay implements ReportInterface
         $this->getState()->setData($rows);
 
         return [
-            'periodStart' => $this->getDate()->getLocalDate($fromDt),
-            'periodEnd' => $this->getDate()->getLocalDate($toDt),
+            'periodStart' => $fromDt->format('Y-m-d H:i:s'),
+            'periodEnd' => $toDt->format('Y-m-d H:i:s'),
             'result' => $rows,
         ];
 
@@ -552,8 +551,8 @@ class ProofOfPlay implements ReportInterface
 
     /**
      * MySQL proof of play report
-     * @param \Jenssegers\Date\Date $fromDt The filter range from date
-     * @param \Jenssegers\Date\Date $toDt The filter range to date
+     * @param Carbon $fromDt The filter range from date
+     * @param Carbon $toDt The filter range to date
      * @param $displayIds array
      * @param $layoutIds array
      * @param $mediaIds array
@@ -852,8 +851,8 @@ class ProofOfPlay implements ReportInterface
 
         return [
             'result' => $rows,
-            'periodStart' => $this->getDate()->parse($fromDt, 'U')->format('Y-m-d H:i:s'),
-            'periodEnd' => $this->getDate()->parse($toDt, 'U')->format('Y-m-d H:i:s'),
+            'periodStart' => Carbon::createFromTimestamp($fromDt)->format('Y-m-d H:i:s'),
+            'periodEnd' => Carbon::createFromTimestamp($toDt)->format('Y-m-d H:i:s'),
             'count' => count($rows),
             'totalStats' => isset($results[0]['total']) ? $results[0]['total'] : 0,
         ];
@@ -862,8 +861,8 @@ class ProofOfPlay implements ReportInterface
 
     /**
      * MongoDB proof of play report
-     * @param \Jenssegers\Date\Date $fromDt The filter range from date
-     * @param \Jenssegers\Date\Date $toDt The filter range to date
+     * @param Carbon $fromDt The filter range from date
+     * @param Carbon $toDt The filter range to date
      * @param $displayIds array
      * @param $layoutIds array
      * @param $mediaIds array
@@ -1138,8 +1137,8 @@ class ProofOfPlay implements ReportInterface
 
         return [
             'result' => $rows,
-            'periodStart' => $this->getDate()->parse($fromDt->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s'),
-            'periodEnd' => $this->getDate()->parse($toDt->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s'),
+            'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format('Y-m-d H:i:s'),
+            'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format('Y-m-d H:i:s'),
             'count' => count($rows),
             'totalStats' => $totalStats,
         ];

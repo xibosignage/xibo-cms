@@ -22,13 +22,14 @@
 namespace Xibo\Entity;
 
 
+use Carbon\Carbon;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\DuplicateEntityException;
@@ -161,11 +162,6 @@ class Playlist implements \JsonSerializable
     //<editor-fold desc="Factories and Dependencies">
 
     /**
-     * @var DateServiceInterface
-     */
-    private $dateService;
-
-    /**
      * @var PermissionFactory
      */
     private $permissionFactory;
@@ -199,19 +195,17 @@ class Playlist implements \JsonSerializable
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
-     * @param DateServiceInterface $date
      * @param PermissionFactory $permissionFactory
      * @param PlaylistFactory $playlistFactory
      * @param WidgetFactory $widgetFactory
      * @param TagFactory $tagFactory
 
      */
-    public function __construct($store, $log, $config, $date, $permissionFactory, $playlistFactory, $widgetFactory, $tagFactory)
+    public function __construct($store, $log, $config, $permissionFactory, $playlistFactory, $widgetFactory, $tagFactory)
     {
         $this->setCommonDependencies($store, $log);
 
         $this->config = $config;
-        $this->dateService = $date;
         $this->permissionFactory = $permissionFactory;
         $this->playlistFactory = $playlistFactory;
         $this->widgetFactory = $widgetFactory;
@@ -834,10 +828,11 @@ class Playlist implements \JsonSerializable
      */
     public function notifyLayouts()
     {
+        $dateHelper = new DateFormatHelper();
         // Notify the Playlist
         $this->getStore()->update('UPDATE `playlist` SET requiresDurationUpdate = 1, `modifiedDT` = :modifiedDt WHERE playlistId = :playlistId', [
             'playlistId' => $this->playlistId,
-            'modifiedDt' => $this->dateService->getLocalDate()
+            'modifiedDt' => Carbon::createFromTimestamp(time())->format($dateHelper->getSystemFormat())
         ]);
 
         $this->getStore()->update('
@@ -852,7 +847,7 @@ class Playlist implements \JsonSerializable
             )
         ', [
             'playlistId' => $this->playlistId,
-            'modifiedDt' => $this->dateService->getLocalDate()
+            'modifiedDt' => Carbon::createFromTimestamp(time())->format($dateHelper->getSystemFormat())
         ]);
     }
 

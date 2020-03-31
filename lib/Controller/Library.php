@@ -21,8 +21,10 @@
  */
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Psr7\Stream;
 use Mimey\MimeTypes;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
@@ -53,10 +55,10 @@ use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\Environment;
 use Xibo\Helper\HttpCacheProvider;
+use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\XiboUploadHandler;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -159,7 +161,6 @@ class Library extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param PoolInterface $pool
@@ -183,9 +184,9 @@ class Library extends Base
      * @param Twig $view
      * @param HttpCacheProvider $cacheProvider
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $dispatcher, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory, $view, HttpCacheProvider $cacheProvider)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $pool, $dispatcher, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory, $view, HttpCacheProvider $cacheProvider)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->store = $store;
         $this->moduleFactory = $moduleFactory;
@@ -605,7 +606,7 @@ class Library extends Base
                 $media->excludeProperty('mediaExpiresIn');
                 $media->excludeProperty('mediaExpiryFailed');
                 $media->excludeProperty('mediaNoExpiryDate');
-                $media->expires = ($media->expires == 0) ? 0 : $this->getDate()->getLocalDate($media->expires);
+                $media->expires = ($media->expires == 0) ? 0 : Carbon::createFromTimestamp($media->expires)->format('Y-m-d H:i:s');
                 continue;
             }
 
@@ -1443,14 +1444,16 @@ class Library extends Base
         $httpCache = $this->cacheProvider;
         // Issue some headers
         $response = $httpCache->withEtag($response, md5($css['css']));
-        $response = $response->withHeader('Content-Type', 'text/css');
-
+        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/fontcss_' . Random::generateString();
         // Return the CSS to the browser as a file
-        $out = fopen('php://output', 'w');
+        $out = fopen($tempFileName, 'w');
         fputs($out, $css['css']);
         fclose($out);
 
         $this->setNoOutput(true);
+
+        $response = $response->withHeader('Content-Type', 'text/css')
+                             ->withBody(new Stream(fopen($tempFileName, 'r')));
 
         return $this->render($request, $response);
     }

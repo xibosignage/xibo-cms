@@ -24,19 +24,17 @@
 namespace Xibo\Factory;
 
 
+use Carbon\Carbon;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Xibo\Entity\Action;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Entity\Layout;
 use Xibo\Entity\Playlist;
-use Xibo\Entity\Region;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
@@ -53,11 +51,6 @@ class LayoutFactory extends BaseFactory
      * @var ConfigServiceInterface
      */
     private $config;
-
-    /**
-     * @var DateServiceInterface
-     */
-    private $date;
 
     /** @var  EventDispatcherInterface */
     private $dispatcher;
@@ -117,22 +110,13 @@ class LayoutFactory extends BaseFactory
     private $actionFactory;
 
     /**
-     * @return DateServiceInterface
-     */
-    private function getDate()
-    {
-        return $this->date;
-    }
-
-    /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
-     * @param DateServiceInterface $date
      * @param EventDispatcherInterface $dispatcher
      * @param PermissionFactory $permissionFactory
      * @param RegionFactory $regionFactory
@@ -147,14 +131,13 @@ class LayoutFactory extends BaseFactory
      * @param WidgetAudioFactory $widgetAudioFactory
      * @param ActionFactory $actionFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $date, $dispatcher, $permissionFactory,
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $dispatcher, $permissionFactory,
                                 $regionFactory, $tagFactory, $campaignFactory, $mediaFactory, $moduleFactory, $resolutionFactory,
                                 $widgetFactory, $widgetOptionFactory, $playlistFactory, $widgetAudioFactory, $actionFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
         $this->config = $config;
-        $this->date = $date;
         $this->dispatcher = $dispatcher;
         $this->permissionFactory = $permissionFactory;
         $this->regionFactory = $regionFactory;
@@ -180,7 +163,6 @@ class LayoutFactory extends BaseFactory
             $this->getStore(),
             $this->getLog(),
             $this->config,
-            $this->date,
             $this->dispatcher,
             $this->permissionFactory,
             $this->regionFactory,
@@ -1989,7 +1971,7 @@ class LayoutFactory extends BaseFactory
             if ($parsedFilter->getInt('filterLayoutStatusId') == 2) {
 
                 // Only show used layouts
-                $now = $this->getDate()->parse()->format('U');
+                $now = Carbon::createFromTimestamp(time())->format('U');
                 $sql = 'SELECT DISTINCT schedule.CampaignID FROM schedule WHERE ( ( schedule.fromDt < '. $now . ' OR schedule.fromDt = 0 ) ' . ' AND schedule.toDt > ' . $now . ') OR schedule.fromDt > ' . $now;
                 $campaignIds = [];
                 foreach ($this->getStore()->select($sql, []) as $row) {
@@ -2003,7 +1985,7 @@ class LayoutFactory extends BaseFactory
             }
             else {
                 // Only show unused layouts
-                $now = $this->getDate()->parse()->format('U');
+                $now = Carbon::createFromTimestamp(time())->format('U');
                 $sql = 'SELECT DISTINCT schedule.CampaignID FROM schedule WHERE ( ( schedule.fromDt < '. $now . ' OR schedule.fromDt = 0 ) ' . ' AND schedule.toDt > ' . $now . ') OR schedule.fromDt > ' . $now;
                 $campaignIds = [];
                 foreach ($this->getStore()->select($sql, []) as $row) {
@@ -2046,7 +2028,7 @@ class LayoutFactory extends BaseFactory
 
         if ($parsedFilter->getInt('activeDisplayGroupId') !== null) {
 
-            $date = $this->getDate()->parse()->format('U');
+            $date = Carbon::createFromTimestamp(time())->format('U');
 
             // for filter by displayGroup, we need to add some additional filters in WHERE clause to show only relevant Layouts at the time the Layout grid is viewed
             $body .= ' AND campaign.campaignId = schedule.campaignId 
@@ -2071,6 +2053,7 @@ class LayoutFactory extends BaseFactory
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $layout = $this->createEmpty();
+
             $parsedRow = $this->getSanitizer($row);
 
             // Validate each param and add it to the array.
@@ -2124,24 +2107,24 @@ class LayoutFactory extends BaseFactory
      */
     private function setWidgetExpiryDatesOrDefault($widget)
     {
-        $minSubYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MIN))->subYear()->format('U');
-        $minAddYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MIN))->addYear()->format('U');
-        $maxSubYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MAX))->subYear()->format('U');
-        $maxAddYear = $this->getDate()->parse($this->getDate()->getLocalDate(Widget::$DATE_MAX))->addYear()->format('U');
+        $minSubYear = Carbon::createFromTimestamp(Widget::$DATE_MIN)->subYear()->format('U');
+        $minAddYear = Carbon::createFromTimestamp(Widget::$DATE_MIN)->addYear()->format('U');
+        $maxSubYear = Carbon::createFromTimestamp(Widget::$DATE_MAX)->subYear()->format('U');
+        $maxAddYear = Carbon::createFromTimestamp(Widget::$DATE_MAX)->addYear()->format('U');
 
         // convert the date string to a unix timestamp, if the layout xlf does not contain dates, then set it to the $DATE_MIN / $DATE_MAX which are already unix timestamps, don't attempt to convert them
         // we need to check if provided from and to dates are within $DATE_MIN +- year to avoid issues with CMS Instances in different timezones https://github.com/xibosignage/xibo/issues/1934
 
-        if ($widget->fromDt === Widget::$DATE_MIN || ($this->getDate()->parse($widget->fromDt)->format('U') > $minSubYear && $this->getDate()->parse($widget->fromDt)->format('U') < $minAddYear)) {
+        if ($widget->fromDt === Widget::$DATE_MIN || (Carbon::createFromTimestamp($widget->fromDt)->format('U') > $minSubYear && Carbon::createFromTimestamp($widget->fromDt)->format('U') < $minAddYear)) {
             $widget->fromDt = Widget::$DATE_MIN;
         } else {
-            $widget->fromDt = $this->getDate()->parse($widget->fromDt)->format('U');
+            $widget->fromDt = Carbon::createFromTimestamp($widget->fromDt)->format('U');
         }
 
-        if ($widget->toDt === Widget::$DATE_MAX || ($this->getDate()->parse($widget->toDt)->format('U') > $maxSubYear && $this->getDate()->parse($widget->toDt)->format('U') < $maxAddYear)) {
+        if ($widget->toDt === Widget::$DATE_MAX || (Carbon::createFromTimestamp($widget->toDt)->format('U') > $maxSubYear && Carbon::createFromTimestamp($widget->toDt)->format('U') < $maxAddYear)) {
             $widget->toDt = Widget::$DATE_MAX;
         } else {
-            $widget->toDt = $this->getDate()->parse($widget->toDt)->format('U');
+            $widget->toDt = Carbon::createFromTimestamp($widget->toDt)->format('U');
         }
 
         return $widget;

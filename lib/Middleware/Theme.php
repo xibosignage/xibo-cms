@@ -24,14 +24,17 @@
 namespace Xibo\Middleware;
 
 
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Respect\Validation\Rules\Date;
 use Slim\App as App;
 use Slim\Routing\RouteContext;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
 use Xibo\Helper\Translate;
 
@@ -54,6 +57,7 @@ class Theme implements Middleware
      * @param RequestHandler $handler
      * @return Response
      * @throws \Twig\Error\LoaderError
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function process(Request $request, RequestHandler $handler): Response
     {
@@ -90,15 +94,16 @@ class Theme implements Middleware
         }
 
         $settings =  $container->get('configService')->getSettings();
+        $dateFormatHelper = new DateFormatHelper();
 
         // Date format
-        $settings['DATE_FORMAT_JS'] = $container->get('dateService')->convertPhpToMomentFormat($settings['DATE_FORMAT']);
-        $settings['DATE_FORMAT_BOOTSTRAP'] = $container->get('dateService')->convertPhpToBootstrapFormat($settings['DATE_FORMAT']);
-        $settings['DATE_FORMAT_BOOTSTRAP_DATEONLY'] = $container->get('dateService')->convertPhpToBootstrapFormat($settings['DATE_FORMAT'], false);
-        $settings['TIME_FORMAT'] = $container->get('dateService')->extractTimeFormat($settings['DATE_FORMAT']);
-        $settings['TIME_FORMAT_JS'] = $container->get('dateService')->convertPhpToMomentFormat($settings['TIME_FORMAT']);
-        $settings['systemDateFormat'] = $container->get('dateService')->convertPhpToMomentFormat($container->get('dateService')->getSystemFormat());
-        $settings['systemTimeFormat'] = $container->get('dateService')->convertPhpToMomentFormat($container->get('dateService')->extractTimeFormat($container->get('dateService')->getSystemFormat()));
+        $settings['DATE_FORMAT_JS'] = $dateFormatHelper->convertPhpToMomentFormat($settings['DATE_FORMAT']);
+        $settings['DATE_FORMAT_BOOTSTRAP'] = $dateFormatHelper->convertPhpToBootstrapFormat($settings['DATE_FORMAT']);
+        $settings['DATE_FORMAT_BOOTSTRAP_DATEONLY'] = $dateFormatHelper->convertPhpToBootstrapFormat($settings['DATE_FORMAT'], false);
+        $settings['TIME_FORMAT'] = $dateFormatHelper->extractTimeFormat($settings['DATE_FORMAT']);
+        $settings['TIME_FORMAT_JS'] = $dateFormatHelper->convertPhpToMomentFormat($settings['TIME_FORMAT']);
+        $settings['systemDateFormat'] = $dateFormatHelper->convertPhpToMomentFormat($dateFormatHelper->getSystemFormat());
+        $settings['systemTimeFormat'] = $dateFormatHelper->convertPhpToMomentFormat($dateFormatHelper->extractTimeFormat($dateFormatHelper->getSystemFormat()));
 
         $routeContext = RouteContext::fromRequest($request);
         $route = $routeContext->getRoute();

@@ -21,10 +21,11 @@
  */
 namespace Xibo\Xmds;
 
+use Carbon\Carbon;
 use Intervention\Image\ImageManagerStatic as Img;
-use Jenssegers\Date\Date;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
@@ -103,10 +104,10 @@ class Soap4 extends Soap
             $this->getLog()->debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);
 
             // Now
-            $dateNow = $this->getDate()->parse();
+            $dateNow = Carbon::createFromTimestamp(time());
 
             // Append the time
-            $displayElement->setAttribute('date', $this->getDate()->getLocalDate($dateNow));
+            $displayElement->setAttribute('date', $dateNow->format('Y-m-d H:i:s'));
             $displayElement->setAttribute('timezone', $this->getConfig()->getSetting('defaultTimezone'));
 
             // Determine if we are licensed or not
@@ -149,7 +150,7 @@ class Soap4 extends Soap
                         if ($timeParts[0] == '00' && $timeParts[1] == '00') {
                             $arrayItem['value'] = 0;
                         } else {
-                            $arrayItem['value'] = Date::now()->setTime(intval($timeParts[0]), intval($timeParts[1]));
+                            $arrayItem['value'] = Carbon::now()->setTime(intval($timeParts[0]), intval($timeParts[1]));
                         }
                     }
 
@@ -222,7 +223,7 @@ class Soap4 extends Soap
                     $dateNow->timezone($display->timeZone);
 
                     // Append Local Time
-                    $displayElement->setAttribute('localDate', $this->getDate()->getLocalDate($dateNow));
+                    $displayElement->setAttribute('localDate', $dateNow->format('Y-m-d H:i:s'));
                 }
             }
 
@@ -570,10 +571,11 @@ class Soap4 extends Soap
 
         // Timezone
         $timeZone = $sanitizedStatus->getString('timeZone');
+        $dateFormatHelper = new DateFormatHelper();
 
         if (!empty($timeZone)) {
             // Validate the provided data and log/ignore if not well formatted
-            if (array_key_exists($timeZone, $this->getDate()->timezoneList())) {
+            if (array_key_exists($timeZone, $dateFormatHelper->timezoneList())) {
                 $this->display->timeZone = $timeZone;
             } else {
                 $this->getLog()->info('Ignoring Incorrect timezone string: ' . $timeZone);
@@ -723,7 +725,7 @@ class Soap4 extends Soap
         $this->display->save(Display::$saveOptionsMinimum);
 
         // Cache the current screen shot time
-        $this->display->setCurrentScreenShotTime($this->getPool(), $this->getDate()->getLocalDate());
+        $this->display->setCurrentScreenShotTime($this->getPool(), Carbon::createFromTimestamp(time())->format('Y-m-d H:i:s'));
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
 

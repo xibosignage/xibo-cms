@@ -24,10 +24,12 @@
 namespace Xibo\Xmds;
 
 
+use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Stash\Invalidation;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
@@ -112,11 +114,12 @@ class Soap5 extends Soap4
             // Audit in
             $this->getLog()->debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);
 
+            $dateHelper = new DateFormatHelper();
             // Now
-            $dateNow = $this->getDate()->parse();
+            $dateNow = Carbon::createFromTimestamp(time());
 
             // Append the time
-            $displayElement->setAttribute('date', $this->getDate()->getLocalDate($dateNow));
+            $displayElement->setAttribute('date', $dateNow->format($dateHelper->getSystemFormat()));
             $displayElement->setAttribute('timezone', $this->getConfig()->getSetting('defaultTimezone'));
 
             // Determine if we are licensed or not
@@ -264,7 +267,7 @@ class Soap5 extends Soap4
 
                     // Append Local Time
                     $displayElement->setAttribute('localTimezone', $display->timeZone);
-                    $displayElement->setAttribute('localDate', $this->getDate()->getLocalDate($dateNow));
+                    $displayElement->setAttribute('localDate', $dateNow->format($dateHelper->getSystemFormat()));
                 }
 
                 // Commands

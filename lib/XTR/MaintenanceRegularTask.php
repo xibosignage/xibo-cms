@@ -22,6 +22,7 @@
 
 
 namespace Xibo\XTR;
+use Carbon\Carbon;
 use Xibo\Controller\Display;
 use Xibo\Controller\Library;
 use Xibo\Factory\DisplayFactory;
@@ -205,7 +206,7 @@ class MaintenanceRegularTask implements TaskInterface
 
                         try {
                             WakeOnLan::TransmitWakeOnLan($display->macAddress, $display->secureOn, $display->broadCastAddress, $display->cidr, '9', $this->log);
-                            $this->runMessage .= ' - ' . $display->display . ' Sent WOL Message. Previous WOL send time: ' . $this->date->getLocalDate($display->lastWakeOnLanCommandSent) . PHP_EOL;
+                            $this->runMessage .= ' - ' . $display->display . ' Sent WOL Message. Previous WOL send time: ' . Carbon::createFromTimestamp($display->lastWakeOnLanCommandSent)->format('Y-m-d H:i:s') . PHP_EOL;
 
                             $display->lastWakeOnLanCommandSent = time();
                             $display->save(['validate' => false, 'audit' => true]);
@@ -215,7 +216,7 @@ class MaintenanceRegularTask implements TaskInterface
                         }
                     }
                     else {
-                        $this->runMessage .= ' - ' . $display->display . ' Display already awake. Previous WOL send time: ' . $this->date->getLocalDate($display->lastWakeOnLanCommandSent) . PHP_EOL;
+                        $this->runMessage .= ' - ' . $display->display . ' Display already awake. Previous WOL send time: ' . Carbon::createFromTimestamp($display->lastWakeOnLanCommandSent)->format('Y-m-d H:i:s') . PHP_EOL;
                     }
                 }
                 else {
@@ -272,6 +273,8 @@ class MaintenanceRegularTask implements TaskInterface
 
     /**
      * Check library usage
+     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     private function checkLibraryUsage()
     {
@@ -289,16 +292,16 @@ class MaintenanceRegularTask implements TaskInterface
         if ($size >= $libraryLimit) {
             // Create a notification if we don't already have one today for this display.
             $subject = __('Library allowance exceeded');
-            $date = $this->date->parse();
+            $date = Carbon::now();
 
-            if (count($this->notificationFactory->getBySubjectAndDate($subject, $this->date->getLocalDate($date->startOfDay(), 'U'), $this->date->getLocalDate($date->addDay(1)->startOfDay(), 'U'))) <= 0) {
+            if (count($this->notificationFactory->getBySubjectAndDate($subject, $date->startOfDay()->format('U'), $date->addDay()->startOfDay()->format('U'))) <= 0) {
 
                 $body = __(sprintf('Library allowance of %s exceeded. Used %s', ByteFormatter::format($libraryLimit), ByteFormatter::format($size)));
 
                 $notification = $this->notificationFactory->createSystemNotification(
                     $subject,
                     $body,
-                    $this->date->parse()
+                    Carbon::createFromTimestamp(time())
                 );
 
                 $notification->save();
@@ -310,6 +313,8 @@ class MaintenanceRegularTask implements TaskInterface
 
     /**
      * Checks to see if there are any overrequested files.
+     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     private function checkOverRequestedFiles()
     {
@@ -329,23 +334,23 @@ class MaintenanceRegularTask implements TaskInterface
         ', [
             'factor' => 3,
             'excludedType' => 'W',
-            'lastAccessed' => $this->date->parse()->subDay()->format('U')
+            'lastAccessed' => Carbon::createFromTimestamp(time())->subDay()->format('U')
         ]);
 
         foreach ($items as $item) {
             $sanitizedItem = $this->getSanitizer($item);
             // Create a notification if we don't already have one today for this display.
             $subject = sprintf(__('%s is downloading %d files too many times'), $sanitizedItem->getString('display'), $sanitizedItem->getInt('countFiles'));
-            $date = $this->date->parse();
+            $date = Carbon::createFromTimestamp(time());
 
-            if (count($this->notificationFactory->getBySubjectAndDate($subject, $this->date->getLocalDate($date->startOfDay(), 'U'), $this->date->getLocalDate($date->addDay(1)->startOfDay(), 'U'))) <= 0) {
+            if (count($this->notificationFactory->getBySubjectAndDate($subject, $date->startOfDay()->format('U'),$date->addDay()->startOfDay()->format('U'))) <= 0) {
 
                 $body = sprintf(__('Please check the bandwidth graphs and display status for %s to investigate the issue.'), $sanitizedItem->getString('display'));
 
                 $notification = $this->notificationFactory->createSystemNotification(
                     $subject,
                     $body,
-                    $this->date->parse()
+                    Carbon::createFromTimestamp(time())
                 );
 
                 $display = $this->displayFactory->getById($item['displayId']);
@@ -398,7 +403,7 @@ class MaintenanceRegularTask implements TaskInterface
             foreach ($layouts as $layout) {
 
                 // check if the layout should be published now according to the date
-                if ($this->date->parse($layout->publishedDate)->format('U') < $this->date->getLocalDate(null, 'U')) {
+                if (Carbon::createFromTimestamp($layout->publishedDate)->format('U') < Carbon::createFromTimestamp(time())->format('U')) {
                     try {
                         // check if draft is valid
                         if ($layout->status === ModuleWidget::$STATUS_INVALID && isset($layout->statusMessage)) {
@@ -417,11 +422,11 @@ class MaintenanceRegularTask implements TaskInterface
 
                         // create a notification
                         $subject = __(sprintf('Error publishing layout ID %d', $layout->layoutId));
-                        $date = $this->date->parse();
+                        $date = Carbon::createFromTimestamp(time());
 
                         if (count($this->notificationFactory->getBySubjectAndDate($subject,
-                                $this->date->getLocalDate($date->startOfDay(), 'U'),
-                                $this->date->getLocalDate($date->addDay()->startOfDay(), 'U'))) <= 0) {
+                                $date->startOfDay()->format('U'),
+                                $date->addDay()->startOfDay()->format('U'))) <= 0) {
 
                             $body = __(sprintf('Publishing layout ID %d failed. With message %s', $layout->layoutId,
                                 $e->getMessage()));
@@ -429,7 +434,7 @@ class MaintenanceRegularTask implements TaskInterface
                             $notification = $this->notificationFactory->createSystemNotification(
                                 $subject,
                                 $body,
-                                $this->date->parse()
+                                Carbon::createFromTimestamp(time())
                             );
                             $notification->save();
 

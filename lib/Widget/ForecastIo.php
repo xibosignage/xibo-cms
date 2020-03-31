@@ -33,6 +33,8 @@
 
 namespace Xibo\Widget;
 
+use Carbon\Carbon;
+use Carbon\Factory;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Str;
@@ -428,13 +430,13 @@ class ForecastIo extends ModuleWidget
              $rows = array();
              foreach ($data['currently'] as $key => $value) {
                  if (stripos($key, 'time')) {
-                     $value = $this->getDate()->getLocalDate($value);
+                     $value = Carbon::createFromTimestamp($value)->format('Y-m-d H:i:s');
                  }
                  $rows[] = array('forecast' => __('Current'), 'key' => $key, 'value' => $value);
              }
              foreach ($data['daily']['data'][0] as $key => $value) {
                  if (stripos($key, 'time')) {
-                     $value = $this->getDate()->getLocalDate($value);
+                     $value = Carbon::createFromTimestamp($value)->format('Y-m-d H:i:s');
                  }
                  $rows[] = array('forecast' => __('Daily'), 'key' => $key, 'value' => $value);
              }
@@ -632,12 +634,13 @@ class ForecastIo extends ModuleWidget
         return $data;
     }
 
-    private function makeSubstitutions($data, $source, $timezone = NULL)
+    private function makeSubstitutions($data, $source, $timezone = NULL, $language = 'en')
     {
+        $carbonFactory = new Factory(['locale' => $language], Carbon::class);
+
         // Replace all matches.
         $matches = '';
         preg_match_all('/\[.*?\]/', $source, $matches);
-
         // Substitute
         foreach ($matches[0] as $sub) {
             $replace = str_replace('[', '', str_replace(']', '', $sub));
@@ -648,10 +651,9 @@ class ForecastIo extends ModuleWidget
 
                 $this->getLog()->debug('Time Substitution for source time ' . $data['time'] . ' and timezone ' . $timezone . ', format ' . $timeSplit[1]);
 
-                $time = $this->getDate()->getLocalDate($data['time'], $timeSplit[1], $timezone);
+                $time = $carbonFactory->parse($data['time'], $timezone)->translatedFormat($timeSplit[1]);
 
                 $this->getLog()->debug('Time Substitution: ' . (string)($time));
-
                 // Pull time out of the array
                 $source = str_replace($sub, $time, $source);
             } else {
@@ -681,13 +683,7 @@ class ForecastIo extends ModuleWidget
         }
 
         // Do we need to override the language?
-        // TODO: I don't like this date fix, the library should really check the file exists?
         $lang = $this->getOption('lang', 'en');
-        if ($lang != 'en' && file_exists(PROJECT_ROOT . '/vendor/jenssegers/date/src/Lang/' . $lang . '.php')) {
-            mb_internal_encoding('UTF-8');
-            $this->getLog()->debug('Setting language to: ' . $lang);
-            $this->getDate()->setLocale($lang);
-        }
 
         $data = [];
 
@@ -738,7 +734,7 @@ class ForecastIo extends ModuleWidget
             'rain-image' => $this->getResourceUrl('forecastio/wi-rain.jpg'),
             'snow-image' => $this->getResourceUrl('forecastio/wi-snow.jpg'),
             'windy-image' => $this->getResourceUrl('forecastio/wi-windy.jpg'),
-          ], $styleSheet
+          ], $styleSheet, null, $lang
         );
 
         $headContent = '
@@ -789,14 +785,14 @@ class ForecastIo extends ModuleWidget
             // Substitute for every day (i.e. 7 times).
             for ($i = $offset; $i < $stopPosition; $i++) {
                 $this->getLog()->debug('Substitiution for Daily, day ' . $i);
-                $dailySubs .= $this->makeSubstitutions($foreCast['daily']['data'][$i], $dailyTemplate, $foreCast['timezone']);
+                $dailySubs .= $this->makeSubstitutions($foreCast['daily']['data'][$i], $dailyTemplate, $foreCast['timezone'], $lang);
             }
             // Substitute the completed template
             $body = str_replace($sub, $dailySubs, $body);
         }
 
         // Run replace over the main template
-        $data['body'] = $this->makeSubstitutions($foreCast['currently'], $body, $foreCast['timezone']);
+        $data['body'] = $this->makeSubstitutions($foreCast['currently'], $body, $foreCast['timezone'], $lang);
 
         // JavaScript to control the size (override the original width and height so that the widget gets blown up )
         $options = array(

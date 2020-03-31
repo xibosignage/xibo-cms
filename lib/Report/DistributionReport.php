@@ -2,6 +2,7 @@
 
 namespace Xibo\Report;
 
+use Carbon\Carbon;
 use MongoDB\BSON\UTCDateTime;
 use Psr\Container\ContainerInterface;
 use Slim\Http\ServerRequest as Request;
@@ -12,11 +13,11 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ReportServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -77,12 +78,11 @@ class DistributionReport implements ReportInterface
      * @param TimeSeriesStoreInterface $timeSeriesStore
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
-     * @param DateServiceInterface $date
-     * @param SanitizerServiceInterface $sanitizer
+     * @param SanitizerService $sanitizer
      */
-    public function __construct($state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer)
+    public function __construct($state, $store, $timeSeriesStore, $log, $config, $sanitizer)
     {
-        $this->setCommonDependencies($state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer);
+        $this->setCommonDependencies($state, $store, $timeSeriesStore, $log, $config, $sanitizer);
     }
 
     /** @inheritdoc */
@@ -148,12 +148,14 @@ class DistributionReport implements ReportInterface
     /** @inheritdoc */
     public function getReportForm()
     {
+        $dateHelper = new DateFormatHelper();
+
         return [
             'template' => 'distribution-report-form',
             'data' =>  [
-                'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
-                'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
-                'toDate' => $this->getDate()->getLocalDate(),
+                'fromDate' => Carbon::createFromTimestamp(time() - (86400 * 35))->format($dateHelper->getSystemFormat()),
+                'fromDateOneDay' => Carbon::createFromTimestamp(time() - 86400)->format($dateHelper->getSystemFormat()),
+                'toDate' => Carbon::now()->format($dateHelper->getSystemFormat()),
                 'availableReports' => $this->reportService->listReports()
             ]
         ];
@@ -312,7 +314,7 @@ class DistributionReport implements ReportInterface
             'template' => 'distribution-report-preview',
             'chartData' => [
                 'savedReport' => $savedReport,
-                'generatedOn' => $this->dateService->parse($savedReport->generatedOn, 'U')->format('Y-m-d H:i:s'),
+                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format('Y-m-d H:i:s'),
                 'periodStart' => isset($json['periodStart']) ? $json['periodStart'] : '',
                 'periodEnd' => isset($json['periodEnd']) ? $json['periodEnd'] : '',
                 'labels' => json_encode($json['labels']),
@@ -378,7 +380,7 @@ class DistributionReport implements ReportInterface
         // check the range filter first and set from/to dates accordingly.
         $reportFilter = $sanitizedParams->getString('reportFilter');
         // Use the current date as a helper
-        $now = $this->getDate()->parse();
+        $now = Carbon::createFromTimestamp(time());
 
         switch ($reportFilter) {
 
@@ -425,10 +427,10 @@ class DistributionReport implements ReportInterface
             case '':
             default:
                 // Expect dates to be provided.
-                $fromDt = $sanitizedParams->getDate('statsFromDt', ['default' => $this->getDate()->parse()->subDay()]);
+                $fromDt = $sanitizedParams->getDate('statsFromDt', ['default' => Carbon::createFromTimestamp(time())->subDay()]);
                 $fromDt->startOfDay();
 
-                $toDt = $sanitizedParams->getDate('statsToDt', ['default' =>  $this->getDate()->parse()]);
+                $toDt = $sanitizedParams->getDate('statsToDt', ['default' =>  Carbon::createFromTimestamp(time())]);
                 $toDt->addDay()->startOfDay();
 
                 // What if the fromdt and todt are exactly the same?
@@ -482,8 +484,8 @@ class DistributionReport implements ReportInterface
 
         // Return data to build chart
         return [
-            'periodStart' => $this->getDate()->getLocalDate($fromDt),
-            'periodEnd' => $this->getDate()->getLocalDate($toDt),
+            'periodStart' => Carbon::createFromTimestamp($fromDt->format('U')),
+            'periodEnd' => Carbon::createFromTimestamp($toDt->format('U')),
             'labels' => $labels,
             'countData' => $countData,
             'durationData' => $durationData,
@@ -495,8 +497,8 @@ class DistributionReport implements ReportInterface
 
     /**
      * MySQL distribution report
-     * @param \Jenssegers\Date\Date $fromDt The filter range from date
-     * @param \Jenssegers\Date\Date $toDt The filter range to date
+     * @param Carbon $fromDt The filter range from date
+     * @param Carbon $toDt The filter range to date
      * @param string $groupByFilter Grouping, byhour, bydayofweek and bydayofmonth
      * @param $displayIds
      * @param $displayGroupIds
@@ -631,7 +633,7 @@ class DistributionReport implements ReportInterface
             (($type == 'event') && ($eventTag != '')) ) {
 
             // Get the timezone
-            $timezone = $this->getDate()->parse()->getTimezone()->getName();
+            $timezone = Carbon::parse()->getTimezone()->getName();
             $filterRangeStart = new UTCDateTime($fromDt->format('U') * 1000);
             $filterRangeEnd = new UTCDateTime($toDt->format('U') * 1000);
 
@@ -1182,11 +1184,11 @@ class DistributionReport implements ReportInterface
                 $id = $period['id'];
 
                 if($groupByFilter == 'byhour'){
-                    $label = $this->getDate()->parse($period['start']->toDateTime()->format('U'), 'U')->format('g:i A');
+                    $label = Carbon::createFromTimestamp($period['start']->toDateTime()->format('U'))->format('g:i A');
                 } elseif ($groupByFilter == 'bydayofweek') {
                     $label = $day[$id];
                 } elseif ($groupByFilter == 'bydayofmonth') {
-                    $label = $this->getDate()->parse($period['start']->toDateTime()->format('U'), 'U')->format('d');
+                    $label = Carbon::createFromTimestamp($period['start']->toDateTime()->format('U'))->format('d');
                 }
 
                 $matched = false;

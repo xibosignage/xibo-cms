@@ -21,13 +21,12 @@
 
 namespace Xibo\Tests\Integration;
 
-use Jenssegers\Date\Date;
+use Carbon\Carbon;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboLibrary;
 use Xibo\OAuth2\Client\Entity\XiboPlaylist;
-use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboStats;
 use Xibo\OAuth2\Client\Entity\XiboText;
 use Xibo\Tests\Helper\DisplayHelperTrait;
@@ -133,7 +132,7 @@ class StatisticsTest extends LocalWebTestCase
         $this->media2->deleteAssigned();
 
         // Delete stat records
-        self::$container->get('timeSeriesStore')->deleteStats(Date::now(), Date::createFromFormat("Y-m-d H:i:s", '2018-02-12 00:00:00'));
+        self::$container->get('timeSeriesStore')->deleteStats(Carbon::now(), Carbon::createFromFormat("Y-m-d H:i:s", '2018-02-12 00:00:00'));
     }
 
     /**

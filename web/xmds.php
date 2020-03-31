@@ -231,7 +231,6 @@ try {
         $container->get('store'),
         $container->get('timeSeriesStore'),
         $container->get('logService'),
-        $container->get('dateService'),
         $container->get('sanitizerService'),
         $container->get('configService'),
         $container->get('requiredFileFactory'),

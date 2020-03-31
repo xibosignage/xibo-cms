@@ -23,6 +23,8 @@
 
 namespace Xibo\Entity;
 
+use Carbon\Carbon;
+use Carbon\Factory;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\DataSetColumnFactory;
@@ -30,7 +32,6 @@ use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\ConfigurationException;
@@ -245,9 +246,6 @@ class DataSet implements \JsonSerializable
     /** @var  DisplayFactory */
     private $displayFactory;
 
-    /** @var DateServiceInterface */
-    private $date;
-
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -259,9 +257,8 @@ class DataSet implements \JsonSerializable
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param PermissionFactory $permissionFactory
      * @param DisplayFactory $displayFactory
-     * @param DateServiceInterface $date
      */
-    public function __construct($store, $log, $sanitizerService, $config, $pool, $dataSetFactory, $dataSetColumnFactory, $permissionFactory, $displayFactory, $date)
+    public function __construct($store, $log, $sanitizerService, $config, $pool, $dataSetFactory, $dataSetColumnFactory, $permissionFactory, $displayFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->sanitizerService = $sanitizerService;
@@ -271,7 +268,6 @@ class DataSet implements \JsonSerializable
         $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->permissionFactory = $permissionFactory;
         $this->displayFactory = $displayFactory;
-        $this->date = $date;
     }
 
     /**
@@ -573,8 +569,8 @@ class DataSet implements \JsonSerializable
                                 $language = $this->config->getSetting('DEFAULT_LANGUAGE', 'en_GB');
                             }
 
-                            $this->date->setLocale($language);
-                            $value = $this->date->parse($item[$details[0]])->format($details[1]);
+                            $carbonFactory = new Factory(['locale' => $language], Carbon::class);
+                            $value = $carbonFactory->parse($item[$details[0]])->translatedFormat($details[1]);
                         }
                     } catch (\Exception $e) {
                         $this->getLog()->error('DataSet client side formula error in dataSetId ' . $this->dataSetId . ' with column formula ' . $column->formula);
@@ -734,13 +730,15 @@ class DataSet implements \JsonSerializable
     {
         $options = array_merge(['validate' => true, 'saveColumns' => true], $options);
 
-        if ($options['validate'])
+        if ($options['validate']) {
             $this->validate();
+        }
 
-        if ($this->dataSetId == 0)
+        if ($this->dataSetId == 0) {
             $this->add();
-        else
+        } else {
             $this->edit();
+        }
 
         // Columns
         if ($options['saveColumns']) {

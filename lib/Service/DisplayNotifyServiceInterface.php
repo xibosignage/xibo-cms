@@ -25,11 +25,10 @@ interface DisplayNotifyServiceInterface
      * @param LogServiceInterface $log
      * @param PoolInterface $pool
      * @param PlayerActionServiceInterface $playerActionService
-     * @param DateServiceInterface $dateService
      * @param ScheduleFactory $scheduleFactory
      * @param DayPartFactory $dayPartFactory
      */
-    public function __construct($config, $store, $log, $pool, $playerActionService, $dateService, $scheduleFactory, $dayPartFactory);
+    public function __construct($config, $store, $log, $pool, $playerActionService, $scheduleFactory, $dayPartFactory);
 
     /**
      * Initialise

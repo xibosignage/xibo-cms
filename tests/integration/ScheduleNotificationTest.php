@@ -22,10 +22,8 @@
 namespace Xibo\Tests\Integration;
 
 
-use Jenssegers\Date\Date;
+use Carbon\Carbon;
 use Xibo\Entity\Display;
-use Xibo\Helper\Random;
-use Xibo\OAuth2\Client\Entity\XiboDaypart;
 use Xibo\Tests\Helper\DisplayHelperTrait;
 use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
@@ -116,7 +114,7 @@ class ScheduleNotificationTest extends LocalWebTestCase
     {
         // Our CMS is in GMT
         // Create a schedule one hours time in my player timezone
-        $localNow = Date::now()->setTimezone($this->timeZone);
+        $localNow = Carbon::now()->setTimezone($this->timeZone);
         $date = $localNow->copy()->addHour()->startOfHour();
 
         $this->getLogger()->debug('Event start will be at: ' . $date->format('Y-m-d H:i:s'));
@@ -183,7 +181,7 @@ class ScheduleNotificationTest extends LocalWebTestCase
         // Our CMS is in GMT
         // Create a schedule one hours time in my player timezone
         // we start this schedule the day before
-        $localNow = Date::now()->setTimezone($this->timeZone);
+        $localNow = Carbon::now()->setTimezone($this->timeZone);
         $date = $localNow->copy()->subDay()->addHour()->startOfHour();
 
         $this->getLogger()->debug('Event start will be at: ' . $date->format('Y-m-d H:i:s'));

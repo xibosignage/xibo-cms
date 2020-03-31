@@ -23,7 +23,7 @@
 
 namespace Xibo\Tests\integration\Cache;
 
-use Jenssegers\Date\Date;
+use Carbon\Carbon;
 use Xibo\Entity\Display;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboCampaign;
@@ -84,7 +84,7 @@ class CampaignLayoutAssignTest extends LocalWebTestCase
         $this->display = $this->createDisplay();
 
         // Date
-        $date = Date::now();
+        $date = Carbon::now();
 
         // Schedule the Campaign "always" onto our display
         //  deleting the layout will remove this at the end

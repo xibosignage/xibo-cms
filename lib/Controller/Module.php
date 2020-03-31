@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -45,9 +46,9 @@ use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetAudioFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -138,7 +139,6 @@ class Module extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param ModuleFactory $moduleFactory
@@ -158,9 +158,9 @@ class Module extends Base
      * @param Twig $view
      * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $moduleFactory, $playlistFactory, $mediaFactory, $permissionFactory, $userGroupFactory, $widgetFactory, $transitionFactory, $regionFactory, $layoutFactory, $displayGroupFactory, $widgetAudioFactory, $displayFactory, $scheduleFactory, $dataSetFactory, Twig $view, ContainerInterface $container)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $moduleFactory, $playlistFactory, $mediaFactory, $permissionFactory, $userGroupFactory, $widgetFactory, $transitionFactory, $regionFactory, $layoutFactory, $displayGroupFactory, $widgetAudioFactory, $displayFactory, $scheduleFactory, $dataSetFactory, Twig $view, ContainerInterface $container)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->store = $store;
         $this->moduleFactory = $moduleFactory;
@@ -1510,8 +1510,8 @@ class Module extends Base
         $this->getState()->template = 'module-form-expiry';
         $this->getState()->setData([
             'module' => $module,
-            'fromDt' => ($module->widget->fromDt === Widget::$DATE_MIN) ? '' : $this->getDate()->getLocalDate($module->widget->fromDt),
-            'toDt' => ($module->widget->toDt === Widget::$DATE_MAX) ? '' : $this->getDate()->getLocalDate($module->widget->toDt),
+            'fromDt' => ($module->widget->fromDt === Widget::$DATE_MIN) ? '' : Carbon::createFromTimestamp($module->widget->fromDt)->format('Y-m-d H:i:s'),
+            'toDt' => ($module->widget->toDt === Widget::$DATE_MAX) ? '' : Carbon::createFromTimestamp($module->widget->toDt)->format('Y-m-d H:i:s'),
             'deleteOnExpiry' => $module->getOption('deleteOnExpiry', 0)
         ]);
 
@@ -1580,6 +1580,7 @@ class Module extends Base
     {
         $widget = $this->widgetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
+        $dateHelper = new DateFormatHelper();
 
         if (!$this->getUser()->checkEditable($widget)) {
             throw new AccessDeniedException();
@@ -1625,10 +1626,10 @@ class Module extends Base
         ]);
 
         if ($this->isApi($request)) {
-            $widget->createdDt = $this->getDate()->getLocalDate($widget->createdDt);
-            $widget->modifiedDt = $this->getDate()->getLocalDate($widget->modifiedDt);
-            $widget->fromDt = $this->getDate()->getLocalDate($widget->fromDt);
-            $widget->toDt = $this->getDate()->getLocalDate($widget->toDt);
+            $widget->createdDt = Carbon::createFromTimestamp($widget->createdDt)->format($dateHelper->getSystemFormat());
+            $widget->modifiedDt = Carbon::createFromTimestamp($widget->modifiedDt)->format($dateHelper->getSystemFormat());
+            $widget->fromDt = Carbon::createFromTimestamp($widget->fromDt)->format($dateHelper->getSystemFormat());
+            $widget->toDt = Carbon::createFromTimestamp($widget->toDt)->format($dateHelper->getSystemFormat());
         }
 
         // Successful

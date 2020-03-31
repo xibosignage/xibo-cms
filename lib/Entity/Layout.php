@@ -21,6 +21,7 @@
  */
 namespace Xibo\Entity;
 
+use Carbon\Carbon;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\LayoutBuildEvent;
 use Xibo\Event\LayoutBuildRegionEvent;
@@ -36,7 +37,6 @@ use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Helper\Environment;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\DuplicateEntityException;
@@ -290,11 +290,6 @@ class Layout implements \JsonSerializable
      */
     private $config;
 
-    /**
-     * @var DateServiceInterface
-     */
-    private $date;
-
     /** @var  EventDispatcherInterface */
     private $dispatcher;
 
@@ -344,7 +339,6 @@ class Layout implements \JsonSerializable
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
-     * @param DateServiceInterface $date
      * @param EventDispatcherInterface $eventDispatcher
      * @param PermissionFactory $permissionFactory
      * @param RegionFactory $regionFactory
@@ -356,12 +350,11 @@ class Layout implements \JsonSerializable
      * @param PlaylistFactory $playlistFactory
      * @param ActionFactory $actionFactory
      */
-    public function __construct($store, $log, $config, $date, $eventDispatcher, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory, $playlistFactory, $actionFactory)
+    public function __construct($store, $log, $config, $eventDispatcher, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory, $playlistFactory, $actionFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->setPermissionsClass('Xibo\Entity\Campaign');
         $this->config = $config;
-        $this->date = $date;
         $this->dispatcher = $eventDispatcher;
         $this->permissionFactory = $permissionFactory;
         $this->regionFactory = $regionFactory;
@@ -625,7 +618,7 @@ class Layout implements \JsonSerializable
         }
 
         $this->getLog()->debug(sprintf('Loading Layout %d with options %s', $this->layoutId, json_encode($options)));
-
+$this->getLog()->debug('LAYOUT LOAD IS ' . json_encode($this));
         // Load permissions
         if ($options['loadPermissions']) {
             $this->permissions = $this->permissionFactory->getByObjectId('Xibo\\Entity\\Campaign', $this->campaignId);
@@ -1008,7 +1001,7 @@ class Layout implements \JsonSerializable
         ', [
             'campaignId' => $this->campaignId,
             'layoutId' => $this->layoutId,
-            'publishedDate' => $this->date->parse()->format('Y-m-d H:i:s')
+            'publishedDate' => Carbon::now()->format('Y-m-d H:i:s')
         ]);
     }
 
@@ -1334,11 +1327,11 @@ class Layout implements \JsonSerializable
 
                 // Set a from/to date
                 if ($widget->fromDt != null || $widget->fromDt === Widget::$DATE_MIN) {
-                    $mediaNode->setAttribute('fromDt', $this->date->getLocalDate($this->date->parse($widget->fromDt, 'U')));
+                    $mediaNode->setAttribute('fromDt', Carbon::createFromTimestamp($widget->fromDt)->format('Y-m-d H:i:s'));
                 }
 
                 if ($widget->toDt != null || $widget->toDt === Widget::$DATE_MAX) {
-                    $mediaNode->setAttribute('toDt', $this->date->getLocalDate($this->date->parse($widget->toDt, 'U')));
+                    $mediaNode->setAttribute('toDt', Carbon::createFromTimestamp($widget->toDt)->format('Y-m-d H:i:s'));
                 }
 
 //                Logic Table
@@ -1774,15 +1767,15 @@ class Layout implements \JsonSerializable
                 // we are editing a draft layout, the published date is set on the original layout, therefore we need our parent.
                 $parent = $this->layoutFactory->loadById($this->parentId);
 
-                $layoutCurrentPublishedDate = $this->date->parse($parent->publishedDate);
-                $newPublishDateString = $this->date->getLocalDate($this->date->parse()->addMinutes(30), 'Y-m-d H:i:s');
-                $newPublishDate = $this->date->parse($newPublishDateString);
+                $layoutCurrentPublishedDate = Carbon::createFromTimestamp($parent->publishedDate);
+                $newPublishDateString =  Carbon::now()->addMinutes(30)->format('Y-m-d H:i:s');
+                $newPublishDate = Carbon::createFromTimeString($newPublishDateString);
 
                 if ($layoutCurrentPublishedDate->format('U') > $newPublishDate->format('U')) {
                     // Layout is set to Publish manually on a date further than 30 min from now, we don't touch it in this case.
                     $this->getLog()->debug('Layout is set to Publish manually on a date further than 30 min from now, do not update');
 
-                }  elseif ($parent->publishedDate != null &&  $layoutCurrentPublishedDate->format('U') < $this->date->getLocalDate($this->date->parse()->subMinutes(5), 'U')) {
+                }  elseif ($parent->publishedDate != null &&  $layoutCurrentPublishedDate->format('U') < Carbon::now()->subMinutes(5)->format('U')) {
                     // Layout is set to Publish manually at least 5 min in the past at the moment, we expect the Regular Maintenance to build it before that happens
                     $this->getLog()->debug('Layout should be built by Regular Maintenance');
 
@@ -2000,7 +1993,7 @@ class Layout implements \JsonSerializable
         $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, enableStat, duration, autoApplyTransitions)
                   VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, :schemaVersion, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat, 0, :autoApplyTransitions)';
 
-        $time = $this->date->getLocalDate();
+        $time = Carbon::now()->format('Y-m-d H:i:s');
 
         $this->layoutId = $this->getStore()->insert($sql, array(
             'layout' => $this->layout,
@@ -2094,7 +2087,7 @@ class Layout implements \JsonSerializable
          WHERE layoutID = :layoutid
         ';
 
-        $time = $this->date->getLocalDate();
+        $time = Carbon::now()->format('Y-m-d H:i:s');
 
         $this->getStore()->update($sql, array(
             'layoutid' => $this->layoutId,

@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use GuzzleHttp\Psr7\Stream;
 use Parsedown;
 use Psr\Container\ContainerInterface;
@@ -47,7 +48,6 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\LayoutUploadHandler;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
@@ -129,7 +129,6 @@ class Layout extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param Session $session
      * @param UserFactory $userFactory
@@ -147,9 +146,9 @@ class Layout extends Base
      * @param ContainerInterface $container
      * @param ActionFactory $actionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory, $campaignFactory, $displayGroupFactory, Twig $view, ContainerInterface $container, $actionFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory, $campaignFactory, $displayGroupFactory, Twig $view, ContainerInterface $container, $actionFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->session = $session;
         $this->userFactory = $userFactory;
@@ -689,7 +688,7 @@ class Layout extends Base
     function deleteForm(Request $request, Response $response, $id)
     {
         $layout = $this->layoutFactory->getById($id);
-
+$this->getLog()->debug('LAYOUT IN DELETE FORM ' . json_encode($layout));
         if (!$this->getUser()->checkDeleteable($layout))
             throw new AccessDeniedException(__('You do not have permissions to delete this layout'));
 
@@ -772,7 +771,7 @@ class Layout extends Base
     function delete(Request $request, Response $response, $id)
     {
         $layout = $this->layoutFactory->loadById($id);
-
+        $this->getLog()->debug('LAYOUT IN DELETE ' . json_encode($layout));
         if (!$this->getUser()->checkDeleteable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to delete this layout'));
         }
@@ -2585,7 +2584,7 @@ class Layout extends Base
 
         // We want to take the draft layout, and update the campaign links to point to the draft, then remove the
         // parent.
-        if ($publishNow || (isset($publishDate) && $publishDate->format('U') <  $this->getDate()->getLocalDate(null, 'U')) ) {
+        if ($publishNow || (isset($publishDate) && $publishDate->format('U') <  Carbon::createFromTimestamp(time())->format('U')) ) {
             $draft = $this->layoutFactory->getByParentId($id);
             $draft->publishDraft();
             $draft->load();

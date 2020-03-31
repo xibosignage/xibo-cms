@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use GuzzleHttp\Psr7\Stream;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -31,7 +32,6 @@ use Xibo\Helper\Environment;
 use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -60,16 +60,15 @@ class Fault extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param LogFactory $logFactory
      * @param DisplayFactory $displayFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $logFactory, $displayFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $logFactory, $displayFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->store = $store;
         $this->logFactory = $logFactory;
@@ -234,7 +233,7 @@ class Fault extends Base
     public function debugOn(Request $request, Response $response)
     {
         $this->getConfig()->changeSetting('audit', 'debug');
-        $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', $this->getDate()->parse()->addMinutes(30)->format('U'));
+        $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', Carbon::createFromTimestamp(time())->addMinutes(30)->format('U'));
 
         // Return
         $this->getState()->hydrate([

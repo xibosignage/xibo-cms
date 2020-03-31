@@ -8,6 +8,8 @@
 
 namespace Xibo\XTR;
 
+use Carbon\Carbon;
+
 /**
  * Class NotificationTidyTask
  * @package Xibo\XTR
@@ -46,7 +48,7 @@ class NotificationTidyTask implements TaskInterface
 
         // Params for all deletes
         $params = [
-            'releaseDt' => $this->date->parse()->subDays($maxAgeDays)->format('U')
+            'releaseDt' => Carbon::now()->subDays($maxAgeDays)->format('U')
         ];
 
         // Delete all notifications older than now minus X days

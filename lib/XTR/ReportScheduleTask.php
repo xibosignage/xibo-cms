@@ -22,6 +22,7 @@
 
 namespace Xibo\XTR;
 
+use Carbon\Carbon;
 use Slim\Views\Twig;
 use Xibo\Controller\Library;
 use Xibo\Factory\MediaFactory;
@@ -30,7 +31,6 @@ use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\ReportServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 
@@ -45,9 +45,6 @@ class ReportScheduleTask implements TaskInterface
 
     /** @var Twig */
     private $view;
-
-    /** @var DateServiceInterface */
-    private $date;
 
     /** @var MediaFactory */
     private $mediaFactory;
@@ -74,7 +71,6 @@ class ReportScheduleTask implements TaskInterface
     public function setFactories($container)
     {
         $this->view = $container->get('view');
-        $this->date = $container->get('dateService');
         $this->userFactory = $container->get('userFactory');
         $this->mediaFactory = $container->get('mediaFactory');
         $this->savedReportFactory = $container->get('savedReportFactory');
@@ -159,7 +155,7 @@ class ReportScheduleTask implements TaskInterface
                     // Remove the JSON file
                     unlink($fileName);
 
-                    $runDateTimestamp = $this->date->parse()->format('U');
+                    $runDateTimestamp = Carbon::createFromTimestamp(time())->format('U');
 
                     // Upload to the library
                     $media = $this->mediaFactory->create(__('reportschedule_' . $reportSchedule->reportScheduleId . '_' . $runDateTimestamp ), 'reportschedule.json.zip', 'savedreport', $reportSchedule->userId);
@@ -235,7 +231,7 @@ class ReportScheduleTask implements TaskInterface
                     'title' => $savedReport->saveAs,
                     'periodStart' => $savedReportData['chartData']['periodStart'],
                     'periodEnd' => $savedReportData['chartData']['periodEnd'],
-                    'generatedOn' => $this->date->parse($savedReport->generatedOn, 'U')->format('Y-m-d H:i:s'),
+                    'generatedOn' => Carbon::createFromFormat('Y-m-d H:i:s', $savedReport->generatedOn),
                     'tableData' => isset($tableData) ? $tableData : null,
                     'src' => isset($src) ? $src : null,
                     'placeholder' => isset($placeholder) ? $placeholder : null
@@ -270,7 +266,7 @@ class ReportScheduleTask implements TaskInterface
                     $notification = $this->notificationFactory->createEmpty();
                     $notification->subject = $report->description;
                     $notification->body = __('Attached please find the report for %s', $savedReport->saveAs);
-                    $notification->createdDt = $this->date->getLocalDate(null, 'U');
+                    $notification->createdDt = Carbon::now()->format('U');
                     $notification->releaseDt = time();
                     $notification->isEmail = 1;
                     $notification->isInterrupt = 0;
