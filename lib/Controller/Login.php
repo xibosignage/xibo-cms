@@ -35,7 +35,6 @@ use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -81,7 +80,6 @@ class Login extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param Session $session
      * @param UserFactory $userFactory
@@ -90,9 +88,9 @@ class Login extends Base
      * @param Twig $view
      * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $pool, $store, $view, ContainerInterface $container)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $session, $userFactory, $pool, $store, $view, ContainerInterface $container)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->session = $session;
         $this->userFactory = $userFactory;

@@ -21,6 +21,7 @@
  */
 namespace Xibo\Widget;
 
+use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -695,7 +696,7 @@ class DataSetTicker extends ModuleWidget
         $this->getLog()->notice('Then template for each row is: ' . $text);
 
         // Set an expiry time for the media
-        $expires = time() + ($this->getOption('updateInterval', 3600) * 60);
+        $expires = Carbon::now()->addSeconds($this->getOption('updateInterval', 3600) * 60)->format('U');
 
         // Combine the column id's with the dataset data
         $matches = '';
@@ -746,7 +747,7 @@ class DataSetTicker extends ModuleWidget
             }
 
             // Set the timezone for SQL
-            $dateNow = $this->getDate()->parse();
+            $dateNow = Carbon::now();
             if ($displayId != 0) {
                 $display = $this->displayFactory->getById($displayId);
                 $timeZone = $display->getSetting('displayTimeZone', '');
@@ -755,7 +756,7 @@ class DataSetTicker extends ModuleWidget
                 $this->getLog()->debug(sprintf('Display Timezone Resolved: %s. Time: %s.', $timeZone, $dateNow->toDateTimeString()));
             }
 
-            $this->getStore()->setTimeZone($this->getDate()->getLocalDate($dateNow, 'P'));
+            $this->getStore()->setTimeZone($dateNow->format('P'));
 
             // Get the data (complete table, filtered)
             $dataSetResults = $dataSet->getData($filter);
@@ -884,7 +885,7 @@ class DataSetTicker extends ModuleWidget
         // Remote dataSets are kept "active" by required files
         $dataSet->setActive();
 
-        return $this->getDate()->parse($widgetModifiedDt, 'U');
+        return Carbon::createFromTimestamp($widgetModifiedDt);
     }
 
     /** @inheritdoc */

@@ -54,7 +54,7 @@ class TestAuthMiddleware implements Middleware
      * @param Request $request
      * @param RequestHandler $handler
      * @return Response
-     * @throws \Xibo\Exception\XiboException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function process(Request $request, RequestHandler $handler): Response
     {

@@ -161,7 +161,7 @@ if (isset($_GET['file'])) {
         } else {
             // Check that we've not used all of our bandwidth already (if we have an allowance)
             if ($container->get('bandwidthFactory')->isBandwidthExceeded($container->get('configService')->GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB'))) {
-                throw new \Xibo\Exception\InstanceSuspendedException('Bandwidth Exceeded');
+                throw new \Xibo\Support\Exception\InstanceSuspendedException('Bandwidth Exceeded');
             }
 
             // Log bandwidth here if we are NOT a CDN
@@ -192,7 +192,7 @@ if (isset($_GET['file'])) {
         }
     }
     catch (\Exception $e) {
-        if ($e instanceof \Xibo\Exception\NotFoundException || $e instanceof \Xibo\Exception\FormExpiredException) {
+        if ($e instanceof \Xibo\Support\Exception\NotFoundException || $e instanceof \Xibo\Support\Exception\ExpiredException) {
             $container->get('logService')->notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404. ' . $e->getMessage());
             // 404
             header('HTTP/1.0 404 Not Found');
@@ -231,7 +231,6 @@ try {
         $container->get('store'),
         $container->get('timeSeriesStore'),
         $container->get('logService'),
-        $container->get('dateService'),
         $container->get('sanitizerService'),
         $container->get('configService'),
         $container->get('requiredFileFactory'),

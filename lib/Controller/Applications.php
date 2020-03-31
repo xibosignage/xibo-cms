@@ -38,7 +38,6 @@ use Xibo\Factory\UserFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\ApiClientStorage;
 use Xibo\Storage\AuthCodeRepository;
@@ -88,7 +87,6 @@ class Applications extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param Session $session
      * @param StorageServiceInterface $store
@@ -99,9 +97,9 @@ class Applications extends Base
      * @param Twig $view
      * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $store, $applicationFactory, $applicationRedirectUriFactory, $applicationScopeFactory, $userFactory, Twig $view, ContainerInterface $container)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $session, $store, $applicationFactory, $applicationRedirectUriFactory, $applicationScopeFactory, $userFactory, Twig $view, ContainerInterface $container)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->session = $session;
         $this->store = $store;

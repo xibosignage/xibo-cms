@@ -27,7 +27,6 @@ use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 
 /**
@@ -47,9 +46,6 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @var LogServiceInterface */
     private $log;
 
-    /** @var DateServiceInterface */
-    private $dateService;
-
     /** @var  LayoutFactory */
     protected $layoutFactory;
 
@@ -67,10 +63,9 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /**
      * @inheritdoc
      */
-    public function setDependencies($log, $date, $layoutFactory = null, $campaignFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null)
+    public function setDependencies($log, $layoutFactory = null, $campaignFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null)
     {
         $this->log = $log;
-        $this->dateService = $date;
         $this->layoutFactory = $layoutFactory;
         $this->campaignFactory = $campaignFactory;
         return $this;

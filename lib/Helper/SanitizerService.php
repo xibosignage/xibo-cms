@@ -22,7 +22,7 @@ class SanitizerService
      */
     public function getSanitizer($array)
     {
-        return (new RespectSanitizer())->setCollection($array)->setDefaultOptions(['throwClass' => '\Xibo\Support\Exception\InvalidArgumentException']);
+        return (new RespectSanitizer())->setCollection($array)->setDefaultOptions(['throwClass' => '\Xibo\Support\Exception\InvalidArgumentException', 'checkboxReturnInteger' => true]);
     }
 
     /**

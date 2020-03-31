@@ -55,7 +55,6 @@ use Xibo\Helper\QuickChartQRProvider;
 use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
@@ -149,7 +148,6 @@ class User extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param UserFactory $userFactory
      * @param UserTypeFactory $userTypeFactory
@@ -171,11 +169,11 @@ class User extends Base
      * @param ContainerInterface $container
      * @param DataSetFactory $dataSetFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userFactory,
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $userFactory,
                                 $userTypeFactory, $userGroupFactory, $pageFactory, $permissionFactory,
                                 $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory, Twig $view, ContainerInterface $container, $dataSetFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->userFactory = $userFactory;
         $this->userTypeFactory = $userTypeFactory;

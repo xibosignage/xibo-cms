@@ -22,6 +22,9 @@
 
 namespace Xibo\Tests\Integration;
 
+use Carbon\Carbon;
+use Xibo\Helper\DateFormatHelper;
+
 class AuditLogTest extends \Xibo\Tests\LocalWebTestCase
 {
     public function testSearch()
@@ -56,8 +59,8 @@ class AuditLogTest extends \Xibo\Tests\LocalWebTestCase
     public function testExport()
     {
         $response = $this->sendRequest('GET','/audit/export', [
-            'filterFromDt' => date('Y-m-d H:i:s', time() - 86400),
-            'filterToDt' => date('Y-m-d H:i:s', time())
+            'filterFromDt' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
+            'filterToDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
         ]);
         $this->assertSame(200, $response->getStatusCode());
     }

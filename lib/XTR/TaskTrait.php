@@ -27,7 +27,6 @@ use Xibo\Entity\Task;
 use Xibo\Entity\User;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
@@ -55,9 +54,6 @@ trait TaskTrait
 
     /** @var  PoolInterface */
     private $pool;
-
-    /** @var  DateServiceInterface */
-    private $date;
 
     /** @var  User */
     private $user;
@@ -98,13 +94,6 @@ trait TaskTrait
     public function setSanitizer($sanitizer)
     {
         $this->sanitizerService = $sanitizer;
-        return $this;
-    }
-
-    /** @inheritdoc */
-    public function setDate($date)
-    {
-        $this->date = $date;
         return $this;
     }
 

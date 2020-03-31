@@ -217,7 +217,7 @@ class CampaignTest extends LocalWebTestCase
 
     /**
      * Assign Layout
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function testAssignLayout()
     {
@@ -256,7 +256,7 @@ class CampaignTest extends LocalWebTestCase
     }
     /**
      * Unassign Layout
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function testUnassignLayout()
     {

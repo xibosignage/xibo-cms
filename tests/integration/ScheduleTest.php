@@ -21,6 +21,8 @@
  */
 namespace Xibo\Tests\Integration;
 
+use Carbon\Carbon;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\OAuth2\Client\Entity\XiboCampaign;
 use Xibo\OAuth2\Client\Entity\XiboCommand;
 use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
@@ -172,8 +174,8 @@ class ScheduleTest extends LocalWebTestCase
             $campaign = (new XiboCampaign($this->getEntityProvider()))->create('phpunit');
             # Create new event with data from provideSuccessCasesCampaign where isCampaign is set to true
             $response = $this->sendRequest('POST', $this->route, [
-                'fromDt' => date('Y-m-d H:i:s', $scheduleFrom),
-                'toDt' => date('Y-m-d H:i:s', $scheduleTo),
+                'fromDt' => Carbon::createFromTimestamp($scheduleFrom)->format(DateFormatHelper::getSystemFormat()),
+                'toDt' => Carbon::createFromTimestamp($scheduleTo)->format(DateFormatHelper::getSystemFormat()),
                 'eventTypeId' => 1,
                 'campaignId' => $campaign->campaignId,
                 'displayGroupIds' => [$displayGroup->displayGroupId],
@@ -189,8 +191,8 @@ class ScheduleTest extends LocalWebTestCase
 
             # Create new event with data from provideSuccessCasesCampaign where isCampaign is set to false
             $response = $this->sendRequest('POST', $this->route, [
-                'fromDt' => date('Y-m-d H:i:s', $scheduleFrom),
-                'toDt' => date('Y-m-d H:i:s', $scheduleTo),
+                'fromDt' => Carbon::createFromTimestamp($scheduleFrom)->format(DateFormatHelper::getSystemFormat()),
+                'toDt' => Carbon::createFromTimestamp($scheduleTo)->format(DateFormatHelper::getSystemFormat()),
                 'eventTypeId' => 1,
                 'campaignId' => $layout->campaignId,
                 'displayGroupIds' => [$displayGroup->displayGroupId],
@@ -240,7 +242,7 @@ class ScheduleTest extends LocalWebTestCase
         $displayGroup = (new XiboDisplayGroup($this->getEntityProvider()))->create('phpunit group', 'phpunit description', 0, '');
         # Create new event with scheduled command and data from provideSuccessCasesCommand
             $response = $this->sendRequest('POST', $this->route, [
-                'fromDt' => date('Y-m-d H:i:s', $scheduleFrom),
+                'fromDt' => Carbon::createFromTimestamp($scheduleFrom)->format(DateFormatHelper::getSystemFormat()),
                 'eventTypeId' => 2,
                 'commandId' => $command->commandId,
                 'displayGroupIds' => [$displayGroup->displayGroupId],
@@ -286,8 +288,8 @@ class ScheduleTest extends LocalWebTestCase
 
         # Create new event with data from provideSuccessCasesOverlay
             $response = $this->sendRequest('POST', $this->route, [
-                'fromDt' => date('Y-m-d H:i:s', $scheduleFrom),
-                'toDt' => date('Y-m-d H:i:s', $scheduleTo),
+                'fromDt' => Carbon::createFromTimestamp($scheduleFrom)->format(DateFormatHelper::getSystemFormat()),
+                'toDt' => Carbon::createFromTimestamp($scheduleTo)->format(DateFormatHelper::getSystemFormat()),
                 'eventTypeId' => 3,
                 'campaignId' => $layout->campaignId,
                 'displayGroupIds' => [$displayGroup->displayGroupId],
@@ -331,8 +333,8 @@ class ScheduleTest extends LocalWebTestCase
         $campaign = (new XiboCampaign($this->getEntityProvider()))->create('phpunit');
         # Create new event
         $event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
-            date('Y-m-d H:i:s', time()),
-            date('Y-m-d H:i:s', time()+7200),
+            Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+            Carbon::now()->addSeconds(7200)->format(DateFormatHelper::getSystemFormat()),
             $campaign->campaignId,
             [$displayGroup->displayGroupId],
             0,
@@ -347,8 +349,8 @@ class ScheduleTest extends LocalWebTestCase
         $toDt = time() + 86400;
         # Edit event
         $response = $this->sendRequest('PUT',$this->route . '/' . $event->eventId, [
-            'fromDt' => date('Y-m-d H:i:s', $fromDt),
-            'toDt' => date('Y-m-d H:i:s', $toDt),
+            'fromDt' => Carbon::createFromTimestamp($fromDt)->format(DateFormatHelper::getSystemFormat()),
+            'toDt' => Carbon::createFromTimestamp($toDt)->format(DateFormatHelper::getSystemFormat()),
             'eventTypeId' => 1,
             'campaignId' => $event->campaignId,
             'displayGroupIds' => [$displayGroup->displayGroupId],
@@ -380,8 +382,8 @@ class ScheduleTest extends LocalWebTestCase
         $campaign = (new XiboCampaign($this->getEntityProvider()))->create('phpunit');
         # Create event
         $event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
-            date('Y-m-d H:i:s', time()),
-            date('Y-m-d H:i:s', time()+7200),
+            Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+            Carbon::now()->addSeconds(7200)->format(DateFormatHelper::getSystemFormat()),
             $campaign->campaignId,
             [$displayGroup->displayGroupId],
             0,

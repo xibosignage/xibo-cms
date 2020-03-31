@@ -53,6 +53,7 @@ class ApplicationScope implements \JsonSerializable
      * Check whether this scope has permission for this route
      * @param $method
      * @param $route
+     * @throws AccessDeniedException
      */
     public function checkRoute($method, $route)
     {

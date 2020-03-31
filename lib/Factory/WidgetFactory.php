@@ -26,9 +26,8 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
-use Xibo\Service\DateServiceInterface;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -38,9 +37,6 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class WidgetFactory extends BaseFactory
 {
-
-    /** @var  DateServiceInterface */
-    private $dateService;
 
     /**
      * @var WidgetOptionFactory
@@ -63,31 +59,33 @@ class WidgetFactory extends BaseFactory
     /** @var  DisplayFactory */
     private $displayFactory;
 
+    /** @var ActionFactory */
+    private $actionFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
-     * @param DateServiceInterface $date
      * @param WidgetOptionFactory $widgetOptionFactory
      * @param WidgetMediaFactory $widgetMediaFactory
      * @param WidgetAudioFactory $widgetAudioFactory
      * @param PermissionFactory $permissionFactory
      * @param DisplayFactory $displayFactory
-     *
+     * @param ActionFactory $actionFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $date, $widgetOptionFactory, $widgetMediaFactory, $widgetAudioFactory, $permissionFactory, $displayFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $widgetOptionFactory, $widgetMediaFactory, $widgetAudioFactory, $permissionFactory, $displayFactory, $actionFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
-        $this->dateService = $date;
         $this->widgetOptionFactory = $widgetOptionFactory;
         $this->widgetMediaFactory = $widgetMediaFactory;
         $this->widgetAudioFactory = $widgetAudioFactory;
         $this->permissionFactory = $permissionFactory;
         $this->displayFactory = $displayFactory;
+        $this->actionFactory = $actionFactory;
     }
 
     /**
@@ -99,12 +97,12 @@ class WidgetFactory extends BaseFactory
         return new Widget(
             $this->getStore(),
             $this->getLog(),
-            $this->dateService,
             $this->widgetOptionFactory,
             $this->widgetMediaFactory,
             $this->widgetAudioFactory,
             $this->permissionFactory,
-            $this->displayFactory
+            $this->displayFactory,
+            $this->actionFactory
         );
     }
 

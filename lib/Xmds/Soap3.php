@@ -20,6 +20,7 @@
  */
 namespace Xibo\Xmds;
 
+use Carbon\Carbon;
 use Xibo\Entity\Bandwidth;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -37,6 +38,7 @@ class Soap3 extends Soap
      * @param string $version
      * @return string
      * @throws \SoapFault
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $version)
     {
@@ -76,7 +78,7 @@ class Soap3 extends Soap
             }
 
             // Touch
-            $display->lastAccessed = time();
+            $display->lastAccessed = Carbon::now()->format('U');
             $display->loggedIn = 1;
             $display->save(['validate' => false, 'audit' => false]);
 
@@ -100,6 +102,7 @@ class Soap3 extends Soap
      * @param string $hardwareKey Display Hardware Key
      * @param string $version
      * @return string $requiredXml Xml Formatted
+     * @throws NotFoundException
      * @throws \SoapFault
      */
     function RequiredFiles($serverKey, $hardwareKey, $version)
@@ -118,7 +121,10 @@ class Soap3 extends Soap
      * @param string $chunkSize The Size of the Chunk Requested
      * @param string $version
      * @return string
+     * @throws NotFoundException
      * @throws \SoapFault
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     function GetFile($serverKey, $hardwareKey, $filePath, $fileType, $chunkOffset, $chunkSize, $version)
     {
@@ -227,10 +233,11 @@ class Soap3 extends Soap
 
     /**
      * Returns the schedule for the hardware key specified
-     * @return string
      * @param string $serverKey
      * @param string $hardwareKey
      * @param string $version
+     * @return string
+     * @throws NotFoundException
      * @throws \SoapFault
      */
     function Schedule($serverKey, $hardwareKey, $version)
@@ -240,13 +247,14 @@ class Soap3 extends Soap
 
     /**
      * BlackList
-     * @return bool
      * @param string $serverKey
      * @param string $hardwareKey
      * @param string $mediaId
      * @param string $type
      * @param string $reason
      * @param string $version
+     * @return bool
+     * @throws NotFoundException
      * @throws \SoapFault
      */
     function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason, $version)
@@ -256,11 +264,12 @@ class Soap3 extends Soap
 
     /**
      * Submit client logging
-     * @return bool
      * @param string $version
      * @param string $serverKey
      * @param string $hardwareKey
      * @param string $logXml
+     * @return bool
+     * @throws NotFoundException
      * @throws \SoapFault
      */
     function SubmitLog($version, $serverKey, $hardwareKey, $logXml)
@@ -270,11 +279,12 @@ class Soap3 extends Soap
 
     /**
      * Submit display statistics to the server
-     * @return bool
      * @param string $version
      * @param string $serverKey
      * @param string $hardwareKey
      * @param string $statXml
+     * @return bool
+     * @throws NotFoundException
      * @throws \SoapFault
      */
     function SubmitStats($version, $serverKey, $hardwareKey, $statXml)
@@ -289,6 +299,7 @@ class Soap3 extends Soap
      * @param string $hardwareKey
      * @param string $inventory
      * @return bool
+     * @throws NotFoundException
      * @throws \SoapFault
      */
     public function MediaInventory($version, $serverKey, $hardwareKey, $inventory)
@@ -305,6 +316,7 @@ class Soap3 extends Soap
      * @param string $mediaId
      * @param string $version
      * @return string
+     * @throws NotFoundException
      * @throws \SoapFault
      */
     function GetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId, $version)

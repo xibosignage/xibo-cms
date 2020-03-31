@@ -45,6 +45,12 @@ class Xtr implements Middleware
         $this->app = $app;
     }
 
+    /**
+     * @param Request $request
+     * @param RequestHandler $handler
+     * @return Response
+     * @throws \Twig\Error\LoaderError
+     */
     public function process(Request $request, RequestHandler $handler): Response
     {
         // Inject our Theme into the Twig View (if it exists)

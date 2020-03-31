@@ -21,6 +21,8 @@
  */
 namespace Xibo\Tests\Integration;
 
+use Carbon\Carbon;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboSchedule;
@@ -69,8 +71,8 @@ class ScheduleDisplayDeleteTest extends LocalWebTestCase
 
         // 1 Schedule
         $this->event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
-            date('Y-m-d H:i:s', time()),
-            date('Y-m-d H:i:s', time()+7200),
+            Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+            Carbon::now()->addSeconds(7200)->format(DateFormatHelper::getSystemFormat()),
             $this->layout->campaignId,
             [$this->display->displayGroupId, $this->display2->displayGroupId],
             0,

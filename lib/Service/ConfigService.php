@@ -21,6 +21,7 @@
  */
 namespace Xibo\Service;
 
+use Carbon\Carbon;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Helper\Environment;
@@ -373,7 +374,7 @@ class ConfigService implements ConfigServiceInterface
             // See about caching these settings - dependent on whether we're logging or not
             $cacheExpiry = 60 * 5;
             foreach ($this->settings as $setting) {
-                if ($setting['setting'] == 'ELEVATE_LOG_UNTIL' && intval($setting['value']) > time()) {
+                if ($setting['setting'] == 'ELEVATE_LOG_UNTIL' && intval($setting['value']) > Carbon::now()->format('U')) {
                     $cacheExpiry = intval($setting['value']);
                     break;
                 }

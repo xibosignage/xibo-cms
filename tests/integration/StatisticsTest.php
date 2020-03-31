@@ -21,13 +21,12 @@
 
 namespace Xibo\Tests\Integration;
 
-use Jenssegers\Date\Date;
+use Carbon\Carbon;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboLibrary;
 use Xibo\OAuth2\Client\Entity\XiboPlaylist;
-use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboStats;
 use Xibo\OAuth2\Client\Entity\XiboText;
 use Xibo\Tests\Helper\DisplayHelperTrait;
@@ -133,7 +132,7 @@ class StatisticsTest extends LocalWebTestCase
         $this->media2->deleteAssigned();
 
         // Delete stat records
-        self::$container->get('timeSeriesStore')->deleteStats(Date::now(), Date::createFromFormat("Y-m-d H:i:s", '2018-02-12 00:00:00'));
+        self::$container->get('timeSeriesStore')->deleteStats(Carbon::now(), Carbon::createFromFormat("Y-m-d H:i:s", '2018-02-12 00:00:00'));
     }
 
     /**
@@ -331,7 +330,8 @@ class StatisticsTest extends LocalWebTestCase
         $response = $this->sendRequest('GET','/stats', [
             'fromDt' => '2018-02-12 00:00:00',
             'toDt' => '2018-02-17 00:00:00',
-            'displayId' => $this->display->displayId
+            'displayId' => $this->display->displayId,
+            'layoutId' => [$this->layout->layoutId]
         ]);
 
         $this->assertSame(200, $response->getStatusCode());
@@ -339,8 +339,12 @@ class StatisticsTest extends LocalWebTestCase
         $object = json_decode($response->getBody());
         // $this->getLogger()->debug($response->getBody());
         $this->assertObjectHasAttribute('data', $object, $response->getBody());
-        $stats = (new XiboStats($this->getEntityProvider()))->get(['fromDt' => '2018-02-12 00:00:00', 'toDt' => '2018-02-17 00:00:00', 'layoutId' => $this->layout->layoutId]);
-        // print_r($stats);
+        $stats = (new XiboStats($this->getEntityProvider()))->get([
+            'fromDt' => '2018-02-12 00:00:00',
+            'toDt' => '2018-02-17 00:00:00',
+            'displayId' => $this->display->displayId,
+            'layoutId' => [$this->layout->layoutId]
+        ]);
         $this->assertNotEquals(0, count($stats));
     }
 
@@ -371,5 +375,4 @@ class StatisticsTest extends LocalWebTestCase
         $body = $response->getBody()->getContents();
         $this->assertContains('layout,"2018-02-12', $body);
     }
-
 }

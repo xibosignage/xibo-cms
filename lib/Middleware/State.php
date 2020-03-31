@@ -22,6 +22,7 @@
 
 namespace Xibo\Middleware;
 
+use Carbon\Carbon;
 use Monolog\Logger;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -66,7 +67,7 @@ class State implements Middleware
      * @return Response
      * @throws InstanceSuspendedException
      * @throws UpgradePendingException
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function process(Request $request, RequestHandler $handler): Response
     {
@@ -142,7 +143,7 @@ class State implements Middleware
      * @param App $app
      * @param \Psr\Http\Message\ServerRequestInterface $request
      * @return \Psr\Http\Message\ServerRequestInterface
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public static function setState(App $app, Request $request): Request
     {
@@ -176,7 +177,6 @@ class State implements Middleware
                 $container->get('timeSeriesStore'),
                 $container->get('logService'),
                 $container->get('configService'),
-                $container->get('dateService'),
                 $container->get('sanitizerService'),
                 $container->get('savedReportFactory')
             );
@@ -219,6 +219,7 @@ class State implements Middleware
         $container->get('logService')->setMode($mode);
 
         if ($container->get('name') == 'web') {
+
             $container->set('flash', function () {
                 return new \Slim\Flash\Messages();
             });
@@ -227,9 +228,14 @@ class State implements Middleware
             $view = $container->get('view');
             $view->addExtension(new TwigMessages(new \Slim\Flash\Messages()));
 
+            $twigEnvironment = $view->getEnvironment();
+
+            // add the urldecode filter to Twig.
+            $filter = new \Twig\TwigFilter('url_decode', 'urldecode');
+            $twigEnvironment->addFilter($filter);
+
             // set Twig auto reload if we are in test mode
             if(strtolower($mode) == 'test') {
-                $twigEnvironment = $view->getEnvironment();
                 $twigEnvironment->enableAutoReload();
             }
         }
@@ -255,7 +261,7 @@ class State implements Middleware
             if ($level < $restingLevel) {
                 // Do we allow the log level to be this high
                 $elevateUntil = $container->get('configService')->getSetting('ELEVATE_LOG_UNTIL');
-                if (intval($elevateUntil) < time()) {
+                if (intval($elevateUntil) < Carbon::now()->format('U')) {
                     // Elevation has expired, revert log level
                     $container->get('configService')->changeSetting('audit', $container->get('configService')->getSetting('RESTING_LOG_LEVEL'));
                     $level = $restingLevel;
@@ -386,6 +392,21 @@ class State implements Middleware
     public static function registerControllersWithDi()
     {
         return [
+            '\Xibo\Controller\Action' => function(ContainerInterface $c) {
+                return new \Xibo\Controller\Action(
+                    $c->get('logService'),
+                    $c->get('sanitizerService'),
+                    $c->get('state'),
+                    $c->get('user'),
+                    $c->get('helpService'),
+                    $c->get('configService'),
+                    $c->get('actionFactory'),
+                    $c->get('layoutFactory'),
+                    $c->get('regionFactory'),
+                    $c->get('widgetFactory'),
+                    $c->get('view')
+                );
+            },
             '\Xibo\Controller\Applications' => function(ContainerInterface $c) {
                 return new \Xibo\Controller\Applications(
                     $c->get('logService'),
@@ -393,7 +414,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('session'),
                     $c->get('store'),
@@ -412,7 +432,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('auditLogFactory'),
                     $c->get('view')
@@ -425,7 +444,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('campaignFactory'),
                     $c->get('layoutFactory'),
@@ -442,7 +460,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('session')
                 );
@@ -454,7 +471,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('commandFactory'),
                     $c->get('displayProfileFactory'),
@@ -468,7 +484,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('dataSetFactory'),
                     $c->get('dataSetColumnFactory'),
@@ -482,7 +497,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('dataSetFactory'),
                     $c->get('dataSetColumnFactory'),
@@ -499,7 +513,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('dataSetFactory'),
                     $c->get('mediaFactory'),
@@ -513,7 +526,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('dataSetRssFactory'),
                     $c->get('dataSetFactory'),
@@ -530,7 +542,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('dayPartFactory'),
                     $c->get('displayGroupFactory'),
@@ -548,7 +559,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('store'),
                     $c->get('pool'),
@@ -577,7 +587,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('playerActionService'),
                     $c->get('displayFactory'),
@@ -599,7 +608,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('pool'),
                     $c->get('displayProfileFactory'),
@@ -616,7 +624,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('view'),
                     $c
@@ -629,7 +636,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('store'),
                     $c->get('logFactory'),
@@ -644,7 +650,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('helpFactory'),
                     $c->get('view')
@@ -657,7 +662,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('view')
                 );
@@ -669,7 +673,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('session'),
                     $c->get('userFactory'),
@@ -684,7 +687,8 @@ class State implements Middleware
                     $c->get('campaignFactory'),
                     $c->get('displayGroupFactory'),
                     $c->get('view'),
-                    $c
+                    $c,
+                    $c->get('actionFactory')
                 );
             },
             '\Xibo\Controller\Library' => function(ContainerInterface $c) {
@@ -694,7 +698,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('store'),
                     $c->get('pool'),
@@ -726,7 +729,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('store'),
                     $c->get('logFactory'),
@@ -742,7 +744,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('session'),
                     $c->get('userFactory'),
@@ -759,7 +760,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('store'),
                     $c->get('taskFactory'),
@@ -780,7 +780,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('moduleFactory'),
                     $c->get('layoutFactory'),
@@ -797,7 +796,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('playlistFactory'),
                     $c->get('moduleFactory'),
@@ -815,7 +813,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('store'),
                     $c->get('moduleFactory'),
@@ -843,7 +840,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('notificationFactory'),
                     $c->get('userNotificationFactory'),
@@ -860,7 +856,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('pool'),
                     $c->get('mediaFactory'),
@@ -882,7 +877,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('playlistFactory'),
                     $c->get('regionFactory'),
@@ -907,7 +901,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('layoutFactory'),
                     $c->get('view')
@@ -920,7 +913,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('session'),
                     $c->get('regionFactory'),
@@ -930,7 +922,8 @@ class State implements Middleware
                     $c->get('moduleFactory'),
                     $c->get('layoutFactory'),
                     $c->get('userGroupFactory'),
-                    $c->get('view')
+                    $c->get('view'),
+                    $c->get('actionFactory')
                 );
             },
             '\Xibo\Controller\Report' => function(ContainerInterface $c) {
@@ -940,7 +933,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('store'),
                     $c->get('timeSeriesStore'),
@@ -959,7 +951,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('resolutionFactory'),
                     $c->get('view')
@@ -972,7 +963,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('session'),
                     $c->get('pool'),
@@ -996,7 +986,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('store'),
                     $c->get('sessionFactory'),
@@ -1010,7 +999,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('layoutFactory'),
                     $c->get('userGroupFactory'),
@@ -1025,7 +1013,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('store'),
                     $c->get('timeSeriesStore'),
@@ -1046,7 +1033,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('store'),
                     $c->get('pool'),
@@ -1064,7 +1050,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('store'),
                     $c->get('timeSeriesStore'),
@@ -1088,7 +1073,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('store'),
                     $c->get('displayGroupFactory'),
@@ -1110,7 +1094,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('layoutFactory'),
                     $c->get('tagFactory'),
@@ -1124,7 +1107,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('transitionFactory'),
                     $c->get('view')
@@ -1137,7 +1119,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('userFactory'),
                     $c->get('userTypeFactory'),
@@ -1167,7 +1148,6 @@ class State implements Middleware
                     $c->get('state'),
                     $c->get('user'),
                     $c->get('helpService'),
-                    $c->get('dateService'),
                     $c->get('configService'),
                     $c->get('userGroupFactory'),
                     $c->get('pageFactory'),
@@ -1185,6 +1165,15 @@ class State implements Middleware
     public static function registerFactoriesWithDi()
     {
         return [
+            'actionFactory' => function(ContainerInterface $c) {
+                return new \Xibo\Factory\ActionFactory(
+                    $c->get('store'),
+                    $c->get('logService'),
+                    $c->get('sanitizerService'),
+                    $c->get('user'),
+                    $c->get('userFactory')
+                );
+            },
             'applicationFactory' => function(ContainerInterface $c) {
                 return new \Xibo\Factory\ApplicationFactory(
                     $c->get('store'),
@@ -1273,8 +1262,7 @@ class State implements Middleware
                     $c->get('pool'),
                     $c->get('dataSetColumnFactory'),
                     $c->get('permissionFactory'),
-                    $c->get('displayFactory'),
-                    $c->get('dateService')
+                    $c->get('displayFactory')
                 );
             },
             'dataSetRssFactory' => function(ContainerInterface $c) {
@@ -1358,7 +1346,6 @@ class State implements Middleware
                     $c->get('user'),
                     $c->get('userFactory'),
                     $c->get('configService'),
-                    $c->get('dateService'),
                     $c->get('dispatcher'),
                     $c->get('permissionFactory'),
                     $c->get('regionFactory'),
@@ -1370,7 +1357,8 @@ class State implements Middleware
                     $c->get('widgetFactory'),
                     $c->get('widgetOptionFactory'),
                     $c->get('playlistFactory'),
-                    $c->get('widgetAudioFactory')
+                    $c->get('widgetAudioFactory'),
+                    $c->get('actionFactory')
                 );
             },
             'logFactory' => function(ContainerInterface $c) {
@@ -1461,7 +1449,6 @@ class State implements Middleware
                     $c->get('sanitizerService'),
                     $c->get('user'),
                     $c->get('userFactory'),
-                    $c->get('dateService'),
                     $c->get('permissionFactory'),
                     $c->get('widgetFactory'),
                     $c->get('tagFactory')
@@ -1472,10 +1459,10 @@ class State implements Middleware
                     $c->get('store'),
                     $c->get('logService'),
                     $c->get('sanitizerService'),
-                    $c->get('dateService'),
                     $c->get('permissionFactory'),
                     $c->get('regionOptionFactory'),
-                    $c->get('playlistFactory')
+                    $c->get('playlistFactory'),
+                    $c->get('actionFactory')
                 );
             },
             'regionOptionFactory' => function(ContainerInterface $c) {
@@ -1500,8 +1487,7 @@ class State implements Middleware
                     $c->get('user'),
                     $c->get('userFactory'),
                     $c->get('configService'),
-                    $c->get('pool'),
-                    $c->get('dateService')
+                    $c->get('pool')
                 );
             },
             'resolutionFactory' => function(ContainerInterface $c) {
@@ -1529,7 +1515,6 @@ class State implements Middleware
                     $c->get('sanitizerService'),
                     $c->get('configService'),
                     $c->get('pool'),
-                    $c->get('dateService'),
                     $c->get('displayGroupFactory'),
                     $c->get('dayPartFactory'),
                     $c->get('userFactory'),
@@ -1558,8 +1543,7 @@ class State implements Middleware
                 return new \Xibo\Factory\SessionFactory(
                     $c->get('store'),
                     $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('dateService')
+                    $c->get('sanitizerService')
                 );
             },
             'tagFactory' => function(ContainerInterface $c) {
@@ -1633,12 +1617,12 @@ class State implements Middleware
                     $c->get('sanitizerService'),
                     $c->get('user'),
                     $c->get('userFactory'),
-                    $c->get('dateService'),
                     $c->get('widgetOptionFactory'),
                     $c->get('widgetMediaFactory'),
                     $c->get('widgetAudioFactory'),
                     $c->get('permissionFactory'),
-                    $c->get('displayFactory')
+                    $c->get('displayFactory'),
+                    $c->get('actionFactory')
                 );
             },
             'widgetMediaFactory' => function(ContainerInterface $c) {

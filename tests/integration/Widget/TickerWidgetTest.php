@@ -22,7 +22,9 @@
 
 namespace Xibo\Tests\Integration\Widget;
 
+use Carbon\Carbon;
 use Xibo\Entity\Display;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboSchedule;
 use Xibo\OAuth2\Client\Entity\XiboTicker;
@@ -94,8 +96,8 @@ class TickerWidgetTest extends LocalWebTestCase
         // Schedule the Layout "always" onto our display
         //  deleting the layout will remove this at the end
         $event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
-            date('Y-m-d H:i:s', time()+3600),
-            date('Y-m-d H:i:s', time()+7200),
+            Carbon::now()->addSeconds(3600)->format(DateFormatHelper::getSystemFormat()),
+            Carbon::now()->addSeconds(7200)->format(DateFormatHelper::getSystemFormat()),
             $this->publishedLayout->campaignId,
             [$this->display->displayGroupId],
             0,

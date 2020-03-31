@@ -734,6 +734,8 @@ class DisplayGroup implements \JsonSerializable
 
     /**
      * Delete
+     * @throws NotFoundException
+     * @throws GeneralException
      */
     public function delete()
     {

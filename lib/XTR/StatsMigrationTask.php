@@ -21,6 +21,7 @@
  */
 
 namespace Xibo\XTR;
+use Carbon\Carbon;
 use Xibo\Entity\Task;
 use Xibo\Entity\User;
 use Xibo\Factory\DisplayFactory;
@@ -274,17 +275,17 @@ class StatsMigrationTask implements TaskInterface
 
                 $params = [
                     'type' => $stat['type'],
-                    'statDate' =>  $this->date->parse($stat['statDate'])->format('U'),
+                    'statDate' =>  Carbon::createFromTimestamp($stat['statDate'])->format('U'),
                     'scheduleId' => (int) $stat['scheduleId'],
                     'displayId' => (int) $stat['displayId'],
                     'campaignId' => $campaignId,
                     'layoutId' => (int) $stat['layoutId'],
                     'mediaId' => (int) $stat['mediaId'],
                     'widgetId' => (int) $stat['widgetId'],
-                    'start' => $this->date->parse($stat['start'])->format('U'),
-                    'end' => $this->date->parse($stat['end'])->format('U'),
+                    'start' => Carbon::createFromTimestamp($stat['start'])->format('U'),
+                    'end' => Carbon::createFromTimestamp($stat['end'])->format('U'),
                     'tag' => $stat['tag'],
-                    'duration' => isset($stat['duration']) ? (int) $stat['duration'] : $this->date->parse($stat['end'])->format('U') - $this->date->parse($stat['start'])->format('U'),
+                    'duration' => isset($stat['duration']) ? (int) $stat['duration'] : Carbon::createFromTimestamp($stat['end'])->format('U') - Carbon::createFromTimestamp($stat['start'])->format('U'),
                     'count' => isset($stat['count']) ? (int) $stat['count'] : 1,
                 ];
 
@@ -384,11 +385,11 @@ class StatsMigrationTask implements TaskInterface
 
                 $entry = [];
 
-                $entry['statDate'] = $this->date->parse($stat['statDate'], 'U');
+                $entry['statDate'] = Carbon::createFromTimestamp($stat['statDate'])->format('U');
 
                 $entry['type'] = $stat['type'];
-                $entry['fromDt'] = $this->date->parse($stat['start'], 'U');
-                $entry['toDt'] = $this->date->parse($stat['end'], 'U');
+                $entry['fromDt'] = Carbon::createFromTimestamp($stat['start'])->format('U');
+                $entry['toDt'] = Carbon::createFromTimestamp($stat['end'])->format('U');
                 $entry['scheduleId'] = (int) $stat['scheduleId'];
                 $entry['mediaId'] = (int) $stat['mediaId'];
                 $entry['layoutId'] = (int) $stat['layoutId'];
@@ -507,9 +508,9 @@ class StatsMigrationTask implements TaskInterface
                     $campaignId = 0;
                 }
 
-                $statDate = $this->date->parse($stat['statDate']);
-                $start = $this->date->parse($stat['start']);
-                $end = $this->date->parse($stat['end']);
+                $statDate = Carbon::createFromTimestamp($stat['statDate']);
+                $start =  Carbon::createFromTimestamp($stat['start']);
+                $end =  Carbon::createFromTimestamp($stat['end']);
 
                 $entry['statDate'] = $statDate;
                 $entry['type'] = $stat['type'];

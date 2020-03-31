@@ -467,6 +467,29 @@ var setupScheduleForm = function(dialog) {
         }
     });
 
+    // Share of voice
+    var shareOfVoice = $("#shareOfVoice");
+    var shareOfVoicePercentage = $("#shareOfVoicePercentage");
+    shareOfVoice.on("change paste keyup", function() {
+        convertShareOfVoice(shareOfVoice.val());
+    });
+
+    shareOfVoicePercentage.on("change paste keyup", function() {
+        var percentage = shareOfVoicePercentage.val();
+        var conversion;
+        conversion = (3600 * percentage) / 100;
+        shareOfVoice.val(conversion);
+    });
+
+
+    var convertShareOfVoice = function(seconds) {
+        var conversion;
+        conversion = (100 * seconds) / 3600;
+        shareOfVoicePercentage.val(conversion.toFixed(2));
+    };
+
+    convertShareOfVoice(shareOfVoice.val());
+
     // Select lists
     var $campaignSelect = $('#campaignId', dialog);
     $campaignSelect.select2({

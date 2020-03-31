@@ -22,7 +22,7 @@
 
 namespace Xibo\Tests\Integration;
 
-use Jenssegers\Date\Date;
+use Carbon\Carbon;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
@@ -80,7 +80,7 @@ class StatisticsEventTest extends LocalWebTestCase
         $this->deleteDisplay($this->display);
 
         // Delete stat records
-        self::$container->get('timeSeriesStore')->deleteStats(Date::now(), Date::createFromFormat("Y-m-d H:i:s", '2018-02-12 00:00:00'));
+        self::$container->get('timeSeriesStore')->deleteStats(Carbon::now(), Carbon::createFromFormat("Y-m-d H:i:s", '2018-02-12 00:00:00'));
     }
 
     /**
@@ -147,7 +147,12 @@ class StatisticsEventTest extends LocalWebTestCase
         $object = json_decode($response->getBody());
 
         $this->assertObjectHasAttribute('data', $object, $response->getBody());
-        $stats = (new XiboStats($this->getEntityProvider()))->get(['fromDt' => '2018-02-12 00:00:00', 'toDt' => '2018-02-17 00:00:00', 'layoutId' => $layout->layoutId]);
+        $stats = (new XiboStats($this->getEntityProvider()))->get([
+            'fromDt' => '2018-02-12 00:00:00',
+            'toDt' => '2018-02-17 00:00:00',
+            'displayId' => $this->display->displayId,
+            'type' => $type
+        ]);
         $this->assertNotEquals(0, count($stats));
     }
 }

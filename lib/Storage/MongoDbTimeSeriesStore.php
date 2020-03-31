@@ -25,17 +25,15 @@ namespace Xibo\Storage;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
-use Xibo\Exception\GeneralException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 
 /**
@@ -46,9 +44,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 {
     /** @var LogServiceInterface */
     private $log;
-
-    /** @var DateServiceInterface */
-    private $dateService;
 
     /** @var array */
     private $config;
@@ -100,10 +95,9 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     /**
      * @inheritdoc
      */
-    public function setDependencies($log, $date, $layoutFactory = null, $campaignFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null, $displayGroupFactory = null)
+    public function setDependencies($log, $layoutFactory = null, $campaignFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null, $displayGroupFactory = null)
     {
         $this->log = $log;
-        $this->dateService = $date;
         $this->mediaFactory = $mediaFactory;
         $this->widgetFactory = $widgetFactory;
         $this->layoutFactory = $layoutFactory;
@@ -271,7 +265,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                     }
 
                     return;
-                } catch (XiboException $error) {
+                } catch (GeneralException $error) {
 
                     // Cache layouts not found
                     if (!in_array($statData['layoutId'], $this->layoutsNotFound)) {

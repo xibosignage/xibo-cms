@@ -22,7 +22,9 @@
 
 namespace Xibo\Tests\integration\Cache;
 
+use Carbon\Carbon;
 use Xibo\Entity\Display;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboImage;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
@@ -84,8 +86,8 @@ class LayoutProofOfPlayXMLWithoutMediaTest extends LocalWebTestCase
         // Schedule the Layout "always" onto our display
         //  deleting the layoutOff will remove this at the end
         $event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
-            date('Y-m-d H:i:s', time()+3600),
-            date('Y-m-d H:i:s', time()+7200),
+            Carbon::now()->addSeconds(3600)->format(DateFormatHelper::getSystemFormat()),
+            Carbon::now()->addSeconds(7200)->format(DateFormatHelper::getSystemFormat()),
             $this->layoutOff->campaignId,
             [$this->display->displayGroupId],
             0,
@@ -115,8 +117,8 @@ class LayoutProofOfPlayXMLWithoutMediaTest extends LocalWebTestCase
         // Schedule the LayoutOn "always" onto our display
         //  deleting the layoutOn will remove this at the end
         $event2 = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
-            date('Y-m-d H:i:s', time()+3600),
-            date('Y-m-d H:i:s', time()+7200),
+            Carbon::now()->addSeconds(3600)->format(DateFormatHelper::getSystemFormat()),
+            Carbon::now()->addSeconds(7200)->format(DateFormatHelper::getSystemFormat()),
             $this->layoutOn->campaignId,
             [$this->display2->displayGroupId],
             0,
