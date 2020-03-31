@@ -330,7 +330,8 @@ class StatisticsTest extends LocalWebTestCase
         $response = $this->sendRequest('GET','/stats', [
             'fromDt' => '2018-02-12 00:00:00',
             'toDt' => '2018-02-17 00:00:00',
-            'displayId' => $this->display->displayId
+            'displayId' => $this->display->displayId,
+            'layoutId' => [$this->layout->layoutId]
         ]);
 
         $this->assertSame(200, $response->getStatusCode());
@@ -338,8 +339,12 @@ class StatisticsTest extends LocalWebTestCase
         $object = json_decode($response->getBody());
         // $this->getLogger()->debug($response->getBody());
         $this->assertObjectHasAttribute('data', $object, $response->getBody());
-        $stats = (new XiboStats($this->getEntityProvider()))->get(['fromDt' => '2018-02-12 00:00:00', 'toDt' => '2018-02-17 00:00:00', 'layoutId' => $this->layout->layoutId]);
-        // print_r($stats);
+        $stats = (new XiboStats($this->getEntityProvider()))->get([
+            'fromDt' => '2018-02-12 00:00:00',
+            'toDt' => '2018-02-17 00:00:00',
+            'displayId' => $this->display->displayId,
+            'layoutId' => [$this->layout->layoutId]
+        ]);
         $this->assertNotEquals(0, count($stats));
     }
 
@@ -370,5 +375,4 @@ class StatisticsTest extends LocalWebTestCase
         $body = $response->getBody()->getContents();
         $this->assertContains('layout,"2018-02-12', $body);
     }
-
 }

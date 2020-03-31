@@ -244,7 +244,7 @@ class Schedule implements \JsonSerializable
     public $syncTimezone;
 
     /**
-     * @SWG\Property(description="Percentage (0-100) of each full hour that is scheduled that this Layout should occupy")
+     * @SWG\Property(description="Seconds (0-3600) of each full hour that is scheduled that this Layout should occupy")
      * @var int
      */
     public $shareOfVoice;
@@ -507,9 +507,8 @@ class Schedule implements \JsonSerializable
             // additional validation for Interrupt Layout event type
             if ($this->eventTypeId == Schedule::$INTERRUPT_EVENT) {
 
-                if (!v::intType()->notEmpty()->validate($this->shareOfVoice) || !v::min(0)->validate($this->shareOfVoice)
-                    || !v::max(100)->validate($this->shareOfVoice)) {
-                    throw new InvalidArgumentException(__('Share of Voice must be a whole number between 0 and 100'), 'shareOfVoice');
+                if (!v::intType()->notEmpty()->min(0)->max(3600)->validate($this->shareOfVoice)) {
+                    throw new InvalidArgumentException(__('Share of Voice must be a whole number between 0 and 3600'), 'shareOfVoice');
                 }
             }
 
