@@ -32,6 +32,7 @@ use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\WakeOnLan;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Widget\ModuleWidget;
@@ -189,7 +190,7 @@ class MaintenanceRegularTask implements TaskInterface
                 /** @var \Xibo\Entity\Display $display */
                 // Time to WOL (with respect to today)
                 $timeToWake = strtotime(date('Y-m-d') . ' ' . $display->wakeOnLanTime);
-                $timeNow = time();
+                $timeNow = Carbon::now()->format('U');
 
                 // Should the display be awake?
                 if ($timeNow >= $timeToWake) {
@@ -206,9 +207,9 @@ class MaintenanceRegularTask implements TaskInterface
 
                         try {
                             WakeOnLan::TransmitWakeOnLan($display->macAddress, $display->secureOn, $display->broadCastAddress, $display->cidr, '9', $this->log);
-                            $this->runMessage .= ' - ' . $display->display . ' Sent WOL Message. Previous WOL send time: ' . Carbon::createFromTimestamp($display->lastWakeOnLanCommandSent)->format('Y-m-d H:i:s') . PHP_EOL;
+                            $this->runMessage .= ' - ' . $display->display . ' Sent WOL Message. Previous WOL send time: ' . Carbon::createFromTimestamp($display->lastWakeOnLanCommandSent)->format(DateFormatHelper::getSystemFormat()) . PHP_EOL;
 
-                            $display->lastWakeOnLanCommandSent = time();
+                            $display->lastWakeOnLanCommandSent = Carbon::now()->format('U');
                             $display->save(['validate' => false, 'audit' => true]);
                         }
                         catch (\Exception $e) {
@@ -216,7 +217,7 @@ class MaintenanceRegularTask implements TaskInterface
                         }
                     }
                     else {
-                        $this->runMessage .= ' - ' . $display->display . ' Display already awake. Previous WOL send time: ' . Carbon::createFromTimestamp($display->lastWakeOnLanCommandSent)->format('Y-m-d H:i:s') . PHP_EOL;
+                        $this->runMessage .= ' - ' . $display->display . ' Display already awake. Previous WOL send time: ' . Carbon::createFromTimestamp($display->lastWakeOnLanCommandSent)->format(DateFormatHelper::getSystemFormat()) . PHP_EOL;
                     }
                 }
                 else {
@@ -301,7 +302,7 @@ class MaintenanceRegularTask implements TaskInterface
                 $notification = $this->notificationFactory->createSystemNotification(
                     $subject,
                     $body,
-                    Carbon::createFromTimestamp(time())
+                    Carbon::now()
                 );
 
                 $notification->save();
@@ -334,14 +335,14 @@ class MaintenanceRegularTask implements TaskInterface
         ', [
             'factor' => 3,
             'excludedType' => 'W',
-            'lastAccessed' => Carbon::createFromTimestamp(time())->subDay()->format('U')
+            'lastAccessed' => Carbon::now()->subDay()->format('U')
         ]);
 
         foreach ($items as $item) {
             $sanitizedItem = $this->getSanitizer($item);
             // Create a notification if we don't already have one today for this display.
             $subject = sprintf(__('%s is downloading %d files too many times'), $sanitizedItem->getString('display'), $sanitizedItem->getInt('countFiles'));
-            $date = Carbon::createFromTimestamp(time());
+            $date = Carbon::now();
 
             if (count($this->notificationFactory->getBySubjectAndDate($subject, $date->startOfDay()->format('U'),$date->addDay()->startOfDay()->format('U'))) <= 0) {
 
@@ -350,7 +351,7 @@ class MaintenanceRegularTask implements TaskInterface
                 $notification = $this->notificationFactory->createSystemNotification(
                     $subject,
                     $body,
-                    Carbon::createFromTimestamp(time())
+                    Carbon::now()
                 );
 
                 $display = $this->displayFactory->getById($item['displayId']);
@@ -403,7 +404,7 @@ class MaintenanceRegularTask implements TaskInterface
             foreach ($layouts as $layout) {
 
                 // check if the layout should be published now according to the date
-                if (Carbon::createFromTimestamp($layout->publishedDate)->format('U') < Carbon::createFromTimestamp(time())->format('U')) {
+                if (Carbon::createFromTimestamp($layout->publishedDate)->format('U') < Carbon::now()->format('U')) {
                     try {
                         // check if draft is valid
                         if ($layout->status === ModuleWidget::$STATUS_INVALID && isset($layout->statusMessage)) {
@@ -422,7 +423,7 @@ class MaintenanceRegularTask implements TaskInterface
 
                         // create a notification
                         $subject = __(sprintf('Error publishing layout ID %d', $layout->layoutId));
-                        $date = Carbon::createFromTimestamp(time());
+                        $date = Carbon::now();
 
                         if (count($this->notificationFactory->getBySubjectAndDate($subject,
                                 $date->startOfDay()->format('U'),
@@ -434,7 +435,7 @@ class MaintenanceRegularTask implements TaskInterface
                             $notification = $this->notificationFactory->createSystemNotification(
                                 $subject,
                                 $body,
-                                Carbon::createFromTimestamp(time())
+                                Carbon::now()
                             );
                             $notification->save();
 

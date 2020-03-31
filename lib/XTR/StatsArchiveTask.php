@@ -27,6 +27,7 @@ use Carbon\Carbon;
 use Xibo\Entity\User;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -92,7 +93,7 @@ class StatsArchiveTask implements TaskInterface
 
             // Take the earliest date and roll forward until the current time
             /** @var Carbon $now */
-            $now = Carbon::createFromTimestamp(time())->subDays($periodSizeInDays * $periodsToKeep)->setTime(0, 0, 0);
+            $now = Carbon::now()->subDays($periodSizeInDays * $periodsToKeep)->setTime(0, 0, 0);
             $i = 0;
 
             while ($earliestDate < $now && $i < $maxPeriods) {
@@ -122,7 +123,7 @@ class StatsArchiveTask implements TaskInterface
      */
     private function exportStatsToLibrary($fromDt, $toDt)
     {
-        $this->runMessage .= ' - ' . $fromDt->format('Y-m-d H:i:s') . ' / ' . $toDt->format('Y-m-d H:i:s') . PHP_EOL;
+        $this->runMessage .= ' - ' . $fromDt->format(DateFormatHelper::getSystemFormat()) . ' / ' . $toDt->format(DateFormatHelper::getSystemFormat()) . PHP_EOL;
 
         $resultSet = $this->timeSeriesStore->getStats([
             'fromDt'=> $fromDt,
@@ -141,14 +142,14 @@ class StatsArchiveTask implements TaskInterface
 
             if ($this->timeSeriesStore->getEngine() == 'mongodb') {
 
-                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate']->toDateTime()->format('U'))->format('Y-m-d H:i:s') : null;
-                $start = Carbon::createFromTimestamp($row['start']->toDateTime()->format('U'))->format('Y-m-d H:i:s');
-                $end = Carbon::createFromTimestamp($row['end']->toDateTime()->format('U'))->format('Y-m-d H:i:s');
+                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()) : null;
+                $start = Carbon::createFromTimestamp($row['start']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
+                $end = Carbon::createFromTimestamp($row['end']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
             } else {
 
-                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate'])->format('Y-m-d H:i:s') : null;
-                $start = Carbon::createFromTimestamp($row['start'])->format('Y-m-d H:i:s');
-                $end = Carbon::createFromTimestamp($row['end'])->format('Y-m-d H:i:s');
+                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate'])->format(DateFormatHelper::getSystemFormat()) : null;
+                $start = Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat());
+                $end = Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat());
             }
 
             // Read the columns

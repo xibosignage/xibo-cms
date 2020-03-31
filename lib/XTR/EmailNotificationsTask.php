@@ -125,7 +125,7 @@ class EmailNotificationsTask implements TaskInterface
             }
 
             // Mark as sent
-            $notification->setEmailed(Carbon::createFromTimestamp(time())->format('U'));
+            $notification->setEmailed(Carbon::now()->format('U'));
             $notification->save();
         }
 

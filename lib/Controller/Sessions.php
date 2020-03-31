@@ -94,7 +94,6 @@ class Sessions extends Base
     function grid(Request $request, Response $response)
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
-        $dateHelper = new DateFormatHelper();
 
         $sessions = $this->sessionFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
             'type' => $sanitizedQueryParams->getString('type'),
@@ -105,7 +104,7 @@ class Sessions extends Base
             /* @var \Xibo\Entity\Session $row */
 
             // Normalise the date
-            $row->lastAccessed = Carbon::createFromFormat($dateHelper->getSystemFormat(), $row->lastAccessed);
+            $row->lastAccessed = Carbon::createFromTimeString($row->lastAccessed)->format(DateFormatHelper::getSystemFormat());
 
             if (!$this->isApi($request) && $this->getUser()->isSuperAdmin()) {
 

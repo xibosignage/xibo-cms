@@ -114,12 +114,11 @@ class Soap5 extends Soap4
             // Audit in
             $this->getLog()->debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);
 
-            $dateHelper = new DateFormatHelper();
             // Now
-            $dateNow = Carbon::createFromTimestamp(time());
+            $dateNow = Carbon::now();
 
             // Append the time
-            $displayElement->setAttribute('date', $dateNow->format($dateHelper->getSystemFormat()));
+            $displayElement->setAttribute('date', $dateNow->format(DateFormatHelper::getSystemFormat()));
             $displayElement->setAttribute('timezone', $this->getConfig()->getSetting('defaultTimezone'));
 
             // Determine if we are licensed or not
@@ -267,7 +266,7 @@ class Soap5 extends Soap4
 
                     // Append Local Time
                     $displayElement->setAttribute('localTimezone', $display->timeZone);
-                    $displayElement->setAttribute('localDate', $dateNow->format($dateHelper->getSystemFormat()));
+                    $displayElement->setAttribute('localDate', $dateNow->format(DateFormatHelper::getSystemFormat()));
                 }
 
                 // Commands
@@ -343,7 +342,7 @@ class Soap5 extends Soap4
         // Send Notification if required
         $this->alertDisplayUp();
 
-        $display->lastAccessed = time();
+        $display->lastAccessed = Carbon::now()->format('U');
         $display->loggedIn = 1;
         $display->clientAddress = $clientAddress;
         $display->macAddress = $macAddress;

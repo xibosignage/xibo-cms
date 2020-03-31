@@ -585,9 +585,8 @@ class WorldClock extends ModuleWidget
     public function getTimezones()
     {
         // A list of timezones
-        $dateFormatHelper = new DateFormatHelper();
         $timeZones = [];
-        foreach ($dateFormatHelper->timezoneList() as $key => $value) {
+        foreach (DateFormatHelper::timezoneList() as $key => $value) {
             $timeZones[] = ['id' => $key, 'value' => $value];
         }
 

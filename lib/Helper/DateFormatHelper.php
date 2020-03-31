@@ -36,7 +36,7 @@ class DateFormatHelper
      * Get the default date format
      * @return string
      */
-    public function getSystemFormat()
+    public static function getSystemFormat()
     {
         return 'Y-m-d H:i:s';
     }
@@ -44,7 +44,7 @@ class DateFormatHelper
     /**
      * @inheritdoc
      */
-    public function extractTimeFormat($format)
+    public static function extractTimeFormat($format)
     {
         $replacements = [
             'd' => '',
@@ -95,7 +95,7 @@ class DateFormatHelper
     /**
      * @inheritdoc
      */
-    public function convertPhpToMomentFormat($format)
+    public static function convertPhpToMomentFormat($format)
     {
         $replacements = [
             'd' => 'DD',
@@ -143,7 +143,7 @@ class DateFormatHelper
     /**
      * @inheritdoc
      */
-    public function convertPhpToBootstrapFormat($format, $includeTime = true)
+    public static function convertPhpToBootstrapFormat($format, $includeTime = true)
     {
         $replacements = [
             'd' => 'dd',
@@ -206,7 +206,7 @@ class DateFormatHelper
      * Timezone identifiers
      * @return array
      */
-    public function timezoneList()
+    public static function timezoneList()
     {
         if (self::$timezones === null) {
             self::$timezones = [];

@@ -134,13 +134,12 @@ class SummaryReport implements ReportInterface
     /** @inheritdoc */
     public function getReportForm()
     {
-        $dateHelper = new DateFormatHelper();
         return [
             'template' => 'summary-report-form',
             'data' =>  [
-                'fromDate' => Carbon::createFromTimestamp(time() - (86400 * 35))->format($dateHelper->getSystemFormat()),
-                'fromDateOneDay' => Carbon::createFromTimestamp(time() - 86400)->format($dateHelper->getSystemFormat()),
-                'toDate' => Carbon::createFromTimestamp(time())->format($dateHelper->getSystemFormat()),
+                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
+                'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
+                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
                 'availableReports' => $this->reportService->listReports()
 
             ]
@@ -289,7 +288,7 @@ class SummaryReport implements ReportInterface
             'template' => 'summary-report-preview',
             'chartData' => [
                 'savedReport' => $savedReport,
-                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format('Y-m-d H:i:s'),
+                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat()),
                 'periodStart' => isset($json['periodStart']) ? $json['periodStart'] : '',
                 'periodEnd' => isset($json['periodEnd']) ? $json['periodEnd'] : '',
                 'labels' => json_encode($json['labels']),
@@ -452,8 +451,8 @@ class SummaryReport implements ReportInterface
 
         // Return data to build chart
         return [
-            'periodStart' => $fromDt->format('Y-m-d H:i:s'),
-            'periodEnd' => $toDt->format('Y-m-d H:i:s'),
+            'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
             'labels' => $labels,
             'countData' => $countData,
             'durationData' => $durationData,
@@ -584,8 +583,8 @@ class SummaryReport implements ReportInterface
 
             return [
                 'result' => $this->getStore()->select($select, $params),
-                'periodStart' => $fromDt->format('Y-m-d H:i:s'),
-                'periodEnd' => $toDt->format('Y-m-d H:i:s')
+                'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
+                'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat())
             ];
 
         } else {
@@ -689,7 +688,7 @@ class SummaryReport implements ReportInterface
                 }
             }
 
-            $this->getLog()->debug('Period start: '.$filterRangeStart->toDateTime()->format('Y-m-d H:i:s'). ' Period end: '. $filterRangeEnd->toDateTime()->format('Y-m-d H:i:s'));
+            $this->getLog()->debug('Period start: '.$filterRangeStart->toDateTime()->format(DateFormatHelper::getSystemFormat()). ' Period end: '. $filterRangeEnd->toDateTime()->format(DateFormatHelper::getSystemFormat()));
 
             // Type filter
             if (($type == 'layout') && ($layoutId != '')) {
@@ -1077,8 +1076,8 @@ class SummaryReport implements ReportInterface
 
             return [
                 'result' => $resultArray,
-                'periodStart' => $fromDt->format('Y-m-d H:i:s'),
-                'periodEnd' => $toDt->format('Y-m-d H:i:s')
+                'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
+                'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat())
             ];
 
         } else {

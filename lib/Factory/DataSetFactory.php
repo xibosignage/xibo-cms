@@ -23,11 +23,13 @@
 namespace Xibo\Factory;
 
 
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
@@ -638,7 +640,7 @@ class DataSetFactory extends BaseFactory
                     $value = [0, date('Y-m-d')];
 
                 } else if ($column->remoteField == '{{TIMESTAMP}}') {
-                    $value = [0, time()];
+                    $value = [0, Carbon::now()->format('U')];
 
                 } else {
                     $chunks = explode('.', $column->remoteField);
@@ -657,7 +659,7 @@ class DataSetFactory extends BaseFactory
                             // This expects an ISO date
                             $date =  $sanitizer->getDate($value[1]);
                             try {
-                                $result[$column->heading] = $date->format('Y-m-d H:i:s');
+                                $result[$column->heading] = $date->format(DateFormatHelper::getSystemFormat());
                             } catch (\Exception $e) {
                                 $this->getLog()->error('Incorrect date provided ' . $date . ' Expected date format Y-m-d H:i:s ');
                                 throw new InvalidArgumentException('Incorrect date provided ' . $date . ' Expected date format Y-m-d H:i:s ', 'date');

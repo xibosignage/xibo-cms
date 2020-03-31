@@ -918,7 +918,6 @@ class Widget implements \JsonSerializable
 
         $this->getLog()->debug('Notifying upstream playlist. Notify Layout: ' . $options['notify'] . ' Notify Displays: ' . $options['notifyDisplays']);
 
-        $dateHelper = new DateFormatHelper();
         // Should we notify the Playlist
         // we do this if the duration has changed on this widget.
         if ($options['forceNotifyPlaylists']|| ($options['notifyPlaylists'] && (
@@ -929,7 +928,7 @@ class Widget implements \JsonSerializable
             // Notify the Playlist
             $this->getStore()->update('UPDATE `playlist` SET requiresDurationUpdate = 1, `modifiedDT` = :modifiedDt WHERE playlistId = :playlistId', [
                 'playlistId' => $this->playlistId,
-                'modifiedDt' => Carbon::createFromTimestamp(time())->format($dateHelper->getSystemFormat())
+                'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
             ]);
         }
 
@@ -950,7 +949,7 @@ class Widget implements \JsonSerializable
                 )
             ', [
                 'playlistId' => $this->playlistId,
-                'modifiedDt' => Carbon::createFromTimestamp(time())->format($dateHelper->getSystemFormat())
+                'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
             ]);
         }
 
@@ -983,8 +982,8 @@ class Widget implements \JsonSerializable
             'calculatedDuration' => $this->calculatedDuration,
             'fromDt' => ($this->fromDt == null) ? self::$DATE_MIN : $this->fromDt,
             'toDt' => ($this->toDt == null) ? self::$DATE_MAX : $this->toDt,
-            'createdDt' => ($this->createdDt === null) ? time() : $this->createdDt,
-            'modifiedDt' => time()
+            'createdDt' => ($this->createdDt === null) ? Carbon::now()->format('U') : $this->createdDt,
+            'modifiedDt' => Carbon::now()->format('U')
         ));
     }
 
@@ -1017,7 +1016,7 @@ class Widget implements \JsonSerializable
             'calculatedDuration' => $this->calculatedDuration,
             'fromDt' => ($this->fromDt == null) ? self::$DATE_MIN : $this->fromDt,
             'toDt' => ($this->toDt == null) ? self::$DATE_MAX : $this->toDt,
-            'modifiedDt' => time()
+            'modifiedDt' => Carbon::now()->format('U')
         ];
 
         $this->getStore()->update($sql, $params);

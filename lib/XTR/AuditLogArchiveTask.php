@@ -94,7 +94,7 @@ class AuditLogArchiveTask implements TaskInterface
 
             // Take the earliest date and roll forward until the current time
             /** @var Carbon $now */
-            $now = Carbon::createFromTimestamp(Time())->subMonth()->setTime(0, 0, 0);
+            $now = Carbon::now()->subMonth()->setTime(0, 0, 0);
             $i = 0;
 
             while ($earliestDate < $now && $i <= $maxPeriods) {

@@ -53,6 +53,7 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
 use Xibo\Helper\HttpCacheProvider;
 use Xibo\Helper\Random;
@@ -606,7 +607,7 @@ class Library extends Base
                 $media->excludeProperty('mediaExpiresIn');
                 $media->excludeProperty('mediaExpiryFailed');
                 $media->excludeProperty('mediaNoExpiryDate');
-                $media->expires = ($media->expires == 0) ? 0 : Carbon::createFromTimestamp($media->expires)->format('Y-m-d H:i:s');
+                $media->expires = ($media->expires == 0) ? 0 : Carbon::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat());
                 continue;
             }
 
@@ -917,7 +918,7 @@ class Library extends Base
 
         if ($parsedBody->getDate('expires') != null ) {
 
-            if ($parsedBody->getDate('expires')->format('U') > time()) {
+            if ($parsedBody->getDate('expires')->format('U') > Carbon::now()->format('U')) {
                 $expires = $parsedBody->getDate('expires')->format('U');
             } else {
                 throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');
@@ -1014,7 +1015,7 @@ class Library extends Base
             'validExtensions' => implode('|', $this->moduleFactory->getValidExtensions(['type' => $media->mediaType])),
             'help' => $this->getHelp()->link('Library', 'Edit'),
             'tags' => $tags,
-            'expiryDate' => ($media->expires == 0 ) ? null : date('Y-m-d H:i:s', $media->expires)
+            'expiryDate' => ($media->expires == 0 ) ? null : Carbon::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat(), $media->expires)
         ]);
 
         return $this->render($request, $response);
@@ -1118,7 +1119,7 @@ class Library extends Base
 
         if ($sanitizedParams->getDate('expires') != null ) {
 
-            if ($sanitizedParams->getDate('expires')->format('U') > time()) {
+            if ($sanitizedParams->getDate('expires')->format('U') > Carbon::now()->format('U')) {
                 $media->expires = $sanitizedParams->getDate('expires')->format('U');
             } else {
                 throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');
@@ -1688,7 +1689,7 @@ class Library extends Base
                 continue;
 
             // Has this file been written to recently?
-            if (filemtime($libraryTemp . DIRECTORY_SEPARATOR . $item) > (time() - 86400)) {
+            if (filemtime($libraryTemp . DIRECTORY_SEPARATOR . $item) > Carbon::now()->subSeconds(86400)->format('U')) {
                 $this->getLog()->debug('Skipping active file: ' . $item);
                 continue;
             }
@@ -1707,7 +1708,7 @@ class Library extends Base
     public function removeExpiredFiles()
     {
         // Get a list of all expired files and delete them
-        foreach ($this->mediaFactory->query(null, array('expires' => time(), 'allModules' => 1, 'length' => 100)) as $entry) {
+        foreach ($this->mediaFactory->query(null, array('expires' => Carbon::now()->format('U'), 'allModules' => 1, 'length' => 100)) as $entry) {
             /* @var \Xibo\Entity\Media $entry */
             // If the media type is a module, then pretend its a generic file
             $this->getLog()->info('Removing Expired File %s', $entry->name);
@@ -2424,7 +2425,7 @@ class Library extends Base
         
         if ($sanitizedParams->getDate('expires') != null ) {
 
-            if ($sanitizedParams->getDate('expires')->format('U') > time()) {
+            if ($sanitizedParams->getDate('expires')->format('U') > Carbon::now()->format('U')) {
                 $expires = $sanitizedParams->getDate('expires')->format('U');
             } else {
                 throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');

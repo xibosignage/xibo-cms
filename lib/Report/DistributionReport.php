@@ -148,14 +148,12 @@ class DistributionReport implements ReportInterface
     /** @inheritdoc */
     public function getReportForm()
     {
-        $dateHelper = new DateFormatHelper();
-
         return [
             'template' => 'distribution-report-form',
             'data' =>  [
-                'fromDate' => Carbon::createFromTimestamp(time() - (86400 * 35))->format($dateHelper->getSystemFormat()),
-                'fromDateOneDay' => Carbon::createFromTimestamp(time() - 86400)->format($dateHelper->getSystemFormat()),
-                'toDate' => Carbon::now()->format($dateHelper->getSystemFormat()),
+                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
+                'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
+                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
                 'availableReports' => $this->reportService->listReports()
             ]
         ];
@@ -314,7 +312,7 @@ class DistributionReport implements ReportInterface
             'template' => 'distribution-report-preview',
             'chartData' => [
                 'savedReport' => $savedReport,
-                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format('Y-m-d H:i:s'),
+                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat()),
                 'periodStart' => isset($json['periodStart']) ? $json['periodStart'] : '',
                 'periodEnd' => isset($json['periodEnd']) ? $json['periodEnd'] : '',
                 'labels' => json_encode($json['labels']),
@@ -380,7 +378,7 @@ class DistributionReport implements ReportInterface
         // check the range filter first and set from/to dates accordingly.
         $reportFilter = $sanitizedParams->getString('reportFilter');
         // Use the current date as a helper
-        $now = Carbon::createFromTimestamp(time());
+        $now = Carbon::now();
 
         switch ($reportFilter) {
 
@@ -427,10 +425,10 @@ class DistributionReport implements ReportInterface
             case '':
             default:
                 // Expect dates to be provided.
-                $fromDt = $sanitizedParams->getDate('statsFromDt', ['default' => Carbon::createFromTimestamp(time())->subDay()]);
+                $fromDt = $sanitizedParams->getDate('statsFromDt', ['default' => Carbon::now()->subDay()]);
                 $fromDt->startOfDay();
 
-                $toDt = $sanitizedParams->getDate('statsToDt', ['default' =>  Carbon::createFromTimestamp(time())]);
+                $toDt = $sanitizedParams->getDate('statsToDt', ['default' =>  Carbon::now()]);
                 $toDt->addDay()->startOfDay();
 
                 // What if the fromdt and todt are exactly the same?
@@ -617,8 +615,8 @@ class DistributionReport implements ReportInterface
 
             return [
                 'result' => $this->getStore()->select($select, $params),
-                'periodStart' => $fromDt->format('Y-m-d H:i:s'),
-                'periodEnd' => $toDt->format('Y-m-d H:i:s')
+                'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
+                'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat())
             ];
 
         } else {
@@ -1217,12 +1215,12 @@ class DistributionReport implements ReportInterface
                 }
             }
 
-            $this->getLog()->debug('Period start: ' . $fromDt->format('Y-m-d H:i:s') . ' Period end: ' . $toDt->format('Y-m-d H:i:s'));
+            $this->getLog()->debug('Period start: ' . $fromDt->format(DateFormatHelper::getSystemFormat()) . ' Period end: ' . $toDt->format(DateFormatHelper::getSystemFormat()));
 
             return [
                 'result' => $resultArray,
-                'periodStart' => $fromDt->format('Y-m-d H:i:s'),
-                'periodEnd' => $toDt->format('Y-m-d H:i:s')
+                'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
+                'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat())
             ];
 
         } else {

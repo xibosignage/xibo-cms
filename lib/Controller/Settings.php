@@ -119,9 +119,8 @@ class Settings extends Base
         }
 
         // A list of timezones
-        $dateFormatHelper = new DateFormatHelper();
         $timeZones = [];
-        foreach ($dateFormatHelper->timezoneList() as $key => $value) {
+        foreach (DateFormatHelper::timezoneList() as $key => $value) {
             $timeZones[] = ['id' => $key, 'value' => $value];
         }
 
@@ -169,10 +168,10 @@ class Settings extends Base
         if ($elevateLogUntil != null) {
             $elevateLogUntil = intval($elevateLogUntil);
 
-            if ($elevateLogUntil <= time()) {
+            if ($elevateLogUntil <= Carbon::now()->format('U')) {
                 $elevateLogUntil = null;
             } else {
-                $elevateLogUntil = Carbon::createFromTimestamp($elevateLogUntil)->format($dateFormatHelper->getSystemFormat());
+                $elevateLogUntil = Carbon::createFromTimestamp($elevateLogUntil)->format(DateFormatHelper::getSystemFormat());
             }
         }
 
@@ -603,7 +602,7 @@ class Settings extends Base
         // Have we changed log level? If so, were we also provided the elevate until setting?
         if ($newElevateUntil === null && $currentLogLevel != $newLogLevel) {
             // We haven't provided an elevate until (meaning it is not visible)
-            $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', Carbon::createFromTimestamp(time())->addHour()->format('U'));
+            $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', Carbon::now()->addHour()->format('U'));
         }
 
         if ($this->getConfig()->isSettingEditable('SERVER_MODE')) {

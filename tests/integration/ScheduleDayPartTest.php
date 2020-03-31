@@ -24,6 +24,7 @@ namespace Xibo\Tests\integration;
 
 use Carbon\Carbon;
 use Xibo\Entity\Display;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDaypart;
 use Xibo\Tests\Helper\DisplayHelperTrait;
@@ -123,10 +124,10 @@ class ScheduleDayPartTest extends LocalWebTestCase
         // Create a schedule one hours time in my player timezone
         $date = Carbon::now()->addDay()->setTime(0,0,0);
 
-        $this->getLogger()->debug('Event start will be at: ' . $date->format('Y-m-d H:i:s'));
+        $this->getLogger()->debug('Event start will be at: ' . $date->format(DateFormatHelper::getSystemFormat()));
 
         $response = $this->sendRequest('POST','/schedule', [
-            'fromDt' => $date->format('Y-m-d H:i:s'),
+            'fromDt' => $date->format(DateFormatHelper::getSystemFormat()),
             'dayPartId' => $this->dayPart->dayPartId,
             'eventTypeId' => 1,
             'campaignId' => $this->layout->campaignId,

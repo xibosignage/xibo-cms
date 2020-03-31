@@ -250,7 +250,6 @@ class Schedule extends Base
         $response = $response->withHeader('Content-Type', 'application/json');
         $this->setNoOutput();
         $sanitizedParams = $this->getSanitizer($request->getParams());
-        $dateHelper = new DateFormatHelper();
 
         $displayGroupIds = $sanitizedParams->getIntArray('displayGroupIds', ['default' => []]);
         $campaignId = $sanitizedParams->getInt('campaignId');
@@ -383,8 +382,8 @@ class Schedule extends Base
                 $toDt = Carbon::createFromTimestamp($scheduleEvent->toDt);
 
                 // Set the row from/to date to be an ISO date for display
-                $scheduleEvent->fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt)->format($dateHelper->getSystemFormat());
-                $scheduleEvent->toDt =Carbon::createFromTimestamp($scheduleEvent->toDt)->format($dateHelper->getSystemFormat());
+                $scheduleEvent->fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt)->format(DateFormatHelper::getSystemFormat());
+                $scheduleEvent->toDt =Carbon::createFromTimestamp($scheduleEvent->toDt)->format(DateFormatHelper::getSystemFormat());
 
                 $this->getLog()->debug(sprintf('Start date is ' . $fromDt->toRssString() . ' ' . $scheduleEvent->fromDt));
                 $this->getLog()->debug(sprintf('End date is ' . $toDt->toRssString() . ' ' . $scheduleEvent->toDt));
@@ -478,7 +477,6 @@ class Schedule extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
-        $dateHelper = new DateFormatHelper();
 
         if (!$this->getUser()->checkViewable($displayGroup)) {
             throw new AccessDeniedException();
@@ -492,7 +490,7 @@ class Schedule extends Base
         // Reset the seconds
         $date->second(0);
 
-        $this->getLog()->debug(sprintf('Generating eventList for DisplayGroupId ' . $id . ' on date ' . $date->format($dateHelper->getSystemFormat())));
+        $this->getLog()->debug(sprintf('Generating eventList for DisplayGroupId ' . $id . ' on date ' . $date->format(DateFormatHelper::getSystemFormat())));
 
         // Get a list of scheduled events
         $events = [];
@@ -950,7 +948,6 @@ class Schedule extends Base
     {
         $this->getLog()->debug('Add Schedule');
         $sanitizedParams = $this->getSanitizer($request->getParams());
-        $dateHelper = new DateFormatHelper();
 
         $embed = ($sanitizedParams->getString('embed') != null) ? explode(',', $sanitizedParams->getString('embed')) : [];
 
@@ -1009,9 +1006,9 @@ class Schedule extends Base
                 throw new InvalidArgumentException(__('Please enter a from date'), 'fromDt');
             }
 
-            $logToDt = isset($toDt) ? $toDt->format($dateHelper->getSystemFormat()) : null;
-            $logRecurrenceRange = isset($recurrenceRange) ? $recurrenceRange->format($dateHelper->getSystemFormat()) : null;
-            $this->getLog()->debug('Times received are: FromDt=' . $fromDt->format($dateHelper->getSystemFormat()) . '. ToDt=' . $logToDt . '. recurrenceRange=' . $logRecurrenceRange);
+            $logToDt = isset($toDt) ? $toDt->format(DateFormatHelper::getSystemFormat()) : null;
+            $logRecurrenceRange = isset($recurrenceRange) ? $recurrenceRange->format(DateFormatHelper::getSystemFormat()) : null;
+            $this->getLog()->debug('Times received are: FromDt=' . $fromDt->format(DateFormatHelper::getSystemFormat()) . '. ToDt=' . $logToDt . '. recurrenceRange=' . $logRecurrenceRange);
 
             if (!$schedule->isCustomDayPart() && !$schedule->isAlwaysDayPart()) {
                 // Daypart selected
@@ -1050,9 +1047,9 @@ class Schedule extends Base
                 }
             }
 
-            $logToDt = isset($toDt) ? $toDt->format($dateHelper->getSystemFormat()) : null;
-            $logRecurrenceRange = isset($recurrenceRange) ? $recurrenceRange->format($dateHelper->getSystemFormat()) : null;
-            $this->getLog()->debug('Processed times are: FromDt=' . $fromDt->format($dateHelper->getSystemFormat()) . '. ToDt=' . $logToDt . '. recurrenceRange=' . $logRecurrenceRange );
+            $logToDt = isset($toDt) ? $toDt->format(DateFormatHelper::getSystemFormat()) : null;
+            $logRecurrenceRange = isset($recurrenceRange) ? $recurrenceRange->format(DateFormatHelper::getSystemFormat()) : null;
+            $this->getLog()->debug('Processed times are: FromDt=' . $fromDt->format(DateFormatHelper::getSystemFormat()) . '. ToDt=' . $logToDt . '. recurrenceRange=' . $logRecurrenceRange );
         }
 
         // Ready to do the add
@@ -1139,7 +1136,6 @@ class Schedule extends Base
         // Recurring event start/end
         $eventStart = $sanitizedParams->getInt('eventStart', ['default' => 1000]) / 1000;
         $eventEnd = $sanitizedParams->getInt('eventEnd', ['default' => 1000]) / 1000;
-        $dateHelper = new DateFormatHelper();
 
         $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
@@ -1153,12 +1149,12 @@ class Schedule extends Base
             $schedule->fromDt = '';
             $schedule->toDt = '';
         } else {
-            $schedule->fromDt = Carbon::createFromTimestamp($schedule->fromDt)->format($dateHelper->getSystemFormat());
-            $schedule->toDt = Carbon::createFromTimestamp($schedule->toDt)->format($dateHelper->getSystemFormat());
+            $schedule->fromDt = Carbon::createFromTimestamp($schedule->fromDt)->format(DateFormatHelper::getSystemFormat());
+            $schedule->toDt = Carbon::createFromTimestamp($schedule->toDt)->format(DateFormatHelper::getSystemFormat());
         }
 
         if ($schedule->recurrenceRange != null)
-            $schedule->recurrenceRange = Carbon::createFromTimestamp($schedule->recurrenceRange)->format($dateHelper->getSystemFormat());
+            $schedule->recurrenceRange = Carbon::createFromTimestamp($schedule->recurrenceRange)->format(DateFormatHelper::getSystemFormat());
 
         // Get all reminders
         $scheduleReminders = $this->scheduleReminderFactory->query(null, ['eventId' => $id]);
@@ -1446,7 +1442,6 @@ class Schedule extends Base
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $embed = ($sanitizedParams->getString('embed') != null) ? explode(',', $sanitizedParams->getString('embed')) : [];
-        $dateHelper = new DateFormatHelper();
 
         $schedule = $this->scheduleFactory->getById($id);
         $schedule->load([
@@ -1511,9 +1506,9 @@ class Schedule extends Base
                 throw new InvalidArgumentException(__('Please enter a from date'). 'fromDt');
             }
 
-            $logToDt = isset($toDt) ? $toDt->format($dateHelper->getSystemFormat()) : null;
-            $logRecurrenceRange = isset($recurrenceRange) ? $recurrenceRange->format($dateHelper->getSystemFormat()) : null;
-            $this->getLog()->debug('Times received are: FromDt=' . $fromDt->format($dateHelper->getSystemFormat()) . '. ToDt=' . $logToDt . '. recurrenceRange=' . $logRecurrenceRange);
+            $logToDt = isset($toDt) ? $toDt->format(DateFormatHelper::getSystemFormat()) : null;
+            $logRecurrenceRange = isset($recurrenceRange) ? $recurrenceRange->format(DateFormatHelper::getSystemFormat()) : null;
+            $this->getLog()->debug('Times received are: FromDt=' . $fromDt->format(DateFormatHelper::getSystemFormat()) . '. ToDt=' . $logToDt . '. recurrenceRange=' . $logRecurrenceRange);
 
             if (!$schedule->isCustomDayPart() && !$schedule->isAlwaysDayPart()) {
                 // Daypart selected
@@ -1875,7 +1870,7 @@ class Schedule extends Base
         }
 
         // Is recurring event?
-        $now = Carbon::createFromTimestamp(time());
+        $now = Carbon::now();
         if ($schedule->recurrenceType != '') {
 
             // find the next event from now

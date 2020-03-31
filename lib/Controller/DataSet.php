@@ -28,6 +28,7 @@ use Slim\Views\Twig;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Helper\DataSetUploadHandler;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -1132,7 +1133,7 @@ class DataSet extends Base
                     }
                     else if ($columns[$key] == 3) {
                         // Date
-                        $value = Carbon::createFromTimeString($value)->format('Y-m-d H:i:s');
+                        $value = Carbon::createFromTimeString($value)->format(DateFormatHelper::getSystemFormat());
                     }
                     else if ($columns[$key] == 5) {
                         // Media Id

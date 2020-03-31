@@ -279,7 +279,6 @@ class Soap
         // Sanitize
         $serverKey = $sanitizer->getString('serverKey');
         $hardwareKey = $sanitizer->getString('hardwareKey');
-        $dateHelper = new DateFormatHelper();
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
@@ -348,9 +347,9 @@ class Soap
         $this->setDateFilters();
 
         // Add the filter dates to the RF xml document
-        $fileElements->setAttribute('generated', Carbon::createFromTimestamp(time())->format($dateHelper->getSystemFormat()));
-        $fileElements->setAttribute('fitlerFrom', $this->fromFilter->format($dateHelper->getSystemFormat()));
-        $fileElements->setAttribute('fitlerTo', $this->toFilter->format($dateHelper->getSystemFormat()));
+        $fileElements->setAttribute('generated', Carbon::now()->format(DateFormatHelper::getSystemFormat()));
+        $fileElements->setAttribute('fitlerFrom', $this->fromFilter->format(DateFormatHelper::getSystemFormat()));
+        $fileElements->setAttribute('fitlerTo', $this->toFilter->format(DateFormatHelper::getSystemFormat()));
 
         // Get a list of all layout ids in the schedule right now
         // including any layouts that have been associated to our Display Group
@@ -804,7 +803,6 @@ class Soap
             'hardwareKey' => $hardwareKey
         ]);
         $options = array_merge(['dependentsAsNodes' => false, 'includeOverlays' => false], $options);
-        $dateHelper = new DateFormatHelper();
 
         // Sanitize
         $serverKey = $sanitizer->getString('serverKey');
@@ -854,9 +852,9 @@ class Soap
         $this->setDateFilters();
 
         // Add the filter dates to the RF xml document
-        $layoutElements->setAttribute('generated', Carbon::createFromTimestamp(time())->format($dateHelper->getSystemFormat()));
-        $layoutElements->setAttribute('filterFrom', $this->fromFilter->format($dateHelper->getSystemFormat()));
-        $layoutElements->setAttribute('filterTo', $this->toFilter->format($dateHelper->getSystemFormat()));
+        $layoutElements->setAttribute('generated', Carbon::now()->format(DateFormatHelper::getSystemFormat()));
+        $layoutElements->setAttribute('filterFrom', $this->fromFilter->format(DateFormatHelper::getSystemFormat()));
+        $layoutElements->setAttribute('filterTo', $this->toFilter->format(DateFormatHelper::getSystemFormat()));
 
         try {
             $dbh = $this->getStore()->getConnection();
@@ -958,11 +956,11 @@ class Soap
                     // the current CMS timezone)
                     // Does the Display have a timezone?
                     if ($isSyncTimezone) {
-                        $fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt, $this->display->timeZone)->format($dateHelper->getSystemFormat());
-                        $toDt =  Carbon::createFromTimestamp($scheduleEvent->toDt, $this->display->timeZone)->format($dateHelper->getSystemFormat());
+                        $fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt, $this->display->timeZone)->format(DateFormatHelper::getSystemFormat());
+                        $toDt =  Carbon::createFromTimestamp($scheduleEvent->toDt, $this->display->timeZone)->format(DateFormatHelper::getSystemFormat());
                     } else {
-                        $fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt)->format($dateHelper->getSystemFormat());
-                        $toDt =  Carbon::createFromTimestamp($scheduleEvent->toDt)->format($dateHelper->getSystemFormat());
+                        $fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt)->format(DateFormatHelper::getSystemFormat());
+                        $toDt =  Carbon::createFromTimestamp($scheduleEvent->toDt)->format(DateFormatHelper::getSystemFormat());
                     }
 
                     $scheduleId = $row['eventId'];
@@ -1342,18 +1340,16 @@ class Soap
                 continue;
             }
 
-            $dateHelper = new DateFormatHelper();
-
             // Adjust the date according to the display timezone
             try {
-                $date = ($this->display->timeZone != null) ? Carbon::createFromFormat('Y-m-d H:i:s', $date, $this->display->timeZone)->tz($defaultTimeZone) : Carbon::createFromFormat('Y-m-d H:i:s', $date);
-                $date = $date->format($dateHelper->getSystemFormat());
+                $date = ($this->display->timeZone != null) ? Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $date, $this->display->timeZone)->tz($defaultTimeZone) : Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $date);
+                $date = $date->format(DateFormatHelper::getSystemFormat());
             } catch (\Exception $e) {
                 // Protect against the date format being inreadable
                 $this->getLog()->debug('Date format unreadable on log message: ' . $date);
 
                 // Use now instead
-                $date = Carbon::createFromTimestamp(time())->format($dateHelper->getSystemFormat());
+                $date = Carbon::now()->format(DateFormatHelper::getSystemFormat());
             }
 
             // Get the date and the message (all log types have these)
@@ -1481,10 +1477,8 @@ class Soap
             throw new \SoapFault('Receiver', "Stat XML is empty.");
         }
 
-        $dateHelper = new DateFormatHelper();
-
         // Store an array of parsed stat data for insert
-        $now = Carbon::createFromTimestamp(time());
+        $now = Carbon::now();
 
         // Get the display timezone to use when adjusting log dates.
         $defaultTimeZone = $this->getConfig()->getSetting('defaultTimezone');
@@ -1619,13 +1613,13 @@ class Soap
             try {
                 // From date
                 $fromdt = ($this->display->timeZone != null)
-                    ? Carbon::createFromFormat($dateHelper->getSystemFormat(), $fromdt, $this->display->timeZone)->tz($defaultTimeZone)
-                    : Carbon::createFromFormat($dateHelper->getSystemFormat(), $fromdt);
+                    ? Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $fromdt, $this->display->timeZone)->tz($defaultTimeZone)
+                    : Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $fromdt);
 
                 // To date
                 $todt = ($this->display->timeZone != null)
-                    ? Carbon::createFromFormat($dateHelper->getSystemFormat(), $todt, $this->display->timeZone)->tz($defaultTimeZone)
-                    : Carbon::createFromFormat($dateHelper->getSystemFormat(), $todt);
+                    ? Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $todt, $this->display->timeZone)->tz($defaultTimeZone)
+                    : Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $todt);
 
                 // Do we need to set the duration of this record (we will do for older individually collected stats)
                 if ($duration == '') {
@@ -1869,7 +1863,7 @@ class Soap
         if ($this->getConfig()->getSetting('PHONE_HOME') == 1) {
             // Find out when we last PHONED_HOME :D
             // If it's been > 28 days since last PHONE_HOME then
-            if ($this->getConfig()->getSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 28))) {
+            if ($this->getConfig()->getSetting('PHONE_HOME_DATE') < Carbon::now()->subSeconds(60 * 60 * 24 * 28)->format('U')) {
 
                 try {
                     $dbh = $this->getStore()->getConnection();
@@ -1891,7 +1885,7 @@ class Soap
                     // Set PHONE_HOME_TIME to NOW.
                     $sth = $dbh->prepare('UPDATE `setting` SET `value` = :time WHERE `setting`.`setting` = :setting LIMIT 1');
                     $sth->execute(array(
-                        'time' => time(),
+                        'time' => Carbon::now()->format('U'),
                         'setting' => 'PHONE_HOME_DATE'
                     ));
 
@@ -1943,7 +1937,6 @@ class Soap
     protected function alertDisplayUp()
     {
         $maintenanceEnabled = $this->getConfig()->getSetting('MAINTENANCE_ENABLED');
-        $dateHelper = new DateFormatHelper();
 
         if ($this->display->loggedIn == 0) {
 
@@ -2001,12 +1994,12 @@ class Soap
                 if ($operatingHours) {
                     $subject = sprintf(__("Recovery for Display %s"), $this->display->display);
                     $body = sprintf(__("Display ID %d is now back online %s"), $this->display->displayId,
-                        Carbon::createFromTimestamp(time())->format($dateHelper->getSystemFormat()));
+                        Carbon::now()->format(DateFormatHelper::getSystemFormat()));
 
                     // Create a notification assigned to system wide user groups
                     try {
                         $notification = $this->notificationFactory->createSystemNotification($subject, $body,
-                            Carbon::createFromTimestamp(time()));
+                            Carbon::now());
 
                         // Add in any displayNotificationGroups, with permissions
                         foreach ($this->userGroupFactory->getDisplayNotificationGroups($this->display->displayGroupId) as $group) {
@@ -2064,7 +2057,6 @@ class Soap
 
         $xmdsLimit = $this->getConfig()->getSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB');
         $displayBandwidthLimit = $this->display->bandwidthLimit;
-        $dateHelper = new DateFormatHelper();
 
         try {
             $bandwidthUsage = 0;
@@ -2073,7 +2065,7 @@ class Soap
                 // Bandwidth Exceeded
                 // Create a notification if we don't already have one today for this display.
                 $subject = __('Bandwidth allowance exceeded');
-                $date = Carbon::createFromTimestamp(time());
+                $date = Carbon::now();
 
                 if (count($this->notificationFactory->getBySubjectAndDate($subject, $date->startOfDay()->format('U'), $date->addDay()->startOfDay()->format('U'))) <= 0) {
 
@@ -2082,7 +2074,7 @@ class Soap
                     $notification = $this->notificationFactory->createSystemNotification(
                         $subject,
                         $body,
-                        Carbon::createFromTimestamp(time())
+                        Carbon::now()
                     );
 
                     $notification->save();
@@ -2096,7 +2088,7 @@ class Soap
                 // Bandwidth Exceeded
                 // Create a notification if we don't already have one today for this display.
                 $subject = __(sprintf('Display ID %d exceeded the bandwidth limit', $this->display->displayId));
-                $date = Carbon::createFromTimestamp(time());
+                $date = Carbon::now();
 
                 if (count($this->notificationFactory->getBySubjectAndDate($subject, $date->startOfDay()->format('U'), $date->addDay()->startOfDay()->format('U'))) <= 0) {
 
@@ -2105,7 +2097,7 @@ class Soap
                     $notification = $this->notificationFactory->createSystemNotification(
                         $subject,
                         $body,
-                        Carbon::createFromTimestamp(time())
+                        Carbon::now()
                     );
 
                     $notification->save();
@@ -2171,7 +2163,7 @@ class Soap
         // it may well be less than 1 hour, and if so we cannot do hour to hour time bands, we need to do
         // now, forwards.
         // Start with now:
-        $fromFilter = Carbon::createFromTimestamp(time());
+        $fromFilter = Carbon::now();
 
         // If this Display is in a different timezone, then we need to set that here for these filter criteria
         if (!empty($this->display->timeZone)) {
@@ -2198,8 +2190,8 @@ class Soap
         // Make sure our filters are expressed in CMS time, so that when we run the query we don't lose the timezone
         $this->localFromFilter = $fromFilter;
         $this->localToFilter = $toFilter;
-        $this->fromFilter = Carbon::createFromFormat('Y-m-d H:i:s', $fromFilter);
-        $this->toFilter = Carbon::createFromFormat('Y-m-d H:i:s', $toFilter);
+        $this->fromFilter = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $fromFilter);
+        $this->toFilter = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $toFilter);
 
         $this->getLog()->debug(sprintf('FromDT = %s [%d]. ToDt = %s [%d]', $fromFilter->toRssString(), $fromFilter->format('U'), $toFilter->toRssString(), $toFilter->format('U')));
     }

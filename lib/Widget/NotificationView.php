@@ -220,12 +220,12 @@ class NotificationView extends ModuleWidget
 
         if ($isPreview)
             $notifications = $this->getNotificationFactory()->query(['releaseDt DESC', 'createDt DESC', 'subject'], [
-                'releaseDt' => ($age === 0) ? null : Carbon::createFromTimestamp(time())->subMinutes($age)->format('U'),
+                'releaseDt' => ($age === 0) ? null : Carbon::now()->subMinutes($age)->format('U'),
                 'userId' => $this->getUser()->userId
             ]);
         else
             $notifications = $this->getNotificationFactory()->query(['releaseDt DESC', 'createDt DESC', 'subject'], [
-                'releaseDt' => ($age === 0) ? null : Carbon::createFromTimestamp(time())->subMinutes($age)->format('U'),
+                'releaseDt' => ($age === 0) ? null : Carbon::now()->subMinutes($age)->format('U'),
                 'displayId' => $displayId
             ]);
 
@@ -345,7 +345,7 @@ class NotificationView extends ModuleWidget
 
         // Get the date/time of the last notification drawn by this Widget
         $notifications = $this->getNotificationFactory()->query(['releaseDt DESC', 'createDt DESC'], [
-            'releaseDt' => ($age === 0) ? null : Carbon::createFromTimestamp(time())->subMinutes($age)->format('U'),
+            'releaseDt' => ($age === 0) ? null : Carbon::now()->subMinutes($age)->format('U'),
             'displayId' => $displayId,
             'length' => 1
         ]);

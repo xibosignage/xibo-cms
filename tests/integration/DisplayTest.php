@@ -20,6 +20,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Tests\Integration;
+use Carbon\Carbon;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 
@@ -118,7 +120,7 @@ class DisplayTest extends \Xibo\Tests\LocalWebTestCase
         $response = $this->sendRequest('PUT','/display/' . $display->displayId, [
             'display' => 'API EDITED',
             'defaultLayoutId' => $display->defaultLayoutId,
-            'auditingUntil' => date('Y-m-d H:i:s', $auditingTime),
+            'auditingUntil' => Carbon::createFromTimestamp($auditingTime)->format(DateFormatHelper::getSystemFormat()),
             'licensed' => $display->licensed,
             'license' => $display->license,
             'incSchedule' => $display->incSchedule,
@@ -235,7 +237,7 @@ pbBhRgkIdydXoZZdjQIDAQAB
             $display->display,
             $display->description,
             $display->tags,
-            date('Y-m-d H:i:s', $auditingTime),
+            Carbon::createFromTimestamp($auditingTime)->format(DateFormatHelper::getSystemFormat()),
             $display->defaultLayoutId,
             $display->licensed,
             $display->license,

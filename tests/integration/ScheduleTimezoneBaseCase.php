@@ -24,6 +24,7 @@ namespace Xibo\Tests\integration;
 
 use Carbon\Carbon;
 use Xibo\Entity\Display;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Tests\Helper\DisplayHelperTrait;
 use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
@@ -117,11 +118,11 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
         $localNow = Carbon::now()->setTimezone($this->timeZone);
         $date = $localNow->copy()->addHour()->startOfHour();
 
-        $this->getLogger()->debug('Event start will be at: ' . $date->format('Y-m-d H:i:s'));
+        $this->getLogger()->debug('Event start will be at: ' . $date->format(DateFormatHelper::getSystemFormat()));
 
         $response = $this->sendRequest('POST','/schedule', [
-            'fromDt' => $date->format('Y-m-d H:i:s'),
-            'toDt' => $date->copy()->addMinutes(30)->format('Y-m-d H:i:s'),
+            'fromDt' => $date->format(DateFormatHelper::getSystemFormat()),
+            'toDt' => $date->copy()->addMinutes(30)->format(DateFormatHelper::getSystemFormat()),
             'eventTypeId' => 1,
             'campaignId' => $this->layout->campaignId,
             'displayGroupIds' => [$this->display->displayGroupId],
@@ -143,8 +144,8 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
         //$this->getLogger()->debug($xml->saveXML());
 
         // Check the filter from and to dates are correct
-        $this->assertEquals($localNow->startOfHour()->format('Y-m-d H:i:s'), $xml->documentElement->getAttribute('filterFrom'), 'Filter from date incorrect');
-        $this->assertEquals($localNow->addDays(2)->format('Y-m-d H:i:s'), $xml->documentElement->getAttribute('filterTo'), 'Filter to date incorrect');
+        $this->assertEquals($localNow->startOfHour()->format(DateFormatHelper::getSystemFormat()), $xml->documentElement->getAttribute('filterFrom'), 'Filter from date incorrect');
+        $this->assertEquals($localNow->addDays(2)->format(DateFormatHelper::getSystemFormat()), $xml->documentElement->getAttribute('filterTo'), 'Filter to date incorrect');
 
         // Check our event is present.
         $layouts = $xml->getElementsByTagName('layout');
@@ -153,7 +154,7 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
 
         foreach ($layouts as $layout) {
             $xmlFromDt = $layout->getAttribute('fromdt');
-            $this->assertEquals($date->format('Y-m-d H:i:s'), $xmlFromDt, 'From date doesnt match: ' . $xmlFromDt);
+            $this->assertEquals($date->format(DateFormatHelper::getSystemFormat()), $xmlFromDt, 'From date doesnt match: ' . $xmlFromDt);
         }
     }
 
@@ -165,11 +166,11 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
         $localNow = Carbon::now()->setTimezone($this->timeZone);
         $date = $localNow->copy()->subDay()->addHour()->startOfHour();
 
-        $this->getLogger()->debug('Event start will be at: ' . $date->format('Y-m-d H:i:s'));
+        $this->getLogger()->debug('Event start will be at: ' . $date->format(DateFormatHelper::getSystemFormat()));
 
         $response = $this->sendRequest('POST','/schedule', [
-            'fromDt' => $date->format('Y-m-d H:i:s'),
-            'toDt' => $date->copy()->addMinutes(30)->format('Y-m-d H:i:s'),
+            'fromDt' => $date->format(DateFormatHelper::getSystemFormat()),
+            'toDt' => $date->copy()->addMinutes(30)->format(DateFormatHelper::getSystemFormat()),
             'eventTypeId' => 1,
             'campaignId' => $this->layout->campaignId,
             'displayGroupIds' => [$this->display->displayGroupId],
@@ -191,8 +192,8 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
         //$this->getLogger()->debug($xml->saveXML());
 
         // Check the filter from and to dates are correct
-        $this->assertEquals($localNow->startOfHour()->format('Y-m-d H:i:s'), $xml->documentElement->getAttribute('filterFrom'), 'Filter from date incorrect');
-        $this->assertEquals($localNow->addDays(2)->format('Y-m-d H:i:s'), $xml->documentElement->getAttribute('filterTo'), 'Filter to date incorrect');
+        $this->assertEquals($localNow->startOfHour()->format(DateFormatHelper::getSystemFormat()), $xml->documentElement->getAttribute('filterFrom'), 'Filter from date incorrect');
+        $this->assertEquals($localNow->addDays(2)->format(DateFormatHelper::getSystemFormat()), $xml->documentElement->getAttribute('filterTo'), 'Filter to date incorrect');
 
         // Check our event is present.
         $layouts = $xml->getElementsByTagName('layout');
@@ -202,7 +203,7 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
             $date->addDay();
 
             $xmlFromDt = $layout->getAttribute('fromdt');
-            $this->assertEquals($date->format('Y-m-d H:i:s'), $xmlFromDt, 'From date doesnt match: ' . $xmlFromDt);
+            $this->assertEquals($date->format(DateFormatHelper::getSystemFormat()), $xmlFromDt, 'From date doesnt match: ' . $xmlFromDt);
         }
     }
 
@@ -217,11 +218,11 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
         $date = Carbon::now()->copy()->addHour()->startOfHour();
         $localDate = $date->copy()->timezone($this->timeZone);
 
-        $this->getLogger()->debug('Event start will be at: ' . $date->format('Y-m-d H:i:s') . ' which is ' . $localDate->format('Y-m-d H:i:s') . ' local time.');
+        $this->getLogger()->debug('Event start will be at: ' . $date->format(DateFormatHelper::getSystemFormat()) . ' which is ' . $localDate->format(DateFormatHelper::getSystemFormat()) . ' local time.');
 
         $response = $this->sendRequest('POST','/schedule', [
-            'fromDt' => $date->format('Y-m-d H:i:s'),
-            'toDt' => $date->copy()->addMinutes(30)->format('Y-m-d H:i:s'),
+            'fromDt' => $date->format(DateFormatHelper::getSystemFormat()),
+            'toDt' => $date->copy()->addMinutes(30)->format(DateFormatHelper::getSystemFormat()),
             'eventTypeId' => 1,
             'campaignId' => $this->layout->campaignId,
             'displayGroupIds' => [$this->display->displayGroupId],
@@ -243,15 +244,15 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
         //$this->getLogger()->debug($xml->saveXML());
 
         // Check the filter from and to dates are correct
-        $this->assertEquals($localNow->startOfHour()->format('Y-m-d H:i:s'), $xml->documentElement->getAttribute('filterFrom'), 'Filter from date incorrect');
-        $this->assertEquals($localNow->addDays(2)->format('Y-m-d H:i:s'), $xml->documentElement->getAttribute('filterTo'), 'Filter to date incorrect');
+        $this->assertEquals($localNow->startOfHour()->format(DateFormatHelper::getSystemFormat()), $xml->documentElement->getAttribute('filterFrom'), 'Filter from date incorrect');
+        $this->assertEquals($localNow->addDays(2)->format(DateFormatHelper::getSystemFormat()), $xml->documentElement->getAttribute('filterTo'), 'Filter to date incorrect');
 
         // Check our event is present.
         $layouts = $xml->getElementsByTagName('layout');
 
         foreach ($layouts as $layout) {
             $xmlFromDt = $layout->getAttribute('fromdt');
-            $this->assertEquals($localDate->format('Y-m-d H:i:s'), $xmlFromDt, 'From date doesnt match: ' . $xmlFromDt);
+            $this->assertEquals($localDate->format(DateFormatHelper::getSystemFormat()), $xmlFromDt, 'From date doesnt match: ' . $xmlFromDt);
         }
     }
 
@@ -266,11 +267,11 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
         $date = Carbon::now()->copy()->subDay()->addHour()->startOfHour();
         $localDate = $date->copy()->timezone($this->timeZone);
 
-        $this->getLogger()->debug('Event start will be at: ' . $date->format('Y-m-d H:i:s') . ' which is ' . $localDate->format('Y-m-d H:i:s') . ' local time.');
+        $this->getLogger()->debug('Event start will be at: ' . $date->format(DateFormatHelper::getSystemFormat()) . ' which is ' . $localDate->format(DateFormatHelper::getSystemFormat()) . ' local time.');
 
         $response = $this->sendRequest('POST','/schedule', [
-            'fromDt' => $date->format('Y-m-d H:i:s'),
-            'toDt' => $date->copy()->addMinutes(30)->format('Y-m-d H:i:s'),
+            'fromDt' => $date->format(DateFormatHelper::getSystemFormat()),
+            'toDt' => $date->copy()->addMinutes(30)->format(DateFormatHelper::getSystemFormat()),
             'eventTypeId' => 1,
             'campaignId' => $this->layout->campaignId,
             'displayGroupIds' => [$this->display->displayGroupId],
@@ -292,8 +293,8 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
         //$this->getLogger()->debug($xml->saveXML());
 
         // Check the filter from and to dates are correct
-        $this->assertEquals($localNow->startOfHour()->format('Y-m-d H:i:s'), $xml->documentElement->getAttribute('filterFrom'), 'Filter from date incorrect');
-        $this->assertEquals($localNow->addDays(2)->format('Y-m-d H:i:s'), $xml->documentElement->getAttribute('filterTo'), 'Filter to date incorrect');
+        $this->assertEquals($localNow->startOfHour()->format(DateFormatHelper::getSystemFormat()), $xml->documentElement->getAttribute('filterFrom'), 'Filter from date incorrect');
+        $this->assertEquals($localNow->addDays(2)->format(DateFormatHelper::getSystemFormat()), $xml->documentElement->getAttribute('filterTo'), 'Filter to date incorrect');
 
         // Check our event is present.
         $layouts = $xml->getElementsByTagName('layout');
@@ -303,7 +304,7 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
             $localDate->addDay();
 
             $xmlFromDt = $layout->getAttribute('fromdt');
-            $this->assertEquals($localDate->format('Y-m-d H:i:s'), $xmlFromDt, 'From date doesnt match: ' . $xmlFromDt);
+            $this->assertEquals($localDate->format(DateFormatHelper::getSystemFormat()), $xmlFromDt, 'From date doesnt match: ' . $xmlFromDt);
         }
     }
 }

@@ -23,6 +23,7 @@
 
 namespace Xibo\Factory;
 
+use Carbon\Carbon;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\User;
 use Xibo\Helper\SanitizerService;
@@ -254,11 +255,11 @@ class PlaylistFactory extends BaseFactory
                 // Not 0 and behind now.
                 $body .= ' AND `playlist`.requiresDurationUpdate <= :requiresDurationUpdate ';
                 $body .= ' AND `playlist`.requiresDurationUpdate <> 0 ';
-                $params['requiresDurationUpdate'] = time();
+                $params['requiresDurationUpdate'] = Carbon::now()->format('U');
             } else {
                 // Ahead of now means we don't need to update yet, or we are set to 0 and we never update
                 $body .= ' AND (`playlist`.requiresDurationUpdate > :requiresDurationUpdate OR `playlist`.requiresDurationUpdate = 0)';
-                $params['requiresDurationUpdate'] = time();
+                $params['requiresDurationUpdate'] = Carbon::now()->format('U');
             }
         }
 

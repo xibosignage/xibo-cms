@@ -33,6 +33,7 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -154,7 +155,7 @@ class Report extends Base
             if ($reportSchedule->lastRunDt == 0) {
                 $nextRunDt = Carbon::now()->format('U');
             } else {
-                $nextRunDt = $cron->getNextRunDate(Carbon::createFromFormat('U', $reportSchedule->lastRunDt))->format('U');
+                $nextRunDt = $cron->getNextRunDate(Carbon::createFromTimestamp($reportSchedule->lastRunDt))->format('U');
             }
 
             $reportSchedule->nextRunDt = $nextRunDt;
@@ -340,7 +341,7 @@ class Report extends Base
         $reportSchedule->lastRunDt = 0;
         $reportSchedule->previousRunDt = 0;
         $reportSchedule->userId = $this->getUser()->userId;
-        $reportSchedule->createdDt = Carbon::createFromTimestamp(time())->format('U');
+        $reportSchedule->createdDt = Carbon::now()->format('U');
 
         $reportSchedule->save();
 
@@ -943,7 +944,7 @@ class Report extends Base
                     'title' => $savedReport->saveAs,
                     'periodStart' => $savedReportData['chartData']['periodStart'],
                     'periodEnd' => $savedReportData['chartData']['periodEnd'],
-                    'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format('Y-m-d H:i:s'),
+                    'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat()),
                     'tableData' => isset($tableData) ? $tableData : null,
                     'src' => isset($src) ? $src : null,
                     'placeholder' => isset($placeholder) ? $placeholder : null

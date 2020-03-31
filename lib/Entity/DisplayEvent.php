@@ -7,6 +7,7 @@
 
 
 namespace Xibo\Entity;
+use Carbon\Carbon;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -48,7 +49,7 @@ class DisplayEvent implements \JsonSerializable
             INSERT INTO `displayevent` (eventDate, start, end, displayID)
               VALUES (:eventDate, :start, :end, :displayId)
         ', [
-            'eventDate' => time(),
+            'eventDate' => Carbon::now()->format('U'),
             'start' => $this->start,
             'end' => $this->end,
             'displayId' => $this->displayId
@@ -69,7 +70,7 @@ class DisplayEvent implements \JsonSerializable
     public function displayUp($displayId)
     {
         $this->getStore()->update('UPDATE `displayevent` SET `end` = :toDt WHERE displayId = :displayId AND `end` IS NULL', [
-            'toDt' => time(),
+            'toDt' => Carbon::now()->format('U'),
             'displayId' => $displayId
         ]);
     }

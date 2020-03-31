@@ -34,6 +34,7 @@ use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DataSetRssFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -689,7 +690,7 @@ class DataSetRss extends Base
             $dataSet = $this->dataSetFactory->getById($feed->dataSetId);
 
             // What is the edit date of this data set
-            $dataSetEditDate = ($dataSet->lastDataEdit == 0) ? Carbon::createFromTimestamp(time())->subMonths(2) : Carbon::createFromTimestamp($dataSet->lastDataEdit);
+            $dataSetEditDate = ($dataSet->lastDataEdit == 0) ? Carbon::now()->subMonths(2) : Carbon::createFromTimestamp($dataSet->lastDataEdit);
 
             // Do we have this feed in the cache?
             $cache = $this->pool->getItem('/dataset/rss/' . $feed->id);
@@ -698,7 +699,7 @@ class DataSetRss extends Base
 
             if ($cache->isMiss() || $cache->getCreation() < $dataSetEditDate) {
                 // We need to recache
-                $this->getLog()->debug('Generating RSS feed and saving to cache. Created on ' . (($cache->getCreation() !== false) ? $cache->getCreation()->format('Y-m-d H:i:s') : 'never'));
+                $this->getLog()->debug('Generating RSS feed and saving to cache. Created on ' . (($cache->getCreation() !== false) ? $cache->getCreation()->format(DateFormatHelper::getSystemFormat()) : 'never'));
 
                 $output = $this->generateFeed($feed, $dataSetEditDate, $dataSet);
 

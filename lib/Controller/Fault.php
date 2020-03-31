@@ -152,7 +152,7 @@ class Fault extends Base
             fputcsv($out, ['logId', 'runNo', 'logDate', 'channel', 'page', 'function', 'message', 'display.display', 'type']);
 
             // Do some post processing
-            foreach ($this->logFactory->query(['logId'], ['fromDt' => (time() - (60 * 10))]) as $row) {
+            foreach ($this->logFactory->query(['logId'], ['fromDt' => (Carbon::now()->subSeconds(60 * 10)->format('U'))]) as $row) {
                 /* @var \Xibo\Entity\LogEntry $row */
                 fputcsv($out, [$row->logId, $row->runNo, $row->logDate, $row->channel, $row->page, $row->function, $row->message, $row->display, $row->type]);
             }
@@ -233,7 +233,7 @@ class Fault extends Base
     public function debugOn(Request $request, Response $response)
     {
         $this->getConfig()->changeSetting('audit', 'debug');
-        $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', Carbon::createFromTimestamp(time())->addMinutes(30)->format('U'));
+        $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', Carbon::now()->addMinutes(30)->format('U'));
 
         // Return
         $this->getState()->hydrate([

@@ -14,6 +14,7 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -128,9 +129,9 @@ class ProofOfPlay implements ReportInterface
         return [
             'template' => 'proofofplay-report-form',
             'data' =>  [
-                'fromDate' => Carbon::createFromTimestamp(time() - (86400 * 35))->format('Y-m-d H:i:s'),
-                'fromDateOneDay' => Carbon::createFromTimestamp(time() - 86400)->format('Y-m-d H:i:s'),
-                'toDate' => Carbon::createFromTimestamp(time())->format('Y-m-d H:i:s'),
+                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
+                'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
+                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
                 'availableReports' => $this->reportService->listReports()
             ]
         ];
@@ -324,7 +325,7 @@ class ProofOfPlay implements ReportInterface
             'chartData' => [
                 'savedReport' => $savedReport,
                 'filterInfo' => $filterInfo,
-                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format('Y-m-d H:i:s'),
+                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat()),
                 'periodStart' => isset($json['periodStart']) ? $json['periodStart'] : '',
                 'periodEnd' => isset($json['periodEnd']) ? $json['periodEnd'] : '',
                 'result' => json_encode($json['result']),
@@ -523,8 +524,8 @@ class ProofOfPlay implements ReportInterface
             $entry['tag'] = $sanitizedRow->getString('tag');
             $entry['numberPlays'] = $sanitizedRow->getInt('numberPlays');
             $entry['duration'] = $sanitizedRow->getInt('duration');
-            $entry['minStart'] = Carbon::createFromTimestamp($row['minStart'])->format('Y-m-d H:i:s');
-            $entry['maxEnd'] =  Carbon::createFromTimestamp($row['maxEnd'])->format('Y-m-d H:i:s');
+            $entry['minStart'] = Carbon::createFromTimestamp($row['minStart'])->format(DateFormatHelper::getSystemFormat());
+            $entry['maxEnd'] =  Carbon::createFromTimestamp($row['maxEnd'])->format(DateFormatHelper::getSystemFormat());
             $entry['mediaId'] = $sanitizedRow->getInt('mediaId');
 
             $rows[] = $entry;
@@ -542,8 +543,8 @@ class ProofOfPlay implements ReportInterface
         $this->getState()->setData($rows);
 
         return [
-            'periodStart' => $fromDt->format('Y-m-d H:i:s'),
-            'periodEnd' => $toDt->format('Y-m-d H:i:s'),
+            'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
             'result' => $rows,
         ];
 
@@ -851,8 +852,8 @@ class ProofOfPlay implements ReportInterface
 
         return [
             'result' => $rows,
-            'periodStart' => Carbon::createFromTimestamp($fromDt)->format('Y-m-d H:i:s'),
-            'periodEnd' => Carbon::createFromTimestamp($toDt)->format('Y-m-d H:i:s'),
+            'periodStart' => Carbon::createFromTimestamp($fromDt)->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => Carbon::createFromTimestamp($toDt)->format(DateFormatHelper::getSystemFormat()),
             'count' => count($rows),
             'totalStats' => isset($results[0]['total']) ? $results[0]['total'] : 0,
         ];
@@ -1137,8 +1138,8 @@ class ProofOfPlay implements ReportInterface
 
         return [
             'result' => $rows,
-            'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format('Y-m-d H:i:s'),
-            'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format('Y-m-d H:i:s'),
+            'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
             'count' => count($rows),
             'totalStats' => $totalStats,
         ];

@@ -360,8 +360,8 @@ class Display extends Base
             'errorSearch' => http_build_query([
                 'displayId' => $display->displayId,
                 'type' => 'ERROR',
-                'fromDt' => Carbon::createFromTimestamp(time())->subHours(12)->format('Y-m-d H:i:s'),
-                'toDt' => Carbon::createFromTimestamp(time())->format('Y-m-d H:i:s')
+                'fromDt' => Carbon::now()->subHours(12)->format(DateFormatHelper::getSystemFormat()),
+                'toDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
             ]),
             'inventory' => [
                 'layouts' => $layouts,
@@ -376,9 +376,9 @@ class Display extends Base
                 'sizeRemaining' => round((double)($totalSize - $completeSize) / (pow(1024, $base)), 2),
             ],
             'defaults' => [
-                'fromDate' => Carbon::createFromTimestamp(time() - (86400 * 35))->format('Y-m-d H:i:s'),
-                'fromDateOneDay' => Carbon::createFromTimestamp(time() - 86400)->format('Y-m-d H:i:s'),
-                'toDate' => Carbon::createFromTimestamp(time())->format('Y-m-d H:i:s')
+                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
+                'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
+                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
             ]
         ]);
 
@@ -572,8 +572,8 @@ class Display extends Base
             $display->getCurrentLayoutId($this->pool);
 
             if ($this->isApi($request)) {
-                $display->lastAccessed = Carbon::createFromTimestamp($display->lastAccessed)->format('Y-m-d H:i:s');
-                $display->auditingUntil = ($display->auditingUntil == 0) ? 0 :  Carbon::createFromTimestamp($display->auditingUntil)->format('Y-m-d H:i:s');
+                $display->lastAccessed = Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat());
+                $display->auditingUntil = ($display->auditingUntil == 0) ? 0 :  Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
                 $display->storageAvailableSpace = ByteFormatter::format($display->storageAvailableSpace);
                 $display->storageTotalSpace = ByteFormatter::format($display->storageTotalSpace);
                 continue;
@@ -888,15 +888,14 @@ class Display extends Base
         }
 
         // Dates
-        $display->auditingUntilIso =  Carbon::createFromTimestamp($display->auditingUntil)->format('Y-m-d H:i:s');
+        $display->auditingUntilIso =  Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
 
         // Get the settings from the profile
         $profile = $display->getSettings();
-        $dateFormatHelper = new DateFormatHelper();
 
         // Get a list of timezones
         $timeZones = [];
-        foreach ($dateFormatHelper->timezoneList() as $key => $value) {
+        foreach (DateFormatHelper::timezoneList()as $key => $value) {
             $timeZones[] = ['id' => $key, 'value' => $value];
         }
 
@@ -1179,7 +1178,6 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id, true);
         $sanitizedParams = $this->getSanitizer($request->getParams());
-        $dateHelper = new DateFormatHelper();
 
         if (!$this->getUser()->checkEditable($display)) {
             throw new AccessDeniedException();
@@ -1244,8 +1242,8 @@ class Display extends Base
         $display->save();
 
         if ($this->isApi($request)) {
-            $display->lastAccessed = Carbon::createFromTimestamp($display->lastAccessed)->format($dateHelper->getSystemFormat());
-            $display->auditingUntil = ($display->auditingUntil == 0) ? 0 : Carbon::createFromTimestamp($display->auditingUntil)->format($dateHelper->getSystemFormat());
+            $display->lastAccessed = Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat());
+            $display->auditingUntil = ($display->auditingUntil == 0) ? 0 : Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
         }
 
         // Return
@@ -1653,7 +1651,7 @@ class Display extends Base
 
         WakeOnLan::TransmitWakeOnLan($display->macAddress, $display->secureOn, $display->broadCastAddress, $display->cidr, '9', $this->getLog());
 
-        $display->lastWakeOnLanCommandSent = time();
+        $display->lastWakeOnLanCommandSent = Carbon::now()->format('U');
         $display->save(['validate' => false]);
 
         // Return
@@ -1693,7 +1691,7 @@ class Display extends Base
             $timeOut = $display->lastAccessed + $timeoutToTestAgainst;
 
             // If the last time we accessed is less than now minus the time out
-            if ($timeOut < time()) {
+            if ($timeOut < Carbon::now()->format('U')) {
                 $this->getLog()->debug('Timed out display. Last Accessed: ' . date('Y-m-d h:i:s', $display->lastAccessed) . '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
 
                 // Is this the first time this display has gone "off-line"
@@ -1763,10 +1761,10 @@ class Display extends Base
                     if ($operatingHours) {
                         $subject = sprintf(__("Alert for Display %s"), $display->display);
                         $body = sprintf(__("Display ID %d is offline since %s."), $display->displayId,
-                            Carbon::createFromTimestamp($display->lastAccessed)->format('Y-m-d H:i:s'));
+                            Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat()));
 
                         // Add to system
-                        $notification = $this->notificationFactory->createSystemNotification($subject, $body, Carbon::createFromTimestamp(time()));
+                        $notification = $this->notificationFactory->createSystemNotification($subject, $body, Carbon::now());
 
                         // Add in any displayNotificationGroups, with permissions
                         foreach ($this->userGroupFactory->getDisplayNotificationGroups($display->displayGroupId) as $group) {

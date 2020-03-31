@@ -756,7 +756,7 @@ class Playlist implements \JsonSerializable
     {
         $this->getLog()->debug('Adding Playlist ' . $this->name);
 
-        $time = date('Y-m-d H:i:s');
+        $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
 
         $sql = '
         INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `createdDt`, `modifiedDt`, `requiresDurationUpdate`, `enableStat`) 
@@ -813,7 +813,7 @@ class Playlist implements \JsonSerializable
             'isDynamic' => $this->isDynamic,
             'filterMediaName' => $this->filterMediaName,
             'filterMediaTags' => $this->filterMediaTags,
-            'modifiedDt' => date('Y-m-d H:i:s'),
+            'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'requiresDurationUpdate' => $this->requiresDurationUpdate,
             'enableStat' => $this->enableStat
         ));
@@ -828,11 +828,10 @@ class Playlist implements \JsonSerializable
      */
     public function notifyLayouts()
     {
-        $dateHelper = new DateFormatHelper();
         // Notify the Playlist
         $this->getStore()->update('UPDATE `playlist` SET requiresDurationUpdate = 1, `modifiedDT` = :modifiedDt WHERE playlistId = :playlistId', [
             'playlistId' => $this->playlistId,
-            'modifiedDt' => Carbon::createFromTimestamp(time())->format($dateHelper->getSystemFormat())
+            'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
         ]);
 
         $this->getStore()->update('
@@ -847,7 +846,7 @@ class Playlist implements \JsonSerializable
             )
         ', [
             'playlistId' => $this->playlistId,
-            'modifiedDt' => Carbon::createFromTimestamp(time())->format($dateHelper->getSystemFormat())
+            'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
         ]);
     }
 

@@ -42,6 +42,7 @@ use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Media;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -430,13 +431,13 @@ class ForecastIo extends ModuleWidget
              $rows = array();
              foreach ($data['currently'] as $key => $value) {
                  if (stripos($key, 'time')) {
-                     $value = Carbon::createFromTimestamp($value)->format('Y-m-d H:i:s');
+                     $value = Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
                  }
                  $rows[] = array('forecast' => __('Current'), 'key' => $key, 'value' => $value);
              }
              foreach ($data['daily']['data'][0] as $key => $value) {
                  if (stripos($key, 'time')) {
-                     $value = Carbon::createFromTimestamp($value)->format('Y-m-d H:i:s');
+                     $value = Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
                  }
                  $rows[] = array('forecast' => __('Daily'), 'key' => $key, 'value' => $value);
              }

@@ -386,7 +386,7 @@ class Schedule implements \JsonSerializable
             return true;
 
         // From Date and To Date are in UNIX format
-        $currentDate = Carbon::createFromTimestamp(time());
+        $currentDate = Carbon::now();
         $rfLookAhead = clone $currentDate;
         $rfLookAhead->addSeconds(intval($this->config->getSetting('REQUIRED_FILES_LOOKAHEAD')));
 
@@ -761,8 +761,6 @@ class Schedule implements \JsonSerializable
             return $this->scheduleEvents;
         }
 
-        $dateHelper = new DateFormatHelper();
-
         // Copy the dates as we are going to be operating on them.
         $fromDt = $fromDt->copy();
         $toDt = $toDt->copy();
@@ -775,7 +773,7 @@ class Schedule implements \JsonSerializable
 
         // What if we are requesting a single point in time?
         if ($fromDt == $toDt) {
-            $this->log->debug('Requesting event for a single point in time: ' . $fromDt->format($dateHelper->getSystemFormat()));
+            $this->log->debug('Requesting event for a single point in time: ' . $fromDt->format(DateFormatHelper::getSystemFormat()));
         }
 
         $events = [];
@@ -867,11 +865,10 @@ class Schedule implements \JsonSerializable
     {
         $generateFromDt->copy()->startOfMonth();
         $generateToDt = $generateFromDt->copy()->addMonth();
-        $dateHelper = new DateFormatHelper();
 
         $this->getLog()->debug('Request for schedule events on eventId ' . $this->eventId
-            . ' from: ' . Carbon::createFromTimestamp($generateFromDt->format($dateHelper->getSystemFormat()))
-            . ' to: ' . Carbon::createFromTimestamp($generateToDt->format($dateHelper->getSystemFormat()))
+            . ' from: ' . Carbon::createFromTimestamp($generateFromDt->format(DateFormatHelper::getSystemFormat()))
+            . ' to: ' . Carbon::createFromTimestamp($generateToDt->format(DateFormatHelper::getSystemFormat()))
             . ' [eventId:' . $this->eventId . ']'
         );
 

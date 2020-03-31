@@ -21,6 +21,7 @@
  */
 namespace Xibo\Entity;
 
+use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -32,6 +33,7 @@ use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -316,7 +318,7 @@ class Media implements \JsonSerializable
         $this->permissions = [];
 
         // We need to do something with the name
-        $this->name = sprintf(__('Copy of %s on %s'), $this->name, date('Y-m-d H:i:s'));
+        $this->name = sprintf(__('Copy of %s on %s'), $this->name, Carbon::now()->format(DateFormatHelper::getSystemFormat()));
 
         // Set so that when we add, we copy the existing file in the library
         $this->fileName = $this->storedAs;
@@ -555,7 +557,7 @@ class Media implements \JsonSerializable
 
             // If the media file is invalid, then force an update (only applies to module files)
             $expires = $this->getOriginalValue('expires');
-            $this->isSaveRequired = ($this->isSaveRequired || $this->valid == 0 || ($expires > 0 && $expires < time()));
+            $this->isSaveRequired = ($this->isSaveRequired || $this->valid == 0 || ($expires > 0 && $expires < Carbon::now()->format('U')));
         }
 
         if ($options['deferred']) {
@@ -736,8 +738,8 @@ class Media implements \JsonSerializable
             'released' => $this->released,
             'apiRef' => $this->apiRef,
             'valid' => 0,
-            'createdDt' => date('Y-m-d H:i:s'),
-            'modifiedDt' => date('Y-m-d H:i:s'),
+            'createdDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+            'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'enableStat' => $this->enableStat
         ]);
 
@@ -776,7 +778,7 @@ class Media implements \JsonSerializable
             'released' => $this->released,
             'apiRef' => $this->apiRef,
             'mediaId' => $this->mediaId,
-            'modifiedDt' => date('Y-m-d H:i:s'),
+            'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'enableStat' => $this->enableStat,
             'expires' => $this->expires
         ];
@@ -949,7 +951,7 @@ class Media implements \JsonSerializable
             'md5' => $md5,
             'released' => 1,
             'mediaId' => $this->mediaId,
-            'modifiedDt' => date('Y-m-d H:i:s')
+            'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
         ]);
         $this->getLog()->debug('Updating image md5 and fileSize. MediaId '. $this->mediaId);
 

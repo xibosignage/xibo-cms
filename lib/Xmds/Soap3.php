@@ -20,6 +20,7 @@
  */
 namespace Xibo\Xmds;
 
+use Carbon\Carbon;
 use Xibo\Entity\Bandwidth;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -77,7 +78,7 @@ class Soap3 extends Soap
             }
 
             // Touch
-            $display->lastAccessed = time();
+            $display->lastAccessed = Carbon::now()->format('U');
             $display->loggedIn = 1;
             $display->save(['validate' => false, 'audit' => false]);
 

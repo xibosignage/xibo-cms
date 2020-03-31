@@ -108,15 +108,14 @@ class Logging extends Base
     function grid(Request $request, Response $response)
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
-        $dateHelper = new DateFormatHelper();
 
         // Date time criteria
         $seconds = $parsedQueryParams->getInt('seconds', ['default' => 120]);
         $intervalType = $parsedQueryParams->getInt('intervalType', ['default' => 1]);
-        $fromDt = $parsedQueryParams->getDate('fromDt', ['default' => Carbon::createFromTimestamp(time())]);
+        $fromDt = $parsedQueryParams->getDate('fromDt', ['default' => Carbon::now()]);
 
         $logs = $this->logFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
-            'fromDt' => $fromDt->format('U') - ($seconds * $intervalType),
+            'fromDt' => $fromDt->addSeconds($seconds * $intervalType)->format('U'),
             'toDt' => $fromDt->format('U'),
             'type' => $parsedQueryParams->getString('level'),
             'page' => $parsedQueryParams->getString('page'),
@@ -134,7 +133,7 @@ class Logging extends Base
 
         foreach ($logs as $log) {
             // Normalise the date
-            $log->logDate = Carbon::createFromTimeString($log->logDate)->format($dateHelper->getSystemFormat());
+            $log->logDate = Carbon::createFromTimeString($log->logDate)->format(DateFormatHelper::getSystemFormat());
         }
 
         $this->getState()->template = 'grid';

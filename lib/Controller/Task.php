@@ -37,6 +37,7 @@ use Xibo\Factory\TaskFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserNotificationFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -453,7 +454,7 @@ class Task extends Base
             $taskClass = new $task->class();
 
             // Record the start time
-            $start = time();
+            $start = Carbon::now()->format('U');
 
             $taskClass
                 ->setSanitizer($this->getSanitizer($request->getParams()))
@@ -471,7 +472,7 @@ class Task extends Base
             $this->store->commitIfNecessary();
 
             // Collect results
-            $task->lastRunDuration = time() - $start;
+            $task->lastRunDuration = Carbon::now()->subSeconds($start)->format('U');
             $task->lastRunMessage = $taskClass->getRunMessage();
             $task->lastRunStatus = \Xibo\Entity\Task::$STATUS_SUCCESS;
         }
@@ -488,13 +489,13 @@ class Task extends Base
             $task->lastRunStatus = \Xibo\Entity\Task::$STATUS_ERROR;
         }
 
-        $task->lastRunDt = Carbon::createFromTimestamp(time())->format('U');
+        $task->lastRunDt = Carbon::now()->format('U');
         $task->runNow = 0;
 
         // Save (on the XTR connection)
         $task->save(['connection' => 'xtr', 'validate' => false, 'reconnect' => true]);
 
-        $this->getLog()->debug('Finished Task ' . $task->name . ' [' . $task->taskId . '] Run Dt: ' . Carbon::createFromTimestamp(time())->format('Y-m-d H:i:s'));
+        $this->getLog()->debug('Finished Task ' . $task->name . ' [' . $task->taskId . '] Run Dt: ' . Carbon::now()->format(DateFormatHelper::getSystemFormat()));
 
         // No output
         $this->setNoOutput(true);
@@ -551,7 +552,7 @@ class Task extends Base
                 // Is the next run date of this event earlier than now, or is the task set to runNow
                 $nextRunDt = $cron->getNextRunDate(\DateTime::createFromFormat('U', $task['lastRunDt']))->format('U');
 
-                if ($task['runNow'] == 1 || $nextRunDt <= time()) {
+                if ($task['runNow'] == 1 || $nextRunDt <= Carbon::now()->format('U')) {
 
                     $this->getLog()->info('Running Task ' . $taskId);
 
@@ -559,7 +560,7 @@ class Task extends Base
                     $this->store->update('UPDATE `task` SET status = :status, lastRunStartDt = :lastRunStartDt WHERE taskId = :taskId', [
                         'taskId' => $taskId,
                         'status' => \Xibo\Entity\Task::$STATUS_RUNNING,
-                        'lastRunStartDt' => Carbon::createFromTimestamp(time())->format('U')
+                        'lastRunStartDt' => Carbon::now()->format('U')
                     ], 'xtr');
                     $this->store->commitIfNecessary('xtr');
 
@@ -627,7 +628,7 @@ class Task extends Base
 
         $command->execute([
             'status' => \Xibo\Entity\Task::$STATUS_RUNNING,
-            'timeout' => Carbon::createFromTimestamp(time())->subHours(12)->format('U')
+            'timeout' => Carbon::now()->subHours(12)->format('U')
         ]);
 
         foreach ($command->fetchAll(\PDO::FETCH_ASSOC) as $task) {

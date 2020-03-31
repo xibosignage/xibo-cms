@@ -26,6 +26,7 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Factory\AuditLogFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
@@ -101,11 +102,11 @@ class AuditLog extends Base
 
         // Get the dates and times
         if ($filterFromDt == null) {
-            $filterFromDt = Carbon::createFromTimestamp(time())->sub('1 day');
+            $filterFromDt = Carbon::now()->sub('1 day');
         }
 
         if ($filterToDt == null) {
-            $filterToDt = Carbon::createFromTimestamp(time());
+            $filterToDt = Carbon::now();
         }
 
         $search['fromTimeStamp'] = $filterFromDt->format('U');
@@ -192,7 +193,7 @@ class AuditLog extends Base
         // Do some post processing
         foreach ($rows as $row) {
             /* @var \Xibo\Entity\AuditLog $row */
-            fputcsv($out, [$row->logId, Carbon::createFromTimestamp($row->logDate)->format('Y-m-d H:i:s'), $row->userName, $row->entity, $row->entityId, $row->message, $row->objectAfter]);
+            fputcsv($out, [$row->logId, Carbon::createFromTimestamp($row->logDate)->format(DateFormatHelper::getSystemFormat()), $row->userName, $row->entity, $row->entityId, $row->message, $row->objectAfter]);
         }
 
         fclose($out);

@@ -674,7 +674,7 @@ class DataSetView extends ModuleWidget
         $columnIds = explode(',', $columnIds);
 
         // Set an expiry time for the media
-        $expires = time() + ($this->getOption('updateInterval', 3600) * 60);
+        $expires = Carbon::now()->addSeconds($this->getOption('updateInterval', 3600) * 60)->format('U');
 
         // Create a data set object, to get the results.
         try {
@@ -711,7 +711,7 @@ class DataSetView extends ModuleWidget
             }
 
             // Set the timezone for SQL
-            $dateNow = Carbon::createFromTimestamp(time());
+            $dateNow = Carbon::now();
             if ($displayId != 0) {
                 $display = $this->displayFactory->getById($displayId);
                 $timeZone = $display->getSetting('displayTimeZone', '');

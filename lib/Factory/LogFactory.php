@@ -24,7 +24,9 @@
 namespace Xibo\Factory;
 
 
+use Carbon\Carbon;
 use Xibo\Entity\LogEntry;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -89,12 +91,12 @@ class LogFactory extends BaseFactory
 
         if ($parsedFilter->getInt('fromDt') !== null) {
             $body .= ' AND logdate > :fromDt ';
-            $params['fromDt'] = date("Y-m-d H:i:s", $parsedFilter->getInt('fromDt'));
+            $params['fromDt'] = Carbon::createFromTimestamp( $parsedFilter->getInt('fromDt'))->format(DateFormatHelper::getSystemFormat());
         }
 
         if ($parsedFilter->getInt('toDt') !== null) {
             $body .= ' AND logdate <= :toDt ';
-            $params['toDt'] = date("Y-m-d H:i:s", $parsedFilter->getInt('toDt'));
+            $params['toDt'] = Carbon::createFromTimestamp( $parsedFilter->getInt('toDt'))->format(DateFormatHelper::getSystemFormat());
         }
 
         if ($parsedFilter->getString('runNo') != null) {

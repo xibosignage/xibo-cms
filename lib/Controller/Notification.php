@@ -119,7 +119,7 @@ class Notification extends Base
         $notification = $this->userNotificationFactory->getByNotificationId($id);
 
         // Mark it as read
-        $notification->setRead(Carbon::createFromTimestamp(time())->format('U'));
+        $notification->setRead(Carbon::now()->format('U'));
         $notification->save();
 
         $this->getState()->template = 'notification-interrupt';
@@ -143,7 +143,7 @@ class Notification extends Base
         $notification = $this->userNotificationFactory->getByNotificationId($id);
 
         // Mark it as read
-        $notification->setRead(Carbon::createFromTimestamp(time())->format('U'));
+        $notification->setRead(Carbon::now()->format('U'));
         $notification->save();
 
         $this->getState()->template = 'notification-form-show';
@@ -315,11 +315,10 @@ class Notification extends Base
     {
         $notification = $this->notificationFactory->getById($id);
         $notification->load();
-        $dateHelper = new DateFormatHelper();
 
         // Adjust the dates
-        $notification->createdDt = Carbon::createFromTimestamp($notification->createdDt)->format($dateHelper->getSystemFormat());
-        $notification->releaseDt = Carbon::createFromTimestamp($notification->releaseDt)->format($dateHelper->getSystemFormat());
+        $notification->createdDt = Carbon::createFromTimestamp($notification->createdDt)->format(DateFormatHelper::getSystemFormat());
+        $notification->releaseDt = Carbon::createFromTimestamp($notification->releaseDt)->format(DateFormatHelper::getSystemFormat());
 
         if (!$this->getUser()->checkEditable($notification)) {
             throw new AccessDeniedException();
@@ -516,7 +515,7 @@ class Notification extends Base
         $notification = $this->notificationFactory->createEmpty();
         $notification->subject = $sanitizedParams->getString('subject');
         $notification->body = $request->getParam('body', '');
-        $notification->createdDt = Carbon::createFromTimestamp(time())->format('U');
+        $notification->createdDt = Carbon::now()->format('U');
         $notification->releaseDt = $sanitizedParams->getDate('releaseDt');
 
         if ($notification->releaseDt !== null) {
@@ -685,7 +684,7 @@ class Notification extends Base
 
         $notification->subject = $sanitizedParams->getString('subject');
         $notification->body = $request->getParam('body', '');
-        $notification->createdDt = Carbon::createFromTimestamp(time())->format('U');
+        $notification->createdDt = Carbon::now()->format('U');
         $notification->releaseDt = $sanitizedParams->getDate('releaseDt')->format('U');
         $notification->isEmail = $sanitizedParams->getCheckbox('isEmail');
         $notification->isInterrupt = $sanitizedParams->getCheckbox('isInterrupt');

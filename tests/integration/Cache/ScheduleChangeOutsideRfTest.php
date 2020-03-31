@@ -25,6 +25,7 @@ namespace Xibo\Tests\integration\Cache;
 
 use Carbon\Carbon;
 use Xibo\Entity\Display;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboSchedule;
@@ -92,8 +93,8 @@ class ScheduleChangeOutsideRfTest extends LocalWebTestCase
         // Schedule the Layout "always" onto our display
         //  deleting the layout will remove this at the end
         $this->event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
-            $date->format('Y-m-d H:i:s'),
-            $date->addHour()->format('Y-m-d H:i:s'),
+            $date->format(DateFormatHelper::getSystemFormat()),
+            $date->addHour()->format(DateFormatHelper::getSystemFormat()),
             $this->layout->campaignId,
             [$this->display->displayGroupId],
             0,
@@ -138,8 +139,8 @@ class ScheduleChangeOutsideRfTest extends LocalWebTestCase
 
         // Change the Schedule
         $this->sendRequest('PUT','/schedule/' . $this->event->eventId, [
-            'fromDt' => date('Y-m-d H:i:s', $this->event->fromDt),
-            'toDt' => date('Y-m-d H:i:s', $this->event->toDt),
+            'fromDt' => date(DateFormatHelper::getSystemFormat(), $this->event->fromDt),
+            'toDt' => date(DateFormatHelper::getSystemFormat(), $this->event->toDt),
             'eventTypeId' => 1,
             'campaignId' => $this->event->campaignId,
             'displayGroupIds' => [$this->display->displayGroupId],

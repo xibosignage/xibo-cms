@@ -35,6 +35,7 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -618,7 +619,7 @@ class Layout implements \JsonSerializable
         }
 
         $this->getLog()->debug(sprintf('Loading Layout %d with options %s', $this->layoutId, json_encode($options)));
-$this->getLog()->debug('LAYOUT LOAD IS ' . json_encode($this));
+
         // Load permissions
         if ($options['loadPermissions']) {
             $this->permissions = $this->permissionFactory->getByObjectId('Xibo\\Entity\\Campaign', $this->campaignId);
@@ -1001,7 +1002,7 @@ $this->getLog()->debug('LAYOUT LOAD IS ' . json_encode($this));
         ', [
             'campaignId' => $this->campaignId,
             'layoutId' => $this->layoutId,
-            'publishedDate' => Carbon::now()->format('Y-m-d H:i:s')
+            'publishedDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
         ]);
     }
 
@@ -1327,11 +1328,11 @@ $this->getLog()->debug('LAYOUT LOAD IS ' . json_encode($this));
 
                 // Set a from/to date
                 if ($widget->fromDt != null || $widget->fromDt === Widget::$DATE_MIN) {
-                    $mediaNode->setAttribute('fromDt', Carbon::createFromTimestamp($widget->fromDt)->format('Y-m-d H:i:s'));
+                    $mediaNode->setAttribute('fromDt', Carbon::createFromTimestamp($widget->fromDt)->format(DateFormatHelper::getSystemFormat()));
                 }
 
                 if ($widget->toDt != null || $widget->toDt === Widget::$DATE_MAX) {
-                    $mediaNode->setAttribute('toDt', Carbon::createFromTimestamp($widget->toDt)->format('Y-m-d H:i:s'));
+                    $mediaNode->setAttribute('toDt', Carbon::createFromTimestamp($widget->toDt)->format(DateFormatHelper::getSystemFormat()));
                 }
 
 //                Logic Table
@@ -1768,7 +1769,7 @@ $this->getLog()->debug('LAYOUT LOAD IS ' . json_encode($this));
                 $parent = $this->layoutFactory->loadById($this->parentId);
 
                 $layoutCurrentPublishedDate = Carbon::createFromTimestamp($parent->publishedDate);
-                $newPublishDateString =  Carbon::now()->addMinutes(30)->format('Y-m-d H:i:s');
+                $newPublishDateString =  Carbon::now()->addMinutes(30)->format(DateFormatHelper::getSystemFormat());
                 $newPublishDate = Carbon::createFromTimeString($newPublishDateString);
 
                 if ($layoutCurrentPublishedDate->format('U') > $newPublishDate->format('U')) {
@@ -1993,7 +1994,7 @@ $this->getLog()->debug('LAYOUT LOAD IS ' . json_encode($this));
         $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, enableStat, duration, autoApplyTransitions)
                   VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, :schemaVersion, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat, 0, :autoApplyTransitions)';
 
-        $time = Carbon::now()->format('Y-m-d H:i:s');
+        $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
 
         $this->layoutId = $this->getStore()->insert($sql, array(
             'layout' => $this->layout,
@@ -2087,7 +2088,7 @@ $this->getLog()->debug('LAYOUT LOAD IS ' . json_encode($this));
          WHERE layoutID = :layoutid
         ';
 
-        $time = Carbon::now()->format('Y-m-d H:i:s');
+        $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
 
         $this->getStore()->update($sql, array(
             'layoutid' => $this->layoutId,

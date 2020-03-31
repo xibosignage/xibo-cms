@@ -22,6 +22,7 @@
 
 namespace Xibo\Middleware;
 
+use Carbon\Carbon;
 use Monolog\Logger;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -260,7 +261,7 @@ class State implements Middleware
             if ($level < $restingLevel) {
                 // Do we allow the log level to be this high
                 $elevateUntil = $container->get('configService')->getSetting('ELEVATE_LOG_UNTIL');
-                if (intval($elevateUntil) < time()) {
+                if (intval($elevateUntil) < Carbon::now()->format('U')) {
                     // Elevation has expired, revert log level
                     $container->get('configService')->changeSetting('audit', $container->get('configService')->getSetting('RESTING_LOG_LEVEL'));
                     $level = $restingLevel;

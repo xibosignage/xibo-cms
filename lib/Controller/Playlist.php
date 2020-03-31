@@ -1064,7 +1064,6 @@ class Playlist extends Base
     {
         $this->getState()->template = 'grid';
         $sanitizedParams = $this->getSanitizer($request->getParams());
-        $dateHelper = new DateFormatHelper();
 
         $widgets = $this->widgetFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
             'playlistId' => $sanitizedParams->getInt('playlistId'),
@@ -1084,10 +1083,10 @@ class Playlist extends Base
             $widget->transition = sprintf('%s / %s', $widget->module->getTransition('in'), $widget->module->getTransition('out'));
 
             if ($this->isApi($request)) {
-                $widget->createdDt = Carbon::createFromTimestamp($widget->createdDt)->format($dateHelper->getSystemFormat());
-                $widget->modifiedDt = Carbon::createFromTimestamp($widget->modifiedDt)->format($dateHelper->getSystemFormat());
-                $widget->fromDt = Carbon::createFromTimestamp($widget->fromDt)->format($dateHelper->getSystemFormat());
-                $widget->toDt = Carbon::createFromTimestamp($widget->toDt)->format($dateHelper->getSystemFormat());
+                $widget->createdDt = Carbon::createFromTimestamp($widget->createdDt)->format(DateFormatHelper::getSystemFormat());
+                $widget->modifiedDt = Carbon::createFromTimestamp($widget->modifiedDt)->format(DateFormatHelper::getSystemFormat());
+                $widget->fromDt = Carbon::createFromTimestamp($widget->fromDt)->format(DateFormatHelper::getSystemFormat());
+                $widget->toDt = Carbon::createFromTimestamp($widget->toDt)->format(DateFormatHelper::getSystemFormat());
             }
         }
 

@@ -696,7 +696,7 @@ class DataSetTicker extends ModuleWidget
         $this->getLog()->notice('Then template for each row is: ' . $text);
 
         // Set an expiry time for the media
-        $expires = time() + ($this->getOption('updateInterval', 3600) * 60);
+        $expires = Carbon::now()->addSeconds($this->getOption('updateInterval', 3600) * 60)->format('U');
 
         // Combine the column id's with the dataset data
         $matches = '';

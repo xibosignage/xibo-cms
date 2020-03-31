@@ -22,6 +22,7 @@
 
 namespace Xibo\Storage;
 
+use Carbon\Carbon;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer\Key;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
@@ -51,8 +52,8 @@ class AccessTokenEntity implements AccessTokenEntityInterface
             ->issuedBy('info@xibosignage.com')
             ->permittedFor($this->getClient()->getIdentifier())
             ->identifiedBy($this->getIdentifier())
-            ->issuedAt(time())
-            ->canOnlyBeUsedAfter(time())
+            ->issuedAt(Carbon::now()->format('U'))
+            ->canOnlyBeUsedAfter(Carbon::now()->format('U'))
             ->expiresAt($this->getExpiryDateTime()->getTimestamp())
             ->relatedTo($userId)
             ->withClaim('scopes', $this->getScopes())

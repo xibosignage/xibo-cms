@@ -88,7 +88,7 @@ class Clock extends Base
         $this->session->refreshExpiry = false;
 
         if ($request->isXhr() || $this->isApi($request)) {
-            $output = Carbon::createFromTimestamp(time())->format('H:i T');
+            $output = Carbon::now()->format('H:i T');
 
             $this->getState()->setData(array('time' => $output));
             $this->getState()->html = $output;
@@ -97,7 +97,7 @@ class Clock extends Base
             return $this->render($request, $response);
         } else {
             // We are returning the response directly, so write the body.
-            $response->getBody()->write(Carbon::createFromTimestamp(time())->format('c'));
+            $response->getBody()->write(Carbon::now()->format('c'));
             return $response;
         }
     }

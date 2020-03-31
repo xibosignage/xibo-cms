@@ -94,16 +94,15 @@ class Theme implements Middleware
         }
 
         $settings =  $container->get('configService')->getSettings();
-        $dateFormatHelper = new DateFormatHelper();
 
         // Date format
-        $settings['DATE_FORMAT_JS'] = $dateFormatHelper->convertPhpToMomentFormat($settings['DATE_FORMAT']);
-        $settings['DATE_FORMAT_BOOTSTRAP'] = $dateFormatHelper->convertPhpToBootstrapFormat($settings['DATE_FORMAT']);
-        $settings['DATE_FORMAT_BOOTSTRAP_DATEONLY'] = $dateFormatHelper->convertPhpToBootstrapFormat($settings['DATE_FORMAT'], false);
-        $settings['TIME_FORMAT'] = $dateFormatHelper->extractTimeFormat($settings['DATE_FORMAT']);
-        $settings['TIME_FORMAT_JS'] = $dateFormatHelper->convertPhpToMomentFormat($settings['TIME_FORMAT']);
-        $settings['systemDateFormat'] = $dateFormatHelper->convertPhpToMomentFormat($dateFormatHelper->getSystemFormat());
-        $settings['systemTimeFormat'] = $dateFormatHelper->convertPhpToMomentFormat($dateFormatHelper->extractTimeFormat($dateFormatHelper->getSystemFormat()));
+        $settings['DATE_FORMAT_JS'] = DateFormatHelper::convertPhpToMomentFormat($settings['DATE_FORMAT']);
+        $settings['DATE_FORMAT_BOOTSTRAP'] =  DateFormatHelper::convertPhpToBootstrapFormat($settings['DATE_FORMAT']);
+        $settings['DATE_FORMAT_BOOTSTRAP_DATEONLY'] =  DateFormatHelper::convertPhpToBootstrapFormat($settings['DATE_FORMAT'], false);
+        $settings['TIME_FORMAT'] = DateFormatHelper::extractTimeFormat($settings['DATE_FORMAT']);
+        $settings['TIME_FORMAT_JS'] = DateFormatHelper::convertPhpToMomentFormat($settings['TIME_FORMAT']);
+        $settings['systemDateFormat'] = DateFormatHelper::convertPhpToMomentFormat(DateFormatHelper::getSystemFormat());
+        $settings['systemTimeFormat'] = DateFormatHelper::convertPhpToMomentFormat(DateFormatHelper::extractTimeFormat(DateFormatHelper::getSystemFormat()));
 
         $routeContext = RouteContext::fromRequest($request);
         $route = $routeContext->getRoute();

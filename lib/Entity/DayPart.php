@@ -302,7 +302,7 @@ class DayPart implements \JsonSerializable
      */
     private function handleEffectedSchedules()
     {
-        $now = time();
+        $now = Carbon::now()->format('U');
 
         // Get all schedules that use this dayPart and exist after the current time.
         $schedules = $this->scheduleFactory->query(null, ['dayPartId' => $this->dayPartId, 'futureSchedulesFrom' => $now]);
@@ -325,7 +325,7 @@ class DayPart implements \JsonSerializable
                 $schedule->save();
 
                 // Adjusting the fromdt on the new event
-                $newSchedule->fromDt = Carbon::createFromTimestamp(time())->addDay()->format('U');
+                $newSchedule->fromDt = Carbon::now()->addDay()->format('U');
                 $newSchedule->save();
             } else {
                 $this->getLog()->debug('Schedule is for a single event');

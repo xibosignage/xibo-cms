@@ -27,6 +27,7 @@ namespace Xibo\Widget;
 use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -533,7 +534,7 @@ class Currencies extends AlphaVantageBase
                 if (stripos($replace, 'time|') > -1) {
                     $timeSplit = explode('|', $replace);
 
-                    $time = Carbon::createFromFormat('Y-m-d H:i:s', $data['time'])->format($timeSplit[1]);
+                    $time = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $data['time'])->format($timeSplit[1]);
 
                     $replacement = $time;
 

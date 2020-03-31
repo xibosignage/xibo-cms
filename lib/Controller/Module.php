@@ -1510,8 +1510,8 @@ class Module extends Base
         $this->getState()->template = 'module-form-expiry';
         $this->getState()->setData([
             'module' => $module,
-            'fromDt' => ($module->widget->fromDt === Widget::$DATE_MIN) ? '' : Carbon::createFromTimestamp($module->widget->fromDt)->format('Y-m-d H:i:s'),
-            'toDt' => ($module->widget->toDt === Widget::$DATE_MAX) ? '' : Carbon::createFromTimestamp($module->widget->toDt)->format('Y-m-d H:i:s'),
+            'fromDt' => ($module->widget->fromDt === Widget::$DATE_MIN) ? '' : Carbon::createFromTimestamp($module->widget->fromDt)->format(DateFormatHelper::getSystemFormat()),
+            'toDt' => ($module->widget->toDt === Widget::$DATE_MAX) ? '' : Carbon::createFromTimestamp($module->widget->toDt)->format(DateFormatHelper::getSystemFormat()),
             'deleteOnExpiry' => $module->getOption('deleteOnExpiry', 0)
         ]);
 
@@ -1580,7 +1580,6 @@ class Module extends Base
     {
         $widget = $this->widgetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
-        $dateHelper = new DateFormatHelper();
 
         if (!$this->getUser()->checkEditable($widget)) {
             throw new AccessDeniedException();
@@ -1626,10 +1625,10 @@ class Module extends Base
         ]);
 
         if ($this->isApi($request)) {
-            $widget->createdDt = Carbon::createFromTimestamp($widget->createdDt)->format($dateHelper->getSystemFormat());
-            $widget->modifiedDt = Carbon::createFromTimestamp($widget->modifiedDt)->format($dateHelper->getSystemFormat());
-            $widget->fromDt = Carbon::createFromTimestamp($widget->fromDt)->format($dateHelper->getSystemFormat());
-            $widget->toDt = Carbon::createFromTimestamp($widget->toDt)->format($dateHelper->getSystemFormat());
+            $widget->createdDt = Carbon::createFromTimestamp($widget->createdDt)->format(DateFormatHelper::getSystemFormat());
+            $widget->modifiedDt = Carbon::createFromTimestamp($widget->modifiedDt)->format(DateFormatHelper::getSystemFormat());
+            $widget->fromDt = Carbon::createFromTimestamp($widget->fromDt)->format(DateFormatHelper::getSystemFormat());
+            $widget->toDt = Carbon::createFromTimestamp($widget->toDt)->format(DateFormatHelper::getSystemFormat());
         }
 
         // Successful

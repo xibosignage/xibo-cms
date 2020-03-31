@@ -25,6 +25,7 @@ namespace Xibo\Tests\integration\Cache;
 
 use Carbon\Carbon;
 use Xibo\Entity\Display;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboCampaign;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
@@ -92,8 +93,8 @@ class CampaignDeleteTest extends LocalWebTestCase
         // Schedule the Campaign "always" onto our display
         //  deleting the layout will remove this at the end
         $this->event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
-            $date->format('Y-m-d H:i:s'),
-            $date->addHours(3)->format('Y-m-d H:i:s'),
+            $date->format(DateFormatHelper::getSystemFormat()),
+            $date->addHours(3)->format(DateFormatHelper::getSystemFormat()),
             $this->campaign->campaignId,
             [$this->display->displayGroupId],
             0,

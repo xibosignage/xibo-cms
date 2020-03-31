@@ -9,6 +9,7 @@
 namespace Xibo\Tests\Helper;
 
 
+use Carbon\Carbon;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Exception\XiboApiException;
@@ -77,7 +78,7 @@ pbBhRgkIdydXoZZdjQIDAQAB
 
         $this->getStore()->update('UPDATE `display` SET MediaInventoryStatus = :status, auditingUntil = :auditingUntil WHERE displayId = :displayId', [
             'displayId' => $display->displayId,
-            'auditingUntil' => time() + 86400,
+            'auditingUntil' => Carbon::now()->addSeconds(86400)->format('U'),
             'status' => $status
         ]);
         $this->getStore()->commitIfNecessary();
@@ -93,7 +94,7 @@ pbBhRgkIdydXoZZdjQIDAQAB
 
         $this->getStore()->update('UPDATE `display` SET licensed = 1, auditingUntil = :auditingUntil WHERE displayId = :displayId', [
             'displayId' => $display->displayId,
-            'auditingUntil' => (time() + 86400)
+            'auditingUntil' => Carbon::now()->addSeconds(86400)->format('U')
         ]);
         $this->getStore()->commitIfNecessary();
         $this->getStore()->close();

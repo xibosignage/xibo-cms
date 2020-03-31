@@ -53,6 +53,7 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\HttpCacheProvider;
 use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
@@ -1448,10 +1449,10 @@ abstract class ModuleWidget implements ModuleInterface
 
         // If not cached set it to have cached a long time in the past
         if ($date === null)
-            return Carbon::createFromTimestamp(time())->subYear();
+            return Carbon::now()->subYear();
 
         // Parse the date
-        return Carbon::createFromFormat( 'Y-m-d H:i:s', $date);
+        return Carbon::createFromFormat( DateFormatHelper::getSystemFormat(), $date);
     }
 
     /** @inheritdoc */
@@ -1460,7 +1461,7 @@ abstract class ModuleWidget implements ModuleInterface
         $now = Carbon::now();
         $item = $this->getPool()->getItem($this->makeCacheKey('html/' . $this->getCacheKey($displayId)));
 
-        $item->set($now->format('Y-m-d H:i:s'));
+        $item->set($now->format(DateFormatHelper::getSystemFormat()));
         $item->expiresAt($now->addYear());
 
         $this->getPool()->save($item);
@@ -1494,8 +1495,8 @@ abstract class ModuleWidget implements ModuleInterface
         // location wouldn't though, which is why we base this on the width/height.
         $cacheFile = $cacheKey . '_' . $this->region->width . '_' . $this->region->height;
 
-        $this->getLog()->debug('Cache details - modifiedDt: ' . $modifiedDt->format('Y-m-d H:i:s')
-            . ', cacheDt: ' . $cachedDt->format('Y-m-d H:i:s')
+        $this->getLog()->debug('Cache details - modifiedDt: ' . $modifiedDt->format(DateFormatHelper::getSystemFormat())
+            . ', cacheDt: ' . $cachedDt->format(DateFormatHelper::getSystemFormat())
             . ', cacheDuration: ' . $cacheDuration
             . ', cacheKey: ' . $cacheKey
             . ', cacheFile: ' . $cacheFile);
@@ -1595,7 +1596,7 @@ abstract class ModuleWidget implements ModuleInterface
                     throw new GeneralException($exception->getMessage(), $exception->getCode(), $exception);
             }
         } else {
-            $this->getLog()->debug('No need to regenerate, cached until ' . $cachedDt->addSeconds($cacheDuration)->format('Y-m-d H:i:s'));
+            $this->getLog()->debug('No need to regenerate, cached until ' . $cachedDt->addSeconds($cacheDuration)->format(DateFormatHelper::getSystemFormat()));
 
             $resource = file_get_contents($cachePath . $cacheFile);
         }
@@ -1646,7 +1647,7 @@ abstract class ModuleWidget implements ModuleInterface
             //sleep(30);
         } else {
             // We are a hit - we must be locked
-            $this->getLog()->debug('LOCK hit for ' . $key . ' expires ' . $this->lock->getExpiration()->format('Y-m-d H:i:s') . ', created ' . $this->lock->getCreation()->format('Y-m-d H:i:s'));
+            $this->getLog()->debug('LOCK hit for ' . $key . ' expires ' . $this->lock->getExpiration()->format(DateFormatHelper::getSystemFormat()) . ', created ' . $this->lock->getCreation()->format(DateFormatHelper::getSystemFormat()));
 
             // Try again?
             $tries--;

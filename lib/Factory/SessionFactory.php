@@ -25,6 +25,7 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Session;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -117,7 +118,7 @@ class SessionFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('fromDt') != null) {
             $body .= ' AND session.LastAccessed >= :lastAccessed ';
-            $params['lastAccessed'] = $sanitizedFilter->getDate('fromDt')->setTime(0, 0, 0)->format('Y-m-d H:i:s');
+            $params['lastAccessed'] = $sanitizedFilter->getDate('fromDt')->setTime(0, 0, 0)->format(DateFormatHelper::getSystemFormat());
         }
 
         if ($sanitizedFilter->getString('type') != null) {

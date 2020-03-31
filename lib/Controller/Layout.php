@@ -688,7 +688,7 @@ class Layout extends Base
     function deleteForm(Request $request, Response $response, $id)
     {
         $layout = $this->layoutFactory->getById($id);
-$this->getLog()->debug('LAYOUT IN DELETE FORM ' . json_encode($layout));
+
         if (!$this->getUser()->checkDeleteable($layout))
             throw new AccessDeniedException(__('You do not have permissions to delete this layout'));
 
@@ -771,7 +771,7 @@ $this->getLog()->debug('LAYOUT IN DELETE FORM ' . json_encode($layout));
     function delete(Request $request, Response $response, $id)
     {
         $layout = $this->layoutFactory->loadById($id);
-        $this->getLog()->debug('LAYOUT IN DELETE ' . json_encode($layout));
+
         if (!$this->getUser()->checkDeleteable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to delete this layout'));
         }
@@ -2584,7 +2584,7 @@ $this->getLog()->debug('LAYOUT IN DELETE FORM ' . json_encode($layout));
 
         // We want to take the draft layout, and update the campaign links to point to the draft, then remove the
         // parent.
-        if ($publishNow || (isset($publishDate) && $publishDate->format('U') <  Carbon::createFromTimestamp(time())->format('U')) ) {
+        if ($publishNow || (isset($publishDate) && $publishDate->format('U') <  Carbon::now()->format('U')) ) {
             $draft = $this->layoutFactory->getByParentId($id);
             $draft->publishDraft();
             $draft->load();

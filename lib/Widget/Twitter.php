@@ -562,7 +562,7 @@ class Twitter extends TwitterBase
         $return = array();
 
         // Expiry time for any media that is downloaded
-        $expires = Carbon::createFromTimestamp(time())->addHours($this->getSetting('cachePeriodImages', 24))->format('U');
+        $expires = Carbon::now()->addHours($this->getSetting('cachePeriodImages', 24))->format('U');
 
         // Remove URL setting
         $removeUrls = $this->getOption('removeUrls', 1)  == 1;

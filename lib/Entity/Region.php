@@ -580,13 +580,11 @@ class Region implements \JsonSerializable
      */
     public function notifyLayout()
     {
-        $dateHelper = new DateFormatHelper();
-
         $this->getStore()->update('
             UPDATE `layout` SET `status` = 3, `modifiedDT` = :modifiedDt WHERE layoutId = :layoutId
         ', [
             'layoutId' => $this->layoutId,
-            'modifiedDt' => Carbon::createFromTimestamp(time())->format($dateHelper->getSystemFormat())
+            'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
         ]);
     }
 }

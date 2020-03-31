@@ -701,7 +701,7 @@ class Ticker extends ModuleWidget
         $dateFormat = $this->getOption('dateFormat', $this->getConfig()->getSetting('DATE_FORMAT'));
 
         // Set an expiry time for the media
-        $expiresImage = Carbon::createFromTimestamp(time())->addMinutes($this->getOption('updateIntervalImages', $this->getSetting('updateIntervalImages', 1440)))->format('U');
+        $expiresImage = Carbon::now()->addMinutes($this->getOption('updateIntervalImages', $this->getSetting('updateIntervalImages', 1440)))->format('U');
 
         // Render the content now
         foreach ($feedItems as $item) {

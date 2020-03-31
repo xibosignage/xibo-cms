@@ -28,6 +28,7 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -280,7 +281,7 @@ class DataSetData extends Base
                 }
                 else if ($column->dataTypeId == 3) {
                     // Date
-                    $value = $sanitizedParams->getDate('dataSetColumnId_' . $column->dataSetColumnId)->format('Y-m-d H:i:s');
+                    $value = $sanitizedParams->getDate('dataSetColumnId_' . $column->dataSetColumnId)->format(DateFormatHelper::getSystemFormat());
                 }
                 else if ($column->dataTypeId == 5) {
                     // Media Id

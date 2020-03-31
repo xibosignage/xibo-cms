@@ -132,13 +132,12 @@ class Stats extends Base
      */
     function displayPage(Request $request, Response $response)
     {
-        $dateHelper = new DateFormatHelper();
         $data = [
             // List of Displays this user has permission for
             'defaults' => [
-                'fromDate' => Carbon::createFromTimestamp(time() - (86400 * 35))->format($dateHelper->getSystemFormat()),
-                'fromDateOneDay' => Carbon::createFromTimestamp(time() - 86400)->format($dateHelper->getSystemFormat()),
-                'toDate' => Carbon::createFromTimestamp(time())->format($dateHelper->getSystemFormat())
+                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
+                'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
+                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
             ]
         ];
 
@@ -158,14 +157,12 @@ class Stats extends Base
      */
     function displayProofOfPlayPage(Request $request, Response $response)
     {
-        $dateHelper = new DateFormatHelper();
-
         $data = [
             // List of Displays this user has permission for
             'defaults' => [
-                'fromDate' => Carbon::createFromTimestamp(time() - (86400 * 35))->format($dateHelper->getSystemFormat()),
-                'fromDateOneDay' => Carbon::createFromTimestamp(time() - 86400)->format($dateHelper->getSystemFormat()),
-                'toDate' => Carbon::createFromTimestamp(time())->format($dateHelper->getSystemFormat()),
+                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
+                'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
+                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
                 'availableReports' => $this->reportService->listReports()
             ]
         ];
@@ -354,8 +351,8 @@ class Stats extends Base
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
 
-        $fromDt = $sanitizedQueryParams->getDate('fromDt', ['default' => $sanitizedQueryParams->getDate('statsFromDt', ['default' => Carbon::createFromTimestamp(time())->subDay()])]);
-        $toDt = $sanitizedQueryParams->getDate('toDt', ['default' => $sanitizedQueryParams->getDate('statsToDt', ['default' => Carbon::createFromTimestamp(time())])]);
+        $fromDt = $sanitizedQueryParams->getDate('fromDt', ['default' => $sanitizedQueryParams->getDate('statsFromDt', ['default' => Carbon::now()->subDay()])]);
+        $toDt = $sanitizedQueryParams->getDate('toDt', ['default' => $sanitizedQueryParams->getDate('statsToDt', ['default' => Carbon::now()])]);
         $type = strtolower($sanitizedQueryParams->getString('type'));
 
         $displayId = $sanitizedQueryParams->getInt('displayId');
@@ -461,15 +458,15 @@ class Stats extends Base
             $entry['media'] = $widgetName;
             $entry['numberPlays'] = $sanitizedRow->getInt('count');
             $entry['duration'] = $sanitizedRow->getInt('duration');
-            $entry['minStart'] = Carbon::createFromTimestamp($row['start'])->format('Y-m-d H:i:s');
-            $entry['maxEnd'] = Carbon::createFromTimestamp($row['end'], 'U')->format('Y-m-d H:i:s');
-            $entry['start'] = Carbon::createFromTimestamp($row['start'], 'U')->format('Y-m-d H:i:s');
-            $entry['end'] = Carbon::createFromTimestamp($row['end'], 'U')->format('Y-m-d H:i:s');
+            $entry['minStart'] = Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat());
+            $entry['maxEnd'] = Carbon::createFromTimestamp($row['end'], 'U')->format(DateFormatHelper::getSystemFormat());
+            $entry['start'] = Carbon::createFromTimestamp($row['start'], 'U')->format(DateFormatHelper::getSystemFormat());
+            $entry['end'] = Carbon::createFromTimestamp($row['end'], 'U')->format(DateFormatHelper::getSystemFormat());
             $entry['layoutId'] = $sanitizedRow->getInt('layoutId');
             $entry['widgetId'] = $sanitizedRow->getInt('widgetId');
             $entry['mediaId'] = $sanitizedRow->getInt('mediaId');
             $entry['tag'] = $sanitizedRow->getString('tag');
-            $entry['statDate'] = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate'])->format('Y-m-d H:i:s') : '';
+            $entry['statDate'] = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate'])->format(DateFormatHelper::getSystemFormat()) : '';
             $entry['engagements'] = $row['engagements'];
 
             $rows[] = $entry;
@@ -498,7 +495,6 @@ class Stats extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $fromDt = $sanitizedParams->getDate('fromDt', ['default' => $sanitizedParams->getDate('bandwidthFromDt')]);
         $toDt = $sanitizedParams->getDate('toDt', ['default' => $sanitizedParams->getDate('bandwidthToDt')]);
-        $dateHelper = new DateFormatHelper();
 
         // Get an array of display id this user has access to.
         $displayIds = [];
@@ -735,7 +731,6 @@ class Stats extends Base
         $toDt = $sanitizedParams->getDate('toDt');
         $displayId = $sanitizedParams->getInt('displayId');
         $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/stats_' . Random::generateString();
-        $dateHelper = new DateFormatHelper();
 
         // Do not filter by display if super admin and no display is selected
         // Super admin will be able to see stat records of deleted display, we will not filter by display later
@@ -797,15 +792,15 @@ class Stats extends Base
             $type = $sanitizedRow->getString('type');
             if ($this->timeSeriesStore->getEngine() == 'mongodb') {
 
-                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate']->toDateTime())->format($dateHelper->getSystemFormat()) : null;
-                $fromDt = Carbon::createFromTimestamp($row['start']->toDateTime())->format($dateHelper->getSystemFormat());
-                $toDt = Carbon::createFromTimestamp($row['end']->toDateTime())->format($dateHelper->getSystemFormat());
+                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate']->toDateTime())->format(DateFormatHelper::getSystemFormat()) : null;
+                $fromDt = Carbon::createFromTimestamp($row['start']->toDateTime())->format(DateFormatHelper::getSystemFormat());
+                $toDt = Carbon::createFromTimestamp($row['end']->toDateTime())->format(DateFormatHelper::getSystemFormat());
                 $engagements = isset($row['engagements']) ? json_encode($row['engagements']): '[]';
             } else {
 
-                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate'])->format($dateHelper->getSystemFormat()) : null;
-                $fromDt = Carbon::createFromTimestamp($row['start'])->format($dateHelper->getSystemFormat());
-                $toDt = Carbon::createFromTimestamp($row['end'])->format($dateHelper->getSystemFormat());
+                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate'])->format(DateFormatHelper::getSystemFormat()) : null;
+                $fromDt = Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat());
+                $toDt = Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat());
                 $engagements = isset($row['engagements']) ? $row['engagements']: '[]';
             }
 
@@ -1058,16 +1053,16 @@ class Stats extends Base
         $tags = $sanitizedQueryParams->getString('tags');
         $onlyLoggedIn = $sanitizedQueryParams->getCheckbox('onlyLoggedIn') == 1;
 
-        $currentDate = Carbon::createFromTimestamp(time())->startOfDay()->format('Y-m-d');
+        $currentDate = Carbon::now()->startOfDay()->format('Y-m-d');
 
         // fromDt is always start of selected day
         $fromDt = $fromDt->startOfDay();
 
         // If toDt is current date then make it current datetime
         if ($toDt->startOfDay()->format('Y-m-d') == $currentDate) {
-            $toDt = Carbon::createFromTimestamp(time());
+            $toDt = Carbon::now();
         } else {
-            $toDt =  Carbon::createFromTimestamp(time())->startOfDay();
+            $toDt =  Carbon::now()->startOfDay();
         }
 
         // Get an array of display id this user has access to.

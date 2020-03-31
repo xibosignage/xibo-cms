@@ -86,7 +86,7 @@ class ScheduleReminderTask implements TaskInterface
 
         $task = $this->getTask();
         $nextRunDate = $task->nextRunDate();
-        $task->lastRunDt = time();
+        $task->lastRunDt = Carbon::now()->format('U');
         $task->save();
 
         // Get those reminders that have reminderDt <= nextRunDate && reminderDt > lastReminderDt
@@ -155,7 +155,7 @@ class ScheduleReminderTask implements TaskInterface
             // Is this schedule a recurring event?
             if ($schedule->recurrenceType != '') {
 
-                $now = Carbon::createFromTimestamp(time());
+                $now = Carbon::now();
                 $remindSeconds = $reminder->value * $type;
 
                 // Get the next reminder date
@@ -226,7 +226,7 @@ class ScheduleReminderTask implements TaskInterface
         $notification = $this->notificationFactory->createEmpty();
         $notification->subject = $subject;
         $notification->body = $body;
-        $notification->createdDt = Carbon::createFromTimestamp(time())->format('U');
+        $notification->createdDt = Carbon::now()->format('U');
         $notification->releaseDt = $releaseDt;
         $notification->isEmail = $reminder->isEmail;
         $notification->isInterrupt = 0;

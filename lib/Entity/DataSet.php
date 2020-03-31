@@ -1019,7 +1019,7 @@ class DataSet implements \JsonSerializable
         $this->getLog()->debug('Adding row ' . var_export($row, true));
 
         // Update the last edit date on this dataSet
-        $this->lastDataEdit = time();
+        $this->lastDataEdit = Carbon::now()->format('U');
 
         // Build a query to insert
         $keys = array_keys($row);
@@ -1043,7 +1043,7 @@ class DataSet implements \JsonSerializable
         $this->getLog()->debug(sprintf('Editing row %s', var_export($row, true)));
 
         // Update the last edit date on this dataSet
-        $this->lastDataEdit = time();
+        $this->lastDataEdit = Carbon::now()->format('U');
 
         // Params
         $params = ['id' => $rowId];
@@ -1073,7 +1073,7 @@ class DataSet implements \JsonSerializable
      */
     public function deleteRow($rowId)
     {
-        $this->lastDataEdit = time();
+        $this->lastDataEdit = Carbon::now()->format('U');
 
         $this->getStore()->update('DELETE FROM `dataset_' . $this->dataSetId . '` WHERE id = :id', [
             'id' => $rowId

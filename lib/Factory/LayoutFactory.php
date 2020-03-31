@@ -1971,7 +1971,7 @@ class LayoutFactory extends BaseFactory
             if ($parsedFilter->getInt('filterLayoutStatusId') == 2) {
 
                 // Only show used layouts
-                $now = Carbon::createFromTimestamp(time())->format('U');
+                $now = Carbon::now()->format('U');
                 $sql = 'SELECT DISTINCT schedule.CampaignID FROM schedule WHERE ( ( schedule.fromDt < '. $now . ' OR schedule.fromDt = 0 ) ' . ' AND schedule.toDt > ' . $now . ') OR schedule.fromDt > ' . $now;
                 $campaignIds = [];
                 foreach ($this->getStore()->select($sql, []) as $row) {
@@ -1985,7 +1985,7 @@ class LayoutFactory extends BaseFactory
             }
             else {
                 // Only show unused layouts
-                $now = Carbon::createFromTimestamp(time())->format('U');
+                $now = Carbon::now()->format('U');
                 $sql = 'SELECT DISTINCT schedule.CampaignID FROM schedule WHERE ( ( schedule.fromDt < '. $now . ' OR schedule.fromDt = 0 ) ' . ' AND schedule.toDt > ' . $now . ') OR schedule.fromDt > ' . $now;
                 $campaignIds = [];
                 foreach ($this->getStore()->select($sql, []) as $row) {
@@ -2028,7 +2028,7 @@ class LayoutFactory extends BaseFactory
 
         if ($parsedFilter->getInt('activeDisplayGroupId') !== null) {
 
-            $date = Carbon::createFromTimestamp(time())->format('U');
+            $date = Carbon::now()->format('U');
 
             // for filter by displayGroup, we need to add some additional filters in WHERE clause to show only relevant Layouts at the time the Layout grid is viewed
             $body .= ' AND campaign.campaignId = schedule.campaignId 

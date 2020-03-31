@@ -142,7 +142,7 @@ class StatusDashboard extends Base
         try {
             // Get some data for a bandwidth chart
             $dbh = $this->store->getConnection();
-            $params = ['month' => time() - (86400 * 365)];
+            $params = ['month' => Carbon::now()->subSeconds(86400 * 365)->format('U')];
 
             $sql = '
               SELECT MAX(FROM_UNIXTIME(month)) AS month,
@@ -194,7 +194,7 @@ class StatusDashboard extends Base
 
             // What if we are empty?
             if (count($results) == 0) {
-                $labels[] = Carbon::createFromTimestamp(time())->format('F');
+                $labels[] = Carbon::now()->format('F');
                 $usage[] = 0;
                 $limit[] = 0;
             }
@@ -299,7 +299,7 @@ class StatusDashboard extends Base
             // Add an empty one
             $displayGroupIds[] = -1;
 
-            $params = ['now' => time()];
+            $params = ['now' => Carbon::now()->format('U')];
 
             $sql = '
               SELECT IFNULL(COUNT(*), 0) AS count_scheduled 
