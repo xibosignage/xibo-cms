@@ -27,8 +27,8 @@ namespace Xibo\Factory;
 use League\OAuth2\Server\Util\SecureKey;
 use Xibo\Entity\Application;
 use Xibo\Entity\User;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -50,7 +50,7 @@ class ApplicationFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param ApplicationRedirectUriFactory $applicationRedirectUriFactory
      * @param $applicationScopeFactory
