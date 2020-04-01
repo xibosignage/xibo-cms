@@ -151,7 +151,7 @@
     </div>
 {% endmacro %}
 
-{% macro dropdown(name, type, title, value, options, optionId, optionValue, helpText, groupClass, validation, accessKey, callBack, dataAttributes, optionGroups, optionImageValue) %}
+{% macro dropdown(name, type, title, value, options, optionId, optionValue, helpText, groupClass, validation, accessKey, callBack, dataAttributes, optionGroups, optionImageValue, optionFilter) %}
     <div class="form-group {{ groupClass }}">
         <label class="col-sm-2 control-label" for="{{ name }}" title="{{ helpText }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="col-sm-10">
@@ -191,6 +191,10 @@
                         {% endif %}
                     {% endif %}
 
+                    {% if optionFilter %}
+                        {% set itemOptionType = attribute(option, optionFilter) %}
+                    {% endif %}
+
                     {% if type == "dropdownmulti" %}
                         {% set selected = (itemOptionId in value) %}
                     {% else %}
@@ -200,6 +204,9 @@
                     <option value="{{ itemOptionId }}" {% if selected %}selected{% endif %}
                             {% if itemOptionImageValue %}
                                 data-content="<span class='media'><span class='media-left'><img style='max-width: 100px' src='{{ itemOptionImageValue }}' /></span> <span class='media-body'>{{ itemOptionValue }}</span></span>"
+                            {% endif %}
+                            {% if itemOptionType %}
+                                data-filter-class="{{ itemOptionType }}"
                             {% endif %}
                     >{{ itemOptionValue }}</option>
                 {% endfor %}

@@ -300,6 +300,10 @@ $loading-overlay-z-index: 4000;
     @extend .fa-video-camera;
 }
 
+.module-icon-weather {
+    @extend .fa-cloud;
+}
+
 .module-icon-webpage {
     @extend .fa-sitemap;
 }
