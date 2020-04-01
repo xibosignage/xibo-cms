@@ -36,6 +36,8 @@
 
 namespace Xibo\Widget;
 
+use Carbon\Carbon;
+use Carbon\Factory;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Str;
@@ -533,13 +535,13 @@ class Weather extends ModuleWidget
              $rows = array();
              foreach ($data['currently'] as $key => $value) {
                  if (stripos($key, 'time')) {
-                     $value = $this->getDate()->getLocalDate($value);
+                     $value = Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
                  }
                  $rows[] = array('forecast' => __('Current'), 'key' => $key, 'value' => $value);
              }
              foreach ($data['daily']['data'][0] as $key => $value) {
                  if (stripos($key, 'time')) {
-                     $value = $this->getDate()->getLocalDate($value);
+                     $value = Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
                  }
                  $rows[] = array('forecast' => __('Daily'), 'key' => $key, 'value' => $value);
              }
@@ -736,8 +738,10 @@ class Weather extends ModuleWidget
         return $data;
     }
 
-    private function makeSubstitutions($data, $source, $timezone = NULL)
+    private function makeSubstitutions($data, $source, $timezone = NULL, $language = 'en')
     {
+        $carbonFactory = new Factory(['locale' => $language], Carbon::class);
+
         // Replace all matches.
         $matches = '';
         preg_match_all('/\[.*?\]/', $source, $matches);
@@ -752,7 +756,7 @@ class Weather extends ModuleWidget
 
                 $this->getLog()->debug('Time Substitution for source time ' . $data['time'] . ' and timezone ' . $timezone . ', format ' . $timeSplit[1]);
 
-                $time = $this->getDate()->getLocalDate($data['time'], $timeSplit[1], $timezone);
+                $time = $carbonFactory->parse($data['time'], $timezone)->translatedFormat($timeSplit[1]);
 
                 $this->getLog()->debug('Time Substitution: ' . (string)($time));
 
@@ -784,13 +788,7 @@ class Weather extends ModuleWidget
         }
 
         // Do we need to override the language?
-        // TODO: I don't like this date fix, the library should really check the file exists?
         $lang = $this->getOption('lang', 'en');
-        if ($lang != 'en' && file_exists(PROJECT_ROOT . '/vendor/jenssegers/date/src/Lang/' . $lang . '.php')) {
-            mb_internal_encoding('UTF-8');
-            $this->getLog()->debug('Setting language to: ' . $lang);
-            $this->getDate()->setLocale($lang);
-        }
 
         $data = [];
 
@@ -918,7 +916,7 @@ class Weather extends ModuleWidget
             'rain-image' => $this->getResourceUrl('weather/wi-rain.jpg'),
             'snow-image' => $this->getResourceUrl('weather/wi-snow.jpg'),
             'windy-image' => $this->getResourceUrl('weather/wi-windy.jpg'),
-          ], $styleSheet
+          ], $styleSheet, null, $lang
         );
 
         $headContent = '
@@ -956,11 +954,11 @@ class Weather extends ModuleWidget
             for ($i=$daysOffset; $i < $stopPosition; $i++) {
                 $this->getLog()->debug('Substitution for Daily, day ' . $i);
                 $template .= '<div class="multi-element">';
-                $template .= $this->makeSubstitutions($foreCast['daily']['data'][$i], $body, $foreCast['timezone']);
+                $template .= $this->makeSubstitutions($foreCast['daily']['data'][$i], $body, $foreCast['timezone'], $lang);
                 $template .= '</div>';
             }
         } else {
-            $template .= $this->makeSubstitutions($foreCast['currently'], $body, $foreCast['timezone']);
+            $template .= $this->makeSubstitutions($foreCast['currently'], $body, $foreCast['timezone'], $lang);
         }
 
         // Close main div in template and add the footer
@@ -971,7 +969,7 @@ class Weather extends ModuleWidget
         </div>';
 
         // Run replace over the main template ( if type is forecast, it will replace at least the background image)
-        $data['body'] = $this->makeSubstitutions($foreCast['currently'], $template, $foreCast['timezone']);
+        $data['body'] = $this->makeSubstitutions($foreCast['currently'], $template, $foreCast['timezone'], $lang);
 
         // JavaScript to control the size (override the original width and height so that the widget gets blown up )
         $options = array(
