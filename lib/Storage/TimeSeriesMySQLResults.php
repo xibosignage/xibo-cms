@@ -22,6 +22,8 @@
 
 namespace Xibo\Storage;
 
+use Carbon\Carbon;
+
 /**
  * Class TimeSeriesMySQLResults
  * @package Xibo\Storage
@@ -52,35 +54,25 @@ class TimeSeriesMySQLResults implements TimeSeriesResultsInterface
      */
     public function getArray()
     {
-        $rows = [];
+        return $this->object->fetchAll(\PDO::FETCH_ASSOC);
+    }
 
-        while ($row = $this->object->fetch(\PDO::FETCH_ASSOC)) {
+    /** @inheritDoc */
+    public function getIdFromRow($row)
+    {
+        return $row['statId'];
+    }
 
-            $entry = [];
+    /** @inheritDoc */
+    public function getDateFromValue($value)
+    {
+        return Carbon::createFromTimestamp($value);
+    }
 
-            // Read the columns
-            $entry['id'] = $row['statId'];
-            $entry['type'] = $row['type'];
-            $entry['start'] = $row['start'];
-            $entry['end'] = $row['end'];
-            $entry['layout'] = $row['layout'];
-            $entry['display'] = $row['display'];
-            $entry['media'] = $row['media'];
-            $entry['tag'] = $row['tag'];
-            $entry['duration'] = $row['duration'];
-            $entry['count'] = $row['count'];
-            $entry['displayId'] = $row['displayId'];
-            $entry['layoutId'] = $row['layoutId'];
-            $entry['widgetId'] = $row['widgetId'];
-            $entry['mediaId'] = $row['mediaId'];
-            $entry['statDate'] = $row['statDate'];
-            $entry['engagements'] = isset($row['engagements']) ? json_decode($row['engagements']) : [];
-
-            $rows[] = $entry;
-        }
-
-        return ['statData'=> $rows];
-
+    /** @inheritDoc */
+    public function getEngagementsFromRow($row)
+    {
+        return isset($row['engagements']) ? json_decode($row['engagements']) : [];
     }
 
     /**

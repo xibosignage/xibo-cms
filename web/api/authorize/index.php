@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,8 +22,6 @@
 
 use Monolog\Logger;
 use Monolog\Processor\UidProcessor;
-use Nyholm\Psr7\Factory\Psr17Factory;
-use Slim\Http\Factory\DecoratedResponseFactory;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ContainerFactory;
@@ -51,7 +49,7 @@ $container->set('logger', function () {
 
     $uidProcessor = new UidProcessor();
     // db
-    $dbhandler  =  new \Xibo\Helper\DatabaseLogHandler();
+    $dbhandler = new \Xibo\Helper\DatabaseLogHandler();
 
     $logger->pushProcessor($uidProcessor);
     $logger->pushHandler($dbhandler);
@@ -76,35 +74,8 @@ $app->addRoutingMiddleware();
 $app->setBasePath(\Xibo\Middleware\State::determineBasePath());
 
 // Define Custom Error Handler
-$customErrorHandler = function (Request $request, Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($app) {
-    $nyholmFactory = new Psr17Factory();
-    $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
-    /** @var Response $response */
-    $response = $decoratedResponseFactory->createResponse($exception->getCode());
-    $app->getContainer()->get('state')->setCommitState(false);
-
-    return $response->withJson([
-        'error' => $exception->getMessage(),
-       // 'traceString' => $exception->getTraceAsString(),
-       // 'trace' => $exception->getTrace(),
-        'code' => $exception->getCode()
-    ]);
-};
-
-
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
-$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
-/* Configure the Slim error handler
-$app->error(function (\Exception $e) use ($app) {
-    $app->container->get('\Xibo\Controller\Error')->handler($e);
-});
-
-// Configure a not found handler
-$app->notFound(function () use ($app) {
-    $app->container->get('\Xibo\Controller\Error')->notFound();
-});
-
-*/
+$errorMiddleware->setDefaultErrorHandler(\Xibo\Middleware\Handlers::jsonErrorHandler($container));
 
 // Auth Routes
 $app->get('/', function(Request $request, Response $response) use ($app) {

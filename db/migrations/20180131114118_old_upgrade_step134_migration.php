@@ -19,7 +19,7 @@ class OldUpgradeStep134Migration extends AbstractMigration
             if ($dbVersion < $STEP) {
                 // Perform the upgrade
                 $this->execute('INSERT INTO displayprofile (name, type, config, isdefault, userId) VALUES (\'webOS\', \'lg\', \'{}\', 1, 1)');
-                $this->execute('INSERT INTO module (Module, Name, Enabled, RegionSpecific, Description, ImageUri, SchemaVersion, ValidExtensions, PreviewEnabled, assignable, render_as, settings, viewPath, class, defaultDuration) VALUES (\'notificationview\', \'Notification\', 1, 1, \'Display Notifications from the Notification Centre\', \'forms/library.gif\', 1, null, 1, 1, \'html\', null, \'../modules\', \'Xibo\\Widget\\NotificationView\', 10);');
+                $this->execute('INSERT INTO module (Module, Name, Enabled, RegionSpecific, Description, ImageUri, SchemaVersion, ValidExtensions, PreviewEnabled, assignable, render_as, settings, viewPath, class, defaultDuration) VALUES (\'notificationview\', \'Notification\', 1, 1, \'Display Notifications from the Notification Centre\', \'forms/library.gif\', 1, null, 1, 1, \'html\', null, \'../modules\', \'Xibo\\\\Widget\\\\NotificationView\', 10);');
 
                 $group = $this->table('group');
                 $group

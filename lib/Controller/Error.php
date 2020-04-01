@@ -34,10 +34,6 @@ use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\HelpServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\ExpiredException;
-use Xibo\Support\Exception\InstanceSuspendedException;
-use Xibo\Support\Exception\UpgradePendingException;
 
 /**
  * Class Error
@@ -64,24 +60,6 @@ class Error extends Base
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
         $this->container = $container;
-    }
-
-    /**
-     * Determine if we are a handled exception
-     * @param $e
-     * @return bool
-     */
-    private function handledError($e)
-    {
-        if (method_exists($e, 'handledException'))
-            return $e->handledException();
-
-        return ($e instanceof \InvalidArgumentException
-            || $e instanceof ExpiredException
-            || $e instanceof AccessDeniedException
-            || $e instanceof InstanceSuspendedException
-            || $e instanceof UpgradePendingException
-        );
     }
 
     /**
