@@ -81,7 +81,7 @@ $customErrorHandler = function (Request $request, Throwable $exception, bool $di
     $nyholmFactory = new Psr17Factory();
     $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
     /** @var Response $response */
-    $response = $decoratedResponseFactory->createResponse($exception->getCode());
+    $response = $decoratedResponseFactory->createResponse((int)$exception->getCode());
     $app->getContainer()->get('state')->setCommitState(false);
 
     return $response->withJson([
