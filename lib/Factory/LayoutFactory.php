@@ -2018,7 +2018,7 @@ class LayoutFactory extends BaseFactory
             $body .= " AND `layout`.publishedDate IS NOT NULL ";
         }
 
-        if ($this->getSanitizer()->getInt('activeDisplayGroupId', $filterBy) !== null) {
+        if ($parsedFilter->getInt('activeDisplayGroupId') !== null) {
 
             $date = Carbon::now()->format('U');
 
