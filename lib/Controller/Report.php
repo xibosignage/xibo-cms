@@ -379,7 +379,16 @@ class Report extends Base
         $savedReports = $this->savedReportFactory->query(null, ['reportScheduleId' => $reportScheduleId]);
         foreach ($savedReports as $savedreport) {
             try {
+                /** @var Media $media */
+                $media = $this->mediaFactory->getById($savedreport->mediaId);
+
+                $savedreport->load();
+                $media->load();
+
+                // Delete
                 $savedreport->delete();
+                $media->delete();
+
             } catch (\RuntimeException $e) {
                 throw new InvalidArgumentException(__('Saved report cannot be deleted'), 'savedReportId');
             }
