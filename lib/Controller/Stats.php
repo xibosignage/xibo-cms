@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 
 use Xibo\Exception\InvalidArgumentException;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -197,10 +198,12 @@ class Stats extends Base
      *  ),
      *  @SWG\Property(
      *      property="minStart",
+     *      description="DEPRECATED - will be removed in v3",
      *      type="string"
      *  ),
      *  @SWG\Property(
      *      property="maxEnd",
+     *      description="DEPRECATED - will be removed in v3",
      *      type="string"
      *  ),
      *  @SWG\Property(
@@ -307,6 +310,20 @@ class Stats extends Base
      *      type="integer",
      *      required=false
      *  ),
+     *   @SWG\Parameter(
+     *      name="returnDisplayLocalTime",
+     *      in="query",
+     *      description="true/1/On if the results should be in display local time, otherwise CMS time",
+     *      type="boolean",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="returnDateFormat",
+     *      in="query",
+     *      description="A PHP formatted date format for how the dates in this call should be returned.",
+     *      type="string",
+     *      required=false
+     *  ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -318,6 +335,7 @@ class Stats extends Base
      *      )
      *  )
      * )
+     * @throws \Xibo\Exception\InvalidArgumentException
      */
     public function grid()
     {
@@ -334,10 +352,15 @@ class Stats extends Base
         $statId = $this->getSanitizer()->getString('statId');
         $campaignId = $this->getSanitizer()->getInt('campaignId');
         $eventTag = $this->getSanitizer()->getString('eventTag');
-
+        $returnDisplayLocalTime = $this->getSanitizer()->getCheckbox('returnDisplayLocalTime');
+        $returnDateFormat = $this->getSanitizer()->getString('returnDateFormat', 'Y-m-d H:i:s');
         $start = $this->getSanitizer()->getInt('start', 0);
         $length = $this->getSanitizer()->getInt('length', 10);
 
+        // CMS timezone
+        $defaultTimezone = $this->getConfig()->getSetting('defaultTimezone');
+
+        // Band the dates out
         if ($fromDt != null) {
             $fromDt->startOfDay();
         }
@@ -361,10 +384,15 @@ class Stats extends Base
         // Super admin will be able to see stat records of deleted display, we will not filter by display later
         $displayIds = [];
         $displaysAccessible = [];
+        $timeZoneCache = [];
+
         if (!$this->getUser()->isSuperAdmin()) {
             // Get an array of display id this user has access to.
             foreach ($this->displayFactory->query() as $display) {
                 $displaysAccessible[] = $display->displayId;
+
+                // Cache the display timezone.
+                $timeZoneCache[$display->displayId] = $display->timeZone;
             }
 
             if (count($displaysAccessible) <= 0)
@@ -414,30 +442,53 @@ class Stats extends Base
         foreach ($result['statData'] as $row) {
             $entry = [];
 
+            // Core details
+            $entry['id'] = $this->getSanitizer()->string($row['id']);
+            $entry['type'] = $this->getSanitizer()->string($row['type']);
+            $entry['displayId'] = $this->getSanitizer()->int(($row['displayId']));
+
+            // Get the start/end date
+            $start = $this->getDate()->parse($row['start'], 'U');
+            $end = $this->getDate()->parse($row['end'], 'U');
+
+            if ($returnDisplayLocalTime) {
+                // Convert the dates to the display timezone.
+                if (!array_key_exists($entry['displayId'], $timeZoneCache)) {
+                    try {
+                        $display = $this->displayFactory->getById($entry['displayId']);
+                        $timeZoneCache[$entry['displayId']] = (empty($display->timeZone)) ? $defaultTimezone : $display->timeZone;
+                    } catch (NotFoundException $e) {
+                        $timeZoneCache[$entry['displayId']] = $defaultTimezone;
+                    }
+                }
+                $start = $start->tz($timeZoneCache[$entry['displayId']]);
+                $end = $end->tz($timeZoneCache[$entry['displayId']]);
+            }
+
             $widgetId = $this->getSanitizer()->int($row['widgetId']);
             $widgetName = $this->getSanitizer()->string($row['media']);
             $widgetName = ($widgetName == '' &&  $widgetId != 0) ? __('Deleted from Layout') : $widgetName;
 
             $displayName = isset($row['display']) ? $this->getSanitizer()->string($row['display']) : '';
             $layoutName = isset($row['layout']) ? $this->getSanitizer()->string($row['layout']) : '';
-            $entry['id'] = $this->getSanitizer()->string($row['id']);
-            $entry['type'] = $this->getSanitizer()->string($row['type']);
-            $entry['displayId'] = $this->getSanitizer()->int(($row['displayId']));
             $entry['display'] = ($displayName != '') ? $displayName : __('Not Found');
             $entry['layout'] = ($layoutName != '') ? $layoutName :  __('Not Found');
             $entry['media'] = $widgetName;
             $entry['numberPlays'] = $this->getSanitizer()->int($row['count']);
             $entry['duration'] = $this->getSanitizer()->int($row['duration']);
-            $entry['minStart'] = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
-            $entry['maxEnd'] = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
-            $entry['start'] = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
-            $entry['end'] = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
+            $entry['start'] = $start->format($returnDateFormat);
+            $entry['end'] = $end->format($returnDateFormat);
             $entry['layoutId'] = $this->getSanitizer()->int($row['layoutId']);
             $entry['widgetId'] = $this->getSanitizer()->int($row['widgetId']);
             $entry['mediaId'] = $this->getSanitizer()->int($row['mediaId']);
             $entry['tag'] = $this->getSanitizer()->string($row['tag']);
-            $entry['statDate'] = isset($row['statDate']) ? $this->getDate()->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : '';
+            $entry['statDate'] = isset($row['statDate']) ? $this->getDate()->parse($row['statDate'], 'U')->format($returnDateFormat) : '';
             $entry['engagements'] = $row['engagements'];
+
+            // These are duplicated for backwards compatibility
+            // DEPRECATED
+            $entry['minStart'] = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
+            $entry['maxEnd'] = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
 
             $rows[] = $entry;
         }
