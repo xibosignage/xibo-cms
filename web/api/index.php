@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,10 +22,6 @@
 
 use Monolog\Logger;
 use Monolog\Processor\UidProcessor;
-use Nyholm\Psr7\Factory\Psr17Factory;
-use Slim\Http\Factory\DecoratedResponseFactory;
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ContainerFactory;
 
 DEFINE('XIBO', true);
@@ -76,39 +72,13 @@ $app->add(new \Xibo\Middleware\Xmr($app));
 
 $app->addRoutingMiddleware();
 
-// Define Custom Error Handler
-$customErrorHandler = function (Request $request, Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($app) {
-    $nyholmFactory = new Psr17Factory();
-    $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
-    /** @var Response $response */
-    $response = $decoratedResponseFactory->createResponse((int)$exception->getCode());
-    $app->getContainer()->get('state')->setCommitState(false);
-
-    return $response->withJson([
-        'success' => false,
-        'error' => $exception->getMessage(),
-        'httpStatus' => $exception->getCode(),
-        'data' => []
-    ]);
-};
-
 // Add Error Middleware
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
-$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
-/*
+$errorMiddleware->setDefaultErrorHandler(\Xibo\Middleware\Handlers::jsonErrorHandler($container));
+
 // Handle additional Middleware
 \Xibo\Middleware\State::setMiddleWare($app);
 
-// Configure the Slim error handler\
-$app->error(function (\Exception $e) use ($app) {
-    $app->container->get('\Xibo\Controller\Error')->handler($e);
-});
-
-// Configure a not found handler
-$app->notFound(function () use ($app) {
-    $app->container->get('\Xibo\Controller\Error')->notFound();
-});
-*/
 // All routes
 require PROJECT_ROOT . '/lib/routes.php';
 

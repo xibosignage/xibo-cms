@@ -115,7 +115,7 @@ class Logging extends Base
         $fromDt = $parsedQueryParams->getDate('fromDt', ['default' => Carbon::now()]);
 
         $logs = $this->logFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
-            'fromDt' => $fromDt->addSeconds($seconds * $intervalType)->format('U'),
+            'fromDt' => $fromDt->clone()->subSeconds($seconds * $intervalType)->format('U'),
             'toDt' => $fromDt->format('U'),
             'type' => $parsedQueryParams->getString('level'),
             'page' => $parsedQueryParams->getString('page'),

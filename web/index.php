@@ -22,13 +22,8 @@
 
 use Monolog\Logger;
 use Monolog\Processor\UidProcessor;
-use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Container\ContainerInterface;
-use Slim\Http\Factory\DecoratedResponseFactory;
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
 use Slim\Views\TwigMiddleware;
-use Xibo\Support\Exception\UpgradePendingException;
 use Xibo\Factory\ContainerFactory;
 
 DEFINE('XIBO', true);
@@ -114,69 +109,14 @@ $app->addRoutingMiddleware();
 
 // Handle additional Middleware
 \Xibo\Middleware\State::setMiddleWare($app);
+
 //
 // End Middleware
 //
 
-// Define Custom Error Handler
-$customErrorHandler = function (Request $request, Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($app) {
-    $nyholmFactory = new Psr17Factory();
-    $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
-    /** @var Response $response */
-    $response = $decoratedResponseFactory->createResponse($exception->getCode());
-
-    if ($exception->getCode() == 404) {
-        $app->getContainer()->get('logger')->debug(sprintf('Page Not Found. %s', $request->getUri()->getPath()));
-        return $response = $response->withRedirect('/notFound');
-    } else {
-        $container = $app->getContainer();
-        /** @var \Xibo\Helper\Session $session */
-        $session = $container->get('session');
-        $logger = $container->get('logger');
-
-        $message = ( !empty($exception->getMessage()) ) ? $exception->getMessage() : __('Unexpected Error, please contact support.');
-
-        // log the error
-        $logger->error('Error with message: ' . $message);
-        $logger->debug('Error with trace: ' . $exception->getTraceAsString());
-
-        $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($exception)));
-
-        if ($exception instanceof UpgradePendingException) {
-            $exceptionClass = 'upgrade-in-progress-page';
-        }
-
-        if ($request->getUri()->getPath() != '/error') {
-
-            // set data in session, this is handled and then cleared in Error Controller.
-            $session->set('exceptionMessage', $message);
-            $session->set('exceptionCode', $exception->getCode());
-            $session->set('exceptionClass', $exceptionClass);
-            $session->set('priorRoute', $request->getUri()->getPath());
-
-            return $response = $response->withRedirect('/error');
-        } else {
-            // this should only happen when there is an error in Middleware or if something went horribly wrong.
-            $mode = $container->get('configService')->getSetting('SERVER_MODE');
-
-            if (strtolower($mode) === 'test') {
-                $message = $exception->getMessage() . ' thrown in ' . $exception->getTraceAsString();
-            } else {
-                $message = $exception->getMessage();
-            }
-
-            $container->get('state')->setCommitState(false);
-
-            // attempt to render a twig template in this application state will not go well
-            // as such return simple json response, with trace if the application is in test mode.
-            return $response = $response->withJson(['error' => $message]);
-        }
-    }
-};
-
 // Add Error Middleware
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
-$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
+$errorMiddleware->setDefaultErrorHandler(\Xibo\Middleware\Handlers::webErrorHandler($container));
 
 // All application routes
 require PROJECT_ROOT . '/lib/routes-web.php';
