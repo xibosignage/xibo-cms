@@ -1,0 +1,7 @@
+{
+  "title": "Weather Module",
+  "author": "Xibo Signage Ltd",
+  "description": "A module for displaying weather information. Uses the Dark Sky API",
+  "name": "weather",
+  "class": "Xibo\\Widget\\Weather"
+}
