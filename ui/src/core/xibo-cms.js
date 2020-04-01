@@ -1832,10 +1832,33 @@ function makePagedSelect(element, parent) {
                     pagination: {
                         more: (page * 10 < data.recordsTotal)
                     }
-                }
+                };
             }
         }
     });
+
+    // Set initial value if exists
+    if(element.data("initialValue") != undefined) {
+        $.ajax({
+            url: element.data("searchUrl"),
+            type: 'GET',
+            data: {
+                mediaId: element.data("initialValue")
+            }
+        }).then(function(data) {
+            // create the option and append to Select2
+            var option = new Option(data.data[0][element.data("textProperty")], data.data[0][element.data("idProperty")], true, true);
+            element.append(option).trigger('change');
+
+            // manually trigger the `select2:select` event
+            element.trigger({
+                type: 'select2:select',
+                params: {
+                    data: data
+                }
+            });
+        });
+    }
 }
 
 /**
@@ -1844,10 +1867,19 @@ function makePagedSelect(element, parent) {
  * @param parent
  */
 function makeLocalSelect(element, parent) {
-    
     element.select2({
         dropdownParent: ((parent == null) ? $("body") : $(parent)),
         matcher: function(params, data) {
+            // If filterClass is defined, try to filter the elements by it
+            const mainFilterClass = $(data.element.parentElement).data().filterClass;
+
+            // Get element class array ( one or more elements split by comma)
+            const elementClassArray = ($(data.element).data().filterClass != undefined ) ? $(data.element).data().filterClass.replace(' ', '').split(',') : [];
+
+            // If filter exists and it's not in one of the element filters, return empty data
+            if(mainFilterClass != undefined && mainFilterClass != '' && !elementClassArray.includes(mainFilterClass)) {
+                return null;
+            }
 
             // If there are no search terms, return all of the data
             if($.trim(params.term) === '') {
@@ -1889,6 +1921,19 @@ function makeLocalSelect(element, parent) {
 
             // Return `null` if the term should not be displayed
             return null;
+        },
+        templateResult: function(state) {
+            if(!state.id) {
+                return state.text;
+            }
+
+            var $el = $(state.element);
+
+            if($el.data().content !== undefined) {
+                return $($el.data().content);
+            }
+
+            return state.text;
         }
     });
 }

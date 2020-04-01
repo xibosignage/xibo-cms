@@ -65,7 +65,7 @@ class WorldClock extends ModuleWidget
             $module->regionSpecific = 1;
             $module->renderAs = 'html';
             $module->schemaVersion = $this->codeSchemaVersion;
-            $module->defaultDuration = 10;
+            $module->defaultDuration = 60;
             $module->settings = [];
             $module->installName = 'worldclock';
 
@@ -144,7 +144,6 @@ class WorldClock extends ModuleWidget
 
             if ($this->getOption('overrideTemplate') == 1) {
                 $this->setRawNode('mainTemplate', $request->getParam('mainTemplate', $request->getParam('mainTemplate', null)));
-                $this->setOption('mainTemplate_advanced', $sanitizedParams->getCheckbox('mainTemplate_advanced'));
                 $this->setRawNode('styleSheet', $request->getParam('styleSheet', $request->getParam('styleSheet', null)));
 
                 $this->setOption('widgetOriginalWidth', $sanitizedParams->getInt('widgetOriginalWidth'));
@@ -517,8 +516,7 @@ class WorldClock extends ModuleWidget
         $headContent = '';
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . ($this->isPreview() ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
-        <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . ($this->isPreview() ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
         
         // Add the CSS if it isn't empty, and replace the wallpaper
         if ($styleSheet != '') {
