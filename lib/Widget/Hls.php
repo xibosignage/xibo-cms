@@ -243,7 +243,7 @@ class Hls extends ModuleWidget
                      }
                 });
             ')
-            ->appendBody('<!--BROWSER=edge--><video id="video" poster="' . $this->getResourceUrl('vendor/hls/hls-1px-transparent.png') . '" ' . (($this->getOption('mute', 0) == 1) ? 'muted' : '') . '></video>')
+            ->appendBody('<video id="video" poster="' . $this->getResourceUrl('vendor/hls/hls-1px-transparent.png') . '" ' . (($this->getOption('mute', 0) == 1) ? 'muted' : '') . '></video>')
             ->appendCss('
                 video {
                     width: 100%; 
