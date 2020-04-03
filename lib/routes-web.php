@@ -418,7 +418,7 @@ $app->get('/report/savedreport/form/delete/{id}', ['\Xibo\Controller\Report','de
 // Ad hoc report
 //
 $app->get('/report/form/{name}', ['\Xibo\Controller\Report','getReportForm'])->setName('report.form');
-
+$app->get('/report/data/{name}', ['\Xibo\Controller\Report','getReportData'])->setName('report.data');
 
 // Player Software
 $app->get('/playersoftware/view', ['\Xibo\Controller\PlayerSoftware','displayPage'])->setName('playersoftware.view');

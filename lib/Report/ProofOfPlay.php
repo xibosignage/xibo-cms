@@ -243,47 +243,51 @@ class ProofOfPlay implements ReportInterface
                 break;
         }
 
+        if (isset($filterCriteria['layoutIds'])) {
+            if (count($filterCriteria['layoutIds']) > 0) {
 
-        if (count($filterCriteria['layoutIds']) > 0) {
+                $layouts = '';
+                foreach ($filterCriteria['layoutIds'] as $id) {
+                    try {
+                        $layout = $this->layoutFactory->getById($id);
 
-            $layouts = '';
-            foreach ($filterCriteria['layoutIds'] as $id) {
-                try {
-                    $layout = $this->layoutFactory->getById($id);
+                    } catch (NotFoundException $error) {
 
-                } catch (NotFoundException $error) {
+                        // Get the campaign ID
+                        $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($id);
+                        $layoutId = $this->layoutFactory->getLatestLayoutIdFromLayoutHistory($campaignId);
+                        $layout = $this->layoutFactory->getById($layoutId);
 
-                    // Get the campaign ID
-                    $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($id);
-                    $layoutId = $this->layoutFactory->getLatestLayoutIdFromLayoutHistory($campaignId);
-                    $layout = $this->layoutFactory->getById($layoutId);
+                    }
 
+                    $layouts .= $layout->layout . ', ';
                 }
 
-                $layouts .= $layout->layout . ', ';
+                $saveAs .= 'Layouts: '. $layouts;
             }
-
-            $saveAs .= 'Layouts: '. $layouts;
         }
 
-        if (count($filterCriteria['mediaIds']) > 0) {
-            $medias = '';
-            foreach ($filterCriteria['mediaIds'] as $id) {
 
-                try {
-                    $media = $this->mediaFactory->getById($id);
-                    $name = $media->name;
+        if (isset($filterCriteria['mediaIds'])) {
+            if (count($filterCriteria['mediaIds']) > 0) {
+                $medias = '';
+                foreach ($filterCriteria['mediaIds'] as $id) {
 
-                } catch (NotFoundException $error) {
-                    $name = 'Media not found';
+                    try {
+                        $media = $this->mediaFactory->getById($id);
+                        $name = $media->name;
+
+                    } catch (NotFoundException $error) {
+                        $name = 'Media not found';
+                    }
+
+                    $medias .= $name . ', ';
+
                 }
 
-                $medias .= $name . ', ';
+                $saveAs .= 'Media: ' . $medias;
 
             }
-
-            $saveAs .= 'Media: ' . $medias;
-
         }
 
 
@@ -337,6 +341,9 @@ class ProofOfPlay implements ReportInterface
     /** @inheritdoc */
     public function getResults($filterCriteria)
     {
+
+        $this->getLog()->debug('Filter criteria: '. json_encode($filterCriteria, JSON_PRETTY_PRINT));
+
         $sanitizedParams = $this->getSanitizer($filterCriteria);
         $displayId = $sanitizedParams->getInt('displayId');
         $layoutIds = $sanitizedParams->getIntArray('layoutId',  ['default' => [] ]);

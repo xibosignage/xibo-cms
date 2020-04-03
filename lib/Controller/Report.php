@@ -148,6 +148,9 @@ class Report extends Base
         /** @var \Xibo\Entity\ReportSchedule $reportSchedule */
         foreach ($reportSchedules as $reportSchedule) {
 
+            if ($this->isApi($request))
+                break;
+
             $reportSchedule->includeProperty('buttons');
 
             $cron = \Cron\CronExpression::factory($reportSchedule->schedule);
@@ -308,6 +311,12 @@ class Report extends Base
         $reportSchedule->lastRunDt = $reportSchedule->previousRunDt;
         $reportSchedule->save();
 
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => 'Success'
+        ]);
+
         return $this->render($request, $response);
     }
 
@@ -441,18 +450,36 @@ class Report extends Base
      */
     public function reportScheduleDeleteAllSavedReport(Request $request, Response $response, $id)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $reportSchedule = $this->reportScheduleFactory->getById($id);
+        $disableUserCheck = $sanitizedParams->getInt('disableUserCheck');
+
+        $reportSchedule = $this->reportScheduleFactory->getById($id, $disableUserCheck);
 
         if (!$this->getUser()->checkDeleteable($reportSchedule)) {
             throw new AccessDeniedException(__('You do not have permissions to delete the saved report of this report schedule'));
         }
 
         // Get all saved reports of the report schedule
-        $savedReports = $this->savedReportFactory->query(null, ['reportScheduleId' => $id]);
+        $savedReports = $this->savedReportFactory->query(null,
+            [
+                'reportScheduleId' => $reportSchedule->reportScheduleId,
+                'disableUserCheck' => $disableUserCheck
+            ]);
+
+
         foreach ($savedReports as $savedreport) {
             try {
+                /** @var Media $media */
+                $media = $this->mediaFactory->getById($savedreport->mediaId);
+
+                $savedreport->load();
+                $media->load();
+
+                // Delete
                 $savedreport->delete();
+                $media->delete();
+
             } catch (\RuntimeException $e) {
                 throw new InvalidArgumentException(__('Saved report cannot be deleted'), 'savedReportId');
             }

@@ -196,7 +196,8 @@ class SummaryReport implements ReportInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $filter = $sanitizedParams->getString('filter');
-        $hiddenFields = json_decode($request->getParam('hiddenFields', null), true);
+
+        $hiddenFields = json_decode($sanitizedParams->getString('hiddenFields'), true);
 
         $type = $hiddenFields['type'];
         $selectedId = $hiddenFields['selectedId'];

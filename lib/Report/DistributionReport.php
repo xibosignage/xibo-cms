@@ -206,8 +206,9 @@ class DistributionReport implements ReportInterface
 
         $filter = $sanitizedParams->getString('filter');
         $groupByFilter = $sanitizedParams->getString('groupByFilter');
-        $displayId = $sanitizedParams->getString('displayId');
-        $hiddenFields = json_decode($request->getParam('hiddenFields', null), true);
+        $displayId = $sanitizedParams->getInt('displayId');
+        $hiddenFields = json_decode($sanitizedParams->getString('hiddenFields'), true);
+
 
         $type = $hiddenFields['type'];
         $selectedId = $hiddenFields['selectedId'];
