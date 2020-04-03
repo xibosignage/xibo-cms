@@ -255,9 +255,9 @@ class Schedule extends Base
         $campaignId = $sanitizedParams->getInt('campaignId');
         $originalDisplayGroupIds = $displayGroupIds;
 
-        $start = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $sanitizedParams->getString('from'));
-        $end = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $sanitizedParams->getString('to'));
-
+        $start = $sanitizedParams->getDate('from', ['default' => Carbon::now()]);
+        $end = $sanitizedParams->getDate('to', ['default' => Carbon::now()]);
+        
         // if we have some displayGroupIds then add them to the session info so we can default everything else.
         $this->session->set('displayGroupIds', $displayGroupIds);
 
