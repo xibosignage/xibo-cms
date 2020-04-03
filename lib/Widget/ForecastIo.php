@@ -46,6 +46,7 @@ use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Weather\DarkSkyProvider;
+use Xibo\Weather\OpenWeatherMapProvider;
 
 /**
  * Class ForecastIo
@@ -128,10 +129,11 @@ class ForecastIo extends ModuleWidget
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Process any module settings you asked for.
         $apiKey = $sanitizedParams->getString('apiKey');
+        $owmApiKey = $sanitizedParams->getString('owmApiKey');
         $cachePeriod = $sanitizedParams->getInt('cachePeriod', ['default' => 300]);
 
         if ($this->module->enabled != 0) {
-            if ($apiKey == '')
+            if ($apiKey == '' && $owmApiKey == '')
                 throw new InvalidArgumentException(__('Missing API Key'), 'apiKey');
 
             if ($cachePeriod <= 0)
@@ -139,6 +141,7 @@ class ForecastIo extends ModuleWidget
         }
 
         $this->module->settings['apiKey'] = $apiKey;
+        $this->module->settings['owmApiKey'] = $owmApiKey;
         $this->module->settings['cachePeriod'] = $cachePeriod;
 
         return $response;
@@ -373,17 +376,20 @@ class ForecastIo extends ModuleWidget
 
     /**
      * Get Tab
+     * @param $tab
+     * @return array
      * @throws \Xibo\Exception\XiboException
      * @inheritDoc
      */
      public function getTab($tab)
      {
          if ($tab == 'forecast') {
+             // Return a current day weather forecast, for displayId 0 (meaning preview)
              if (!$data = $this->getForecastData(0)) {
                  throw new NotFoundException(__('No data returned, please check error log.'));
              }
 
-             $rows = array();
+             $rows = [];
              foreach ((array)$data->getCurrentDay() as $key => $value) {
                  if (stripos($key, 'time')) {
                      $value = Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
@@ -430,7 +436,8 @@ class ForecastIo extends ModuleWidget
     {
         // Don't do anything if we don't have an API Key
         $apiKey = $this->getSetting('apiKey');
-        if ($apiKey == '') {
+        $owmApiKey = $this->getSetting('owmApiKey');
+        if ($apiKey == '' && $owmApiKey == '') {
             throw new ConfigurationException('Incorrectly configured module');
         }
 
@@ -444,7 +451,10 @@ class ForecastIo extends ModuleWidget
 
                 $display = $this->displayFactory->getById($displayId);
 
-                if ($display->latitude != '' && $display->longitude != '' && v::latitude()->validate($display->latitude) && v::longitude()->validate($display->longitude)) {
+                if ($display->latitude != '' && $display->longitude != ''
+                    && v::latitude()->validate($display->latitude)
+                    && v::longitude()->validate($display->longitude)
+                ) {
                     $defaultLat = $display->latitude;
                     $defaultLong = $display->longitude;
                 } else {
@@ -457,18 +467,22 @@ class ForecastIo extends ModuleWidget
         }
 
         if (!v::longitude()->validate($defaultLong) || !v::latitude()->validate($defaultLat)) {
-            $this->getLog()->error('Weather widget configured with incorrect lat/long. WidgetId is ' . $this->getWidgetId() . ', Lat is ' . $defaultLat . ', Lng is ' . $defaultLong);
+            $this->getLog()->error('Weather widget configured with incorrect lat/long. WidgetId is ' . $this->getWidgetId()
+                . ', Lat is ' . $defaultLat . ', Lng is ' . $defaultLong);
             throw new InvalidArgumentException('Lat/Long invalid', 'geolocation');
         }
 
         // Provider needs a client with our proxy config.
         $client = new Client($this->getConfig()->getGuzzleProxy(['connect_timeout' => 20]));
 
-        // TODO: we need to pick the provider based on whether we have a DarkSky or OpenWeatherMap API key.
+        // We need to pick the provider based on whether we have a DarkSky or OpenWeatherMap API key.
+        $provider = (empty($owmApiKey))
+            ? (new DarkSkyProvider($this->getPool(), $client))->setKey($apiKey)
+            : (new OpenWeatherMapProvider($this->getPool(), $client))->setKey($owmApiKey);
+
         // Create a provider
-        return (new DarkSkyProvider($this->getPool(), $client))
+        return $provider
             ->enableLogging($this->getLog())
-            ->setKey($apiKey)
             ->setCachePeriod($this->getSetting('cachePeriod', 14400))
             ->setLocation($defaultLat, $defaultLong)
             ->setUnits($this->getOption('units', 'auto'))
@@ -537,6 +551,7 @@ class ForecastIo extends ModuleWidget
             // Both current and forecast templates are required by this module.
             $currently = $foreCast->getCurrentDay();
             $daily = $foreCast->getForecast();
+
         } catch (GeneralException $exception) {
             // The player should keep its cache
             return '';
@@ -544,7 +559,9 @@ class ForecastIo extends ModuleWidget
 
         // Are we set to only show daytime weather conditions?
         if ($this->getOption('dayConditionsOnly') == 1) {
+            // Swap the night icons for their day equivalents
             $currently->icon = str_replace('-night', '', $currently->icon);
+            $currently->wicon = str_replace('-night', '', $currently->wicon);
         }
 
         // Do we need to override the language?
@@ -554,9 +571,9 @@ class ForecastIo extends ModuleWidget
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
-        
+
+        // Templates
         if ($this->getOption('overrideTemplate') == 0) {
-            
             // Get CSS and HTML from the default templates
             $template = $this->getTemplateById($this->getOption('templateId'));
             
@@ -566,11 +583,12 @@ class ForecastIo extends ModuleWidget
                 $styleSheet = $template['css'];
                 $widgetOriginalWidth = $template['widgetOriginalWidth'];
                 $widgetOriginalHeight = $template['widgetOriginalHeight'];
+            } else {
+                throw new InvalidArgumentException(__('Template not found, please edit the Widget and select another.'), 'templateId');
             }
             
         } else {
             // Get CSS and HTML from the override input fields
-            
             $body = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('currentTemplate', ''));
             $dailyTemplate = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('dailyTemplate', ''));
             $styleSheet = $this->getRawNode('styleSheet', '');
@@ -590,6 +608,7 @@ class ForecastIo extends ModuleWidget
         $dailyTemplate = $this->parseTranslations($dailyTemplate);
         
         // Provide the background images to the templates styleSheet
+        // TODO: the way this works is super odd
         $styleSheet = $this->makeSubstitutions([
             'cloudy-image' => $this->getResourceUrl('forecastio/wi-cloudy.jpg'),
             'day-cloudy-image' => $this->getResourceUrl('forecastio/wi-day-cloudy.jpg'),
@@ -620,6 +639,7 @@ class ForecastIo extends ModuleWidget
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
         // Replace any icon sets
+        // TODO: I don't think this functionality exists anymore.
         $data['head'] = str_replace('[[ICONS]]', $this->getResourceUrl('forecastio/' . $this->getOption('icons')), $headContent);
 
         // Get the JavaScript node
