@@ -254,9 +254,10 @@ class Schedule extends Base
         $displayGroupIds = $sanitizedParams->getIntArray('displayGroupIds', ['default' => []]);
         $campaignId = $sanitizedParams->getInt('campaignId');
         $originalDisplayGroupIds = $displayGroupIds;
-        $start = Carbon::createFromTimestamp($sanitizedParams->getString('from', ['default' => 1000]) / 1000);
-        $end =  Carbon::createFromTimestamp($sanitizedParams->getString('to', ['default' => 1000]) / 1000);
 
+        $start = $sanitizedParams->getDate('from', ['default' => Carbon::now()]);
+        $end = $sanitizedParams->getDate('to', ['default' => Carbon::now()]);
+        
         // if we have some displayGroupIds then add them to the session info so we can default everything else.
         $this->session->set('displayGroupIds', $displayGroupIds);
 
