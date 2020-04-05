@@ -44,7 +44,6 @@ use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
 use Xibo\Weather\DarkSkyProvider;
 use Xibo\Weather\OpenWeatherMapProvider;
 
@@ -82,7 +81,7 @@ class ForecastIo extends ModuleWidget
             $module->name = 'Weather';
             $module->type = 'forecastio';
             $module->class = 'Xibo\Widget\ForecastIo';
-            $module->description = 'Weather Powered by DarkSky';
+            $module->description = 'Weather module showing Current and Daily forecasts.';
             $module->enabled = 1;
             $module->previewEnabled = 1;
             $module->assignable = 1;
@@ -357,7 +356,7 @@ class ForecastIo extends ModuleWidget
     /**
      * Units supported by Forecast.IO API
      * @return array The Units Available (temperature, wind speed and visible distance)
-     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\ConfigurationException
      */
     public function unitsAvailable()
     {
@@ -367,7 +366,7 @@ class ForecastIo extends ModuleWidget
     /**
      * Languages supported by Forecast.IO API
      * @return array The Supported Language
-     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\ConfigurationException
      */
     public function supportedLanguages()
     {
@@ -375,19 +374,14 @@ class ForecastIo extends ModuleWidget
     }
 
     /**
-     * Get Tab
-     * @param $tab
-     * @return array
-     * @throws \Xibo\Exception\XiboException
      * @inheritDoc
+     * @throws \Xibo\Support\Exception\GeneralException
      */
      public function getTab($tab)
      {
          if ($tab == 'forecast') {
              // Return a current day weather forecast, for displayId 0 (meaning preview)
-             if (!$data = $this->getForecastData(0)) {
-                 throw new NotFoundException(__('No data returned, please check error log.'));
-             }
+             $data = $this->getForecastData(0);
 
              $rows = [];
              foreach ((array)$data->getCurrentDay() as $key => $value) {
@@ -395,12 +389,6 @@ class ForecastIo extends ModuleWidget
                      $value = Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
                  }
                  $rows[] = array('forecast' => __('Forecast'), 'key' => $key, 'value' => $value);
-             }
-             foreach ($data['daily']['data'][0] as $key => $value) {
-                 if (stripos($key, 'time')) {
-                     $value = Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
-                 }
-                 $rows[] = array('forecast' => __('Daily'), 'key' => $key, 'value' => $value);
              }
 
              return ['forecast' => $rows];
@@ -414,7 +402,7 @@ class ForecastIo extends ModuleWidget
                      'designHeight' => $this->getOption('designHeight'),
                      'main' => $this->getRawNode('currentTemplate'),
                      'daily' => $this->getRawNode('dailyTemplate'),
-                     'css' => $this->getRawNode('styleSheet'),                     
+                     'css' => $this->getRawNode('styleSheet'),
                      'widgetOriginalWidth' => intval($this->getOption('widgetOriginalWidth')),
                      'widgetOriginalHeight' => intval($this->getOption('widgetOriginalHeight')),
                      'image' => 'preview-image'
@@ -476,7 +464,7 @@ class ForecastIo extends ModuleWidget
 
     /**
      * @return \Xibo\Weather\WeatherProvider
-     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\ConfigurationException
      */
     private function getProvider()
     {
@@ -678,7 +666,7 @@ class ForecastIo extends ModuleWidget
             // Substitute for every day (i.e. 7 times).
             for ($i = $offset; $i < $stopPosition; $i++) {
                 $this->getLog()->debug('Substitiution for Daily, day ' . $i);
-                $dailySubs .= $this->makeSubstitutions($foreCast['daily']['data'][$i], $dailyTemplate, $foreCast->getTimezone(), $lang);
+                $dailySubs .= $this->makeSubstitutions($daily[$i], $dailyTemplate, $foreCast->getTimezone(), $lang);
             }
 
             // Substitute the completed template
@@ -686,7 +674,7 @@ class ForecastIo extends ModuleWidget
         }
 
         // Run replace over the main template
-        $data['body'] = $this->makeSubstitutions($foreCast['currently'], $body, $foreCast->getTimezone(), $lang);
+        $data['body'] = $this->makeSubstitutions($currently, $body, $foreCast->getTimezone(), $lang);
 
         // JavaScript to control the size (override the original width and height so that the widget gets blown up )
         $options = array(
@@ -757,5 +745,11 @@ class ForecastIo extends ModuleWidget
     public function isCacheDisplaySpecific()
     {
         return ($this->getOption('useDisplayLocation') == 1);
+    }
+
+    /** @inheritDoc */
+    public function hasTemplates()
+    {
+        return true;
     }
 }

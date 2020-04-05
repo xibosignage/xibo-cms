@@ -22,11 +22,14 @@
 
 namespace Xibo\Weather;
 
-
+use Carbon\Carbon;
 use GuzzleHttp\Exception\RequestException;
-use Jenssegers\Date\Date;
-use Xibo\Exception\GeneralException;
+use Xibo\Support\Exception\GeneralException;
 
+/**
+ * Class OpenWeatherMapProvider
+ * @package Xibo\Weather
+ */
 class OpenWeatherMapProvider implements WeatherProvider
 {
     use WeatherProviderTrait;
@@ -67,7 +70,7 @@ class OpenWeatherMapProvider implements WeatherProvider
 
     /**
      * Get a combined forecast
-     * @throws \Xibo\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     private function get()
     {
@@ -367,7 +370,7 @@ class OpenWeatherMapProvider implements WeatherProvider
     /**
      * @param string $url
      * @return array
-     * @throws \Xibo\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     private function queryApi(string $url): array
     {
@@ -392,7 +395,7 @@ class OpenWeatherMapProvider implements WeatherProvider
 
                 // Cache
                 // reset the cache time to be at midnight of the day on which we would have cached.
-                $time = Date::now()->addSeconds($this->cachePeriod)->startOfDay();
+                $time = Carbon::now()->addSeconds($this->cachePeriod)->startOfDay();
                 $cache->set($data);
                 $cache->expiresAt($time);
                 $this->pool->saveDeferred($cache);

@@ -22,11 +22,14 @@
 
 namespace Xibo\Weather;
 
-
+use Carbon\Carbon;
 use GuzzleHttp\Exception\RequestException;
-use Jenssegers\Date\Date;
-use Xibo\Exception\GeneralException;
+use Xibo\Support\Exception\GeneralException;
 
+/**
+ * Class DarkSkyProvider
+ * @package Xibo\Weather
+ */
 class DarkSkyProvider implements WeatherProvider
 {
     // Use a trait to provide the basic provider functions
@@ -62,7 +65,7 @@ class DarkSkyProvider implements WeatherProvider
 
     /**
      * Get the body for our API response.
-     * @throws \Xibo\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     private function get()
     {
@@ -109,7 +112,7 @@ class DarkSkyProvider implements WeatherProvider
 
                 // Cache
                 // reset the cache time to be at midnight of the day on which we would have cached.
-                $time = Date::now()->addSeconds($this->cachePeriod)->startOfDay();
+                $time = Carbon::now()->addSeconds($this->cachePeriod)->startOfDay();
                 $cache->set($data);
                 $cache->expiresAt($time);
                 $this->pool->saveDeferred($cache);

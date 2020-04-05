@@ -83,13 +83,13 @@ interface WeatherProvider
 
     /**
      * @return \Xibo\Weather\Forecast
-     * @throws \Xibo\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function getCurrentDay();
 
     /**
      * @return \Xibo\Weather\Forecast[]
-     * @throws \Xibo\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function getForecast();
 

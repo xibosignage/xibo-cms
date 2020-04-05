@@ -390,7 +390,7 @@ class Base
 
         $view = $view->getBody();
         // Log Rendered View
-         $this->getLog()->debug(sprintf('%s View: %s', $state->template, $view));
+        //$this->getLog()->debug(sprintf('%s View: %s', $state->template, $view));
 
         if (!$view = json_decode($view, true)) {
             $this->getLog()->error(sprintf('Problem with Template: View = %s ', $state->template));
