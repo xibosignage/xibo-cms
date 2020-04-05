@@ -24,139 +24,22 @@ namespace Xibo\Weather;
 
 
 use GuzzleHttp\Exception\RequestException;
-use Psr\Log\NullLogger;
 use Xibo\Exception\GeneralException;
-use Xibo\Service\LogServiceInterface;
 
-class DarkSkyProvider
+class DarkSkyProvider implements WeatherProvider
 {
-    /** @var \Stash\Interfaces\PoolInterface */
-    private $pool;
+    // Use a trait to provide the basic provider functions
+    use WeatherProviderTrait;
 
-    /** @var \GuzzleHttp\Client */
-    private $client;
+    protected $apiUrl = 'https://api.darksky.net/forecast/';
 
-    /** @var \Psr\Log\NullLogger|LogServiceInterface */
-    private $logger;
-
-    private $apiUrl = 'https://api.darksky.net/forecast/';
-    private $apiKey;
-    private $cachePeriod = 14400;
-
-    private $lat;
-    private $long;
-    private $units;
-    private $lang;
-
-    /** @var string */
-    private $timezone;
-
-    /** @var \Xibo\Weather\ForecastDay */
-    private $currentDay;
-
-    /** @var \Xibo\Weather\ForecastDay[] */
-    private $forecast;
-
-    // <editor-fold desc="Getters/Setters">
-
-    /**
-     * DarkSkyProvider constructor.
-     * @param \Stash\Interfaces\PoolInterface $pool
-     * @param \GuzzleHttp\Client $client
-     */
-    public function __construct($pool, $client)
-    {
-        $this->pool = $pool;
-        $this->client = $client;
-        $this->logger = new NullLogger();
-    }
-
-    /**
-     * @param \Psr\Log\NullLogger|LogServiceInterface $logger
-     * @return $this
-     */
-    public function enableLogging($logger)
-    {
-        $this->logger = $logger;
-        return $this;
-    }
-
-    /**
-     * @param string $url
-     * @return $this
-     */
-    public function setUrl(string $url)
-    {
-        $this->apiUrl = $url;
-        return $this;
-    }
-
-    /**
-     * @param string $key
-     * @return $this
-     */
-    public function setKey(string $key)
-    {
-        $this->apiKey = $key;
-        return $this;
-    }
-
-    /**
-     * @param int $cachePeriod
-     * @return $this
-     */
-    public function setCachePeriod(int $cachePeriod)
-    {
-        $this->cachePeriod = $cachePeriod;
-        return $this;
-    }
-
-    /**
-     * @param $lat
-     * @param $long
-     * @return $this
-     */
-    public function setLocation($lat, $long)
-    {
-        $this->lat = $lat;
-        $this->long = $long;
-        return $this;
-    }
-
-    /**
-     * @param $lang
-     * @return $this
-     */
-    public function setLang($lang)
-    {
-        $this->lang = $lang;
-        return $this;
-    }
-
-    /**
-     * @param $units
-     * @return $this
-     */
-    public function setUnits($units)
-    {
-        $this->units = $units;
-        return $this;
-    }
-
-    // </editor-fold>
-
-    /**
-     * @return string
-     */
+    /** @inheritDoc */
     public function getAttribution()
     {
         return 'Powered by DarkSky';
     }
 
-    /**
-     * @return \Xibo\Weather\ForecastDay
-     * @throws \Xibo\Exception\GeneralException
-     */
+    /** @inheritDoc */
     public function getCurrentDay()
     {
         if ($this->currentDay === null) {
@@ -166,10 +49,7 @@ class DarkSkyProvider
         return $this->currentDay;
     }
 
-    /**
-     * @return \Xibo\Weather\ForecastDay[]
-     * @throws \Xibo\Exception\GeneralException
-     */
+    /** @inheritDoc */
     public function getForecast()
     {
         if ($this->forecast === null) {
@@ -177,15 +57,6 @@ class DarkSkyProvider
         }
 
         return $this->forecast;
-    }
-
-    /**
-     * Get TimeZone
-     * @return string
-     */
-    public function getTimezone()
-    {
-        return $this->timezone;
     }
 
     /**
@@ -252,17 +123,10 @@ class DarkSkyProvider
         $this->timezone = $data['timezone'];
 
         // Temperature and Wind Speed Unit Mappings
-        $temperatureUnit = '';
-        $windSpeedUnit = '';
-        $visibilityDistanceUnit = '';
-        foreach ($this->unitsAvailable() as $unit) {
-            if ($unit['id'] == $data['flags']['units']) {
-                $temperatureUnit = $unit['tempUnit'];
-                $windSpeedUnit = $unit['windUnit'];
-                $visibilityDistanceUnit = $unit['visibilityUnit'];
-                break;
-            }
-        }
+        $unit = $this->getUnit($this->units);
+        $temperatureUnit = $unit['tempUnit'] ?? 'C';
+        $windSpeedUnit = $unit['windUnit'] ?? 'KPH';
+        $visibilityDistanceUnit = $unit['visibilityUnit'] ?? 'km';
 
         // Load this data into our objects
         $this->currentDay = new ForecastDay();
@@ -327,29 +191,11 @@ class DarkSkyProvider
         }
 
         // Map icon
-        $icons = self::iconMap();
+        $icons = $this->iconMap();
         $day->wicon = $icons[$item['icon']] ?? $icons['unmapped'];
     }
 
-    /**
-     * Units supported by Forecast.IO API
-     * @return array The Units Available (temperature, wind speed and visible distance)
-     */
-    public static function unitsAvailable()
-    {
-        return [
-            ['id' => 'auto', 'value' => 'Automatically select based on geographic location', 'tempUnit' => '', 'windUnit' => '', 'visibilityUnit' => ''],
-            ['id' => 'ca', 'value' => 'Canada', 'tempUnit' => 'C', 'windUnit' => 'KPH', 'visibilityUnit' => 'km'],
-            ['id' => 'si', 'value' => 'Standard International Units', 'tempUnit' => 'C', 'windUnit' => 'MPS', 'visibilityUnit' => 'km'],
-            ['id' => 'uk2', 'value' => 'United Kingdom', 'tempUnit' => 'C', 'windUnit' => 'MPH', 'visibilityUnit' => 'mi'],
-            ['id' => 'us', 'value' => 'United States', 'tempUnit' => 'F', 'windUnit' => 'MPH', 'visibilityUnit' => 'mi'],
-        ];
-    }
-
-    /**
-     * Languages supported by Forecast.IO API
-     * @return array The Supported Language
-     */
+    /** @inheritDoc */
     public static function supportedLanguages()
     {
         return [
@@ -397,7 +243,7 @@ class DarkSkyProvider
     /**
      * @return array
      */
-    private static function iconMap()
+    private function iconMap()
     {
         return [
             'unmapped' => 'wi-alien',
@@ -411,23 +257,6 @@ class DarkSkyProvider
             'cloudy' => 'wi-cloudy',
             'partly-cloudy-day' => 'wi-day-cloudy',
             'partly-cloudy-night' => 'wi-night-partly-cloudy',
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    private static function cardinalDirections()
-    {
-        return [
-            'N' => [337.5, 22.5],
-            'NE' => [22.5, 67.5],
-            'E' => [67.5, 112.5],
-            'SE' => [112.5, 157.5],
-            'S' => [157.5, 202.5],
-            'SW' => [202.5, 247.5],
-            'W' => [247.5, 292.5],
-            'NW' => [292.5, 337.5]
         ];
     }
 }
