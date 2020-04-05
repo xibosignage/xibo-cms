@@ -37,6 +37,9 @@ trait WeatherProviderTrait
     /** @var \Psr\Log\NullLogger|LogServiceInterface */
     protected $logger;
 
+    /** @var array $options */
+    protected $options;
+
     /** @var string The API Key */
     protected $apiKey;
 
@@ -50,10 +53,10 @@ trait WeatherProviderTrait
     /** @var string */
     protected $timezone;
 
-    /** @var \Xibo\Weather\ForecastDay */
+    /** @var \Xibo\Weather\Forecast */
     protected $currentDay;
 
-    /** @var \Xibo\Weather\ForecastDay[] */
+    /** @var \Xibo\Weather\Forecast[] */
     protected $forecast;
 
     // <editor-fold desc="Getters/Setters">
@@ -61,12 +64,10 @@ trait WeatherProviderTrait
     /**
      * Constructor.
      * @param \Stash\Interfaces\PoolInterface $pool
-     * @param \GuzzleHttp\Client $client
      */
-    public function __construct($pool, $client)
+    public function __construct($pool)
     {
         $this->pool = $pool;
-        $this->client = $client;
         $this->logger = new NullLogger();
     }
 
@@ -78,9 +79,19 @@ trait WeatherProviderTrait
     }
 
     /** @inheritDoc */
-    public function setUrl(string $url)
+    public function setHttpClient($client)
     {
-        $this->apiUrl = $url;
+        $this->client = $client;
+        return $this;
+    }
+
+    /** @inheritDoc */
+    public function setOptions(array $options)
+    {
+        if (isset($options['url'])) {
+            $this->apiUrl = $options['url'];
+        }
+        $this->options = $options;
         return $this;
     }
 

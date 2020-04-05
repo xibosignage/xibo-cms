@@ -34,10 +34,16 @@ interface WeatherProvider
     public function enableLogging($logger);
 
     /**
-     * @param string $url
+     * @param \GuzzleHttp\ClientInterface $client
      * @return $this
      */
-    public function setUrl(string $url);
+    public function setHttpClient($client);
+
+    /**
+     * @param array $options
+     * @return $this
+     */
+    public function setOptions(array $options);
 
     /**
      * @param string $key
@@ -76,13 +82,13 @@ interface WeatherProvider
     public function getAttribution();
 
     /**
-     * @return \Xibo\Weather\ForecastDay
+     * @return \Xibo\Weather\Forecast
      * @throws \Xibo\Exception\GeneralException
      */
     public function getCurrentDay();
 
     /**
-     * @return \Xibo\Weather\ForecastDay[]
+     * @return \Xibo\Weather\Forecast[]
      * @throws \Xibo\Exception\GeneralException
      */
     public function getForecast();

@@ -25,7 +25,7 @@ namespace Xibo\Weather;
 
 use Carbon\Carbon;
 
-class ForecastDay
+class Forecast
 {
     public $time;
     public $summary;
@@ -37,6 +37,8 @@ class ForecastDay
     public $temperatureMaxRound;
     public $temperatureLow;
     public $temperatureMinRound;
+    public $temperatureMean;
+    public $temperatureMeanRound;
     public $apparentTemperature;
     public $apparentTemperatureRound;
     public $dewPoint;
