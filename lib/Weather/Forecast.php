@@ -23,16 +23,27 @@
 namespace Xibo\Weather;
 
 
-use Carbon\Carbon;
-
+/**
+ * Class Forecast
+ *  this class represents a weather forecast, either current or future.
+ * @package Xibo\Weather
+ */
 class Forecast
 {
     public $time;
+    public $sunSet;
+    public $sunRise;
     public $summary;
     public $icon;
     public $wicon;
     public $temperature;
     public $temperatureRound;
+    public $temperatureNight;
+    public $temperatureNightRound;
+    public $temperatureMorning;
+    public $temperatureMorningRound;
+    public $temperatureEvening;
+    public $temperatureEveningRound;
     public $temperatureHigh;
     public $temperatureMaxRound;
     public $temperatureLow;
@@ -56,12 +67,4 @@ class Forecast
     public $temperatureUnit;
     public $windSpeedUnit;
     public $visibilityDistanceUnit;
-
-    /**
-     * @return \Carbon\Carbon
-     */
-    public function getDate()
-    {
-        return Carbon::createFromTimestamp($this->time, 'UTC');
-    }
 }

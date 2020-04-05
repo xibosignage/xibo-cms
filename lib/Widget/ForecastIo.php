@@ -55,8 +55,6 @@ use Xibo\Weather\OpenWeatherMapProvider;
  */
 class ForecastIo extends ModuleWidget
 {
-    const API_ENDPOINT = 'https://api.darksky.net/forecast/';
-
     private $resourceFolder;
     protected $codeSchemaVersion = 1;
 
