@@ -358,19 +358,21 @@ class ForecastIo extends ModuleWidget
     /**
      * Units supported by Forecast.IO API
      * @return array The Units Available (temperature, wind speed and visible distance)
+     * @throws \Xibo\Exception\ConfigurationException
      */
     public function unitsAvailable()
     {
-        return DarkSkyProvider::unitsAvailable();
+        return $this->getProvider()::unitsAvailable();
     }
 
     /**
      * Languages supported by Forecast.IO API
      * @return array The Supported Language
+     * @throws \Xibo\Exception\ConfigurationException
      */
     public function supportedLanguages()
     {
-        return DarkSkyProvider::supportedLanguages();
+        return $this->getProvider()::supportedLanguages();
     }
 
     /**
@@ -420,18 +422,11 @@ class ForecastIo extends ModuleWidget
     /**
      * Get the forecast data for the provided display id
      * @param int $displayId
-     * @return DarkSkyProvider
+     * @return \Xibo\Weather\WeatherProvider
      * @throws XiboException
      */
     private function getForecastData($displayId)
     {
-        // Don't do anything if we don't have an API Key
-        $apiKey = $this->getSetting('apiKey');
-        $owmApiKey = $this->getSetting('owmApiKey');
-        if ($apiKey == '' && $owmApiKey == '') {
-            throw new ConfigurationException('Incorrectly configured module');
-        }
-
         // Get the Lat/Long
         $defaultLat = $this->getConfig()->getSetting('DEFAULT_LAT');
         $defaultLong = $this->getConfig()->getSetting('DEFAULT_LONG');
@@ -463,16 +458,9 @@ class ForecastIo extends ModuleWidget
             throw new InvalidArgumentException('Lat/Long invalid', 'geolocation');
         }
 
-        // Provider needs a client with our proxy config.
-        $client = new Client($this->getConfig()->getGuzzleProxy(['connect_timeout' => 20]));
-
-        // We need to pick the provider based on whether we have a DarkSky or OpenWeatherMap API key.
-        $provider = (empty($owmApiKey))
-            ? (new DarkSkyProvider($this->getPool(), $client))->setKey($apiKey)
-            : (new OpenWeatherMapProvider($this->getPool(), $client))->setKey($owmApiKey);
-
         // Create a provider
-        return $provider
+        return $this->getProvider()
+            ->setHttpClient(new Client($this->getConfig()->getGuzzleProxy(['connect_timeout' => 20])))
             ->enableLogging($this->getLog())
             ->setCachePeriod($this->getSetting('cachePeriod', 14400))
             ->setLocation($defaultLat, $defaultLong)
@@ -481,7 +469,26 @@ class ForecastIo extends ModuleWidget
     }
 
     /**
-     * @param array|\Xibo\Weather\ForecastDay $data
+     * @return \Xibo\Weather\WeatherProvider
+     * @throws \Xibo\Exception\ConfigurationException
+     */
+    private function getProvider()
+    {
+        // Don't do anything if we don't have an API Key
+        $apiKey = $this->getSetting('apiKey');
+        $owmApiKey = $this->getSetting('owmApiKey');
+        if ($apiKey == '' && $owmApiKey == '') {
+            throw new ConfigurationException('Incorrectly configured module');
+        }
+
+        // We need to pick the provider based on whether we have a DarkSky or OpenWeatherMap API key.
+        return (empty($owmApiKey))
+            ? (new DarkSkyProvider($this->getPool()))->setKey($apiKey)
+            : (new OpenWeatherMapProvider($this->getPool()))->setKey($owmApiKey);
+    }
+
+    /**
+     * @param array|\Xibo\Weather\Forecast $data
      * @param $source
      * @param null $timezone
      * @return string|string[]

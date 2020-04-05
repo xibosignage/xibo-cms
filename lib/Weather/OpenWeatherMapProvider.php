@@ -31,7 +31,8 @@ class OpenWeatherMapProvider implements WeatherProvider
     use WeatherProviderTrait;
 
     private $apiUrl = 'https://api.openweathermap.org/data/2.5/';
-    private $forecast5day = 'forecast';
+    private $forecast3Hourly = 'forecast';
+    private $forecastDaily = 'daily';
 
     /**
      * @inheritDoc
@@ -67,7 +68,7 @@ class OpenWeatherMapProvider implements WeatherProvider
         $unit = $this->getUnit($this->units);
 
         // Load this data into our objects
-        $this->currentDay = new ForecastDay();
+        $this->currentDay = new Forecast();
         $this->currentDay->temperatureUnit = $unit['tempUnit'] ?: 'C';
         $this->currentDay->windSpeedUnit = $unit['windUnit'] ?: 'KPH';
         $this->currentDay->visibilityDistanceUnit = $unit['visibilityUnit'] ?: 'km';
@@ -84,7 +85,7 @@ class OpenWeatherMapProvider implements WeatherProvider
         // Convert units to an acceptable format
         $units = in_array($this->units, ['auto', 'us', 'uk2']) ? 'imperial' : 'metric';
 
-        $url = $this->apiUrl . $this->forecast5day
+        $url = $this->apiUrl . $this->forecast3Hourly
             . '?lat=' . $this->lat
             . '&lon=' . $this->long
             . '&units=' . $units
@@ -100,7 +101,7 @@ class OpenWeatherMapProvider implements WeatherProvider
         $this->forecast = [];
 
         foreach ($data['list'] as $item) {
-            $day = new ForecastDay();
+            $day = new Forecast();
             $day->temperatureUnit = $unit['tempUnit'] ?: 'C';
             $day->windSpeedUnit = $unit['windUnit'] ?: 'KPH';
             $day->visibilityDistanceUnit = $unit['visibilityUnit'] ?: 'km';
@@ -114,7 +115,7 @@ class OpenWeatherMapProvider implements WeatherProvider
     }
 
     /**
-     * @param \Xibo\Weather\ForecastDay $day
+     * @param \Xibo\Weather\Forecast $day
      * @param array $item
      * @param $requestUnit
      */
@@ -128,6 +129,10 @@ class OpenWeatherMapProvider implements WeatherProvider
         // metric = C
         $day->temperature = $item['main']['temp'];
         $day->apparentTemperature = $item['main']['feels_like'];
+
+        // For current and forecast3hourly these are the min/max temp for the forecast within the location
+        // and will usually be the same as temp.
+        // for the forecastDaily (paid key only) these are the min/max temperature in the day
         $day->temperatureHigh = $item['main']['temp_max'] ?? $day->temperature;
         $day->temperatureLow = $item['main']['temp_min'] ?? $day->temperature;
 
@@ -146,18 +151,23 @@ class OpenWeatherMapProvider implements WeatherProvider
             $day->temperatureLow = ($day->temperatureLow - 32) * 5 / 9;
         }
 
+        // Work out the mean
+        $day->temperatureMean = ($day->temperatureHigh + $day->temperatureLow) / 2;
+
         // Round those off
         $day->temperatureRound = round($day->temperature, 0);
         $day->apparentTemperatureRound = round($day->apparentTemperature, 0);
         $day->temperatureMaxRound = round($day->temperatureHigh, 0);
         $day->temperatureMinRound = round($day->temperatureLow, 0);
+        $day->temperatureMeanRound = round($day->temperatureMean, 0);
 
         // Humidity
         $day->humidityPercent = $item['main']['humidity'];
         $day->humidity = $day->humidityPercent / 100;
 
         // Pressure
-        $day->pressure = $item['main']['pressure'];
+        // received in hPa, display in mB
+        $day->pressure = $item['main']['pressure'] / 100;
 
         // Wind
         // metric = meters per second
@@ -287,7 +297,7 @@ class OpenWeatherMapProvider implements WeatherProvider
             'weather-icons' => [
                 '01d' => 'wi-day-sunny',
                 '01n' => 'wi-night-clear',
-                '02d' => 'wi-day-partly-cloudy',
+                '02d' => 'wi-day-cloudy',
                 '02n' => 'wi-night-partly-cloudy',
                 '03d' => 'wi-cloudy',
                 '03n' => 'wi-night-cloudy',
