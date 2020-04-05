@@ -129,7 +129,7 @@ class DarkSkyProvider implements WeatherProvider
         $visibilityDistanceUnit = $unit['visibilityUnit'] ?? 'km';
 
         // Load this data into our objects
-        $this->currentDay = new ForecastDay();
+        $this->currentDay = new Forecast();
         $this->currentDay->temperatureUnit = $temperatureUnit;
         $this->currentDay->windSpeedUnit = $windSpeedUnit;
         $this->currentDay->visibilityDistanceUnit = $visibilityDistanceUnit;
@@ -137,7 +137,7 @@ class DarkSkyProvider implements WeatherProvider
 
         // Process each day into a forecast
         foreach ($data['daily']['data'] as $dayItem) {
-            $day = new ForecastDay();
+            $day = new Forecast();
             $day->temperatureUnit = $temperatureUnit;
             $day->windSpeedUnit = $windSpeedUnit;
             $day->visibilityDistanceUnit = $visibilityDistanceUnit;
@@ -155,7 +155,7 @@ class DarkSkyProvider implements WeatherProvider
 
     /**
      * Process an item into a Day
-     * @param \Xibo\Weather\ForecastDay $day
+     * @param \Xibo\Weather\Forecast $day
      * @param array $item
      */
     private function processItemIntoDay($day, $item)
@@ -171,6 +171,8 @@ class DarkSkyProvider implements WeatherProvider
         $day->temperatureMaxRound = round($day->temperatureHigh, 0);
         $day->temperatureLow = $item['temperatureLow'] ?? $day->temperature;
         $day->temperatureMinRound = round($day->temperatureLow, 0);
+        $day->temperatureMean = ($day->temperatureHigh + $day->temperatureLow) / 2;
+        $day->temperatureMeanRound = round($day->temperatureMean, 2);
         $day->dewPoint = $item['dewPoint'];
         $day->humidity = $item['humidity'];
         $day->humidityPercent = $day->humidity * 100;
