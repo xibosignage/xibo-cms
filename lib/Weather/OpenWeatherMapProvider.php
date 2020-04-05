@@ -24,6 +24,7 @@ namespace Xibo\Weather;
 
 
 use GuzzleHttp\Exception\RequestException;
+use Jenssegers\Date\Date;
 use Xibo\Exception\GeneralException;
 
 class OpenWeatherMapProvider implements WeatherProvider
@@ -31,8 +32,10 @@ class OpenWeatherMapProvider implements WeatherProvider
     use WeatherProviderTrait;
 
     private $apiUrl = 'https://api.openweathermap.org/data/2.5/';
+    private $forecastCurrent = 'weather';
     private $forecast3Hourly = 'forecast';
     private $forecastDaily = 'daily';
+    private $forecastCombined = 'onecall';
 
     /**
      * @inheritDoc
@@ -42,15 +45,36 @@ class OpenWeatherMapProvider implements WeatherProvider
         return 'CC BY-SA 4.0';
     }
 
-    /**
-     * @inheritDoc
-     */
+    /** @inheritDoc */
     public function getCurrentDay()
+    {
+        if ($this->currentDay === null) {
+            $this->get();
+        }
+
+        return $this->currentDay;
+    }
+
+    /** @inheritDoc */
+    public function getForecast()
+    {
+        if ($this->forecast === null) {
+            $this->get();
+        }
+
+        return $this->forecast;
+    }
+
+    /**
+     * Get a combined forecast
+     * @throws \Xibo\Exception\GeneralException
+     */
+    private function get()
     {
         // Convert units to an acceptable format
         $units = in_array($this->units, ['auto', 'us', 'uk2']) ? 'imperial' : 'metric';
 
-        $url = $this->apiUrl . 'weather'
+        $url = $this->apiUrl . $this->forecastCombined
             . '?lat=' . $this->lat
             . '&lon=' . $this->long
             . '&units=' . $units
@@ -61,8 +85,7 @@ class OpenWeatherMapProvider implements WeatherProvider
         $data = $this->queryApi($url);
 
         // Parse into our forecast.
-        $timezoneOffset = (int)$data['timezone'] / 3600;
-        $this->timezone = (new \DateTimeZone(($timezoneOffset < 0 ? '-' : '+') . abs($timezoneOffset)))->getName();
+        $this->timezone = $data['timezone'];
 
         // Temperature and Wind Speed Unit Mappings
         $unit = $this->getUnit($this->units);
@@ -72,69 +95,65 @@ class OpenWeatherMapProvider implements WeatherProvider
         $this->currentDay->temperatureUnit = $unit['tempUnit'] ?: 'C';
         $this->currentDay->windSpeedUnit = $unit['windUnit'] ?: 'KPH';
         $this->currentDay->visibilityDistanceUnit = $unit['visibilityUnit'] ?: 'km';
-        $this->processItemIntoDay($this->currentDay, $data, $units);
+        $this->processItemIntoDay($this->currentDay, $data['current'], $units, true);
 
-        return $this->currentDay;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getForecast()
-    {
-        // Convert units to an acceptable format
-        $units = in_array($this->units, ['auto', 'us', 'uk2']) ? 'imperial' : 'metric';
-
-        $url = $this->apiUrl . $this->forecast3Hourly
-            . '?lat=' . $this->lat
-            . '&lon=' . $this->long
-            . '&units=' . $units
-            . '&lang=' . $this->lang
-            . '&appid=[API_KEY]';
-
-        $data = $this->queryApi($url);
-
-        // Temperature and Wind Speed Unit Mappings
-        $unit = $this->getUnit($this->units);
-
-        // Clear our any forecast we have already
-        $this->forecast = [];
-
-        foreach ($data['list'] as $item) {
+        // Process each day into a forecast
+        foreach ($data['daily'] as $dayItem) {
             $day = new Forecast();
-            $day->temperatureUnit = $unit['tempUnit'] ?: 'C';
-            $day->windSpeedUnit = $unit['windUnit'] ?: 'KPH';
-            $day->visibilityDistanceUnit = $unit['visibilityUnit'] ?: 'km';
-            $this->processItemIntoDay($day, $item, $units);
+            $day->temperatureUnit = $this->currentDay->temperatureUnit;
+            $day->windSpeedUnit = $this->currentDay->windSpeedUnit;
+            $day->visibilityDistanceUnit = $this->currentDay->visibilityDistanceUnit;
+            $this->processItemIntoDay($day, $dayItem, $units);
 
-            // Assign this day to the forecast
             $this->forecast[] = $day;
         }
 
-        return $this->forecast;
+        // Enhance the currently with the high/low from the first daily forecast
+        $this->currentDay->temperatureHigh = $this->forecast[0]->temperatureHigh;
+        $this->currentDay->temperatureMaxRound = $this->forecast[0]->temperatureMaxRound;
+        $this->currentDay->temperatureLow = $this->forecast[0]->temperatureLow;
+        $this->currentDay->temperatureMinRound = $this->forecast[0]->temperatureMinRound;
+        $this->currentDay->temperatureMorning = $this->forecast[0]->temperatureMorning;
+        $this->currentDay->temperatureMorningRound = $this->forecast[0]->temperatureMorningRound;
+        $this->currentDay->temperatureNight = $this->forecast[0]->temperatureNight;
+        $this->currentDay->temperatureNightRound = $this->forecast[0]->temperatureNightRound;
+        $this->currentDay->temperatureEvening = $this->forecast[0]->temperatureEvening;
+        $this->currentDay->temperatureEveningRound = $this->forecast[0]->temperatureEveningRound;
     }
 
     /**
      * @param \Xibo\Weather\Forecast $day
      * @param array $item
      * @param $requestUnit
+     * @param bool $isCurrent
      */
-    private function processItemIntoDay($day, $item, $requestUnit)
+    private function processItemIntoDay($day, $item, $requestUnit, $isCurrent = false)
     {
         $day->time = $item['dt'];
+        $day->sunRise = $item['sunrise'];
+        $day->sunSet = $item['sunset'];
         $day->summary = ucfirst($item['weather'][0]['description']);
 
         // Temperature
         // imperial = F
         // metric = C
-        $day->temperature = $item['main']['temp'];
-        $day->apparentTemperature = $item['main']['feels_like'];
-
-        // For current and forecast3hourly these are the min/max temp for the forecast within the location
-        // and will usually be the same as temp.
-        // for the forecastDaily (paid key only) these are the min/max temperature in the day
-        $day->temperatureHigh = $item['main']['temp_max'] ?? $day->temperature;
-        $day->temperatureLow = $item['main']['temp_min'] ?? $day->temperature;
+        if ($isCurrent) {
+            $day->temperature = $item['temp'];
+            $day->apparentTemperature = $item['feels_like'];
+            $day->temperatureHigh = $day->temperature;
+            $day->temperatureLow = $day->temperature;
+            $day->temperatureNight = $day->temperature;
+            $day->temperatureEvening = $day->temperature;
+            $day->temperatureMorning = $day->temperature;
+        } else {
+            $day->temperature = $item['temp']['day'];
+            $day->apparentTemperature = $item['feels_like']['day'];
+            $day->temperatureHigh = $item['temp']['max'] ?? $day->temperature;
+            $day->temperatureLow = $item['temp']['min'] ?? $day->temperature;
+            $day->temperatureNight = $item['temp']['night'];
+            $day->temperatureEvening = $item['temp']['eve'];
+            $day->temperatureMorning = $item['temp']['morn'];
+        }
 
         if ($requestUnit === 'metric' && $day->temperatureUnit === 'F') {
             // Convert C to F
@@ -156,24 +175,27 @@ class OpenWeatherMapProvider implements WeatherProvider
 
         // Round those off
         $day->temperatureRound = round($day->temperature, 0);
+        $day->temperatureNightRound = round($day->temperatureNight, 0);
+        $day->temperatureMorningRound = round($day->temperatureMorning, 0);
+        $day->temperatureEveningRound = round($day->temperatureEvening, 0);
         $day->apparentTemperatureRound = round($day->apparentTemperature, 0);
         $day->temperatureMaxRound = round($day->temperatureHigh, 0);
         $day->temperatureMinRound = round($day->temperatureLow, 0);
         $day->temperatureMeanRound = round($day->temperatureMean, 0);
 
         // Humidity
-        $day->humidityPercent = $item['main']['humidity'];
+        $day->humidityPercent = $item['humidity'];
         $day->humidity = $day->humidityPercent / 100;
 
         // Pressure
         // received in hPa, display in mB
-        $day->pressure = $item['main']['pressure'] / 100;
+        $day->pressure = $item['pressure'] / 100;
 
         // Wind
         // metric = meters per second
         // imperial = miles per hour
-        $day->windSpeed = $item['wind']['speed'];
-        $day->windBearing = $item['wind']['deg'];
+        $day->windSpeed = $item['wind_speed'] ?? null;
+        $day->windBearing = $item['wind_deg'] ?? null;
 
         if ($requestUnit === 'metric' && $day->windSpeedUnit !== 'MPS') {
             // We have MPS and need to go to something else
@@ -195,41 +217,46 @@ class OpenWeatherMapProvider implements WeatherProvider
         }
 
         // Wind direction
-        foreach (self::cardinalDirections() as $dir => $angles) {
-            if ($day->windBearing >= $angles[0] && $day->windBearing < $angles[1]) {
-                $day->windDirection = $dir;
-                break;
+        if ($day->windBearing !== null) {
+            foreach (self::cardinalDirections() as $dir => $angles) {
+                if ($day->windBearing >= $angles[0] && $day->windBearing < $angles[1]) {
+                    $day->windDirection = $dir;
+                    break;
+                }
             }
+        } else {
+            $day->windDirection = '--';
         }
 
         // Clouds
-        $day->cloudCover = $item['clouds']['all'] / 100;
+        $day->cloudCover = $item['clouds'];
 
         // Visibility
         // metric = meters
         // imperial = meters?
-        $day->visibility = $item['visibility'] ?? null;
+        $day->visibility = $item['visibility'] ?? '--';
 
-        // Always in meters
-        if ($day->visibilityDistanceUnit === 'mi') {
-            // Convert meters to miles
-            $day->visibility = $day->visibility / 1609;
-        } else if ($day->visibilityDistanceUnit === 'km') {
-            // Convert meters to KM
-            $day->visibility = $day->visibility / 1000;
+        if ($day->visibility !== '--') {
+            // Always in meters
+            if ($day->visibilityDistanceUnit === 'mi') {
+                // Convert meters to miles
+                $day->visibility = $day->visibility / 1609;
+            } else {
+                if ($day->visibilityDistanceUnit === 'km') {
+                    // Convert meters to KM
+                    $day->visibility = $day->visibility / 1000;
+                }
+            }
         }
 
         // not available
-        $day->dewPoint = '--';
-        $day->uvIndex = '--';
+        $day->dewPoint = $item['dew_point'] ?? '--';
+        $day->uvIndex = $item['uvi'] ?? '--';
         $day->ozone = '--';
 
         // Map icon
         $icons = self::iconMap();
         $icon = $item['weather'][0]['icon'];
-
-        $this->logger->debug('Icon is: ' . $icon);
-
         $day->icon = $icons['backgrounds'][$icon] ?? 'wi-na';
         $day->wicon = $icons['weather-icons'][$icon] ?? 'wi-na';
     }
@@ -364,8 +391,10 @@ class OpenWeatherMapProvider implements WeatherProvider
                 $data = json_decode($response->getBody(), true);
 
                 // Cache
+                // reset the cache time to be at midnight of the day on which we would have cached.
+                $time = Date::now()->addSeconds($this->cachePeriod)->startOfDay();
                 $cache->set($data);
-                $cache->expiresAfter($this->cachePeriod);
+                $cache->expiresAt($time);
                 $this->pool->saveDeferred($cache);
 
             } catch (RequestException $e) {

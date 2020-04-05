@@ -24,6 +24,7 @@ namespace Xibo\Weather;
 
 
 use GuzzleHttp\Exception\RequestException;
+use Jenssegers\Date\Date;
 use Xibo\Exception\GeneralException;
 
 class DarkSkyProvider implements WeatherProvider
@@ -107,8 +108,10 @@ class DarkSkyProvider implements WeatherProvider
                 $data = json_decode($response->getBody(), true);
 
                 // Cache
+                // reset the cache time to be at midnight of the day on which we would have cached.
+                $time = Date::now()->addSeconds($this->cachePeriod)->startOfDay();
                 $cache->set($data);
-                $cache->expiresAfter($this->cachePeriod);
+                $cache->expiresAt($time);
                 $this->pool->saveDeferred($cache);
 
             } catch (RequestException $e) {
@@ -183,6 +186,14 @@ class DarkSkyProvider implements WeatherProvider
         $day->uvIndex = $item['uvIndex'];
         $day->visibility = $item['visibility'];
         $day->ozone = $item['ozone'];
+
+        // Items we dont have
+        $day->temperatureNight = $day->temperature;
+        $day->temperatureNightRound = $day->temperatureRound;
+        $day->temperatureMorning = $day->temperature;
+        $day->temperatureMorningRound = $day->temperatureRound;
+        $day->temperatureEvening = $day->temperature;
+        $day->temperatureEveningRound = $day->temperatureRound;
 
         // Wind direction
         foreach (self::cardinalDirections() as $dir => $angles) {
