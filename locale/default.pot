@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-03-18 17:28+0000\n"
+"POT-Creation-Date: 2020-04-06 16:34+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -2987,13 +2987,13 @@ msgstr ""
 
 #: cache/cc/cc73668bcd623d809d219bb3fb7d2c50efd48322499a859b2523a380869f0a94.php:118
 #: cache/52/527248fb81c147890572651660b181a5794aa8cba62084403072f8fae7162f8e.php:220
-#: lib/Controller/Stats.php:1063
+#: lib/Controller/Stats.php:1137
 msgid "Minutes"
 msgstr ""
 
 #: cache/cc/cc73668bcd623d809d219bb3fb7d2c50efd48322499a859b2523a380869f0a94.php:123
 #: cache/52/527248fb81c147890572651660b181a5794aa8cba62084403072f8fae7162f8e.php:205
-#: lib/Controller/Stats.php:1059
+#: lib/Controller/Stats.php:1133
 msgid "Hours"
 msgstr ""
 
@@ -4529,6 +4529,7 @@ msgstr ""
 
 #: cache/4b/4b82b1e16c879e1e6ebbd81525d0581d3271d3c37f03b83be89d2750a3efdef1.php:131
 #: cache/61/61112c8da134b4ad9bda6c07b4f1ae6d8ce689bd52685dd0311a795e28c57ef3.php:52
+#: lib/Widget/ForecastIo.php:397
 msgid "Forecast"
 msgstr ""
 
@@ -4913,7 +4914,6 @@ msgstr ""
 #: cache/eb/eb442c9086d94dbd30b522895c64e68792ace79624c5e1cab8386363e2d61093.php:453
 #: cache/d3/d37324a32bbf00fbb4d8ab336f2491be8c15c519a53496c78c65ff010c9ac959.php:489
 #: cache/d3/d37324a32bbf00fbb4d8ab336f2491be8c15c519a53496c78c65ff010c9ac959.php:562
-#: lib/Widget/ForecastIo.php:438
 msgid "Daily"
 msgstr ""
 
@@ -5934,7 +5934,7 @@ msgstr ""
 #: cache/68/6865640508f5c7e13c7e0448a45eb55b865acd7ec915604e38c7caba91b823dc.php:190
 #: cache/40/40807b3ce78be6f93ced5aba5494ae865beae2c978554316c73e23ca5e820706.php:83
 #: cache/13/13a19e9c0bd188164367f43405d072e794463d2c93b6842a546e6adfe3d8f320.php:219
-#: lib/Entity/Layout.php:1335 lib/Controller/Region.php:627
+#: lib/Entity/Layout.php:1336 lib/Controller/Region.php:627
 msgid "Empty Region"
 msgstr ""
 
@@ -9046,7 +9046,6 @@ msgid "Upload Layout"
 msgstr ""
 
 #: cache/7f/7f0ff9e1f43d26378b4a11af98ab245648f7ac866da3c34739e9b9ae8d4c92e0.php:47
-#: cache/cd/cd15effb45893d9ddcac81bb2a6150bcadd3d0339919010abbb25c2beebab1e0.php:47
 #: cache/6c/6ccd9e6947decc88ccda5634a4228a9fc4c16d0f3dfece0c2101d9b6258f8416.php:49
 #: cache/46/46f0503bca66e8f7452ead20c605e0603619e3c354e317ff5c0c189dc353aced.php:47
 #: cache/41/4192e86ae86bcc4e187b5b18b1ee01f301924656b42d4009c24d000f5ccd626f.php:49
@@ -9865,21 +9864,40 @@ msgstr ""
 msgid "Are you sure you want to delete this Help page? This cannot be undone"
 msgstr ""
 
-#: cache/cd/cd15effb45893d9ddcac81bb2a6150bcadd3d0339919010abbb25c2beebab1e0.php:52
+#: cache/cd/cd15effb45893d9ddcac81bb2a6150bcadd3d0339919010abbb25c2beebab1e0.php:63
+msgid "Open Weather Map API Key"
+msgstr ""
+
+#: cache/cd/cd15effb45893d9ddcac81bb2a6150bcadd3d0339919010abbb25c2beebab1e0.php:68
+msgid "Enter your API Key from Open Weather Map."
+msgstr ""
+
+#: cache/cd/cd15effb45893d9ddcac81bb2a6150bcadd3d0339919010abbb25c2beebab1e0.php:78
+msgid "Paid plan?"
+msgstr ""
+
+#: cache/cd/cd15effb45893d9ddcac81bb2a6150bcadd3d0339919010abbb25c2beebab1e0.php:83
+msgid "Is the above key on an Open Weather Map paid plan?"
+msgstr ""
+
+#: cache/cd/cd15effb45893d9ddcac81bb2a6150bcadd3d0339919010abbb25c2beebab1e0.php:93
+msgid "DarkSky API Key"
+msgstr ""
+
+#: cache/cd/cd15effb45893d9ddcac81bb2a6150bcadd3d0339919010abbb25c2beebab1e0.php:98
 msgid "Enter your API Key from DarkSky."
 msgstr ""
 
-#: cache/cd/cd15effb45893d9ddcac81bb2a6150bcadd3d0339919010abbb25c2beebab1e0.php:62
+#: cache/cd/cd15effb45893d9ddcac81bb2a6150bcadd3d0339919010abbb25c2beebab1e0.php:108
 #: cache/6c/6ccd9e6947decc88ccda5634a4228a9fc4c16d0f3dfece0c2101d9b6258f8416.php:64
 #: cache/46/46f0503bca66e8f7452ead20c605e0603619e3c354e317ff5c0c189dc353aced.php:77
 #: cache/41/4192e86ae86bcc4e187b5b18b1ee01f301924656b42d4009c24d000f5ccd626f.php:64
 msgid "Cache Period"
 msgstr ""
 
-#: cache/cd/cd15effb45893d9ddcac81bb2a6150bcadd3d0339919010abbb25c2beebab1e0.php:67
+#: cache/cd/cd15effb45893d9ddcac81bb2a6150bcadd3d0339919010abbb25c2beebab1e0.php:113
 msgid ""
-"Enter the number of seconds you would like to cache long/lat requests for. "
-"DarkSky offers 1000 requests a day."
+"Enter the number of seconds you would like to cache long/lat requests for."
 msgstr ""
 
 #: cache/cd/cdeb5a18f14b4ed74732722530a2ad598a8fb86453f8562950e0653f121f162b.php:48
@@ -12770,7 +12788,7 @@ msgid "Add"
 msgstr ""
 
 #: cache/06/06078e27f9bb966b71a3f9198f0356c7264050a7521fcead9fe385775c6b7029.php:307
-#: lib/Controller/StatusDashboard.php:263 lib/Controller/Stats.php:769
+#: lib/Controller/StatusDashboard.php:263 lib/Controller/Stats.php:843
 msgid "Empty"
 msgstr ""
 
@@ -14006,9 +14024,260 @@ msgstr ""
 msgid "Unable to import row %d"
 msgstr ""
 
+#: lib/Weather/DarkSkyProvider.php:212
+#: lib/Weather/OpenWeatherMapProvider.php:314
+msgid "Arabic"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:213
+#: lib/Weather/OpenWeatherMapProvider.php:315
+msgid "Azerbaijani"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:214
+msgid "Belarusian"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:215
+msgid "Bosnian"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:216
+#: lib/Weather/OpenWeatherMapProvider.php:316
+msgid "Bulgarian"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:217
+#: lib/Weather/OpenWeatherMapProvider.php:317
+msgid "Catalan"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:218
+msgid "Cornish"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:219
+msgid "Simplified Chinese"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:220
+msgid "Traditional Chinese"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:221
+#: lib/Weather/OpenWeatherMapProvider.php:332
+msgid "Croatian"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:222
+#: lib/Weather/OpenWeatherMapProvider.php:320
+msgid "Czech"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:223
+#: lib/Weather/OpenWeatherMapProvider.php:321
+msgid "Danish"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:224
+#: lib/Weather/OpenWeatherMapProvider.php:342
+msgid "Dutch"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:225
+msgid "Georgian"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:226
+#: lib/Weather/OpenWeatherMapProvider.php:322
+msgid "German"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:227
+#: lib/Weather/OpenWeatherMapProvider.php:323
+msgid "Greek"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:228
+#: lib/Weather/OpenWeatherMapProvider.php:324
+msgid "English"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:229
+msgid "Estonian"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:230
+#: lib/Weather/OpenWeatherMapProvider.php:327
+msgid "Finnish"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:231
+#: lib/Weather/OpenWeatherMapProvider.php:328
+msgid "French"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:232
+#: lib/Weather/OpenWeatherMapProvider.php:333
+msgid "Hungarian"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:233
+msgid "Icelandic"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:234
+#: lib/Weather/OpenWeatherMapProvider.php:334
+msgid "Indonesian"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:235
+#: lib/Weather/OpenWeatherMapProvider.php:335
+msgid "Italian"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:236
+#: lib/Weather/OpenWeatherMapProvider.php:336
+msgid "Japanese"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:237
+msgid "Norwegian Bokmål"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:238
+#: lib/Weather/OpenWeatherMapProvider.php:343
+msgid "Polish"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:239
+#: lib/Weather/OpenWeatherMapProvider.php:344
+msgid "Portuguese"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:240
+#: lib/Weather/OpenWeatherMapProvider.php:347
+msgid "Russian"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:241
+#: lib/Weather/OpenWeatherMapProvider.php:352
+msgid "Serbian"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:242
+#: lib/Weather/OpenWeatherMapProvider.php:349
+msgid "Slovak"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:243
+#: lib/Weather/OpenWeatherMapProvider.php:350
+msgid "Slovenian"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:244
+#: lib/Weather/OpenWeatherMapProvider.php:351
+msgid "Spanish"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:245
+#: lib/Weather/OpenWeatherMapProvider.php:348
+msgid "Swedish"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:246
+msgid "Tetum"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:247
+#: lib/Weather/OpenWeatherMapProvider.php:354
+msgid "Turkish"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:248
+#: lib/Weather/OpenWeatherMapProvider.php:355
+msgid "Ukrainian"
+msgstr ""
+
+#: lib/Weather/DarkSkyProvider.php:249
+msgid "lgpay Atinlay"
+msgstr ""
+
+#: lib/Weather/OpenWeatherMapProvider.php:313
+msgid "Afrikaans"
+msgstr ""
+
+#: lib/Weather/OpenWeatherMapProvider.php:318
+msgid "Chinese Simplified"
+msgstr ""
+
+#: lib/Weather/OpenWeatherMapProvider.php:319
+msgid "Chinese Traditional"
+msgstr ""
+
+#: lib/Weather/OpenWeatherMapProvider.php:325
+msgid "Basque"
+msgstr ""
+
+#: lib/Weather/OpenWeatherMapProvider.php:326
+msgid "Persian (Farsi)"
+msgstr ""
+
+#: lib/Weather/OpenWeatherMapProvider.php:329
+msgid "Galician"
+msgstr ""
+
+#: lib/Weather/OpenWeatherMapProvider.php:330
+msgid "Hebrew"
+msgstr ""
+
+#: lib/Weather/OpenWeatherMapProvider.php:331
+msgid "Hindi"
+msgstr ""
+
+#: lib/Weather/OpenWeatherMapProvider.php:337
+msgid "Korean"
+msgstr ""
+
+#: lib/Weather/OpenWeatherMapProvider.php:338
+msgid "Latvian"
+msgstr ""
+
+#: lib/Weather/OpenWeatherMapProvider.php:339
+msgid "Lithuanian"
+msgstr ""
+
+#: lib/Weather/OpenWeatherMapProvider.php:340
+msgid "Macedonian"
+msgstr ""
+
+#: lib/Weather/OpenWeatherMapProvider.php:341
+msgid "Norwegian"
+msgstr ""
+
+#: lib/Weather/OpenWeatherMapProvider.php:345
+msgid "Português Brasil"
+msgstr ""
+
+#: lib/Weather/OpenWeatherMapProvider.php:346
+msgid "Romanian"
+msgstr ""
+
+#: lib/Weather/OpenWeatherMapProvider.php:353
+msgid "Thai"
+msgstr ""
+
+#: lib/Weather/OpenWeatherMapProvider.php:356
+msgid "Vietnamese"
+msgstr ""
+
+#: lib/Weather/OpenWeatherMapProvider.php:357
+msgid "Zulu"
+msgstr ""
+
 #: lib/Widget/Countdown.php:414 lib/Widget/Twitter.php:870
 #: lib/Widget/Stocks.php:654 lib/Widget/Currencies.php:835
-#: lib/Widget/TwitterMetro.php:161 lib/Widget/ForecastIo.php:830
+#: lib/Widget/TwitterMetro.php:161 lib/Widget/ForecastIo.php:724
 msgid "Please choose a template"
 msgstr ""
 
@@ -14182,7 +14451,7 @@ msgstr ""
 #: lib/Widget/GoogleTraffic.php:235 lib/Widget/Hls.php:174
 #: lib/Widget/Calendar.php:695 lib/Widget/Stocks.php:657
 #: lib/Widget/Currencies.php:838 lib/Widget/TwitterMetro.php:164
-#: lib/Widget/ForecastIo.php:833 lib/Widget/Ticker.php:894
+#: lib/Widget/ForecastIo.php:727 lib/Widget/Ticker.php:894
 #: lib/Widget/DataSetTicker.php:830
 msgid "Please enter a duration"
 msgstr ""
@@ -14241,12 +14510,12 @@ msgstr ""
 msgid "Please enter a zoom level"
 msgstr ""
 
-#: lib/Widget/GoogleTraffic.php:243 lib/Widget/ForecastIo.php:838
+#: lib/Widget/GoogleTraffic.php:243 lib/Widget/ForecastIo.php:732
 #: lib/Entity/Display.php:579 lib/Controller/Settings.php:287
 msgid "The latitude entered is not valid."
 msgstr ""
 
-#: lib/Widget/GoogleTraffic.php:246 lib/Widget/ForecastIo.php:841
+#: lib/Widget/GoogleTraffic.php:246 lib/Widget/ForecastIo.php:735
 #: lib/Entity/Display.php:576 lib/Controller/Settings.php:296
 msgid "The longitude entered is not valid."
 msgstr ""
@@ -14318,7 +14587,7 @@ msgid "Cache Period must be 3600 or greater for this Module"
 msgstr ""
 
 #: lib/Widget/Stocks.php:515 lib/Widget/Currencies.php:694
-#: lib/Widget/ForecastIo.php:426
+#: lib/Widget/ForecastIo.php:389
 msgid "No data returned, please check error log."
 msgstr ""
 
@@ -14346,7 +14615,7 @@ msgstr ""
 msgid "Please select at least 1 Playlist to embed"
 msgstr ""
 
-#: lib/Widget/SubPlaylist.php:277 lib/Entity/Layout.php:1947
+#: lib/Widget/SubPlaylist.php:277 lib/Entity/Layout.php:1948
 msgid "Cannot add the same SubPlaylist twice."
 msgstr ""
 
@@ -14370,160 +14639,8 @@ msgstr ""
 msgid "cURL extension is required for Twitter"
 msgstr ""
 
-#: lib/Widget/ForecastIo.php:378
-msgid "Arabic"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:379
-msgid "Azerbaijani"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:380
-msgid "Belarusian"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:381
-msgid "Bosnian"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:382
-msgid "Bulgarian"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:383
-msgid "Catalan"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:384
-msgid "Cornish"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:385
-msgid "Simplified Chinese"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:386
-msgid "Traditional Chinese"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:387
-msgid "Croatian"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:388
-msgid "Czech"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:389
-msgid "Danish"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:390
-msgid "Dutch"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:391
-msgid "Georgian"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:392
-msgid "German"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:393
-msgid "Greek"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:394
-msgid "English"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:395
-msgid "Estonian"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:396
-msgid "Finnish"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:397
-msgid "French"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:398
-msgid "Hungarian"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:399
-msgid "Icelandic"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:400
-msgid "Indonesian"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:401
-msgid "Italian"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:402
-msgid "Japanese"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:403
-msgid "Norwegian Bokmål"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:404
-msgid "Polish"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:405
-msgid "Portuguese"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:406
-msgid "Russian"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:407
-msgid "Serbian"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:408
-msgid "Slovak"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:409
-msgid "Slovenian"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:410
-msgid "Spanish"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:411
-msgid "Swedish"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:412
-msgid "Tetum"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:413
-msgid "Turkish"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:414
-msgid "Ukrainian"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:415
-msgid "lgpay Atinlay"
-msgstr ""
-
-#: lib/Widget/ForecastIo.php:432
-msgid "Current"
+#: lib/Widget/ForecastIo.php:591
+msgid "Template not found, please edit the Widget and select another."
 msgstr ""
 
 #: lib/Widget/Ticker.php:83 lib/Widget/Ticker.php:908
@@ -14547,7 +14664,7 @@ msgstr ""
 msgid "Please enter a display group name"
 msgstr ""
 
-#: lib/Entity/DisplayGroup.php:603 lib/Entity/Layout.php:795
+#: lib/Entity/DisplayGroup.php:603 lib/Entity/Layout.php:796
 #: lib/Entity/DataSet.php:663
 msgid "Description can not be longer than 254 characters"
 msgstr ""
@@ -14808,7 +14925,7 @@ msgstr ""
 msgid "The Region dimensions cannot be empty or negative"
 msgstr ""
 
-#: lib/Entity/Region.php:359 lib/Entity/Layout.php:813
+#: lib/Entity/Region.php:359 lib/Entity/Layout.php:814
 msgid "Layer must be 0 or a positive number"
 msgstr ""
 
@@ -14842,33 +14959,33 @@ msgstr ""
 msgid "This layout is used as the global default and cannot be deleted"
 msgstr ""
 
-#: lib/Entity/Layout.php:788
+#: lib/Entity/Layout.php:789
 msgid "The layout dimensions cannot be empty"
 msgstr ""
 
-#: lib/Entity/Layout.php:792
+#: lib/Entity/Layout.php:793
 msgid "Layout Name must be between 1 and 50 characters"
 msgstr ""
 
-#: lib/Entity/Layout.php:808
+#: lib/Entity/Layout.php:809
 #, php-format
 msgid "You already own a Layout called '%s'. Please choose another name."
 msgstr ""
 
-#: lib/Entity/Layout.php:1368 lib/Controller/Fault.php:99
+#: lib/Entity/Layout.php:1369 lib/Controller/Fault.php:99
 msgid "Can't create ZIP. Error Code: "
 msgstr ""
 
-#: lib/Entity/Layout.php:1604
+#: lib/Entity/Layout.php:1605
 #, php-format
 msgid "There is an error with this Layout: %s"
 msgstr ""
 
-#: lib/Entity/Layout.php:1640 lib/Entity/Layout.php:1755
+#: lib/Entity/Layout.php:1641 lib/Entity/Layout.php:1756
 msgid "Not a Draft"
 msgstr ""
 
-#: lib/Entity/Layout.php:1829
+#: lib/Entity/Layout.php:1830
 msgid "Draft Layouts must have a parent"
 msgstr ""
 
@@ -15701,7 +15818,7 @@ msgstr ""
 msgid "Available"
 msgstr ""
 
-#: lib/Controller/StatusDashboard.php:257 lib/Controller/Stats.php:763
+#: lib/Controller/StatusDashboard.php:257 lib/Controller/Stats.php:837
 msgid "Free"
 msgstr ""
 
@@ -16316,19 +16433,19 @@ msgstr ""
 msgid "Discarded %s"
 msgstr ""
 
-#: lib/Controller/Stats.php:354 lib/Controller/Stats.php:444
-#: lib/Controller/Stats.php:569 lib/Controller/Stats.php:622
-#: lib/Controller/Stats.php:920 lib/Report/DistributionReport.php:358
+#: lib/Controller/Stats.php:399 lib/Controller/Stats.php:518
+#: lib/Controller/Stats.php:643 lib/Controller/Stats.php:696
+#: lib/Controller/Stats.php:994 lib/Report/DistributionReport.php:358
 #: lib/Report/SummaryReport.php:321 lib/Report/ProofOfPlay.php:368
 msgid "No displays with View permissions"
 msgstr ""
 
-#: lib/Controller/Stats.php:396 lib/Report/ProofOfPlay.php:512
+#: lib/Controller/Stats.php:470 lib/Report/ProofOfPlay.php:512
 msgid "Deleted from Layout"
 msgstr ""
 
-#: lib/Controller/Stats.php:403 lib/Controller/Stats.php:404
-#: lib/Controller/Stats.php:682 lib/Controller/Stats.php:683
+#: lib/Controller/Stats.php:474 lib/Controller/Stats.php:475
+#: lib/Controller/Stats.php:756 lib/Controller/Stats.php:757
 #: lib/Report/DistributionReport.php:282 lib/Report/DistributionReport.php:300
 #: lib/Report/SummaryReport.php:269 lib/Report/ProofOfPlay.php:275
 #: lib/Report/ProofOfPlay.php:295 lib/Report/ProofOfPlay.php:518
@@ -16336,19 +16453,19 @@ msgstr ""
 msgid "Not Found"
 msgstr ""
 
-#: lib/Controller/Stats.php:510
+#: lib/Controller/Stats.php:584
 msgid "Deleted Displays"
 msgstr ""
 
-#: lib/Controller/Stats.php:639
+#: lib/Controller/Stats.php:713
 msgid "Both fromDt/toDt should be provided"
 msgstr ""
 
-#: lib/Controller/Stats.php:930 lib/Report/DistributionReport.php:369
+#: lib/Controller/Stats.php:1004 lib/Report/DistributionReport.php:369
 msgid "No display groups with View permissions"
 msgstr ""
 
-#: lib/Controller/Stats.php:1055
+#: lib/Controller/Stats.php:1129
 msgid "Days"
 msgstr ""
 
