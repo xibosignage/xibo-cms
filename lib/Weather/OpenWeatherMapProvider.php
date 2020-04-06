@@ -24,7 +24,6 @@ namespace Xibo\Weather;
 
 
 use GuzzleHttp\Exception\RequestException;
-use Jenssegers\Date\Date;
 use Xibo\Exception\GeneralException;
 
 class OpenWeatherMapProvider implements WeatherProvider
@@ -391,10 +390,8 @@ class OpenWeatherMapProvider implements WeatherProvider
                 $data = json_decode($response->getBody(), true);
 
                 // Cache
-                // reset the cache time to be at midnight of the day on which we would have cached.
-                $time = Date::now()->addSeconds($this->cachePeriod)->startOfDay();
                 $cache->set($data);
-                $cache->expiresAt($time);
+                $cache->expiresAfter($this->cachePeriod);
                 $this->pool->saveDeferred($cache);
 
             } catch (RequestException $e) {
