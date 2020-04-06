@@ -37,7 +37,11 @@
 
     {% set title %}{% trans "Open Weather Map API Key" %}{% endset %}
     {% set helpText %}{% trans "Enter your API Key from Open Weather Map." %}{% endset %}
-    {{ forms.input("owmApiKey", title, module.getSetting("ownApiKey"), helpText) }}
+    {{ forms.input("owmApiKey", title, module.getSetting("owmApiKey"), helpText) }}
+
+    {% set title %}{% trans "Paid plan?" %}{% endset %}
+    {% set helpText %}{% trans "Is the above key on an Open Weather Map paid plan?" %}{% endset %}
+    {{ forms.checkbox("owmIsPaidPlan", title, module.getSetting("owmIsPaidPlan"), helpText) }}
 
     {% set title %}{% trans "DarkSky API Key" %}{% endset %}
     {% set helpText %}{% trans "Enter your API Key from DarkSky." %}{% endset %}
@@ -45,5 +49,5 @@
 
     {% set title %}{% trans "Cache Period" %}{% endset %}
     {% set helpText %}{% trans "Enter the number of seconds you would like to cache long/lat requests for." %}{% endset %}
-    {{ forms.input("cachePeriod", title, module.getSetting("cachePeriod", 300), helpText) }}
+    {{ forms.input("cachePeriod", title, module.getSetting("cachePeriod", 1440), helpText) }}
 {% endblock %}
