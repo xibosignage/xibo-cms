@@ -22,6 +22,7 @@
 
 namespace Xibo\Weather;
 
+use Carbon\Carbon;
 use GuzzleHttp\Exception\RequestException;
 use Xibo\Support\Exception\GeneralException;
 
