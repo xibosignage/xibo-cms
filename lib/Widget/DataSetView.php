@@ -501,6 +501,9 @@ class DataSetView extends ModuleWidget
             $styleSheet .= 'table.DataSetTable { font-size: ' . $this->getOption('fontSize') . 'px; }';
         }
 
+        // Table display CSS fix
+        $styleSheet .= 'table.DataSetTable.cycle-slide { display: table !important; }';
+
         // Get the JavaScript node
         $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
 
