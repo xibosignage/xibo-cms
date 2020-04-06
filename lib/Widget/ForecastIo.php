@@ -133,7 +133,8 @@ class ForecastIo extends ModuleWidget
         // Process any module settings you asked for.
         $apiKey = $this->getSanitizer()->getString('apiKey');
         $owmApiKey = $this->getSanitizer()->getString('owmApiKey');
-        $cachePeriod = $this->getSanitizer()->getInt('cachePeriod', 300);
+        $owmIsPaidPlan = $this->getSanitizer()->getCheckbox('owmIsPaidPlan');
+        $cachePeriod = $this->getSanitizer()->getInt('cachePeriod', 1440);
 
         if ($this->module->enabled != 0) {
             if ($apiKey == '' && $owmApiKey == '')
@@ -145,6 +146,7 @@ class ForecastIo extends ModuleWidget
 
         $this->module->settings['apiKey'] = $apiKey;
         $this->module->settings['owmApiKey'] = $owmApiKey;
+        $this->module->settings['owmIsPaidPlan'] = $owmIsPaidPlan;
         $this->module->settings['cachePeriod'] = $cachePeriod;
     }
 
@@ -460,7 +462,6 @@ class ForecastIo extends ModuleWidget
         return $this->getProvider()
             ->setHttpClient(new Client($this->getConfig()->getGuzzleProxy(['connect_timeout' => 20])))
             ->enableLogging($this->getLog())
-            ->setCachePeriod($this->getSetting('cachePeriod', 14400))
             ->setLocation($defaultLat, $defaultLong)
             ->setUnits($this->getOption('units', 'auto'))
             ->setLang($this->getOption('lang', 'en'));
@@ -470,7 +471,7 @@ class ForecastIo extends ModuleWidget
      * @return \Xibo\Weather\WeatherProvider
      * @throws \Xibo\Exception\ConfigurationException
      */
-    private function getProvider()
+    protected function getProvider()
     {
         // Don't do anything if we don't have an API Key
         $apiKey = $this->getSetting('apiKey');
@@ -480,9 +481,13 @@ class ForecastIo extends ModuleWidget
         }
 
         // We need to pick the provider based on whether we have a DarkSky or OpenWeatherMap API key.
-        return (empty($owmApiKey))
+        return ((empty($owmApiKey))
             ? (new DarkSkyProvider($this->getPool()))->setKey($apiKey)
-            : (new OpenWeatherMapProvider($this->getPool()))->setKey($owmApiKey);
+            : (new OpenWeatherMapProvider($this->getPool()))->setKey($owmApiKey))
+            ->setCachePeriod($this->getSetting('cachePeriod', 1440))
+            ->setOptions([
+                'isPaidPlan' => $this->getSetting('owmIsPaidPlan', 0)
+            ]);
     }
 
     /**

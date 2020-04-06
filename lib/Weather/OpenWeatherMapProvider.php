@@ -24,6 +24,7 @@ namespace Xibo\Weather;
 
 
 use GuzzleHttp\Exception\RequestException;
+use Jenssegers\Date\Date;
 use Xibo\Exception\GeneralException;
 
 class OpenWeatherMapProvider implements WeatherProvider
@@ -33,8 +34,9 @@ class OpenWeatherMapProvider implements WeatherProvider
     private $apiUrl = 'https://api.openweathermap.org/data/2.5/';
     private $forecastCurrent = 'weather';
     private $forecast3Hourly = 'forecast';
-    private $forecastDaily = 'daily';
+    private $forecastDaily = 'forecast/daily';
     private $forecastCombined = 'onecall';
+    private $forecastUv = 'uvi';
 
     /**
      * @inheritDoc
@@ -73,19 +75,34 @@ class OpenWeatherMapProvider implements WeatherProvider
         // Convert units to an acceptable format
         $units = in_array($this->units, ['auto', 'us', 'uk2']) ? 'imperial' : 'metric';
 
-        $url = $this->apiUrl . $this->forecastCombined
-            . '?lat=' . $this->lat
+        $url = '?lat=' . $this->lat
             . '&lon=' . $this->long
             . '&units=' . $units
             . '&lang=' . $this->lang
             . '&appid=[API_KEY]';
 
-        // Query the OWM api
-        $data = $this->queryApi($url);
+        // Cache expiry date
+        $cacheExpire = Date::now()->addSeconds($this->cachePeriod);
+
+        if ($this->options['isPaidPlan'] ?? 0 == 1) {
+            // We build our data from multiple API calls
+            // Current data first.
+            $data = $this->queryApi($this->apiUrl . $this->forecastCurrent . $url, $cacheExpire);
+            $data['current'] = $this->parseCurrentIntoFormat($data);
+
+            $timezoneOffset = (int)$data['timezone'] / 3600;
+            $this->timezone = (new \DateTimeZone(($timezoneOffset < 0 ? '-' : '+') . abs($timezoneOffset)))->getName();
+
+            // Then the 16 day forecast API, which we will cache a day
+            $data['daily'] = $this->queryApi($this->apiUrl . $this->forecastDaily . $url, $cacheExpire->copy()->addDay()->startOfDay())['list'];
+        } else {
+            // We use onecall
+            $data = $this->queryApi($this->apiUrl . $this->forecastCombined . $url, $cacheExpire);
+
+            $this->timezone = $data['timezone'];
+        }
 
         // Parse into our forecast.
-        $this->timezone = $data['timezone'];
-
         // Temperature and Wind Speed Unit Mappings
         $unit = $this->getUnit($this->units);
 
@@ -118,6 +135,33 @@ class OpenWeatherMapProvider implements WeatherProvider
         $this->currentDay->temperatureNightRound = $this->forecast[0]->temperatureNightRound;
         $this->currentDay->temperatureEvening = $this->forecast[0]->temperatureEvening;
         $this->currentDay->temperatureEveningRound = $this->forecast[0]->temperatureEveningRound;
+    }
+
+    /**
+     * Parse the response from the current API into the format provided by the onecall API
+     * this means easier processing down the line
+     * @param array $source
+     * @return array
+     */
+    private function parseCurrentIntoFormat(array $source): array
+    {
+        return [
+            'timezone' => $source['timezone'],
+            'dt' => $source['dt'],
+            'sunrise' => $source['sys']['sunrise'],
+            'sunset' => $source['sys']['sunset'],
+            'temp' => $source['main']['temp'],
+            'feels_like' => $source['main']['feels_like'],
+            'pressure' => $source['main']['pressure'],
+            'humidity' => $source['main']['humidity'],
+            'dew_point' => null,
+            'uvi' => null,
+            'clouds' => $source['clouds']['all'],
+            'visibility' => $source['visibility'],
+            'wind_speed' => $source['wind']['speed'],
+            'wind_deg' => $source['wind']['deg'],
+            'weather' => $source['weather'],
+        ];
     }
 
     /**
@@ -193,8 +237,8 @@ class OpenWeatherMapProvider implements WeatherProvider
         // Wind
         // metric = meters per second
         // imperial = miles per hour
-        $day->windSpeed = $item['wind_speed'] ?? null;
-        $day->windBearing = $item['wind_deg'] ?? null;
+        $day->windSpeed = $item['wind_speed'] ?? $item['speed'] ?? null;
+        $day->windBearing = $item['wind_deg'] ?? $item['deg'] ?? null;
 
         if ($requestUnit === 'metric' && $day->windSpeedUnit !== 'MPS') {
             // We have MPS and need to go to something else
@@ -327,7 +371,7 @@ class OpenWeatherMapProvider implements WeatherProvider
                 '02n' => 'wi-night-partly-cloudy',
                 '03d' => 'wi-cloudy',
                 '03n' => 'wi-night-cloudy',
-                '04d' => 'wi-day-partly-cloudy',
+                '04d' => 'wi-day-cloudy',
                 '04n' => 'wi-night-partly-cloudy',
                 '09d' => 'wi-rain',
                 '09n' => 'wi-night-rain',
@@ -365,10 +409,11 @@ class OpenWeatherMapProvider implements WeatherProvider
 
     /**
      * @param string $url
+     * @param \Jenssegers\Date\Date $cacheExpiresAt
      * @return array
      * @throws \Xibo\Exception\GeneralException
      */
-    private function queryApi(string $url): array
+    private function queryApi(string $url, Date $cacheExpiresAt): array
     {
         $cache = $this->pool->getItem('/weather/owm/' . md5($url));
         $data = $cache->get();
@@ -391,7 +436,7 @@ class OpenWeatherMapProvider implements WeatherProvider
 
                 // Cache
                 $cache->set($data);
-                $cache->expiresAfter($this->cachePeriod);
+                $cache->expiresAt($cacheExpiresAt);
                 $this->pool->saveDeferred($cache);
 
             } catch (RequestException $e) {
