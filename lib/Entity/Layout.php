@@ -831,12 +831,6 @@ class Layout implements \JsonSerializable
             }
         }
 
-        // Delete Permissions
-        foreach ($this->permissions as $permission) {
-            /* @var Permission $permission */
-            $permission->deleteAll();
-        }
-
         // Unassign all Tags
         foreach ($this->tags as $tag) {
             /* @var Tag $tag */
@@ -852,7 +846,14 @@ class Layout implements \JsonSerializable
             $region->delete($options);
         }
 
+        // If we are the top level parent we also delete objects that sit on the top-level
         if ($this->parentId === null) {
+
+            // Delete Permissions
+            foreach ($this->permissions as $permission) {
+                /* @var Permission $permission */
+                $permission->deleteAll();
+            }
 
             // Delete widget history
             $this->getStore()->update('DELETE FROM `widgethistory` WHERE layoutHistoryId IN (SELECT layoutHistoryId FROM `layouthistory` WHERE campaignId = :campaignId)', ['campaignId' => $this->campaignId]);
