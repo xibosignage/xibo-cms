@@ -1334,7 +1334,10 @@ class Module extends Base
         }
 
         $this->setNoOutput(true);
-        $response->getBody()->write($resource);
+
+        if (!empty($resource)) {
+            $response->getBody()->write($resource);
+        }
 
         return $this->render($request, $response);
     }

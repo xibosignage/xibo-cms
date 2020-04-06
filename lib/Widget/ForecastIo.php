@@ -36,18 +36,16 @@ namespace Xibo\Widget;
 use Carbon\Carbon;
 use Carbon\Factory;
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
-use Illuminate\Support\Str;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Media;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\ConfigurationException;
-use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Exception\GeneralException;
-use Xibo\Helper\Translate;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Weather\DarkSkyProvider;
+use Xibo\Weather\OpenWeatherMapProvider;
 
 /**
  * Class ForecastIo
@@ -56,8 +54,6 @@ use Xibo\Helper\Translate;
  */
 class ForecastIo extends ModuleWidget
 {
-    const API_ENDPOINT = 'https://api.darksky.net/forecast/';
-
     private $resourceFolder;
     protected $codeSchemaVersion = 1;
 
@@ -85,7 +81,7 @@ class ForecastIo extends ModuleWidget
             $module->name = 'Weather';
             $module->type = 'forecastio';
             $module->class = 'Xibo\Widget\ForecastIo';
-            $module->description = 'Weather Powered by DarkSky';
+            $module->description = 'Weather module showing Current and Daily forecasts.';
             $module->enabled = 1;
             $module->previewEnabled = 1;
             $module->assignable = 1;
@@ -130,10 +126,12 @@ class ForecastIo extends ModuleWidget
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Process any module settings you asked for.
         $apiKey = $sanitizedParams->getString('apiKey');
-        $cachePeriod = $sanitizedParams->getInt('cachePeriod', ['default' => 300]);
+        $owmApiKey = $sanitizedParams->getString('owmApiKey');
+        $owmIsPaidPlan = $sanitizedParams->getCheckbox('owmIsPaidPlan');
+        $cachePeriod = $sanitizedParams->getInt('cachePeriod', ['default' => 1440]);
 
         if ($this->module->enabled != 0) {
-            if ($apiKey == '')
+            if ($apiKey == '' && $owmApiKey == '')
                 throw new InvalidArgumentException(__('Missing API Key'), 'apiKey');
 
             if ($cachePeriod <= 0)
@@ -141,6 +139,8 @@ class ForecastIo extends ModuleWidget
         }
 
         $this->module->settings['apiKey'] = $apiKey;
+        $this->module->settings['owmApiKey'] = $owmApiKey;
+        $this->module->settings['owmIsPaidPlan'] = $owmIsPaidPlan;
         $this->module->settings['cachePeriod'] = $cachePeriod;
 
         return $response;
@@ -358,90 +358,43 @@ class ForecastIo extends ModuleWidget
     /**
      * Units supported by Forecast.IO API
      * @return array The Units Available (temperature, wind speed and visible distance)
+     * @throws \Xibo\Support\Exception\ConfigurationException
      */
     public function unitsAvailable()
     {
-        return array(
-            array('id' => 'auto', 'value' => 'Automatically select based on geographic location', 'tempUnit' => '', 'windUnit' => '', 'visibilityUnit' => ''),
-            array('id' => 'ca', 'value' => 'Canada', 'tempUnit' => 'C', 'windUnit' => 'KPH', 'visibilityUnit' => 'km'),
-            array('id' => 'si', 'value' => 'Standard International Units', 'tempUnit' => 'C', 'windUnit' => 'MPS', 'visibilityUnit' => 'km'),
-            array('id' => 'uk2', 'value' => 'United Kingdom', 'tempUnit' => 'C', 'windUnit' => 'MPH', 'visibilityUnit' => 'mi'),
-            array('id' => 'us', 'value' => 'United States', 'tempUnit' => 'F', 'windUnit' => 'MPH', 'visibilityUnit' => 'km'),
-        );
+        return $this->getProvider()::unitsAvailable();
     }
 
     /**
      * Languages supported by Forecast.IO API
      * @return array The Supported Language
+     * @throws \Xibo\Support\Exception\ConfigurationException
      */
     public function supportedLanguages()
     {
-        return array(
-            array('id' => 'ar', 'value' => __('Arabic')),
-            array('id' => 'az', 'value' => __('Azerbaijani')),
-            array('id' => 'be', 'value' => __('Belarusian')),
-            array('id' => 'bs', 'value' => __('Bosnian')),
-            array('id' => 'bg', 'value' => __('Bulgarian')),
-            array('id' => 'ca', 'value' => __('Catalan')),
-            array('id' => 'kw', 'value' => __('Cornish')),
-            array('id' => 'zh', 'value' => __('Simplified Chinese')),
-            array('id' => 'zh-tw', 'value' => __('Traditional Chinese')),
-            array('id' => 'hr', 'value' => __('Croatian')),
-            array('id' => 'cs', 'value' => __('Czech')),
-            array('id' => 'da', 'value' => __('Danish')),
-            array('id' => 'nl', 'value' => __('Dutch')),
-            array('id' => 'ka', 'value' => __('Georgian')),
-            array('id' => 'de', 'value' => __('German')),
-            array('id' => 'el', 'value' => __('Greek')),
-            array('id' => 'en', 'value' => __('English')),
-            array('id' => 'et', 'value' => __('Estonian')),
-            array('id' => 'fi', 'value' => __('Finnish')),
-            array('id' => 'fr', 'value' => __('French')),
-            array('id' => 'hu', 'value' => __('Hungarian')),
-            array('id' => 'is', 'value' => __('Icelandic')),
-            array('id' => 'id', 'value' => __('Indonesian')),
-            array('id' => 'it', 'value' => __('Italian')),
-            array('id' => 'ja', 'value' => __('Japanese')),
-            array('id' => 'nb', 'value' => __('Norwegian Bokmål')),
-            array('id' => 'pl', 'value' => __('Polish')),
-            array('id' => 'pt', 'value' => __('Portuguese')),
-            array('id' => 'ru', 'value' => __('Russian')),
-            array('id' => 'sr', 'value' => __('Serbian')),
-            array('id' => 'sk', 'value' => __('Slovak')),
-            array('id' => 'sl', 'value' => __('Slovenian')),
-            array('id' => 'es', 'value' => __('Spanish')),
-            array('id' => 'sv', 'value' => __('Swedish')),
-            array('id' => 'tet', 'value' => __('Tetum')),
-            array('id' => 'tr', 'value' => __('Turkish')),
-            array('id' => 'uk', 'value' => __('Ukrainian')),
-            array('id' => 'x-pig-latin', 'value' => __('lgpay Atinlay'))
-        );
+        return $this->getProvider()::supportedLanguages();
     }
 
     /**
      * @inheritDoc
+     * @throws \Xibo\Support\Exception\GeneralException
      */
      public function getTab($tab)
      {
          if ($tab == 'forecast') {
-             if (!$data = $this->getForecastData(0)) {
-                 throw new NotFoundException(__('No data returned, please check error log.'));
+             // Return a current day weather forecast, for displayId 0 (meaning preview)
+             $data = $this->getForecastData(0);
+
+             $rows = [];
+             foreach ((array)$data->getCurrentDay() as $key => $value) {
+                 if (stripos($key, 'time')) {
+                     $value = Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
+                 }
+                 $rows[] = array('forecast' => __('Forecast'), 'key' => $key, 'value' => $value);
              }
 
-             $rows = array();
-             foreach ($data['currently'] as $key => $value) {
-                 if (stripos($key, 'time')) {
-                     $value = Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
-                 }
-                 $rows[] = array('forecast' => __('Current'), 'key' => $key, 'value' => $value);
-             }
-             foreach ($data['daily']['data'][0] as $key => $value) {
-                 if (stripos($key, 'time')) {
-                     $value = Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
-                 }
-                 $rows[] = array('forecast' => __('Daily'), 'key' => $key, 'value' => $value);
-             }
              return ['forecast' => $rows];
+
          } else if ($tab == 'exporttemplate') {
              return [
                  'template' => json_encode([
@@ -451,7 +404,7 @@ class ForecastIo extends ModuleWidget
                      'designHeight' => $this->getOption('designHeight'),
                      'main' => $this->getRawNode('currentTemplate'),
                      'daily' => $this->getRawNode('dailyTemplate'),
-                     'css' => $this->getRawNode('styleSheet'),                     
+                     'css' => $this->getRawNode('styleSheet'),
                      'widgetOriginalWidth' => intval($this->getOption('widgetOriginalWidth')),
                      'widgetOriginalHeight' => intval($this->getOption('widgetOriginalHeight')),
                      'image' => 'preview-image'
@@ -465,11 +418,12 @@ class ForecastIo extends ModuleWidget
     /**
      * Get the forecast data for the provided display id
      * @param int $displayId
-     * @return array|boolean
-     * @throws GeneralException
+     * @return \Xibo\Weather\WeatherProvider
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     private function getForecastData($displayId)
     {
+        // Get the Lat/Long
         $defaultLat = $this->getConfig()->getSetting('DEFAULT_LAT');
         $defaultLong = $this->getConfig()->getSetting('DEFAULT_LONG');
 
@@ -479,11 +433,14 @@ class ForecastIo extends ModuleWidget
 
                 $display = $this->displayFactory->getById($displayId);
 
-                if ($display->latitude != '' && $display->longitude != '' && v::latitude()->validate($display->latitude) && v::longitude()->validate($display->longitude)) {
+                if ($display->latitude != '' && $display->longitude != ''
+                    && v::latitude()->validate($display->latitude)
+                    && v::longitude()->validate($display->longitude)
+                ) {
                     $defaultLat = $display->latitude;
                     $defaultLong = $display->longitude;
                 } else {
-                    $this->getLog()->info('Warning, display %s does not have a lat/long or they are invalid, and yet a forecast widget is set to use display location.', $display->display);
+                    $this->getLog()->info('Warning, display ' .  $display->display . ' does not have a lat/long or they are invalid, and yet a forecast widget is set to use display location.');
                 }
             }
         } else {
@@ -492,152 +449,57 @@ class ForecastIo extends ModuleWidget
         }
 
         if (!v::longitude()->validate($defaultLong) || !v::latitude()->validate($defaultLat)) {
-            $this->getLog()->error('Weather widget configured with incorrect lat/long. WidgetId is ' . $this->getWidgetId() . ', Lat is ' . $defaultLat . ', Lng is ' . $defaultLong);
-            return false;
+            $this->getLog()->error('Weather widget configured with incorrect lat/long. WidgetId is ' . $this->getWidgetId()
+                . ', Lat is ' . $defaultLat . ', Lng is ' . $defaultLong);
+            throw new InvalidArgumentException('Lat/Long invalid', 'geolocation');
         }
 
-        $apiKey = $this->getSetting('apiKey');
-        if ($apiKey == '')
-            throw new ConfigurationException('Incorrectly configured module');
-
-        // Query the API and Dump the Results.
-        $apiOptions = array('units' => $this->getOption('units', 'auto'), 'lang' => $this->getOption('lang', 'en'), 'exclude' => 'minutely,hourly');
-
-        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($defaultLat . $defaultLong . implode('.', $apiOptions))));
-        $data = $cache->get();
-
-        if ($cache->isMiss()) {
-            $cache->lock();
-
-            $this->getLog()->notice('Getting Forecast from the API');
-            if (!$data = $this->get($defaultLat, $defaultLong, null, $apiOptions)) {
-                return false;
-            }
-
-            // Cache
-            $cache->set($data);
-            $cache->expiresAfter($this->getSetting('cachePeriod', 14400));
-            $this->getPool()->saveDeferred($cache);
-        } else {
-            $this->getLog()->debug('Getting Forecast from cache');
-        }
-
-        // Icon Mappings
-        $icons = array(
-            'unmapped' => 'wi-alien',
-            'clear-day' => 'wi-day-sunny',
-            'clear-night' => 'wi-night-clear',
-            'rain' => 'wi-rain',
-            'snow' => 'wi-snow',
-            'sleet' => 'wi-hail',
-            'wind' => 'wi-windy',
-            'fog' => 'wi-fog',
-            'cloudy' => 'wi-cloudy',
-            'partly-cloudy-day' => 'wi-day-cloudy',
-            'partly-cloudy-night' => 'wi-night-partly-cloudy',
-        );
-
-        // Temperature and wind Speed Unit Mappings
-        $temperatureUnit = '';
-        $windSpeedUnit = '';
-        $visibilityDistanceUnit = '';
-        foreach ($this->unitsAvailable() as $unit) {
-            if ($unit['id'] == $data->flags->units) {
-                $temperatureUnit = $unit['tempUnit'];
-                $windSpeedUnit = $unit['windUnit'];
-                $visibilityDistanceUnit = $unit['visibilityUnit'];
-                break;
-            }
-        }
-
-        // Are we set to only show daytime weather conditions?
-        if ($this->getOption('dayConditionsOnly') == 1) {
-            if ($data->currently->icon == 'partly-cloudy-night')
-                $data->currently->icon = 'clear-day';
-        }
-        
-        // Wind Direction Mappings
-        $cardinalDirections = array(
-          'N' => array(337.5, 22.5),
-          'NE' => array(22.5, 67.5),
-          'E' => array(67.5, 112.5),
-          'SE' => array(112.5, 157.5),
-          'S' => array(157.5, 202.5),
-          'SW' => array(202.5, 247.5),
-          'W' => array(247.5, 292.5),
-          'NW' => array(292.5, 337.5)
-        );
-        
-        $windDirection = '';
-        foreach ($cardinalDirections as $dir => $angles) {
-          if ($data->currently->windBearing >= $angles[0] && $data->currently->windBearing < $angles[1]) {
-            $windDirection = $dir;
-            break;
-          }
-        }
-
-        $data->currently->wicon = (isset($icons[$data->currently->icon]) ? $icons[$data->currently->icon] : $icons['unmapped']);
-        $data->currently->temperatureFloor = (isset($data->currently->temperature) ? floor($data->currently->temperature) : '--');
-        $data->currently->apparentTemperatureFloor = (isset($data->currently->apparentTemperature) ? floor($data->currently->apparentTemperature) : '--');
-        $data->currently->temperatureRound = (isset($data->currently->temperature) ? round($data->currently->temperature, 0) : '--');
-        $data->currently->apparentTemperatureRound = (isset($data->currently->apparentTemperature) ? round($data->currently->apparentTemperature, 0) : '--');
-        $data->currently->summary = (isset($data->currently->summary) ? $data->currently->summary : '--');
-        $data->currently->weekSummary = (isset($data->daily->summary) ? $data->daily->summary : '--');
-        $data->currently->temperatureUnit = $temperatureUnit;
-        $data->currently->windSpeedUnit = $windSpeedUnit;
-        $data->currently->windDirection = $windDirection;
-        $data->currently->visibilityDistanceUnit = $visibilityDistanceUnit;
-        $data->currently->humidityPercent = (isset($data->currently->humidity)) ? ($data->currently->humidity * 100) : '--';
-
-        // Convert a stdObject to an array
-        $data = json_decode(json_encode($data), true);
-
-        //Today Daily values
-        $data['currently']['temperatureMaxFloor'] = (isset($data['daily']['data'][0]['temperatureMax'])) ? floor($data['daily']['data'][0]['temperatureMax']) : '--';
-        $data['currently']['temperatureMinFloor'] = (isset($data['daily']['data'][0]['temperatureMin'])) ? floor($data['daily']['data'][0]['temperatureMin']) : '--';
-        $data['currently']['temperatureMeanFloor'] = ($data['currently']['temperatureMaxFloor'] != '--' && $data['currently']['temperatureMinFloor'] != '--') ? floor((($data['currently']['temperatureMinFloor'] + $data['currently']['temperatureMaxFloor']) / 2)) : '--';
-      
-        $data['currently']['temperatureMaxRound'] = (isset($data['daily']['data'][0]['temperatureMax'])) ? round($data['daily']['data'][0]['temperatureMax'], 0) : '--';
-        $data['currently']['temperatureMinRound'] = (isset($data['daily']['data'][0]['temperatureMin'])) ? round($data['daily']['data'][0]['temperatureMin'], 0) : '--';
-        $data['currently']['temperatureMeanRound'] = ($data['currently']['temperatureMaxRound'] != '--' && $data['currently']['temperatureMinRound'] != '--') ? round((($data['currently']['temperatureMinRound'] + $data['currently']['temperatureMaxRound']) / 2), 0) : '--';
-
-        // Process the icon for each day
-        for ($i = 0; $i < 7; $i++) {
-            // Are we set to only show daytime weather conditions?
-            if ($this->getOption('dayConditionsOnly') == 1) {
-                if ($data['daily']['data'][$i]['icon'] == 'partly-cloudy-night')
-                    $data['daily']['data'][$i]['icon'] = 'clear-day';
-            }
-            
-            // Wind Direction bearing to code
-            $windDirectionDaily = '';
-            foreach ($cardinalDirections as $dir => $angles) {
-              if ($data['daily']['data'][$i]['windBearing'] >= $angles[0] && $data['daily']['data'][$i]['windBearing'] < $angles[1]) {
-                $windDirectionDaily = $dir;
-                break;
-              }
-            }
-
-            $data['daily']['data'][$i]['wicon'] = (isset($icons[$data['daily']['data'][$i]['icon']]) ? $icons[$data['daily']['data'][$i]['icon']] : $icons['unmapped']);
-            $data['daily']['data'][$i]['temperatureMaxFloor'] = (isset($data['daily']['data'][$i]['temperatureMax'])) ? floor($data['daily']['data'][$i]['temperatureMax']) : '--';
-            $data['daily']['data'][$i]['temperatureMinFloor'] = (isset($data['daily']['data'][$i]['temperatureMin'])) ? floor($data['daily']['data'][$i]['temperatureMin']) : '--';
-            $data['daily']['data'][$i]['temperatureFloor'] = ($data['daily']['data'][$i]['temperatureMinFloor'] != '--' && $data['daily']['data'][$i]['temperatureMaxFloor'] != '--') ? floor((($data['daily']['data'][$i]['temperatureMinFloor'] + $data['daily']['data'][$i]['temperatureMaxFloor']) / 2)) : '--';
-            $data['daily']['data'][$i]['temperatureMaxRound'] = (isset($data['daily']['data'][$i]['temperatureMax'])) ? round($data['daily']['data'][$i]['temperatureMax'], 0) : '--';
-            $data['daily']['data'][$i]['temperatureMinRound'] = (isset($data['daily']['data'][$i]['temperatureMin'])) ? round($data['daily']['data'][$i]['temperatureMin'], 0) : '--';
-            $data['daily']['data'][$i]['temperatureRound'] = ($data['daily']['data'][$i]['temperatureMinRound'] != '--' && $data['daily']['data'][$i]['temperatureMaxRound'] != '--') ? round((($data['daily']['data'][$i]['temperatureMinRound'] + $data['daily']['data'][$i]['temperatureMaxRound']) / 2), 0) : '--';
-            $data['daily']['data'][$i]['temperatureUnit'] = $temperatureUnit;
-            $data['daily']['data'][$i]['windSpeedUnit'] = $windSpeedUnit;
-            $data['daily']['data'][$i]['visibilityDistanceUnit'] = $visibilityDistanceUnit;
-            $data['daily']['data'][$i]['humidityPercent'] = (isset($data['daily']['data'][$i]['humidity'])) ? ($data['daily']['data'][$i]['humidity'] * 100) : '--';
-            $data['daily']['data'][$i]['windDirection'] = $windDirectionDaily;
-        }
-
-        return $data;
+        // Create a provider
+        return $this->getProvider()
+            ->setHttpClient(new Client($this->getConfig()->getGuzzleProxy(['connect_timeout' => 20])))
+            ->enableLogging($this->getLog())
+            ->setLocation($defaultLat, $defaultLong)
+            ->setUnits($this->getOption('units', 'auto'))
+            ->setLang($this->getOption('lang', 'en'));
     }
 
+    /**
+     * @return \Xibo\Weather\WeatherProvider
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     */
+    protected function getProvider()
+    {
+        // Don't do anything if we don't have an API Key
+        $apiKey = $this->getSetting('apiKey');
+        $owmApiKey = $this->getSetting('owmApiKey');
+        if ($apiKey == '' && $owmApiKey == '') {
+            throw new ConfigurationException('Incorrectly configured module');
+        }
+
+        // We need to pick the provider based on whether we have a DarkSky or OpenWeatherMap API key.
+        return ((empty($owmApiKey))
+            ? (new DarkSkyProvider($this->getPool()))->setKey($apiKey)
+            : (new OpenWeatherMapProvider($this->getPool()))->setKey($owmApiKey))
+            ->setCachePeriod($this->getSetting('cachePeriod', 1440))
+            ->setOptions([
+                'isPaidPlan' => $this->getSetting('owmIsPaidPlan', 0)
+            ]);
+    }
+
+    /**
+     * @param array|\Xibo\Weather\Forecast $data
+     * @param $source
+     * @param null $timezone
+     * @return string|string[]
+     */
     private function makeSubstitutions($data, $source, $timezone = NULL, $language = 'en')
     {
         $carbonFactory = new Factory(['locale' => $language], Carbon::class);
+
+        // Convert to an array if necessary
+        if (is_object($data)) {
+            $data = (array)$data;
+        }
 
         // Replace all matches.
         $matches = '';
@@ -659,8 +521,9 @@ class ForecastIo extends ModuleWidget
                 $source = str_replace($sub, $time, $source);
             } else {
                 // Match that in the array
-                if (isset($data[$replace]))
+                if (isset($data[$replace])) {
                     $source = str_replace($sub, $data[$replace], $source);
+                }
             }
         }
 
@@ -679,8 +542,23 @@ class ForecastIo extends ModuleWidget
         $widgetOriginalHeight = null;
 
         // Behave exactly like the client.
-        if (!$foreCast = $this->getForecastData($displayId)) {
+        try {
+            $foreCast = $this->getForecastData($displayId);
+
+            // Both current and forecast templates are required by this module.
+            $currently = $foreCast->getCurrentDay();
+            $daily = $foreCast->getForecast();
+
+        } catch (GeneralException $exception) {
+            // The player should keep its cache
             return '';
+        }
+
+        // Are we set to only show daytime weather conditions?
+        if ($this->getOption('dayConditionsOnly') == 1) {
+            // Swap the night icons for their day equivalents
+            $currently->icon = str_replace('-night', '', $currently->icon);
+            $currently->wicon = str_replace('-night', '', $currently->wicon);
         }
 
         // Do we need to override the language?
@@ -690,11 +568,10 @@ class ForecastIo extends ModuleWidget
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
-        
-        if( $this->getOption('overrideTemplate') == 0 ) {
-            
-            // Get CSS and HTML from the default templates
 
+        // Templates
+        if ($this->getOption('overrideTemplate') == 0) {
+            // Get CSS and HTML from the default templates
             $template = $this->getTemplateById($this->getOption('templateId'));
             
             if (isset($template)) {
@@ -703,11 +580,12 @@ class ForecastIo extends ModuleWidget
                 $styleSheet = $template['css'];
                 $widgetOriginalWidth = $template['widgetOriginalWidth'];
                 $widgetOriginalHeight = $template['widgetOriginalHeight'];
+            } else {
+                throw new InvalidArgumentException(__('Template not found, please edit the Widget and select another.'), 'templateId');
             }
             
         } else {
             // Get CSS and HTML from the override input fields
-            
             $body = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('currentTemplate', ''));
             $dailyTemplate = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('dailyTemplate', ''));
             $styleSheet = $this->getRawNode('styleSheet', '');
@@ -719,11 +597,15 @@ class ForecastIo extends ModuleWidget
         $body = $this->parseLibraryReferences($this->isPreview(), $body);
         $dailyTemplate = $this->parseLibraryReferences($this->isPreview(), $dailyTemplate);
 
+        // Attribution
+        $body = str_replace('[Attribution]', $foreCast->getAttribution(), $body);
+
         // Parse translations
         $body = $this->parseTranslations($body);
         $dailyTemplate = $this->parseTranslations($dailyTemplate);
         
         // Provide the background images to the templates styleSheet
+        // TODO: the way this works is super odd
         $styleSheet = $this->makeSubstitutions([
             'cloudy-image' => $this->getResourceUrl('forecastio/wi-cloudy.jpg'),
             'day-cloudy-image' => $this->getResourceUrl('forecastio/wi-day-cloudy.jpg'),
@@ -754,6 +636,7 @@ class ForecastIo extends ModuleWidget
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
         // Replace any icon sets
+        // TODO: I don't think this functionality exists anymore.
         $data['head'] = str_replace('[[ICONS]]', $this->getResourceUrl('forecastio/' . $this->getOption('icons')), $headContent);
 
         // Get the JavaScript node
@@ -767,33 +650,36 @@ class ForecastIo extends ModuleWidget
         // Substitute
         foreach ($matches[0] as $sub) {
             $replace = str_replace('[', '', str_replace(']', '', $sub));
-            // Handling for date/time
-            $itterations = 7;
-            $stopPosition = $itterations;
+
+            // Does the dailyForecast tag have a number of days parameter?
+            $maxDays = count($daily);
             $offset = 0;
             if (stripos($replace, '|') > -1) {
                 $quantity = explode('|', $replace);
-                $itterations = $quantity[1];
+                $iterations = $quantity[1];
                 
-                if (count($quantity) > 1)
-                  $offset = $quantity[2];
+                if (count($quantity) > 1) {
+                    $offset = $quantity[2];
+                }
 
-                  $stopPosition = (($itterations+$offset) > 7) ? 7 : $itterations+$offset;
-            
+                $stopPosition = (($iterations + $offset) > $maxDays) ? $maxDays : $iterations + $offset;
+            } else {
+                $stopPosition = $maxDays;
             }
 
             // Pull it out, and run substitute over it for each day
             // Substitute for every day (i.e. 7 times).
             for ($i = $offset; $i < $stopPosition; $i++) {
                 $this->getLog()->debug('Substitiution for Daily, day ' . $i);
-                $dailySubs .= $this->makeSubstitutions($foreCast['daily']['data'][$i], $dailyTemplate, $foreCast['timezone'], $lang);
+                $dailySubs .= $this->makeSubstitutions($daily[$i], $dailyTemplate, $foreCast->getTimezone(), $lang);
             }
+
             // Substitute the completed template
             $body = str_replace($sub, $dailySubs, $body);
         }
 
         // Run replace over the main template
-        $data['body'] = $this->makeSubstitutions($foreCast['currently'], $body, $foreCast['timezone'], $lang);
+        $data['body'] = $this->makeSubstitutions($currently, $body, $foreCast->getTimezone(), $lang);
 
         // JavaScript to control the size (override the original width and height so that the widget gets blown up )
         $options = array(
@@ -845,61 +731,6 @@ class ForecastIo extends ModuleWidget
         return self::$STATUS_VALID;
     }
 
-    /**
-     * Get a forecast from DarkSky
-     * @param $latitude
-     * @param $longitude
-     * @param null $time
-     * @param array $options
-     * @return bool|mixed
-     */
-    public function get($latitude, $longitude, $time = null, $options = array())
-    {
-        $request_url = self::API_ENDPOINT
-            . '[APIKEY]'
-            . '/'
-            . $latitude
-            . ','
-            . $longitude
-            . ((is_null($time)) ? '' : ','. $time);
-
-        if (!empty($options)) {
-            $request_url .= '?'. http_build_query($options);
-        }
-
-        $this->getLog()->debug('Calling API with: ' . $request_url);
-
-        $request_url = str_replace('[APIKEY]', $this->getSetting('apiKey'), $request_url);
-
-        // Request
-        $client = new Client();
-
-        try {
-            $response = $client->get($request_url, $this->getConfig()->getGuzzleProxy(['connect_timeout' => 20]));
-
-            // Success?
-            if ($response->getStatusCode() != 200) {
-                $this->getLog()->error('ForecastIO API returned %d status. Unable to proceed. Headers = %s', $response->getStatusCode(), var_export($response->getHeaders(), true));
-
-                // See if we can parse the error.
-                $body = json_decode($response->getBody());
-
-                $this->getLog()->error('ForecastIO Error: ' . ((isset($body->errors[0])) ? $body->errors[0]->message : 'Unknown Error'));
-
-                return false;
-            }
-
-            // Parse out header and body
-            $body = json_decode($response->getBody());
-
-            return $body;
-        }
-        catch (RequestException $e) {
-            $this->getLog()->error('Unable to reach Forecast API: %s', $e->getMessage());
-            return false;
-        }
-    }
-
     /** @inheritdoc */
     public function getCacheDuration()
     {
@@ -919,27 +750,6 @@ class ForecastIo extends ModuleWidget
     public function isCacheDisplaySpecific()
     {
         return ($this->getOption('useDisplayLocation') == 1);
-    }
-
-    public function getWeatherLanguage()
-    {
-        $supportedLanguages[] = $this->supportedLanguages();
-
-        foreach ($supportedLanguages as $language) {
-            foreach ($language as $lang) {
-                if ($lang['id'] === strtolower(translate::getJsLocale())) {
-                    return strtolower(translate::getJsLocale());
-                }
-                else {
-                    continue;
-                }
-            }
-        }
-        if (strlen(translate::getJsLocale()) > 2 && Str::contains(translate::getJsLocale(), '-')) {
-                return substr(translate::getJsLocale(), 0, 2);
-        } else {
-                return 'en';
-        }
     }
 
     /** @inheritDoc */
