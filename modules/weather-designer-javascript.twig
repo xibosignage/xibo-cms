@@ -1,0 +1,88 @@
+{#
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+<script type="text/javascript">
+
+    const weatherType = {
+        forecast: 'Forecast', 
+        current: 'Current'
+        };
+
+    // Runs after form opens
+    function weather_form_edit_open() {
+        
+        // Set duration field, using the helper ()
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
+
+        // Set display location field, using the helper ()
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDisplayLocation', '', '.locationControls');
+
+        // Weather controls based on type
+        formHelpers.setupObjectValueInputFields($(this).find('form'), '#weatherType', ['.forecastViewControls'], ['current'], true);
+        
+        // Set override template field, using the helper ()
+        formHelpers.setupCheckboxInputFields($(this), '#overrideTemplate', '.template-override-controls, .reloadTemplateButton', '.template-selector-control');
+
+        // Setup editors
+        formHelpers.setupDualTypeTextArea(this, 'template');
+
+        // Setup template override
+        formHelpers.setupTemplateOverriding(this, '#overrideTemplate', '#templateId', 
+            {
+                '#template': 'main',
+                '#styleSheet': 'css',
+                '#widgetOriginalWidth': 'widgetOriginalWidth',
+                '#widgetOriginalHeight': 'widgetOriginalHeight'
+            }
+        );
+
+        // Setupd color picker
+        $(this).find('#color').colorpicker();
+
+        // Tidy up colorpickers on modal close
+        if($(this).hasClass('modal')) {
+            $(this).on("hide.bs.modal", function(e) {
+                if(e.namespace === 'bs.modal') {
+                    // Remove colour pickers
+                    $(this).find("#color").colorpicker('destroy');
+                }
+            });
+        }
+
+        const setFilter = function (refresh) {
+            // Set dropdown filter option
+            $(this).find('.weather-type-targets select').data('filterClass', $(this).find('#weatherType').val());
+
+            // Clear template id if it's not selected
+            if(refresh && $(this).find('#overrideTemplate').is(':checked') == false) {
+                $(this).find('#templateId').val(null).trigger('change');
+            }
+        }.bind(this);
+
+        // Trigger set filter on weather type change
+        $(this).find('#weatherType').on('change input', function () {
+            setFilter(true);
+        });
+
+        setFilter(false);
+    }
+</script>

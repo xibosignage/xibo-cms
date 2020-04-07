@@ -97,7 +97,7 @@ echo __('Twitter Search Module');
 echo __('Twitter Metro');
 echo __('Twitter Metro Search Module');
 echo __('Weather');
-echo __('Weather Powered by DarkSky');
+echo __('Weather module showing Current and Daily forecasts.');
 echo __('Sub-Playlist');
 echo __('Embed a Sub-Playlist');
 echo __('Countdown');

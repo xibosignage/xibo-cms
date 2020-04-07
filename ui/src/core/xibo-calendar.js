@@ -104,8 +104,8 @@ $(document).ready(function() {
                     
                     // Populate the events array via AJAX
                     var params = {
-                        "from": this.options.position.start.getTime(),
-                        "to": this.options.position.end.getTime()
+                        "from": moment(this.options.position.start.getTime()).format(systemDateFormat),
+                        "to": moment(this.options.position.end.getTime()).format(systemDateFormat)
                     };
 
                     // If there is already a request, abort it

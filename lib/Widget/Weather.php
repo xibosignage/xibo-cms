@@ -23,8 +23,11 @@
  * Template strings to be translated, that will be used to replace tags in the ||tag|| format
  * __('Wind')
  * __('Humidity')
+ * __('Precipitation')
  * __('Feels Like')
  * __('Right now')
+ * __('Minimum temperature')
+ * __('Maximum temperature')
  * __('Pressure')
  * __('Visibility')
  * __('TODAY')
@@ -36,11 +39,13 @@ namespace Xibo\Widget;
 use Carbon\Carbon;
 use Carbon\Factory;
 use GuzzleHttp\Client;
+use Illuminate\Support\Str;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Media;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Translate;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -48,12 +53,120 @@ use Xibo\Weather\DarkSkyProvider;
 use Xibo\Weather\OpenWeatherMapProvider;
 
 /**
- * Class ForecastIo
+ * Class Weather
  * Weather module powered by the DarkSky API
  * @package Xibo\Widget
  */
-class ForecastIo extends ModuleWidget
+class Weather extends ModuleWidget
 {
+    const API_ENDPOINT = 'https://api.darksky.net/forecast/';
+
+    const WEATHER_BACKGROUNDS = array(
+        "cloudy-image",
+        "day-cloudy-image",
+        "day-sunny-image",
+        "fog-image",
+        "hail-image",
+        "night-clear-image",
+        "night-partly-cloudy-image",
+        "rain-image",
+        "snow-image",
+        "windy-image"
+    );
+
+    const WEATHER_SNIPPETS_CURRENT = array(
+        'time',
+        'summary',
+        'icon',
+        'nearestStormDistance',
+        'nearestStormBearing',
+        'precipIntensity',
+        'precipProbability',
+        'temperature',
+        'apparentTemperature',
+        'dewPoint',
+        'humidity',
+        'pressure',
+        'windSpeed',
+        'windGust',
+        'windBearing',
+        'cloudCover',
+        'uvIndex',
+        'visibility',
+        'ozone',
+        'wicon',
+        'temperatureFloor',
+        'apparentTemperatureFloor',
+        'temperatureRound',
+        'apparentTemperatureRound',
+        'weekSummary',
+        'temperatureUnit',
+        'windSpeedUnit',
+        'windDirection',
+        'visibilityDistanceUnit',
+        'humidityPercent',
+        'temperatureMaxFloor',
+        'temperatureMinFloor',
+        'temperatureMeanFloor',
+        'temperatureMaxRound',
+        'temperatureMinRound',
+        'temperatureMeanRound'
+    );
+    
+    const WEATHER_SNIPPETS_FORECAST = array(
+        'time',
+        'summary',
+        'icon',
+        'sunriseTime',
+        'sunsetTime',
+        'moonPhase',
+        'precipIntensity',
+        'precipIntensityMax',
+        'precipIntensityMaxTime',
+        'precipProbability',
+        'precipType',
+        'temperatureHigh',
+        'temperatureHighTime',
+        'temperatureLow',
+        'temperatureLowTime',
+        'apparentTemperatureHigh',
+        'apparentTemperatureHighTime',
+        'apparentTemperatureLow',
+        'apparentTemperatureLowTime',
+        'dewPoint',
+        'humidity',
+        'pressure',
+        'windSpeed',
+        'windGust',
+        'windGustTime',
+        'windBearing',
+        'cloudCover',
+        'uvIndex',
+        'uvIndexTime',
+        'visibility',
+        'ozone',
+        'temperatureMin',
+        'temperatureMinTime',
+        'temperatureMax',
+        'temperatureMaxTime',
+        'apparentTemperatureMin',
+        'apparentTemperatureMinTime',
+        'apparentTemperatureMax',
+        'apparentTemperatureMaxTime',
+        'wicon',
+        'temperatureMaxFloor',
+        'temperatureMinFloor',
+        'temperatureFloor',
+        'temperatureMaxRound',
+        'temperatureMinRound',
+        'temperatureRound',
+        'temperatureUnit',
+        'windSpeedUnit',
+        'visibilityDistanceUnit',
+        'humidityPercent',
+        'windDirection'
+    );
+
     private $resourceFolder;
     protected $codeSchemaVersion = 1;
 
@@ -69,7 +182,7 @@ class ForecastIo extends ModuleWidget
     /** @inheritDoc */
     public function layoutDesignerJavaScript()
     {
-        return 'forecastio-designer-javascript';
+        return 'weather-designer-javascript';
     }
 
     /** @inheritDoc */
@@ -78,10 +191,10 @@ class ForecastIo extends ModuleWidget
         if ($this->module == null) {
             // Install
             $module = $moduleFactory->createEmpty();
-            $module->name = 'Weather';
-            $module->type = 'forecastio';
-            $module->class = 'Xibo\Widget\ForecastIo';
-            $module->description = 'Weather module showing Current and Daily forecasts.';
+            $module->name = 'Weather Tiles';
+            $module->type = 'weather';
+            $module->class = 'Xibo\Widget\Weather';
+            $module->description = 'Weather Tiles';
             $module->enabled = 1;
             $module->previewEnabled = 1;
             $module->assignable = 1;
@@ -90,7 +203,7 @@ class ForecastIo extends ModuleWidget
             $module->schemaVersion = $this->codeSchemaVersion;
             $module->settings = [];
             $module->defaultDuration = 60;
-            $module->installName = 'forecastio';
+            $module->installName = 'weather';
 
             $this->setModule($module);
             $this->installModule();
@@ -117,7 +230,7 @@ class ForecastIo extends ModuleWidget
     /** @inheritDoc */
     public function settingsForm()
     {
-        return 'forecastio-form-settings';
+        return 'weather-form-settings';
     }
 
     /** @inheritDoc */
@@ -126,12 +239,10 @@ class ForecastIo extends ModuleWidget
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Process any module settings you asked for.
         $apiKey = $sanitizedParams->getString('apiKey');
-        $owmApiKey = $sanitizedParams->getString('owmApiKey');
-        $owmIsPaidPlan = $sanitizedParams->getCheckbox('owmIsPaidPlan');
-        $cachePeriod = $sanitizedParams->getInt('cachePeriod', ['default' => 1440]);
+        $cachePeriod = $sanitizedParams->getInt('cachePeriod', ['default' => 300]);
 
         if ($this->module->enabled != 0) {
-            if ($apiKey == '' && $owmApiKey == '')
+            if ($apiKey == '')
                 throw new InvalidArgumentException(__('Missing API Key'), 'apiKey');
 
             if ($cachePeriod <= 0)
@@ -139,8 +250,6 @@ class ForecastIo extends ModuleWidget
         }
 
         $this->module->settings['apiKey'] = $apiKey;
-        $this->module->settings['owmApiKey'] = $owmApiKey;
-        $this->module->settings['owmIsPaidPlan'] = $owmIsPaidPlan;
         $this->module->settings['cachePeriod'] = $cachePeriod;
 
         return $response;
@@ -268,31 +377,10 @@ class ForecastIo extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Parameter(
-     *      name="currentTemplate",
+     *      name="template",
      *      in="formData",
      *      description="Current template, Pass only with overrideTemplate set to 1 ",
      *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="currentTemplate_advanced",
-     *      in="formData",
-     *      description="A flag (0, 1), Should text area by presented as a visual editor?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dailyTemplate",
-     *      in="formData",
-     *      description="Replaces [dailyForecast] in main template, Pass only with overrideTemplate set to 1 ",
-     *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="dailyTemplate_advanced",
-     *      in="formData",
-     *      description="A flag (0, 1), Should text area by presented as a visual editor?",
-     *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
@@ -335,13 +423,30 @@ class ForecastIo extends ModuleWidget
         $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 60]));
         $this->setOption('lang', $sanitizedParams->getString('lang', ['default' => 'en']));
         $this->setOption('dayConditionsOnly', $sanitizedParams->getCheckbox('dayConditionsOnly'));
-        
+        $this->setOption('weatherType', $sanitizedParams->getString('weatherType'));
+        $this->setOption('showMainBackground', $sanitizedParams->getCheckbox('showMainBackground'));
+
+        // Background images
+        foreach (self::WEATHER_BACKGROUNDS as $background) {
+            $this->setOption($background, $sanitizedParams->getString($background));
+            if($sanitizedParams->getString($background) != '') {
+                $this->setOption($background, $sanitizedParams->getString($background));
+            } else {
+                $this->setOption($background, $background);
+            }
+        }
+
+        // If weather type is forecast, get extra options
+        if ($this->getOption('weatherType') == 'forecast') {
+            $this->setOption('dayOffset', $sanitizedParams->getInt('dayOffset', ['default' => 0]));
+            $this->setOption('numDays', $sanitizedParams->getInt('numDays', ['default' => 1]));
+            $this->setOption('daysCols', $sanitizedParams->getInt('daysCols', ['default' => 1]));
+            $this->setOption('daysRows', $sanitizedParams->getInt('daysRows', ['default' => 1]));
+        }
+
         if ($this->getOption('overrideTemplate') == 1) {
             $this->setRawNode('styleSheet', $request->getParam('styleSheet', null));
-            $this->setRawNode('currentTemplate', $request->getParam('currentTemplate', null));
-            $this->setOption('currentTemplate_advanced', $sanitizedParams->getCheckbox('currentTemplate_advanced'));
-            $this->setRawNode('dailyTemplate', $request->getParam('dailyTemplate', null));
-            $this->setOption('dailyTemplate_advanced', $sanitizedParams->getCheckbox('dailyTemplate_advanced'));
+            $this->setRawNode('template', $request->getParam('template', null));
             $this->setOption('widgetOriginalWidth', $sanitizedParams->getInt('widgetOriginalWidth'));
             $this->setOption('widgetOriginalHeight', $sanitizedParams->getInt('widgetOriginalHeight'));
         }
@@ -358,21 +463,64 @@ class ForecastIo extends ModuleWidget
     /**
      * Units supported by Forecast.IO API
      * @return array The Units Available (temperature, wind speed and visible distance)
-     * @throws \Xibo\Support\Exception\ConfigurationException
      */
     public function unitsAvailable()
     {
-        return $this->getProvider()::unitsAvailable();
+        return array(
+            array('id' => 'auto', 'value' => 'Automatically select based on geographic location', 'tempUnit' => '', 'windUnit' => '', 'visibilityUnit' => ''),
+            array('id' => 'ca', 'value' => 'Canada', 'tempUnit' => 'C', 'windUnit' => 'KPH', 'visibilityUnit' => 'km'),
+            array('id' => 'si', 'value' => 'Standard International Units', 'tempUnit' => 'C', 'windUnit' => 'MPS', 'visibilityUnit' => 'km'),
+            array('id' => 'uk2', 'value' => 'United Kingdom', 'tempUnit' => 'C', 'windUnit' => 'MPH', 'visibilityUnit' => 'mi'),
+            array('id' => 'us', 'value' => 'United States', 'tempUnit' => 'F', 'windUnit' => 'MPH', 'visibilityUnit' => 'km'),
+        );
     }
 
     /**
      * Languages supported by Forecast.IO API
      * @return array The Supported Language
-     * @throws \Xibo\Support\Exception\ConfigurationException
      */
     public function supportedLanguages()
     {
-        return $this->getProvider()::supportedLanguages();
+        return array(
+            array('id' => 'ar', 'value' => __('Arabic')),
+            array('id' => 'az', 'value' => __('Azerbaijani')),
+            array('id' => 'be', 'value' => __('Belarusian')),
+            array('id' => 'bs', 'value' => __('Bosnian')),
+            array('id' => 'bg', 'value' => __('Bulgarian')),
+            array('id' => 'ca', 'value' => __('Catalan')),
+            array('id' => 'kw', 'value' => __('Cornish')),
+            array('id' => 'zh', 'value' => __('Simplified Chinese')),
+            array('id' => 'zh-tw', 'value' => __('Traditional Chinese')),
+            array('id' => 'hr', 'value' => __('Croatian')),
+            array('id' => 'cs', 'value' => __('Czech')),
+            array('id' => 'da', 'value' => __('Danish')),
+            array('id' => 'nl', 'value' => __('Dutch')),
+            array('id' => 'ka', 'value' => __('Georgian')),
+            array('id' => 'de', 'value' => __('German')),
+            array('id' => 'el', 'value' => __('Greek')),
+            array('id' => 'en', 'value' => __('English')),
+            array('id' => 'et', 'value' => __('Estonian')),
+            array('id' => 'fi', 'value' => __('Finnish')),
+            array('id' => 'fr', 'value' => __('French')),
+            array('id' => 'hu', 'value' => __('Hungarian')),
+            array('id' => 'is', 'value' => __('Icelandic')),
+            array('id' => 'id', 'value' => __('Indonesian')),
+            array('id' => 'it', 'value' => __('Italian')),
+            array('id' => 'ja', 'value' => __('Japanese')),
+            array('id' => 'nb', 'value' => __('Norwegian Bokmål')),
+            array('id' => 'pl', 'value' => __('Polish')),
+            array('id' => 'pt', 'value' => __('Portuguese')),
+            array('id' => 'ru', 'value' => __('Russian')),
+            array('id' => 'sr', 'value' => __('Serbian')),
+            array('id' => 'sk', 'value' => __('Slovak')),
+            array('id' => 'sl', 'value' => __('Slovenian')),
+            array('id' => 'es', 'value' => __('Spanish')),
+            array('id' => 'sv', 'value' => __('Swedish')),
+            array('id' => 'tet', 'value' => __('Tetum')),
+            array('id' => 'tr', 'value' => __('Turkish')),
+            array('id' => 'uk', 'value' => __('Ukrainian')),
+            array('id' => 'x-pig-latin', 'value' => __('lgpay Atinlay'))
+        );
     }
 
     /**
@@ -382,19 +530,16 @@ class ForecastIo extends ModuleWidget
      public function getTab($tab)
      {
          if ($tab == 'forecast') {
-             // Return a current day weather forecast, for displayId 0 (meaning preview)
              $data = $this->getForecastData(0);
 
-             $rows = [];
-             foreach ((array)$data->getCurrentDay() as $key => $value) {
+             $rows = array();
+             foreach ($data->getCurrentDay() as $key => $value) {
                  if (stripos($key, 'time')) {
                      $value = Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
                  }
-                 $rows[] = array('forecast' => __('Forecast'), 'key' => $key, 'value' => $value);
+                 $rows[] = array('forecast' => __('Current'), 'key' => $key, 'value' => $value);
              }
-
              return ['forecast' => $rows];
-
          } else if ($tab == 'exporttemplate') {
              return [
                  'template' => json_encode([
@@ -402,9 +547,8 @@ class ForecastIo extends ModuleWidget
                      'value' => 'title',
                      'designWidth' => $this->getOption('designWidth'),
                      'designHeight' => $this->getOption('designHeight'),
-                     'main' => $this->getRawNode('currentTemplate'),
-                     'daily' => $this->getRawNode('dailyTemplate'),
-                     'css' => $this->getRawNode('styleSheet'),
+                     'main' => $this->getRawNode('template'),
+                     'css' => $this->getRawNode('styleSheet'),                     
                      'widgetOriginalWidth' => intval($this->getOption('widgetOriginalWidth')),
                      'widgetOriginalHeight' => intval($this->getOption('widgetOriginalHeight')),
                      'image' => 'preview-image'
@@ -458,6 +602,7 @@ class ForecastIo extends ModuleWidget
         return $this->getProvider()
             ->setHttpClient(new Client($this->getConfig()->getGuzzleProxy(['connect_timeout' => 20])))
             ->enableLogging($this->getLog())
+            ->setCachePeriod($this->getSetting('cachePeriod', 14400))
             ->setLocation($defaultLat, $defaultLong)
             ->setUnits($this->getOption('units', 'auto'))
             ->setLang($this->getOption('lang', 'en'));
@@ -467,7 +612,7 @@ class ForecastIo extends ModuleWidget
      * @return \Xibo\Weather\WeatherProvider
      * @throws \Xibo\Support\Exception\ConfigurationException
      */
-    protected function getProvider()
+    private function getProvider()
     {
         // Don't do anything if we don't have an API Key
         $apiKey = $this->getSetting('apiKey');
@@ -477,20 +622,17 @@ class ForecastIo extends ModuleWidget
         }
 
         // We need to pick the provider based on whether we have a DarkSky or OpenWeatherMap API key.
-        return ((empty($owmApiKey))
+        return (empty($owmApiKey))
             ? (new DarkSkyProvider($this->getPool()))->setKey($apiKey)
-            : (new OpenWeatherMapProvider($this->getPool()))->setKey($owmApiKey))
-            ->setCachePeriod($this->getSetting('cachePeriod', 1440))
-            ->setOptions([
-                'isPaidPlan' => $this->getSetting('owmIsPaidPlan', 0)
-            ]);
+            : (new OpenWeatherMapProvider($this->getPool()))->setKey($owmApiKey);
     }
 
     /**
-     * @param array|\Xibo\Weather\Forecast $data
+     * @param $data
      * @param $source
      * @param null $timezone
-     * @return string|string[]
+     * @param string $language
+     * @return string
      */
     private function makeSubstitutions($data, $source, $timezone = NULL, $language = 'en')
     {
@@ -504,6 +646,7 @@ class ForecastIo extends ModuleWidget
         // Replace all matches.
         $matches = '';
         preg_match_all('/\[.*?\]/', $source, $matches);
+
         // Substitute
         foreach ($matches[0] as $sub) {
             $replace = str_replace('[', '', str_replace(']', '', $sub));
@@ -517,13 +660,13 @@ class ForecastIo extends ModuleWidget
                 $time = $carbonFactory->parse($data['time'], $timezone)->translatedFormat($timeSplit[1]);
 
                 $this->getLog()->debug('Time Substitution: ' . (string)($time));
+
                 // Pull time out of the array
                 $source = str_replace($sub, $time, $source);
             } else {
                 // Match that in the array
-                if (isset($data[$replace])) {
+                if (isset($data[$replace]))
                     $source = str_replace($sub, $data[$replace], $source);
-                }
             }
         }
 
@@ -536,7 +679,6 @@ class ForecastIo extends ModuleWidget
     public function getResource($displayId = 0)
     {
         $body = null;
-        $dailyTemplate = null;
         $styleSheet = null;
         $widgetOriginalWidth = null;
         $widgetOriginalHeight = null;
@@ -569,62 +711,135 @@ class ForecastIo extends ModuleWidget
         // Replace the View Port Width?
         $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
 
-        // Templates
-        if ($this->getOption('overrideTemplate') == 0) {
+        // Common styles
+        $styleSheet .= "
+            #content {
+                height: 100%;
+            }
+
+            .bg-div {
+                background-repeat: no-repeat;
+                background-size: cover;
+                background-position: left;
+                width: 100%;
+                height: 100%;
+            }
+
+            .footer-powered-by {
+                color: #333;
+                font-size: 12px;
+                background-color: #f9f9f9;
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                text-align: center;
+                opacity: 0.85;
+            }
+
+            .footer-powered-by a {
+                text-decoration: none;
+                color: inherit;
+            }
+        ";
+
+        // Custom backgrounds
+        $styleSheet .= "
+            .bg-cloudy {
+                background-image: url('[" . $this->getOption('cloudy-image') . "]');
+            }
+
+            .bg-partly-cloudy-day {
+                background-image: url('[" . $this->getOption('day-cloudy-image') . "]');
+            }
+
+            .bg-clear-day {
+                background-image: url('[" . $this->getOption('day-sunny-image') . "]');
+            }
+
+            .bg-fog {
+                background-image: url('[" . $this->getOption('fog-image') . "]');
+            }
+
+            .bg-sleet {
+                background-image: url('[" . $this->getOption('hail-image') . "]');
+            }
+
+            .bg-clear-night {
+                background-image: url('[" . $this->getOption('night-clear-image') . "]');
+            }
+
+            .bg-partly-cloudy-night {
+                background-image: url('[" . $this->getOption('night-partly-cloudy-image') . "]');
+            }
+
+            .bg-rain {
+                background-image: url('[" . $this->getOption('rain-image') . "]');
+            }
+
+            .bg-snow {
+                background-image: url('[" . $this->getOption('snow-image') . "]');
+            }
+
+            .bg-wind {
+                background-image: url('[" . $this->getOption('windy-image') . "]');
+            }
+        ";
+
+        if($this->getOption('showMainBackground') != 1) {
+            $styleSheet .= "
+                .bg-div-main {
+                    background-image: none;
+                }
+            ";
+        }
+        
+        if($this->getOption('overrideTemplate') == 0 ) {
             // Get CSS and HTML from the default templates
             $template = $this->getTemplateById($this->getOption('templateId'));
             
             if (isset($template)) {
                 $body = $template['main'];
-                $dailyTemplate = $template['daily'];
-                $styleSheet = $template['css'];
+                $styleSheet .= $template['css'];
                 $widgetOriginalWidth = $template['widgetOriginalWidth'];
                 $widgetOriginalHeight = $template['widgetOriginalHeight'];
-            } else {
-                throw new InvalidArgumentException(__('Template not found, please edit the Widget and select another.'), 'templateId');
             }
             
         } else {
             // Get CSS and HTML from the override input fields
-            $body = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('currentTemplate', ''));
-            $dailyTemplate = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('dailyTemplate', ''));
-            $styleSheet = $this->getRawNode('styleSheet', '');
+            
+            $body = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('template', ''));
+            $styleSheet .= $this->getRawNode('styleSheet', '');
             $widgetOriginalWidth = intval($this->getOption('widgetOriginalWidth'));
             $widgetOriginalHeight = intval($this->getOption('widgetOriginalHeight'));
         }
         
         // Parse library references
         $body = $this->parseLibraryReferences($this->isPreview(), $body);
-        $dailyTemplate = $this->parseLibraryReferences($this->isPreview(), $dailyTemplate);
-
-        // Attribution
-        $body = str_replace('[Attribution]', $foreCast->getAttribution(), $body);
 
         // Parse translations
         $body = $this->parseTranslations($body);
-        $dailyTemplate = $this->parseTranslations($dailyTemplate);
         
         // Provide the background images to the templates styleSheet
-        // TODO: the way this works is super odd
         $styleSheet = $this->makeSubstitutions([
-            'cloudy-image' => $this->getResourceUrl('forecastio/wi-cloudy.jpg'),
-            'day-cloudy-image' => $this->getResourceUrl('forecastio/wi-day-cloudy.jpg'),
-            'day-sunny-image' => $this->getResourceUrl('forecastio/wi-day-sunny.jpg'),
-            'fog-image' => $this->getResourceUrl('forecastio/wi-fog.jpg'),
-            'hail-image' => $this->getResourceUrl('forecastio/wi-hail.jpg'),
-            'night-clear-image' => $this->getResourceUrl('forecastio/wi-night-clear.jpg'),
-            'night-partly-cloudy-image' => $this->getResourceUrl('forecastio/wi-night-partly-cloudy.jpg'),
-            'rain-image' => $this->getResourceUrl('forecastio/wi-rain.jpg'),
-            'snow-image' => $this->getResourceUrl('forecastio/wi-snow.jpg'),
-            'windy-image' => $this->getResourceUrl('forecastio/wi-windy.jpg'),
+            'cloudy-image' => $this->getResourceUrl('weather/wi-cloudy.jpg'),
+            'day-cloudy-image' => $this->getResourceUrl('weather/wi-day-cloudy.jpg'),
+            'day-sunny-image' => $this->getResourceUrl('weather/wi-day-sunny.jpg'),
+            'fog-image' => $this->getResourceUrl('weather/wi-fog.jpg'),
+            'hail-image' => $this->getResourceUrl('weather/wi-hail.jpg'),
+            'night-clear-image' => $this->getResourceUrl('weather/wi-night-clear.jpg'),
+            'night-partly-cloudy-image' => $this->getResourceUrl('weather/wi-night-partly-cloudy.jpg'),
+            'rain-image' => $this->getResourceUrl('weather/wi-rain.jpg'),
+            'snow-image' => $this->getResourceUrl('weather/wi-snow.jpg'),
+            'windy-image' => $this->getResourceUrl('weather/wi-windy.jpg'),
           ], $styleSheet, null, $lang
         );
 
         $headContent = '
             <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">
-            <link href="' . $this->getResourceUrl('forecastio/weather-icons.min.css') . '" rel="stylesheet" media="screen">
-            <link href="' . $this->getResourceUrl('forecastio/font-awesome.min.css')  . '" rel="stylesheet" media="screen">
-            <link href="' . $this->getResourceUrl('forecastio/animate.css')  . '" rel="stylesheet" media="screen">
+            <link href="' . $this->getResourceUrl('weather/weather-icons.min.css') . '" rel="stylesheet" media="screen">
+            <link href="' . $this->getResourceUrl('weather/font-awesome.min.css')  . '" rel="stylesheet" media="screen">
+            <link href="' . $this->getResourceUrl('weather/animate.css')  . '" rel="stylesheet" media="screen">
             <style type="text/css"> body { background-color: transparent }</style>
             <style type="text/css">
                 ' . $this->parseLibraryReferences($this->isPreview(), $styleSheet) . '
@@ -636,50 +851,41 @@ class ForecastIo extends ModuleWidget
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
 
         // Replace any icon sets
-        // TODO: I don't think this functionality exists anymore.
-        $data['head'] = str_replace('[[ICONS]]', $this->getResourceUrl('forecastio/' . $this->getOption('icons')), $headContent);
+        $data['head'] = str_replace('[[ICONS]]', $this->getResourceUrl('weather/' . $this->getOption('icons')), $headContent);
 
         // Get the JavaScript node
         $javaScript = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', ''));
 
-        // Handle the daily template (if its here)
-        $dailySubs = '';
-        $matches = '';
-        preg_match_all('/\[dailyForecast.*?\]/', $body, $matches);
+        // Build template
+        $template = '<div class="weather-content bg-div bg-div-main bg-[icon]">';
 
-        // Substitute
-        foreach ($matches[0] as $sub) {
-            $replace = str_replace('[', '', str_replace(']', '', $sub));
+         // Process days
+        if ($this->getOption('weatherType') == 'forecast') {
+            $numDays = $this->getOption('numDays');
+            $daysOffset = $this->getOption('dayOffset');
+            $daysCols = intval($this->getOption('daysCols'));
+            $daysRows = intval($this->getOption('daysRows'));
 
-            // Does the dailyForecast tag have a number of days parameter?
-            $maxDays = count($daily);
-            $offset = 0;
-            if (stripos($replace, '|') > -1) {
-                $quantity = explode('|', $replace);
-                $iterations = $quantity[1];
-                
-                if (count($quantity) > 1) {
-                    $offset = $quantity[2];
-                }
-
-                $stopPosition = (($iterations + $offset) > $maxDays) ? $maxDays : $iterations + $offset;
-            } else {
-                $stopPosition = $maxDays;
+            $stopPosition = (($numDays+$daysOffset) > 7) ? 7 : $numDays+$daysOffset;
+            for ($i=$daysOffset; $i < $stopPosition; $i++) {
+                $this->getLog()->debug('Substitution for Daily, day ' . $i);
+                $template .= '<div class="multi-element">';
+                $template .= $this->makeSubstitutions($daily[$i], $body, $foreCast->getTimezone(), $lang);
+                $template .= '</div>';
             }
-
-            // Pull it out, and run substitute over it for each day
-            // Substitute for every day (i.e. 7 times).
-            for ($i = $offset; $i < $stopPosition; $i++) {
-                $this->getLog()->debug('Substitiution for Daily, day ' . $i);
-                $dailySubs .= $this->makeSubstitutions($daily[$i], $dailyTemplate, $foreCast->getTimezone(), $lang);
-            }
-
-            // Substitute the completed template
-            $body = str_replace($sub, $dailySubs, $body);
+        } else {
+            $template .= $this->makeSubstitutions($currently, $body, $foreCast->getTimezone(), $lang);
         }
 
-        // Run replace over the main template
-        $data['body'] = $this->makeSubstitutions($currently, $body, $foreCast->getTimezone(), $lang);
+        // Close main div in template and add the footer
+        $template .= '
+            <div class="footer-powered-by">
+                <a href="#" target="_blank">' . $foreCast->getAttribution() . '</a>
+            </div>
+        </div>';
+
+        // Run replace over the main template ( if type is forecast, it will replace at least the background image)
+        $data['body'] = $this->makeSubstitutions($currently, $template, $foreCast->getTimezone(), $lang);
 
         // JavaScript to control the size (override the original width and height so that the widget gets blown up )
         $options = array(
@@ -688,6 +894,11 @@ class ForecastIo extends ModuleWidget
             'widgetDesignWidth' => $widgetOriginalWidth,
             'widgetDesignHeight'=> $widgetOriginalHeight
         );
+
+        if($this->getOption('weatherType') == 'forecast') {
+            $options['numCols'] = $daysCols;
+            $options['numRows'] = $daysRows;
+        }
 
         $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
@@ -715,6 +926,20 @@ class ForecastIo extends ModuleWidget
     {
         if ($this->getOption('overrideTemplate') == 0 && ( $this->getOption('templateId') == '' || $this->getOption('templateId') == null))
             throw new InvalidArgumentException(__('Please choose a template'), 'templateId');
+
+        if ($this->getOption('weatherType') == 'forecast') {
+            if ($this->getOption('numDays') == '' || $this->getOption('numDays') <= 0) {
+                throw new InvalidArgumentException(__('Please enter a positive number of days.'), 'numDays');
+            }
+
+            if ($this->getOption('daysRows') == '' || $this->getOption('daysRows') <= 0) {
+                throw new InvalidArgumentException(__('Please enter a positive number of rows.'), 'daysRows');
+            }
+
+            if ($this->getOption('daysCols') == '' || $this->getOption('daysCols') <= 0) {
+                throw new InvalidArgumentException(__('Please enter a positive number of columns.'), 'daysCols');
+            }
+        }
 
         if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
             throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
@@ -750,6 +975,67 @@ class ForecastIo extends ModuleWidget
     public function isCacheDisplaySpecific()
     {
         return ($this->getOption('useDisplayLocation') == 1);
+    }
+
+    /**
+     * @return false|string
+     */
+    public function getWeatherLanguage()
+    {
+        $supportedLanguages[] = $this->supportedLanguages();
+
+        foreach ($supportedLanguages as $language) {
+            foreach ($language as $lang) {
+                if ($lang['id'] === strtolower(translate::getJsLocale())) {
+                    return strtolower(translate::getJsLocale());
+                }
+                else {
+                    continue;
+                }
+            }
+        }
+        if (strlen(translate::getJsLocale()) > 2 && Str::contains(translate::getJsLocale(), '-')) {
+                return substr(translate::getJsLocale(), 0, 2);
+        } else {
+                return 'en';
+        }
+    }
+
+    /**
+     * @return array
+     */
+    public function getBackgroundList()
+    {
+        return self::WEATHER_BACKGROUNDS;
+    }
+
+    /**
+     * @return \Xibo\Entity\Media[]
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getBackgroundOptions()
+    {
+        $initBackgrounds = [];
+        $resBackgrounds = [];
+
+        foreach (self::WEATHER_BACKGROUNDS as $background) {
+            if($this->getOption($background) != $background) {
+                $initBackgrounds[] = $this->getOption($background);
+            }
+        }
+
+        return $this->mediaFactory->query(null, array('disableUserCheck' => 1, 'id' => $initBackgrounds, 'allModules' => 1, 'type' => 'image'));
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getWeatherSnippets()
+    {
+        $snippets['current'] = self::WEATHER_SNIPPETS_CURRENT;
+        $snippets['forecast'] = self::WEATHER_SNIPPETS_FORECAST;
+
+        return $snippets;
     }
 
     /** @inheritDoc */

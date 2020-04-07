@@ -1,22 +1,23 @@
 /**
-* Xibo - Digital Signage - http://www.xibo.org.uk
-* Copyright (C) 2009-2016 Daniel Garner
-*
-* This file is part of Xibo.
-*
-* Xibo is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* any later version.
-*
-* Xibo is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 jQuery.fn.extend({
     xiboLayoutScaler: function(options) {
         // Default options
@@ -70,13 +71,39 @@ jQuery.fn.extend({
             newHeight = height / ratio;
         }
 
+        // Multiple element options
+        var mElOptions = {};
+
+        // Multiple elements per page
+        if(options.numCols != undefined || options.numRows != undefined) {
+            // Content dimensions and scale ( to create multiple elements based on the body scale fomr the xibo scaler )
+            mElOptions.contentWidth = (options.numCols > 1) ? (options.widgetDesignWidth * options.numCols) : options.widgetDesignWidth;
+            mElOptions.contentHeight = (options.numRows > 1) ? (options.widgetDesignHeight * options.numRows) : options.widgetDesignHeight;
+
+            mElOptions.contentScaleX = newWidth/ mElOptions.contentWidth;
+            mElOptions.contentScaleY = newHeight/ mElOptions.contentHeight;
+        }
+
         // Apply these details
         $(this).each(function() {
+            if(!$.isEmptyObject(mElOptions)) {
+                $(this).find('#content').css('transform-origin', 'top left');
+                $(this).find('#content').css('transform', 'scale(' + Math.min(mElOptions.contentScaleX, mElOptions.contentScaleY) + ')');
+                $(this).find('#content').width(mElOptions.contentWidth);
+                $(this).find('#content').height(mElOptions.contentHeight);
 
-            $(this).css({
-                width: newWidth,
-                height: newHeight
-            });
+                $(this).find('.multi-element').css({
+                    overflow: 'hidden',
+                    float: 'left',
+                    width: options.widgetDesignWidth,
+                    height: options.widgetDesignHeight
+                });
+            } else {
+                $(this).css({
+                    width: newWidth,
+                    height: newHeight
+                });
+            }
             
             // Handle the scaling
             // What IE are we?
