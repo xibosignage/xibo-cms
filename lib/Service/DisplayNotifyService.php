@@ -623,4 +623,40 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
 
         $this->keysProcessed[] = 'playlist_' . $playlistId;
     }
+
+    public function notifyByLayoutCode($code)
+    {
+        // get the Campaign Ids that are linked to our Layout specific campaign via Action navLayout with provided code
+        $campaignIds = $this->store->select(
+            'SELECT DISTINCT campaignId
+                    FROM layout
+                    INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
+                    INNER JOIN action on layout.layoutId = action.sourceId
+                WHERE action.layoutCode = :code AND layout.publishedStatusId = 1
+              UNION
+                SELECT DISTINCT campaignId
+                  FROM layout
+                       INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
+                       INNER JOIN region ON region.layoutId = layout.layoutId
+                       INNER JOIN action on region.regionId = action.sourceId
+                WHERE action.layoutCode = :code AND layout.publishedStatusId = 1
+              UNION
+                SELECT DISTINCT campaignId
+                  FROM layout
+                       INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
+                       INNER JOIN region ON region.layoutId = layout.layoutId
+                       INNER JOIN playlist ON playlist.regionId = region.regionId
+                       INNER JOIN widget on playlist.playlistId = widget.playlistId
+                       INNER JOIN action on widget.widgetId = action.sourceId
+                WHERE
+                    action.layoutCode = :code AND
+                    layout.publishedStatusId = 1',
+            ['code' => $code]);
+
+        $this->log->debug('Notify by Layout Code, found following Campaigns to notify: ' . json_encode($campaignIds));
+
+        foreach ($campaignIds as $row) {
+            $this->notifyByCampaignId($row['campaignId']);
+        }
+    }
 }

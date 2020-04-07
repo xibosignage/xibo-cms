@@ -45,6 +45,7 @@ use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\ModuleWidget;
+use Xibo\Widget\SubPlaylist;
 
 /**
  * Class Layout
@@ -245,6 +246,12 @@ class Layout implements \JsonSerializable
      * )
      */
     public $autoApplyTransitions;
+
+    /**
+     * @var string
+     * @SWG\Property(description="Code identifier for this Layout")
+     */
+    public $code;
 
     // Child items
     /** @var Region[]  */
@@ -491,6 +498,27 @@ class Layout implements \JsonSerializable
         }
 
         throw new NotFoundException(__('Cannot find drawer region'));
+    }
+
+    /**
+     * Load both Regions and Drawers from a Layout
+     * @param int $regionId
+     * @return Region
+     * @throws NotFoundException
+     */
+    public function getRegionOrDrawer($regionId)
+    {
+        /** @var Region[] $allRegions */
+        $allRegions = array_merge($this->regions, $this->drawers);
+
+        foreach ($allRegions as $region) {
+            /* @var Region $region */
+            if ($region->regionId == $regionId) {
+                return $region;
+            }
+        }
+
+        throw new NotFoundException(__('Cannot find Region or Drawer'));
     }
 
     /**
@@ -1154,11 +1182,14 @@ class Layout implements \JsonSerializable
         // Track module status within the layout
         $status = 0;
         $this->clearStatusMessage();
+
         $layoutActionNode = null;
         if (is_array($this->actions) && count($this->actions) > 0) {
             // actions on Layout
             foreach ($this->actions as $action) {
                 $layoutActionNode = $document->createElement('action');
+                $layoutActionNode->setAttribute('layoutCode', $action->layoutCode);
+                $layoutActionNode->setAttribute('widgetId', $action->widgetId);
                 $layoutActionNode->setAttribute('triggerCode', $action->triggerCode);
                 $layoutActionNode->setAttribute('targetId', $action->targetId);
                 $layoutActionNode->setAttribute('target', $action->target);
@@ -1203,6 +1234,8 @@ class Layout implements \JsonSerializable
 
             foreach ($region->actions as $action) {
                 $regionActionNode = $document->createElement('action');
+                $regionActionNode->setAttribute('layoutCode', $action->layoutCode);
+                $regionActionNode->setAttribute('widgetId', $action->widgetId);
                 $regionActionNode->setAttribute('targetId', $action->targetId);
                 $regionActionNode->setAttribute('target', $action->target);
                 $regionActionNode->setAttribute('sourceId', $action->sourceId);
@@ -1305,6 +1338,12 @@ class Layout implements \JsonSerializable
                 $mediaNode->setAttribute('id', $widget->widgetId);
                 $mediaNode->setAttribute('type', $widget->type);
                 $mediaNode->setAttribute('render', ($renderAs == '') ? 'native' : $renderAs);
+                $mediaNode->setAttribute('playlist', $widget->playlist);
+                $mediaNode->setAttribute('displayOrder', $widget->displayOrder);
+
+                if ($widget->tempId != $widget->widgetId) {
+                    $mediaNode->setAttribute('parentWidgetId', $widget->tempId);
+                }
 
                 // Set the duration according to whether we are using widget duration or not
                 $mediaNode->setAttribute('duration', $widgetDuration);
@@ -1313,6 +1352,8 @@ class Layout implements \JsonSerializable
 
                 foreach ($widget->actions as $action) {
                     $widgetActionNode = $document->createElement('action');
+                    $widgetActionNode->setAttribute('layoutCode', $action->layoutCode);
+                    $widgetActionNode->setAttribute('widgetId', $action->widgetId);
                     $widgetActionNode->setAttribute('targetId', $action->targetId);
                     $widgetActionNode->setAttribute('target', $action->target);
                     $widgetActionNode->setAttribute('sourceId', $action->sourceId);
@@ -1991,8 +2032,8 @@ class Layout implements \JsonSerializable
     {
         $this->getLog()->debug('Adding Layout' . $this->layout);
 
-        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, enableStat, duration, autoApplyTransitions)
-                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, :schemaVersion, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat, 0, :autoApplyTransitions)';
+        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, enableStat, duration, autoApplyTransitions, code)
+                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, :schemaVersion, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat, 0, :autoApplyTransitions, :code)';
 
         $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
 
@@ -2012,7 +2053,8 @@ class Layout implements \JsonSerializable
             'backgroundzIndex' => $this->backgroundzIndex,
             'parentId' => ($this->parentId == null) ? null : $this->parentId,
             'enableStat' => $this->enableStat,
-            'autoApplyTransitions' => ($this->autoApplyTransitions == null) ? 0 : $this->autoApplyTransitions
+            'autoApplyTransitions' => ($this->autoApplyTransitions == null) ? 0 : $this->autoApplyTransitions,
+            'code' => $this->code
         ));
 
         // Add a Campaign
@@ -2084,7 +2126,8 @@ class Layout implements \JsonSerializable
               `schemaVersion` = :schemaVersion,
               `statusMessage` = :statusMessage,
               enableStat = :enableStat,
-              autoApplyTransitions = :autoApplyTransitions
+              autoApplyTransitions = :autoApplyTransitions,
+              code = :code
          WHERE layoutID = :layoutid
         ';
 
@@ -2108,7 +2151,8 @@ class Layout implements \JsonSerializable
             'schemaVersion' => $this->schemaVersion,
             'statusMessage' => (empty($this->statusMessage)) ? null : json_encode($this->statusMessage),
             'enableStat' => $this->enableStat,
-            'autoApplyTransitions' => $this->autoApplyTransitions
+            'autoApplyTransitions' => $this->autoApplyTransitions,
+            'code' => $this->code
         ));
 
         // Update the Campaign
@@ -2116,7 +2160,7 @@ class Layout implements \JsonSerializable
             $campaign = $this->campaignFactory->getById($this->campaignId);
             $campaign->campaign = $this->layout;
             $campaign->ownerId = $this->ownerId;
-            $campaign->save(['validate' => false, 'notify' => $options['notify'], 'collectNow' => $options['collectNow']]);
+            $campaign->save(['validate' => false, 'notify' => $options['notify'], 'collectNow' => $options['collectNow'], 'layoutCode' => $this->code]);
         }
     }
 
@@ -2178,6 +2222,7 @@ class Layout implements \JsonSerializable
      * This function will adjust the Action sourceId and targetId in all relevant objects in our imported Layout
      *
      * @param Layout $layout
+     * @throws InvalidArgumentException
      * @throws NotFoundException
      */
     public function manageActions(Layout $layout)
@@ -2224,6 +2269,17 @@ class Layout implements \JsonSerializable
                 }
             }
 
+            // switch widgetId
+            if ($action->widgetId != null) {
+
+                foreach ($combinedWidgets as $old => $new) {
+                    if ($old == $action->widgetId && $action->actionType == 'navWidget') {
+                        $this->getLog()->debug('Layout Import, switching Widget Action widget ID from ' . $old . ' to ' . $new);
+                        $action->widgetId = $new;
+                    }
+                }
+            }
+
             $action->save();
         }
 
@@ -2233,6 +2289,7 @@ class Layout implements \JsonSerializable
         // go through all imported actions on a Region and replace the source/target Ids with the new ones
         foreach ($regionActions as $action) {
             $action->source = 'region';
+
             foreach ($combined as $old => $new) {
                 if ($old == $action->targetId) {
                     $this->getLog()->debug('Layout Import, switching Region Action target ID from ' . $old . ' to ' . $new);
@@ -2244,6 +2301,18 @@ class Layout implements \JsonSerializable
                     $action->sourceId = $new;
                 }
             }
+
+            // switch widgetId
+            if ($action->widgetId != null) {
+
+                foreach ($combinedWidgets as $old => $new) {
+                    if ($old == $action->widgetId && $action->actionType == 'navWidget') {
+                        $this->getLog()->debug('Layout Import, switching Widget Action widget ID from ' . $old . ' to ' . $new);
+                        $action->widgetId = $new;
+                    }
+                }
+            }
+
             $action->save();
         }
 
@@ -2254,11 +2323,18 @@ class Layout implements \JsonSerializable
         foreach ($widgetActions as $action) {
             $action->source = 'widget';
 
-            // switch source Id
+            // switch Action source Id and Action widget Id
             foreach ($combinedWidgets as $old => $new) {
                 if ($action->sourceId == $old) {
                     $this->getLog()->debug('Layout Import, switching Widget Action source ID from ' . $old . ' to ' . $new);
                     $action->sourceId = $new;
+                }
+
+                if ($action->widgetId != null) {
+                    if ($old == $action->widgetId && $action->actionType == 'navWidget') {
+                        $this->getLog()->debug('Layout Import, switching Widget Action widget ID from ' . $old . ' to ' . $new);
+                        $action->widgetId = $new;
+                    }
                 }
             }
 
@@ -2281,59 +2357,78 @@ class Layout implements \JsonSerializable
      *
      * @param Layout $newLayout
      * @param Layout $originalLayout
+     * @throws InvalidArgumentException
      * @throws NotFoundException
      */
     public function copyActions(Layout $newLayout, Layout $originalLayout)
     {
         $oldRegionIds = [];
         $newRegionIds = [];
+        $oldWidgetIds = [];
+        $newWidgetIds = [];
 
         $this->getLog()->debug('Copy Actions from ' . $originalLayout->layoutId . ' To ' . $newLayout->layoutId);
-        // go through all regions and build array of old and new regionIds - we need that to update Action table later on.
-        /** @var Region $region */
-        foreach ($newLayout->regions as $region) {
-            // Match our original region id to the id in the parent layout
-            $original = $originalLayout->getRegion($region->getOriginalValue('regionId'));
-
-            $oldRegionIds[] = $original->regionId;
-            $newRegionIds[] = $region->regionId;
-        }
-
-        $combined = array_combine($oldRegionIds, $newRegionIds);
 
         /** @var Region[] $allRegions */
         $allRegions = array_merge($newLayout->regions, $newLayout->drawers);
 
-        // Permissions && Sub-Playlists
-        // Layout level permissions are managed on the Campaign entity, so we do not need to worry about that
-        // Regions/Widgets need to copy down our layout permissions
+        // go through all layouts, regions, playlists and their widgets
+        /** @var Region $region */
         foreach ($allRegions as $region) {
             // Match our original region id to the id in the parent layout
-            if ($region->isDrawer === 0) {
-                $original = $originalLayout->getRegion($region->getOriginalValue('regionId'));
-            } else {
-                $original = $originalLayout->getDrawer($region->getOriginalValue('regionId'));
+            $original = $originalLayout->getRegionOrDrawer($region->getOriginalValue('regionId'));
+
+            $oldRegionIds[] = (int)$original->regionId;
+            $newRegionIds[] = $region->regionId;
+
+            foreach ($region->getPlaylist()->widgets as $widget) {
+                $originalWidget = $original->getPlaylist()->getWidget($widget->getOriginalValue('widgetId'));
+
+                $oldWidgetIds[] = (int)$originalWidget->widgetId;
+                $newWidgetIds[] = $widget->widgetId;
+            }
+        }
+
+        // create $old=>$new arrays of all of them to later update the Actions
+        $combinedRegionIds = array_combine($oldRegionIds, $newRegionIds);
+        $combinedWidgetIds = array_combine($oldWidgetIds, $newWidgetIds);
+
+        $this->getLog()->debug('Region Ids array ' . json_encode($combinedRegionIds));
+        $this->getLog()->debug('Widget Ids array ' . json_encode($combinedWidgetIds));
+
+        // Interactive Actions on Layout
+        foreach ($newLayout->actions as $action) {
+
+            // switch source Id
+            if ($action->sourceId === $originalLayout->layoutId) {
+                $action->sourceId = $newLayout->layoutId;
             }
 
-            // Interactive Actions on Layout
-            foreach ($newLayout->actions as $action) {
-
-                // switch source Id
-                if ($action->sourceId === $originalLayout->layoutId) {
-                    $action->sourceId = $newLayout->layoutId;
-                }
-
-                // if we had targetId (regionId) then switch it
-                if ($action->targetId != null) {
-                    foreach ($combined as $old => $new) {
-                        if ($old == $action->targetId) {
-                            $action->targetId = $new;
-                        }
+            // if we had targetId (regionId) then switch it
+            if ($action->targetId != null) {
+                foreach ($combinedRegionIds as $old => $new) {
+                    if ($old == $action->targetId) {
+                        $action->targetId = $new;
                     }
                 }
-
-                $action->save();
             }
+
+            // switch Action widgetId
+            if ($action->widgetId != null) {#
+
+                foreach ($combinedWidgetIds as $old => $new) {
+                    if ($old == $action->widgetId && $action->actionType == 'navWidget') {
+                        $action->widgetId = $new;
+                    }
+                }
+            }
+            $action->save();
+        }
+
+        // Region Actions
+        foreach ($allRegions as $region) {
+            // Match our original region id to the id in the parent layout
+            $original = $originalLayout->getRegionOrDrawer($region->getOriginalValue('regionId'));
 
             // Interactive Actions on Region
             foreach ($region->actions as $action) {
@@ -2345,9 +2440,19 @@ class Layout implements \JsonSerializable
 
                 // if we had targetId (regionId) then switch it
                 if ($action->targetId != null) {
-                    foreach ($combined as $old => $new) {
+                    foreach ($combinedRegionIds as $old => $new) {
                         if ($old == $action->targetId) {
                             $action->targetId = $new;
+                        }
+                    }
+                }
+
+                // switch Action widgetId
+                if ($action->widgetId != null) {
+
+                    foreach ($combinedWidgetIds as $old => $new) {
+                        if ($old == $action->widgetId && $action->actionType == 'navWidget') {
+                            $action->widgetId = $new;
                         }
                     }
                 }
@@ -2355,7 +2460,7 @@ class Layout implements \JsonSerializable
                 $action->save();
             }
 
-            // Widgets
+            // Widget Actions
             foreach ($region->getPlaylist()->widgets as $widget) {
                 $originalWidget = $original->getPlaylist()->getWidget($widget->getOriginalValue('widgetId'));
 
@@ -2368,9 +2473,19 @@ class Layout implements \JsonSerializable
 
                     // if we had targetId (regionId) then switch it
                     if ($action->targetId != null) {
-                        foreach ($combined as $old => $new) {
+                        foreach ($combinedRegionIds as $old => $new) {
                             if ($old == $action->targetId) {
                                 $action->targetId = $new;
+                            }
+                        }
+                    }
+
+                    // switch Action widgetId
+                    if ($action->widgetId != null) {
+
+                        foreach ($combinedWidgetIds as $old => $new) {
+                            if ($old == $action->widgetId && $action->actionType == 'navWidget') {
+                                $action->widgetId = $new;
                             }
                         }
                     }

@@ -81,4 +81,10 @@ interface DisplayNotifyServiceInterface
      * @param $playlistId
      */
     public function notifyByPlaylistId($playlistId);
+
+    /**
+     * Notify By Layout Code
+     * @param $code
+     */
+    public function notifyByLayoutCode($code);
 }

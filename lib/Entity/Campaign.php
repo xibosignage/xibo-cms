@@ -663,6 +663,11 @@ class Campaign implements \JsonSerializable
 
             // Notify
             $notify->notifyByCampaignId($this->campaignId);
+
+            if (!empty($options['layoutCode'])) {
+                $this->getLog()->debug('CampaignId ' . $this->campaignId . ' wants to notify with Layout Code ' . $options['layoutCode']);
+                $notify->notifyByLayoutCode($options['layoutCode']);
+            }
         }
     }
 }

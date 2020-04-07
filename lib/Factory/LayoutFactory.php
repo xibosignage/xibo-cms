@@ -183,13 +183,14 @@ class LayoutFactory extends BaseFactory
      * @param string $name
      * @param string $description
      * @param string $tags
+     * @param string $code
      * @return Layout
      *
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function createFromResolution($resolutionId, $ownerId, $name, $description, $tags)
+    public function createFromResolution($resolutionId, $ownerId, $name, $description, $tags, $code)
     {
         $resolution = $this->resolutionFactory->getById($resolutionId);
 
@@ -203,6 +204,7 @@ class LayoutFactory extends BaseFactory
         $layout->description = $description;
         $layout->backgroundzIndex = 0;
         $layout->backgroundColor = '#000';
+        $layout->code = $code;
 
         // Set the owner
         $layout->setOwner($ownerId);
@@ -446,6 +448,24 @@ class LayoutFactory extends BaseFactory
     public function getByTag($tag)
     {
         return $this->query(null, ['disableUserCheck' => 1, 'tags' => $tag, 'exactTags' => 1]);
+    }
+
+    /**
+     * Get by Code identifier
+     * @param string $code
+     * @return Layout
+     * @throws NotFoundException
+     */
+    public function getByCode($code)
+    {
+        $layouts = $this->query(null, array('disableUserCheck' => 1, 'code' => $code, 'excludeTemplates' => -1, 'retired' => -1));
+
+        if (count($layouts) <= 0) {
+            throw new NotFoundException('Layout not found');
+        }
+
+        // Set our layout
+        return $layouts[0];
     }
 
     /**
@@ -705,8 +725,9 @@ class LayoutFactory extends BaseFactory
         $layout->backgroundzIndex = (int)$layoutJson['layoutDefinitions']['backgroundzIndex'];
         $layout->actions = [];
         $actions = $layoutJson['layoutDefinitions']['actions'];
+
         foreach ($actions as $action) {
-            $newAction = $this->actionFactory->create($action['triggerType'], $action['triggerCode'], $action['actionType'], 'importLayout', $action['sourceId'], $action['target'], $action['targetId']);
+            $newAction = $this->actionFactory->create($action['triggerType'], $action['triggerCode'], $action['actionType'], 'importLayout', $action['sourceId'], $action['target'], $action['targetId'], $action['widgetId'], $action['layoutCode']);
             $newAction->save(['validate' => false]);
         }
 
@@ -771,13 +792,14 @@ class LayoutFactory extends BaseFactory
                 // make sure we have a string as the region name, otherwise sanitizer will get confused.
                 $region->name = (string)$region->name;
             }
+
             // Populate Playlists
             $playlist = $this->playlistFactory->create($region->name, $regionOwnerId);
 
             // interactive Actions
             $actions = $regionJson['actions'];
             foreach ($actions as $action) {
-                $newAction = $this->actionFactory->create($action['triggerType'], $action['triggerCode'], $action['actionType'], 'importRegion', $action['sourceId'], $action['target'], $action['targetId']);
+                $newAction = $this->actionFactory->create($action['triggerType'], $action['triggerCode'], $action['actionType'], 'importRegion', $action['sourceId'], $action['target'], $action['targetId'], $action['widgetId'], $action['layoutCode']);
                 $newAction->save(['validate' => false]);
             }
 
@@ -942,7 +964,7 @@ class LayoutFactory extends BaseFactory
                 // interactive Actions
                 $actions = $mediaNode['actions'];
                 foreach ($actions as $action) {
-                    $newAction = $this->actionFactory->create($action['triggerType'], $action['triggerCode'], $action['actionType'], 'importWidget', $action['sourceId'], $action['target'], $action['targetId']);
+                    $newAction = $this->actionFactory->create($action['triggerType'], $action['triggerCode'], $action['actionType'], 'importWidget', $action['sourceId'], $action['target'], $action['targetId'], $action['widgetId'], $action['layoutCode']);
                     $newAction->save(['validate' => false]);
                 }
             }
@@ -1661,6 +1683,15 @@ class LayoutFactory extends BaseFactory
     }
 
     /**
+     * Get all Codes assigned to Layouts
+     * return string[]
+     */
+    public function getLayoutCodes()
+    {
+        return $this->getStore()->select('SELECT code FROM layout WHERE code IS NOT NULL', []);
+    }
+
+    /**
      * Query for all Layouts
      * @param array $sortOrder
      * @param array $filterBy
@@ -1673,8 +1704,9 @@ class LayoutFactory extends BaseFactory
         $entries = [];
         $params = [];
 
-        if ($sortOrder === null)
+        if ($sortOrder === null) {
             $sortOrder = ['layout'];
+        }
 
         $select  = "";
         $select .= "SELECT layout.layoutID, ";
@@ -1703,6 +1735,7 @@ class LayoutFactory extends BaseFactory
         $select .= "        `status`.status AS publishedStatus, ";
         $select .= "        layout.publishedDate, ";
         $select .= "        layout.autoApplyTransitions, ";
+        $select .= "        layout.code, ";
 
         if ($parsedFilter->getInt('campaignId') !== null) {
             $select .= ' lkcl.displayOrder, ';
@@ -1936,6 +1969,12 @@ class LayoutFactory extends BaseFactory
             $params['regionId'] = $parsedFilter->getInt('regionId', ['default' => 0]);
         }
 
+        // get by Code
+        if ($parsedFilter->getString('code', $filterBy) != '') {
+            $body.= " AND layout.code = :code ";
+            $params['code'] = $parsedFilter->getString('code');
+        }
+
         // Tags
         if ($parsedFilter->getString('tags') != '') {
 
@@ -2076,6 +2115,7 @@ class LayoutFactory extends BaseFactory
             $layout->publishedStatus = $parsedRow->getString('publishedStatus');
             $layout->publishedDate = $parsedRow->getString('publishedDate');
             $layout->autoApplyTransitions = $parsedRow->getInt('autoApplyTransitions');
+            $layout->code = $parsedRow->getString('code');
 
             $layout->groupsWithPermissions = $row['groupsWithPermissions'];
             $layout->setOriginals();

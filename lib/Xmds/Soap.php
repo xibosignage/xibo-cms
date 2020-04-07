@@ -30,6 +30,7 @@ use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
+use Xibo\Entity\Region;
 use Xibo\Entity\Schedule;
 use Xibo\Entity\Widget;
 use Xibo\Factory\BandwidthFactory;
@@ -382,6 +383,7 @@ class Soap
 
             // Our layout list will always include the default layout
             $layouts = [];
+            $interactiveLayoutIds = [];
             $layouts[] = $this->display->defaultLayoutId;
 
             // Build up the other layouts into an array
@@ -426,6 +428,47 @@ class Soap
             $this->getLog()->error('Unable to get a list of layouts. ' . $e->getMessage());
             return new \SoapFault('Sender', 'Unable to get a list of layouts');
         }
+
+        // workout if any of the layouts we have in our list has Actions pointing to another Layout.
+        foreach ($layouts as $layoutId) {
+            $layout = $this->layoutFactory->loadById($layoutId);
+
+            foreach ($layout->actions as $action) {
+                if ($action->actionType === 'navLayout') {
+                    $interactiveLayout = $this->layoutFactory->getByCode($action->layoutCode);
+                    if (!in_array($interactiveLayout->layoutId, $interactiveLayoutIds) && !in_array($interactiveLayout->layoutId, $layouts)) {
+                        $interactiveLayoutIds[] = $interactiveLayout->layoutId;
+                    }
+                }
+            }
+            /** @var Region[] $allRegions */
+            $allRegions = array_merge($layout->regions, $layout->drawers);
+
+            foreach ($allRegions as $region) {
+                foreach ($region->actions as $action) {
+                    if ($action->actionType === 'navLayout') {
+                        $interactiveLayout = $this->layoutFactory->getByCode($action->layoutCode);
+                        if (!in_array($interactiveLayout->layoutId, $interactiveLayoutIds) && !in_array($interactiveLayout->layoutId, $layouts)) {
+                            $interactiveLayoutIds[] = $interactiveLayout->layoutId;
+                        }
+                    }
+                }
+
+                foreach ($region->getPlaylist()->widgets as $widget) {
+                    foreach ($widget->actions as $action) {
+                        if ($action->actionType === 'navLayout') {
+                            $interactiveLayout = $this->layoutFactory->getByCode($action->layoutCode);
+                            if (!in_array($interactiveLayout->layoutId, $interactiveLayoutIds) && !in_array($interactiveLayout->layoutId, $layouts)) {
+                                $interactiveLayoutIds[] = $interactiveLayout->layoutId;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // merge the Action layouts to our array, we need the player to download all resources on them
+        $layouts = array_merge($layouts, $interactiveLayoutIds);
 
         // Create a comma separated list to pass into the query which gets file nodes
         $layoutIdList = implode(',', $layouts);
@@ -644,11 +687,15 @@ class Soap
                 // Get the Layout Modified Date
                 $layoutModifiedDt = Carbon::createFromTimestamp($layout->modifiedDt);
 
+                // merge regions and drawers
+                /** @var Region[] $allRegions */
+                $allRegions = array_merge($layout->regions, $layout->drawers);
+
                 // Load the layout XML and work out if we have any ticker / text / dataset media items
                 // Append layout resources before layout so they are downloaded first. 
                 // If layouts are set to expire immediately, the new layout will use the old resources if 
                 // the layout is downloaded first.
-                foreach ($layout->regions as $region) {
+                foreach ($allRegions as $region) {
                     $playlist = $region->getPlaylist();
                     $playlist->setModuleFactory($this->moduleFactory);
 

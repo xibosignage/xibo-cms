@@ -77,9 +77,11 @@ class ActionFactory  extends BaseFactory
      * @param integer $sourceId
      * @param string $target
      * @param integer|null $targetId
+     * @param integer|null $widgetId
+     * @param string|null $layoutCode
      * @return Action
      */
-    public function create(string $triggerType, $triggerCode, string $actionType, string $source, int $sourceId, string $target, $targetId)
+    public function create(string $triggerType, $triggerCode, string $actionType, string $source, int $sourceId, string $target, $targetId, $widgetId, $layoutCode)
     {
 
         $action = $this->createEmpty();
@@ -91,6 +93,8 @@ class ActionFactory  extends BaseFactory
         $action->sourceId = $sourceId;
         $action->target = $target;
         $action->targetId = $targetId;
+        $action->widgetId = $widgetId;
+        $action->layoutCode = $layoutCode;
 
         return $action;
     }
@@ -145,6 +149,29 @@ class ActionFactory  extends BaseFactory
     }
 
     /**
+     * Check if Touch Action with provided source, sourceId and actionId already exist
+     *
+     * @param string $source
+     * @param int $sourceId
+     * @param string $triggerType
+     * @param null $actionId
+     * @return bool
+     */
+    public function checkIfActionExist(string $source, int $sourceId, string $triggerType, $actionId = null)
+    {
+        // we can have multiple webhook Actions
+        if ($triggerType == 'webhook') {
+            return false;
+        }
+
+        // exclude our Action ID (for edit)
+        $notActionId = ($actionId == null) ? 0 : $actionId;
+
+        $actions = $this->query(null, ['source' => $source, 'sourceId' => $sourceId, 'triggerType' => $triggerType, 'notActionId' => $notActionId]);
+
+        return ( count($actions) >= 1 ) ? true : false;
+    }
+    /**
      * @param null $sortOrder
      * @param array $filterBy
      * @return Action[]
@@ -169,7 +196,9 @@ class ActionFactory  extends BaseFactory
                action.source,
                action.sourceId,
                action.target,
-               action.targetId
+               action.targetId,
+               action.widgetId,
+               action.layoutCode
             ';
 
         $body = ' FROM action
@@ -221,6 +250,21 @@ class ActionFactory  extends BaseFactory
             $params['targetId'] = $sanitizedFilter->getInt('targetId');
         }
 
+        if ($sanitizedFilter->getInt('widgetId') !== null) {
+            $body .= ' AND `action`.widgetId = :widgetId ';
+            $params['objectId'] = $sanitizedFilter->getInt('widgetId');
+        }
+
+        if ($sanitizedFilter->getString('layoutCode') !== null) {
+            $body .= ' AND `action`.layoutCode = :layoutCode ';
+            $params['objectId'] = $sanitizedFilter->getString('layoutCode');
+        }
+
+        if ($sanitizedFilter->getInt('notActionId') !== null) {
+            $body .= ' AND `action`.actionId <> :notActionId ';
+            $params['notActionId'] = $sanitizedFilter->getInt('notActionId');
+        }
+
         // Sorting?
         $order = '';
 
@@ -239,6 +283,8 @@ class ActionFactory  extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $action = $this->createEmpty()->hydrate($row);
             $action->targetId = ($action->targetId === 0) ? null : $action->targetId;
+            $action->widgetId = ($action->widgetId === 0) ? null : $action->widgetId;
+            $action->layoutCode = ($action->widgetId === '') ? null : $action->layoutCode;
 
             $entries[] = $action;
         }

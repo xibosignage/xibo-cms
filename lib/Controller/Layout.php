@@ -302,6 +302,13 @@ class Layout extends Base
      *      type="boolean",
      *      required=false
      *  ),
+     *  @SWG\Parameter(
+     *      name="code",
+     *      in="formData",
+     *      description="Code identifier for this Layout",
+     *      type="string",
+     *      required=false
+     *  ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -333,6 +340,7 @@ class Layout extends Base
         $resolutionId = $sanitizedParams->getInt('resolutionId');
         $enableStat = $sanitizedParams->getCheckbox('enableStat');
         $autoApplyTransitions = $sanitizedParams->getCheckbox('autoApplyTransitions');
+        $code = $sanitizedParams->getString('code', ['defaultOnEmptyString' => true]);
 
         $template = null;
 
@@ -347,6 +355,7 @@ class Layout extends Base
             // Overwrite our new properties
             $layout->layout = $name;
             $layout->description = $description;
+            $layout->code = $code;
 
             // Create some tags (overwriting the old ones)
             $layout->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
@@ -361,7 +370,7 @@ class Layout extends Base
             }
         }
         else {
-            $layout = $this->layoutFactory->createFromResolution($resolutionId, $this->getUser()->userId, $name, $description, $sanitizedParams->getString('tags'));
+            $layout = $this->layoutFactory->createFromResolution($resolutionId, $this->getUser()->userId, $name, $description, $sanitizedParams->getString('tags'), $code);
         }
 
         // Set layout enableStat flag
@@ -501,6 +510,13 @@ class Layout extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="code",
+     *      in="formData",
+     *      description="Code identifier for this Layout",
+     *      type="string",
+     *      required=false
+     *  ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -536,6 +552,7 @@ class Layout extends Base
         $layout->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
         $layout->retired = $sanitizedParams->getCheckbox('retired');
         $layout->enableStat = $sanitizedParams->getCheckbox('enableStat');
+        $layout->code = $sanitizedParams->getString('code');
 
         $tags = $sanitizedParams->getString('tags');
         $tagsArray = explode(',', $tags);
@@ -1820,11 +1837,8 @@ class Layout extends Base
         /** @var Region $region */
         foreach ($allRegions as $region) {
             // Match our original region id to the id in the parent layout
-            if ($region->isDrawer === 0) {
-                $original = $originalLayout->getRegion($region->getOriginalValue('regionId'));
-            } else {
-                $original = $originalLayout->getDrawer($region->getOriginalValue('regionId'));
-            }
+            $original = $originalLayout->getRegionOrDrawer($region->getOriginalValue('regionId'));
+
             // Make sure Playlist closure table from the published one are copied over
             $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
         }
@@ -2444,11 +2458,7 @@ class Layout extends Base
         // Regions/Widgets need to copy down our layout permissions
         foreach ($allRegions as $region) {
             // Match our original region id to the id in the parent layout
-            if ($region->isDrawer === 0) {
-                $original = $layout->getRegion($region->getOriginalValue('regionId'));
-            } else {
-                $original = $layout->getDrawer($region->getOriginalValue('regionId'));
-            }
+            $original = $layout->getRegionOrDrawer($region->getOriginalValue('regionId'));
 
             // Make sure Playlist closure table from the published one are copied over
             $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);

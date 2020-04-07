@@ -29,6 +29,7 @@ use Xibo\Entity\User;
 use Xibo\Entity\Widget;
 use Xibo\Factory\ActionFactory;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ApplicationState;
@@ -61,6 +62,9 @@ class Action  extends Base
     /** @var WidgetFactory */
     private $widgetFactory;
 
+    /** @var ModuleFactory */
+    private $moduleFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -73,9 +77,10 @@ class Action  extends Base
      * @param LayoutFactory $layoutFactory
      * @param RegionFactory $regionFactory
      * @param WidgetFactory $widgetFactory
+     * @param ModuleFactory $moduleFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $actionFactory, $layoutFactory, $regionFactory, $widgetFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $actionFactory, $layoutFactory, $regionFactory, $widgetFactory, $moduleFactory, Twig $view)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
@@ -83,6 +88,7 @@ class Action  extends Base
         $this->layoutFactory = $layoutFactory;
         $this->regionFactory = $regionFactory;
         $this->widgetFactory = $widgetFactory;
+        $this->moduleFactory = $moduleFactory;
     }
 
 
@@ -185,7 +191,9 @@ class Action  extends Base
             'source' => $parsedParams->getString('source'),
             'sourceId' => $parsedParams->getInt('sourceId'),
             'target' => $parsedParams->getString('target'),
-            'targetId' => $parsedParams->getInt('targetId')
+            'targetId' => $parsedParams->getInt('targetId'),
+            'widgetId' => $parsedParams->getInt('widgetId'),
+            'layoutCode' => $parsedParams->getString('layoutCode')
         ];
 
         $actions = $this->actionFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
@@ -232,10 +240,10 @@ class Action  extends Base
     {
         $sourceObject = $this->checkIfSourceExists($source, $id);
 
-        if ($source == 'layout') {
+        if ($source === 'layout') {
             /** @var \Xibo\Entity\Layout $layout */
             $layout = $sourceObject;
-        } elseif ($source == 'region') {
+        } elseif ($source === 'region') {
             /** @var \Xibo\Entity\Region $region */
             $region = $sourceObject;
             $layout = $this->layoutFactory->getById($region->layoutId);
@@ -248,17 +256,28 @@ class Action  extends Base
 
         // Make sure the Layout is checked out to begin with
         if (!$layout->isEditable()) {
-            throw new InvalidArgumentException(__('Layout is not checked out'), 'statusId');
+            throw new InvalidArgumentException(__('Layout is not checked out'), 'publishedStatusId');
         }
 
         $layout->load();
+
+        // all widgets
+        $widgets = $layout->getAllWidgets();
+
+        foreach ($widgets as $widget) {
+            $module = $this->moduleFactory->createWithWidget($widget);
+            // if we don't have a name set in the Widget
+            $widget->name = $module->getName();
+        }
 
         $this->getState()->template = 'action-form-add';
         $this->getState()->setData([
             'sourceObject' => $sourceObject,
             'source' => $source,
             'id' => $id,
-            'regions' => $layout->regions
+            'regions' => $layout->regions,
+            'widgets' => $widgets,
+            'layoutCodes' => $this->layoutFactory->getLayoutCodes()
         ]);
 
         return $this->render($request, $response);
@@ -281,9 +300,16 @@ class Action  extends Base
      *      required=true
      *   ),
      *  @SWG\Parameter(
+     *      name="sourceId",
+     *      in="path",
+     *      description="The id of the source object, layoutId, regionId or widgetId",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
      *      name="triggerType",
      *      in="formData",
-     *      description="Action trigger type, touch, webhook, webwidget",
+     *      description="Action trigger type, touch or webhook",
      *      type="string",
      *      required=true
      *   ),
@@ -297,30 +323,37 @@ class Action  extends Base
      *  @SWG\Parameter(
      *      name="actionType",
      *      in="formData",
-     *      description="Action type",
+     *      description="Action type, next, previous, navLayout, navWidget",
      *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="sourceId",
-     *      in="formData",
-     *      description="The id of the source object, layoutId, regionId or widgetId",
-     *      type="integer",
      *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="target",
      *      in="formData",
-     *      description="Target for this action",
+     *      description="Target for this action, screen or region",
      *      type="string",
      *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="targetId",
      *      in="formData",
-     *      description="The id of the target for this action",
+     *      description="The id of the target for this action - regionId if the target is set to region",
      *      type="string",
-     *      required=true
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="widgetId",
+     *      in="formData",
+     *      description="For navWidget actionType, the WidgetId to navigate to",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="layoutCode",
+     *      in="formData",
+     *      description="For navLayout, the Layout Code identifier to navigate to",
+     *      type="string",
+     *      required=false
      *   ),
      *  @SWG\Response(
      *      response=201,
@@ -349,6 +382,8 @@ class Action  extends Base
         $actionType = $sanitizedParams->getString('actionType');
         $target = $sanitizedParams->getString('target');
         $targetId = $sanitizedParams->getInt('targetId');
+        $widgetId = $sanitizedParams->getInt('widgetId');
+        $layoutCode = $sanitizedParams->getString('layoutCode');
 
         // this will return Layout|Region|Widget object or throw an exception if provided source and sourceId does not exist.
         $sourceObject = $this->checkIfSourceExists($source, $id);
@@ -372,7 +407,12 @@ class Action  extends Base
             throw new InvalidArgumentException(__('Layout is not checked out'), 'statusId');
         }
 
-        $action = $this->actionFactory->create($triggerType, $triggerCode, $actionType, $source, $id, $target, $targetId);
+        // restrict to one touch Action per source
+        if ($this->actionFactory->checkIfActionExist($source, $id, $triggerType)) {
+            throw new InvalidArgumentException(__('Action with specified Trigger Type already exists'), 'triggerType');
+        }
+
+        $action = $this->actionFactory->create($triggerType, $triggerCode, $actionType, $source, $id, $target, $targetId, $widgetId, $layoutCode);
         $action->save();
 
         // Return
@@ -415,6 +455,15 @@ class Action  extends Base
 
         $layout->load();
 
+        // all widgets, assigned to this layout or drawer
+        $widgets = $layout->getAllWidgets();
+
+        foreach ($widgets as $widget) {
+            $module = $this->moduleFactory->createWithWidget($widget);
+            // if we don't have a name set in the Widget
+            $widget->name = $module->getName();
+        }
+
         // Make sure the Layout is checked out to begin with
         if (!$layout->isEditable()) {
             throw new InvalidArgumentException(__('Layout is not checked out'), 'statusId');
@@ -425,7 +474,9 @@ class Action  extends Base
             'help' => $this->getHelp()->link('Action', 'Edit'),
             'action' => $action,
             'source' => $action->source,
-            'regions' => $layout->regions
+            'regions' => $layout->regions,
+            'widgets' => $widgets,
+            'layoutCodes' => $this->layoutFactory->getLayoutCodes()
         ]);
 
         return $this->render($request, $response);
@@ -441,16 +492,16 @@ class Action  extends Base
      *  summary="Add Action",
      *  description="Add a new Action",
      *  @SWG\Parameter(
-     *      name="source",
+     *      name="actionId",
      *      in="path",
-     *      description="Source for this action layout, region or widget",
-     *      type="string",
+     *      description="Action ID to edit",
+     *      type="integer",
      *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="triggerType",
      *      in="formData",
-     *      description="Action trigger type, touch, webhook, webwidget",
+     *      description="Action trigger type, touch, webhook",
      *      type="string",
      *      required=true
      *   ),
@@ -459,35 +510,42 @@ class Action  extends Base
      *      in="formData",
      *      description="Action trigger code",
      *      type="string",
-     *      required=true
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="actionType",
      *      in="formData",
-     *      description="Action type",
+     *      description="Action type, next, previous, navLayout, navWidget",
      *      type="string",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
-     *      name="sourceId",
-     *      in="formData",
-     *      description="The id of the source object, layoutId, regionId or widgetId",
-     *      type="integer",
      *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="target",
      *      in="formData",
-     *      description="Target for this action",
+     *      description="Target for this action, screen or region",
      *      type="string",
      *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="targetId",
      *      in="formData",
-     *      description="The id of the target for this action",
+     *      description="The id of the target for this action, regionId if target set to region",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="widgetId",
+     *      in="formData",
+     *      description="For navWidget actionType, the WidgetId to navigate to",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="layoutCode",
+     *      in="formData",
+     *      description="For navLayout, the Layout Code identifier to navigate to",
      *      type="string",
-     *      required=true
+     *      required=false
      *   ),
      *  @SWG\Response(
      *      response=201,
@@ -534,11 +592,18 @@ class Action  extends Base
             throw new InvalidArgumentException(__('Layout is not checked out'), 'statusId');
         }
 
+        // restrict to one touch Action per source
+        if ($this->actionFactory->checkIfActionExist($action->source, $action->sourceId, $action->triggerType, $action->actionId)) {
+            throw new InvalidArgumentException(__('Action with specified Trigger Type already exists'), 'triggerType');
+        }
+
         $action->triggerType = $sanitizedParams->getString('triggerType');
         $action->triggerCode = $sanitizedParams->getString('triggerCode');
         $action->actionType = $sanitizedParams->getString('actionType');
         $action->target = $sanitizedParams->getString('target');
         $action->targetId = $sanitizedParams->getInt('targetId');
+        $action->widgetId = $sanitizedParams->getInt('widgetId');
+        $action->layoutCode = $sanitizedParams->getString('layoutCode');
 
         $action->save();
 
@@ -582,7 +647,7 @@ class Action  extends Base
 
         // Make sure the Layout is checked out to begin with
         if (!$layout->isEditable()) {
-            throw new InvalidArgumentException(__('Layout is not checked out'), 'statusId');
+            throw new InvalidArgumentException(__('Layout is not checked out'), 'publishedStatusId');
         }
 
         $this->getState()->template = 'action-form-delete';

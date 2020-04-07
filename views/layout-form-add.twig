@@ -92,6 +92,10 @@
                         {% set helpText %}{% trans "Choose the resolution this Layout should be designed for." %}{% endset %}
                         {{ forms.dropdown("resolutionId", "single", title, "", resolutions, "resolutionId", "resolution", helpText, "resolution-group") }}
 
+                        {% set title %}{% trans "Code" %}{% endset %}
+                        {% set helpText %}{% trans "The Code identifier for this layout - used in Interactive Actions" %}{% endset %}
+                        {{ forms.input("code", title, "", helpText) }}
+
                         {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
                         {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Layout. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
                         {{ forms.checkbox("enableStat", title, theme.getSetting("LAYOUT_STATS_ENABLED_DEFAULT"), helpText) }}
