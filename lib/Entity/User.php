@@ -805,6 +805,12 @@ class User implements \JsonSerializable
             'oldUserId' => $this->userId
         ]);
 
+        // Reassign oAuth Clients
+        $this->getStore()->update('UPDATE `oauth_clients` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
         // Load again
         $this->loaded = false;
         $this->load(true);
@@ -846,6 +852,15 @@ class User implements \JsonSerializable
         }
         catch (NotFoundException $e) {
             throw new InvalidArgumentException(__('Selected home page does not exist'), 'homePageId');
+        }
+
+        // System User
+        if ($this->userId == $this->configService->getSetting('SYSTEM_USER') &&  $this->userTypeId != 1) {
+            throw new InvalidArgumentException('This User is set as System User and needs to be super admin', 'userId');
+        }
+
+        if ($this->userId == $this->configService->getSetting('SYSTEM_USER') &&  $this->retired === 1) {
+            throw new InvalidArgumentException('This User is set as System User and cannot be retired', 'userId');
         }
     }
 
@@ -970,7 +985,8 @@ class User implements \JsonSerializable
 
         // Delete Actions
         $this->getStore()->update('DELETE FROM `action` WHERE ownerId = :userId', ['userId' => $this->userId]);
-
+        // Delete oAuth clients
+        $this->getStore()->update('DELETE FROM `oauth_clients` WHERE userId = :userId', ['userId' => $this->userId]);
         // Delete user specific entities
         $this->getStore()->update('DELETE FROM `resolution` WHERE userId = :userId', ['userId' => $this->userId]);
         $this->getStore()->update('DELETE FROM `daypart` WHERE userId = :userId', ['userId' => $this->userId]);
@@ -1383,16 +1399,17 @@ class User implements \JsonSerializable
     {
         // Check that this object has the necessary methods
         $this->checkObjectCompatibility($object);
-
         // Admin users
         // Note here that the DOOH user isn't allowed to outright delete other users things
-        if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId())
+        if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId()) {
             return true;
+        }
 
         // Group Admins
-        if ($this->userTypeId == 2 && count(array_intersect($this->groups, $this->userGroupFactory->getByUserId($object->getOwnerId()))))
+        if ($this->userTypeId == 2 && count(array_intersect($this->groups, $this->userGroupFactory->getByUserId($object->getOwnerId())))) {
             // Group Admin and in the same group as the owner.
             return true;
+        }
 
         // Get the permissions for that entity
         $permissions = $this->loadPermissions($object->permissionsClass());
