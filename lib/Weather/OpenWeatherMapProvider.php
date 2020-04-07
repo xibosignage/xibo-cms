@@ -47,7 +47,7 @@ class OpenWeatherMapProvider implements WeatherProvider
      */
     public function getAttribution()
     {
-        return 'CC BY-SA 4.0';
+        return 'Powered by OpenWeather';
     }
 
     /** @inheritDoc */
