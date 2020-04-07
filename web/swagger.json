@@ -6384,6 +6384,20 @@
                         "description": "An optional Campaign Id to filter",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "returnDisplayLocalTime",
+                        "in": "query",
+                        "description": "true/1/On if the results should be in display local time, otherwise CMS time",
+                        "required": false,
+                        "type": "boolean"
+                    },
+                    {
+                        "name": "returnDateFormat",
+                        "in": "query",
+                        "description": "A PHP formatted date format for how the dates in this call should be returned.",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -11130,9 +11144,11 @@
                     "type": "integer"
                 },
                 "minStart": {
+                    "description": "DEPRECATED - will be removed in v3",
                     "type": "string"
                 },
                 "maxEnd": {
+                    "description": "DEPRECATED - will be removed in v3",
                     "type": "string"
                 },
                 "start": {
