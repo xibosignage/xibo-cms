@@ -24,6 +24,7 @@ namespace Xibo\Weather;
 
 
 use GuzzleHttp\Exception\RequestException;
+use Illuminate\Support\Str;
 use Jenssegers\Date\Date;
 use Xibo\Exception\GeneralException;
 
@@ -75,6 +76,10 @@ class OpenWeatherMapProvider implements WeatherProvider
         // Convert units to an acceptable format
         $units = in_array($this->units, ['auto', 'us', 'uk2']) ? 'imperial' : 'metric';
 
+        // Temperature and Wind Speed Unit Mappings
+        $unit = $this->getUnit($this->units);
+
+        // Build the URL
         $url = '?lat=' . $this->lat
             . '&lon=' . $this->long
             . '&units=' . $units
@@ -93,6 +98,25 @@ class OpenWeatherMapProvider implements WeatherProvider
             $timezoneOffset = (int)$data['timezone'] / 3600;
             $this->timezone = (new \DateTimeZone(($timezoneOffset < 0 ? '-' : '+') . abs($timezoneOffset)))->getName();
 
+            // Pick out the country
+            $country = $data['sys']['country'] ?? null;
+
+            $this->logger->debug('Trying to determine units for Country: ' . $country);
+
+            // If we don't have a unit, then can we base it on the timezone we got back?
+            if ($this->units === 'auto' && $country !== null) {
+                // Pick out some countries to set the units
+                if ($country === 'GB') {
+                    $unit = $this->getUnit('uk2');
+                } else if ($country === 'US') {
+                    $unit = $this->getUnit('us');
+                } else if ($country === 'CA') {
+                    $unit = $this->getUnit('ca');
+                } else {
+                    $unit = $this->getUnit('si');
+                }
+            }
+
             // Then the 16 day forecast API, which we will cache a day
             $data['daily'] = $this->queryApi($this->apiUrl . $this->forecastDaily . $url, $cacheExpire->copy()->addDay()->startOfDay())['list'];
         } else {
@@ -100,12 +124,23 @@ class OpenWeatherMapProvider implements WeatherProvider
             $data = $this->queryApi($this->apiUrl . $this->forecastCombined . $url, $cacheExpire);
 
             $this->timezone = $data['timezone'];
+
+            // Country based on timezone (this is harder than using the real country)
+            if ($this->units === 'auto') {
+                if (Str::startsWith($this->timezone, 'America')) {
+                    $unit = $this->getUnit('us');
+                } else if ($this->timezone === 'Europe/London') {
+                    $unit = $this->getUnit('uk2');
+                } else {
+                    $unit = $this->getUnit('si');
+                }
+            }
         }
 
-        // Parse into our forecast.
-        // Temperature and Wind Speed Unit Mappings
-        $unit = $this->getUnit($this->units);
+        // Using units:
+        $this->logger->debug('Using units: ' . json_encode($unit));
 
+        // Parse into our forecast.
         // Load this data into our objects
         $this->currentDay = new Forecast();
         $this->currentDay->temperatureUnit = $unit['tempUnit'] ?: 'C';
@@ -159,7 +194,7 @@ class OpenWeatherMapProvider implements WeatherProvider
             'clouds' => $source['clouds']['all'],
             'visibility' => $source['visibility'],
             'wind_speed' => $source['wind']['speed'],
-            'wind_deg' => $source['wind']['deg'],
+            'wind_deg' => $source['wind']['deg'] ?? 0,
             'weather' => $source['weather'],
         ];
     }
@@ -260,7 +295,7 @@ class OpenWeatherMapProvider implements WeatherProvider
         }
 
         // Wind direction
-        if ($day->windBearing !== null) {
+        if ($day->windBearing !== null && $day->windBearing !== 0) {
             foreach (self::cardinalDirections() as $dir => $angles) {
                 if ($day->windBearing >= $angles[0] && $day->windBearing < $angles[1]) {
                     $day->windDirection = $dir;
