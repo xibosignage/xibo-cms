@@ -1271,7 +1271,8 @@ class Layout implements \JsonSerializable
             $widgets = $region->getPlaylist()->setModuleFactory($this->moduleFactory)->expandWidgets();
             $countWidgets = count($widgets);
 
-            if ($countWidgets <= 0) {
+            // Check for empty Region, exclude Drawers from this check.
+            if ($countWidgets <= 0 && $region->isDrawer == 0) {
                 $this->getLog()->info('Layout has empty region - ' . $countWidgets . ' widgets. playlistId = ' . $region->getPlaylist()->getId());
                 $layoutHasEmptyRegion = true;
             }
@@ -1338,10 +1339,11 @@ class Layout implements \JsonSerializable
                 $mediaNode->setAttribute('id', $widget->widgetId);
                 $mediaNode->setAttribute('type', $widget->type);
                 $mediaNode->setAttribute('render', ($renderAs == '') ? 'native' : $renderAs);
-                $mediaNode->setAttribute('playlist', $widget->playlist);
-                $mediaNode->setAttribute('displayOrder', $widget->displayOrder);
 
+                // to make the xml cleaner, add those nodes only on Widgets that were grouped in a subPlaylist Widget.
                 if ($widget->tempId != $widget->widgetId) {
+                    $mediaNode->setAttribute('playlist', $widget->playlist);
+                    $mediaNode->setAttribute('displayOrder', $widget->displayOrder);
                     $mediaNode->setAttribute('parentWidgetId', $widget->tempId);
                 }
 
