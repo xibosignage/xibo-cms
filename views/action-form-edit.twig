@@ -65,11 +65,25 @@
                     { typeid: "next", type: next },
                     { typeid: "previous", type: previous },
                     { typeid: "navLayout", type: navLayout },
-                    { typeid: "navRegion", type: navRegion },
-                    { typeid: "navPlaylist", type: navPlaylist },
                     { typeid: "navWidget", type: navWidget },
                 ] %}
                 {{ forms.dropdown("actionType", "single", title,action.actionType, options, "typeid","type", helpText) }}
+
+                {% set title %}{% trans "Widget" %}{% endset %}
+                {% set helpText %}{% trans "Widget that will load into target" %}{% endset %}
+                {{ forms.dropdown("widgetId", "single", title, action.widgetId, [{widgetId:null, name:""}]|merge(widgets), "widgetId", "name", helpText, "nav-control-widget") }}
+
+                {% set title %}{% trans "Layout Code" %}{% endset %}
+                {% set helpText %}{% trans "Please enter code identifier for the Layout" %}{% endset %}
+
+                {% set attributes = [
+                    { name: "data-width", value: "100%" },
+                    { name: "data-search-url", value: url_for("layout.code.search") },
+                    { name: "data-search-term", value: "code" },
+                    { name: "data-id-property", value: "code" },
+                    { name: "data-text-property", value: "code" }
+                ] %}
+                {{ forms.dropdown("layoutCode", "single", title, action.layoutCode, layout, "code", "code", helpText, "pagedSelect nav-control-layout", "", "", "", attributes) }}
 
                 {% set title %}{% trans "Target" %}{% endset %}
                 {% set helpText %}{% trans "Please select the target for this Action." %}{% endset %}
@@ -83,7 +97,7 @@
 
                 {% set title %}{% trans "Target ID" %}{% endset %}
                 {% set helpText %}{% trans "Select the Target ID for this Action" %}{% endset %}
-                {{ forms.dropdown("targetId", "single", title,action.targetId, [{regionId:null, name:""}]|merge(regions), "regionId","name", helpText, "target-control") }}
+                {{ forms.dropdown("targetId", "single", title, action.targetId, [{regionId:null, name:""}]|merge(regions), "regionId","name", helpText, "target-control") }}
             </form>
         </div>
     </div>

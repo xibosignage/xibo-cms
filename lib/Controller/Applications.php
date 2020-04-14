@@ -535,7 +535,7 @@ class Applications extends Base
             $this->getLog()->debug('Attempting to change ownership to ' . $user->userId . ' - ' . $user->userName);
 
             if (!$this->getUser()->checkViewable($user)) {
-                throw new InvalidArgumentException('You do not have permission to assign this user', 'userId');
+                throw new InvalidArgumentException(__('You do not have permission to assign this user'), 'userId');
             }
 
             $client->userId = $user->userId;

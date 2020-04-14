@@ -39,7 +39,7 @@ class Pbkdf2Hash
     {
         $params = explode(':', $hash);
         if (count($params) < self::HASH_SECTIONS) {
-            throw new InvalidArgumentException('Invalid password hash - not enough hash sections');
+            throw new InvalidArgumentException(__('Invalid password hash - not enough hash sections'));
         }
 
         $pbkdf2 = base64_decode($params[self::HASH_PBKDF2_INDEX]);

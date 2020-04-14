@@ -114,6 +114,8 @@ $app->get('/layout/form/unretire/{id}', ['\Xibo\Controller\Layout','unretireForm
 $app->get('/layout/form/setenablestat/{id}', ['\Xibo\Controller\Layout','setEnableStatForm'])->setName('layout.setenablestat.form');
 $app->get('/layout/form/export/{id}', ['\Xibo\Controller\Layout','exportForm'])->setName('layout.export.form');
 $app->get('/layout/form/campaign/assign/{id}', ['\Xibo\Controller\Layout','assignToCampaignForm'])->setName('layout.assignTo.campaign.form');
+// Layout with Codes
+$app->get('/layout/codes', ['\Xibo\Controller\Layout', 'getLayoutCodes'])->setName('layout.code.search');
 
 //
 // regions

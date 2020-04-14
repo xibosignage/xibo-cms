@@ -217,7 +217,7 @@ class Soap3 extends Soap
                 $requiredFile->save();
 
             } else {
-                throw new NotFoundException('Unknown FileType Requested.');
+                throw new NotFoundException(__('Unknown FileType Requested.'));
             }
         }
         catch (NotFoundException $e) {

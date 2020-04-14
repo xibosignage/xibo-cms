@@ -373,11 +373,11 @@ class Soap4 extends Soap
                 $this->getLog()->debug(json_encode($media));
 
                 if (!file_exists($libraryLocation . $media->storedAs))
-                    throw new NotFoundException('Media exists but file missing from library. ' . $libraryLocation);
+                    throw new NotFoundException(__('Media exists but file missing from library. ') . $libraryLocation);
 
                 // Return the Chunk size specified
                 if (!$f = fopen($libraryLocation . $media->storedAs, 'r'))
-                    throw new NotFoundException('Unable to get file pointer');
+                    throw new NotFoundException(__('Unable to get file pointer'));
 
                 fseek($f, $chunkOffset);
 
@@ -387,13 +387,13 @@ class Soap4 extends Soap
                 $chunkSize = strlen($file);
 
                 if ($chunkSize === 0)
-                    throw new NotFoundException('Empty file');
+                    throw new NotFoundException(__('Empty file'));
 
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
                 $requiredFile->save();
 
             } else {
-                throw new NotFoundException('Unknown FileType Requested.');
+                throw new NotFoundException(__('Unknown FileType Requested.'));
             }
         }
         catch (NotFoundException $e) {

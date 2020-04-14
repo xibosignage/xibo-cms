@@ -29,6 +29,7 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TransitionFactory;
+use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
@@ -53,6 +54,9 @@ class Settings extends Base
     /** @var TransitionFactory */
     private $transitionfactory;
 
+    /** @var UserFactory */
+    private $userFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -64,15 +68,17 @@ class Settings extends Base
      * @param LayoutFactory $layoutFactory
      * @param UserGroupFactory $userGroupFactory
      * @param TransitionFactory $transitionfactory
+     * @param UserFactory $userFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $layoutFactory, $userGroupFactory, $transitionfactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $layoutFactory, $userGroupFactory, $transitionfactory, $userFactory, Twig $view)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->layoutFactory = $layoutFactory;
         $this->userGroupFactory = $userGroupFactory;
         $this->transitionfactory = $transitionfactory;
+        $this->userFactory = $userFactory;
 
         // Initialise extra validation rules
         v::with('Xibo\\Validation\\Rules\\');
@@ -141,6 +147,13 @@ class Settings extends Base
             $defaultLayout = null;
         }
 
+        // The system User
+        try {
+            $systemUser = $this->userFactory->getById($this->getConfig()->getSetting('SYSTEM_USER'));
+        } catch (NotFoundException $notFoundException) {
+            $systemUser = null;
+        }
+
         // The default user group
         try {
             $defaultUserGroup = $this->userGroupFactory->getById($this->getConfig()->getSetting('DEFAULT_USERGROUP'));
@@ -186,7 +199,8 @@ class Settings extends Base
             'defaultUserGroup' => $defaultUserGroup,
             'elevateLogUntil' => $elevateLogUntil,
             'defaultTransitionIn' => $defaultTransitionIn,
-            'defaultTransitionOut' => $defaultTransitionOut
+            'defaultTransitionOut' => $defaultTransitionOut,
+            'systemUser' => $systemUser
         ]);
 
         return $this->render($request, $response);
@@ -607,6 +621,10 @@ class Settings extends Base
 
         if ($this->getConfig()->isSettingEditable('SERVER_MODE')) {
             $this->getConfig()->changeSetting('SERVER_MODE', $sanitizedParams->getString('SERVER_MODE'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('SYSTEM_USER')) {
+            $this->getConfig()->changeSetting('SYSTEM_USER', $sanitizedParams->getInt('SYSTEM_USER'));
         }
 
         if ($this->getConfig()->isSettingEditable('DEFAULT_USERGROUP')) {

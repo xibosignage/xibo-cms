@@ -183,13 +183,14 @@ class LayoutFactory extends BaseFactory
      * @param string $name
      * @param string $description
      * @param string $tags
+     * @param string $code
      * @return Layout
      *
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function createFromResolution($resolutionId, $ownerId, $name, $description, $tags)
+    public function createFromResolution($resolutionId, $ownerId, $name, $description, $tags, $code)
     {
         $resolution = $this->resolutionFactory->getById($resolutionId);
 
@@ -203,6 +204,7 @@ class LayoutFactory extends BaseFactory
         $layout->description = $description;
         $layout->backgroundzIndex = 0;
         $layout->backgroundColor = '#000';
+        $layout->code = $code;
 
         // Set the owner
         $layout->setOwner($ownerId);
@@ -241,13 +243,13 @@ class LayoutFactory extends BaseFactory
     public function getById($layoutId)
     {
         if ($layoutId == 0) {
-            throw new NotFoundException('LayoutId is 0');
+            throw new NotFoundException(__('LayoutId is 0'));
         }
 
         $layouts = $this->query(null, array('disableUserCheck' => 1, 'layoutId' => $layoutId, 'excludeTemplates' => -1, 'retired' => -1));
 
         if (count($layouts) <= 0) {
-            throw new NotFoundException('Layout not found');
+            throw new NotFoundException(__('Layout not found'));
         }
 
         // Set our layout
@@ -264,7 +266,7 @@ class LayoutFactory extends BaseFactory
     public function getCampaignIdFromLayoutHistory($layoutId)
     {
         if ($layoutId == null) {
-            throw new InvalidArgumentException('Invalid Input', 'layoutId');
+            throw new InvalidArgumentException(__('Invalid Input'), 'layoutId');
         }
 
         $row = $this->getStore()->select('SELECT campaignId FROM `layouthistory` WHERE layoutId = :layoutId LIMIT 1', ['layoutId' => $layoutId]);
@@ -306,7 +308,7 @@ class LayoutFactory extends BaseFactory
     public function getLatestLayoutIdFromLayoutHistory($campaignId)
     {
         if ($campaignId == null) {
-            throw new InvalidArgumentException('Invalid Input', 'campaignId');
+            throw new InvalidArgumentException(__('Invalid Input'), 'campaignId');
         }
 
         $row = $this->getStore()->select('SELECT MAX(layoutId) AS layoutId FROM `layouthistory` WHERE campaignId = :campaignId  ', ['campaignId' => $campaignId]);
@@ -446,6 +448,24 @@ class LayoutFactory extends BaseFactory
     public function getByTag($tag)
     {
         return $this->query(null, ['disableUserCheck' => 1, 'tags' => $tag, 'exactTags' => 1]);
+    }
+
+    /**
+     * Get by Code identifier
+     * @param string $code
+     * @return Layout
+     * @throws NotFoundException
+     */
+    public function getByCode($code)
+    {
+        $layouts = $this->query(null, ['disableUserCheck' => 1, 'code' => $code, 'excludeTemplates' => -1, 'retired' => -1]);
+
+        if (count($layouts) <= 0) {
+            throw new NotFoundException(__('Layout not found'));
+        }
+
+        // Set our layout
+        return $layouts[0];
     }
 
     /**
@@ -705,8 +725,9 @@ class LayoutFactory extends BaseFactory
         $layout->backgroundzIndex = (int)$layoutJson['layoutDefinitions']['backgroundzIndex'];
         $layout->actions = [];
         $actions = $layoutJson['layoutDefinitions']['actions'];
+
         foreach ($actions as $action) {
-            $newAction = $this->actionFactory->create($action['triggerType'], $action['triggerCode'], $action['actionType'], 'importLayout', $action['sourceId'], $action['target'], $action['targetId']);
+            $newAction = $this->actionFactory->create($action['triggerType'], $action['triggerCode'], $action['actionType'], 'importLayout', $action['sourceId'], $action['target'], $action['targetId'], $action['widgetId'], $action['layoutCode']);
             $newAction->save(['validate' => false]);
         }
 
@@ -771,13 +792,14 @@ class LayoutFactory extends BaseFactory
                 // make sure we have a string as the region name, otherwise sanitizer will get confused.
                 $region->name = (string)$region->name;
             }
+
             // Populate Playlists
             $playlist = $this->playlistFactory->create($region->name, $regionOwnerId);
 
             // interactive Actions
             $actions = $regionJson['actions'];
             foreach ($actions as $action) {
-                $newAction = $this->actionFactory->create($action['triggerType'], $action['triggerCode'], $action['actionType'], 'importRegion', $action['sourceId'], $action['target'], $action['targetId']);
+                $newAction = $this->actionFactory->create($action['triggerType'], $action['triggerCode'], $action['actionType'], 'importRegion', $action['sourceId'], $action['target'], $action['targetId'], $action['widgetId'], $action['layoutCode']);
                 $newAction->save(['validate' => false]);
             }
 
@@ -942,7 +964,7 @@ class LayoutFactory extends BaseFactory
                 // interactive Actions
                 $actions = $mediaNode['actions'];
                 foreach ($actions as $action) {
-                    $newAction = $this->actionFactory->create($action['triggerType'], $action['triggerCode'], $action['actionType'], 'importWidget', $action['sourceId'], $action['target'], $action['targetId']);
+                    $newAction = $this->actionFactory->create($action['triggerType'], $action['triggerCode'], $action['actionType'], 'importWidget', $action['sourceId'], $action['target'], $action['targetId'], $action['widgetId'], $action['layoutCode']);
                     $newAction->save(['validate' => false]);
                 }
             }
@@ -1075,6 +1097,15 @@ class LayoutFactory extends BaseFactory
         // Override the name/description
         $layout->layout = (($layoutName != '') ? $layoutName : $layoutDetails['layout']);
         $layout->description = (isset($layoutDetails['description']) ? $layoutDetails['description'] : '');
+
+        // Layout code, remove it if Layout with the same code already exists in the CMS, otherwise import would fail.
+        // if the code does not exist, then persist it on import.
+        try {
+            $this->getByCode($layoutDetails['layoutDefinitions']['code']);
+            $layout->code = null;
+        } catch (NotFoundException $exception) {
+            $layout->code = $layoutDetails['layoutDefinitions']['code'];
+        }
 
         // Get global stat setting of layout to on/off proof of play statistics
         $layout->enableStat = $this->config->getSetting('LAYOUT_STATS_ENABLED_DEFAULT');
@@ -1661,6 +1692,36 @@ class LayoutFactory extends BaseFactory
     }
 
     /**
+     * Get all Codes assigned to Layouts
+     * @param array $filterBy
+     * @return array
+     */
+    public function getLayoutCodes($filterBy = [])
+    {
+        $parsedFilter = $this->getSanitizer($filterBy);
+        $params = [];
+        $select = 'SELECT DISTINCT code ';
+        $body = ' FROM layout WHERE code IS NOT NULL ORDER BY code';
+
+        // Paging
+        $limit = '';
+        if ($filterBy !== null && $parsedFilter->getInt('start') !== null && $parsedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . intval($parsedFilter->getInt('start'), 0) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
+        }
+
+        $sql = $select . $body . $limit;
+        $entries = $this->getStore()->select($sql, []);
+
+        // Paging
+        if ($limit != '' && count($entries) > 0) {
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
+        }
+
+        return $entries;
+    }
+
+    /**
      * Query for all Layouts
      * @param array $sortOrder
      * @param array $filterBy
@@ -1673,8 +1734,9 @@ class LayoutFactory extends BaseFactory
         $entries = [];
         $params = [];
 
-        if ($sortOrder === null)
+        if ($sortOrder === null) {
             $sortOrder = ['layout'];
+        }
 
         $select  = "";
         $select .= "SELECT layout.layoutID, ";
@@ -1703,6 +1765,7 @@ class LayoutFactory extends BaseFactory
         $select .= "        `status`.status AS publishedStatus, ";
         $select .= "        layout.publishedDate, ";
         $select .= "        layout.autoApplyTransitions, ";
+        $select .= "        layout.code, ";
 
         if ($parsedFilter->getInt('campaignId') !== null) {
             $select .= ' lkcl.displayOrder, ';
@@ -1936,6 +1999,12 @@ class LayoutFactory extends BaseFactory
             $params['regionId'] = $parsedFilter->getInt('regionId', ['default' => 0]);
         }
 
+        // get by Code
+        if ($parsedFilter->getString('code', $filterBy) != '') {
+            $body.= " AND layout.code = :code ";
+            $params['code'] = $parsedFilter->getString('code');
+        }
+
         // Tags
         if ($parsedFilter->getString('tags') != '') {
 
@@ -2076,6 +2145,7 @@ class LayoutFactory extends BaseFactory
             $layout->publishedStatus = $parsedRow->getString('publishedStatus');
             $layout->publishedDate = $parsedRow->getString('publishedDate');
             $layout->autoApplyTransitions = $parsedRow->getInt('autoApplyTransitions');
+            $layout->code = $parsedRow->getString('code');
 
             $layout->groupsWithPermissions = $row['groupsWithPermissions'];
             $layout->setOriginals();
@@ -2107,16 +2177,16 @@ class LayoutFactory extends BaseFactory
         // convert the date string to a unix timestamp, if the layout xlf does not contain dates, then set it to the $DATE_MIN / $DATE_MAX which are already unix timestamps, don't attempt to convert them
         // we need to check if provided from and to dates are within $DATE_MIN +- year to avoid issues with CMS Instances in different timezones https://github.com/xibosignage/xibo/issues/1934
 
-        if ($widget->fromDt === Widget::$DATE_MIN || (Carbon::createFromTimestamp($widget->fromDt)->format('U') > $minSubYear && Carbon::createFromTimestamp($widget->fromDt)->format('U') < $minAddYear)) {
+        if ($widget->fromDt === Widget::$DATE_MIN || (Carbon::createFromTimeString($widget->fromDt)->format('U') > $minSubYear && Carbon::createFromTimeString($widget->fromDt)->format('U') < $minAddYear)) {
             $widget->fromDt = Widget::$DATE_MIN;
         } else {
-            $widget->fromDt = Carbon::createFromTimestamp($widget->fromDt)->format('U');
+            $widget->fromDt = Carbon::createFromTimeString($widget->fromDt)->format('U');
         }
 
-        if ($widget->toDt === Widget::$DATE_MAX || (Carbon::createFromTimestamp($widget->toDt)->format('U') > $maxSubYear && Carbon::createFromTimestamp($widget->toDt)->format('U') < $maxAddYear)) {
+        if ($widget->toDt === Widget::$DATE_MAX || (Carbon::createFromTimeString($widget->toDt)->format('U') > $maxSubYear && Carbon::createFromTimeString($widget->toDt)->format('U') < $maxAddYear)) {
             $widget->toDt = Widget::$DATE_MAX;
         } else {
-            $widget->toDt = Carbon::createFromTimestamp($widget->toDt)->format('U');
+            $widget->toDt = Carbon::createFromTimeString($widget->toDt)->format('U');
         }
 
         return $widget;

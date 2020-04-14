@@ -101,7 +101,7 @@ class ResolutionFactory extends BaseFactory
         $resolutions = $this->query(null, array('disableUserCheck' => 1, 'width' => $width, 'height' => $height));
 
         if (count($resolutions) <= 0)
-            throw new NotFoundException('Resolution not found');
+            throw new NotFoundException(__('Resolution not found'));
 
         return $resolutions[0];
     }
@@ -118,7 +118,7 @@ class ResolutionFactory extends BaseFactory
         $resolutions = $this->query(null, array('disableUserCheck' => 1, 'designerWidth' => $width, 'designerHeight' => $height));
 
         if (count($resolutions) <= 0)
-            throw new NotFoundException('Resolution not found');
+            throw new NotFoundException(__('Resolution not found'));
 
         return $resolutions[0];
     }

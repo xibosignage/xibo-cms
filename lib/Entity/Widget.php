@@ -385,7 +385,7 @@ class Widget implements \JsonSerializable
                 return $widgetOption;
         }
 
-        throw new NotFoundException('Widget Option not found');
+        throw new NotFoundException(__('Widget Option not found'));
     }
 
     /**

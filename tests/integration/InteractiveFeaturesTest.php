@@ -53,18 +53,6 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
 
         $this->addSimpleWidget($layout);
 
-        $this->getEntityProvider()->post('/action/layout/' . $layout->layoutId, [
-            'triggerType' => 'touch',
-            'actionType' => 'previous',
-            'target' => 'screen'
-        ]);
-
-        $this->getEntityProvider()->post('/action/layout/' . $layout->layoutId, [
-            'triggerType' => 'touch',
-            'actionType' => 'next',
-            'target' => 'screen'
-        ]);
-
         $this->layout = $this->publish($this->layout);
 
         // Set the Layout status
@@ -150,12 +138,14 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
      * @param string|null $triggerCode
      * @param string $actionType
      * @param string $target
+     * @param string|null $layoutCode
      */
-    public function testAddActionSuccess(string $source, string $triggerType, $triggerCode, string $actionType, string $target)
+    public function testAddActionSuccess(string $source, string $triggerType, $triggerCode, string $actionType, string $target, $layoutCode)
     {
         $layout = $this->checkout($this->layout);
         $sourceId = null;
         $targetId = null;
+        $widgetId = null;
 
         // Add a couple of text widgets to the region
         $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist->playlistId);
@@ -166,6 +156,15 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
         ]);
 
         $widget = (new XiboText($this->getEntityProvider()))->hydrate($response);
+
+        $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist->playlistId);
+        $response = $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'], [
+            'text' => 'Widget B',
+            'duration' => 100,
+            'useDuration' => 1
+        ]);
+
+        $widget2 = (new XiboText($this->getEntityProvider()))->hydrate($response);
 
         // depending on the source from AddActionsCases, the sourceId will be different
         if ($source === 'layout') {
@@ -181,12 +180,18 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
             $targetId = $layout->regions[0]->regionId;
         }
 
+        if ($actionType == 'navWidget') {
+            $widgetId = $widget2->widgetId;
+        }
+
         $response = $this->sendRequest('POST', '/action/' . $source . '/' . $sourceId, [
             'triggerType' => $triggerType,
             'triggerCode' => $triggerCode,
             'actionType' => $actionType,
             'target' => $target,
-            'targetId' => $targetId
+            'targetId' => $targetId,
+            'widgetId' => $widgetId,
+            'layoutCode' => $layoutCode
         ]);
 
         $this->assertSame(200, $response->getStatusCode());
@@ -214,12 +219,14 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
     public function AddActionSuccessCases()
     {
         return [
-            'Layout' => ['layout', 'touch', 'trigger code', 'next', 'screen'],
-            'Layout with region target' => ['layout', 'touch', null, 'navRegion', 'region'],
-            'Region' => ['region', 'webhook', null, 'previous', 'screen'],
-            'Region with region target' => ['region', 'webhook', null, 'previous', 'region'],
-            'Widget' => ['widget', 'touch', null, 'next', 'screen'],
-            'Widget with region target' => ['widget', 'touch', null, 'navRegion', 'region']
+            'Layout' => ['layout', 'touch', 'trigger code', 'next', 'screen', null],
+            'Layout with region target' => ['layout', 'touch', null, 'previous', 'region', null],
+            'Region' => ['region', 'webhook', null, 'previous', 'screen', null],
+            'Region with region target' => ['region', 'webhook', null, 'previous', 'region', null],
+            'Widget' => ['widget', 'touch', null, 'next', 'screen', null],
+            'Widget with region target' => ['widget', 'touch', null, 'next', 'region', null],
+            'Navigate to Widget' => ['layout', 'touch', null, 'navWidget', 'screen', null],
+            'Navigate to Layout with code' => ['layout', 'touch', null, 'navLayout', 'screen', 'CodeIdentifier']
         ];
     }
 
@@ -262,7 +269,7 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
         $layout = $this->checkout($this->layout);
 
         $action = $this->getEntityProvider()->post('/action/layout/' . $layout->layoutId, [
-            'triggerType' => 'touch',
+            'triggerType' => 'webhook',
             'actionType' => 'previous',
             'target' => 'screen'
         ]);
@@ -279,8 +286,7 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
 
         // check if one action remains with our Layout Id.
         $actions = $this->getEntityProvider()->get('/action', ['sourceId' => $layout->layoutId]);
-        // should be only 2 left - created during setup, actions persist on checkout (which we also check here).
-        $this->assertSame(2, count($actions));
+        $this->assertSame(0, count($actions));
     }
 
     /**
@@ -297,6 +303,8 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
         $layout = $this->checkout($this->layout);
         $sourceId = null;
         $targetId = null;
+        $widgetId = null;
+        $layoutCode = null;
 
         if ($source === 'layout') {
             $sourceId = $layout->layoutId;
@@ -347,6 +355,16 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
             if ($source !== 'layout' && $triggerCode != null) {
                 $this->assertSame('Trigger code can only be set with source set to Layout', $body->error);
             }
+
+            // navWidget without widgetId
+            if ($actionType === 'navWidget' && $widgetId == null) {
+                $this->assertSame('Please select a Widget', $body->error);
+            }
+
+            // navLayout without layoutCode
+            if ($actionType === 'navLayout' && $layoutCode == null) {
+                $this->assertSame('Please enter Layout code', $body->error);
+            }
         }
     }
 
@@ -364,11 +382,23 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
             'Wrong target' => ['layout', 'touch', 'trigger code', 'next', 'world'],
             'Target region without targetId' => ['layout', 'touch', 'trigger code', 'next', 'region'],
             'Trigger Code for non layout source' => ['region', 'touch', 'trigger code', 'next', 'screen'],
+            'Navigate to Widget without widgetId' => ['layout', 'touch', null, 'navWidget', 'screen'],
+            'Navigate to Layout without layoutCode' => ['layout', 'touch', null, 'navLayout', 'screen']
         ];
     }
 
     public function testCopyLayoutWithActions()
     {
+        $layout = $this->checkout($this->layout);
+
+        $this->getEntityProvider()->post('/action/layout/' . $layout->layoutId, [
+            'triggerType' => 'touch',
+            'actionType' => 'previous',
+            'target' => 'screen'
+        ]);
+
+        $this->layout = $this->publish($this->layout);
+
         $response = $this->sendRequest('POST', '/layout/copy/' . $this->layout->layoutId, ['copyMediaFiles' => 0, 'name' =>  Random::generateString()]);
 
         $this->assertSame(200, $response->getStatusCode());

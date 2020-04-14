@@ -1853,7 +1853,7 @@ class Schedule extends Base
                 $type = ScheduleReminder::$MONTH;
                 break;
             default:
-                throw new NotFoundException('Unknown type');
+                throw new NotFoundException(__('Unknown type'));
         }
 
         // Remind seconds that we will subtract/add from schedule fromDt/toDt to get reminderDt

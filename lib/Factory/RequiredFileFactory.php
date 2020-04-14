@@ -94,7 +94,7 @@ class RequiredFileFactory extends BaseFactory
         $result = $this->query(['displayId' => $displayId, 'type' => 'L', 'itemId' => $layoutId]);
 
         if (count($result) <= 0)
-            throw new NotFoundException('Required file not found for Display and Layout Combination');
+            throw new NotFoundException(__('Required file not found for Display and Layout Combination'));
 
         return $result[0];
     }
@@ -110,7 +110,7 @@ class RequiredFileFactory extends BaseFactory
         $result = $this->query(['displayId' => $displayId, 'type' => 'M', 'itemId' => $mediaId]);
 
         if (count($result) <= 0)
-            throw new NotFoundException('Required file not found for Display and Media Combination');
+            throw new NotFoundException(__('Required file not found for Display and Media Combination'));
 
         return $result[0];
     }
@@ -126,7 +126,7 @@ class RequiredFileFactory extends BaseFactory
         $result = $this->query(['displayId' => $displayId, 'type' => 'W', 'itemId' => $widgetId]);
 
         if (count($result) <= 0)
-            throw new NotFoundException('Required file not found for Display and Layout Widget');
+            throw new NotFoundException(__('Required file not found for Display and Layout Widget'));
 
         return $result[0];
     }

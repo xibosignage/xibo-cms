@@ -404,6 +404,7 @@ class State implements Middleware
                     $c->get('layoutFactory'),
                     $c->get('regionFactory'),
                     $c->get('widgetFactory'),
+                    $c->get('moduleFactory'),
                     $c->get('view')
                 );
             },
@@ -1003,6 +1004,7 @@ class State implements Middleware
                     $c->get('layoutFactory'),
                     $c->get('userGroupFactory'),
                     $c->get('transitionFactory'),
+                    $c->get('userFactory'),
                     $c->get('view')
                 );
             },

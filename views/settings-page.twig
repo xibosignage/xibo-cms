@@ -1086,6 +1086,26 @@
                             <div class="tab-pane" id="tab_users">
                                 <h3 class="section-heading">{% trans "Users" %}</h3>
 
+                                {% if theme.isSettingVisible("SYSTEM_USER") %}
+                                    {% set title %}{% trans "System User" %}{% endset %}
+                                    {% set helpText %}{% trans "The system User for this CMS" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("SYSTEM_USER") %}
+                                        {% set attributes = [
+                                            { name: "data-width", value: "100%" },
+                                            { name: "data-search-url", value: url_for("user.search") },
+                                            { name: "data-search-term", value: "userName" },
+                                            { name: "data-search-term-tags", value: "tags" },
+                                            { name: "data-id-property", value: "userId" },
+                                            { name: "data-text-property", value: "userName" },
+                                            { name: "data-filter-options", value: '{"userTypeId":"1"}' }
+                                        ] %}
+                                        {{ forms.dropdown("SYSTEM_USER", "single", title, systemUser.userId, [systemUser], "userId", "userName", helpText, "pagedSelect", "", "", "", attributes) }}
+                                    {% else %}
+                                        {{ forms.disabled("SYSTEM_USER", title, theme.getSetting("SYSTEM_USER"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
                                 {% if theme.isSettingVisible("DEFAULT_USERGROUP") %}
                                     {% set title %}{% trans "Default User Group" %}{% endset %}
                                     {% set helpText %}{% trans "The default User Group for new Users" %}{% endset %}

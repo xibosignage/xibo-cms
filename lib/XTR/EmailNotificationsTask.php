@@ -78,8 +78,9 @@ class EmailNotificationsTask implements TaskInterface
             $this->log->debug('Notification found: ' . $notification->notificationId);
 
             // System notification for the system user
-            if ($notification->isSystem == 1 && $notification->userId == 0)
-                $notification->email = $this->user->email;
+            if ($notification->isSystem == 1 && $notification->userId == 0) {
+                $notification->email = $this->user->email ?? $this->config->getSetting('mail_to');
+            }
 
             if ($notification->email != '') {
 

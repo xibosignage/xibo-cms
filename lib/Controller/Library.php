@@ -1412,7 +1412,7 @@ class Library extends Base
         }
 
         if ($widget->getModule()->regionSpecific == 1) {
-            throw new NotFoundException('Cannot download region specific module');
+            throw new NotFoundException(__('Cannot download region specific module'));
         }
 
         $this->getLog()->debug('About to call download for Widget: ' . $widget->getModuleType());

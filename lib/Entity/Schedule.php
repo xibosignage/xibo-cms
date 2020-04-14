@@ -1069,7 +1069,7 @@ class Schedule implements \JsonSerializable
                     break;
 
                 default:
-                    throw new InvalidArgumentException('Invalid recurrence type', 'recurrenceType');
+                    throw new InvalidArgumentException(__('Invalid recurrence type'), 'recurrenceType');
             }
 
             // after we have added the appropriate amount, are we still valid
@@ -1318,7 +1318,7 @@ class Schedule implements \JsonSerializable
                 break;
 
             default:
-                throw new InvalidArgumentException('Invalid recurrence type', 'recurrenceType');
+                throw new InvalidArgumentException(__('Invalid recurrence type'), 'recurrenceType');
         }
 
         // toDt is set so that we get two next events from now
@@ -1349,7 +1349,7 @@ class Schedule implements \JsonSerializable
         }
 
         // No next event exist
-        throw new NotFoundException('reminderDt not found as next event does not exist');
+        throw new NotFoundException(__('reminderDt not found as next event does not exist'));
     }
 
     /**
