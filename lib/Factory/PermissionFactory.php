@@ -78,7 +78,7 @@ class PermissionFactory extends BaseFactory
         $results = $this->getStore()->select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => $entity]);
 
         if (count($results) <= 0) {
-            throw new InvalidArgumentException('Entity not found: ' . $entity);
+            throw new InvalidArgumentException(__('Entity not found: ') . $entity);
         }
 
         $permission = $this->createEmpty();
@@ -110,7 +110,7 @@ class PermissionFactory extends BaseFactory
         $results = $this->getStore()->select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => $entity]);
 
         if (count($results) <= 0) {
-            throw new InvalidArgumentException('Entity not found: ' . $entity);
+            throw new InvalidArgumentException(__('Entity not found: ') . $entity);
         }
 
         $permission = $this->createEmpty();

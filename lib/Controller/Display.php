@@ -2088,7 +2088,7 @@ class Display extends Base
         $cmsKey = $this->getConfig()->getSetting('SERVER_KEY');
 
         if ($user_code == '') {
-            throw new InvalidArgumentException('Code cannot be empty', 'code');
+            throw new InvalidArgumentException(__('Code cannot be empty'), 'code');
         }
 
         $guzzle = new Client();
@@ -2113,7 +2113,7 @@ class Display extends Base
             ]);
         } catch (\Exception $e) {
             $this->getLog()->debug($e->getMessage());
-            throw new InvalidArgumentException('Provided user_code does not exist', 'user_code');
+            throw new InvalidArgumentException(__('Provided user_code does not exist'), 'user_code');
         }
 
         return $this->render($request, $response);
@@ -2188,7 +2188,7 @@ class Display extends Base
         }
 
         if (empty($display->xmrChannel)) {
-            throw new InvalidArgumentException('XMR is not configured for this Display', 'xmrChannel');
+            throw new InvalidArgumentException(__('XMR is not configured for this Display'), 'xmrChannel');
         }
 
         $this->playerAction->sendAction($display, new LicenceCheckAction());

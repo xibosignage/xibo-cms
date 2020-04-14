@@ -66,7 +66,7 @@ class PageFactory extends BaseFactory
         $pages = $this->query(null, ['pageId' => $pageId, 'disableUserCheck' => 1]);
 
         if (count($pages) <= 0)
-            throw new NotFoundException('Unknown Route');
+            throw new NotFoundException(__('Unknown Route'));
 
         return $pages[0];
     }
@@ -82,7 +82,7 @@ class PageFactory extends BaseFactory
         $pages = $this->query(null, array('name' => $page, 'disableUserCheck' => 1));
 
         if (count($pages) <= 0)
-            throw new NotFoundException('Unknown Route');
+            throw new NotFoundException(__('Unknown Route'));
 
         return $pages[0];
     }

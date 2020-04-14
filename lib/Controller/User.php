@@ -927,7 +927,7 @@ class User extends Base
 
         // System User
         if ($user->userId == $this->getConfig()->getSetting('SYSTEM_USER')) {
-            throw new InvalidArgumentException('This User is set as System User and cannot be deleted.', 'userId');
+            throw new InvalidArgumentException(__('This User is set as System User and cannot be deleted.'), 'userId');
         }
 
         if (!$this->getUser()->checkDeleteable($user)) {

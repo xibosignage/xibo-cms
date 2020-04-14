@@ -315,7 +315,7 @@ trait ReportTrait
                 ]);
             } else {
                 $this->getLog()->error('Unknown Grouping Selected ' . $groupByFilter);
-                throw new InvalidArgumentException('Unknown Grouping ' . $groupByFilter, 'groupByFilter');
+                throw new InvalidArgumentException(__('Unknown Grouping ') . $groupByFilter, 'groupByFilter');
             }
         }
 

@@ -114,19 +114,19 @@ if (isset($_GET['file'])) {
     try {
         /** @var \Xibo\Entity\RequiredFile $file */
         if (!isset($_REQUEST['displayId']) || !isset($_REQUEST['type']) || !isset($_REQUEST['itemId']))
-            throw new NotFoundException('Missing params');
+            throw new NotFoundException(__('Missing params'));
 
         // Get the player nonce from the cache
         /** @var \Stash\Item $nonce */
         $nonce = $container->get('pool')->getItem('/display/nonce/' . $_REQUEST['displayId']);
 
         if ($nonce->isMiss()) {
-            throw new NotFoundException('No nonce cache');
+            throw new NotFoundException(__('No nonce cache'));
         }
 
         // Check the nonce against the nonce we received
         if ($nonce->get() != $_REQUEST['file']) {
-            throw new NotFoundException('Nonce mismatch');
+            throw new NotFoundException(__('Nonce mismatch'));
         }
 
         switch ($_REQUEST['type']) {
@@ -139,7 +139,7 @@ if (isset($_GET['file'])) {
                 break;
 
             default:
-                throw new NotFoundException('Unknown type');
+                throw new NotFoundException(__('Unknown type'));
         }
 
         // Only log bandwidth under certain conditions
