@@ -489,7 +489,7 @@ class User implements \JsonSerializable
 
         $this->getLog()->debug(sprintf('UserOption %s not found', $option));
 
-        throw new NotFoundException('User Option not found');
+        throw new NotFoundException(__('User Option not found'));
     }
 
     /**
@@ -805,11 +805,8 @@ class User implements \JsonSerializable
             'oldUserId' => $this->userId
         ]);
 
-        // Reassign oAuth Clients
-        $this->getStore()->update('UPDATE `oauth_clients` SET userId = :userId WHERE userId = :oldUserId', [
-            'userId' => $user->userId,
-            'oldUserId' => $this->userId
-        ]);
+        // Delete oAuth Clients - security concern
+        $this->getStore()->update('DELETE FROM `oauth_clients` WHERE userId = :userId', ['userId' => $this->userId]);
 
         // Load again
         $this->loaded = false;
@@ -856,11 +853,11 @@ class User implements \JsonSerializable
 
         // System User
         if ($this->userId == $this->configService->getSetting('SYSTEM_USER') &&  $this->userTypeId != 1) {
-            throw new InvalidArgumentException('This User is set as System User and needs to be super admin', 'userId');
+            throw new InvalidArgumentException(__('This User is set as System User and needs to be super admin'), 'userId');
         }
 
         if ($this->userId == $this->configService->getSetting('SYSTEM_USER') &&  $this->retired === 1) {
-            throw new InvalidArgumentException('This User is set as System User and cannot be retired', 'userId');
+            throw new InvalidArgumentException(__('This User is set as System User and cannot be retired'), 'userId');
         }
     }
 
@@ -869,6 +866,7 @@ class User implements \JsonSerializable
      * @param array $options
      * @throws DuplicateEntityException
      * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
     public function save($options = [])
     {
