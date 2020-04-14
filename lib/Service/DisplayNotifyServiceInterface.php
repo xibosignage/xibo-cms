@@ -66,9 +66,9 @@ interface DisplayNotifyServiceInterface
 
     /**
      * Notify by CampaignId
-     * @param array $campaignIds
+     * @param $campaignId
      */
-    public function notifyByCampaignId($campaignIds);
+    public function notifyByCampaignId($campaignId);
 
     /**
      * Notify by DataSetId

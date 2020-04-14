@@ -219,15 +219,13 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     }
 
     /** @inheritdoc */
-    public function notifyByCampaignId($campaignIds)
+    public function notifyByCampaignId($campaignId)
     {
-        foreach ($campaignIds as $campaignId) {
-            $this->log->debug('Notify by CampaignId ' . $campaignId);
+        $this->log->debug('Notify by CampaignId ' . $campaignId);
 
-            if (in_array('campaign_' . $campaignId, $this->keysProcessed)) {
-                $this->log->debug('Already processed ' . $campaignId . ' skipping this time.');
-                return;
-            }
+        if (in_array('campaign_' . $campaignId, $this->keysProcessed)) {
+            $this->log->debug('Already processed ' . $campaignId . ' skipping this time.');
+            return;
         }
 
         $sql = '
@@ -253,13 +251,13 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                INNER JOIN (
                   SELECT campaignId
                     FROM campaign
-                   WHERE campaign.campaignId IN (' . implode(',', $campaignIds) . ')
+                   WHERE campaign.campaignId = :activeCampaignId
                    UNION
                   SELECT DISTINCT parent.campaignId
                     FROM `lkcampaignlayout` child
                       INNER JOIN `lkcampaignlayout` parent
                       ON parent.layoutId = child.layoutId 
-                   WHERE child.campaignId IN (' . implode(',', $campaignIds) . ')
+                   WHERE child.campaignId = :activeCampaignId
                       
                ) campaigns
                ON campaigns.campaignId = `schedule`.campaignId
@@ -284,7 +282,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
              FROM `display`
                INNER JOIN `lkcampaignlayout`
                ON `lkcampaignlayout`.LayoutID = `display`.DefaultLayoutID
-             WHERE `lkcampaignlayout`.CampaignID IN (' . implode(',', $campaignIds) . ')
+             WHERE `lkcampaignlayout`.CampaignID = :activeCampaignId2
             UNION
             SELECT `lkdisplaydg`.displayId,
                 0 AS eventId, 
@@ -301,7 +299,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                 ON `lklayoutdisplaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId
                 INNER JOIN `lkcampaignlayout`
                 ON `lkcampaignlayout`.layoutId = `lklayoutdisplaygroup`.layoutId
-             WHERE `lkcampaignlayout`.campaignId IN (' . implode(',', $campaignIds) . ')
+             WHERE `lkcampaignlayout`.campaignId = :assignedCampaignId
         ';
 
         $currentDate = Carbon::now();
@@ -309,7 +307,10 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
 
         $params = [
             'fromDt' => $currentDate->subHour()->format('U'),
-            'toDt' => $rfLookAhead->format('U')
+            'toDt' => $rfLookAhead->format('U'),
+            'activeCampaignId' => $campaignId,
+            'activeCampaignId2' => $campaignId,
+            'assignedCampaignId' => $campaignId
         ];
 
         foreach ($this->store->select($sql, $params) as $row) {
@@ -333,7 +334,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                 }
             }
 
-            $this->log->debug('Campaigns ' . json_encode($campaignIds) .' change caused notify on displayId[' . $row['displayId'] . ']');
+            $this->log->debug('Campaign[' . $campaignId .'] change caused notify on displayId[' . $row['displayId'] . ']');
 
             $this->displayIds[] = $row['displayId'];
 
@@ -342,9 +343,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
             }
         }
 
-        foreach ($campaignIds as $campaignId) {
-            $this->keysProcessed[] = 'campaign_' . $campaignId;
-        }
+        $this->keysProcessed[] = 'campaign_' . $campaignId;
     }
 
     /** @inheritdoc */
@@ -657,12 +656,133 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                     layout.publishedStatusId = 1',
             ['code' => $code]);
 
+        // Populate the $campaignIdsToNotify array with campaignIds we need to notify
+        // if campaignId already exists in keysProcessed then don't process it again.
         foreach ($campaignIds as $row) {
-            $campaignIdsToNotify[] = (int)$row['campaignId'];
+            if (!in_array('campaign_' . (int)$row['campaignId'], $this->keysProcessed)) {
+                $campaignIdsToNotify[] = (int)$row['campaignId'];
+            } else {
+                $this->log->debug('Already processed Campaign ' . (int)$row['campaignId'] . ' skipping this time.');
+            }
         }
 
         $this->log->debug('Notify by Layout Code, found following Campaigns to notify: ' . json_encode($campaignIdsToNotify));
 
-        $this->notifyByCampaignId($campaignIdsToNotify);
+        // Get the Display Ids we need to notify
+        $sql = '
+            SELECT DISTINCT display.displayId, 
+                schedule.eventId, 
+                schedule.fromDt, 
+                schedule.toDt, 
+                schedule.recurrence_type AS recurrenceType,
+                schedule.recurrence_detail AS recurrenceDetail,
+                schedule.recurrence_range AS recurrenceRange,
+                schedule.recurrenceRepeatsOn,
+                schedule.lastRecurrenceWatermark,
+                schedule.dayPartId
+             FROM `schedule`
+               INNER JOIN `lkscheduledisplaygroup`
+               ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
+               INNER JOIN `lkdgdg`
+               ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
+               INNER JOIN `lkdisplaydg`
+               ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
+               INNER JOIN `display`
+               ON lkdisplaydg.DisplayID = display.displayID
+               INNER JOIN (
+                  SELECT campaignId
+                    FROM campaign
+                   WHERE campaign.campaignId IN (' . implode(',', $campaignIdsToNotify) . ')
+                   UNION
+                  SELECT DISTINCT parent.campaignId
+                    FROM `lkcampaignlayout` child
+                      INNER JOIN `lkcampaignlayout` parent
+                      ON parent.layoutId = child.layoutId 
+                   WHERE child.campaignId IN (' . implode(',', $campaignIdsToNotify) . ')
+                      
+               ) campaigns
+               ON campaigns.campaignId = `schedule`.campaignId
+             WHERE (
+                  (`schedule`.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
+                  OR `schedule`.recurrence_range >= :fromDt 
+                  OR (
+                    IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
+                  )
+              )
+            UNION
+            SELECT DISTINCT display.DisplayID,
+                0 AS eventId, 
+                0 AS fromDt, 
+                0 AS toDt, 
+                NULL AS recurrenceType, 
+                NULL AS recurrenceDetail,
+                NULL AS recurrenceRange,
+                NULL AS recurrenceRepeatsOn,
+                NULL AS lastRecurrenceWatermark,
+                NULL AS dayPartId
+             FROM `display`
+               INNER JOIN `lkcampaignlayout`
+               ON `lkcampaignlayout`.LayoutID = `display`.DefaultLayoutID
+             WHERE `lkcampaignlayout`.CampaignID IN (' . implode(',', $campaignIdsToNotify) . ')
+            UNION
+            SELECT `lkdisplaydg`.displayId,
+                0 AS eventId, 
+                0 AS fromDt, 
+                0 AS toDt, 
+                NULL AS recurrenceType, 
+                NULL AS recurrenceDetail,
+                NULL AS recurrenceRange,
+                NULL AS recurrenceRepeatsOn,
+                NULL AS lastRecurrenceWatermark,
+                NULL AS dayPartId
+              FROM `lkdisplaydg`
+                INNER JOIN `lklayoutdisplaygroup`
+                ON `lklayoutdisplaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId
+                INNER JOIN `lkcampaignlayout`
+                ON `lkcampaignlayout`.layoutId = `lklayoutdisplaygroup`.layoutId
+             WHERE `lkcampaignlayout`.campaignId IN (' . implode(',', $campaignIdsToNotify) . ')
+        ';
+
+        $currentDate = Carbon::now();
+        $rfLookAhead = $currentDate->copy()->addSeconds($this->config->getSetting('REQUIRED_FILES_LOOKAHEAD'));
+
+        $params = [
+            'fromDt' => $currentDate->subHour()->format('U'),
+            'toDt' => $rfLookAhead->format('U')
+        ];
+
+        foreach ($this->store->select($sql, $params) as $row) {
+
+            // Don't process if the displayId is already in the collection (there is little point in running the
+            // extra query)
+            if (in_array($row['displayId'], $this->displayIds)) {
+                continue;
+            }
+
+            // Is this schedule active?
+            if ($row['eventId'] != 0) {
+                $scheduleEvents = $this->scheduleFactory
+                    ->createEmpty()
+                    ->hydrate($row)
+                    ->getEvents($currentDate, $rfLookAhead);
+
+                if (count($scheduleEvents) <= 0) {
+                    $this->log->debug('Skipping eventId ' . $row['eventId'] . ' because it doesnt have any active events in the window');
+                    continue;
+                }
+            }
+
+            $this->log->debug(sprintf('Saving Layout with code %s, caused notify on displayId[' . $row['displayId'] . ']', $code));
+
+            $this->displayIds[] = $row['displayId'];
+
+            if ($this->collectRequired) {
+                $this->displayIdsRequiringActions[] = $row['displayId'];
+            }
+        }
+
+        foreach ($campaignIdsToNotify as $campaignId) {
+            $this->keysProcessed[] = 'campaign_' . $campaignId;
+        }
     }
 }
