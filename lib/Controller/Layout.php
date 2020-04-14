@@ -560,7 +560,7 @@ class Layout extends Base
         if (!$isTemplate) {
             foreach ($tagsArray as $tag) {
                 if ($tag === 'template') {
-                    throw new InvalidArgumentException('Cannot assign a Template tag to a Layout, to create a template use the Save Template button instead.', 'tags');
+                    throw new InvalidArgumentException(__('Cannot assign a Template tag to a Layout, to create a template use the Save Template button instead.'), 'tags');
                 }
             }
         }
@@ -1767,7 +1767,7 @@ class Layout extends Base
 
         // Make sure we're not a draft
         if ($layout->isChild()) {
-            throw new InvalidArgumentException('Cannot copy a Draft Layout', 'layoutId');
+            throw new InvalidArgumentException(__('Cannot copy a Draft Layout'), 'layoutId');
         }
 
         // Load the layout for Copy
@@ -1935,7 +1935,7 @@ class Layout extends Base
 
         // Make sure we're not a draft
         if ($layout->isChild())
-            throw new InvalidArgumentException('Cannot manage tags on a Draft Layout', 'layoutId');
+            throw new InvalidArgumentException(__('Cannot manage tags on a Draft Layout'), 'layoutId');
 
         $tags = $sanitizedParams->getArray('tag');
 
@@ -2011,7 +2011,7 @@ class Layout extends Base
 
         // Make sure we're not a draft
         if ($layout->isChild())
-            throw new InvalidArgumentException('Cannot manage tags on a Draft Layout', 'layoutId');
+            throw new InvalidArgumentException(__('Cannot manage tags on a Draft Layout'), 'layoutId');
 
         $tags = $sanitizedParams->getArray('tag');
 
@@ -2139,7 +2139,7 @@ class Layout extends Base
 
         // Make sure we're not a draft
         if ($layout->isChild())
-            throw new InvalidArgumentException('Cannot manage tags on a Draft Layout', 'layoutId');
+            throw new InvalidArgumentException(__('Cannot manage tags on a Draft Layout'), 'layoutId');
 
         // Render the form
         $this->getState()->template = 'layout-form-export';
@@ -2175,7 +2175,7 @@ class Layout extends Base
 
         // Make sure we're not a draft
         if ($layout->isChild()) {
-            throw new InvalidArgumentException('Cannot manage tags on a Draft Layout', 'layoutId');
+            throw new InvalidArgumentException(__('Cannot manage tags on a Draft Layout'), 'layoutId');
         }
 
         // Make sure our file name is reasonable
@@ -2303,7 +2303,7 @@ class Layout extends Base
         $widget = $this->moduleFactory->createWithMedia($media);
 
         if ($widget->getModule()->regionSpecific == 1) {
-            throw new NotFoundException('Cannot download non-region specific module');
+            throw new NotFoundException(__('Cannot download non-region specific module'));
         }
 
         $response = $widget->download($request, $response);
@@ -2428,6 +2428,7 @@ class Layout extends Base
         $draft->publishedStatusId = 2; // Draft
         $draft->publishedStatus = __('Draft');
         $draft->autoApplyTransitions = $layout->autoApplyTransitions;
+        $draft->code = $layout->code;
 
         // Do not copy any of the tags, these will belong on the parent and are not editable from the draft.
         $draft->tags = [];
@@ -2707,6 +2708,27 @@ class Layout extends Base
             'message' => sprintf(__('Discarded %s'), $draft->layout),
             'data' => $layout
         ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Query the Database for all Code identifiers assigned to Layouts.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return Response
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function getLayoutCodes(Request $request, Response $response)
+    {
+        $this->getState()->template = 'grid';
+        $codes = $this->layoutFactory->getLayoutCodes($this->gridRenderFilter([], $request));
+
+        // Store the table rows
+        $this->getState()->recordsTotal = $this->layoutFactory->countLast();
+        $this->getState()->setData($codes);
 
         return $this->render($request, $response);
     }

@@ -199,6 +199,23 @@ class Action  extends Base
         $actions = $this->actionFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
 
         foreach ($actions as $action) {
+            $action->widgetName = null;
+            $action->regionName = null;
+
+            if ($action->actionType === 'navWidget' && $action->widgetId != null) {
+                $widget = $this->widgetFactory->loadByWidgetId($action->widgetId);
+                $module = $this->moduleFactory->createWithWidget($widget);
+
+                // dynamic field to display in the grid instead of widgetId
+                $action->widgetName = $module->getName();
+            }
+
+            if ($action->target === 'region' && $action->targetId != null) {
+                $region = $this->regionFactory->getById($action->targetId);
+
+                // dynamic field to display in the grid instead of regionId
+                $action->regionName = $region->name;
+            }
 
             if ($this->isApi($request)) {
                 continue;
@@ -277,7 +294,6 @@ class Action  extends Base
             'id' => $id,
             'regions' => $layout->regions,
             'widgets' => $widgets,
-            'layoutCodes' => $this->layoutFactory->getLayoutCodes()
         ]);
 
         return $this->render($request, $response);
@@ -469,6 +485,12 @@ class Action  extends Base
             throw new InvalidArgumentException(__('Layout is not checked out'), 'statusId');
         }
 
+        try {
+            $code = (($action->layoutCode != null) ? [$this->layoutFactory->getByCode($action->layoutCode)] : []);
+        } catch (NotFoundException $notFoundException) {
+            $code = [];
+        }
+
         $this->getState()->template = 'action-form-edit';
         $this->getState()->setData([
             'help' => $this->getHelp()->link('Action', 'Edit'),
@@ -476,7 +498,7 @@ class Action  extends Base
             'source' => $action->source,
             'regions' => $layout->regions,
             'widgets' => $widgets,
-            'layoutCodes' => $this->layoutFactory->getLayoutCodes()
+            'layout' => $code
         ]);
 
         return $this->render($request, $response);
@@ -738,7 +760,7 @@ class Action  extends Base
         } elseif (strtolower($source) === 'widget') {
             $object = $this->widgetFactory->getById($sourceId);
         } else {
-            throw new InvalidArgumentException('Provided source is invalid. ' , 'source');
+            throw new InvalidArgumentException(__('Provided source is invalid. ') , 'source');
         }
 
         return $object;

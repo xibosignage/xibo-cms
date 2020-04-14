@@ -432,43 +432,13 @@ class Soap
         // workout if any of the layouts we have in our list has Actions pointing to another Layout.
         foreach ($layouts as $layoutId) {
             $layout = $this->layoutFactory->loadById($layoutId);
+            $actionLayoutIds = $layout->getActionLayoutIds();
 
-            foreach ($layout->actions as $action) {
-                if ($action->actionType === 'navLayout') {
-                    $interactiveLayout = $this->layoutFactory->getByCode($action->layoutCode);
-                    if (!in_array($interactiveLayout->layoutId, $interactiveLayoutIds) && !in_array($interactiveLayout->layoutId, $layouts)) {
-                        $interactiveLayoutIds[] = $interactiveLayout->layoutId;
-                    }
-                }
-            }
-            /** @var Region[] $allRegions */
-            $allRegions = array_merge($layout->regions, $layout->drawers);
-
-            foreach ($allRegions as $region) {
-                foreach ($region->actions as $action) {
-                    if ($action->actionType === 'navLayout') {
-                        $interactiveLayout = $this->layoutFactory->getByCode($action->layoutCode);
-                        if (!in_array($interactiveLayout->layoutId, $interactiveLayoutIds) && !in_array($interactiveLayout->layoutId, $layouts)) {
-                            $interactiveLayoutIds[] = $interactiveLayout->layoutId;
-                        }
-                    }
-                }
-
-                foreach ($region->getPlaylist()->widgets as $widget) {
-                    foreach ($widget->actions as $action) {
-                        if ($action->actionType === 'navLayout') {
-                            $interactiveLayout = $this->layoutFactory->getByCode($action->layoutCode);
-                            if (!in_array($interactiveLayout->layoutId, $interactiveLayoutIds) && !in_array($interactiveLayout->layoutId, $layouts)) {
-                                $interactiveLayoutIds[] = $interactiveLayout->layoutId;
-                            }
-                        }
-                    }
-                }
+            // merge the Action layouts to our array, we need the player to download all resources on them
+            if (!empty($actionLayoutIds) ) {
+                $layouts = array_unique(array_merge($layouts, $actionLayoutIds));
             }
         }
-
-        // merge the Action layouts to our array, we need the player to download all resources on them
-        $layouts = array_merge($layouts, $interactiveLayoutIds);
 
         // Create a comma separated list to pass into the query which gets file nodes
         $layoutIdList = implode(',', $layouts);
@@ -1674,7 +1644,7 @@ class Soap
 
                     // If the duration is enormous, then we have an eroneous message from the player
                     if ($duration > (86400 * 365)) {
-                        throw new InvalidArgumentException('Dates are too far apart', 'duration');
+                        throw new InvalidArgumentException(__('Dates are too far apart'), 'duration');
                     }
                 }
 
