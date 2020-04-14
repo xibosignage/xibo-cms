@@ -219,13 +219,15 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     }
 
     /** @inheritdoc */
-    public function notifyByCampaignId($campaignId)
+    public function notifyByCampaignId($campaignIds)
     {
-        $this->log->debug('Notify by CampaignId ' . $campaignId);
+        foreach ($campaignIds as $campaignId) {
+            $this->log->debug('Notify by CampaignId ' . $campaignId);
 
-        if (in_array('campaign_' . $campaignId, $this->keysProcessed)) {
-            $this->log->debug('Already processed ' . $campaignId . ' skipping this time.');
-            return;
+            if (in_array('campaign_' . $campaignId, $this->keysProcessed)) {
+                $this->log->debug('Already processed ' . $campaignId . ' skipping this time.');
+                return;
+            }
         }
 
         $sql = '
@@ -251,13 +253,13 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                INNER JOIN (
                   SELECT campaignId
                     FROM campaign
-                   WHERE campaign.campaignId = :activeCampaignId
+                   WHERE campaign.campaignId IN (' . implode(',', $campaignIds) . ')
                    UNION
                   SELECT DISTINCT parent.campaignId
                     FROM `lkcampaignlayout` child
                       INNER JOIN `lkcampaignlayout` parent
                       ON parent.layoutId = child.layoutId 
-                   WHERE child.campaignId = :activeCampaignId
+                   WHERE child.campaignId IN (' . implode(',', $campaignIds) . ')
                       
                ) campaigns
                ON campaigns.campaignId = `schedule`.campaignId
@@ -282,7 +284,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
              FROM `display`
                INNER JOIN `lkcampaignlayout`
                ON `lkcampaignlayout`.LayoutID = `display`.DefaultLayoutID
-             WHERE `lkcampaignlayout`.CampaignID = :activeCampaignId2
+             WHERE `lkcampaignlayout`.CampaignID IN (' . implode(',', $campaignIds) . ')
             UNION
             SELECT `lkdisplaydg`.displayId,
                 0 AS eventId, 
@@ -299,7 +301,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                 ON `lklayoutdisplaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId
                 INNER JOIN `lkcampaignlayout`
                 ON `lkcampaignlayout`.layoutId = `lklayoutdisplaygroup`.layoutId
-             WHERE `lkcampaignlayout`.campaignId = :assignedCampaignId
+             WHERE `lkcampaignlayout`.campaignId IN (' . implode(',', $campaignIds) . ')
         ';
 
         $currentDate = Carbon::now();
@@ -307,10 +309,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
 
         $params = [
             'fromDt' => $currentDate->subHour()->format('U'),
-            'toDt' => $rfLookAhead->format('U'),
-            'activeCampaignId' => $campaignId,
-            'activeCampaignId2' => $campaignId,
-            'assignedCampaignId' => $campaignId
+            'toDt' => $rfLookAhead->format('U')
         ];
 
         foreach ($this->store->select($sql, $params) as $row) {
@@ -334,15 +333,18 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                 }
             }
 
-            $this->log->debug('Campaign[' . $campaignId .'] change caused notify on displayId[' . $row['displayId'] . ']');
+            $this->log->debug('Campaigns ' . json_encode($campaignIds) .' change caused notify on displayId[' . $row['displayId'] . ']');
 
             $this->displayIds[] = $row['displayId'];
 
-            if ($this->collectRequired)
+            if ($this->collectRequired) {
                 $this->displayIdsRequiringActions[] = $row['displayId'];
+            }
         }
 
-        $this->keysProcessed[] = 'campaign_' . $campaignId;
+        foreach ($campaignIds as $campaignId) {
+            $this->keysProcessed[] = 'campaign_' . $campaignId;
+        }
     }
 
     /** @inheritdoc */
@@ -626,6 +628,8 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
 
     public function notifyByLayoutCode($code)
     {
+        $campaignIdsToNotify = [];
+
         // get the Campaign Ids that are linked to our Layout specific campaign via Action navLayout with provided code
         $campaignIds = $this->store->select(
             'SELECT DISTINCT campaignId
@@ -653,10 +657,12 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                     layout.publishedStatusId = 1',
             ['code' => $code]);
 
-        $this->log->debug('Notify by Layout Code, found following Campaigns to notify: ' . json_encode($campaignIds));
-
         foreach ($campaignIds as $row) {
-            $this->notifyByCampaignId($row['campaignId']);
+            $campaignIdsToNotify[] = (int)$row['campaignId'];
         }
+
+        $this->log->debug('Notify by Layout Code, found following Campaigns to notify: ' . json_encode($campaignIdsToNotify));
+
+        $this->notifyByCampaignId($campaignIdsToNotify);
     }
 }
