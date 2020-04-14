@@ -625,48 +625,15 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         $this->keysProcessed[] = 'playlist_' . $playlistId;
     }
 
+    /** @inheritdoc */
     public function notifyByLayoutCode($code)
     {
-        $campaignIdsToNotify = [];
-
-        // get the Campaign Ids that are linked to our Layout specific campaign via Action navLayout with provided code
-        $campaignIds = $this->store->select(
-            'SELECT DISTINCT campaignId
-                    FROM layout
-                    INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
-                    INNER JOIN action on layout.layoutId = action.sourceId
-                WHERE action.layoutCode = :code AND layout.publishedStatusId = 1
-              UNION
-                SELECT DISTINCT campaignId
-                  FROM layout
-                       INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
-                       INNER JOIN region ON region.layoutId = layout.layoutId
-                       INNER JOIN action on region.regionId = action.sourceId
-                WHERE action.layoutCode = :code AND layout.publishedStatusId = 1
-              UNION
-                SELECT DISTINCT campaignId
-                  FROM layout
-                       INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
-                       INNER JOIN region ON region.layoutId = layout.layoutId
-                       INNER JOIN playlist ON playlist.regionId = region.regionId
-                       INNER JOIN widget on playlist.playlistId = widget.playlistId
-                       INNER JOIN action on widget.widgetId = action.sourceId
-                WHERE
-                    action.layoutCode = :code AND
-                    layout.publishedStatusId = 1',
-            ['code' => $code]);
-
-        // Populate the $campaignIdsToNotify array with campaignIds we need to notify
-        // if campaignId already exists in keysProcessed then don't process it again.
-        foreach ($campaignIds as $row) {
-            if (!in_array('campaign_' . (int)$row['campaignId'], $this->keysProcessed)) {
-                $campaignIdsToNotify[] = (int)$row['campaignId'];
-            } else {
-                $this->log->debug('Already processed Campaign ' . (int)$row['campaignId'] . ' skipping this time.');
-            }
+        if (in_array('layoutCode_' . $code, $this->keysProcessed)) {
+            $this->log->debug('Already processed ' . $code . ' skipping this time.');
+            return;
         }
 
-        $this->log->debug('Notify by Layout Code, found following Campaigns to notify: ' . json_encode($campaignIdsToNotify));
+        $this->log->debug('Notify by Layout Code: ' . $code);
 
         // Get the Display Ids we need to notify
         $sql = '
@@ -690,16 +657,29 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                INNER JOIN `display`
                ON lkdisplaydg.DisplayID = display.displayID
                INNER JOIN (
-                  SELECT campaignId
-                    FROM campaign
-                   WHERE campaign.campaignId IN (' . implode(',', $campaignIdsToNotify) . ')
-                   UNION
-                  SELECT DISTINCT parent.campaignId
-                    FROM `lkcampaignlayout` child
-                      INNER JOIN `lkcampaignlayout` parent
-                      ON parent.layoutId = child.layoutId 
-                   WHERE child.campaignId IN (' . implode(',', $campaignIdsToNotify) . ')
-                      
+                  SELECT DISTINCT campaignId
+                        FROM layout
+                        INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
+                        INNER JOIN action on layout.layoutId = action.sourceId
+                    WHERE action.layoutCode = :code AND layout.publishedStatusId = 1
+                  UNION
+                    SELECT DISTINCT campaignId
+                      FROM layout
+                           INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
+                           INNER JOIN region ON region.layoutId = layout.layoutId
+                           INNER JOIN action on region.regionId = action.sourceId
+                    WHERE action.layoutCode = :code AND layout.publishedStatusId = 1
+                  UNION
+                    SELECT DISTINCT campaignId
+                      FROM layout
+                           INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
+                           INNER JOIN region ON region.layoutId = layout.layoutId
+                           INNER JOIN playlist ON playlist.regionId = region.regionId
+                           INNER JOIN widget on playlist.playlistId = widget.playlistId
+                           INNER JOIN action on widget.widgetId = action.sourceId
+                    WHERE
+                        action.layoutCode = :code AND
+                        layout.publishedStatusId = 1
                ) campaigns
                ON campaigns.campaignId = `schedule`.campaignId
              WHERE (
@@ -723,7 +703,30 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
              FROM `display`
                INNER JOIN `lkcampaignlayout`
                ON `lkcampaignlayout`.LayoutID = `display`.DefaultLayoutID
-             WHERE `lkcampaignlayout`.CampaignID IN (' . implode(',', $campaignIdsToNotify) . ')
+             WHERE `lkcampaignlayout`.CampaignID IN (
+                  SELECT DISTINCT campaignId
+                        FROM layout
+                        INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
+                        INNER JOIN action on layout.layoutId = action.sourceId
+                    WHERE action.layoutCode = :code AND layout.publishedStatusId = 1
+                  UNION
+                    SELECT DISTINCT campaignId
+                      FROM layout
+                           INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
+                           INNER JOIN region ON region.layoutId = layout.layoutId
+                           INNER JOIN action on region.regionId = action.sourceId
+                    WHERE action.layoutCode = :code AND layout.publishedStatusId = 1
+                  UNION
+                    SELECT DISTINCT campaignId
+                      FROM layout
+                           INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
+                           INNER JOIN region ON region.layoutId = layout.layoutId
+                           INNER JOIN playlist ON playlist.regionId = region.regionId
+                           INNER JOIN widget on playlist.playlistId = widget.playlistId
+                           INNER JOIN action on widget.widgetId = action.sourceId
+                    WHERE
+                        action.layoutCode = :code AND layout.publishedStatusId = 1
+                    )
             UNION
             SELECT `lkdisplaydg`.displayId,
                 0 AS eventId, 
@@ -740,7 +743,30 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                 ON `lklayoutdisplaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId
                 INNER JOIN `lkcampaignlayout`
                 ON `lkcampaignlayout`.layoutId = `lklayoutdisplaygroup`.layoutId
-             WHERE `lkcampaignlayout`.campaignId IN (' . implode(',', $campaignIdsToNotify) . ')
+             WHERE `lkcampaignlayout`.campaignId IN ( 
+                  SELECT DISTINCT campaignId
+                        FROM layout
+                        INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
+                        INNER JOIN action on layout.layoutId = action.sourceId
+                    WHERE action.layoutCode = :code AND layout.publishedStatusId = 1
+                  UNION
+                    SELECT DISTINCT campaignId
+                      FROM layout
+                           INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
+                           INNER JOIN region ON region.layoutId = layout.layoutId
+                           INNER JOIN action on region.regionId = action.sourceId
+                    WHERE action.layoutCode = :code AND layout.publishedStatusId = 1
+                  UNION
+                    SELECT DISTINCT campaignId
+                      FROM layout
+                           INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
+                           INNER JOIN region ON region.layoutId = layout.layoutId
+                           INNER JOIN playlist ON playlist.regionId = region.regionId
+                           INNER JOIN widget on playlist.playlistId = widget.playlistId
+                           INNER JOIN action on widget.widgetId = action.sourceId
+                    WHERE
+                        action.layoutCode = :code AND layout.publishedStatusId = 1
+                  )
         ';
 
         $currentDate = Carbon::now();
@@ -748,7 +774,8 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
 
         $params = [
             'fromDt' => $currentDate->subHour()->format('U'),
-            'toDt' => $rfLookAhead->format('U')
+            'toDt' => $rfLookAhead->format('U'),
+            'code' => $code
         ];
 
         foreach ($this->store->select($sql, $params) as $row) {
@@ -781,8 +808,6 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
             }
         }
 
-        foreach ($campaignIdsToNotify as $campaignId) {
-            $this->keysProcessed[] = 'campaign_' . $campaignId;
-        }
+        $this->keysProcessed[] = 'layoutCode_' . $code;
     }
 }
