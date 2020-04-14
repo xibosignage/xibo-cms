@@ -448,7 +448,7 @@ class Task extends Base
         try {
             // Instantiate
             if (!class_exists($task->class)) {
-                throw new NotFoundException(__('Task with class name ') . $task->class . ' not found');
+                throw new NotFoundException(sprintf(__('Task with class name %s not found'), $task->class));
             }
 
             /** @var TaskInterface $taskClass */

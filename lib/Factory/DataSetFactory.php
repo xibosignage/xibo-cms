@@ -661,8 +661,8 @@ class DataSetFactory extends BaseFactory
                             try {
                                 $result[$column->heading] = $date->format(DateFormatHelper::getSystemFormat());
                             } catch (\Exception $e) {
-                                $this->getLog()->error('Incorrect date provided ' . $date . ' Expected date format Y-m-d H:i:s ');
-                                throw new InvalidArgumentException(__('Incorrect date provided ') . $date . __(' Expected date format Y-m-d H:i:s '), 'date');
+                                $this->getLog()->error(sprintf('Incorrect date provided %s, expected date format Y-m-d H:i:s ', $date));
+                                throw new InvalidArgumentException(sprintf(__('Incorrect date provided %s, expected date format Y-m-d H:i:s '), $date), 'date');
                             }
                             break;
                         case 5:
