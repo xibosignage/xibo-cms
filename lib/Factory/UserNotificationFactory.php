@@ -23,10 +23,11 @@
 
 namespace Xibo\Factory;
 
+use Carbon\Carbon;
 use Xibo\Entity\User;
 use Xibo\Entity\UserNotification;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 
@@ -40,7 +41,7 @@ class UserNotificationFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      */
@@ -70,7 +71,7 @@ class UserNotificationFactory extends BaseFactory
         $notification->subject = $subject;
         $notification->body = $body;
         $notification->userId = $this->getUser()->userId;
-        $notification->releaseDt = time();
+        $notification->releaseDt = Carbon::now()->format('U');
 
         return $notification;
     }
@@ -125,7 +126,7 @@ class UserNotificationFactory extends BaseFactory
               AND `lknotificationuser`.`read` = 0
               AND `notification`.releaseDt < :now
           ', [
-            'now' => time(), 'userId' => $this->getUser()->userId
+            'now' => Carbon::now()->format('U'), 'userId' => $this->getUser()->userId
         ])[0]['Cnt'];
     }
 
@@ -142,7 +143,7 @@ class UserNotificationFactory extends BaseFactory
         if ($sortOrder == null)
             $sortOrder = ['releaseDt DESC'];
 
-        $params = ['now' => time()];
+        $params = ['now' => Carbon::now()->format('U')];
         $select = 'SELECT `lknotificationuser`.lknotificationuserId,
             `lknotificationuser`.notificationId,
             `lknotificationuser`.userId,

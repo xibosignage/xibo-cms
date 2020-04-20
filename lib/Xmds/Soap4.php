@@ -21,10 +21,11 @@
  */
 namespace Xibo\Xmds;
 
+use Carbon\Carbon;
 use Intervention\Image\ImageManagerStatic as Img;
-use Jenssegers\Date\Date;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
@@ -103,10 +104,10 @@ class Soap4 extends Soap
             $this->getLog()->debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);
 
             // Now
-            $dateNow = $this->getDate()->parse();
+            $dateNow = Carbon::now();
 
             // Append the time
-            $displayElement->setAttribute('date', $this->getDate()->getLocalDate($dateNow));
+            $displayElement->setAttribute('date', $dateNow->format(DateFormatHelper::getSystemFormat()));
             $displayElement->setAttribute('timezone', $this->getConfig()->getSetting('defaultTimezone'));
 
             // Determine if we are licensed or not
@@ -149,7 +150,7 @@ class Soap4 extends Soap
                         if ($timeParts[0] == '00' && $timeParts[1] == '00') {
                             $arrayItem['value'] = 0;
                         } else {
-                            $arrayItem['value'] = Date::now()->setTime(intval($timeParts[0]), intval($timeParts[1]));
+                            $arrayItem['value'] = Carbon::now()->setTime(intval($timeParts[0]), intval($timeParts[1]));
                         }
                     }
 
@@ -222,7 +223,7 @@ class Soap4 extends Soap
                     $dateNow->timezone($display->timeZone);
 
                     // Append Local Time
-                    $displayElement->setAttribute('localDate', $this->getDate()->getLocalDate($dateNow));
+                    $displayElement->setAttribute('localDate', $dateNow->format(DateFormatHelper::getSystemFormat()));
                 }
             }
 
@@ -259,7 +260,7 @@ class Soap4 extends Soap
         // Send Notification if required
         $this->alertDisplayUp();
 
-        $display->lastAccessed = time();
+        $display->lastAccessed = Carbon::now()->format('U');
         $display->loggedIn = 1;
         $display->clientAddress = $clientAddress;
         $display->macAddress = $macAddress;
@@ -372,11 +373,11 @@ class Soap4 extends Soap
                 $this->getLog()->debug(json_encode($media));
 
                 if (!file_exists($libraryLocation . $media->storedAs))
-                    throw new NotFoundException('Media exists but file missing from library. ' . $libraryLocation);
+                    throw new NotFoundException(__('Media exists but file missing from library. ') . $libraryLocation);
 
                 // Return the Chunk size specified
                 if (!$f = fopen($libraryLocation . $media->storedAs, 'r'))
-                    throw new NotFoundException('Unable to get file pointer');
+                    throw new NotFoundException(__('Unable to get file pointer'));
 
                 fseek($f, $chunkOffset);
 
@@ -386,13 +387,13 @@ class Soap4 extends Soap
                 $chunkSize = strlen($file);
 
                 if ($chunkSize === 0)
-                    throw new NotFoundException('Empty file');
+                    throw new NotFoundException(__('Empty file'));
 
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
                 $requiredFile->save();
 
             } else {
-                throw new NotFoundException('Unknown FileType Requested.');
+                throw new NotFoundException(__('Unknown FileType Requested.'));
             }
         }
         catch (NotFoundException $e) {
@@ -573,7 +574,7 @@ class Soap4 extends Soap
 
         if (!empty($timeZone)) {
             // Validate the provided data and log/ignore if not well formatted
-            if (array_key_exists($timeZone, $this->getDate()->timezoneList())) {
+            if (array_key_exists($timeZone, DateFormatHelper::timezoneList())) {
                 $this->display->timeZone = $timeZone;
             } else {
                 $this->getLog()->info('Ignoring Incorrect timezone string: ' . $timeZone);
@@ -723,7 +724,7 @@ class Soap4 extends Soap
         $this->display->save(Display::$saveOptionsMinimum);
 
         // Cache the current screen shot time
-        $this->display->setCurrentScreenShotTime($this->getPool(), $this->getDate()->getLocalDate());
+        $this->display->setCurrentScreenShotTime($this->getPool(), Carbon::now()->format(DateFormatHelper::getSystemFormat()));
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
 

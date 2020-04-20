@@ -22,13 +22,12 @@
 
 namespace Xibo\Storage;
 
-use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class MySqlTimeSeriesStore
@@ -47,9 +46,6 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @var LogServiceInterface */
     private $log;
 
-    /** @var DateServiceInterface */
-    private $dateService;
-
     /** @var  LayoutFactory */
     protected $layoutFactory;
 
@@ -67,10 +63,9 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /**
      * @inheritdoc
      */
-    public function setDependencies($log, $date, $layoutFactory = null, $campaignFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null)
+    public function setDependencies($log, $layoutFactory = null, $campaignFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null)
     {
         $this->log = $log;
-        $this->dateService = $date;
         $this->layoutFactory = $layoutFactory;
         $this->campaignFactory = $campaignFactory;
         return $this;
@@ -323,34 +318,34 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $limit = ' LIMIT ' . $start . ', ' . $length;
         }
 
-
-        // Total count
-        $resTotal = [];
+        // Total count if paging is enabled.
+        $totalNumberOfRecords = 0;
         if ($start !== null && $length !== null) {
-            $resTotal = $this->store->select('
+            $totalNumberOfRecords = $this->store->select('
               SELECT COUNT(*) AS total FROM (   ' . $select. $body . ') total
-            ', $params);
+            ', $params)[0]['total'];
         }
+
+        // Join our SQL statement together
+        $sql = $select . $body. $limit;
+
+        // Write this to our log
+        $this->log->sql($sql, $params);
 
         // Run our query using a connection object (to save memory)
         $connection = $this->store->getConnection();
         $connection->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
 
-        /*Execute sql statement*/
-        $sql = $select . $body. $limit;
-
+        // Prepare the statement
         $statement = $connection->prepare($sql);
 
         // Execute
         $statement->execute($params);
-        $this->log->sql($sql, $params);
 
-        $result = new TimeSeriesMySQLResults($statement);
-
-        // Total
-        $result->totalCount = isset($resTotal[0]['total']) ? $resTotal[0]['total'] : 0;
-
-        return $result;
+        // Create a results object and set the total number of records on it.
+        $results = new TimeSeriesMySQLResults($statement);
+        $results->totalCount = $totalNumberOfRecords;
+        return $results;
     }
 
     /** @inheritdoc */

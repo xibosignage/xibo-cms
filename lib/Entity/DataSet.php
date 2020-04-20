@@ -23,6 +23,8 @@
 
 namespace Xibo\Entity;
 
+use Carbon\Carbon;
+use Carbon\Factory;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\DataSetColumnFactory;
@@ -30,7 +32,6 @@ use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\ConfigurationException;
@@ -245,9 +246,6 @@ class DataSet implements \JsonSerializable
     /** @var  DisplayFactory */
     private $displayFactory;
 
-    /** @var DateServiceInterface */
-    private $date;
-
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -259,9 +257,8 @@ class DataSet implements \JsonSerializable
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param PermissionFactory $permissionFactory
      * @param DisplayFactory $displayFactory
-     * @param DateServiceInterface $date
      */
-    public function __construct($store, $log, $sanitizerService, $config, $pool, $dataSetFactory, $dataSetColumnFactory, $permissionFactory, $displayFactory, $date)
+    public function __construct($store, $log, $sanitizerService, $config, $pool, $dataSetFactory, $dataSetColumnFactory, $permissionFactory, $displayFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->sanitizerService = $sanitizerService;
@@ -271,7 +268,6 @@ class DataSet implements \JsonSerializable
         $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->permissionFactory = $permissionFactory;
         $this->displayFactory = $displayFactory;
-        $this->date = $date;
     }
 
     /**
@@ -573,8 +569,8 @@ class DataSet implements \JsonSerializable
                                 $language = $this->config->getSetting('DEFAULT_LANGUAGE', 'en_GB');
                             }
 
-                            $this->date->setLocale($language);
-                            $value = $this->date->parse($item[$details[0]])->format($details[1]);
+                            $carbonFactory = new Factory(['locale' => $language], Carbon::class);
+                            $value = $carbonFactory->parse($item[$details[0]])->translatedFormat($details[1]);
                         }
                     } catch (\Exception $e) {
                         $this->getLog()->error('DataSet client side formula error in dataSetId ' . $this->dataSetId . ' with column formula ' . $column->formula);
@@ -734,13 +730,15 @@ class DataSet implements \JsonSerializable
     {
         $options = array_merge(['validate' => true, 'saveColumns' => true], $options);
 
-        if ($options['validate'])
+        if ($options['validate']) {
             $this->validate();
+        }
 
-        if ($this->dataSetId == 0)
+        if ($this->dataSetId == 0) {
             $this->add();
-        else
+        } else {
             $this->edit();
+        }
 
         // Columns
         if ($options['saveColumns']) {
@@ -824,10 +822,19 @@ class DataSet implements \JsonSerializable
     {
         $this->load();
 
-        if ($this->isLookup)
+        if ($this->isLookup) {
             throw new ConfigurationException(__('Lookup Tables cannot be deleted'));
+        }
 
-        // TODO: Make sure we're not used as a dependent DataSet
+        // check if any other DataSet depends on this DataSet
+        if ($this->getStore()->exists(
+            'SELECT dataSetId FROM dataset WHERE runsAfter = :runsAfter AND dataSetId <> :dataSetId',
+            [
+                'runsAfter' => $this->dataSetId,
+                'dataSetId' => $this->dataSetId
+            ])) {
+            throw new InvalidArgumentException(__('Cannot delete because this DataSet is set as dependent DataSet for another DataSet'), 'dataSetId');
+        }
 
         // Make sure we're able to delete
         if ($this->getStore()->exists('
@@ -837,7 +844,7 @@ class DataSet implements \JsonSerializable
                 AND `widgetoption`.option = \'dataSetId\'
                 AND `widgetoption`.value = :dataSetId
         ', ['dataSetId' => $this->dataSetId])) {
-            throw new InvalidArgumentException('Cannot delete because DataSet is in use on one or more Layouts.', 'dataSetId');
+            throw new InvalidArgumentException(__('Cannot delete because DataSet is in use on one or more Layouts.'), 'dataSetId');
         }
 
         // Delete Permissions
@@ -1021,7 +1028,7 @@ class DataSet implements \JsonSerializable
         $this->getLog()->debug('Adding row ' . var_export($row, true));
 
         // Update the last edit date on this dataSet
-        $this->lastDataEdit = time();
+        $this->lastDataEdit = Carbon::now()->format('U');
 
         // Build a query to insert
         $keys = array_keys($row);
@@ -1045,7 +1052,7 @@ class DataSet implements \JsonSerializable
         $this->getLog()->debug(sprintf('Editing row %s', var_export($row, true)));
 
         // Update the last edit date on this dataSet
-        $this->lastDataEdit = time();
+        $this->lastDataEdit = Carbon::now()->format('U');
 
         // Params
         $params = ['id' => $rowId];
@@ -1075,7 +1082,7 @@ class DataSet implements \JsonSerializable
      */
     public function deleteRow($rowId)
     {
-        $this->lastDataEdit = time();
+        $this->lastDataEdit = Carbon::now()->format('U');
 
         $this->getStore()->update('DELETE FROM `dataset_' . $this->dataSetId . '` WHERE id = :id', [
             'id' => $rowId

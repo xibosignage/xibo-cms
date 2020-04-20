@@ -55,7 +55,6 @@ use Xibo\Helper\QuickChartQRProvider;
 use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
@@ -149,7 +148,6 @@ class User extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param UserFactory $userFactory
      * @param UserTypeFactory $userTypeFactory
@@ -171,11 +169,11 @@ class User extends Base
      * @param ContainerInterface $container
      * @param DataSetFactory $dataSetFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userFactory,
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $userFactory,
                                 $userTypeFactory, $userGroupFactory, $pageFactory, $permissionFactory,
                                 $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory, Twig $view, ContainerInterface $container, $dataSetFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->userFactory = $userFactory;
         $this->userTypeFactory = $userTypeFactory;
@@ -355,7 +353,7 @@ class User extends Base
                 ];
             }
 
-            if ($this->getUser()->isSuperAdmin()) {
+            if ($this->getUser()->isSuperAdmin() && $user->userId != $this->getConfig()->getSetting('SYSTEM_USER')) {
                 // Delete
                 $user->buttons[] = [
                     'id' => 'user_button_delete',
@@ -926,6 +924,11 @@ class User extends Base
     public function delete(Request $request, Response $response, $id)
     {
         $user = $this->userFactory->getById($id);
+
+        // System User
+        if ($user->userId == $this->getConfig()->getSetting('SYSTEM_USER')) {
+            throw new InvalidArgumentException(__('This User is set as System User and cannot be deleted.'), 'userId');
+        }
 
         if (!$this->getUser()->checkDeleteable($user)) {
             throw new AccessDeniedException();
@@ -1612,7 +1615,7 @@ class User extends Base
             if ($object->permissionsClass() == 'Xibo\Entity\Campaign') {
                 $this->getLog()->debug('Changing owner on child Layout');
 
-                foreach ($this->layoutFactory->getByCampaignId($object->getId(), true, true, $request ) as $layout) {
+                foreach ($this->layoutFactory->getByCampaignId($object->getId(), true, true) as $layout) {
                     $layout->setOwner($ownerId, true);
                     $layout->save(['notify' => false]);
                 }
@@ -1728,11 +1731,13 @@ class User extends Base
 
             // Check and see what permissions we have been provided for this selection
             // If all permissions are 0, then the record is deleted
-            if (array_key_exists($row->groupId, $groupIds)) {
-                $row->view = (array_key_exists('view', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['view'] : 0);
-                $row->edit = (array_key_exists('edit', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['edit'] : 0);
-                $row->delete = (array_key_exists('delete', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['delete'] : 0);
-                $row->save();
+            if (is_array($groupIds)) {
+                if (array_key_exists($row->groupId, $groupIds)) {
+                    $row->view = (array_key_exists('view', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['view'] : 0);
+                    $row->edit = (array_key_exists('edit', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['edit'] : 0);
+                    $row->delete = (array_key_exists('delete', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['delete'] : 0);
+                    $row->save();
+                }
             }
         }
     }

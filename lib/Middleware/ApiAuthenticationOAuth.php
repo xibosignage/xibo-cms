@@ -55,8 +55,9 @@ class ApiAuthenticationOAuth implements Middleware
      * @param RequestHandler $handler
      * @return Response
      * @throws OAuthServerException
-     * @throws \Xibo\Exception\NotFoundException
-     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\AccessDeniedException
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function process(Request $request, RequestHandler $handler): Response
     {

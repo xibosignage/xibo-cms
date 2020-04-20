@@ -1,0 +1,104 @@
+{#
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+#}
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans %}Edit Action for {{ source }} {% endtrans %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#actionFormEdit").submit()
+{% endblock %}
+
+{% block callBack %}actionFormOpen{% endblock %}
+
+{% block formHtml %}
+
+    <div class="row">
+        <div class="col-md-12">
+            <form id="actionFormEdit" class="XiboForm form-horizontal" method="put" action="{{ url_for("action.edit", {id: action.actionId}) }}">
+                {% set title %}{% trans "Trigger Type" %}{% endset %}
+                {% set helpText %}{% trans "Please select the trigger type for this Action" %}{% endset %}
+                {% set touch %}{% trans "Touch" %}{% endset %}
+                {% set webhook %}{% trans "Web hook" %}{% endset %}
+                {% set options = [
+                    { typeid: "touch", type: touch },
+                    { typeid: "webhook", type: webhook },
+                ] %}
+                {{ forms.dropdown("triggerType", "single", title,action.triggerType, options, "typeid","type", helpText) }}
+
+                {% if source == 'layout' %}
+                    {% set title %}{% trans "Trigger Code" %}{% endset %}
+                    {% set helpText %}{% trans "Please enter trigger code" %}{% endset %}
+                    {{ forms.input("triggerCode", title, action.triggerCode, helpText) }}
+                {% endif %}
+
+                {% set title %}{% trans "Action Type" %}{% endset %}
+                {% set helpText %}{% trans "Please select action Type" %}{% endset %}
+                {% set next %}{% trans "Next" %}{% endset %}
+                {% set previous %}{% trans "Previous" %}{% endset %}
+                {% set navLayout %}{% trans "Navigate to Layout" %}{% endset %}
+                {% set navRegion %}{% trans "Navigate to Region" %}{% endset %}
+                {% set navPlaylist %}{% trans "Navigate to Playlist" %}{% endset %}
+                {% set navWidget %}{% trans "Navigate to Widget" %}{% endset %}
+                {% set options = [
+                    { typeid: "next", type: next },
+                    { typeid: "previous", type: previous },
+                    { typeid: "navLayout", type: navLayout },
+                    { typeid: "navWidget", type: navWidget },
+                ] %}
+                {{ forms.dropdown("actionType", "single", title,action.actionType, options, "typeid","type", helpText) }}
+
+                {% set title %}{% trans "Widget" %}{% endset %}
+                {% set helpText %}{% trans "Widget that will load into target" %}{% endset %}
+                {{ forms.dropdown("widgetId", "single", title, action.widgetId, [{widgetId:null, name:""}]|merge(widgets), "widgetId", "name", helpText, "nav-control-widget") }}
+
+                {% set title %}{% trans "Layout Code" %}{% endset %}
+                {% set helpText %}{% trans "Please enter code identifier for the Layout" %}{% endset %}
+
+                {% set attributes = [
+                    { name: "data-width", value: "100%" },
+                    { name: "data-search-url", value: url_for("layout.code.search") },
+                    { name: "data-search-term", value: "code" },
+                    { name: "data-id-property", value: "code" },
+                    { name: "data-text-property", value: "code" }
+                ] %}
+                {{ forms.dropdown("layoutCode", "single", title, action.layoutCode, layout, "code", "code", helpText, "pagedSelect nav-control-layout", "", "", "", attributes) }}
+
+                {% set title %}{% trans "Target" %}{% endset %}
+                {% set helpText %}{% trans "Please select the target for this Action." %}{% endset %}
+                {% set screen %}{% trans "Screen" %}{% endset %}
+                {% set region %}{% trans "Region" %}{% endset %}
+                {% set options = [
+                    { typeid: "screen", type: screen },
+                    { typeid: "region", type: region },
+                ] %}
+                {{ forms.dropdown("target", "single", title,action.target, options, "typeid","type", helpText) }}
+
+                {% set title %}{% trans "Target ID" %}{% endset %}
+                {% set helpText %}{% trans "Select the Target ID for this Action" %}{% endset %}
+                {{ forms.dropdown("targetId", "single", title, action.targetId, [{regionId:null, name:""}]|merge(regions), "regionId","name", helpText, "target-control") }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

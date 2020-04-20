@@ -23,16 +23,17 @@
 namespace Xibo\Factory;
 
 
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -58,16 +59,13 @@ class DataSetFactory extends BaseFactory
     /** @var  DisplayFactory */
     private $displayFactory;
 
-    /** @var DateServiceInterface */
-    private $date;
-
     private $sanitizerService;
 
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Entity\User $user
      * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
@@ -75,9 +73,8 @@ class DataSetFactory extends BaseFactory
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param PermissionFactory $permissionFactory
      * @param DisplayFactory $displayFactory
-     * @param DateServiceInterface $date
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $pool, $dataSetColumnFactory, $permissionFactory, $displayFactory, $date)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $pool, $dataSetColumnFactory, $permissionFactory, $displayFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
@@ -86,7 +83,6 @@ class DataSetFactory extends BaseFactory
         $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->permissionFactory = $permissionFactory;
         $this->displayFactory = $displayFactory;
-        $this->date = $date;
         $this->sanitizerService = $sanitizerService;
     }
 
@@ -112,8 +108,7 @@ class DataSetFactory extends BaseFactory
             $this,
             $this->dataSetColumnFactory,
             $this->permissionFactory,
-            $this->displayFactory,
-            $this->date
+            $this->displayFactory
         );
     }
 
@@ -645,7 +640,7 @@ class DataSetFactory extends BaseFactory
                     $value = [0, date('Y-m-d')];
 
                 } else if ($column->remoteField == '{{TIMESTAMP}}') {
-                    $value = [0, time()];
+                    $value = [0, Carbon::now()->format('U')];
 
                 } else {
                     $chunks = explode('.', $column->remoteField);
@@ -664,10 +659,10 @@ class DataSetFactory extends BaseFactory
                             // This expects an ISO date
                             $date =  $sanitizer->getDate($value[1]);
                             try {
-                                $result[$column->heading] = $this->date->parse($date);
+                                $result[$column->heading] = $date->format(DateFormatHelper::getSystemFormat());
                             } catch (\Exception $e) {
-                                $this->getLog()->error('Incorrect date provided ' . $date . ' Expected date format Y-m-d H:i:s ');
-                                throw new InvalidArgumentException('Incorrect date provided ' . $date . ' Expected date format Y-m-d H:i:s ', 'date');
+                                $this->getLog()->error(sprintf('Incorrect date provided %s, expected date format Y-m-d H:i:s ', $date));
+                                throw new InvalidArgumentException(sprintf(__('Incorrect date provided %s, expected date format Y-m-d H:i:s '), $date), 'date');
                             }
                             break;
                         case 5:

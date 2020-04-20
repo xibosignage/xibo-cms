@@ -99,6 +99,10 @@
                 discardForm: {
                     url: "{{ url_for("layout.discard.form", {id: ':id'}) }}",
                     type: 'GET'
+                },
+                addActionForm: {
+                    url: "{{ url_for("action.add.form", {source: 'layout', id:':id'}) }}",
+                    type: 'GET'
                 }
             },
             region: {
@@ -130,6 +134,10 @@
                 },
                 getPermissions:  {
                     url: "{{ url_for("user.permissions.form", {entity: 'Region', id: ':id'}) }}",
+                    type: 'GET'
+                },
+                addActionForm: {
+                    url: "{{ url_for("action.add.form", {source: 'region', id:':id'}) }}",
                     type: 'GET'
                 }
             },
@@ -176,6 +184,10 @@
                 },
                 getPermissions:  {
                     url: "{{ url_for("user.permissions.form", {entity: 'Widget', id: ':id'}) }}",
+                    type: 'GET'
+                },
+                addActionForm: {
+                    url: "{{ url_for("action.add.form", {source: 'widget', id:':id'}) }}",
                     type: 'GET'
                 }
             },
@@ -491,6 +503,25 @@
                         value: "{{ "And"|trans }}"
                     }
                 ]
+            };
+
+            var actionsTranslations = {
+                tableHeaders: {
+                    name: "{{ "Actions" |trans }}",
+                    id: "{{ "Id"|trans }}",
+                    ownerId: "{{ "Owner Id"|trans }}",
+                    triggerType: "{{ "Trigger Type"|trans }}",
+                    triggerCode: "{{ "Trigger Code"|trans }}",
+                    actionType: "{{ "Action Type"|trans }}",
+                    target: "{{ "Target Type"|trans }}",
+                    targetId: "{{ "Target"|trans }}",
+                    widgetId: "{{ "Widget"|trans }}",
+                    layoutCode: "{{ "Layout Code"|trans }}",
+                },
+                button: {
+                    name: "{{ "Add Action" |trans }}",
+                    description: "{{ "Click to Add a new Action"|trans }}"
+                }
             };
         {% endautoescape %}
     </script>

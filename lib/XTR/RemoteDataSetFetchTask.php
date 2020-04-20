@@ -23,6 +23,7 @@
 
 namespace Xibo\XTR;
 
+use Carbon\Carbon;
 use Xibo\Entity\DataSet;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\NotificationFactory;
@@ -67,7 +68,7 @@ class RemoteDataSetFetchTask implements TaskInterface
     {
         $this->runMessage = '# ' . __('Fetching Remote-DataSets') . PHP_EOL . PHP_EOL;
 
-        $runTime = $this->date->getLocalDate(null, 'U');
+        $runTime = Carbon::now()->format('U');
 
         /** @var DataSet $dataSet */
         $dataSet = null;
@@ -146,7 +147,7 @@ class RemoteDataSetFetchTask implements TaskInterface
                 $notification = $this->notificationFactory->createEmpty();
                 $notification->subject = __('Remote DataSet %s failed to synchronise', $dataSet->dataSet);
                 $notification->body = 'The error is: ' . $e->getMessage();
-                $notification->createdDt = $this->date->getLocalDate(null, 'U');
+                $notification->createdDt = Carbon::now()->format('U');
                 $notification->releaseDt = $notification->createdDt;
                 $notification->isEmail = 0;
                 $notification->isInterrupt = 0;

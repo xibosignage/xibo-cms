@@ -20,15 +20,16 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
+use Carbon\Carbon;
 use GuzzleHttp\Psr7\Stream;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Factory\AuditLogFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 
@@ -50,14 +51,13 @@ class AuditLog extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param AuditLogFactory $auditLogFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $auditLogFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $auditLogFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->auditLogFactory = $auditLogFactory;
     }
@@ -102,11 +102,11 @@ class AuditLog extends Base
 
         // Get the dates and times
         if ($filterFromDt == null) {
-            $filterFromDt = $this->getDate()->parse()->sub('1 day');
+            $filterFromDt = Carbon::now()->sub('1 day');
         }
 
         if ($filterToDt == null) {
-            $filterToDt = $this->getDate()->parse();
+            $filterToDt = Carbon::now();
         }
 
         $search['fromTimeStamp'] = $filterFromDt->format('U');
@@ -193,7 +193,7 @@ class AuditLog extends Base
         // Do some post processing
         foreach ($rows as $row) {
             /* @var \Xibo\Entity\AuditLog $row */
-            fputcsv($out, [$row->logId, $this->getDate()->getLocalDate($row->logDate), $row->userName, $row->entity, $row->entityId, $row->message, $row->objectAfter]);
+            fputcsv($out, [$row->logId, Carbon::createFromTimestamp($row->logDate)->format(DateFormatHelper::getSystemFormat()), $row->userName, $row->entity, $row->entityId, $row->message, $row->objectAfter]);
         }
 
         fclose($out);

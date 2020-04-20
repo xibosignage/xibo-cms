@@ -114,6 +114,8 @@ $app->get('/layout/form/unretire/{id}', ['\Xibo\Controller\Layout','unretireForm
 $app->get('/layout/form/setenablestat/{id}', ['\Xibo\Controller\Layout','setEnableStatForm'])->setName('layout.setenablestat.form');
 $app->get('/layout/form/export/{id}', ['\Xibo\Controller\Layout','exportForm'])->setName('layout.export.form');
 $app->get('/layout/form/campaign/assign/{id}', ['\Xibo\Controller\Layout','assignToCampaignForm'])->setName('layout.assignTo.campaign.form');
+// Layout with Codes
+$app->get('/layout/codes', ['\Xibo\Controller\Layout', 'getLayoutCodes'])->setName('layout.code.search');
 
 //
 // regions
@@ -432,5 +434,10 @@ $app->get('/tag/form/edit/{id}', ['\Xibo\Controller\Tag','editForm'])->setName('
 $app->get('/tag/form/delete/{id}', ['\Xibo\Controller\Tag','deleteForm'])->setName('tag.delete.form');
 
 // Errors
-$app->get('/notFound', ['\Xibo\Controller\Error', 'notFoundPage'])->setName('error.notFound');
+$app->any('/notFound', ['\Xibo\Controller\Error', 'notFoundPage'])->setName('error.notFound');
 $app->any('/error', ['\Xibo\Controller\Error', 'errorPage'])->setName('error');
+
+// Actions
+$app->get('/action/form/add/{source}/{id}', ['\Xibo\Controller\Action', 'addForm'])->setName('action.add.form');
+$app->get('/action/form/edit/{id}', ['\Xibo\Controller\Action', 'editForm'])->setName('action.edit.form');
+$app->get('/action/form/delete/{id}', ['\Xibo\Controller\Action', 'deleteForm'])->setName('action.delete.form');

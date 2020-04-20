@@ -114,19 +114,19 @@ if (isset($_GET['file'])) {
     try {
         /** @var \Xibo\Entity\RequiredFile $file */
         if (!isset($_REQUEST['displayId']) || !isset($_REQUEST['type']) || !isset($_REQUEST['itemId']))
-            throw new NotFoundException('Missing params');
+            throw new NotFoundException(__('Missing params'));
 
         // Get the player nonce from the cache
         /** @var \Stash\Item $nonce */
         $nonce = $container->get('pool')->getItem('/display/nonce/' . $_REQUEST['displayId']);
 
         if ($nonce->isMiss()) {
-            throw new NotFoundException('No nonce cache');
+            throw new NotFoundException(__('No nonce cache'));
         }
 
         // Check the nonce against the nonce we received
         if ($nonce->get() != $_REQUEST['file']) {
-            throw new NotFoundException('Nonce mismatch');
+            throw new NotFoundException(__('Nonce mismatch'));
         }
 
         switch ($_REQUEST['type']) {
@@ -139,7 +139,7 @@ if (isset($_GET['file'])) {
                 break;
 
             default:
-                throw new NotFoundException('Unknown type');
+                throw new NotFoundException(__('Unknown type'));
         }
 
         // Only log bandwidth under certain conditions
@@ -161,7 +161,7 @@ if (isset($_GET['file'])) {
         } else {
             // Check that we've not used all of our bandwidth already (if we have an allowance)
             if ($container->get('bandwidthFactory')->isBandwidthExceeded($container->get('configService')->GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB'))) {
-                throw new \Xibo\Exception\InstanceSuspendedException('Bandwidth Exceeded');
+                throw new \Xibo\Support\Exception\InstanceSuspendedException('Bandwidth Exceeded');
             }
 
             // Log bandwidth here if we are NOT a CDN
@@ -192,7 +192,7 @@ if (isset($_GET['file'])) {
         }
     }
     catch (\Exception $e) {
-        if ($e instanceof \Xibo\Exception\NotFoundException || $e instanceof \Xibo\Exception\FormExpiredException) {
+        if ($e instanceof \Xibo\Support\Exception\NotFoundException || $e instanceof \Xibo\Support\Exception\ExpiredException) {
             $container->get('logService')->notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404. ' . $e->getMessage());
             // 404
             header('HTTP/1.0 404 Not Found');
@@ -231,7 +231,6 @@ try {
         $container->get('store'),
         $container->get('timeSeriesStore'),
         $container->get('logService'),
-        $container->get('dateService'),
         $container->get('sanitizerService'),
         $container->get('configService'),
         $container->get('requiredFileFactory'),

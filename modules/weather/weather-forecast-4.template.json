@@ -1,0 +1,10 @@
+{
+    "id": "weather-forecast-4",
+    "value": "Template 5 - Forecast squared with background",
+    "main": "<div class=\"container bg-div bg-[icon]\">\n    <div class=\"row\">\n        <div class=\"col-xs-6\">\n            <div class=\"shadowed temp text-left\">[temperatureRound]º[temperatureUnit]</div>\n        </div>\n        <div class=\"col-xs-6\">\n            <div class=\"main-icon shadowed text-right\"><i class=\"wi [wicon]\"></i></div>\n        </div>\n        <div class=\"col-xs-12\">\n            <div class=\"date shadowed\"> [time|M] [time|d]</div>\n        </div>\n    </div>\n\n    <div class=\"row bg-footer\">\n        <div class=\"col-xs-12 forecast-current\">[summary]</div>\n        <div class=\"col-xs-12 forecast-second\">||Precipitation||: [precipProbability]%</div>\n        <div class=\"col-xs-12 forecast-second\">||Wind||: [windDirection] [windSpeed] [windSpeedUnit]</div>\n        <div class=\"col-xs-12 forecast-second\">||Humidity||: [humidityPercent]%</div>\n    </div>\n</div>",
+    "css": "#content {\n    color: #f9f9f9;\n}\n\n.shadowed {\ntext-shadow: 0px 0px 6px rgba(0, 0, 0, 0.6);\n    filter: dropshadow(color=rgba(0, 0, 0, 0.6), offx=6, offy=6);\n}\n\n.date {\n    font-family: 'Roboto', sans-serif;\n    font-weight: 900;\n    font-size: 30px;\n    text-transform: uppercase;\n}\n\n.temp {\n    font-family: 'Roboto', sans-serif;\n    font-size: 40px;\n    font-weight: 900;\n    padding: 10px 0;\n}\n\n.main-icon {\n    font-size: 0;\n    padding: 20px 0;\n}\n\n.main-icon i {\n    font-size: 60px;\n}\n\n.footer-powered-by {\n    color: #f9f9f9;\n    background-color: #000;\n    opacity: 0.6;\n}\n\n.bg-footer {\n    background-color: #111;\n    background-color: #111a;\n    padding: 6px 0;\n}\n\n.footer-powered-by {\n    opacity: 1;\n}",
+    "widgetOriginalWidth": "250",
+    "widgetOriginalHeight": "250",
+    "image": "modules/weather/template-thumbs/weather-forecast-4.png",
+    "type": "forecast"
+}

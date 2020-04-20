@@ -21,6 +21,7 @@
  */
 namespace Xibo\Widget;
 
+use Carbon\Carbon;
 use Emojione\Client;
 use Emojione\Ruleset;
 use Respect\Validation\Validator as v;
@@ -417,7 +418,7 @@ class Twitter extends TwitterBase
         $this->setOption('speed', $sanitizedParams->getInt('speed'));
         $this->setOption('backgroundColor', $sanitizedParams->getString('backgroundColor'));
         $this->setOption('noTweetsMessage', $sanitizedParams->getString('noTweetsMessage'));
-        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat'));
+        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat', ['defaultOnEmptyString' => true]));
         $this->setOption('resultType', $sanitizedParams->getString('resultType'));
         $this->setOption('tweetDistance', $sanitizedParams->getInt('tweetDistance'));
         $this->setOption('tweetCount', $sanitizedParams->getInt('tweetCount'));
@@ -561,7 +562,7 @@ class Twitter extends TwitterBase
         $return = array();
 
         // Expiry time for any media that is downloaded
-        $expires = $this->getDate()->parse()->addHours($this->getSetting('cachePeriodImages', 24))->format('U');
+        $expires = Carbon::now()->addHours($this->getSetting('cachePeriodImages', 24))->format('U');
 
         // Remove URL setting
         $removeUrls = $this->getOption('removeUrls', 1)  == 1;
@@ -660,7 +661,7 @@ class Twitter extends TwitterBase
                         break;
 
                     case 'Date':
-                        $replace = $this->getDate()->getLocalDate(strtotime($tweet->created_at), $dateFormat);
+                        $replace = Carbon::createFromTimestamp(strtotime($tweet->created_at))->format($dateFormat);
                         break;
   
                     case 'Location':

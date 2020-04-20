@@ -21,10 +21,12 @@
  */
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use GuzzleHttp\Psr7\Stream;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
+use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -32,10 +34,10 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ReportServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -94,7 +96,6 @@ class Stats extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param TimeSeriesStoreInterface $timeSeriesStore
@@ -107,9 +108,9 @@ class Stats extends Base
      * @param DisplayGroupFactory $displayGroupFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $reportService, $displayFactory, $layoutFactory, $mediaFactory, $userFactory, $userGroupFactory, $displayGroupFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $timeSeriesStore, $reportService, $displayFactory, $layoutFactory, $mediaFactory, $userFactory, $userGroupFactory, $displayGroupFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->store = $store;
         $this->timeSeriesStore = $timeSeriesStore;
@@ -135,9 +136,9 @@ class Stats extends Base
         $data = [
             // List of Displays this user has permission for
             'defaults' => [
-                'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
-                'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
-                'toDate' => $this->getDate()->getLocalDate()
+                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
+                'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
+                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
             ]
         ];
 
@@ -160,9 +161,9 @@ class Stats extends Base
         $data = [
             // List of Displays this user has permission for
             'defaults' => [
-                'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
-                'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
-                'toDate' => $this->getDate()->getLocalDate(),
+                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
+                'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
+                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
                 'availableReports' => $this->reportService->listReports()
             ]
         ];
@@ -215,14 +216,6 @@ class Stats extends Base
      *  @SWG\Property(
      *      property="duration",
      *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="minStart",
-     *      type="string"
-     *  ),
-     *  @SWG\Property(
-     *      property="maxEnd",
-     *      type="string"
      *  ),
      *  @SWG\Property(
      *      property="start",
@@ -328,6 +321,20 @@ class Stats extends Base
      *      type="integer",
      *      required=false
      *  ),
+     *   @SWG\Parameter(
+     *      name="returnDisplayLocalTime",
+     *      in="query",
+     *      description="true/1/On if the results should be in display local time, otherwise CMS time",
+     *      type="boolean",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="returnDateFormat",
+     *      in="query",
+     *      description="A PHP formatted date format for how the dates in this call should be returned.",
+     *      type="string",
+     *      required=false
+     *  ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -343,7 +350,6 @@ class Stats extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws InvalidArgumentException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
@@ -351,8 +357,8 @@ class Stats extends Base
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
 
-        $fromDt = $sanitizedQueryParams->getDate('fromDt', ['default' => $sanitizedQueryParams->getDate('statsFromDt', ['default' => $this->getDate()->parse()->subDay()])]);
-        $toDt = $sanitizedQueryParams->getDate('toDt', ['default' => $sanitizedQueryParams->getDate('statsToDt', ['default' => $this->getDate()->parse()])]);
+        $fromDt = $sanitizedQueryParams->getDate('fromDt', ['default' => Carbon::now()->subDay()]);
+        $toDt = $sanitizedQueryParams->getDate('toDt', ['default' => Carbon::now()]);
         $type = strtolower($sanitizedQueryParams->getString('type'));
 
         $displayId = $sanitizedQueryParams->getInt('displayId');
@@ -364,20 +370,19 @@ class Stats extends Base
         $campaignId = $sanitizedQueryParams->getInt('campaignId');
         $eventTag = $sanitizedQueryParams->getString('eventTag');
 
+        // Return formatting
+        $returnDisplayLocalTime = $sanitizedQueryParams->getCheckbox('returnDisplayLocalTime');
+        $returnDateFormat = $sanitizedQueryParams->getString('returnDateFormat', ['default' => DateFormatHelper::getSystemFormat()]);
+        $defaultTimezone = $this->getConfig()->getSetting('defaultTimezone');
+
+        // Paging
         $start = $sanitizedQueryParams->getInt('start', ['default' => 0]);
         $length = $sanitizedQueryParams->getInt('length', ['default' => 10]);
 
-        if ($fromDt != null) {
-            $fromDt->startOfDay();
-        }
-
-        if ($toDt != null) {
-            $toDt->addDay()->startOfDay();
-        }
-
         // What if the fromdt and todt are exactly the same?
-        // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
-        if ($fromDt != null && $toDt != null && $fromDt == $toDt) {
+        // in this case assume an entire day from midnight on the fromdt to midnight on
+        // the todt (i.e. add a day to the todt)
+        if ($fromDt == $toDt) {
             $toDt->addDay();
         }
 
@@ -390,10 +395,15 @@ class Stats extends Base
         // Super admin will be able to see stat records of deleted display, we will not filter by display later
         $displayIds = [];
         $displaysAccessible = [];
+        $timeZoneCache = [];
+
         if (!$this->getUser()->isSuperAdmin()) {
             // Get an array of display id this user has access to.
             foreach ($this->displayFactory->query() as $display) {
                 $displaysAccessible[] = $display->displayId;
+
+                // Cache the display timezone.
+                $timeZoneCache[$display->displayId] = $display->timeZone;
             }
 
             if (count($displaysAccessible) <= 0)
@@ -420,7 +430,7 @@ class Stats extends Base
         }
 
         // Call the time series interface getStats
-        $resultSet =  $this->timeSeriesStore->getStats(
+        $resultSet = $this->timeSeriesStore->getStats(
             [
                 'fromDt'=> $fromDt,
                 'toDt'=> $toDt,
@@ -436,38 +446,56 @@ class Stats extends Base
                 'length' => $length,
             ]);
 
-        // Get results as array
-        $result = $resultSet->getArray();
-
         $rows = [];
-        foreach ($result['statData'] as $row) {
+        foreach ($resultSet->getArray() as $row) {
             $entry = [];
+
+            // Load my row into the sanitizer
             $sanitizedRow = $this->getSanitizer($row);
 
-            $widgetId = $sanitizedRow->getInt('widgetId');
+            // Core details
+            $entry['id'] = $resultSet->getIdFromRow($row);
+            $entry['type'] = $sanitizedRow->getString('type');
+            $entry['displayId'] = $sanitizedRow->getInt(('displayId'));
+
+            // Get the start/end date
+            $start = $resultSet->getDateFromValue($row['start']);
+            $end = $resultSet->getDateFromValue($row['end']);
+
+            if ($returnDisplayLocalTime) {
+                // Convert the dates to the display timezone.
+                if (!array_key_exists($entry['displayId'], $timeZoneCache)) {
+                    try {
+                        $display = $this->displayFactory->getById($entry['displayId']);
+                        $timeZoneCache[$entry['displayId']] = (empty($display->timeZone)) ? $defaultTimezone : $display->timeZone;
+                    } catch (\Xibo\Support\Exception\NotFoundException $e) {
+                        $timeZoneCache[$entry['displayId']] = $defaultTimezone;
+                    }
+                }
+                $start = $start->tz($timeZoneCache[$entry['displayId']]);
+                $end = $end->tz($timeZoneCache[$entry['displayId']]);
+            }
+
+            $widgetId = $sanitizedRow->getInt('widgetId', ['default' => 0]);
             $widgetName = $sanitizedRow->getString('media');
             $widgetName = ($widgetName == '' &&  $widgetId != 0) ? __('Deleted from Layout') : $widgetName;
 
             $displayName = isset($row['display']) ? $sanitizedRow->getString('display') : '';
             $layoutName = isset($row['layout']) ? $sanitizedRow->getString('layout') : '';
-            $entry['id'] = $sanitizedRow->getString('id');
-            $entry['type'] = $sanitizedRow->getString('type');
-            $entry['displayId'] = $sanitizedRow->getInt(('displayId'));
+
             $entry['display'] = ($displayName != '') ? $displayName : __('Not Found');
             $entry['layout'] = ($layoutName != '') ? $layoutName :  __('Not Found');
             $entry['media'] = $widgetName;
             $entry['numberPlays'] = $sanitizedRow->getInt('count');
             $entry['duration'] = $sanitizedRow->getInt('duration');
-            $entry['minStart'] = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
-            $entry['maxEnd'] = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
-            $entry['start'] = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
-            $entry['end'] = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
-            $entry['layoutId'] = $sanitizedRow->getInt('layoutId');
-            $entry['widgetId'] = $sanitizedRow->getInt('widgetId');
-            $entry['mediaId'] = $sanitizedRow->getInt('mediaId');
+            $entry['start'] = $start->format($returnDateFormat);
+            $entry['end'] = $end->format($returnDateFormat);
+            $entry['layoutId'] = $sanitizedRow->getInt('layoutId', ['default' => 0]);
+            $entry['widgetId'] = $widgetId;
+            $entry['mediaId'] = $sanitizedRow->getInt('mediaId', ['default' => 0]);
             $entry['tag'] = $sanitizedRow->getString('tag');
-            $entry['statDate'] = isset($row['statDate']) ? $this->getDate()->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : '';
-            $entry['engagements'] = $row['engagements'];
+            $entry['statDate'] = isset($row['statDate']) ? $resultSet->getDateFromValue($row['statDate'])->format(DateFormatHelper::getSystemFormat()) : '';
+            $entry['engagements'] = $resultSet->getEngagementsFromRow($row);
 
             $rows[] = $entry;
         }
@@ -499,7 +527,7 @@ class Stats extends Base
         // Get an array of display id this user has access to.
         $displayIds = [];
 
-        foreach ($this->displayFactory->query(null, [], $request) as $display) {
+        foreach ($this->displayFactory->query(null, []) as $display) {
             $displayIds[] = $display->displayId;
         }
 
@@ -512,8 +540,8 @@ class Stats extends Base
 
         $displayId = $sanitizedParams->getInt('displayId');
         $params = array(
-            'month' => $this->getDate()->getLocalDate($fromDt->setDateTime($fromDt->year, $fromDt->month, 1, 0, 0), 'U'),
-            'month2' => $this->getDate()->getLocalDate($toDt->addMonth()->setDateTime($toDt->year, $toDt->month, 1, 0, 0), 'U')
+            'month' => $fromDt->setDateTime($fromDt->year, $fromDt->month, 1, 0, 0)->format('U'),
+            'month2' => $toDt->addMonth()->setDateTime($toDt->year, $toDt->month, 1, 0, 0)->format('U')
         );
 
         $SQL = 'SELECT display.display, IFNULL(SUM(Size), 0) AS size ';
@@ -792,15 +820,15 @@ class Stats extends Base
             $type = $sanitizedRow->getString('type');
             if ($this->timeSeriesStore->getEngine() == 'mongodb') {
 
-                $statDate = isset($row['statDate']) ? $this->getDate()->parse($row['statDate']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s') : null;
-                $fromDt = $this->getDate()->parse($row['start']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
-                $toDt = $this->getDate()->parse($row['end']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
+                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate']->toDateTime())->format(DateFormatHelper::getSystemFormat()) : null;
+                $fromDt = Carbon::createFromTimestamp($row['start']->toDateTime())->format(DateFormatHelper::getSystemFormat());
+                $toDt = Carbon::createFromTimestamp($row['end']->toDateTime())->format(DateFormatHelper::getSystemFormat());
                 $engagements = isset($row['engagements']) ? json_encode($row['engagements']): '[]';
             } else {
 
-                $statDate = isset($row['statDate']) ?$this->getDate()->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : null;
-                $fromDt = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
-                $toDt = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
+                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate'])->format(DateFormatHelper::getSystemFormat()) : null;
+                $fromDt = Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat());
+                $toDt = Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat());
                 $engagements = isset($row['engagements']) ? $row['engagements']: '[]';
             }
 
@@ -1053,16 +1081,16 @@ class Stats extends Base
         $tags = $sanitizedQueryParams->getString('tags');
         $onlyLoggedIn = $sanitizedQueryParams->getCheckbox('onlyLoggedIn') == 1;
 
-        $currentDate = $this->getDate()->parse()->startOfDay()->format('Y-m-d');
+        $currentDate = Carbon::now()->startOfDay()->format('Y-m-d');
 
         // fromDt is always start of selected day
-        $fromDt = $this->getDate()->parse($fromDt)->startOfDay();
+        $fromDt = $fromDt->startOfDay();
 
         // If toDt is current date then make it current datetime
-        if ($this->getDate()->parse($toDt)->startOfDay()->format('Y-m-d') == $currentDate) {
-            $toDt = $this->getDate()->parse();
+        if ($toDt->startOfDay()->format('Y-m-d') == $currentDate) {
+            $toDt = Carbon::now();
         } else {
-            $toDt = $this->getDate()->parse()->startOfDay();
+            $toDt =  Carbon::now()->startOfDay();
         }
 
         // Get an array of display id this user has access to.

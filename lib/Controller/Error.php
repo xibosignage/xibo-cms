@@ -32,13 +32,8 @@ use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Environment;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\HelpServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\ExpiredException;
-use Xibo\Support\Exception\InstanceSuspendedException;
-use Xibo\Support\Exception\UpgradePendingException;
 
 /**
  * Class Error
@@ -57,33 +52,14 @@ class Error extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param Twig $view
      * @param ContainerInterface $container
      */
-    public function __construct(LogServiceInterface $log, SanitizerService $sanitizerService, ApplicationState $state, \Xibo\Entity\User $user, HelpServiceInterface $help, DateServiceInterface $date, ConfigServiceInterface $config, Twig $view, ContainerInterface $container)
+    public function __construct(LogServiceInterface $log, SanitizerService $sanitizerService, ApplicationState $state, \Xibo\Entity\User $user, HelpServiceInterface $help, ConfigServiceInterface $config, Twig $view, ContainerInterface $container)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
         $this->container = $container;
-    }
-
-    /**
-     * Determine if we are a handled exception
-     * @param $e
-     * @return bool
-     */
-    private function handledError($e)
-    {
-        if (method_exists($e, 'handledException'))
-            return $e->handledException();
-
-        return ($e instanceof \InvalidArgumentException
-            || $e instanceof ExpiredException
-            || $e instanceof AccessDeniedException
-            || $e instanceof InstanceSuspendedException
-            || $e instanceof UpgradePendingException
-        );
     }
 
     /**

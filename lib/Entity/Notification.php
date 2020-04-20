@@ -254,6 +254,7 @@ class Notification implements \JsonSerializable
 
     /**
      * Save Notification
+     * @throws InvalidArgumentException
      */
     public function save()
     {

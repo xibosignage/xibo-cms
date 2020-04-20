@@ -21,8 +21,10 @@
  */
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Psr7\Stream;
 use Mimey\MimeTypes;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
@@ -51,12 +53,13 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
 use Xibo\Helper\HttpCacheProvider;
+use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\XiboUploadHandler;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -159,7 +162,6 @@ class Library extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param PoolInterface $pool
@@ -183,9 +185,9 @@ class Library extends Base
      * @param Twig $view
      * @param HttpCacheProvider $cacheProvider
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $dispatcher, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory, $view, HttpCacheProvider $cacheProvider)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $pool, $dispatcher, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory, $view, HttpCacheProvider $cacheProvider)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->store = $store;
         $this->moduleFactory = $moduleFactory;
@@ -605,7 +607,7 @@ class Library extends Base
                 $media->excludeProperty('mediaExpiresIn');
                 $media->excludeProperty('mediaExpiryFailed');
                 $media->excludeProperty('mediaNoExpiryDate');
-                $media->expires = ($media->expires == 0) ? 0 : $this->getDate()->getLocalDate($media->expires);
+                $media->expires = ($media->expires == 0) ? 0 : Carbon::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat());
                 continue;
             }
 
@@ -916,7 +918,7 @@ class Library extends Base
 
         if ($parsedBody->getDate('expires') != null ) {
 
-            if ($parsedBody->getDate('expires')->format('U') > time()) {
+            if ($parsedBody->getDate('expires')->format('U') > Carbon::now()->format('U')) {
                 $expires = $parsedBody->getDate('expires')->format('U');
             } else {
                 throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');
@@ -1013,7 +1015,7 @@ class Library extends Base
             'validExtensions' => implode('|', $this->moduleFactory->getValidExtensions(['type' => $media->mediaType])),
             'help' => $this->getHelp()->link('Library', 'Edit'),
             'tags' => $tags,
-            'expiryDate' => ($media->expires == 0 ) ? null : date('Y-m-d H:i:s', $media->expires)
+            'expiryDate' => ($media->expires == 0 ) ? null : Carbon::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat(), $media->expires)
         ]);
 
         return $this->render($request, $response);
@@ -1117,7 +1119,7 @@ class Library extends Base
 
         if ($sanitizedParams->getDate('expires') != null ) {
 
-            if ($sanitizedParams->getDate('expires')->format('U') > time()) {
+            if ($sanitizedParams->getDate('expires')->format('U') > Carbon::now()->format('U')) {
                 $media->expires = $sanitizedParams->getDate('expires')->format('U');
             } else {
                 throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');
@@ -1410,7 +1412,7 @@ class Library extends Base
         }
 
         if ($widget->getModule()->regionSpecific == 1) {
-            throw new NotFoundException('Cannot download region specific module');
+            throw new NotFoundException(__('Cannot download region specific module'));
         }
 
         $this->getLog()->debug('About to call download for Widget: ' . $widget->getModuleType());
@@ -1443,14 +1445,16 @@ class Library extends Base
         $httpCache = $this->cacheProvider;
         // Issue some headers
         $response = $httpCache->withEtag($response, md5($css['css']));
-        $response = $response->withHeader('Content-Type', 'text/css');
-
+        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/fontcss_' . Random::generateString();
         // Return the CSS to the browser as a file
-        $out = fopen('php://output', 'w');
+        $out = fopen($tempFileName, 'w');
         fputs($out, $css['css']);
         fclose($out);
 
         $this->setNoOutput(true);
+
+        $response = $response->withHeader('Content-Type', 'text/css')
+                             ->withBody(new Stream(fopen($tempFileName, 'r')));
 
         return $this->render($request, $response);
     }
@@ -1646,6 +1650,8 @@ class Library extends Base
 
     /**
      * Installs all files related to the enabled modules
+     * @throws NotFoundException
+     * @throws GeneralException
      */
     public function installAllModuleFiles()
     {
@@ -1683,7 +1689,7 @@ class Library extends Base
                 continue;
 
             // Has this file been written to recently?
-            if (filemtime($libraryTemp . DIRECTORY_SEPARATOR . $item) > (time() - 86400)) {
+            if (filemtime($libraryTemp . DIRECTORY_SEPARATOR . $item) > Carbon::now()->subSeconds(86400)->format('U')) {
                 $this->getLog()->debug('Skipping active file: ' . $item);
                 continue;
             }
@@ -1696,11 +1702,13 @@ class Library extends Base
 
     /**
      * Removes all expired media files
+     * @throws NotFoundException
+     * @throws GeneralException
      */
     public function removeExpiredFiles()
     {
         // Get a list of all expired files and delete them
-        foreach ($this->mediaFactory->query(null, array('expires' => time(), 'allModules' => 1, 'length' => 100)) as $entry) {
+        foreach ($this->mediaFactory->query(null, array('expires' => Carbon::now()->format('U'), 'allModules' => 1, 'length' => 100)) as $entry) {
             /* @var \Xibo\Entity\Media $entry */
             // If the media type is a module, then pretend its a generic file
             $this->getLog()->info('Removing Expired File %s', $entry->name);
@@ -2417,7 +2425,7 @@ class Library extends Base
         
         if ($sanitizedParams->getDate('expires') != null ) {
 
-            if ($sanitizedParams->getDate('expires')->format('U') > time()) {
+            if ($sanitizedParams->getDate('expires')->format('U') > Carbon::now()->format('U')) {
                 $expires = $sanitizedParams->getDate('expires')->format('U');
             } else {
                 throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');

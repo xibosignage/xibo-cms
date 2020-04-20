@@ -21,6 +21,7 @@
  */
 
 namespace Xibo\XTR;
+use Carbon\Carbon;
 use Xibo\Entity\ScheduleReminder;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\NotificationFactory;
@@ -28,7 +29,6 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\ScheduleReminderFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -38,9 +38,6 @@ use Xibo\Support\Exception\NotFoundException;
 class ScheduleReminderTask implements TaskInterface
 {
     use TaskTrait;
-
-    /** @var DateServiceInterface */
-    private $date;
 
     /** @var UserFactory */
     private $userFactory;
@@ -63,7 +60,6 @@ class ScheduleReminderTask implements TaskInterface
     /** @inheritdoc */
     public function setFactories($container)
     {
-        $this->date = $container->get('dateService');
         $this->userFactory = $container->get('userFactory');
         $this->scheduleFactory = $container->get('scheduleFactory');
         $this->campaignFactory = $container->get('campaignFactory');
@@ -90,7 +86,7 @@ class ScheduleReminderTask implements TaskInterface
 
         $task = $this->getTask();
         $nextRunDate = $task->nextRunDate();
-        $task->lastRunDt = time();
+        $task->lastRunDt = Carbon::now()->format('U');
         $task->save();
 
         // Get those reminders that have reminderDt <= nextRunDate && reminderDt > lastReminderDt
@@ -159,7 +155,7 @@ class ScheduleReminderTask implements TaskInterface
             // Is this schedule a recurring event?
             if ($schedule->recurrenceType != '') {
 
-                $now = $this->date->parse();
+                $now = Carbon::now();
                 $remindSeconds = $reminder->value * $type;
 
                 // Get the next reminder date
@@ -177,7 +173,7 @@ class ScheduleReminderTask implements TaskInterface
                     // Keep the last reminder date
                     $lastReminderDate = $nextReminderDate;
 
-                    $now = $this->date->parse($nextReminderDate + 1, 'U');
+                    $now = Carbon::createFromTimestamp($nextReminderDate + 1);
                     try {
                         $nextReminderDate = $schedule->getNextReminderDate($now, $reminder, $remindSeconds);
                     } catch (NotFoundException $error) {
@@ -216,12 +212,21 @@ class ScheduleReminderTask implements TaskInterface
         }
     }
 
+    /**
+     * @param $subject
+     * @param $body
+     * @param $reminder
+     * @param $schedule
+     * @param null $releaseDt
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     */
     private function createNotification($subject, $body, $reminder, $schedule, $releaseDt = null) {
 
         $notification = $this->notificationFactory->createEmpty();
         $notification->subject = $subject;
         $notification->body = $body;
-        $notification->createdDt = $this->date->getLocalDate(null, 'U');
+        $notification->createdDt = Carbon::now()->format('U');
         $notification->releaseDt = $releaseDt;
         $notification->isEmail = $reminder->isEmail;
         $notification->isInterrupt = 0;

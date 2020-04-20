@@ -32,7 +32,6 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Entity\User;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\SanitizerService;
-use Xibo\Helper\Translate;
 use Xibo\Middleware\State;
 use Xibo\Service\ConfigService;
 use Xibo\Service\HelpService;
@@ -84,7 +83,6 @@ class ContainerFactory
                 if ($c->get('configService')->timeSeriesStore == null) {
                     return (new MySqlTimeSeriesStore())
                         ->setDependencies($c->get('logService'),
-                            $c->get('dateService'),
                             $c->get('layoutFactory'),
                             $c->get('campaignFactory'))
                         ->setStore($c->get('store'));
@@ -94,7 +92,6 @@ class ContainerFactory
 
                     return $timeSeriesStore->setDependencies(
                         $c->get('logService'),
-                        $c->get('dateService'),
                         $c->get('layoutFactory'),
                         $c->get('campaignFactory'),
                         $c->get('mediaFactory'),
@@ -107,12 +104,6 @@ class ContainerFactory
             'state' => function() {
                 return new ApplicationState();
             },
-            'dateService' => function() {
-                $date = new \Xibo\Service\DateServiceGregorian();
-                $date->setLocale(Translate::GetLocale(2));
-
-                return $date;
-            },
             'dispatcher' => function() {
                 return new EventDispatcher();
             },
@@ -122,7 +113,6 @@ class ContainerFactory
                     $c->get('pool'),
                     $c->get('logService'),
                     $c->get('configService'),
-                    $c->get('dateService'),
                     $c->get('sanitizerService'),
                     $c->get('dispatcher')
                 );

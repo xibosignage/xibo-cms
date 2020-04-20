@@ -1,0 +1,10 @@
+{
+    "id": "weather-forecast-3",
+    "value": "Template 4 - Forecast vertical list",
+    "main": "<div class=\"main-container\">\n    <div class=\"main-details\">\n        <div class=\"day\">\n            <div class=\"day-details text-center\">[time|D]</div>\n            <div class=\"weather-icon text-center\"><i class=\"wi [wicon]\"></i></div>\n            <div class=\"temp-details text-center\">[temperatureMaxRound] º [temperatureUnit] </div>\n        </div>\n    </div>\n</div>",
+    "css": ".main-details {\n    background-color: #000;\n    opacity: 0.8;\n    color: #f9f9f9;\n}\n\n.day-details {\n    font-size: 16px;\n    padding-top: 20px;\n    height: 50px;\n}\n\n.temp-details {\n    font-size: 16px;\n    padding-bottom: 20px;\n    height: 50px;\n}\n\n.weather-icon {\n    font-size: 30px;\n    padding: 30px 0px;\n    height: 100px;\n}\n\n.footer-powered-by {\n    color: #fff;\n    font-size: 10px;\n    background-color: #000;\n}",
+    "widgetOriginalWidth": "50",
+    "widgetOriginalHeight": "200",
+    "image": "modules/weather/template-thumbs/weather-forecast-3.png",
+    "type": "forecast"
+}

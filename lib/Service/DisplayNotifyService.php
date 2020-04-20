@@ -22,6 +22,7 @@
 
 
 namespace Xibo\Service;
+use Carbon\Carbon;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Display;
 use Xibo\Support\Exception\DeadlockException;
@@ -51,9 +52,6 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     /** @var  PlayerActionServiceInterface */
     private $playerActionService;
 
-    /** @var  DateServiceInterface */
-    private $dateService;
-
     /** @var  ScheduleFactory */
     private $scheduleFactory;
 
@@ -73,14 +71,13 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     private $keysProcessed = [];
 
     /** @inheritdoc */
-    public function __construct($config, $log, $store, $pool, $playerActionService, $dateService, $scheduleFactory, $dayPartFactory)
+    public function __construct($config, $log, $store, $pool, $playerActionService, $scheduleFactory, $dayPartFactory)
     {
         $this->config = $config;
         $this->log = $log;
         $this->store = $store;
         $this->pool = $pool;
         $this->playerActionService = $playerActionService;
-        $this->dateService = $dateService;
         $this->scheduleFactory = $scheduleFactory;
         $this->dayPartFactory = $dayPartFactory;
     }
@@ -305,7 +302,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
              WHERE `lkcampaignlayout`.campaignId = :assignedCampaignId
         ';
 
-        $currentDate = $this->dateService->parse();
+        $currentDate = Carbon::now();
         $rfLookAhead = $currentDate->copy()->addSeconds($this->config->getSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         $params = [
@@ -341,8 +338,9 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
 
             $this->displayIds[] = $row['displayId'];
 
-            if ($this->collectRequired)
+            if ($this->collectRequired) {
                 $this->displayIdsRequiringActions[] = $row['displayId'];
+            }
         }
 
         $this->keysProcessed[] = 'campaign_' . $campaignId;
@@ -454,7 +452,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                     AND `widgetoption`.value = :activeDataSetId3
         ';
 
-        $currentDate = $this->dateService->parse();
+        $currentDate = Carbon::now();
         $rfLookAhead = $currentDate->copy()->addSeconds($this->config->getSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         $params = [
@@ -586,7 +584,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
              WHERE `playlist`.playlistId = :playlistId
         ';
 
-        $currentDate = $this->dateService->parse();
+        $currentDate = Carbon::now();
         $rfLookAhead = $currentDate->copy()->addSeconds($this->config->getSetting('REQUIRED_FILES_LOOKAHEAD'));
 
         $params = [
@@ -625,5 +623,191 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         }
 
         $this->keysProcessed[] = 'playlist_' . $playlistId;
+    }
+
+    /** @inheritdoc */
+    public function notifyByLayoutCode($code)
+    {
+        if (in_array('layoutCode_' . $code, $this->keysProcessed)) {
+            $this->log->debug('Already processed ' . $code . ' skipping this time.');
+            return;
+        }
+
+        $this->log->debug('Notify by Layout Code: ' . $code);
+
+        // Get the Display Ids we need to notify
+        $sql = '
+            SELECT DISTINCT display.displayId, 
+                schedule.eventId, 
+                schedule.fromDt, 
+                schedule.toDt, 
+                schedule.recurrence_type AS recurrenceType,
+                schedule.recurrence_detail AS recurrenceDetail,
+                schedule.recurrence_range AS recurrenceRange,
+                schedule.recurrenceRepeatsOn,
+                schedule.lastRecurrenceWatermark,
+                schedule.dayPartId
+             FROM `schedule`
+               INNER JOIN `lkscheduledisplaygroup`
+               ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
+               INNER JOIN `lkdgdg`
+               ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
+               INNER JOIN `lkdisplaydg`
+               ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
+               INNER JOIN `display`
+               ON lkdisplaydg.DisplayID = display.displayID
+               INNER JOIN (
+                  SELECT DISTINCT campaignId
+                        FROM layout
+                        INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
+                        INNER JOIN action on layout.layoutId = action.sourceId
+                    WHERE action.layoutCode = :code AND layout.publishedStatusId = 1
+                  UNION
+                    SELECT DISTINCT campaignId
+                      FROM layout
+                           INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
+                           INNER JOIN region ON region.layoutId = layout.layoutId
+                           INNER JOIN action on region.regionId = action.sourceId
+                    WHERE action.layoutCode = :code AND layout.publishedStatusId = 1
+                  UNION
+                    SELECT DISTINCT campaignId
+                      FROM layout
+                           INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
+                           INNER JOIN region ON region.layoutId = layout.layoutId
+                           INNER JOIN playlist ON playlist.regionId = region.regionId
+                           INNER JOIN widget on playlist.playlistId = widget.playlistId
+                           INNER JOIN action on widget.widgetId = action.sourceId
+                    WHERE
+                        action.layoutCode = :code AND
+                        layout.publishedStatusId = 1
+               ) campaigns
+               ON campaigns.campaignId = `schedule`.campaignId
+             WHERE (
+                  (`schedule`.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
+                  OR `schedule`.recurrence_range >= :fromDt 
+                  OR (
+                    IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
+                  )
+              )
+            UNION
+            SELECT DISTINCT display.DisplayID,
+                0 AS eventId, 
+                0 AS fromDt, 
+                0 AS toDt, 
+                NULL AS recurrenceType, 
+                NULL AS recurrenceDetail,
+                NULL AS recurrenceRange,
+                NULL AS recurrenceRepeatsOn,
+                NULL AS lastRecurrenceWatermark,
+                NULL AS dayPartId
+             FROM `display`
+               INNER JOIN `lkcampaignlayout`
+               ON `lkcampaignlayout`.LayoutID = `display`.DefaultLayoutID
+             WHERE `lkcampaignlayout`.CampaignID IN (
+                  SELECT DISTINCT campaignId
+                        FROM layout
+                        INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
+                        INNER JOIN action on layout.layoutId = action.sourceId
+                    WHERE action.layoutCode = :code AND layout.publishedStatusId = 1
+                  UNION
+                    SELECT DISTINCT campaignId
+                      FROM layout
+                           INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
+                           INNER JOIN region ON region.layoutId = layout.layoutId
+                           INNER JOIN action on region.regionId = action.sourceId
+                    WHERE action.layoutCode = :code AND layout.publishedStatusId = 1
+                  UNION
+                    SELECT DISTINCT campaignId
+                      FROM layout
+                           INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
+                           INNER JOIN region ON region.layoutId = layout.layoutId
+                           INNER JOIN playlist ON playlist.regionId = region.regionId
+                           INNER JOIN widget on playlist.playlistId = widget.playlistId
+                           INNER JOIN action on widget.widgetId = action.sourceId
+                    WHERE
+                        action.layoutCode = :code AND layout.publishedStatusId = 1
+                    )
+            UNION
+            SELECT `lkdisplaydg`.displayId,
+                0 AS eventId, 
+                0 AS fromDt, 
+                0 AS toDt, 
+                NULL AS recurrenceType, 
+                NULL AS recurrenceDetail,
+                NULL AS recurrenceRange,
+                NULL AS recurrenceRepeatsOn,
+                NULL AS lastRecurrenceWatermark,
+                NULL AS dayPartId
+              FROM `lkdisplaydg`
+                INNER JOIN `lklayoutdisplaygroup`
+                ON `lklayoutdisplaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId
+                INNER JOIN `lkcampaignlayout`
+                ON `lkcampaignlayout`.layoutId = `lklayoutdisplaygroup`.layoutId
+             WHERE `lkcampaignlayout`.campaignId IN ( 
+                  SELECT DISTINCT campaignId
+                        FROM layout
+                        INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
+                        INNER JOIN action on layout.layoutId = action.sourceId
+                    WHERE action.layoutCode = :code AND layout.publishedStatusId = 1
+                  UNION
+                    SELECT DISTINCT campaignId
+                      FROM layout
+                           INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
+                           INNER JOIN region ON region.layoutId = layout.layoutId
+                           INNER JOIN action on region.regionId = action.sourceId
+                    WHERE action.layoutCode = :code AND layout.publishedStatusId = 1
+                  UNION
+                    SELECT DISTINCT campaignId
+                      FROM layout
+                           INNER JOIN lkcampaignlayout ON lkcampaignlayout.layoutId = layout.layoutId
+                           INNER JOIN region ON region.layoutId = layout.layoutId
+                           INNER JOIN playlist ON playlist.regionId = region.regionId
+                           INNER JOIN widget on playlist.playlistId = widget.playlistId
+                           INNER JOIN action on widget.widgetId = action.sourceId
+                    WHERE
+                        action.layoutCode = :code AND layout.publishedStatusId = 1
+                  )
+        ';
+
+        $currentDate = Carbon::now();
+        $rfLookAhead = $currentDate->copy()->addSeconds($this->config->getSetting('REQUIRED_FILES_LOOKAHEAD'));
+
+        $params = [
+            'fromDt' => $currentDate->subHour()->format('U'),
+            'toDt' => $rfLookAhead->format('U'),
+            'code' => $code
+        ];
+
+        foreach ($this->store->select($sql, $params) as $row) {
+
+            // Don't process if the displayId is already in the collection (there is little point in running the
+            // extra query)
+            if (in_array($row['displayId'], $this->displayIds)) {
+                continue;
+            }
+
+            // Is this schedule active?
+            if ($row['eventId'] != 0) {
+                $scheduleEvents = $this->scheduleFactory
+                    ->createEmpty()
+                    ->hydrate($row)
+                    ->getEvents($currentDate, $rfLookAhead);
+
+                if (count($scheduleEvents) <= 0) {
+                    $this->log->debug('Skipping eventId ' . $row['eventId'] . ' because it doesnt have any active events in the window');
+                    continue;
+                }
+            }
+
+            $this->log->debug(sprintf('Saving Layout with code %s, caused notify on displayId[' . $row['displayId'] . ']', $code));
+
+            $this->displayIds[] = $row['displayId'];
+
+            if ($this->collectRequired) {
+                $this->displayIdsRequiringActions[] = $row['displayId'];
+            }
+        }
+
+        $this->keysProcessed[] = 'layoutCode_' . $code;
     }
 }

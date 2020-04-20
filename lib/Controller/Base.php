@@ -21,6 +21,7 @@
  */
 
 namespace Xibo\Controller;
+use Carbon\Carbon;
 use Slim\App;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -33,7 +34,6 @@ use Xibo\Entity\User;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
@@ -69,11 +69,6 @@ class Base
      * @var \Xibo\Service\HelpServiceInterface
      */
     private $helpService;
-
-    /**
-     * @var \Xibo\Service\DateServiceInterface
-     */
-    private $dateService;
 
     /**
      * @var ConfigServiceInterface
@@ -113,19 +108,17 @@ class Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param Twig $view
      * @return $this
      */
-    protected function setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, Twig $view = null)
+    protected function setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, Twig $view = null)
     {
         $this->log = $log;
         $this->sanitizerService = $sanitizerService;
         $this->state = $state;
         $this->user = $user;
         $this->helpService = $help;
-        $this->dateService = $date;
         $this->configService = $config;
         $this->view = $view;
 
@@ -175,15 +168,6 @@ class Base
     protected function getHelp()
     {
         return $this->helpService;
-    }
-
-    /**
-     * Get Date
-     * @return DateServiceInterface
-     */
-    protected function getDate()
-    {
-        return $this->dateService;
     }
 
     /**
@@ -320,7 +304,7 @@ class Base
             }
 
             // Append the side bar content
-            $data['clock'] = $this->getDate()->getLocalDate(null, 'H:i T');
+            $data['clock'] = Carbon::now()->format('H:i T');
             $data['currentUser'] = $this->getUser();
 
             try {
@@ -406,7 +390,7 @@ class Base
 
         $view = $view->getBody();
         // Log Rendered View
-         $this->getLog()->debug(sprintf('%s View: %s', $state->template, $view));
+        //$this->getLog()->debug(sprintf('%s View: %s', $state->template, $view));
 
         if (!$view = json_decode($view, true)) {
             $this->getLog()->error(sprintf('Problem with Template: View = %s ', $state->template));

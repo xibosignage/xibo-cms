@@ -22,7 +22,8 @@
 
 
 namespace Xibo\XTR;
-use Jenssegers\Date\Date;
+
+use Carbon\Carbon;
 use Xibo\Entity\User;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
@@ -72,7 +73,7 @@ class AuditLogArchiveTask implements TaskInterface
 
             // Delete all audit log messages older than 1 month
             $this->store->update('DELETE FROM `auditlog` WHERE logDate < :logDate', [
-                'logDate' => $this->date->parse()->subMonth()->setTime(0, 0, 0)->format('U')
+                'logDate' => Carbon::now()->subMonth()->setTime(0, 0, 0)->format('U')
             ]);
 
         } else {
@@ -88,12 +89,12 @@ class AuditLogArchiveTask implements TaskInterface
                 return;
             }
 
-            /** @var Date $earliestDate */
-            $earliestDate = $this->date->parse($earliestDate[0]['minDate'], 'U')->setTime(0, 0, 0);
+            /** @var Carbon $earliestDate */
+            $earliestDate = Carbon::createFromTimestamp($earliestDate[0]['minDate'])->setTime(0, 0, 0);
 
             // Take the earliest date and roll forward until the current time
-            /** @var Date $now */
-            $now = $this->date->parse()->subMonth()->setTime(0, 0, 0);
+            /** @var Carbon $now */
+            $now = Carbon::now()->subMonth()->setTime(0, 0, 0);
             $i = 0;
 
             while ($earliestDate < $now && $i <= $maxPeriods) {
@@ -115,8 +116,8 @@ class AuditLogArchiveTask implements TaskInterface
 
     /**
      * Export stats to the library
-     * @param Date $fromDt
-     * @param Date $toDt
+     * @param Carbon $fromDt
+     * @param Carbon $toDt
      * @throws \Xibo\Support\Exception\GeneralException
      */
     private function exportAuditLogToLibrary($fromDt, $toDt)
@@ -132,8 +133,8 @@ class AuditLogArchiveTask implements TaskInterface
         ';
 
         $params = [
-            'fromDt' => $this->date->getLocalDate($fromDt, 'U'),
-            'toDt' => $this->date->getLocalDate($toDt, 'U')
+            'fromDt' => $fromDt->format('U'),
+            'toDt' => $toDt->format('U')
         ];
 
         $sql .= " ORDER BY 1 ";

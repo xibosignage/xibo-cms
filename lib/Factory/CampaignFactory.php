@@ -25,8 +25,8 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Campaign;
 use Xibo\Entity\User;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -60,7 +60,7 @@ class CampaignFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param PermissionFactory $permissionFactory
@@ -291,14 +291,6 @@ class CampaignFactory extends BaseFactory
                 $group .= ' OR campaign.campaignId = :includeCampaignId ';
                 $params['includeCampaignId'] = $sanitizedFilter->getInt('includeCampaignId');
             }
-        }
-
-        $user = $this->getUser();
-
-        if ( ($user->userTypeId == 1 && $user->showContentFrom == 2) || $user->userTypeId == 4 ) {
-            $body .= ' AND user.userTypeId = 4 ';
-        } else {
-            $body .= ' AND user.userTypeId <> 4 ';
         }
 
         // Sorting?

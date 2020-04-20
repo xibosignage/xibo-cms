@@ -60,6 +60,10 @@
                             <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown." %}</p>
                         </div>
 
+                        {% set title %}{% trans "Code" %}{% endset %}
+                        {% set helpText %}{% trans "The Code identifier for this Layout - used in Interactive Actions" %}{% endset %}
+                        {{ forms.input("code", title, layout.code, helpText) }}
+
                         {% set title %}{% trans "Retired" %}{% endset %}
                         {% set helpText %}{% trans "Retire this layout or not? It will no longer be visible in lists" %}{% endset %}
                         {{ forms.checkbox("retired", title, layout.retired, helpText) }}

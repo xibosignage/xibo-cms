@@ -25,8 +25,9 @@ namespace Xibo\Widget;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Translate;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class WorldClock
@@ -65,7 +66,7 @@ class WorldClock extends ModuleWidget
             $module->regionSpecific = 1;
             $module->renderAs = 'html';
             $module->schemaVersion = $this->codeSchemaVersion;
-            $module->defaultDuration = 10;
+            $module->defaultDuration = 60;
             $module->settings = [];
             $module->installName = 'worldclock';
 
@@ -144,7 +145,6 @@ class WorldClock extends ModuleWidget
 
             if ($this->getOption('overrideTemplate') == 1) {
                 $this->setRawNode('mainTemplate', $request->getParam('mainTemplate', $request->getParam('mainTemplate', null)));
-                $this->setOption('mainTemplate_advanced', $sanitizedParams->getCheckbox('mainTemplate_advanced'));
                 $this->setRawNode('styleSheet', $request->getParam('styleSheet', $request->getParam('styleSheet', null)));
 
                 $this->setOption('widgetOriginalWidth', $sanitizedParams->getInt('widgetOriginalWidth'));
@@ -345,7 +345,7 @@ class WorldClock extends ModuleWidget
                 /* Highlighted */
                 .highlighted .analogue-clock-label {
                     font-weight: bold;
-                    font-size: 22px;
+                    font-size: 20px;
                 }';
 
                 // Show or hide label
@@ -356,7 +356,7 @@ class WorldClock extends ModuleWidget
                             color: ' . $this->getOption('labelTextColor') . ';
                             bottom: -30px;
                             position: relative;
-                            font-size: 20px;
+                            font-size: 18px;
                             width: 80%;
                             left: 10%;
                             text-align: center;
@@ -509,16 +509,15 @@ class WorldClock extends ModuleWidget
             'widgetDesignWidth' => $widgetOriginalWidth,
             'widgetDesignHeight'=> $widgetOriginalHeight,
             'worldClocks' => $worldClocks,
-            'clockCols' => $clockCols,
-            'clockRows' => $clockRows
+            'numCols' => $clockCols,
+            'numRows' => $clockRows
         );
 
         // Replace the head content
         $headContent = '';
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . ($this->isPreview() ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
-        <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . ($this->isPreview() ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
         
         // Add the CSS if it isn't empty, and replace the wallpaper
         if ($styleSheet != '') {
@@ -542,7 +541,7 @@ class WorldClock extends ModuleWidget
         $javaScriptContent .= '   var body = ' . json_encode($mainTemplate) . ';';
         $javaScriptContent .= '   moment.locale("' . Translate::GetJsLocale() . '");';
         $javaScriptContent .= '   $(document).ready(function() { ';
-        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("body").xiboWorldClockRender(options, body); $("#content").find("img").xiboImageRender(options); ';
+        $javaScriptContent .= '       $("body").xiboWorldClockRender(options, body); $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options); ';
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= '</script>';
 
@@ -585,7 +584,7 @@ class WorldClock extends ModuleWidget
     {
         // A list of timezones
         $timeZones = [];
-        foreach ($this->getDate()->timezoneList() as $key => $value) {
+        foreach (DateFormatHelper::timezoneList() as $key => $value) {
             $timeZones[] = ['id' => $key, 'value' => $value];
         }
 

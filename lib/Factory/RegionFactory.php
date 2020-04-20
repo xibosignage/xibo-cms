@@ -25,9 +25,8 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Region;
-use Xibo\Service\DateServiceInterface;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -38,9 +37,6 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class RegionFactory extends BaseFactory
 {
-    /** @var DateServiceInterface */
-    private $dateService;
-
     /**
      * @var RegionOptionFactory
      */
@@ -56,23 +52,26 @@ class RegionFactory extends BaseFactory
      */
     private $playlistFactory;
 
+    /** @var ActionFactory */
+    private $actionFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
-     * @param DateServiceInterface $date
+     * @param SanitizerService $sanitizerService
      * @param PermissionFactory $permissionFactory
      * @param RegionOptionFactory $regionOptionFactory
      * @param PlaylistFactory $playlistFactory
+     * @param ActionFactory $actionFactory
      */
-    public function __construct($store, $log, $sanitizerService, $date, $permissionFactory, $regionOptionFactory, $playlistFactory)
+    public function __construct($store, $log, $sanitizerService, $permissionFactory, $regionOptionFactory, $playlistFactory, $actionFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
-        $this->dateService = $date;
         $this->permissionFactory = $permissionFactory;
         $this->regionOptionFactory = $regionOptionFactory;
         $this->playlistFactory = $playlistFactory;
+        $this->actionFactory = $actionFactory;
     }
 
     /**
@@ -83,11 +82,11 @@ class RegionFactory extends BaseFactory
         return new Region(
             $this->getStore(),
             $this->getLog(),
-            $this->dateService,
             $this,
             $this->permissionFactory,
             $this->regionOptionFactory,
-            $this->playlistFactory
+            $this->playlistFactory,
+            $this->actionFactory
         );
     }
 
@@ -100,20 +99,24 @@ class RegionFactory extends BaseFactory
      * @param int $top
      * @param int $left
      * @param int $zIndex
+     * @param int $isDrawer
      * @return Region
      * @throws InvalidArgumentException
      */
-    public function create($ownerId, $name, $width, $height, $top, $left, $zIndex = 0)
+    public function create($ownerId, $name, $width, $height, $top, $left, $zIndex = 0, $isDrawer = 0)
     {
         // Validation
-        if (!is_numeric($width) || !is_numeric($height) || !is_numeric($top) || !is_numeric($left))
+        if (!is_numeric($width) || !is_numeric($height) || !is_numeric($top) || !is_numeric($left)) {
             throw new InvalidArgumentException(__('Size and coordinates must be generic'));
+        }
 
-        if ($width <= 0)
+        if ($width <= 0) {
             throw new InvalidArgumentException(__('Width must be greater than 0'));
+        }
 
-        if ($height <= 0)
+        if ($height <= 0) {
             throw new InvalidArgumentException(__('Height must be greater than 0'));
+        }
 
         $region = $this->createEmpty();
         $region->ownerId = $ownerId;
@@ -123,6 +126,7 @@ class RegionFactory extends BaseFactory
         $region->top = $top;
         $region->left = $left;
         $region->zIndex = $zIndex;
+        $region->isDrawer = $isDrawer;
 
         return $region;
     }
@@ -135,7 +139,18 @@ class RegionFactory extends BaseFactory
     public function getByLayoutId($layoutId)
     {
         // Get all regions for this layout
-        return $this->query(array(), array('disableUserCheck' => 1, 'layoutId' => $layoutId));
+        return $this->query([], ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'isDrawer' => 0]);
+    }
+
+    /**
+     * Get the drawer regions for a layout
+     * @param int $layoutId
+     * @return array[\Xibo\Entity\Region]
+     */
+    public function getDrawersByLayoutId($layoutId)
+    {
+        // Get all regions for this layout
+        return $this->query([], ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'isDrawer' => 1]);
     }
 
     /**
@@ -146,7 +161,7 @@ class RegionFactory extends BaseFactory
     public function getByPlaylistId($playlistId)
     {
         // Get all regions for this layout
-        return $this->query(array(), array('disableUserCheck' => 1, 'playlistId' => $playlistId));
+        return $this->query([], ['disableUserCheck' => 1, 'playlistId' => $playlistId]);
     }
 
     /**
@@ -200,7 +215,8 @@ class RegionFactory extends BaseFactory
               `region`.top,
               `region`.left,
               `region`.zIndex,
-              `region`.duration
+              `region`.duration,
+              `region`.isDrawer
         ';
 
         $sql .= '
@@ -224,8 +240,13 @@ class RegionFactory extends BaseFactory
             $params['playlistId'] = $sanitizedFilter->getInt('playlistId');
         }
 
+        if ($sanitizedFilter->getInt('isDrawer') !== null) {
+            $sql .= ' AND region.isDrawer = :isDrawer ';
+            $params['isDrawer'] = $sanitizedFilter->getInt('isDrawer');
+        }
+
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['zIndex']]);
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['zIndex', 'duration', 'isDrawer']]);
         }
 
         return $entries;

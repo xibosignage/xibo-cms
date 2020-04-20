@@ -81,6 +81,7 @@
                         {% set helpText %}{% trans "How far should the map be zoomed in? The higher the number the closer, 1 represents the entire globe." %}{% endset %}
                         {{ forms.number("zoom", title, module.getOption("zoom"), helpText) }}
                     </div>
+
                 </div> 
 
                 {% set message %}{% trans "This module is rendered on the Player which means the Player must have an internet connection." %}{% endset %}

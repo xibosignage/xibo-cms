@@ -107,7 +107,7 @@ $(document).ready(function() {
     toastr.options.positionClass = 'toast-top-center';
 
     // Load layout through an ajax request
-    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + '&embed=regions,playlists,widgets,widget_validity,tags,permissions')
+    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + '&embed=regions,playlists,widgets,widget_validity,tags,permissions,actions')
         .done(function(res) {
 
             if(res.data != null && res.data.length > 0) {
@@ -449,7 +449,7 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
 
     lD.common.showLoadingScreen();
 
-    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + "&embed=regions,playlists,widgets,widget_validity,tags,permissions")
+    $.get(urlsForApi.layout.get.url + '?layoutId=' + layoutId + "&embed=regions,playlists,widgets,widget_validity,tags,permissions,actions")
         .done(function(res) {
             if(res.data != null && res.data.length > 0) {
                 lD.layout = new Layout(layoutId, res.data[0]);

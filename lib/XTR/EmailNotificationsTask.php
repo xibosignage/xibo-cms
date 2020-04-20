@@ -24,6 +24,7 @@
 namespace Xibo\XTR;
 
 
+use Carbon\Carbon;
 use Slim\Views\Twig;
 use Xibo\Entity\UserNotification;
 use Xibo\Factory\UserNotificationFactory;
@@ -77,8 +78,9 @@ class EmailNotificationsTask implements TaskInterface
             $this->log->debug('Notification found: ' . $notification->notificationId);
 
             // System notification for the system user
-            if ($notification->isSystem == 1 && $notification->userId == 0)
-                $notification->email = $this->user->email;
+            if ($notification->isSystem == 1 && $notification->userId == 0) {
+                $notification->email = $this->user->email ?? $this->config->getSetting('mail_to');
+            }
 
             if ($notification->email != '') {
 
@@ -124,7 +126,7 @@ class EmailNotificationsTask implements TaskInterface
             }
 
             // Mark as sent
-            $notification->setEmailed($this->date->getLocalDate(null, 'U'));
+            $notification->setEmailed(Carbon::now()->format('U'));
             $notification->save();
         }
 

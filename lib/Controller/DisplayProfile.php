@@ -31,7 +31,6 @@ use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\NotFoundException;
@@ -72,7 +71,6 @@ class DisplayProfile extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param PoolInterface $pool
      * @param DisplayProfileFactory $displayProfileFactory
@@ -81,9 +79,9 @@ class DisplayProfile extends Base
      * @param DayPartFactory $dayPartFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $pool, $displayProfileFactory, $commandFactory, $playerVersionFactory, $dayPartFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $pool, $displayProfileFactory, $commandFactory, $playerVersionFactory, $dayPartFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->pool = $pool;
         $this->displayProfileFactory = $displayProfileFactory;
@@ -173,7 +171,7 @@ class DisplayProfile extends Base
         $profiles = $this->displayProfileFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
 
         if (count($profiles) <= 0)
-            throw new NotFoundException('Display Profile not found', 'DisplayProfile');
+            throw new NotFoundException(__('Display Profile not found'), 'DisplayProfile');
 
         foreach ($profiles as $profile) {
             /* @var \Xibo\Entity\DisplayProfile $profile */

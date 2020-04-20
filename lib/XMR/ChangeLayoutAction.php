@@ -37,6 +37,10 @@ class ChangeLayoutAction extends PlayerAction
         return $this;
     }
 
+    /**
+     * @return mixed|string
+     * @throws PlayerActionException
+     */
     public function getMessage()
     {
         $this->action = 'changeLayout';

@@ -21,13 +21,15 @@
  */
 namespace Xibo\Entity;
 
+use Carbon\Carbon;
+use Xibo\Factory\ActionFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\WidgetAudioFactory;
 use Xibo\Factory\WidgetMediaFactory;
 use Xibo\Factory\WidgetOptionFactory;
-use Xibo\Service\DateServiceInterface;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
@@ -182,6 +184,9 @@ class Widget implements \JsonSerializable
      */
     public $playlist;
 
+    /** @var Action[] */
+    public $actions = [];
+
     /**
      * Hash Key of Media Assignments
      * @var string
@@ -189,10 +194,16 @@ class Widget implements \JsonSerializable
     private $mediaHash = null;
 
     /**
-     * Temporary Id used during import/upgrade/sub-playlist ordering
+     * Temporary media Id used during import/upgrade/sub-playlist ordering
      * @var string read only string
      */
     public $tempId = null;
+
+    /**
+     * Temporary widget Id used during import/upgrade/sub-playlist ordering
+     * @var string read only string
+     */
+    public $tempWidgetId = null;
 
     /**
      * Flag to indicate whether the widget is newly added
@@ -216,8 +227,6 @@ class Widget implements \JsonSerializable
     public static $widgetMinDuration = 1;
 
     //<editor-fold desc="Factories and Dependencies">
-    /** @var  DateServiceInterface */
-    private $dateService;
 
     /**
      * @var WidgetOptionFactory
@@ -242,29 +251,32 @@ class Widget implements \JsonSerializable
 
     /** @var  PlaylistFactory */
     private $playlistFactory;
+
+    /** @var ActionFactory */
+    private $actionFactory;
     //</editor-fold>
 
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param DateServiceInterface $date
      * @param WidgetOptionFactory $widgetOptionFactory
      * @param WidgetMediaFactory $widgetMediaFactory
      * @param WidgetAudioFactory $widgetAudioFactory
      * @param PermissionFactory $permissionFactory
      * @param DisplayFactory $displayFactory
+     * @param ActionFactory $actionFactory
      */
-    public function __construct($store, $log, $date, $widgetOptionFactory, $widgetMediaFactory, $widgetAudioFactory, $permissionFactory, $displayFactory)
+    public function __construct($store, $log, $widgetOptionFactory, $widgetMediaFactory, $widgetAudioFactory, $permissionFactory, $displayFactory, $actionFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->excludeProperty('module');
-        $this->dateService = $date;
         $this->widgetOptionFactory = $widgetOptionFactory;
         $this->widgetMediaFactory = $widgetMediaFactory;
         $this->widgetAudioFactory = $widgetAudioFactory;
         $this->permissionFactory = $permissionFactory;
         $this->displayFactory = $displayFactory;
+        $this->actionFactory = $actionFactory;
     }
 
     /**
@@ -287,6 +299,9 @@ class Widget implements \JsonSerializable
         // No need to clone the media, but we should empty the original arrays of ids
         $this->originalMediaIds = [];
         $this->originalAudio = [];
+
+        // Clone actions
+        $this->actions = array_map(function ($object) { return clone $object; }, $this->actions);
     }
 
     /**
@@ -315,6 +330,7 @@ class Widget implements \JsonSerializable
             . $this->fromDt
             . $this->toDt
             . json_encode($this->widgetOptions)
+            . json_encode($this->actions)
         );
     }
 
@@ -369,7 +385,7 @@ class Widget implements \JsonSerializable
                 return $widgetOption;
         }
 
-        throw new NotFoundException('Widget Option not found');
+        throw new NotFoundException(__('Widget Option not found'));
     }
 
     /**
@@ -608,7 +624,7 @@ class Widget implements \JsonSerializable
      */
     public function isExpired()
     {
-        return ($this->toDt !== self::$DATE_MAX && $this->dateService->parse($this->toDt, 'U') < $this->dateService->parse());
+        return ($this->toDt !== self::$DATE_MAX && Carbon::createFromTimestamp($this->toDt)->format('U') < Carbon::now()->format('U'));
     }
 
     /**
@@ -666,11 +682,13 @@ class Widget implements \JsonSerializable
 
     /**
      * Load the Widget
+     * @param bool $loadActions
      */
-    public function load()
+    public function load($loadActions = true)
     {
-        if ($this->loaded || $this->widgetId == null || $this->widgetId == 0)
+        if ($this->loaded || $this->widgetId == null || $this->widgetId == 0) {
             return;
+        }
 
         // Load permissions
         $this->permissions = $this->permissionFactory->getByObjectId(get_class(), $this->widgetId);
@@ -686,6 +704,10 @@ class Widget implements \JsonSerializable
         // Load any widget audio assignments
         $this->audio = $this->widgetAudioFactory->getByWidgetId($this->widgetId);
         $this->originalAudio = $this->audio;
+
+        if ($loadActions) {
+            $this->actions = $this->actionFactory->getBySourceAndSourceId('widget', $this->widgetId);
+        }
 
         $this->hash = $this->hash();
         $this->mediaHash = $this->mediaHash();
@@ -860,6 +882,10 @@ class Widget implements \JsonSerializable
             $audio->delete();
         }
 
+        foreach ($this->actions as $action) {
+            $action->delete();
+        }
+
         // Unlink Media
         $this->mediaIds = [];
         $this->unlinkMedia();
@@ -902,7 +928,7 @@ class Widget implements \JsonSerializable
             // Notify the Playlist
             $this->getStore()->update('UPDATE `playlist` SET requiresDurationUpdate = 1, `modifiedDT` = :modifiedDt WHERE playlistId = :playlistId', [
                 'playlistId' => $this->playlistId,
-                'modifiedDt' => $this->dateService->getLocalDate()
+                'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
             ]);
         }
 
@@ -923,7 +949,7 @@ class Widget implements \JsonSerializable
                 )
             ', [
                 'playlistId' => $this->playlistId,
-                'modifiedDt' => $this->dateService->getLocalDate()
+                'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
             ]);
         }
 
@@ -956,8 +982,8 @@ class Widget implements \JsonSerializable
             'calculatedDuration' => $this->calculatedDuration,
             'fromDt' => ($this->fromDt == null) ? self::$DATE_MIN : $this->fromDt,
             'toDt' => ($this->toDt == null) ? self::$DATE_MAX : $this->toDt,
-            'createdDt' => ($this->createdDt === null) ? time() : $this->createdDt,
-            'modifiedDt' => time()
+            'createdDt' => ($this->createdDt === null) ? Carbon::now()->format('U') : $this->createdDt,
+            'modifiedDt' => Carbon::now()->format('U')
         ));
     }
 
@@ -990,7 +1016,7 @@ class Widget implements \JsonSerializable
             'calculatedDuration' => $this->calculatedDuration,
             'fromDt' => ($this->fromDt == null) ? self::$DATE_MIN : $this->fromDt,
             'toDt' => ($this->toDt == null) ? self::$DATE_MAX : $this->toDt,
-            'modifiedDt' => time()
+            'modifiedDt' => Carbon::now()->format('U')
         ];
 
         $this->getStore()->update($sql, $params);

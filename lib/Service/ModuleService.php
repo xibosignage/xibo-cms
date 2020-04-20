@@ -26,6 +26,7 @@ namespace Xibo\Service;
 
 use Stash\Interfaces\PoolInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Helper\SanitizerService;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -57,12 +58,7 @@ class ModuleService implements ModuleServiceInterface
     private $configService;
 
     /**
-     * @var DateServiceInterface
-     */
-    private $dateService;
-
-    /**
-     * @var SanitizerServiceInterface
+     * @var SanitizerService
      */
     private $sanitizerService;
 
@@ -72,13 +68,12 @@ class ModuleService implements ModuleServiceInterface
     /**
      * @inheritdoc
      */
-    public function __construct($store, $pool, $log, $config, $date, $sanitizer, $dispatcher)
+    public function __construct($store, $pool, $log, $config, $sanitizer, $dispatcher)
     {
         $this->store = $store;
         $this->pool = $pool;
         $this->logService = $log;
         $this->configService = $config;
-        $this->dateService = $date;
         $this->sanitizerService = $sanitizer;
         $this->dispatcher = $dispatcher;
     }
@@ -110,7 +105,6 @@ class ModuleService implements ModuleServiceInterface
             $this->pool,
             $this->logService,
             $this->configService,
-            $this->dateService,
             $this->sanitizerService,
             $this->dispatcher,
             $moduleFactory,

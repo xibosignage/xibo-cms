@@ -22,6 +22,7 @@
 namespace Xibo\Entity;
 
 
+use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\DisplayFactory;
@@ -517,9 +518,9 @@ class Display implements \JsonSerializable
      */
     public function isAuditing()
     {
-        $this->getLog()->debug(sprintf('Testing whether this display is auditing. %d vs %d.', $this->auditingUntil, time()));
+        $this->getLog()->debug(sprintf('Testing whether this display is auditing. %d vs %d.', $this->auditingUntil, Carbon::now()->format('U')));
         // Test $this->auditingUntil against the current date.
-        return ($this->auditingUntil >= time());
+        return ($this->auditingUntil >= Carbon::now()->format('U'));
     }
 
     /**
@@ -568,7 +569,7 @@ class Display implements \JsonSerializable
         if ($this->hasPropertyChanged('macAddress')) {
             // Mac address change detected
             $this->numberOfMacAddressChanges++;
-            $this->lastChanged = time();
+            $this->lastChanged = Carbon::now()->format('U');
         }
 
         // Lat/Long
@@ -721,6 +722,10 @@ class Display implements \JsonSerializable
         $this->getLog()->audit('Display', $this->displayId, 'Display Deleted', ['displayId' => $this->displayId]);
     }
 
+    /**
+     * @throws GeneralException
+     * @throws NotFoundException
+     */
     private function add()
     {
         $this->displayId = $this->getStore()->insert('
@@ -764,6 +769,10 @@ class Display implements \JsonSerializable
     }
 
 
+    /**
+     * @throws GeneralException
+     * @throws NotFoundException
+     */
     private function edit()
     {
         $this->getStore()->update('

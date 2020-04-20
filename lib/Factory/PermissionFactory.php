@@ -26,8 +26,8 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Permission;
 use Xibo\Entity\User;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -42,7 +42,7 @@ class PermissionFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      */
     public function __construct($store, $log, $sanitizerService)
     {
@@ -78,7 +78,7 @@ class PermissionFactory extends BaseFactory
         $results = $this->getStore()->select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => $entity]);
 
         if (count($results) <= 0) {
-            throw new InvalidArgumentException('Entity not found: ' . $entity);
+            throw new InvalidArgumentException(__('Entity not found: ') . $entity);
         }
 
         $permission = $this->createEmpty();
@@ -110,7 +110,7 @@ class PermissionFactory extends BaseFactory
         $results = $this->getStore()->select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => $entity]);
 
         if (count($results) <= 0) {
-            throw new InvalidArgumentException('Entity not found: ' . $entity);
+            throw new InvalidArgumentException(__('Entity not found: ') . $entity);
         }
 
         $permission = $this->createEmpty();
