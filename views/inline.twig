@@ -188,10 +188,12 @@
 {% macro date(name, title, value, helpText, groupClass, validation, accessKey) %}
     <div class="form-group {{ groupClass }}">
         <label class="control-label" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div class="">
-            <input type="hidden" name="{{ name }}" id="{{ name }}" value="{{ value }}" />
-            {% set linkedName %}{{ name }}Link{% endset %}
-            <input class="form-control datePicker dateControl" name="{{ linkedName }}" type="text" id="{{ linkedName }}" {{ validation }} data-link-field="{{ name }}" data-link-format="yyyy-mm-dd hh:ii:ss" readonly/>
+        <div>
+            <div class="input-group">
+                <input type="hidden" name="{{ name }}" id="{{ name }}" value="{{ value }}" />
+                {% set linkedName %}{{ name }}Link{% endset %}
+                <input class="form-control datePicker dateControl" name="{{ linkedName }}" type="text" id="{{ linkedName }}" {{ validation }} data-link-field="{{ name }}" data-link-format="YYYY-MM-DD HH:mm:ss"   />
+            </div>
         </div>
     </div>
 {% endmacro %}
@@ -199,10 +201,25 @@
 {% macro dateMonth(name, title, value, helpText, groupClass, validation, accessKey) %}
     <div class="form-group {{ groupClass }}">
         <label class="control-label" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div class="">
-            <input type="hidden" name="{{ name }}" id="{{ name }}" value="{{ value }}" />
-            {% set linkedName %}{{ name }}Link{% endset %}
-            <input class="form-control dateMonthPicker dateControl" name="{{ linkedName }}" type="text" id="{{ linkedName }}" {{ validation }} data-link-field="{{ name }}" data-link-format="yyyy-mm-dd hh:ii:ss" readonly/>
+        <div>
+            <div class="input-group">
+                <input type="hidden" name="{{ name }}" id="{{ name }}" value="{{ value }}" />
+                {% set linkedName %}{{ name }}Link{% endset %}
+                <input class="form-control dateMonthPicker dateControl" name="{{ linkedName }}" type="text" id="{{ linkedName }}" {{ validation }} data-link-field="{{ name }}" data-link-format="YYYY-MM-DD HH:mm:ss"  />
+            </div>
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro dateTime(name, title, value, helpText, groupClass, validation, accessKey) %}
+    <div class="form-group {{ groupClass }}">
+        <label class="control-label" title="{{ helpText }}" for="{{ linkedName }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <div>
+            <div class="input-group">
+                <input type="hidden" name="{{ name }}" id="{{ name }}" value="{{ value }}" />
+                {% set linkedName %}{{ name }}Link{% endset %}
+                <input class="form-control dateTimePicker dateControl" name="{{ linkedName }}" type="text" id="{{ linkedName }}" {{ validation }} data-link-field="{{ name }}" data-link-format="YYYY-MM-DD HH:mm:ss"/>
+            </div>
         </div>
     </div>
 {% endmacro %}
@@ -210,10 +227,12 @@
 {% macro time(name, title, value, helpText, groupClass, validation, accessKey) %}
     <div class="form-group {{ groupClass }}">
         <label class="control-label" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div class="">
-            <input type="hidden" name="{{ name }}" id="{{ name }}" value="{{ value }}" />
-            {% set linkedName %}{{ name }}Link{% endset %}
-            <input class="form-control timePicker dateControl" name="{{ linkedName }}" type="text" id="{{ linkedName }}" {{ validation }} data-link-field="{{ name }}" data-link-format="hh:ii" />
+        <div>
+            <div class="input-group">
+                <input type="hidden" name="{{ name }}" id="{{ name }}" value="{{ value }}" />
+                {% set linkedName %}{{ name }}Link{% endset %}
+                <input class="form-control timePicker dateControl" name="{{ linkedName }}" type="text" id="{{ linkedName }}" {{ validation }} data-link-field="{{ name }}" data-link-format="HH:mm" />
+            </div>
         </div>
     </div>
 {% endmacro %}

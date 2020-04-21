@@ -60,6 +60,59 @@ $(document).ready(function() {
         // Get some options for the calendar
         var calendarOptions = $("#CalendarContainer").data();
 
+        // Callback function to navigate to calendar date with the date picker
+        const navigateToCalendarDate = function() {
+            if(calendar != undefined) {
+                // Add event to the picker to update the calendar
+                calendar.navigate('date', moment($('#dateInputLink').val()));
+            }
+        };
+
+        // Select picker options
+        let pickerOptions = {};
+
+        if( calendarType == 'Jalali') {
+            const linkedFormat = $('#dateInputLink').data().linkFormat;
+
+            pickerOptions = {
+                initialValue: false,
+                altField: '#dateInputLink',
+                autoClose: true,
+                altFieldFormatter: function(unixTime) {
+                    let newDate = moment.unix(unixTime / 1000);
+                    newDate.set('hour', 0);
+                    newDate.set('minute', 0);
+                    newDate.set('second', 0);
+                    return newDate.format(linkedFormat);
+                },
+                onSelect: function() {},
+                onHide: function() {
+                    // Trigger change after close
+                    $('#dateInput').trigger('change');
+                    $('#dateInputLink').trigger('change');
+
+                    // Callback if exists
+                    if(navigateToCalendarDate != null && typeof navigateToCalendarDate == 'function') {
+                        navigateToCalendarDate();
+                    }
+                }
+            };
+        } else if( calendarType == 'Gregorian') {
+            pickerOptions = {
+                allowInput: false,
+                wrap: true,
+            };
+        }
+
+        // Create the date input shortcut
+        initDatePicker(
+            $('#dateInput'), 
+            dateOnlyFormat, 
+            pickerOptions, 
+            navigateToCalendarDate,
+            false // clear button
+        );
+        
         var options = {
             time_start: '00:00',
             time_end: '00:00',
@@ -336,7 +389,6 @@ $(document).ready(function() {
                 }
             },
             onAfterViewLoad: function(view) {
-                
                 // Show time slider on agenda view and call the calendar view on slide stop event
                 if (this.options.view == 'agenda') {
                     $('.cal-event-time-bar').show();
@@ -365,10 +417,15 @@ $(document).ready(function() {
                 }
                 
                 // Sync the date of the date picker to the current calendar date
-                if (this.options.position.start != undefined && this.options.position.start != ""){
-                    $("#dateInput .form-control").datetimepicker('update', moment(this.options.position.start.getTime() / 1000, "X").format(systemDateFormat));
-                }
+                if (this.options.position.start != undefined && this.options.position.start != "") {
+
+                    // Date format
+                    let dateFormat = (calendarType == 'Jalali') ? systemDateOnlyFormat : dateOnlyFormat;
                     
+                    // Update timepicker
+                    updateDatePicker($('#dateInput'), moment.unix(this.options.position.start.getTime() / 1000).format(systemDateOnlyFormat), dateFormat);
+                }
+                
                 if (typeof this.getTitle === "function")
                     $('h1.page-header').text(this.getTitle());
 
@@ -417,20 +474,7 @@ $(document).ready(function() {
             
             // Select the clicked element and the linked elements
             agendaSelectLinkedElements($self.closest('table').prop('id'), $self.data("elemId"), events, $self.data("eventId"));
-            
         });
-        
-        // Create the date input shortcut
-        $('#dateInput').datetimepicker({
-            format: bootstrapDateFormatDateOnly,
-            autoclose: true,
-            language: language,
-            calendarType: calendarType,
-            minView: 2,
-            todayHighlight: true
-        }).change(function() {
-            calendar.navigate("date", moment($("#dateInput .form-control").val(), jsDateFormat));
-        }).datetimepicker('update', moment(calendar.options.position.start.getTime() / 1000, "X").format(systemDateFormat));
     }
 });
 
@@ -754,8 +798,6 @@ var beforeSubmitScheduleForm = function(form) {
         };
         reminderFields.append(reminderEventTemplate(context));
     } else {
-
-        console.log(reminderFields.data().reminders)
         // For each of the existing codes, create form components
         var i = 0;
         $.each(reminderFields.data().reminders, function(index, field) {
