@@ -232,7 +232,7 @@ class ReportScheduleTask implements TaskInterface
                     'title' => $savedReport->saveAs,
                     'periodStart' => $savedReportData['chartData']['periodStart'],
                     'periodEnd' => $savedReportData['chartData']['periodEnd'],
-                    'generatedOn' => Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $savedReport->generatedOn),
+                    'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn),
                     'tableData' => isset($tableData) ? $tableData : null,
                     'src' => isset($src) ? $src : null,
                     'placeholder' => isset($placeholder) ? $placeholder : null

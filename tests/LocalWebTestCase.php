@@ -431,7 +431,6 @@ class LocalWebTestCase extends PHPUnit_TestCase
                 $c->get('store'),
                 $c->get('pool'),
                 $c->get('playerActionService'),
-                $c->get('dateService'),
                 $c->get('scheduleFactory'),
                 $c->get('dayPartFactory')
             );
@@ -457,7 +456,6 @@ class LocalWebTestCase extends PHPUnit_TestCase
             ->setUser($c->get('user'))
             ->setConfig($c->get('configService'))
             ->setLogger($c->get('logService'))
-            ->setDate($c->get('dateService'))
             ->setPool($c->get('pool'))
             ->setStore($c->get('store'))
             ->setTimeSeriesStore($c->get('timeSeriesStore'))

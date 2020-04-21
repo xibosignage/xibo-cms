@@ -21,6 +21,7 @@
 
 namespace Xibo\Tests\Integration;
 
+use Carbon\Carbon;
 use Jenssegers\Date\Date;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
@@ -99,7 +100,7 @@ class ReportTest extends LocalWebTestCase
         $this->deleteDisplay($this->display);
 
         // Delete stat records
-        self::$container->get('timeSeriesStore')->deleteStats(Date::now(), Date::createFromFormat("Y-m-d H:i:s", '2020-03-31 00:00:00'));
+        self::$container->get('timeSeriesStore')->deleteStats(Carbon::now(), Carbon::createFromFormat("Y-m-d H:i:s", '2020-03-31 00:00:00'));
     }
 
 
@@ -112,8 +113,8 @@ class ReportTest extends LocalWebTestCase
 
         $hardwareId = $this->display->license;
 
-        $yesterday = Date::parse()->subDay()->startOfDay();
-        $today = Date::parse()->startOfDay();
+        $yesterday = Carbon::parse()->subDay()->startOfDay();
+        $today = Carbon::parse()->startOfDay();
 
         // First insert for Yesterday
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
@@ -185,8 +186,8 @@ class ReportTest extends LocalWebTestCase
 
 
         $response = $this->sendRequest('GET','/report/data/summaryReport', [
-            'statsFromDt' => Date::parse('2020-03-31 00:00:00'),
-            'statsToDt' => Date::parse('2020-04-31 00:00:00'),
+            'statsFromDt' => Carbon::parse('2020-03-31 00:00:00'),
+            'statsToDt' => Carbon::parse('2020-04-31 00:00:00'),
             'groupByFilter' => 'byday',
             'displayId' => $this->display->displayId,
             'layoutId' => $this->layout->layoutId,
@@ -243,8 +244,8 @@ class ReportTest extends LocalWebTestCase
 
 
         $response = $this->sendRequest('GET','/report/data/proofofplayReport', [
-            'statsFromDt' => Date::parse('2020-03-31 00:00:00'),
-            'statsToDt' => Date::parse('2020-04-31 00:00:00'),
+            'statsFromDt' => Carbon::parse('2020-03-31 00:00:00'),
+            'statsToDt' => Carbon::parse('2020-04-31 00:00:00'),
             'groupByFilter' => 'byday',
             'displayId' => $this->display->displayId,
             'layoutId' => [$this->layout->layoutId],
