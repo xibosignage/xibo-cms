@@ -855,7 +855,7 @@ class DataSetTicker extends ModuleWidget
                 throw new InvalidArgumentException(__('Limits cannot be lower than 0'), 'limits');
 
             // Check the bounds of the limits
-            if ($this->getOption('upperLimit') < $this->getOption('lowerLimit'))
+            if ($this->getOption('upperLimit') != 0 && $this->getOption('upperLimit') < $this->getOption('lowerLimit'))
                 throw new InvalidArgumentException(__('Upper limit must be higher than lower limit'), 'limits');
         }
 
