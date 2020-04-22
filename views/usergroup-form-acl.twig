@@ -40,15 +40,25 @@
             <form id="AclForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("group.acl", {id: groupId}) }}">
                 {% set helpText %}{% trans %}Check or un-check the options against each item to control whether access is allowed or not.{% endtrans %}{% endset %}
                 {{ forms.message(helpText) }}
+                {% if isUserSpecific == 1 %}
+                    {% set helpTextUserSpecific %}{% trans %}The Effective Permissions column shows Permissions inherited from User Groups this User belongs to.{% endtrans %}{% endset %}
+                    {{ forms.message(helpTextUserSpecific) }}
+                {% endif %}
                 <table class="table table-bordered">
                     <tr>
                         <th>{{ entity }}</th>
                         <th>{% trans "View" %}</th>
+                        {% if isUserSpecific == 1 %}
+                            <th>{% trans "Effective Permissions" %}</th>
+                        {% endif %}
                     </tr>
                     {% for item in permissions %}
                         <tr>
-                            <td>{{ item.name }}</td>
-                            <td><input type="checkbox" name="objectId[]" value="{{ item.value_view }}" {{ item.value_view_checked }}></td>
+                            <td width="70%">{{ item.name }}</td>
+                            <td width="15%"><input type="checkbox" name="objectId[]" value="{{ item.value_view }}" {{ item.value_view_checked }}></td>
+                            {% if isUserSpecific == 1 %}
+                                <td width="15%"><input type="checkbox" name="effectivePermissions" disabled value="{{ item.value_view }}" {{ item.value_view_group_checked }}></td>
+                            {% endif %}
                         </tr>
                     {% endfor %}
                 </table>

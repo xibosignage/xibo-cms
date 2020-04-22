@@ -285,7 +285,7 @@ $app->get('/group/form/add', ['\Xibo\Controller\UserGroup','addForm'])->setName(
 $app->get('/group/form/edit/{id}', ['\Xibo\Controller\UserGroup','editForm'])->setName('group.edit.form');
 $app->get('/group/form/delete/{id}', ['\Xibo\Controller\UserGroup','deleteForm'])->setName('group.delete.form');
 $app->get('/group/form/copy/{id}', ['\Xibo\Controller\UserGroup','copyForm'])->setName('group.copy.form');
-$app->get('/group/form/acl/{id}', ['\Xibo\Controller\UserGroup','aclForm'])->setName('group.acl.form');
+$app->get('/group/form/acl/{id}/[{userId}]', ['\Xibo\Controller\UserGroup','aclForm'])->setName('group.acl.form');
 $app->get('/group/form/members/{id}', ['\Xibo\Controller\UserGroup','membersForm'])->setName('group.members.form');
 
 //
