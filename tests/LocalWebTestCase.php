@@ -25,7 +25,6 @@ use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Monolog\Processor\UidProcessor;
-use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\TestCase as PHPUnit_TestCase;
 use Psr\Container\ContainerInterface;
@@ -33,11 +32,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Slim\App;
-use Slim\Http\Factory\DecoratedResponseFactory;
-use Slim\Http\Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\TwigMiddleware;
-use Throwable;
 use Xibo\Entity\Application;
 use Xibo\Entity\User;
 use Xibo\Factory\ContainerFactory;
@@ -143,7 +139,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
         $app->router = $app->getRouteCollector()->getRouteParser();
         $request = $this->createRequest('GET', '/');
 
-        \Xibo\Middleware\State::setState($app, $request);
+        State::setState($app, $request);
 
        // $this->getLogger()->debug('Setting Middleware');
         $app->add(new Storage($app));
@@ -153,23 +149,9 @@ class LocalWebTestCase extends PHPUnit_TestCase
         $app->add(new Middleware\TestXmr($app));
         $app->addRoutingMiddleware();
 
-        $customErrorHandler = function (Request $request, Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($app) {
-            $nyholmFactory = new Psr17Factory();
-            $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
-            /** @var Response $response */
-            $response = $decoratedResponseFactory->createResponse($exception->getCode());
-
-            return $response->withJson([
-                'success' => false,
-                'error' => $exception->getMessage(),
-                'httpStatus' => $exception->getCode(),
-                'data' => []
-            ]);
-        };
-
         // Add Error Middleware
         $errorMiddleware = $app->addErrorMiddleware(true, true, true);
-        $errorMiddleware->setDefaultErrorHandler($customErrorHandler);
+        $errorMiddleware->setDefaultErrorHandler(\Xibo\Middleware\Handlers::jsonErrorHandler($container));
 
         // Store our container
         self::$container = $container;
