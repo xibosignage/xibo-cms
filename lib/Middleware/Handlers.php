@@ -48,8 +48,10 @@ class Handlers
     public static function jsonErrorHandler($container)
     {
         return function (Request $request, \Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($container) {
-            // No committing!
-            $container->get('state')->setCommitState(false);
+            // If we are in a transaction, then we should rollback.
+            if ($container->get('store')->getConnection()->inTransaction()) {
+                $container->get('store')->getConnection()->rollBack();
+            }
 
             // Handle error handling
             if ($logErrors && !self::handledError($exception)) {
@@ -141,13 +143,42 @@ class Handlers
                         $message = $exception->getMessage();
                     }
 
-                    $container->get('state')->setCommitState(false);
+                    // If we are in a transaction, then we should rollback.
+                    if ($container->get('store')->getConnection()->inTransaction()) {
+                        $container->get('store')->getConnection()->rollBack();
+                    }
 
                     // attempt to render a twig template in this application state will not go well
                     // as such return simple json response, with trace if the application is in test mode.
                     return $response = $response->withJson(['error' => $message]);
                 }
             }
+        };
+    }
+
+    /**
+     * @param \Psr\Container\ContainerInterface $container
+     * @return \Closure
+     */
+    public static function testErrorHandler($container)
+    {
+        return function (Request $request, \Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($container) {
+            // If we are in a transaction, then we should rollback.
+            if ($container->get('store')->getConnection()->inTransaction()) {
+                $container->get('store')->getConnection()->rollBack();
+            }
+
+            $nyholmFactory = new Psr17Factory();
+            $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
+            /** @var Response $response */
+            $response = $decoratedResponseFactory->createResponse($exception->getCode());
+
+            return $response->withJson([
+                'success' => false,
+                'error' => $exception->getMessage(),
+                'httpStatus' => $exception->getCode(),
+                'data' => []
+            ]);
         };
     }
 

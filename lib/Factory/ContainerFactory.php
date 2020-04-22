@@ -136,7 +136,7 @@ class ContainerFactory
                     $c->get('store'),
                     $c->get('configService'),
                     $c->get('pool'),
-        '/'
+                    '/'
                 );
             },
             'pool' => function(ContainerInterface $c) {
