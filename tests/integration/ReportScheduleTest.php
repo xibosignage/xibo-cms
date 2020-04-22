@@ -28,7 +28,6 @@ use Xibo\OAuth2\Client\Entity\XiboReportSchedule;
 use Xibo\Tests\Helper\DisplayHelperTrait;
 use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
-use Xibo\XTR\TaskInterface;
 
 /**
  * Class ReportScheduleTest
@@ -113,14 +112,13 @@ class ReportScheduleTest extends LocalWebTestCase
 
         $this->assertSame($report, $reportSchedule->reportName);
 
-        $this->setService();
-
         // Delete Report Schedule
         $reportSchedule->delete();
     }
 
     /**
      *  Report Schedule Delete All Saved Report
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function testReportScheduleDeleteAllSavedReport()
     {
@@ -129,7 +127,6 @@ class ReportScheduleTest extends LocalWebTestCase
 
         $reportScheduleId = $reportSchedule->reportScheduleId;
 
-        /** @var TaskInterface $task */
         $task = $this->getTask('\Xibo\XTR\ReportScheduleTask');
         $task->run();
         self::$container->get('store')->commitIfNecessary();
@@ -185,16 +182,15 @@ class ReportScheduleTest extends LocalWebTestCase
     }
 
     /**
-     *  Delete Saved Report
+     * Delete Saved Report
+     * @throws \Xibo\OAuth2\Client\Exception\XiboApiException|\Xibo\Support\Exception\NotFoundException
      */
     public function testDeleteSavedReport()
     {
-
         $reportSchedule = (new XiboReportSchedule($this->getEntityProvider()))
             ->create('Report Schedule', 'proofofplayReport', 'daily');
 
         // Create a saved report
-        /** @var TaskInterface $task */
         $task = $this->getTask('\Xibo\XTR\ReportScheduleTask');
         $task->run();
         self::$container->get('store')->commitIfNecessary();
