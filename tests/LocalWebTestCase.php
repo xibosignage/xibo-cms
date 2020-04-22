@@ -38,19 +38,25 @@ use Slim\Http\Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\TwigMiddleware;
 use Throwable;
+use Xibo\Controller\Task;
 use Xibo\Entity\Application;
 use Xibo\Entity\User;
 use Xibo\Factory\ContainerFactory;
+use Xibo\Factory\TaskFactory;
 use Xibo\Helper\Translate;
 use Xibo\Middleware\State;
 use Xibo\Middleware\Storage;
 use Xibo\OAuth2\Client\Provider\XiboEntityProvider;
+use Xibo\Service\DisplayNotifyService;
 use Xibo\Storage\PdoStorageService;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Tests\Helper\MockPlayerActionService;
 use Xibo\Tests\Middleware\TestAuthMiddleware;
 use Xibo\Tests\Xmds\XmdsWrapper;
+use Xibo\XTR\ImageProcessingTask;
+use Xibo\XTR\ReportScheduleTask;
+use Xibo\XTR\TaskInterface;
 
 /**
  * Class LocalWebTestCase
@@ -63,6 +69,9 @@ class LocalWebTestCase extends PHPUnit_TestCase
 
     /** @var LoggerInterface */
     public static $logger;
+
+    /** @var TaskInterface */
+    public static $taskService;
 
     /** @var  XiboEntityProvider */
     public static $entityProvider;
@@ -189,14 +198,16 @@ class LocalWebTestCase extends PHPUnit_TestCase
      * @param string $method
      * @param string $path
      * @param array $headers
+     * @param string $requestAttrVal
+     * @param bool|false $ajaxHeader
      * @param null $body
      * @return ResponseInterface
      */
-    protected function sendRequest(string $method, string $path, $body = null,  array $headers = ['HTTP_ACCEPT'=>'application/json']): ResponseInterface
+    protected function sendRequest(string $method, string $path, $body = null,  array $headers = ['HTTP_ACCEPT'=>'application/json'], $requestAttrVal = 'test', $ajaxHeader = false ): ResponseInterface
     {
         // Create a request for tests
         $request = new Request(new ServerRequest($method, $path, $headers));
-        $request = $request->withAttribute('name', 'test');
+        $request = $request->withAttribute('name', $requestAttrVal);
 
         // If we are using POST or PUT method then we expect to have Body provided, add it to the request
         if (in_array($method, ['POST', 'PUT']) && $body != null) {
@@ -207,6 +218,10 @@ class LocalWebTestCase extends PHPUnit_TestCase
             if ($method === 'PUT') {
                 $request = $request->withHeader('Content-Type', 'application/x-www-form-urlencoded');
             }
+        }
+
+        if ($ajaxHeader === true) {
+            $request = $request->withHeader('X-Requested-With', 'XMLHttpRequest');
         }
 
         if ($method == 'GET' && $body != null) {
@@ -393,6 +408,69 @@ class LocalWebTestCase extends PHPUnit_TestCase
     public function getStore()
     {
         return self::$container->get('store');
+    }
+
+    /**
+     * Set required service to instantiate a task
+     */
+    public function setService()
+    {
+        $c = self::$container;
+
+        // Player Action Helper
+        $c->set('playerActionService', function(ContainerInterface $c) {
+            return new MockPlayerActionService(
+                $c->get('configService'),
+                $c->get('logService'),
+                false
+            );
+        });
+
+        // Register the display notify service
+        $c->set('displayNotifyService', function(ContainerInterface $c) {
+            return new DisplayNotifyService(
+                $c->get('configService'),
+                $c->get('logService'),
+                $c->get('store'),
+                $c->get('pool'),
+                $c->get('playerActionService'),
+                $c->get('scheduleFactory'),
+                $c->get('dayPartFactory')
+            );
+        });
+    }
+
+    /**
+     * Get a task object
+     * @param string $task The path of the task class
+     * @return TaskInterface
+     * @throws NotFoundException
+     */
+    public function getTask($task)
+    {
+
+        $c = self::$container;
+
+        // Set required service to instantiate the task
+        $this->setService();
+
+        /** @var TaskFactory $taskFactory */
+        $taskFactory = $c->get('taskFactory');
+        $task = $taskFactory->getByClass($task);
+
+        /** @var TaskInterface $taskClass */
+        $taskClass = new $task->class();
+
+        return $taskClass
+            ->setSanitizer($c->get('sanitizerService'))
+            ->setUser($c->get('user'))
+            ->setConfig($c->get('configService'))
+            ->setLogger($c->get('logService'))
+            ->setPool($c->get('pool'))
+            ->setStore($c->get('store'))
+            ->setTimeSeriesStore($c->get('timeSeriesStore'))
+            ->setFactories($c)
+            ->setTask($task);
     }
 
     /**
