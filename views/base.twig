@@ -66,14 +66,11 @@
 
         {# Dates #}
         {% if settings.CALENDAR_TYPE == "Jalali" %}
-            <script src="{{ theme.rootUri() }}dist/vendor/bootstrap-datetimepicker/js/jalali-date.js"></script>
-            <script src="{{ theme.rootUri() }}dist/vendor/bootstrap-datetimepicker/js/bootstrap-datetimepicker-jalali.min.js"></script>
             <script src="{{ theme.rootUri() }}dist/vendor/calendar/js/calendar-jalali.js"></script>
             <script type="text/javascript">
                 moment.loadPersian();
             </script>
         {% else %}
-            <script src="{{ theme.rootUri() }}dist/vendor/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
             <script src="{{ theme.rootUri() }}dist/vendor/calendar/js/calendar.js"></script>
         {% endif %}
 
@@ -81,11 +78,6 @@
         {% set calendarTranslation %}dist/vendor/calendar/js/language/{{ translate.jsShortLocale }}.js{% endset %}
         {% if theme.fileExists(calendarTranslation) %}
             <script src="{{ theme.rootUri() }}{{ calendarTranslation }}"></script>
-        {% endif %}
-
-        {% set datePickerTranslation %}dist/vendor/bootstrap-datetimepicker/js/locales/bootstrap-datetimepicker.{{ translate.jsShortLocale }}.js{% endset %}
-        {% if theme.fileExists(datePickerTranslation) %}
-            <script src="{{ theme.rootUri() }}{{ datePickerTranslation }}"></script>
         {% endif %}
 
         <script type="text/javascript">
@@ -118,8 +110,10 @@
             var dateFormat = "{{ settings.DATE_FORMAT }}";
             var jsDateFormat = "{{ settings.DATE_FORMAT_JS }}";
             var timeFormat = "{{ settings.TIME_FORMAT }}";
+            var dateOnlyFormat = "{{ settings.DATE_ONLY_FORMAT }}";
             var jsTimeFormat = "{{ settings.TIME_FORMAT_JS }}";
             var systemDateFormat = "{{ settings.systemDateFormat }}";
+            var systemDateOnlyFormat = "{{ settings.systemDateOnlyFormat }}";
             var systemTimeFormat = "{{ settings.systemTimeFormat }}";
             var bootstrapDateFormat = "{{ settings.DATE_FORMAT_BOOTSTRAP }}";
             var bootstrapDateFormatDateOnly = "{{ settings.DATE_FORMAT_BOOTSTRAP_DATEONLY }}";

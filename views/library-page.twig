@@ -488,21 +488,32 @@
             usageTable.on('draw', dataTableDraw);
             usageTable.on('processing.dt', dataTableProcessing);
 
-            $("#mediaEventDateLink").datetimepicker({
-                format: bootstrapDateFormatDateOnly,
-                autoclose: true,
-                language: language,
-                calendarType: calendarType,
-                minView: 2,
-                todayHighlight: true
-            });
+            // Init date time picker
+            let datePickerOptions = {};
 
-            $("#dateClearButton").on("click", function () {
-                $("#mediaEventDateLink").val("")
-                $("#mediaEventDate").val("");
-                $("#mediaEventDateLink").datetimepicker("update");
-                usageTable.ajax.reload();
-            });
+            if(calendarType == "Jalali") {
+                datePickerOptions = {
+                    altFieldFormatter: function(unixTime) {
+                        let newDate = moment.unix(unixTime / 1000);
+                        newDate.set('hour', 0);
+                        newDate.set('minute', 0);
+                        newDate.set('second', 0);
+
+                        return newDate.format($('#mediaEventDateLink').data().linkFormat);
+                    }
+                };
+            }
+
+            initDatePicker(
+                $('#mediaEventDateLink'), 
+                dateOnlyFormat,
+                datePickerOptions, // options
+                null, // onChangeCallback
+                true, // clearButton
+                function () { // onChangeCallback
+                    usageTable.ajax.reload();
+                }
+            );
 
             // Layouts tab
             var usageTableLayouts = $("#usageReportLayoutsTable").DataTable({
@@ -533,8 +544,8 @@
             if(dialog.hasClass('modal')) {
                 dialog.on("hide.bs.modal", function(e) {
                     if(e.namespace === 'bs.modal') {
-                            // Remove colour pickers
-                            dialog.find("#mediaEventDateLink").datetimepicker('remove');
+                        // Remove timepicker
+                        destroyDatePickers(dialog.find('#mediaEventDateLink'));
                     }
                 });
             }

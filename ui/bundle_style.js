@@ -43,6 +43,13 @@ require('bootstrap-tagsinput/dist/bootstrap-tagsinput.css');
 // font-awesome
 require('font-awesome/css/font-awesome.min.css');
 
+// Persian date picker
+require('persian-datepicker/dist/css/persian-datepicker.min.css');
+
+// Time/Date picker
+require('flatpickr/dist/flatpickr.min.css');
+require('flatpickr/dist/plugins/monthSelect/style.css');
+
 // datatables.net-dt
 require('datatables.net-bs/css/dataTables.bootstrap.css');
 require('datatables.net-buttons-dt/css/buttons.dataTables.min.css');
@@ -56,7 +63,6 @@ require('bootstrap-tourist/bootstrap-tourist.css');
 require('./src/vendor/calendar/css/calendar.css');
 require('./src/vendor/jquery-file-upload/css/jquery.fileupload.css');
 require('./src/vendor/jquery-file-upload/css/jquery.fileupload-ui.css');
-require('./src/vendor/bootstrap-datetimepicker/css/bootstrap-datetimepicker.min.css');
 require('./src/vendor/jquery-ui/css/ui-lightness/jquery-ui-1.10.2.custom.min.css');
 
 // leaflet

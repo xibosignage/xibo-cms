@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/xibosignage/xibo-cms#readme",
   "devDependencies": {
-    "cypress": "^4.2.0"
+    "cypress": "^4.4.1"
   },
   "dependencies": {
     "@babel/core": "^7.8.7",
@@ -45,7 +45,6 @@
     "bootstrap": "^3.4.1",
     "bootstrap-calendar": "~0.2.4",
     "bootstrap-colorpicker": "~2.5.2",
-    "bootstrap-datetime-picker": "~2.4.4",
     "bootstrap-select": "~1.12.4",
     "bootstrap-slider": "^10.6.2",
     "bootstrap-switch": "3.3.4",
@@ -64,9 +63,10 @@
     "ekko-lightbox": "~5.3.0",
     "fibers": "^4.0.2",
     "file-loader": "^3.0.1",
+    "flatpickr": "^4.6.3",
     "font-awesome": "~4.7.0",
     "form-serializer": "~2.5.0",
-    "handlebars": "^4.7.3",
+    "handlebars": "^4.7.6",
     "handlebars-loader": "^1.7.1",
     "imports-loader": "^0.7.1",
     "jquery": "^3.4.1",
@@ -82,6 +82,8 @@
     "moment-jalaali": "~0.7.2",
     "moment-timezone": "^0.5.28",
     "node-sass": "^4.13.1",
+    "persian-date": "^0.3.1-b",
+    "persian-datepicker": "^0.5.11",
     "postcss-loader": "^3.0.0",
     "precss": "^4.0.0",
     "sass": "^1.26.3",

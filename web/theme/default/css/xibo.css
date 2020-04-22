@@ -989,3 +989,11 @@ ul li.active.tab-design:hover a {
     right: -16px;
     top: 8px;
 }
+
+/* 
+ * Date time picker 
+ */
+input.datePicker[readonly], input.dateTimePicker[readonly], input.dateMonthPicker[readonly], input.timePicker[readonly] {
+    cursor: pointer;
+    background-color: #fff;
+}
