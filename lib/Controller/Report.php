@@ -149,7 +149,7 @@ class Report extends Base
         foreach ($reportSchedules as $reportSchedule) {
 
             if ($this->isApi($request))
-                break;
+                continue;
 
             $reportSchedule->includeProperty('buttons');
 

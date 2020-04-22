@@ -410,6 +410,9 @@ class LocalWebTestCase extends PHPUnit_TestCase
         return self::$container->get('store');
     }
 
+    /**
+     * Set required service to instantiate a task
+     */
     public function setService()
     {
         $c = self::$container;
@@ -437,11 +440,18 @@ class LocalWebTestCase extends PHPUnit_TestCase
         });
     }
 
+    /**
+     * Get a task object
+     * @param string $task The path of the task class
+     * @return TaskInterface
+     * @throws NotFoundException
+     */
     public function getTask($task)
     {
 
         $c = self::$container;
 
+        // Set required service to instantiate the task
         $this->setService();
 
         /** @var TaskFactory $taskFactory */
