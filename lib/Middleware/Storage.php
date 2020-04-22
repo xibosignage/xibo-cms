@@ -21,14 +21,11 @@
  */
 namespace Xibo\Middleware;
 
-use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App;
-use Xibo\Storage\MySqlTimeSeriesStore;
-use Xibo\Storage\PdoStorageService;
 
 /**
  * Class Storage
@@ -60,10 +57,7 @@ class Storage implements Middleware
 
         $startTime = microtime(true);
 
-        // Configure storage
-      //  self::setStorage($container);
-
-       // $this->next->call();
+        // Pass straight down to the next middleware
         $response = $handler->handle($request);
 
         // Are we in a transaction coming out of the stack?
@@ -89,41 +83,5 @@ class Storage implements Middleware
         $container->get('store')->close();
 
         return $response;
-    }
-
-    /**
-     * Set Storage
-     * @param ContainerInterface $container
-     */
-    public static function setStorage($container)
-    {
-        // Register the database service
-        $container->set('store', function(ContainerInterface $container) {
-            return (new PdoStorageService($container->get('logService')))->setConnection();
-        });
-
-         //Register the statistics database service
-        $container->set('timeSeriesStore', function(ContainerInterface $c) {
-            if ($c->get('configService')->timeSeriesStore == null) {
-                return (new MySqlTimeSeriesStore())
-                    ->setDependencies($c->get('logService'),
-                        $c->get('layoutFactory'),
-                        $c->get('campaignFactory'))
-                    ->setStore($c->get('store'));
-            } else {
-                $timeSeriesStore = $c->get('configService')->timeSeriesStore;
-                $timeSeriesStore = $timeSeriesStore();
-
-                return $timeSeriesStore->setDependencies(
-                    $c->get('logService'),
-                    $c->get('layoutFactory'),
-                    $c->get('campaignFactory'),
-                    $c->get('mediaFactory'),
-                    $c->get('widgetFactory'),
-                    $c->get('displayFactory'),
-                    $c->get('displayGroupFactory')
-                );
-            }
-        });
     }
 }

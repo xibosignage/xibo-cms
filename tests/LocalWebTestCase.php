@@ -25,7 +25,6 @@ use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Monolog\Processor\UidProcessor;
-use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7\ServerRequest;
 use PHPUnit\Framework\TestCase as PHPUnit_TestCase;
 use Psr\Container\ContainerInterface;
@@ -33,11 +32,8 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Slim\App;
-use Slim\Http\Factory\DecoratedResponseFactory;
-use Slim\Http\Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\TwigMiddleware;
-use Throwable;
 use Xibo\Entity\Application;
 use Xibo\Entity\User;
 use Xibo\Factory\ContainerFactory;
@@ -160,23 +156,9 @@ class LocalWebTestCase extends PHPUnit_TestCase
         $app->add(new Middleware\TestXmr($app));
         $app->addRoutingMiddleware();
 
-        $customErrorHandler = function (Request $request, Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($app) {
-            $nyholmFactory = new Psr17Factory();
-            $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
-            /** @var Response $response */
-            $response = $decoratedResponseFactory->createResponse($exception->getCode());
-
-            return $response->withJson([
-                'success' => false,
-                'error' => $exception->getMessage(),
-                'httpStatus' => $exception->getCode(),
-                'data' => []
-            ]);
-        };
-
         // Add Error Middleware
         $errorMiddleware = $app->addErrorMiddleware(true, true, true);
-        $errorMiddleware->setDefaultErrorHandler($customErrorHandler);
+        $errorMiddleware->setDefaultErrorHandler(\Xibo\Middleware\Handlers::testErrorHandler($container));
 
         // All routes
         //$this->getLogger()->debug('Including Routes');
@@ -224,9 +206,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
         }
 
         // send the request and return the response
-        $response = $this->app->handle($request);
-
-        return $response;
+        return $this->app->handle($request);
     }
 
     /**
@@ -416,14 +396,6 @@ class LocalWebTestCase extends PHPUnit_TestCase
         parent::tearDownAfterClass();
     }
 
-    public function tearDown()
-    {
-        // Remove the DB
-        self::$container->get('store')->close();
-
-        parent::tearDown();
-    }
-
     /**
      * Convenience function to skip a test with a reason and close output buffers nicely.
      * @param string $reason
@@ -498,7 +470,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
     public function getPlayerActionQueue()
     {
         /** @var MockPlayerActionService $service */
-        $service = self::$container->get('playerActionService');
+        $service = $this->app->getContainer()->get('playerActionService');
 
         if ($service === null)
             $this->fail('Test hasnt used the client and therefore cannot determine XMR activity');

@@ -118,7 +118,7 @@ class ContainerFactory
                 );
             },
             'configService' => function(ContainerInterface $c) {
-               return ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
+                return ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
             },
             'user' => function (ContainerInterface $c) {
                 return new User(
@@ -136,7 +136,7 @@ class ContainerFactory
                     $c->get('store'),
                     $c->get('configService'),
                     $c->get('pool'),
-        '/'
+                    '/'
                 );
             },
             'pool' => function(ContainerInterface $c) {
