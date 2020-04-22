@@ -38,7 +38,6 @@ use Slim\Http\Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\TwigMiddleware;
 use Throwable;
-use Xibo\Controller\Task;
 use Xibo\Entity\Application;
 use Xibo\Entity\User;
 use Xibo\Factory\ContainerFactory;
@@ -48,14 +47,13 @@ use Xibo\Middleware\State;
 use Xibo\Middleware\Storage;
 use Xibo\OAuth2\Client\Provider\XiboEntityProvider;
 use Xibo\Service\DisplayNotifyService;
+use Xibo\Service\ReportService;
 use Xibo\Storage\PdoStorageService;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Tests\Helper\MockPlayerActionService;
 use Xibo\Tests\Middleware\TestAuthMiddleware;
 use Xibo\Tests\Xmds\XmdsWrapper;
-use Xibo\XTR\ImageProcessingTask;
-use Xibo\XTR\ReportScheduleTask;
 use Xibo\XTR\TaskInterface;
 
 /**
@@ -180,11 +178,8 @@ class LocalWebTestCase extends PHPUnit_TestCase
         $errorMiddleware = $app->addErrorMiddleware(true, true, true);
         $errorMiddleware->setDefaultErrorHandler($customErrorHandler);
 
-        // Store our container
-        self::$container = $container;
-        //$this->getLogger()->debug('Including Routes');
-
         // All routes
+        //$this->getLogger()->debug('Including Routes');
         require PROJECT_ROOT . '/lib/routes-web.php';
         require PROJECT_ROOT . '/lib/routes.php';
 
@@ -291,6 +286,43 @@ class LocalWebTestCase extends PHPUnit_TestCase
         Translate::InitLocale($container->get('configService'));
 
         $container->set('name', 'test');
+
+        // Configure the container with Player Action and Display Notify
+        // Player Action Helper
+        $container->set('playerActionService', function(ContainerInterface $c) {
+            return new MockPlayerActionService(
+                $c->get('configService'),
+                $c->get('logService'),
+                false
+            );
+        });
+
+        // Register the display notify service
+        $container->set('displayNotifyService', function(ContainerInterface $c) {
+            return new DisplayNotifyService(
+                $c->get('configService'),
+                $c->get('logService'),
+                $c->get('store'),
+                $c->get('pool'),
+                $c->get('playerActionService'),
+                $c->get('scheduleFactory'),
+                $c->get('dayPartFactory')
+            );
+        });
+
+        // Register the report service
+        $container->set('reportService', function(ContainerInterface $c) {
+            return new ReportService(
+                $c,
+                $c->get('state'),
+                $c->get('store'),
+                $c->get('timeSeriesStore'),
+                $c->get('logService'),
+                $c->get('configService'),
+                $c->get('sanitizerService'),
+                $c->get('savedReportFactory')
+            );
+        });
 
         // Find the PHPUnit user and if we don't create it
         try {
@@ -411,36 +443,6 @@ class LocalWebTestCase extends PHPUnit_TestCase
     }
 
     /**
-     * Set required service to instantiate a task
-     */
-    public function setService()
-    {
-        $c = self::$container;
-
-        // Player Action Helper
-        $c->set('playerActionService', function(ContainerInterface $c) {
-            return new MockPlayerActionService(
-                $c->get('configService'),
-                $c->get('logService'),
-                false
-            );
-        });
-
-        // Register the display notify service
-        $c->set('displayNotifyService', function(ContainerInterface $c) {
-            return new DisplayNotifyService(
-                $c->get('configService'),
-                $c->get('logService'),
-                $c->get('store'),
-                $c->get('pool'),
-                $c->get('playerActionService'),
-                $c->get('scheduleFactory'),
-                $c->get('dayPartFactory')
-            );
-        });
-    }
-
-    /**
      * Get a task object
      * @param string $task The path of the task class
      * @return TaskInterface
@@ -448,11 +450,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
      */
     public function getTask($task)
     {
-
         $c = self::$container;
-
-        // Set required service to instantiate the task
-        $this->setService();
 
         /** @var TaskFactory $taskFactory */
         $taskFactory = $c->get('taskFactory');
