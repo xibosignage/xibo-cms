@@ -1344,6 +1344,7 @@
                 "serialize",
                 "tokenizer"
             ],
+            "abandoned": "opis/closure",
             "time": "2018-03-21T22:21:57+00:00"
         },
         {
@@ -4946,12 +4947,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/xibosignage/oauth2-xibo-cms.git",
-                "reference": "eb16bad139d6072811a1a815ceeb2cad04819746"
+                "reference": "f60509c0fc50c0dcb1a84612cbc1f49c134bb1aa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/xibosignage/oauth2-xibo-cms/zipball/eb16bad139d6072811a1a815ceeb2cad04819746",
-                "reference": "eb16bad139d6072811a1a815ceeb2cad04819746",
+                "url": "https://api.github.com/repos/xibosignage/oauth2-xibo-cms/zipball/f60509c0fc50c0dcb1a84612cbc1f49c134bb1aa",
+                "reference": "f60509c0fc50c0dcb1a84612cbc1f49c134bb1aa",
                 "shasum": ""
             },
             "require": {
@@ -4993,7 +4994,7 @@
                 "xibo",
                 "xibo cms"
             ],
-            "time": "2020-02-25T15:33:37+00:00"
+            "time": "2020-04-03T09:30:04+00:00"
         },
         {
             "name": "xibosignage/support",
