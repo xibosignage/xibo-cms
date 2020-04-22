@@ -407,7 +407,8 @@ class LayoutFactory extends BaseFactory
             'regionId' => $regionId,
             'excludeTemplates' => -1,
             'retired' => -1,
-            'disableUserCheck' => $permissionsCheck ? 0 : 1
+            'disableUserCheck' => $permissionsCheck ? 0 : 1,
+            'showDrafts' => 1
         ]);
 
         if (count($layouts) <= 0) {

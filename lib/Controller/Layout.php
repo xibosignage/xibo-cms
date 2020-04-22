@@ -28,6 +28,7 @@ use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
+use Stash\Item;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
@@ -1230,6 +1231,7 @@ class Layout extends Base
 
             // Populate the status message
             $layout->getStatusMessage();
+            $layout->isLocked = $this->container->get('pool')->getItem('locks/layout/' . $layout->layoutId)->get();
 
             // Annotate each Widget with its validity, tags and permissions
             if (in_array('widget_validity', $embed) || in_array('tags', $embed) || in_array('permissions', $embed)) { 
@@ -2071,6 +2073,7 @@ class Layout extends Base
         $layout = $this->layoutFactory->getById($id);
 
         $layout->xlfToDisk();
+        $layout->isLocked = $this->container->get('pool')->getItem('locks/layout/' . $id)->get();
 
         switch ($layout->status) {
 
@@ -2106,7 +2109,8 @@ class Layout extends Base
             $this->getState()->extra = [
                 'status' => $layout->status,
                 'duration' => $layout->duration,
-                'statusMessage' => $layout->getStatusMessage()
+                'statusMessage' => $layout->getStatusMessage(),
+                'isLocked' => $layout->isLocked
             ];
 
             $this->getState()->success = true;
@@ -2729,6 +2733,31 @@ class Layout extends Base
         // Store the table rows
         $this->getState()->recordsTotal = $this->layoutFactory->countLast();
         $this->getState()->setData($codes);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Release the Layout Lock on specified layoutId, Super Admin only.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function releaseLock(Request $request, Response $response, $id)
+    {
+        if (!$this->getUser()->isSuperAdmin()) {
+            throw new InvalidArgumentException(__('This function is available only to Super Admins.'));
+        }
+
+        /** @var Item $lock */
+        $lock = $this->container->get('pool')->getItem('locks/layout/' . $id);
+        $lock->set(false);
+        $lock->save();
 
         return $this->render($request, $response);
     }
