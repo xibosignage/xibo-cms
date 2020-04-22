@@ -995,5 +995,5 @@ ul li.active.tab-design:hover a {
  */
 input.datePicker[readonly], input.dateTimePicker[readonly], input.dateMonthPicker[readonly], input.timePicker[readonly] {
     cursor: pointer;
-    background-color: #e8f0fe;
+    background-color: #fff;
 }

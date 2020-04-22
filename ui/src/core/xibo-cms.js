@@ -1924,19 +1924,23 @@ function userPreferencesFormSubmit() {
 }
 
 // Initialise date time picker
-function initDatePicker($element, dateTimeFormat, options = {}, onChangeCallback = null, clearButton = true, onClearCallback = null) {
+function initDatePicker($element, dateTimeFormat, options = {}, onChangeCallback = null, clearButtonActive = true, onClearCallback = null) {
     // Check for date format
     if(dateTimeFormat == undefined) {
         console.error('dateTimeFormat needs to be defined!');
         return false;
     }
+    
     // Get linked field
     const $linkedField = $element.closest('form').find('#' + $element.data().linkField);
     const linkedFormat = $element.data().linkFormat;
 
+    // Link field initial value
+    const linkedFieldVal = $linkedField.val();
+
     if(calendarType == 'Jalali') {
         $element.persianDatepicker(Object.assign({
-            initialValue: false,
+            initialValue: ((linkedFieldVal != undefined) ? linkedFieldVal : false),
             altField: '#' + $element.data().linkField,
             altFieldFormatter: function(unixTime) {
                 return (moment.unix(unixTime / 1000).format(linkedFormat));
@@ -1979,22 +1983,16 @@ function initDatePicker($element, dateTimeFormat, options = {}, onChangeCallback
                 }
             }
         }, options));
-    }
 
-    // Get the linked field and use it to set the time
-    var linkedFieldVal = $linkedField.val();
-
-    if(linkedFieldVal != undefined && linkedFieldVal != "" && calendarType == 'Gregorian') {
-        updateDatePicker($element, linkedFieldVal, dateTimeFormat);
+        // Update date picker if linked field has a default value
+        if(linkedFieldVal != undefined && linkedFieldVal != "") {
+            updateDatePicker($element, linkedFieldVal, dateTimeFormat);
+        }
     }
 
     // Clear button
-    if(clearButton) {
-        $clearButton = $('<span class="input-group-addon date-clear-button" role="button"><i class="fa fa-times"></i></span>');
-        $clearButton.attr('id', $element.attr('id') + 'Clear');
-        $element.after($clearButton);
-
-        $clearButton.click(function() {
+    if(clearButtonActive) {
+        $element.parent().find('.date-clear-button').removeClass('hidden').click(function() {
             updateDatePicker($element, '');
 
             // Clear callback if defined
@@ -2011,7 +2009,8 @@ function updateDatePicker($element, date, format, triggerChange = false) {
         // Update gregorian calendar
         if($element[0]._flatpickr != undefined) {
             if(date == '') {
-                $('#' + $element.data().linkField).val('');
+                $element.val('').trigger('change');
+                $('#' + $element.data().linkField).val('').trigger('change');
                 $element[0]._flatpickr.setDate('');
             } else if(format != undefined) {
                 $element[0]._flatpickr.setDate(date, triggerChange, format);
