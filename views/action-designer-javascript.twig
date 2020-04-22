@@ -29,6 +29,12 @@
         $(dialog).find("#target").on('change', function () {
             onTargetChange(dialog);
         });
+
+        onActionTypeChange(dialog);
+
+        $(dialog).find("#actionType").on('change', function () {
+            onActionTypeChange(dialog);
+        });
     }
 
     function onTargetChange(dialog) {
@@ -40,6 +46,31 @@
         } else {
             $('#targetId').val('');
             targetId.addClass("hidden");
+        }
+    }
+
+    function onActionTypeChange(dialog) {
+        let actionType = $(dialog).find('#actionType').val();
+
+        let navLayout = $(dialog).find(".nav-control-layout");
+        let navWidget = $(dialog).find(".nav-control-widget");
+
+        if (actionType === 'navLayout') {
+            // nav Layout, hide Widget dropdown and clear their values
+            navLayout.removeClass("hidden");
+            navWidget.addClass("hidden");
+            $('#widgetId').val('');
+        } else if (actionType === 'navWidget') {
+            // nav Widget, hide LayoutCode and clear its value
+            navLayout.addClass("hidden");
+            navWidget.removeClass("hidden");
+            $('#layoutCode').val('');
+        } else {
+            // not in nav Action Type, clear values, hide
+            navLayout.addClass("hidden");
+            navWidget.addClass("hidden");
+            $('#widgetId').val('');
+            $('#layoutCode').val('');
         }
     }
 
@@ -74,7 +105,9 @@
                             {"data": "triggerCode", "visible": false},
                             {"data": "actionType"},
                             {"data": "target"},
-                            {"data": "targetId"},
+                            {"data": "regionName"},
+                            {"data": "widgetName"},
+                            {"data": "layoutCode"},
                             {
                                 "orderable": false,
                                 "data": dataTableButtonsColumn

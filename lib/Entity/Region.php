@@ -276,7 +276,7 @@ class Region implements \JsonSerializable
 
         $this->getLog()->debug('RegionOption ' . $option . ' not found');
 
-        throw new NotFoundException('Region Option not found');
+        throw new NotFoundException(__('Region Option not found'));
     }
 
     /**

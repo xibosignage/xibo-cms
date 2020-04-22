@@ -91,6 +91,18 @@ class Action implements \JsonSerializable
      */
     public $targetId;
 
+    /**
+     * @SWG\Property(description="Widget ID that will be loaded as a result of navigate to Widget Action type")
+     * @var int
+     */
+    public $widgetId;
+
+    /**
+     * @SWG\Property(description="Layout Code identifier")
+     * @var string
+     */
+    public $layoutCode;
+
     private $permissionFactory;
 
     /**
@@ -163,7 +175,7 @@ class Action implements \JsonSerializable
             throw new InvalidArgumentException(__('Invalid trigger type'), 'triggerType');
         }
 
-        if (!in_array($this->actionType, ['next', 'previous', 'navLayout', 'navRegion', 'navPlaylist', 'navWidget'])) {
+        if (!in_array($this->actionType, ['next', 'previous', 'navLayout', 'navWidget'])) {
             throw new InvalidArgumentException(__('Invalid action type'), 'actionType');
         }
 
@@ -173,6 +185,14 @@ class Action implements \JsonSerializable
 
         if (!in_array(strtolower($this->target), ['region', 'screen'])) {
             throw new InvalidArgumentException(__('Invalid target'), 'target');
+        }
+
+        if ($this->actionType === 'navLayout' && $this->layoutCode == '') {
+            throw new InvalidArgumentException(__('Please enter Layout code'), 'layoutCode');
+        }
+
+        if ($this->actionType === 'navWidget' && $this->widgetId == null) {
+            throw new InvalidArgumentException(__('Please select a Widget'), 'widgetId');
         }
     }
 
@@ -202,22 +222,7 @@ class Action implements \JsonSerializable
 
     public function add()
     {
-        $this->actionId = $this->getStore()->insert('INSERT INTO `action` (ownerId, triggerType, triggerCode, actionType, source, sourceId, target, targetId) VALUES (:ownerId, :triggerType, :triggerCode, :actionType, :source, :sourceId, :target, :targetId)', [
-            'ownerId' => $this->ownerId,
-            'triggerType' => $this->triggerType,
-            'triggerCode' => $this->triggerCode,
-            'actionType' => $this->actionType,
-            'source' => $this->source,
-            'sourceId' => $this->sourceId,
-            'target' => $this->target,
-            'targetId' => $this->targetId
-        ]);
-
-    }
-
-    public function update()
-    {
-        $this->getStore()->update('UPDATE `action` SET ownerId = :ownerId, triggerType = :triggerType, triggerCode = :triggerCode, actionType = :actionType, source = :source, sourceId = :sourceId, target = :target, targetId = :targetId WHERE actionId = :actionId', [
+        $this->actionId = $this->getStore()->insert('INSERT INTO `action` (ownerId, triggerType, triggerCode, actionType, source, sourceId, target, targetId, widgetId, layoutCode) VALUES (:ownerId, :triggerType, :triggerCode, :actionType, :source, :sourceId, :target, :targetId, :widgetId, :layoutCode)', [
             'ownerId' => $this->ownerId,
             'triggerType' => $this->triggerType,
             'triggerCode' => $this->triggerCode,
@@ -226,7 +231,26 @@ class Action implements \JsonSerializable
             'sourceId' => $this->sourceId,
             'target' => $this->target,
             'targetId' => $this->targetId,
-            'actionId' => $this->actionId
+            'widgetId' => $this->widgetId,
+            'layoutCode' => $this->layoutCode
+        ]);
+
+    }
+
+    public function update()
+    {
+        $this->getStore()->update('UPDATE `action` SET ownerId = :ownerId, triggerType = :triggerType, triggerCode = :triggerCode, actionType = :actionType, source = :source, sourceId = :sourceId, target = :target, targetId = :targetId, widgetId = :widgetId, layoutCode = :layoutCode WHERE actionId = :actionId', [
+            'ownerId' => $this->ownerId,
+            'triggerType' => $this->triggerType,
+            'triggerCode' => $this->triggerCode,
+            'actionType' => $this->actionType,
+            'source' => $this->source,
+            'sourceId' => $this->sourceId,
+            'target' => $this->target,
+            'targetId' => $this->targetId,
+            'actionId' => $this->actionId,
+            'widgetId' => $this->widgetId,
+            'layoutCode' => $this->layoutCode
         ]);
     }
 

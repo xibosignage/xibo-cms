@@ -106,8 +106,9 @@ class UserFactory extends BaseFactory
     {
         $users = $this->query(null, array('disableUserCheck' => 1, 'userId' => $userId));
 
-        if (count($users) <= 0)
+        if (count($users) <= 0) {
             throw new NotFoundException(__('User not found'));
+        }
 
         return $users[0];
     }
@@ -122,8 +123,9 @@ class UserFactory extends BaseFactory
     {
         $users = $this->query(null, array('disableUserCheck' => 1, 'clientId' => $clientId));
 
-        if (count($users) <= 0)
+        if (count($users) <= 0) {
             throw new NotFoundException(sprintf('User not found'));
+        }
 
         return $users[0];
     }
@@ -138,8 +140,9 @@ class UserFactory extends BaseFactory
     {
         $users = $this->query(null, array('disableUserCheck' => 1, 'exactUserName' => $userName));
 
-        if (count($users) <= 0)
+        if (count($users) <= 0) {
             throw new NotFoundException(__('User not found'));
+        }
 
         return $users[0];
     }
@@ -153,8 +156,10 @@ class UserFactory extends BaseFactory
     public function getByEmail($email) {
         $users = $this->query(null, array('disableUserCheck' => 1, 'email' => $email));
 
-        if (count($users) <= 0)
+        if (count($users) <= 0) {
             throw new NotFoundException(__('User not found'));
+        }
+
         return $users[0];
     }
 
@@ -189,14 +194,11 @@ class UserFactory extends BaseFactory
     /**
      * Get system user
      * @return User
+     * @throws NotFoundException
      */
     public function getSystemUser()
     {
-        $user = $this->create();
-        $user->userId = 1;
-        $user->userName = 'system';
-        $user->userTypeId = 1;
-        $user->email = $this->configService->getSetting('mail_to');
+        $user = $this->getById($this->configService->getSetting('SYSTEM_USER'));
 
         return $user;
     }

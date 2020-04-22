@@ -748,7 +748,7 @@ class Campaign extends Base
 
             // Make sure we're not a draft
             if ($layout->isChild())
-                throw new InvalidArgumentException('Cannot assign a Draft Layout to a Campaign', 'layoutId');
+                throw new InvalidArgumentException(__('Cannot assign a Draft Layout to a Campaign'), 'layoutId');
 
             // Make sure this layout is not a template - for API, in web ui templates are not available for assignment
             $tags = $layout->tags;
@@ -756,7 +756,7 @@ class Campaign extends Base
 
             foreach ($tagsArray as $tag) {
                 if ($tag === 'template') {
-                    throw new InvalidArgumentException('Cannot assign a Template to a Campaign', 'layoutId');
+                    throw new InvalidArgumentException(__('Cannot assign a Template to a Campaign'), 'layoutId');
                 }
             }
 

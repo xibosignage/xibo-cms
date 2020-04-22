@@ -58,18 +58,31 @@
                 {% set next %}{% trans "Next" %}{% endset %}
                 {% set previous %}{% trans "Previous" %}{% endset %}
                 {% set navLayout %}{% trans "Navigate to Layout" %}{% endset %}
-                {% set navRegion %}{% trans "Navigate to Region" %}{% endset %}
                 {% set navPlaylist %}{% trans "Navigate to Playlist" %}{% endset %}
                 {% set navWidget %}{% trans "Navigate to Widget" %}{% endset %}
                 {% set options = [
                     { typeid: "next", type: next },
                     { typeid: "previous", type: previous },
                     { typeid: "navLayout", type: navLayout },
-                    { typeid: "navRegion", type: navRegion },
-                    { typeid: "navPlaylist", type: navPlaylist },
                     { typeid: "navWidget", type: navWidget },
                 ] %}
                 {{ forms.dropdown("actionType", "single", title,"", options, "typeid","type", helpText) }}
+
+                {% set title %}{% trans "Widget" %}{% endset %}
+                {% set helpText %}{% trans "Widget that will load into target" %}{% endset %}
+                {{ forms.dropdown("widgetId", "single", title, "", [{widgetId:null, name:""}]|merge(widgets), "widgetId", "name", helpText, "nav-control-widget") }}
+
+                {% set title %}{% trans "Layout Code" %}{% endset %}
+                {% set helpText %}{% trans "Please enter code identifier for the Layout" %}{% endset %}
+
+                {% set attributes = [
+                    { name: "data-width", value: "100%" },
+                    { name: "data-search-url", value: url_for("layout.code.search") },
+                    { name: "data-search-term", value: "code" },
+                    { name: "data-id-property", value: "code" },
+                    { name: "data-text-property", value: "code" }
+                ] %}
+                {{ forms.dropdown("layoutCode", "single", title, "", null, "code", "code", helpText, "pagedSelect nav-control-layout", "", "", "", attributes) }}
 
                 {% set title %}{% trans "Target" %}{% endset %}
                 {% set helpText %}{% trans "Please select the trigger type for this Action." %}{% endset %}

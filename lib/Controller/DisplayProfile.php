@@ -171,7 +171,7 @@ class DisplayProfile extends Base
         $profiles = $this->displayProfileFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
 
         if (count($profiles) <= 0)
-            throw new NotFoundException('Display Profile not found', 'DisplayProfile');
+            throw new NotFoundException(__('Display Profile not found'), 'DisplayProfile');
 
         foreach ($profiles as $profile) {
             /* @var \Xibo\Entity\DisplayProfile $profile */

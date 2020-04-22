@@ -630,7 +630,7 @@ class SummaryReport implements ReportInterface
                 $input = range(0, ceil($diffInDays / 30));
             } else {
                 $this->getLog()->error('Unknown Grouping Selected ' . $groupByFilter);
-                throw new InvalidArgumentException('Unknown Grouping ' . $groupByFilter, 'groupByFilter');
+                throw new InvalidArgumentException(__('Unknown Grouping ') . $groupByFilter, 'groupByFilter');
             }
 
             $filterRangeStart = new UTCDateTime($fromDt->format('U') * 1000);

@@ -822,10 +822,19 @@ class DataSet implements \JsonSerializable
     {
         $this->load();
 
-        if ($this->isLookup)
+        if ($this->isLookup) {
             throw new ConfigurationException(__('Lookup Tables cannot be deleted'));
+        }
 
-        // TODO: Make sure we're not used as a dependent DataSet
+        // check if any other DataSet depends on this DataSet
+        if ($this->getStore()->exists(
+            'SELECT dataSetId FROM dataset WHERE runsAfter = :runsAfter AND dataSetId <> :dataSetId',
+            [
+                'runsAfter' => $this->dataSetId,
+                'dataSetId' => $this->dataSetId
+            ])) {
+            throw new InvalidArgumentException(__('Cannot delete because this DataSet is set as dependent DataSet for another DataSet'), 'dataSetId');
+        }
 
         // Make sure we're able to delete
         if ($this->getStore()->exists('
@@ -835,7 +844,7 @@ class DataSet implements \JsonSerializable
                 AND `widgetoption`.option = \'dataSetId\'
                 AND `widgetoption`.value = :dataSetId
         ', ['dataSetId' => $this->dataSetId])) {
-            throw new InvalidArgumentException('Cannot delete because DataSet is in use on one or more Layouts.', 'dataSetId');
+            throw new InvalidArgumentException(__('Cannot delete because DataSet is in use on one or more Layouts.'), 'dataSetId');
         }
 
         // Delete Permissions

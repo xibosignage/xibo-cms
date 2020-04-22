@@ -451,7 +451,7 @@ class ForecastIo extends ModuleWidget
         if (!v::longitude()->validate($defaultLong) || !v::latitude()->validate($defaultLat)) {
             $this->getLog()->error('Weather widget configured with incorrect lat/long. WidgetId is ' . $this->getWidgetId()
                 . ', Lat is ' . $defaultLat . ', Lng is ' . $defaultLong);
-            throw new InvalidArgumentException('Lat/Long invalid', 'geolocation');
+            throw new InvalidArgumentException(__('Lat/Long invalid'), 'geolocation');
         }
 
         // Create a provider
