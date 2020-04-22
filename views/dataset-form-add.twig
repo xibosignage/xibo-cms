@@ -224,7 +224,7 @@
                             { typeid: "29030400", type: truncate_year },
                             { typeid: "58060800", type: truncate_two_year }
                         ] %}
-                        {{ forms.dropdown("clearRate", "single", title, "", options, "typeid", "type", helpText) }}
+                        {{ forms.dropdown("clearRate", "single", title, "1", options, "typeid", "type", helpText) }}
 
                         {% set title %}{% trans "Depends on DataSet" %}{% endset %}
                         {% set dataSets = [{dataSetId: null, dataSet: ""}]|merge(dataSets) %}
