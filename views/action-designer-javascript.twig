@@ -39,7 +39,7 @@
 
     function onTargetChange(dialog) {
         let target = $(dialog).find("#target").val();
-        let targetId = $(dialog).find(".target-control");
+        let targetId = $(dialog).find(".targetid-control");
 
         if (target === 'region') {
             targetId.removeClass("hidden");
@@ -54,21 +54,27 @@
 
         let navLayout = $(dialog).find(".nav-control-layout");
         let navWidget = $(dialog).find(".nav-control-widget");
+        let target = $(dialog).find(".target-control");
 
         if (actionType === 'navLayout') {
-            // nav Layout, hide Widget dropdown and clear their values
+            // nav Layout, hide Widget and Target dropdowns and clear corresponding values
             navLayout.removeClass("hidden");
             navWidget.addClass("hidden");
+            $("#target").val("screen").change();
+            target.addClass("hidden");
             $('#widgetId').val('');
+            $('#targetId').val('');
         } else if (actionType === 'navWidget') {
             // nav Widget, hide LayoutCode and clear its value
             navLayout.addClass("hidden");
             navWidget.removeClass("hidden");
+            target.removeClass("hidden");
             $('#layoutCode').val('');
         } else {
             // not in nav Action Type, clear values, hide
             navLayout.addClass("hidden");
             navWidget.addClass("hidden");
+            target.removeClass("hidden");
             $('#widgetId').val('');
             $('#layoutCode').val('');
         }
