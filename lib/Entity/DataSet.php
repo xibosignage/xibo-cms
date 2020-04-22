@@ -514,6 +514,12 @@ class DataSet implements \JsonSerializable
         $limit = '';
         if ($start != 0 || $size != 0) {
             // Substitute in
+
+            // handle case where lower limit is set to > 0 and upper limit to 0 https://github.com/xibosignage/xibo/issues/2187
+            if ($start != 0 && $size = 0) {
+                $size = 18446744073709551615;
+            }
+
             $limit = sprintf(' LIMIT %d, %d ', $start, $size);
         }
 
