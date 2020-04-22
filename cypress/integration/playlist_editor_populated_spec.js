@@ -178,11 +178,14 @@ describe('Playlist Editor (Populated)', function() {
         ).then(() => {
 
             // Add dates
-            cy.get('[data-test="widgetPropertiesForm"] #fromDt_Link1').type('2018-01-01');
-            cy.get('[data-test="widgetPropertiesForm"] #fromDt_Link2').type('00:00');
+            cy.get('[data-test="widgetPropertiesForm"] .starttime-control .date-clear-button').click();
+            cy.get('[data-test="widgetPropertiesForm"] #fromDtLink').click();
+            cy.get('.flatpickr-calendar.open .dayContainer .flatpickr-day.today').click();
 
-            cy.get('[data-test="widgetPropertiesForm"] #toDt_Link1').type('2018-01-01');
-            cy.get('[data-test="widgetPropertiesForm"] #toDt_Link2').type('23:45');
+            cy.get('[data-test="widgetPropertiesForm"] .endtime-control .date-clear-button').click();
+            cy.get('[data-test="widgetPropertiesForm"] #toDtLink').click();
+            cy.get('.flatpickr-calendar.open .dayContainer .flatpickr-day.today').click();
+
 
             // Save and close the form
             cy.get('[data-test="widgetPropertiesForm"] [data-bb-handler="done"]').click();
