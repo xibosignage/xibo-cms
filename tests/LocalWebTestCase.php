@@ -38,7 +38,6 @@ use Xibo\Entity\Application;
 use Xibo\Entity\User;
 use Xibo\Factory\ContainerFactory;
 use Xibo\Factory\TaskFactory;
-use Xibo\Helper\Translate;
 use Xibo\Middleware\State;
 use Xibo\Middleware\Storage;
 use Xibo\OAuth2\Client\Provider\XiboEntityProvider;
@@ -101,11 +100,6 @@ class LocalWebTestCase extends PHPUnit_TestCase
      */
     public function getSlimInstance()
     {
-        //$this->getLogger()->debug('Getting Slim Instance');
-
-        // this function sets $_SERVER parameters for this test environment.
-        $this->setEnvironment();
-
         // Create the container for dependency injection.
         try {
             $container = ContainerFactory::create();
@@ -137,9 +131,8 @@ class LocalWebTestCase extends PHPUnit_TestCase
             return $logger;
         });
 
+        // Name the Container
         $container->set('name', 'test');
-
-        //$this->getLogger()->debug('Loading Config');
 
         // Config
         $app->config = $container->get('configService');
@@ -148,11 +141,11 @@ class LocalWebTestCase extends PHPUnit_TestCase
 
         \Xibo\Middleware\State::setState($app, $request);
 
-       // $this->getLogger()->debug('Setting Middleware');
-        $app->add(new Storage($app));
+        // Setting Middleware
         $app->add(new TestAuthMiddleware($app));
         $app->add(new State($app));
         $app->add($twigMiddleware);
+        $app->add(new Storage($app));
         $app->add(new Middleware\TestXmr($app));
         $app->addRoutingMiddleware();
 
@@ -161,7 +154,6 @@ class LocalWebTestCase extends PHPUnit_TestCase
         $errorMiddleware->setDefaultErrorHandler(\Xibo\Middleware\Handlers::testErrorHandler($container));
 
         // All routes
-        //$this->getLogger()->debug('Including Routes');
         require PROJECT_ROOT . '/lib/routes-web.php';
         require PROJECT_ROOT . '/lib/routes.php';
 
@@ -180,7 +172,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
      * @param null $body
      * @return ResponseInterface
      */
-    protected function sendRequest(string $method, string $path, $body = null,  array $headers = ['HTTP_ACCEPT'=>'application/json'], $requestAttrVal = 'test', $ajaxHeader = false ): ResponseInterface
+    protected function sendRequest(string $method, string $path, $body = null, array $headers = ['HTTP_ACCEPT'=>'application/json'], $requestAttrVal = 'test', $ajaxHeader = false ): ResponseInterface
     {
         // Create a request for tests
         $request = new Request(new ServerRequest($method, $path, $headers));
@@ -217,7 +209,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
      * @param array $serverParams
      * @return Request
      */
-    protected function createRequest(string $method, string $path, $body = null,  array $headers = ['HTTP_ACCEPT'=>'application/json'], $serverParams = []): Request
+    protected function createRequest(string $method, string $path, $body = null, array $headers = ['HTTP_ACCEPT'=>'application/json'], $serverParams = []): Request
     {
         // Create a request for tests
         $request = new Request(new ServerRequest($method, $path, $headers, $body, '', $serverParams));
@@ -231,169 +223,168 @@ class LocalWebTestCase extends PHPUnit_TestCase
      */
     public static function setUpBeforeClass()
     {
+        parent::setUpBeforeClass();
+
         // Configure global test state
         // We want to ensure there is a
         //  - global DB object
         //  - phpunit user who executes the tests through Slim
         //  - an API application owned by phpunit with client_credentials grant type
-        $container = ContainerFactory::create();
+        if (self::$container == null) {
+            self::getLogger()->debug('Creating Container');
 
-        // Create a logger
-        $handlers = [];
-        if (isset($_SERVER['PHPUNIT_LOG_TO_FILE']) && $_SERVER['PHPUNIT_LOG_TO_FILE']) {
-            $handlers[] = new StreamHandler(PROJECT_ROOT . '/library/log.txt', Logger::INFO);
-        } else {
-            $handlers[] = new NullHandler();
-        }
+            // Create a new container
+            $container = ContainerFactory::create();
 
-        $container->set('logger', function (ContainerInterface $container) use ($handlers) {
-            $logger = new Logger('PHPUNIT');
-
-            $uidProcessor = new UidProcessor();
-            $logger->pushProcessor($uidProcessor);
-            foreach ($handlers as $handler) {
-                $logger->pushHandler($handler);
+            // Create a logger
+            $handlers = [];
+            if (isset($_SERVER['PHPUNIT_LOG_TO_FILE']) && $_SERVER['PHPUNIT_LOG_TO_FILE']) {
+                $handlers[] = new StreamHandler(PROJECT_ROOT . '/library/log.txt', Logger::INFO);
+            } else {
+                $handlers[] = new NullHandler();
             }
 
-            return $logger;
-        });
+            $container->set('logger', function (ContainerInterface $container) use ($handlers) {
+                $logger = new Logger('PHPUNIT');
 
-        //config
-        $container->get('configService');
+                $uidProcessor = new UidProcessor();
+                $logger->pushProcessor($uidProcessor);
+                foreach ($handlers as $handler) {
+                    $logger->pushHandler($handler);
+                }
 
-        //translations
-        $container->get('configService')->setDependencies($container->get('store'), '/');
-        Translate::InitLocale($container->get('configService'));
+                return $logger;
+            });
 
-        $container->set('name', 'test');
+            // Initialise config
+            $container->get('configService');
+            $container->get('configService')->setDependencies($container->get('store'), '/');
 
-        // Configure the container with Player Action and Display Notify
-        // Player Action Helper
-        $container->set('playerActionService', function(ContainerInterface $c) {
-            return new MockPlayerActionService(
-                $c->get('configService'),
-                $c->get('logService'),
-                false
-            );
-        });
+            // This is our helper container.
+            $container->set('name', 'phpunit');
 
-        // Register the display notify service
-        $container->set('displayNotifyService', function(ContainerInterface $c) {
-            return new DisplayNotifyService(
-                $c->get('configService'),
-                $c->get('logService'),
-                $c->get('store'),
-                $c->get('pool'),
-                $c->get('playerActionService'),
-                $c->get('scheduleFactory'),
-                $c->get('dayPartFactory')
-            );
-        });
+            // Configure the container with Player Action and Display Notify
+            // Player Action Helper
+            $container->set('playerActionService', function (ContainerInterface $c) {
+                return new MockPlayerActionService(
+                    $c->get('configService'),
+                    $c->get('logService'),
+                    false
+                );
+            });
 
-        // Register the report service
-        $container->set('reportService', function(ContainerInterface $c) {
-            return new ReportService(
-                $c,
-                $c->get('state'),
-                $c->get('store'),
-                $c->get('timeSeriesStore'),
-                $c->get('logService'),
-                $c->get('configService'),
-                $c->get('sanitizerService'),
-                $c->get('savedReportFactory')
-            );
-        });
+            // Register the display notify service
+            $container->set('displayNotifyService', function (ContainerInterface $c) {
+                return new DisplayNotifyService(
+                    $c->get('configService'),
+                    $c->get('logService'),
+                    $c->get('store'),
+                    $c->get('pool'),
+                    $c->get('playerActionService'),
+                    $c->get('scheduleFactory'),
+                    $c->get('dayPartFactory')
+                );
+            });
 
-        // Find the PHPUnit user and if we don't create it
-        try {
-            /** @var User $user */
-            $user = $container->get('userFactory')->getByName('phpunit');
-            // Pass the page factory into the user object, so that it can check its page permissions
-            $user->setChildAclDependencies($container->get('userGroupFactory'), $container->get('pageFactory'));
-            // Load the user
-            $user->load(false);
+            // Register the report service
+            $container->set('reportService', function (ContainerInterface $c) {
+                return new ReportService(
+                    $c,
+                    $c->get('state'),
+                    $c->get('store'),
+                    $c->get('timeSeriesStore'),
+                    $c->get('logService'),
+                    $c->get('configService'),
+                    $c->get('sanitizerService'),
+                    $c->get('savedReportFactory')
+                );
+            });
 
+            // <editor-fold desc="Create PHPUnit container users">
+            // Find the PHPUnit user and if we don't create it
+            try {
+                /** @var User $user */
+                $user = $container->get('userFactory')->getByName('phpunit');
 
+                // Pass the page factory into the user object, so that it can check its page permissions
+                $user->setChildAclDependencies($container->get('userGroupFactory'), $container->get('pageFactory'));
+
+                // Load the user
+                $user->load(false);
+
+            } catch (NotFoundException $e) {
+                // Create the phpunit user with a random password
+                /** @var \Xibo\Entity\User $user */
+                $user = $container->get('userFactory')->create();
+                $user->setChildAclDependencies($container->get('userGroupFactory'), $container->get('pageFactory'));
+                $user->userTypeId = 1;
+                $user->userName = 'phpunit';
+                $user->libraryQuota = 0;
+                $user->homePageId = $container->get('pageFactory')->getByName('statusdashboard')->pageId;
+                $user->isSystemNotification = 1;
+                $user->setNewPassword(\Xibo\Helper\Random::generateString());
+                $user->save();
+                $container->get('store')->commitIfNecessary();
+            }
+
+            // Set on the container
             $container->set('user', $user);
-        } catch (NotFoundException $e) {
-            // Create the phpunit user with a random password
-            /** @var \Xibo\Entity\User $user */
-            $user = $container->get('userFactory')->create();
-            $user->setChildAclDependencies($container->get('userGroupFactory'), $container->get('pageFactory'));
-            $user->userTypeId = 1;
-            $user->userName = 'phpunit';
-            $user->libraryQuota = 0;
-            $user->homePageId = $container->get('pageFactory')->getByName('statusdashboard')->pageId;
-            $user->isSystemNotification = 1;
-            $user->setNewPassword(\Xibo\Helper\Random::generateString());
-            $user->save();
-            $container->get('store')->commitIfNecessary();
 
-            $container->set('user', $user);
-        }
+            // Find the phpunit user and if we don't, complain
+            try {
+                /** @var User $admin */
+                $admin = $container->get('userFactory')->getByName('phpunit');
 
-        // Find the phpunit user and if we don't, complain
-        try {
-            /** @var User $admin */
-            $admin = $container->get('userFactory')->getByName('phpunit');
+            } catch (NotFoundException $e) {
+                die ('Cant proceed without the phpunit user');
+            }
 
-        } catch (NotFoundException $e) {
-            die ('Cant proceed without the phpunit user');
-        }
+            // Check to see if there is an API application we can use
+            try {
+                /** @var Application $application */
+                $application = $container->get('applicationFactory')->getByName('phpunit');
+            } catch (NotFoundException $e) {
+                // Add it
+                $application = $container->get('applicationFactory')->create();
+                $application->name = ('phpunit');
+                $application->authCode = 0;
+                $application->clientCredentials = 1;
+                $application->userId = $admin->userId;
+                $application->assignScope($container->get('applicationScopeFactory')->getById('all'));
+                $application->save();
 
-        // Check to see if there is an API application we can use
-        try {
-            /** @var Application $application */
-            $application = $container->get('applicationFactory')->getByName('phpunit');
-        } catch (NotFoundException $e) {
-            // Add it
-            $application = $container->get('applicationFactory')->create();
-            $application->name = ('phpunit');
-            $application->authCode = 0;
-            $application->clientCredentials = 1;
-            $application->userId = $admin->userId;
-            $application->assignScope($container->get('applicationScopeFactory')->getById('all'));
-            $application->save();
+                /** @var PdoStorageService $store */
+                $store = $container->get('store');
+                $store->commitIfNecessary();
+            }
+            //</editor-fold>
 
+            // Register a provider and entity provider to act as our API wrapper
+            $provider = new \Xibo\OAuth2\Client\Provider\Xibo([
+                'clientId' => $application->key,
+                'clientSecret' => $application->secret,
+                'redirectUri' => '',
+                'baseUrl' => 'http://localhost'
+            ]);
+
+            // Discover the CMS key for XMDS
             /** @var PdoStorageService $store */
             $store = $container->get('store');
+            $key = $store->select('SELECT value FROM `setting` WHERE `setting` = \'SERVER_KEY\'', [])[0]['value'];
             $store->commitIfNecessary();
+
+            // Create an XMDS wrapper for the tests to use
+            $xmds = new XmdsWrapper('http://localhost/xmds.php', $key);
+
+            // Store our entityProvider
+            self::$entityProvider = new XiboEntityProvider($provider);
+
+            // Store our XmdsWrapper
+            self::$xmds = $xmds;
+
+            // Store our container
+            self::$container = $container;
         }
-
-        // Register a provider and entity provider to act as our API wrapper
-        $provider = new \Xibo\OAuth2\Client\Provider\Xibo([
-            'clientId' => $application->key,
-            'clientSecret' => $application->secret,
-            'redirectUri' => '',
-            'baseUrl' => 'http://localhost'
-        ]);
-
-        // Discover the CMS key for XMDS
-        /** @var PdoStorageService $store */
-        $store = $container->get('store');
-        $key = $store->select('SELECT value FROM `setting` WHERE `setting` = \'SERVER_KEY\'', [])[0]['value'];
-        $store->commitIfNecessary();
-        $store->close();
-
-        // Create an XMDS wrapper for the tests to use
-        $xmds = new XmdsWrapper('http://localhost/xmds.php', $key);
-
-        // Store our entityProvider
-        self::$entityProvider = new XiboEntityProvider($provider);
-
-        // Store our container
-        self::$container = $container;
-
-        // Store our XmdsWrapper
-        self::$xmds = $xmds;
-    }
-
-    public static function tearDownAfterClass()
-    {
-        // Remove the DB
-        self::$container->get('store')->close();
-
-        parent::tearDownAfterClass();
     }
 
     /**
@@ -447,7 +438,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
      * @return LoggerInterface
      * @throws \Exception
      */
-    public function getLogger()
+    public static function getLogger()
     {
         // Create if necessary
         if (self::$logger === null) {
@@ -478,6 +469,10 @@ class LocalWebTestCase extends PHPUnit_TestCase
         return $service->processQueue();
     }
 
+    /**
+     * @param $name
+     * @param $class
+     */
     protected static function installModuleIfNecessary($name, $class)
     {
         // Make sure the HLS widget is installed
@@ -511,14 +506,21 @@ class LocalWebTestCase extends PHPUnit_TestCase
         }
     }
 
-    // Run for each unit test to setup our slim app environment
+    /**
+     * Run for each unit test to setup our slim app environment
+     * @throws \Exception
+     */
     public function setup()
     {
         // Establish a local reference to the Slim app object
         $this->app = $this->getSlimInstance();
     }
 
-    public function setEnvironment($userSettings = [])
+    /**
+     * Set the _SERVER vars for the suite
+     * @param array $userSettings
+     */
+    public static function setEnvironment($userSettings = [])
     {
         $defaults = [
             'REQUEST_METHOD' => 'GET',

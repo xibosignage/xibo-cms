@@ -25,6 +25,7 @@ namespace Xibo\Service;
 
 use Carbon\Carbon;
 use Monolog\Logger;
+use Xibo\Helper\DatabaseLogHandler;
 use Xibo\Storage\PdoStorageService;
 
 /**
@@ -34,7 +35,7 @@ use Xibo\Storage\PdoStorageService;
 class LogService implements LogServiceInterface
 {
     /**
-     * @var LogServiceInterface
+     * @var \Psr\Log\LoggerInterface
      */
     private $log;
 
@@ -220,25 +221,33 @@ class LogService implements LogServiceInterface
                 return Logger::ALERT;
 
             case 'critical':
-                return logger::CRITICAL;
-
-            case 'error':
-                return logger::ERROR;
+                return Logger::CRITICAL;
 
             case 'warning':
-                return logger::WARNING;
+                return Logger::WARNING;
 
             case 'notice':
-                return logger::NOTICE;
+                return Logger::NOTICE;
 
             case 'info':
-                return logger::INFO;
+                return Logger::INFO;
 
             case 'debug':
-                return logger::DEBUG;
+                return Logger::DEBUG;
 
+            case 'error':
             default:
-                return logger::ERROR;
+                return Logger::ERROR;
+        }
+    }
+
+    /** @inheritDoc */
+    public function setLevel($level)
+    {
+        foreach ($this->log->getHandlers() as $handler) {
+            if ($handler instanceof DatabaseLogHandler) {
+                $handler->setLevel($level);
+            }
         }
     }
 }

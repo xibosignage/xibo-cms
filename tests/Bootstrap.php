@@ -30,3 +30,5 @@ require_once PROJECT_ROOT . '/tests/LocalWebTestCase.php';
 
 if (!file_exists(PROJECT_ROOT . '/web/settings.php'))
     die('Not configured');
+
+\Xibo\Tests\LocalWebTestCase::setEnvironment();

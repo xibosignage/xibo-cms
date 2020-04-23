@@ -105,4 +105,10 @@ interface LogServiceInterface
      * @return int
      */
     public static function resolveLogLevel($level);
+
+    /**
+     * Set the log level on all handlers
+     * @param $level
+     */
+    public function setLevel($level);
 }

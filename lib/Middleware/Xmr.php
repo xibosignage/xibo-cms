@@ -81,6 +81,7 @@ class Xmr implements Middleware
     public static function finish($app)
     {
         $container = $app->getContainer();
+
         // Handle display notifications
         if ($container->get('displayNotifyService') != null) {
             try {
@@ -98,6 +99,9 @@ class Xmr implements Middleware
                 $container->get('logService')->error('Unable to Process Queue of Player actions due to %s', $e->getMessage());
             }
         }
+
+        // Re-terminate any DB connections
+        $app->getContainer()->get('store')->close();
     }
 
     /**

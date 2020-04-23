@@ -65,11 +65,10 @@ $routeParser = $app->getRouteCollector()->getRouteParser();
 $container->set('name', 'API');
 
 $app->add(new \Xibo\Middleware\ApiAuthenticationOAuth($app));
-$app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\State($app));
 $app->add(new \Xibo\Middleware\Log($app));
+$app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\Xmr($app));
-
 $app->addRoutingMiddleware();
 
 // Add Error Middleware
