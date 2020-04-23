@@ -86,6 +86,10 @@ class RemoteDataSetFetchTask implements TaskInterface
         foreach ($dataSets as $dataSet) {
 
             $this->log->debug('Processing ' . $dataSet->dataSet . '. ID:' . $dataSet->dataSetId);
+            $hardRowLimit = $this->config->getSetting('DATASET_HARD_ROW_LIMIT');
+            $softRowLimit = $dataSet->rowLimit;
+            $limitPolicy = $dataSet->limitPolicy;
+            $currentNumberOfRows = intval($this->store->select('SELECT COUNT(*) AS total FROM `dataset_' . $dataSet->dataSetId . '`', [])[0]['total']);
 
             try {
                 // Has this dataSet been accessed recently?
@@ -117,6 +121,34 @@ class RemoteDataSetFetchTask implements TaskInterface
 
                             // Update the last clear time.
                             $dataSet->saveLastClear($runTime);
+                        }
+
+                        $rowsToAdd = $results->number;
+                        $this->log->debug('Current number of rows in DataSet ID ' . $dataSet->dataSetId . ' is: ' . $currentNumberOfRows . ' number of records to add ' . $rowsToAdd);
+
+                        // row limit reached
+                        if ($currentNumberOfRows + $rowsToAdd >= $hardRowLimit || $softRowLimit != null && $currentNumberOfRows + $rowsToAdd >= $softRowLimit) {
+
+                            // which limit policy was set?
+                            if ($limitPolicy === 'stop') {
+                                $this->log->info('DataSet ID ' . $dataSet->dataSetId . ' reached the row limit, due to selected limit policy, it will stop syncing');
+                                continue;
+                            } elseif ($limitPolicy === 'fifo') {
+                                // FiFo
+                                $this->log->info('DataSet ID ' . $dataSet->dataSetId . ' reached the row limit, due to selected limit policy, oldest rows will be removed');
+
+                                $this->store->update('DELETE FROM `dataset_' . $dataSet->dataSetId . '` ORDER BY id ASC LIMIT ' . $rowsToAdd, []);
+                            } elseif ($limitPolicy === 'truncate') {
+                                // truncate
+                                $this->log->info('DataSet ID ' . $dataSet->dataSetId . ' reached the row limit, due to selected limit policy, we will truncate the DataSet data');
+                                $dataSet->deleteData();
+
+                                // Update the last clear time.
+                                $dataSet->saveLastClear($runTime);
+                            } else {
+                                $this->log->error('DataSet ID ' . $dataSet->dataSetId . ' reached the row limit, selected limit policy empty or incorrect');
+                                throw new GeneralException(__('Incorrect Limit Policy'));
+                            }
                         }
 
                         if ($dataSet->sourceId === 1) {

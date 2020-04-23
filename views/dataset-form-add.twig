@@ -230,6 +230,22 @@
                         {% set dataSets = [{dataSetId: null, dataSet: ""}]|merge(dataSets) %}
                         {% set helpText %}{% trans "The DataSet you select here will be processed in advance and have its values available for subsitution in the data to add to this request on the Remote tab." %}{% endset %}
                         {{ forms.dropdown("runsAfter", "single", title, "", dataSets, "dataSetId", "dataSet", helpText) }}
+
+                        {% set title %}{% trans "Row Limit" %}{% endset %}
+                        {% set helpText %}{% trans "Optionally provide a row limit for this DataSet. When left empty the DataSet row limit from CMS Settings will be used." %}{% endset %}
+                        {{ forms.number("rowLimit", title, "", helpText) }}
+
+                        {% set title %}{% trans "Limit Policy" %}{% endset %}
+                        {% set helpText %}{% trans "What should happen when this Dataset reaches the row limit?" %}{% endset %}
+                        {% set stop %}{% trans "Stop Syncing" %}{% endset %}
+                        {% set fifo %}{% trans "First In First Out" %}{% endset %}
+                        {% set truncate %}{% trans "Truncate" %}{% endset %}
+                        {% set options = [
+                            { typeid: "stop", type: stop },
+                            { typeid: "fifo", type: fifo },
+                            { typeid: "truncate", type: truncate },
+                        ] %}
+                        {{ forms.dropdown("limitPolicy", "single", title, "", options, "typeid", "type", helpText) }}
                     </div>
                 </div>
             </form>

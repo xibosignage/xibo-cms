@@ -212,6 +212,18 @@ class DataSet implements \JsonSerializable
      */
     public $ignoreFirstRow;
 
+    /**
+     * @SWG\Property(description="Soft limit on number of rows per DataSet, if left empty the global DataSet row limit will be used.")
+     * @var integer
+     */
+    public $rowLimit = null;
+
+    /**
+     * @SWG\Property(description="Type of action that should be taken on next remote DataSet sync - stop, fifo or truncate")
+     * @var string
+     */
+    public $limitPolicy;
+
     /** @var array Permissions */
     private $permissions = [];
 
@@ -540,7 +552,7 @@ class DataSet implements \JsonSerializable
             // Substitute in
 
             // handle case where lower limit is set to > 0 and upper limit to 0 https://github.com/xibosignage/xibo/issues/2187
-            if ($start != 0 && $size = 0) {
+            if ($start != 0 && $size == 0) {
                 $size = 18446744073709551615;
             }
 
@@ -686,23 +698,36 @@ class DataSet implements \JsonSerializable
      */
     public function validate()
     {
-        if (!v::stringType()->notEmpty()->length(null, 50)->validate($this->dataSet))
+        if (!v::stringType()->notEmpty()->length(null, 50)->validate($this->dataSet)) {
             throw new InvalidArgumentException(__('Name must be between 1 and 50 characters'), 'dataSet');
+        }
 
-        if ($this->description != null && !v::stringType()->length(null, 254)->validate($this->description))
+        if ($this->description != null && !v::stringType()->length(null, 254)->validate($this->description)) {
             throw new InvalidArgumentException(__('Description can not be longer than 254 characters'), 'description');
+        }
 
         // If we are a remote dataset do some additional checks
         if ($this->isRemote === 1) {
-            if (!v::stringType()->notEmpty()->validate($this->uri))
+            if (!v::stringType()->notEmpty()->validate($this->uri)) {
                 throw new InvalidArgumentException(__('A remote DataSet must have a URI.'), 'uri');
+            }
+
+            if ($this->rowLimit > $this->config->getSetting('DATASET_HARD_ROW_LIMIT')) {
+                throw new InvalidArgumentException(__('DataSet row limit cannot be larger than the CMS dataSet row limit'));
+            }
+
+            if ($this->limitPolicy == null) {
+                throw new InvalidArgumentException(__('Please select the limit policy for this DataSet.'));
+            }
+
         }
 
         try {
             $existing = $this->dataSetFactory->getByName($this->dataSet, $this->userId);
 
-            if ($this->dataSetId == 0 || $this->dataSetId != $existing->dataSetId)
+            if ($this->dataSetId == 0 || $this->dataSetId != $existing->dataSetId) {
                 throw new DuplicateEntityException(sprintf(__('There is already dataSet called %s. Please choose another name.'), $this->dataSet));
+            }
         }
         catch (NotFoundException $e) {
             // This is good
@@ -906,8 +931,8 @@ class DataSet implements \JsonSerializable
 
         // Insert the extra columns we expect for a remote DataSet
         if ($this->isRemote === 1) {
-            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `customHeaders`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`, `summarize`, `summarizeField`, `sourceId`, `ignoreFirstRow`';
-            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :customHeaders, :refreshRate, :clearRate, :runsAfter, :dataRoot, :lastSync, :summarize, :summarizeField, :sourceId, :ignoreFirstRow';
+            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `customHeaders`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`, `summarize`, `summarizeField`, `sourceId`, `ignoreFirstRow`, `rowLimit`, `limitPolicy`';
+            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :customHeaders, :refreshRate, :clearRate, :runsAfter, :dataRoot, :lastSync, :summarize, :summarizeField, :sourceId, :ignoreFirstRow, :rowLimit, :limitPolicy';
 
             $params['method'] = $this->method;
             $params['uri'] = $this->uri;
@@ -925,6 +950,8 @@ class DataSet implements \JsonSerializable
             $params['sourceId'] = $this->sourceId;
             $params['ignoreFirstRow'] = $this->ignoreFirstRow;
             $params['lastSync'] = 0;
+            $params['rowLimit'] = $this->rowLimit;
+            $params['limitPolicy'] = $this->limitPolicy;
         }
 
         // Do the insert
@@ -952,7 +979,7 @@ class DataSet implements \JsonSerializable
         ];
 
         if ($this->isRemote) {
-            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, `customHeaders` = :customHeaders, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField, `sourceId` = :sourceId, `ignoreFirstRow` = :ignoreFirstRow ';
+            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, `customHeaders` = :customHeaders, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField, `sourceId` = :sourceId, `ignoreFirstRow` = :ignoreFirstRow , `rowLimit` = :rowLimit, `limitPolicy` = :limitPolicy ';
 
             $params['method'] = $this->method;
             $params['uri'] = $this->uri;
@@ -969,6 +996,8 @@ class DataSet implements \JsonSerializable
             $params['summarizeField'] = $this->summarizeField;
             $params['sourceId'] = $this->sourceId;
             $params['ignoreFirstRow'] = $this->ignoreFirstRow;
+            $params['rowLimit'] = $this->rowLimit;
+            $params['limitPolicy'] = $this->limitPolicy;
         }
 
         $this->getStore()->update('UPDATE dataset SET ' . $sql . '  WHERE DataSetID = :dataSetId', $params);

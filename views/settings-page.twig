@@ -225,6 +225,17 @@
                                         {{ forms.disabled("DEFAULT_RESIZE_LIMIT", title, theme.getSetting("DEFAULT_RESIZE_LIMIT", 0), helpText) }}
                                     {% endif %}
                                 {% endif %}
+
+                                {% if theme.isSettingVisible("DATASET_HARD_ROW_LIMIT") %}
+                                    {% set title %}{% trans "DataSet maximum number of Rows" %}{% endset %}
+                                    {% set helpText %}{% trans "The maximum number of rows per DataSet, once the limit is met the limit policy defined per DataSet will dictate further action." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DATASET_HARD_ROW_LIMIT") %}
+                                        {{ forms.number("DATASET_HARD_ROW_LIMIT", title, theme.getSetting("DATASET_HARD_ROW_LIMIT", 0), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("DATASET_HARD_ROW_LIMIT", title, theme.getSetting("DATASET_HARD_ROW_LIMIT", 0), helpText) }}
+                                    {% endif %}
+                                {% endif %}
                             </div>
                             <div class="tab-pane" id="tab_displays">
                                 <h3 class="section-heading">{% trans "Displays" %}</h3>

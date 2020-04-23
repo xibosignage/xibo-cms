@@ -466,6 +466,8 @@ class DataSet extends Base
             $dataSet->summarizeField = $sanitizedParams->getString('summarizeField');
             $dataSet->sourceId = $sanitizedParams->getInt('sourceId');
             $dataSet->ignoreFirstRow = $sanitizedParams->getCheckbox('ignoreFirstRow');
+            $dataSet->rowLimit = $sanitizedParams->getInt('rowLimit');
+            $dataSet->limitPolicy = $sanitizedParams->getString('limitPolicy');
         }
 
         // Also add one column
@@ -706,6 +708,8 @@ class DataSet extends Base
             $dataSet->summarizeField = $sanitizedParams->getString('summarizeField');
             $dataSet->sourceId = $sanitizedParams->getInt('sourceId');
             $dataSet->ignoreFirstRow = $sanitizedParams->getCheckbox('ignoreFirstRow');
+            $dataSet->rowLimit = $sanitizedParams->getInt('rowLimit');
+            $dataSet->limitPolicy = $sanitizedParams->getString('limitPolicy');
         }
 
         $dataSet->save();

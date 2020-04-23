@@ -215,6 +215,8 @@ class DataSetFactory extends BaseFactory
             dataset.`lastClear`,
             dataset.`sourceId`,
             dataset.`ignoreFirstRow`,
+            dataset.`rowLimit`,
+            dataset.`limitPolicy`,
             user.userName AS owner,
             (
               SELECT GROUP_CONCAT(DISTINCT `group`.group)
@@ -453,7 +455,17 @@ class DataSetFactory extends BaseFactory
                 // TODO: we should probably do some checking to ensure we have JSON back
                 if ($dataSet->sourceId === 1) {
                     $result->entries[] = json_decode($request->getBody());
-                    $result->number = $result->number + 1;
+                    foreach ($result->entries as $entry) {
+                        $data = $this->getDataRootFromResult($dataSet->dataRoot, $entry);
+
+                        if (is_array($data)) {
+                            $result->number = count($data);
+                        }
+
+                        if (is_object($data)) {
+                            $result->number = count(get_object_vars($data));
+                        }
+                    }
                 } else {
                     $csv = $request->getBody();
                     $array = array_map("str_getcsv", explode("\n", $csv));
@@ -657,7 +669,7 @@ class DataSetFactory extends BaseFactory
                             break;
                         case 3:
                             // This expects an ISO date
-                            $date =  $sanitizer->getDate($value[1]);
+                            $date =  $sanitizer->getDate(1);
                             try {
                                 $result[$column->heading] = $date->format(DateFormatHelper::getSystemFormat());
                             } catch (\Exception $e) {
