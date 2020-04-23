@@ -58,8 +58,8 @@ class Video extends ModuleWidget
      *  tags={"widget"},
      *  summary="Parameters for editing existing video on a layout",
      *  description="For uploading new video files, please refer to POST /library documentation.
-                    For assigning existing video file to a Playlist please see POST /playlist/library/assign/{playlistId} documentation.
-                    This call will replace existing Widget object, all not supplied parameters will be set to default.",
+     *               For assigning existing video file to a Playlist please see POST /playlist/library/assign/{playlistId} documentation.
+     *               This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",
