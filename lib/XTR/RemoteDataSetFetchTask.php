@@ -129,6 +129,12 @@ class RemoteDataSetFetchTask implements TaskInterface
                         // row limit reached
                         if ($currentNumberOfRows + $rowsToAdd >= $hardRowLimit || $softRowLimit != null && $currentNumberOfRows + $rowsToAdd >= $softRowLimit) {
 
+                            // handle remote DataSets created before introduction of limit policy
+                            if ($limitPolicy == null) {
+                                $this->log->debug('No limit policy set, default to stop syncing.');
+                                $limitPolicy = 'stop';
+                            }
+
                             // which limit policy was set?
                             if ($limitPolicy === 'stop') {
                                 $this->log->info('DataSet ID ' . $dataSet->dataSetId . ' reached the row limit, due to selected limit policy, it will stop syncing');
@@ -145,9 +151,6 @@ class RemoteDataSetFetchTask implements TaskInterface
 
                                 // Update the last clear time.
                                 $dataSet->saveLastClear($runTime);
-                            } else {
-                                $this->log->error('DataSet ID ' . $dataSet->dataSetId . ' reached the row limit, selected limit policy empty or incorrect');
-                                throw new GeneralException(__('Incorrect Limit Policy'));
                             }
                         }
 
