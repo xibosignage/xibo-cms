@@ -47,8 +47,8 @@ class Audio extends ModuleWidget
      *  tags={"widget"},
      *  summary="Parameters for editing existing audio widget on a layout",
      *  description="For uploading new audio files, please refer to POST /library documentation.
-                    For assigning existing audio file to a Playlist please see POST /playlist/library/assign/{playlistId} documentation.
-                    This call will replace existing Widget object, all not supplied parameters will be set to default.",
+     *               For assigning existing audio file to a Playlist please see POST /playlist/library/assign/{playlistId} documentation.
+     *               This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",
