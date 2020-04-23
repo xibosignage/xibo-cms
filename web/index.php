@@ -77,9 +77,7 @@ $app = \DI\Bridge\Slim\Bridge::create($container);
 $app->setBasePath(\Xibo\Middleware\State::determineBasePath());
 
 // Config
-$app->config = $container->get('configService');
-$app->router = $app->getRouteCollector()->getRouteParser();
-
+$container->get('configService');
 $container->set('name', 'web');
 
 //
@@ -98,11 +96,11 @@ if ($container->get('configService')->authentication != null) {
 }
 // TODO reconfigure this and enable
 //$app->add(new Xibo\Middleware\HttpCache());
-$app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\CsrfGuard($app));
 $app->add(new \Xibo\Middleware\State($app));
 $app->add(new \Xibo\Middleware\Log($app));
 $app->add($twigMiddleware);
+$app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\Xmr($app));
 
 $app->addRoutingMiddleware();

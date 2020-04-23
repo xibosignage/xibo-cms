@@ -527,11 +527,6 @@ $app->post('/report/reportschedule/{id}/reset', ['\Xibo\Controller\Report','repo
 $app->get('/report/savedreport', ['\Xibo\Controller\Report','savedReportGrid'])->setName('savedreport.search');
 $app->delete('/report/savedreport/{id}', ['\Xibo\Controller\Report','savedReportDelete'])->setName('savedreport.delete');
 
-//
-// Ad hoc report
-//
-$app->get('/report/data/{name}', ['\Xibo\Controller\Report','getReportData'])->setName('report.data');
-
 /**
  * Player Versions
  * @SWG\Tag(

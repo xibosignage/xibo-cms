@@ -43,6 +43,14 @@
     {% set helpText %}{% trans "Is the above key on an Open Weather Map paid plan?" %}{% endset %}
     {{ forms.checkbox("owmIsPaidPlan", title, module.getSetting("owmIsPaidPlan"), helpText) }}
 
+    <div class="row">
+        <div class="col-sm-10 col-sm-offset-2">
+            <p>Weather data provided by <a href="https://openweathermap.org/" target="_blank">OpenWeather</a> is provided under
+                <a href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">CC-BY-SA 4.0</a>
+                and <a href="http://opendatacommons.org/licenses/odbl/" target="_blank">ODbl</a>.</p>
+        </div>
+    </div>
+
     {% set title %}{% trans "DarkSky API Key" %}{% endset %}
     {% set helpText %}{% trans "Enter your API Key from DarkSky." %}{% endset %}
     {{ forms.input("apiKey", title, module.getSetting("apiKey"), helpText) }}

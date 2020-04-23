@@ -118,7 +118,7 @@ class ContainerFactory
                 );
             },
             'configService' => function(ContainerInterface $c) {
-               return ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
+                return ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
             },
             'user' => function (ContainerInterface $c) {
                 return new User(
@@ -136,7 +136,7 @@ class ContainerFactory
                     $c->get('store'),
                     $c->get('configService'),
                     $c->get('pool'),
-        '/'
+                    '/'
                 );
             },
             'pool' => function(ContainerInterface $c) {
@@ -177,7 +177,11 @@ class ContainerFactory
 
         $containerBuilder->addDefinitions(State::registerControllersWithDi());
         $containerBuilder->addDefinitions(State::registerFactoriesWithDi());
-        // $containerBuilder->enableCompilation(PROJECT_ROOT . '/cache');
+
+        // Should we compile the container?
+        /*if (!Environment::isDevMode()) {
+            $containerBuilder->enableCompilation(PROJECT_ROOT . '/cache');
+        }*/
 
         return $containerBuilder->build();
     }

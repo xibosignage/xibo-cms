@@ -30,6 +30,7 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
@@ -83,7 +84,7 @@ class DynamicPlaylistSyncTask implements TaskInterface
                 AND `type` <> \'font\';', [])[0]['modifiedDt'];
             $lastPlaylistUpdate = $this->store->select('SELECT MAX(modifiedDt) AS modifiedDt FROM `playlist`;', [])[0]['modifiedDt'];
 
-            if (empty($lastMediaUpdate) && empty($lastPlaylistUpdate)) {
+            if (empty($lastMediaUpdate) || empty($lastPlaylistUpdate)) {
                 $this->appendRunMessage('No library media or Playlists to assess');
                 return;
             }
@@ -91,8 +92,8 @@ class DynamicPlaylistSyncTask implements TaskInterface
             $this->log->debug('Last media updated date is ' . $lastMediaUpdate);
             $this->log->debug('Last playlist updated date is ' . $lastPlaylistUpdate);
 
-            $lastMediaUpdate = Carbon::createFromTimeString($lastMediaUpdate);
-            $lastPlaylistUpdate = Carbon::createFromTimeString($lastPlaylistUpdate);
+            $lastMediaUpdate = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $lastMediaUpdate);
+            $lastPlaylistUpdate = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $lastPlaylistUpdate);
             $lastTaskRun = Carbon::createFromTimestamp($this->getTask()->lastRunDt);
 
             if ($lastMediaUpdate->lessThanOrEqualTo($lastTaskRun) && $lastPlaylistUpdate->lessThanOrEqualTo($lastTaskRun)) {

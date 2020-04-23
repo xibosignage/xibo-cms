@@ -57,13 +57,19 @@ $container->set('logger', function () use($uidProcessor) {
 
     return $logger;
 });
+
 // Create a Slim application
 $app = \DI\Bridge\Slim\Bridge::create($container);
 $app->setBasePath(\Xibo\Middleware\State::determineBasePath());
+
+// Mock a request
 $request = new Request(new ServerRequest('GET', $app->getBasePath()));
 $request = $request->withAttribute('name', 'xmds');
 $container->set('name', 'xmds');
+
+// Start time of transaction (for logs)
 $startTime = microtime(true);
+
 // Set state
 \Xibo\Middleware\State::setState($app, $request);
 
@@ -88,8 +94,9 @@ $sanitizer = $container->get('sanitizerService')->getSanitizer($_REQUEST);
 $version = $sanitizer->getInt('v', ['default' => 3]);
 
 // Version Request?
-if (isset($_GET['what']))
+if (isset($_GET['what'])) {
     die(\Xibo\Helper\Environment::$XMDS_VERSION);
+}
 
 // Is the WSDL being requested.
 if (isset($_GET['wsdl']) || isset($_GET['WSDL'])) {
@@ -210,7 +217,7 @@ if (isset($_GET['file'])) {
 }
 
 // Town down all logging
-//$container->get('logService')->setLevel(\Xibo\Service\LogService::resolveLogLevel('error'));
+$container->get('logService')->setLevel(\Xibo\Service\LogService::resolveLogLevel('error'));
 
 try {
     $wsdl = PROJECT_ROOT . '/lib/Xmds/service_v' . $version . '.wsdl';
@@ -251,9 +258,6 @@ try {
     );
     $soap->handle();
 
-    // Finish any XMR work that has been logged during the request
-    \Xibo\Middleware\Xmr::finish($app);
-
     // Get the stats for this connection
     $stats = $container->get('store')->stats();
 
@@ -261,14 +265,19 @@ try {
 
     $container->get('logService')->info('PDO stats: %s.', json_encode($stats, JSON_PRETTY_PRINT));
 
-    if ($container->get('store')->getConnection()->inTransaction())
+    if ($container->get('store')->getConnection()->inTransaction()) {
         $container->get('store')->getConnection()->commit();
-}
-catch (Exception $e) {
+    }
+
+    // Finish any XMR work that has been logged during the request
+    \Xibo\Middleware\Xmr::finish($app);
+
+} catch (Exception $e) {
     $container->get('logService')->error($e->getMessage());
 
-    if ($container->get('store')->getConnection()->inTransaction())
+    if ($container->get('store')->getConnection()->inTransaction()) {
         $container->get('store')->getConnection()->rollBack();
+    }
 
     header('HTTP/1.1 500 Internal Server Error');
     header('Content-Type: text/plain');
