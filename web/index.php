@@ -77,9 +77,7 @@ $app = \DI\Bridge\Slim\Bridge::create($container);
 $app->setBasePath(\Xibo\Middleware\State::determineBasePath());
 
 // Config
-$app->config = $container->get('configService');
-$app->router = $app->getRouteCollector()->getRouteParser();
-
+$container->get('configService');
 $container->set('name', 'web');
 
 //

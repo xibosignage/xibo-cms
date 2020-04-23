@@ -131,15 +131,12 @@ class LocalWebTestCase extends PHPUnit_TestCase
             return $logger;
         });
 
-        // Name the Container
-        $container->set('name', 'test');
-
         // Config
-        $app->config = $container->get('configService');
-        $app->router = $app->getRouteCollector()->getRouteParser();
-        $request = $this->createRequest('GET', '/');
+        $container->set('name', 'test');
+        $container->get('configService');
 
-        \Xibo\Middleware\State::setState($app, $request);
+        // Set app state
+        \Xibo\Middleware\State::setState($app, $this->createRequest('GET', '/'));
 
         // Setting Middleware
         $app->add(new TestAuthMiddleware($app));
@@ -172,7 +169,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
      * @param null $body
      * @return ResponseInterface
      */
-    protected function sendRequest(string $method, string $path, $body = null, array $headers = ['HTTP_ACCEPT'=>'application/json'], $requestAttrVal = 'test', $ajaxHeader = false ): ResponseInterface
+    protected function sendRequest(string $method, string $path, $body = null, array $headers = ['HTTP_ACCEPT'=>'application/json'], $requestAttrVal = 'test', $ajaxHeader = false): ResponseInterface
     {
         // Create a request for tests
         $request = new Request(new ServerRequest($method, $path, $headers));
@@ -219,6 +216,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
     }
 
     /**
+     * Create a global container for all tests to share.
      * @throws \Exception
      */
     public static function setUpBeforeClass()
@@ -507,13 +505,31 @@ class LocalWebTestCase extends PHPUnit_TestCase
     }
 
     /**
-     * Run for each unit test to setup our slim app environment
+     * @inheritDoc
      * @throws \Exception
      */
-    public function setup()
+    public function setUp()
     {
+        self::getLogger()->debug('LocalWebTestCase: setUp');
+        parent::setUp();
+
         // Establish a local reference to the Slim app object
         $this->app = $this->getSlimInstance();
+    }
+
+    /**
+     * @inheritDoc
+     * @throws \Exception
+     */
+    public function tearDown()
+    {
+        self::getLogger()->debug('LocalWebTestCase: tearDown');
+
+        // Close and tidy up the app
+        $this->app->getContainer()->get('store')->close();
+        $this->app = null;
+
+        parent::tearDown();
     }
 
     /**
