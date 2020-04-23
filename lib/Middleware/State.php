@@ -35,7 +35,6 @@ use Slim\Views\Twig;
 use Stash\Driver\Composite;
 use Stash\Pool;
 use Xibo\Entity\User;
-use Xibo\Helper\DatabaseLogHandler;
 use Xibo\Helper\Environment;
 use Xibo\Helper\NullSession;
 use Xibo\Helper\Session;
@@ -77,65 +76,65 @@ class State implements Middleware
         // Set state
         $request = State::setState($app, $request);
 
-        $response = $handler->handle($request);
+        // Check to see if the instance has been suspended, if so call the special route
+        if ($container->get('configService')->getSetting('INSTANCE_SUSPENDED') == 1) {
+            throw new InstanceSuspendedException();
+        }
 
-            // Do we need SSL/STS?
-            // If we are behind a load balancer we should look at HTTP_X_FORWARDED_PROTO
-            // if a whitelist of IP address is provided, we should check it, otherwise trust
-            $whiteListLoadBalancers = $container->get('configService')->getSetting('WHITELIST_LOAD_BALANCERS');
-            $originIp = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
-            $forwardedProtoHttps = (
-                strtolower($request->getHeaderLine('HTTP_X_FORWARDED_PROTO')) === 'https'
-                && $originIp != ''
-                && (
-                    $whiteListLoadBalancers === '' || in_array($originIp, explode(',', $whiteListLoadBalancers))
-                )
-            );
-
-            if ($request->getUri()->getScheme() == 'https' || $forwardedProtoHttps) {
-                if ($container->get('configService')->getSetting('ISSUE_STS', 0) == 1) {
-                    $response = $response->withHeader('strict-transport-security', 'max-age=' . $container->get('configService')->getSetting('STS_TTL', 600));
-                }
-            } else {
-                // Get the current route pattern
-                $routeContext = RouteContext::fromRequest($request);
-                $route = $routeContext->getRoute();
-                $resource = $route->getPattern();
-
-                // Allow non-https access to the clock page, otherwise force https
-                if ($resource !== '/clock' && $container->get('configService')->getSetting('FORCE_HTTPS', 0) == 1) {
-                    $redirect = "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-                    $response = $response->withHeader('Location', $redirect)
-                                         ->withStatus(302);
-                }
-            }
-
-            // Check to see if the instance has been suspended, if so call the special route
-            if ($container->get('configService')->getSetting('INSTANCE_SUSPENDED') == 1) {
-                throw new InstanceSuspendedException();
-            }
-
-            // Get to see if upgrade is pending, we don't want to throw this when we are on error page, causes redirect problems with error handler.
-            if (Environment::migrationPending() && $request->getUri()->getPath() != '/error') {
-                throw new UpgradePendingException();
-            }
-
-            // Reset the ETAGs for GZIP
-            $requestEtag = $request->getHeaderLine('IF_NONE_MATCH');
-            if ($requestEtag) {
-                $response = $response->withHeader('IF_NONE_MATCH', str_replace('-gzip', '', $requestEtag));
-            }
-
-            // Handle correctly outputting cache headers for AJAX requests
-            // IE cache busting
-            if ($this->isAjax($request) && $request->getMethod() == 'GET' && $request->getAttribute('name') == 'web') {
-                $response = $response->withHeader('Cache-control', 'no-cache')
-                         ->withHeader('Cache-control', 'no-store')
-                         ->withHeader('Pragma', 'no-cache')
-                         ->withHeader('Expires', '0');
-            }
+        // Get to see if upgrade is pending, we don't want to throw this when we are on error page, causes redirect problems with error handler.
+        if (Environment::migrationPending() && $request->getUri()->getPath() != '/error') {
+            throw new UpgradePendingException();
+        }
 
         // Next middleware
+        $response = $handler->handle($request);
+
+        // Do we need SSL/STS?
+        // If we are behind a load balancer we should look at HTTP_X_FORWARDED_PROTO
+        // if a whitelist of IP address is provided, we should check it, otherwise trust
+        $whiteListLoadBalancers = $container->get('configService')->getSetting('WHITELIST_LOAD_BALANCERS');
+        $originIp = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+        $forwardedProtoHttps = (
+            strtolower($request->getHeaderLine('HTTP_X_FORWARDED_PROTO')) === 'https'
+            && $originIp != ''
+            && (
+                $whiteListLoadBalancers === '' || in_array($originIp, explode(',', $whiteListLoadBalancers))
+            )
+        );
+
+        if ($request->getUri()->getScheme() == 'https' || $forwardedProtoHttps) {
+            if ($container->get('configService')->getSetting('ISSUE_STS', 0) == 1) {
+                $response = $response->withHeader('strict-transport-security', 'max-age=' . $container->get('configService')->getSetting('STS_TTL', 600));
+            }
+        } else {
+            // Get the current route pattern
+            $routeContext = RouteContext::fromRequest($request);
+            $route = $routeContext->getRoute();
+            $resource = $route->getPattern();
+
+            // Allow non-https access to the clock page, otherwise force https
+            if ($resource !== '/clock' && $container->get('configService')->getSetting('FORCE_HTTPS', 0) == 1) {
+                $redirect = "https://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+                $response = $response->withHeader('Location', $redirect)
+                                     ->withStatus(302);
+            }
+        }
+
+        // Reset the ETAGs for GZIP
+        $requestEtag = $request->getHeaderLine('IF_NONE_MATCH');
+        if ($requestEtag) {
+            $response = $response->withHeader('IF_NONE_MATCH', str_replace('-gzip', '', $requestEtag));
+        }
+
+        // Handle correctly outputting cache headers for AJAX requests
+        // IE cache busting
+        if ($this->isAjax($request) && $request->getMethod() == 'GET' && $request->getAttribute('name') == 'web') {
+            $response = $response->withHeader('Cache-control', 'no-cache')
+                     ->withHeader('Cache-control', 'no-store')
+                     ->withHeader('Pragma', 'no-cache')
+                     ->withHeader('Expires', '0');
+        }
+
         return $response;
     }
 
@@ -181,8 +180,6 @@ class State implements Middleware
                 $container->get('savedReportFactory')
             );
         });
-
-
 
         // Set some public routes
         $request = $request->withAttribute('publicRoutes', [
@@ -235,23 +232,19 @@ class State implements Middleware
             $twigEnvironment->addFilter($filter);
 
             // set Twig auto reload if we are in test mode
-            if(strtolower($mode) == 'test') {
+            if (strtolower($mode) == 'test') {
                 $twigEnvironment->enableAutoReload();
             }
         }
 
-        $logger = $container->get('logger');
-
         // Configure logging
+        // -----------------
+        // Standard handlers
         if (Environment::isForceDebugging() || strtolower($mode) == 'test') {
             error_reporting(E_ALL);
             ini_set('display_errors', 1);
-            // log level is set in our database handler construct (in access points), it also has getLevel() and setLevel($level) functions.
-            foreach ($logger->getHandlers() as $handler) {
-                if ($handler instanceof DatabaseLogHandler) {
-                    $handler->setLevel(Logger::DEBUG);
-                }
-            }
+
+            $container->get('logService')->setLevel(Logger::DEBUG);
         } else {
             // Log level
             $level = \Xibo\Service\LogService::resolveLogLevel($container->get('configService')->getSetting('audit'));
@@ -268,19 +261,16 @@ class State implements Middleware
                 }
             }
 
-            // log level is set in our database handler construct (in access points), it also has getLevel() and setLevel($level) functions.
-            foreach ($logger->getHandlers() as $handler) {
-                if ($handler instanceof DatabaseLogHandler) {
-                    $handler->setLevel($level);
-                }
-            }
+            $container->get('logService')->setLevel($level);
         }
 
         // Configure any extra log handlers
+        // we do these last so that they can provide their own log levels independent of the system settings
         if ($container->get('configService')->logHandlers != null && is_array($container->get('configService')->logHandlers)) {
             $container->get('logService')->debug('Configuring %d additional log handlers from Config', count($container->get('configService')->logHandlers));
             foreach ($container->get('configService')->logHandlers as $handler) {
-                $logger->pushHandler($handler);
+                // Direct access to the LoggerInterface here, rather than via our log service
+                $container->get('logger')->pushHandler($handler);
             }
         }
 
@@ -288,7 +278,7 @@ class State implements Middleware
         if ($container->get('configService')->logProcessors != null && is_array($container->get('configService')->logProcessors)) {
             $container->get('logService')->debug('Configuring %d additional log processors from Config', count($container->get('configService')->logProcessors));
             foreach ($container->get('configService')->logProcessors as $processor) {
-                $logger->pushProcessor($processor);
+                $container->get('logger')->pushProcessor($processor);
             }
         }
 

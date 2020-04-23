@@ -95,6 +95,58 @@ class DateFormatHelper
     /**
      * @inheritdoc
      */
+    public static function extractDateOnlyFormat($format)
+    {
+        $replacements = [
+            'd' => 'd',
+            'D' => 'D',
+            'j' => '',
+            'l' => '',
+            'N' => '',
+            'S' => '',
+            'w' => '',
+            'z' => '',
+            'W' => '',
+            'F' => '',
+            'm' => 'm',
+            'M' => 'M',
+            'n' => '',
+            't' => '', // no equivalent
+            'L' => '', // no equivalent
+            'o' => '',
+            'Y' => 'Y',
+            'y' => 'y',
+            'a' => '',
+            'A' => '',
+            'B' => '', // no equivalent
+            'g' => '',
+            'G' => '',
+            'h' => '',
+            'H' => '',
+            'i' => '',
+            's' => '',
+            'u' => '',
+            'e' => '', // deprecated since version 1.6.0 of moment.js
+            'I' => '', // no equivalent
+            'O' => '', // no equivalent
+            'P' => '', // no equivalent
+            'T' => '', // no equivalent
+            'Z' => '', // no equivalent
+            'c' => '', // no equivalent
+            'r' => '', // no equivalent
+            'U' => '',
+            '-' => '-',
+            '/' => '/',
+            '.' => '.',
+            ':' => ''
+        ];
+        $timeOnly = strtr($format, $replacements);
+        return trim($timeOnly);
+    }
+
+    /**
+     * @inheritdoc
+     */
     public static function convertPhpToMomentFormat($format)
     {
         $replacements = [

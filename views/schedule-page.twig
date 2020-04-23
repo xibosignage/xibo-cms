@@ -33,12 +33,13 @@
                 <button type="button" class="btn btn-warning" data-calendar-view="day">{% trans "Day" %}</button>
                 <button type="button" class="btn btn-warning" data-calendar-view="agenda">{% trans "Agenda" %}</button>
             </div>
+
             <div class="btn-group pull-right xibo-calendar-controls">
-                <button class='input-group date' id='dateInput'>
-                    <input type='hidden' class="form-control" />
-                    <span class="input-group-addon">
+                <button class="inputgroup date" id="dateInput">
+                    <span class="input-group-addon" data-toggle>
                         <i class="glyphicon glyphicon-calendar"></i>
                     </span>
+                    <input type="hidden" class="form-control" id="dateInputLink" data-input data-link-format="YYYY-MM-DD HH:mm:ss" />
                 </button>
             </div>
             <div class="btn-group pull-right xibo-calendar-controls">

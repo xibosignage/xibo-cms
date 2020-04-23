@@ -52,6 +52,7 @@ class Handlers
             if ($container->get('store')->getConnection()->inTransaction()) {
                 $container->get('store')->getConnection()->rollBack();
             }
+            $container->get('store')->close();
 
             // Handle error handling
             if ($logErrors && !self::handledError($exception)) {
@@ -147,6 +148,7 @@ class Handlers
                     if ($container->get('store')->getConnection()->inTransaction()) {
                         $container->get('store')->getConnection()->rollBack();
                     }
+                    $container->get('store')->close();
 
                     // attempt to render a twig template in this application state will not go well
                     // as such return simple json response, with trace if the application is in test mode.
@@ -167,6 +169,7 @@ class Handlers
             if ($container->get('store')->getConnection()->inTransaction()) {
                 $container->get('store')->getConnection()->rollBack();
             }
+            $container->get('store')->close();
 
             $nyholmFactory = new Psr17Factory();
             $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);

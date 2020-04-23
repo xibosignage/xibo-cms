@@ -177,7 +177,11 @@ class ContainerFactory
 
         $containerBuilder->addDefinitions(State::registerControllersWithDi());
         $containerBuilder->addDefinitions(State::registerFactoriesWithDi());
-        // $containerBuilder->enableCompilation(PROJECT_ROOT . '/cache');
+
+        // Should we compile the container?
+        /*if (!Environment::isDevMode()) {
+            $containerBuilder->enableCompilation(PROJECT_ROOT . '/cache');
+        }*/
 
         return $containerBuilder->build();
     }
