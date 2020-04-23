@@ -31,7 +31,6 @@ use Stash\Pool;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Entity\User;
 use Xibo\Helper\ApplicationState;
-use Xibo\Helper\Environment;
 use Xibo\Helper\SanitizerService;
 use Xibo\Middleware\State;
 use Xibo\Service\ConfigService;
@@ -180,9 +179,9 @@ class ContainerFactory
         $containerBuilder->addDefinitions(State::registerFactoriesWithDi());
 
         // Should we compile the container?
-        if (!Environment::isDevMode()) {
+        /*if (!Environment::isDevMode()) {
             $containerBuilder->enableCompilation(PROJECT_ROOT . '/cache');
-        }
+        }*/
 
         return $containerBuilder->build();
     }
