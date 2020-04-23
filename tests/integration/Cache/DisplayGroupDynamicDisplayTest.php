@@ -137,8 +137,10 @@ class DisplayGroupDynamicDisplayTest extends LocalWebTestCase
         // Make sure our Display is already DONE
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
 
+        $this->getLogger()->debug('Renaming display');
+
         // Rename the display
-        $this->sendRequest('PUT','/display/' . $this->display->displayId, [
+        $response = $this->sendRequest('PUT','/display/' . $this->display->displayId, [
             'display' => Random::generateString(10, 'testedited'),
             'defaultLayoutId' => $this->display->defaultLayoutId,
             'auditingUntil' => null,
@@ -150,6 +152,9 @@ class DisplayGroupDynamicDisplayTest extends LocalWebTestCase
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
         // There isn't anything directly on the display - so that will NOT trigger anything. The schedule is on the Display Group.
+        $this->getLogger()->debug('Finished renaming display');
+
+        $this->assertLessThan(300, $response->getStatusCode(), 'Non-success status code, body =' . $response->getBody()->getContents());
 
         // Validate the display status afterwards
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_PENDING), 'Display Status isnt as expected');

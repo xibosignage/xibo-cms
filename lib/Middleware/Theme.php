@@ -100,8 +100,10 @@ class Theme implements Middleware
         $settings['DATE_FORMAT_BOOTSTRAP'] =  DateFormatHelper::convertPhpToBootstrapFormat($settings['DATE_FORMAT']);
         $settings['DATE_FORMAT_BOOTSTRAP_DATEONLY'] =  DateFormatHelper::convertPhpToBootstrapFormat($settings['DATE_FORMAT'], false);
         $settings['TIME_FORMAT'] = DateFormatHelper::extractTimeFormat($settings['DATE_FORMAT']);
+        $settings['DATE_ONLY_FORMAT'] = DateFormatHelper::extractDateOnlyFormat($settings['DATE_FORMAT']);
         $settings['TIME_FORMAT_JS'] = DateFormatHelper::convertPhpToMomentFormat($settings['TIME_FORMAT']);
         $settings['systemDateFormat'] = DateFormatHelper::convertPhpToMomentFormat(DateFormatHelper::getSystemFormat());
+        $settings['systemDateOnlyFormat'] = DateFormatHelper::convertPhpToMomentFormat(DateFormatHelper::extractDateOnlyFormat(DateFormatHelper::getSystemFormat()));
         $settings['systemTimeFormat'] = DateFormatHelper::convertPhpToMomentFormat(DateFormatHelper::extractTimeFormat(DateFormatHelper::getSystemFormat()));
 
         $routeContext = RouteContext::fromRequest($request);

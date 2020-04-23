@@ -32,6 +32,8 @@ trait DisplayHelperTrait
         $hardwareId = Random::generateString(12, 'phpunit');
         $xmrChannel = Random::generateString(50);
 
+        $this->getLogger()->debug('Creating Display called ' . $hardwareId);
+
         // This is a dummy pubKey and isn't used by anything important
         $xmrPubkey = '-----BEGIN PUBLIC KEY-----
 MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDmdnXL4gGg3yJfmqVkU1xsGSQI

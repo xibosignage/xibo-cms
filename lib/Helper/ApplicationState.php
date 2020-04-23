@@ -162,11 +162,20 @@ class ApplicationState
         return $this;
     }
 
+    /**
+     * Called in the Storage Middleware to determine whether or not we should commit this transaction.
+     * @return bool
+     */
     public function getCommitState()
     {
         return $this->commit;
     }
 
+    /**
+     * Set the commit state
+     * @param bool $state
+     * @return bool
+     */
     public function setCommitState(bool $state)
     {
         return $this->commit = $state;

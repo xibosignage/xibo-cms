@@ -314,21 +314,47 @@
             usageTable.on('draw', dataTableDraw);
             usageTable.on('processing.dt', dataTableProcessing);
 
-            $("#playlistEventDateLink").datetimepicker({
-                format: bootstrapDateFormatDateOnly,
-                autoclose: true,
-                language: language,
-                calendarType: calendarType,
-                minView: 2,
-                todayHighlight: true
-            });
+            // Init date picker
+            if(calendarType == "Gregorian") {
+                initDatePicker(
+                    $('#playlistEventDateLink'), 
+                    dateOnlyFormat, 
+                    {
+                        altFormat: "F, Y",
+                        plugins: [new flatpickrMonthSelectPlugin({shorthand: false})]
+                    },
+                    null, // onChangeCallback
+                    true, // clearButton
+                    function() { // onChangeCallback
+                        usageTable.ajax.reload();
+                    }
+                );
+            } else {
+                initDatePicker($('#playlistEventDateLink'),
+                    dateOnlyFormat, 
+                    {
+                        format: "YYYY MMMM",
+                        viewMode: 'month',
+                        dayPicker: {
+                            enabled: false
+                        },
+                        altFieldFormatter: function(unixTime) {
+                            let newDate = moment.unix(unixTime / 1000);
+                            newDate.set('date', 1);
+                            newDate.set('hour', 0);
+                            newDate.set('minute', 0);
+                            newDate.set('second', 0);
 
-            $("#dateClearButton").on("click", function () {
-                $("#playlistEventDateLink").val("")
-                $("#playlistEventDate").val("");
-                $("#playlistEventDateLink").datetimepicker("update");
-                usageTable.ajax.reload();
-            });
+                            return newDate.format($('#playlistEventDateLink').data().linkFormat);
+                        }
+                    },
+                    null, // onChangeCallback
+                    true, // clearButton
+                    function() { // onChangeCallback
+                        usageTable.ajax.reload();
+                    }
+                );
+            }
 
             // Layouts tab
             var usageTableLayouts = $("#usageReportLayoutsTable").DataTable({
@@ -359,14 +385,12 @@
             if(dialog.hasClass('modal')) {
                 dialog.on("hide.bs.modal", function(e) {
                     if(e.namespace === 'bs.modal') {
-                        // Remove colour pickers
-                        dialog.find("#playlistEventDateLink").datetimepicker('remove');
+                        // Remove timepicker
+                        destroyDatePickers(dialog.find('#playlistEventDateLink'));
                     }
                 });
             }
         }
-
-
 
         function playlistFormPopulateMediaTable(dialog) {
             nameFilter = $(dialog).find("input[name=filterMediaName]").val();

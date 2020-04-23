@@ -31,11 +31,28 @@ window.moment = require('moment');
 // moment-timezone
 require('moment-timezone');
 
-// moment-jalaali
 try {
     // Conditional import for the locale variable
     if( calendar_type && calendar_type == "Jalali") {
+        // moment-jalaali
         window.moment = require('moment-jalaali');
+
+        // Persian date time picker
+        window.persianDate = require('persian-date/dist/persian-date.min.js');
+        require('persian-datepicker/dist/js/persian-datepicker.min.js');
+    } else {
+        // Time/Date picker
+        window.flatpickr = require('flatpickr');
+        window.flatpickrMonthSelectPlugin = require('flatpickr/dist/plugins/monthSelect/index.js');
+
+        try {
+            // Conditional import for the locale variable
+            if(jsShortLocale && jsShortLocale != 'en-GB') {
+                require('flatpickr/dist/l10n/' + jsShortLocale + '.js');
+            }
+        } catch(e) { //Handle variable not set error
+            console.warn('[Warning] loading flatpickr: Locale not defined!');
+        }
     }
 } catch (e) { //Handle variable not set error
     console.warn('[Warning] loading moment-jalaali: Calendar Type not defined!');
