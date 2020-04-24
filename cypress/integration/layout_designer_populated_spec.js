@@ -175,7 +175,7 @@ describe('Layout Designer (Populated)', function() {
         });
     });
 
-    it('attaches expiry dates to a widget, and adds a link to open the form in the timeline', () => {
+    it.skip('attaches expiry dates to a widget, and adds a link to open the form in the timeline', () => {
 
         // Create and alias for reload layout
         cy.server();
