@@ -100,7 +100,7 @@ class LayoutLock implements Middleware
 
             // if we are assigning media or ordering Region Playlist, then we will have regionId
             // otherwise it's non Region specific Playlist, in which case we are not interested in locking anything.
-            if ($regionId !== null) {
+            if ($regionId != null) {
                 $this->layoutId = $this->app->getContainer()->get('layoutFactory')->getByRegionId($regionId)->layoutId;
             }
         } elseif (strpos($route->getName(), 'widget') !== false) {
@@ -112,7 +112,7 @@ class LayoutLock implements Middleware
             $regionId = $this->app->getContainer()->get('playlistFactory')->getById($playlistId)->regionId;
 
             // check if it's Region specific Playlist, otherwise we don't lock anything.
-            if ($regionId !== null) {
+            if ($regionId != null) {
                 $this->layoutId = $this->app->getContainer()->get('layoutFactory')->getByRegionId($regionId)->layoutId;
             }
         } else {
@@ -120,50 +120,52 @@ class LayoutLock implements Middleware
             throw new GeneralException(sprintf(__('Layout Lock Middleware called with incorrect route %s'), $route->getPattern()));
         }
 
+        // run only if we have layout id, that will exclude non Region specific Playlist requests.
+        if ($this->layoutId !== null) {
+            $this->userId = $this->app->getContainer()->get('user')->userId;
+            $this->entryPoint = $this->app->getContainer()->get('name');
+            $key = $this->getKey();
+            $this->lock = $this->getPool()->getItem('locks/layout/' . $key);
 
-        $this->userId = $this->app->getContainer()->get('user')->userId;
-        $this->entryPoint = $this->app->getContainer()->get('name');
-        $key = $this->getKey();
-        $this->lock = $this->getPool()->getItem('locks/layout/' . $key);
+            $objectToCache = new \stdClass();
+            $objectToCache->layoutId = $this->layoutId;
+            $objectToCache->userId = $this->userId;
+            $objectToCache->entryPoint = $this->entryPoint;
 
-        $objectToCache = new \stdClass();
-        $objectToCache->layoutId = $this->layoutId;
-        $objectToCache->userId = $this->userId;
-        $objectToCache->entryPoint = $this->entryPoint;
+            $this->app->getContainer()->get('logger')->debug('Layout Lock middleware for LayoutId ' . $this->layoutId . ' userId ' . $this->userId . ' emtrypoint ' . $this->entryPoint);
 
-        $this->app->getContainer()->get('logger')->debug('Layout Lock middleware for LayoutId ' . $this->layoutId . ' userId ' . $this->userId . ' emtrypoint ' . $this->entryPoint);
+            $this->lock->setInvalidationMethod(Invalidation::OLD);
 
-        $this->lock->setInvalidationMethod(Invalidation::OLD);
+            // Get the lock
+            // other requests will wait here until we're done, or we've timed out
+            $locked = $this->lock->get();
+            $this->app->getContainer()->get('logger')->debug('$locked is ' . var_export($locked, true) . ', key = ' . $key);
 
-        // Get the lock
-        // other requests will wait here until we're done, or we've timed out
-        $locked = $this->lock->get();
-        $this->app->getContainer()->get('logger')->debug('$locked is '. var_export($locked, true) . ', key = ' . $key);
+            if ($this->lock->isMiss() || $locked === false) {
+                $this->app->getContainer()->get('logger')->debug('Lock miss or false. Locking for ' . $this->ttl . ' seconds. $locked is ' . var_export($locked, true) . ', key = ' . $key);
 
-        if ($this->lock->isMiss() || $locked === false) {
-            $this->app->getContainer()->get('logger')->debug('Lock miss or false. Locking for ' . $this->ttl . ' seconds. $locked is '. var_export($locked, true) . ', key = ' . $key);
-
-            // so lock now
-            $this->lock->expiresAfter($this->ttl);
-            $objectToCache->expires = $this->lock->getExpiration()->format(DateFormatHelper::getSystemFormat());
-            $this->lock->set($objectToCache);
-            $this->lock->save();
-        } else {
-            // We are a hit - we must be locked
-            $this->app->getContainer()->get('logger')->debug('LOCK hit for ' . $key . ' expires ' . $this->lock->getExpiration()->format(DateFormatHelper::getSystemFormat()) . ', created ' . $this->lock->getCreation()->format(DateFormatHelper::getSystemFormat()));
-
-            if ($locked->userId == $this->userId && $locked->entryPoint == $this->entryPoint) {
-                // the same user in the same entry point is editing the same layoutId
+                // so lock now
                 $this->lock->expiresAfter($this->ttl);
                 $objectToCache->expires = $this->lock->getExpiration()->format(DateFormatHelper::getSystemFormat());
                 $this->lock->set($objectToCache);
                 $this->lock->save();
-
-                $this->app->getContainer()->get('logger')->debug('Lock extended to ' . $this->lock->getExpiration()->format(DateFormatHelper::getSystemFormat()));
             } else {
-                // different user or entry point
-                $this->app->getContainer()->get('logger')->debug('Sorry Layout is locked by another User!');
-                throw new AccessDeniedException(sprintf(__('Layout ID %d is locked by another User! Lock expires on: %s'), $locked->layoutId, $locked->expires));
+                // We are a hit - we must be locked
+                $this->app->getContainer()->get('logger')->debug('LOCK hit for ' . $key . ' expires ' . $this->lock->getExpiration()->format(DateFormatHelper::getSystemFormat()) . ', created ' . $this->lock->getCreation()->format(DateFormatHelper::getSystemFormat()));
+
+                if ($locked->userId == $this->userId && $locked->entryPoint == $this->entryPoint) {
+                    // the same user in the same entry point is editing the same layoutId
+                    $this->lock->expiresAfter($this->ttl);
+                    $objectToCache->expires = $this->lock->getExpiration()->format(DateFormatHelper::getSystemFormat());
+                    $this->lock->set($objectToCache);
+                    $this->lock->save();
+
+                    $this->app->getContainer()->get('logger')->debug('Lock extended to ' . $this->lock->getExpiration()->format(DateFormatHelper::getSystemFormat()));
+                } else {
+                    // different user or entry point
+                    $this->app->getContainer()->get('logger')->debug('Sorry Layout is locked by another User!');
+                    throw new AccessDeniedException(sprintf(__('Layout ID %d is locked by another User! Lock expires on: %s'), $locked->layoutId, $locked->expires));
+                }
             }
         }
 

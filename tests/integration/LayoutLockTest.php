@@ -95,9 +95,9 @@ class LayoutLockTest extends LocalWebTestCase
             'useDuration' => 1
         ], [], 'layoutLock');
 
-        $this->assertSame(401, $response->getStatusCode());
+        $this->assertSame(403, $response->getStatusCode());
         $body = json_decode($response->getBody());
-        $this->assertSame(401, $body->httpStatus);
+        $this->assertSame(403, $body->httpStatus);
         $this->assertContains('Layout ID ' . $layout->layoutId . ' is locked by another User! Lock expires on:', $body->error);
     }
 
