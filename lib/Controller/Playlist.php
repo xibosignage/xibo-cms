@@ -1451,23 +1451,24 @@ class Playlist extends Base
         $displayIds = [];
 
         // have we been provided with a date/time to restrict the scheduled events to?
-        $playlistDate = $sanitizedParams->getDate('playlistEventDate');
+        $playlistFromDate = $sanitizedParams->getDate('playlistEventFromDate');
+        $playlistToDate = $sanitizedParams->getDate('playlistEventToDate');
 
-        if ($playlistDate !== null) {
-            // Get a list of scheduled events that this playlistId is used on, based on the date provided
-            $toDate = $playlistDate->copy()->addDay();
+        // Events query array
+        $eventsQuery = [
+            'playlistId' => $id
+        ];
 
-            $events = $this->scheduleFactory->query(null, [
-                'futureSchedulesFrom' => $playlistDate->format('U'),
-                'futureSchedulesTo' => $toDate->format('U'),
-                'playlistId' => $id
-            ]);
-        } else {
-            // All scheduled events for this playlistId
-            $events = $this->scheduleFactory->query(null, [
-                'playlistId' => $id
-            ]);
+        if ($playlistFromDate !== null) {
+            $eventsQuery['futureSchedulesFrom'] = $playlistFromDate->format('U');
         }
+
+        if ($playlistToDate !== null) {
+            $eventsQuery['futureSchedulesTo'] = $playlistToDate->format('U');
+        }
+
+        // Query for events
+        $events = $this->scheduleFactory->query(null, $eventsQuery);
 
         // Total records returned from the schedules query
         $totalRecords = $this->scheduleFactory->countLast();
@@ -1477,9 +1478,9 @@ class Playlist extends Base
 
             // Generate this event
             // Assess the date?
-            if ($playlistDate !== null) {
+            if ($playlistFromDate !== null && $playlistToDate !== null) {
                 try {
-                    $scheduleEvents = $row->getEvents($playlistDate, $toDate);
+                    $scheduleEvents = $row->getEvents($playlistFromDate, $playlistToDate);
                 } catch (GeneralException $e) {
                     $this->getLog()->error('Unable to getEvents for ' . $row->eventId);
                     continue;

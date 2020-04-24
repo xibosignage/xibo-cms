@@ -314,48 +314,6 @@
             usageTable.on('draw', dataTableDraw);
             usageTable.on('processing.dt', dataTableProcessing);
 
-            // Init date picker
-            if(calendarType == "Gregorian") {
-                initDatePicker(
-                    $('#playlistEventDateLink'), 
-                    dateOnlyFormat, 
-                    {
-                        altFormat: "F, Y",
-                        plugins: [new flatpickrMonthSelectPlugin({shorthand: false})]
-                    },
-                    null, // onChangeCallback
-                    true, // clearButton
-                    function() { // onChangeCallback
-                        usageTable.ajax.reload();
-                    }
-                );
-            } else {
-                initDatePicker($('#playlistEventDateLink'),
-                    dateOnlyFormat, 
-                    {
-                        format: "YYYY MMMM",
-                        viewMode: 'month',
-                        dayPicker: {
-                            enabled: false
-                        },
-                        altFieldFormatter: function(unixTime) {
-                            let newDate = moment.unix(unixTime / 1000);
-                            newDate.set('date', 1);
-                            newDate.set('hour', 0);
-                            newDate.set('minute', 0);
-                            newDate.set('second', 0);
-
-                            return newDate.format($('#playlistEventDateLink').data().linkFormat);
-                        }
-                    },
-                    null, // onChangeCallback
-                    true, // clearButton
-                    function() { // onChangeCallback
-                        usageTable.ajax.reload();
-                    }
-                );
-            }
-
             // Layouts tab
             var usageTableLayouts = $("#usageReportLayoutsTable").DataTable({
                 "language": dataTablesLanguage,
@@ -380,16 +338,6 @@
 
             usageTableLayouts.on('draw', dataTableDraw);
             usageTableLayouts.on('processing.dt', dataTableProcessing);
-
-            // Tidy up timepickers on modal close
-            if(dialog.hasClass('modal')) {
-                dialog.on("hide.bs.modal", function(e) {
-                    if(e.namespace === 'bs.modal') {
-                        // Remove timepicker
-                        destroyDatePickers(dialog.find('#playlistEventDateLink'));
-                    }
-                });
-            }
         }
 
         function playlistFormPopulateMediaTable(dialog) {

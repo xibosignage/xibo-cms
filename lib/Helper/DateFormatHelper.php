@@ -193,68 +193,6 @@ class DateFormatHelper
     }
 
     /**
-     * @inheritdoc
-     */
-    public static function convertPhpToBootstrapFormat($format, $includeTime = true)
-    {
-        $replacements = [
-            'd' => 'dd',
-            'D' => '',
-            'j' => 'd',
-            'l' => '',
-            'N' => '',
-            'S' => '',
-            'w' => '',
-            'z' => '',
-            'W' => '',
-            'F' => 'MM',
-            'm' => 'mm',
-            'M' => 'M',
-            'n' => 'i',
-            't' => '', // no equivalent
-            'L' => '', // no equivalent
-            'o' => 'yyyy',
-            'Y' => 'yyyy',
-            'y' => 'yy',
-            'a' => '',
-            'A' => '',
-            'B' => '', // no equivalent
-            'g' => '',
-            'G' => '',
-            'h' => '',
-            'H' => '',
-            'i' => '',
-            's' => '',
-            'u' => '',
-            'e' => '', // deprecated since version 1.6.0 of moment.js
-            'I' => '', // no equivalent
-            'O' => '', // no equivalent
-            'P' => '', // no equivalent
-            'T' => '', // no equivalent
-            'Z' => '', // no equivalent
-            'c' => '', // no equivalent
-            'r' => '', // no equivalent
-            'U' => '',
-            ':' => ''
-        ];
-
-        if ($includeTime) {
-            $replacements['g'] = 'H';
-            $replacements['G'] = 'h';
-            $replacements['h'] = 'HH';
-            $replacements['H'] = 'hh';
-            $replacements['i'] = 'ii';
-            $replacements['s'] = 'ss';
-            $replacements['a'] = 'p';
-            $replacements['A'] = 'P';
-            $replacements[':'] = ':';
-        }
-
-        $momentFormat = strtr($format, $replacements);
-        return trim($momentFormat);
-    }
-
-    /**
      * Timezone identifiers
      * @return array
      */

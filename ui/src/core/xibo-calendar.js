@@ -64,7 +64,7 @@ $(document).ready(function() {
         const navigateToCalendarDate = function() {
             if(calendar != undefined) {
                 // Add event to the picker to update the calendar
-                calendar.navigate('date', moment($('#dateInputLink').val()));
+                calendar.navigate('date', moment($('#dateInput input[data-input]').val()));
             }
         };
 
@@ -72,42 +72,35 @@ $(document).ready(function() {
         let pickerOptions = {};
 
         if( calendarType == 'Jalali') {
-            const linkedFormat = $('#dateInputLink').data().linkFormat;
-
             pickerOptions = {
-                initialValue: false,
-                altField: '#dateInputLink',
                 autoClose: true,
+                altField: '#dateInputLink',
                 altFieldFormatter: function(unixTime) {
                     let newDate = moment.unix(unixTime / 1000);
                     newDate.set('hour', 0);
                     newDate.set('minute', 0);
                     newDate.set('second', 0);
-                    return newDate.format(linkedFormat);
+
+                    return newDate.format(systemDateOnlyFormat);
                 },
                 onSelect: function() {},
                 onHide: function() {
                     // Trigger change after close
                     $('#dateInput').trigger('change');
                     $('#dateInputLink').trigger('change');
-
-                    // Callback if exists
-                    if(navigateToCalendarDate != null && typeof navigateToCalendarDate == 'function') {
-                        navigateToCalendarDate();
-                    }
                 }
             };
         } else if( calendarType == 'Gregorian') {
             pickerOptions = {
-                allowInput: false,
                 wrap: true,
+                altFormat: jsDateOnlyFormat
             };
         }
 
         // Create the date input shortcut
         initDatePicker(
             $('#dateInput'), 
-            dateOnlyFormat, 
+            systemDateOnlyFormat, 
             pickerOptions, 
             navigateToCalendarDate,
             false // clear button
@@ -418,12 +411,8 @@ $(document).ready(function() {
                 
                 // Sync the date of the date picker to the current calendar date
                 if (this.options.position.start != undefined && this.options.position.start != "") {
-
-                    // Date format
-                    let dateFormat = (calendarType == 'Jalali') ? systemDateOnlyFormat : dateOnlyFormat;
-                    
                     // Update timepicker
-                    updateDatePicker($('#dateInput'), moment.unix(this.options.position.start.getTime() / 1000).format(systemDateOnlyFormat), dateFormat);
+                    updateDatePicker($('#dateInput'), moment.unix(this.options.position.start.getTime() / 1000).format(systemDateOnlyFormat), systemDateOnlyFormat);
                 }
                 
                 if (typeof this.getTitle === "function")
