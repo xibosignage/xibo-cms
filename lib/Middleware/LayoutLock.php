@@ -75,6 +75,11 @@ class LayoutLock implements Middleware
         // what route are we in?
         $resource = $route->getPattern();
 
+        // skip for test suite
+        if ($request->getAttribute('name') === 'test' && $this->app->getContainer()->get('name') === 'test') {
+            return $handler->handle($request);
+        }
+
         if (strpos($resource,'layout') !== false) {
             // Layout route, we can get the Layout id from route argument.
             $this->layoutId = (int)$route->getArgument('id');

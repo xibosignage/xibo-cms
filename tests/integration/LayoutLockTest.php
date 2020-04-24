@@ -69,9 +69,9 @@ class LayoutLockTest extends LocalWebTestCase
         $this->addSimpleWidget($layout);
 
         // Get the Layout object via web request
-        $response = $this->sendRequest('GET', '/layout', ['layoutId' => $layout->layoutId]);
+        $response = $this->sendRequest('GET', '/layout', ['layoutId' => $layout->layoutId], [], 'layoutLock');
         $body = json_decode($response->getBody());
-        $layoutObject = $body->data->data[0];
+        $layoutObject = $body[0];
 
         // check if the isLocked dynamic object is there and is not empty, then check the values inside of it.
         // we expect it to be locked with our LayoutId and API entryPoint
@@ -93,12 +93,12 @@ class LayoutLockTest extends LocalWebTestCase
         $response = $this->sendRequest('POST', '/playlist/widget/clock/' . $layout->regions[0]->regionPlaylist->playlistId, [
             'duration' => 100,
             'useDuration' => 1
-        ]);
+        ], [], 'layoutLock');
 
         $this->assertSame(401, $response->getStatusCode());
         $body = json_decode($response->getBody());
-        $this->assertSame(401, $body->error);
-        $this->assertContains('Layout ID ' . $layout->layoutId . ' is locked by another User! Lock expires on:', $body->message);
+        $this->assertSame(401, $body->httpStatus);
+        $this->assertContains('Layout ID ' . $layout->layoutId . ' is locked by another User! Lock expires on:', $body->error);
     }
 
     public function testWebToApi()
@@ -107,7 +107,7 @@ class LayoutLockTest extends LocalWebTestCase
         $layout = $this->checkout($this->layout);
 
         // call Layout status via web request, this will trigger the Layout Lock Middleware as well
-        $this->sendRequest('GET', '/layout/status/' . $layout->layoutId);
+        $this->sendRequest('GET', '/layout/status/' . $layout->layoutId, [], [], 'layoutLock');
 
         // attempt to add Widget via API
         try {
