@@ -715,11 +715,6 @@ class DataSet implements \JsonSerializable
             if ($this->rowLimit > $this->config->getSetting('DATASET_HARD_ROW_LIMIT')) {
                 throw new InvalidArgumentException(__('DataSet row limit cannot be larger than the CMS dataSet row limit'));
             }
-
-            if ($this->limitPolicy == null) {
-                throw new InvalidArgumentException(__('Please select the limit policy for this DataSet.'));
-            }
-
         }
 
         try {
