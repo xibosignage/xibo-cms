@@ -460,9 +460,7 @@ class DataSetFactory extends BaseFactory
 
                         if (is_array($data)) {
                             $result->number = count($data);
-                        }
-
-                        if (is_object($data)) {
+                        } elseif (is_object($data)) {
                             $result->number = count(get_object_vars($data));
                         }
                     }

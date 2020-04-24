@@ -28,6 +28,7 @@ use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
+use Stash\Interfaces\PoolInterface;
 use Stash\Item;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Playlist;
@@ -120,8 +121,11 @@ class Layout extends Base
     /** @var  ActionFactory */
     private $actionFactory;
 
-    /** ContainerInterface */
-    private  $container;
+    /** @var ContainerInterface */
+    private $container;
+
+    /** @var PoolInterface */
+    private $pool;
 
     /**
      * Set common dependencies.
@@ -147,7 +151,7 @@ class Layout extends Base
      * @param ContainerInterface $container
      * @param ActionFactory $actionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory, $campaignFactory, $displayGroupFactory, Twig $view, ContainerInterface $container, $actionFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory, $campaignFactory, $displayGroupFactory, Twig $view, ContainerInterface $container, $actionFactory, $pool)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
@@ -165,6 +169,7 @@ class Layout extends Base
         $this->displayGroupFactory = $displayGroupFactory;
         $this->actionFactory = $actionFactory;
         $this->container = $container;
+        $this->pool = $pool;
     }
 
     /**
@@ -1231,7 +1236,10 @@ class Layout extends Base
 
             // Populate the status message
             $layout->getStatusMessage();
-            $layout->isLocked = $this->container->get('pool')->getItem('locks/layout/' . $layout->layoutId)->get();
+            /** @var $locked Item */
+            $locked = $this->pool->getItem('locks/layout/' . $layout->layoutId);
+            $layout->isLocked = $locked->isMiss() ? [] : $locked->get();
+
 
             // Annotate each Widget with its validity, tags and permissions
             if (in_array('widget_validity', $embed) || in_array('tags', $embed) || in_array('permissions', $embed)) { 
@@ -2073,7 +2081,9 @@ class Layout extends Base
         $layout = $this->layoutFactory->getById($id);
 
         $layout->xlfToDisk();
-        $layout->isLocked = $this->container->get('pool')->getItem('locks/layout/' . $id)->get();
+        /** @var $locked Item */
+        $locked = $this->pool->getItem('locks/layout/' . $layout->layoutId);
+        $layout->isLocked = $locked->isMiss() ? [] : $locked->get();
 
         switch ($layout->status) {
 

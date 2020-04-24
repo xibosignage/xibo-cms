@@ -679,7 +679,8 @@ class State implements Middleware
                     $c->get('displayGroupFactory'),
                     $c->get('view'),
                     $c,
-                    $c->get('actionFactory')
+                    $c->get('actionFactory'),
+                    $c->get('pool')
                 );
             },
             '\Xibo\Controller\Library' => function(ContainerInterface $c) {
