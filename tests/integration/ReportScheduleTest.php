@@ -133,9 +133,7 @@ class ReportScheduleTest extends LocalWebTestCase
 
         // Delete All Saved Report
         $resDelete = $this->sendRequest('POST', '/report/reportschedule/' .
-            $reportScheduleId. '/deletesavedreport',[
-            'disableUserCheck' => 1,
-        ]);
+            $reportScheduleId. '/deletesavedreport');
         $this->assertSame(200, $resDelete->getStatusCode(), $resDelete->getBody());
 
         // Delete Report Schedule

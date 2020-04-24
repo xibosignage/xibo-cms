@@ -452,9 +452,7 @@ class Report extends Base
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $disableUserCheck = $sanitizedParams->getInt('disableUserCheck');
-
-        $reportSchedule = $this->reportScheduleFactory->getById($id, $disableUserCheck);
+        $reportSchedule = $this->reportScheduleFactory->getById($id);
 
         if (!$this->getUser()->checkDeleteable($reportSchedule)) {
             throw new AccessDeniedException(__('You do not have permissions to delete the saved report of this report schedule'));
@@ -463,8 +461,7 @@ class Report extends Base
         // Get all saved reports of the report schedule
         $savedReports = $this->savedReportFactory->query(null,
             [
-                'reportScheduleId' => $reportSchedule->reportScheduleId,
-                'disableUserCheck' => $disableUserCheck
+                'reportScheduleId' => $reportSchedule->reportScheduleId
             ]);
 
 
