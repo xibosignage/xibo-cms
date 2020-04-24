@@ -502,6 +502,9 @@ class Region implements \JsonSerializable
             $action->delete();
         }
 
+        // Delete any actions that had this Region id as targetId, to avoid orphaned records in action table.
+        $this->getStore()->update('DELETE FROM `action` WHERE targetId = :targetId', ['targetId' => $this->regionId]);
+
         // Delete the region specific playlist
         $this->getPlaylist()->delete(['regionDelete' => true]);
 
