@@ -337,15 +337,20 @@ class Report extends Base
         $reportName = $request->getParam('reportName', null);
         $fromDt = $sanitizedParams->getDate('fromDt', ['default' => 0]);
         $toDt = $sanitizedParams->getDate('toDt', ['default' => 0]);
+        $today = Carbon::now()->startOfDay();
 
-        // TODO
         // from and todt should be greater than today
-
         if (!empty($fromDt)) {
             $fromDt = $fromDt->format('U');
+            if ($fromDt < $today) {
+                throw new InvalidArgumentException(__('Start time cannot be earlier than today'), 'fromDt' );
+            }
         }
         if (!empty($toDt)) {
             $toDt = $toDt->format('U');
+            if ($toDt < $today) {
+                throw new InvalidArgumentException(__('End time cannot be earlier than today'), 'toDt' );
+            }
         }
 
         $this->getLog()->debug('Add Report Schedule: '. $name);
@@ -405,15 +410,20 @@ class Report extends Base
         $reportName = $request->getParam('reportName', null);
         $fromDt = $sanitizedParams->getDate('fromDt', ['default' => 0]);
         $toDt = $sanitizedParams->getDate('toDt', ['default' => 0]);
+        $today = Carbon::now()->startOfDay();
 
-        // TODO
         // from and todt should be greater than today
-
         if (!empty($fromDt)) {
             $fromDt = $fromDt->format('U');
+            if ($fromDt < $today) {
+                throw new InvalidArgumentException(__('Start time cannot be earlier than today'), 'fromDt' );
+            }
         }
         if (!empty($toDt)) {
             $toDt = $toDt->format('U');
+            if ($toDt < $today) {
+                throw new InvalidArgumentException(__('End time cannot be earlier than today'), 'toDt' );
+            }
         }
 
         $reportSchedule->name = $name;
@@ -621,8 +631,18 @@ class Report extends Base
     public function editReportScheduleForm(Request $request, Response $response, $id)
     {
         $reportSchedule = $this->reportScheduleFactory->getById($id, 0);
-        $reportSchedule->fromDt = Carbon::createFromTimestamp($reportSchedule->fromDt)->format(DateFormatHelper::getSystemFormat());
-        $reportSchedule->toDt = Carbon::createFromTimestamp($reportSchedule->toDt)->format(DateFormatHelper::getSystemFormat());
+
+        if ($reportSchedule->fromDt > 0) {
+            $reportSchedule->fromDt = Carbon::createFromTimestamp($reportSchedule->fromDt)->format(DateFormatHelper::getSystemFormat());
+        } else {
+            $reportSchedule->fromDt = '';
+        }
+
+        if ($reportSchedule->toDt > 0) {
+            $reportSchedule->toDt = Carbon::createFromTimestamp($reportSchedule->toDt)->format(DateFormatHelper::getSystemFormat());
+        } else {
+            $reportSchedule->toDt = '';
+        }
 
         $this->getState()->template = 'reportschedule-form-edit';
         $this->getState()->setData([
