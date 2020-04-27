@@ -379,7 +379,7 @@ class User extends Base
                 // Page Security
                 $user->buttons[] = [
                     'id' => 'user_button_page_security',
-                    'url' => $this->urlFor($request,'group.acl.form', ['id' => $user->groupId]),
+                    'url' => $this->urlFor($request,'group.acl.form', ['id' => $user->groupId, 'userId' => $user->userId]),
                     'text' => __('Page Security')
                 ];
             }
@@ -1868,6 +1868,7 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
@@ -1919,7 +1920,7 @@ class User extends Base
             'help' =>  $this->getHelp()->link('User', 'Members')
         ]);
 
-        $this->render($request, $response);
+        return $this->render($request, $response);
     }
 
     /**
@@ -1944,7 +1945,7 @@ class User extends Base
 
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Go through each ID to assign
-        foreach ($sanitizedParams->getIntArray('userGroupId') as $userGroupId) {
+        foreach ($sanitizedParams->getIntArray('userGroupId', ['default' => []]) as $userGroupId) {
             $userGroup = $this->userGroupFactory->getById($userGroupId);
 
             if (!$this->getUser()->checkEditable($userGroup)) {
@@ -1956,7 +1957,7 @@ class User extends Base
         }
 
         // Have we been provided with unassign id's as well?
-        foreach ($sanitizedParams->getIntArray('unassignUserGroupId') as $userGroupId) {
+        foreach ($sanitizedParams->getIntArray('unassignUserGroupId', ['default' => []]) as $userGroupId) {
             $userGroup = $this->userGroupFactory->getById($userGroupId);
 
             if (!$this->getUser()->checkEditable($userGroup)) {

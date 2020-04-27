@@ -488,7 +488,8 @@ class DataSetTest extends LocalWebTestCase
             'dataRoot' => 'data',
             'refreshRate' => 0,
             'clearRate' => 1,
-            'sourceId' => 1
+            'sourceId' => 1,
+            'limitPolicy' => 'stop'
         ]);
         # Check if call was successful
         $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
@@ -524,7 +525,8 @@ class DataSetTest extends LocalWebTestCase
             'dataRoot' => 'data',
             'clearRate' => 3600,
             'refreshRate' => 1,
-            'sourceId' => 1
+            'sourceId' => 1,
+            'limitPolicy' => 'stop'
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
         # Check if call was successful
@@ -561,7 +563,8 @@ class DataSetTest extends LocalWebTestCase
             'dataRoot' => 'data',
             'refreshRate' => 0,
             'clearRate' => 1,
-            'sourceId' => 1
+            'sourceId' => 1,
+            'limitPolicy' => 'stop'
         ]);
 
         # Check if call was successful

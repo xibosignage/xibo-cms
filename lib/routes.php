@@ -19,6 +19,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+use Slim\Routing\RouteCollectorProxy;
+
 defined('XIBO') or die('Sorry, you are not allowed to directly access this page.');
 
 /**
@@ -110,20 +113,23 @@ $app->delete('/notification/{id}', ['\Xibo\Controller\Notification','delete'])->
  *  description="Layouts"
  * )
  */
+$app->group('/layout', function (RouteCollectorProxy $group) {
+    $group->put('/{id}', ['\Xibo\Controller\Layout','edit'])->setName('layout.edit');
+    $group->delete('/{id}', ['\Xibo\Controller\Layout','delete'])->setName('layout.delete');
+    $group->put('/background/{id}', ['\Xibo\Controller\Layout','editBackground'])->setName('layout.edit.background');
+    $group->put('/publish/{id}', ['\Xibo\Controller\Layout','publish'])->setName('layout.publish');
+    $group->put('/discard/{id}', ['\Xibo\Controller\Layout','discard'])->setName('layout.discard');
+    $group->put('/retire/{id}', ['\Xibo\Controller\Layout','retire'])->setName('layout.retire');
+    $group->put('/unretire/{id}', ['\Xibo\Controller\Layout','unretire'])->setName('layout.unretire');
+    $group->get('/status/{id}', ['\Xibo\Controller\Layout','status'])->setName('layout.status');
+})->addMiddleware(new \Xibo\Middleware\LayoutLock($app));
+
+$app->put('/layout/checkout/{id}', ['\Xibo\Controller\Layout','checkout'])->setName('layout.checkout');
 $app->get('/layout', ['\Xibo\Controller\Layout','grid'])->setName('layout.search');
 $app->post('/layout', ['\Xibo\Controller\Layout','add'])->setName('layout.add');
-$app->put('/layout/{id}', ['\Xibo\Controller\Layout','edit'])->setName('layout.edit');
 $app->post('/layout/copy/{id}', ['\Xibo\Controller\Layout','copy'])->setName('layout.copy');
-$app->delete('/layout/{id}', ['\Xibo\Controller\Layout','delete'])->setName('layout.delete');
-
-$app->put('/layout/background/{id}', ['\Xibo\Controller\Layout','editBackground'])->setName('layout.edit.background');
-$app->put('/layout/checkout/{id}', ['\Xibo\Controller\Layout','checkout'])->setName('layout.checkout');
-$app->put('/layout/publish/{id}', ['\Xibo\Controller\Layout','publish'])->setName('layout.publish');
-$app->put('/layout/discard/{id}', ['\Xibo\Controller\Layout','discard'])->setName('layout.discard');
-$app->put('/layout/retire/{id}', ['\Xibo\Controller\Layout','retire'])->setName('layout.retire');
-$app->put('/layout/unretire/{id}', ['\Xibo\Controller\Layout','unretire'])->setName('layout.unretire');
 $app->put('/layout/setenablestat/{id}', ['\Xibo\Controller\Layout','setEnableStat'])->setName('layout.setenablestat');
-$app->get('/layout/status/{id}', ['\Xibo\Controller\Layout','status'])->setName('layout.status');
+$app->get('/layout/lock/release/{id}', ['\Xibo\Controller\Layout', 'releaseLock'])->setName('layout.lock.release');
 // Layout Import
 //$app->map(['HEAD'],'/layout/import', ['\Xibo\Controller\Library','add');
 $app->post('/layout/import', ['\Xibo\Controller\Layout','import'])->setName('layout.import');
@@ -134,11 +140,13 @@ $app->post('/layout/{id}/untag', ['\Xibo\Controller\Layout','untag'])->setName('
 /**
  * Region
  */
-$app->post('/region/{id}', ['\Xibo\Controller\Region','add'])->setName('region.add');
-$app->put('/region/{id}', ['\Xibo\Controller\Region','edit'])->setName('region.edit');
-$app->delete('/region/{id}', ['\Xibo\Controller\Region','delete'])->setName('region.delete');
-$app->put('/region/position/all/{id}', ['\Xibo\Controller\Region','positionAll'])->setName('region.position.all');
-$app->post('/region/drawer/{id}', ['\Xibo\Controller\Region','addDrawer'])->setName('region.add.drawer');
+$app->group('/region', function (RouteCollectorProxy $group) {
+    $group->post('/{id}', ['\Xibo\Controller\Region','add'])->setName('region.add');
+    $group->put('/{id}', ['\Xibo\Controller\Region','edit'])->setName('region.edit');
+    $group->delete('/{id}', ['\Xibo\Controller\Region','delete'])->setName('region.delete');
+    $group->put('/position/all/{id}', ['\Xibo\Controller\Region','positionAll'])->setName('region.position.all');
+    $group->post('/drawer/{id}', ['\Xibo\Controller\Region','addDrawer'])->setName('region.add.drawer');
+})->addMiddleware(new \Xibo\Middleware\LayoutLock($app));
 
 /**
  * playlist
@@ -158,8 +166,11 @@ $app->get('/playlist/usage/layouts/{id}', ['\Xibo\Controller\Playlist','usageLay
 
 // Widgets Order
 $app->get('/playlist/widget', ['\Xibo\Controller\Playlist','widgetGrid'])->setName('playlist.widget.search');
-$app->post('/playlist/order/{id}', ['\Xibo\Controller\Playlist','order'])->setName('playlist.order');
-$app->post('/playlist/library/assign/{id}', ['\Xibo\Controller\Playlist','libraryAssign'])->setName('playlist.library.assign');
+$app->group('/playlist', function (RouteCollectorProxy $group) {
+    $group->post('/order/{id}', ['\Xibo\Controller\Playlist','order'])->setName('playlist.order');
+    $group->post('/library/assign/{id}', ['\Xibo\Controller\Playlist','libraryAssign'])->setName('playlist.library.assign');
+})->addMiddleware(new \Xibo\Middleware\LayoutLock($app));
+
 // Widget Modules
 /**
  * @SWG\Tag(
@@ -167,13 +178,15 @@ $app->post('/playlist/library/assign/{id}', ['\Xibo\Controller\Playlist','librar
  *  description="Widgets"
  * )
  */
-$app->post('/playlist/widget/{type}/{id}', ['\Xibo\Controller\Module','addWidget'])->setName('module.widget.add');
-$app->put('/playlist/widget/{id}', ['\Xibo\Controller\Module','editWidget'])->setName('module.widget.edit');
-$app->delete('/playlist/widget/{id}', ['\Xibo\Controller\Module','deleteWidget'])->setName('module.widget.delete');
-$app->put('/playlist/widget/transition/{type}/{id}', ['\Xibo\Controller\Module','editWidgetTransition'])->setName('module.widget.transition.edit');
-$app->put('/playlist/widget/{id}/audio', ['\Xibo\Controller\Module','widgetAudio'])->setName('module.widget.audio');
-$app->delete('/playlist/widget/{id}/audio', ['\Xibo\Controller\Module','widgetAudioDelete']);
-$app->put('/playlist/widget/{id}/expiry', ['\Xibo\Controller\Module','widgetExpiry'])->setName('module.widget.expiry');
+$app->group('/playlist/widget', function (RouteCollectorProxy $group) {
+    $group->post('/{type}/{id}', ['\Xibo\Controller\Module','addWidget'])->setName('module.widget.add');
+    $group->put('/{id}', ['\Xibo\Controller\Module','editWidget'])->setName('module.widget.edit');
+    $group->delete('/{id}', ['\Xibo\Controller\Module','deleteWidget'])->setName('module.widget.delete');
+    $group->put('/transition/{type}/{id}', ['\Xibo\Controller\Module','editWidgetTransition'])->setName('module.widget.transition.edit');
+    $group->put('/{id}/audio', ['\Xibo\Controller\Module','widgetAudio'])->setName('module.widget.audio');
+    $group->delete('/{id}/audio', ['\Xibo\Controller\Module','widgetAudioDelete']);
+    $group->put('/{id}/expiry', ['\Xibo\Controller\Module','widgetExpiry'])->setName('module.widget.expiry');
+})->addMiddleware(new \Xibo\Middleware\LayoutLock($app));
 
 /**
  * Campaign

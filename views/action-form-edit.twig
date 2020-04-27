@@ -93,11 +93,11 @@
                     { typeid: "screen", type: screen },
                     { typeid: "region", type: region },
                 ] %}
-                {{ forms.dropdown("target", "single", title,action.target, options, "typeid","type", helpText) }}
+                {{ forms.dropdown("target", "single", title,action.target, options, "typeid","type", helpText, "target-control") }}
 
                 {% set title %}{% trans "Target ID" %}{% endset %}
                 {% set helpText %}{% trans "Select the Target ID for this Action" %}{% endset %}
-                {{ forms.dropdown("targetId", "single", title, action.targetId, [{regionId:null, name:""}]|merge(regions), "regionId","name", helpText, "target-control") }}
+                {{ forms.dropdown("targetId", "single", title, action.targetId, [{regionId:null, name:""}]|merge(regions), "regionId","name", helpText, "targetid-control") }}
             </form>
         </div>
     </div>

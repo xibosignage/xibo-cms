@@ -328,7 +328,6 @@ class Soap4 extends Soap
         $chunkOffset = $sanitizer->getDouble('chunkOffset');
         $chunkSize = $sanitizer->getDouble('chunkSize');
 
-        $this->getLog()->debug('GET FILE  GET ' . ' hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: ' . $fileType . ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize);
         $libraryLocation = $this->getConfig()->getSetting("LIBRARY_LOCATION");
 
         // Check the serverKey matches

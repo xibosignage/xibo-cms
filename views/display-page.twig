@@ -375,6 +375,10 @@
                     {
                         "name": "clientSort",
                         "data": function (data) {
+                            if (data.clientType === 'lg') {
+                                data.clientType = 'webOS'
+                            }
+
                             return data.clientType + ' ' + data.clientVersion + '-' + data.clientCode;
                         },
                         "visible": false

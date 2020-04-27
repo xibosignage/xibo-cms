@@ -383,7 +383,6 @@ class Soap
 
             // Our layout list will always include the default layout
             $layouts = [];
-            $interactiveLayoutIds = [];
             $layouts[] = $this->display->defaultLayoutId;
 
             // Build up the other layouts into an array
