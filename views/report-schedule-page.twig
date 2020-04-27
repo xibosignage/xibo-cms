@@ -84,6 +84,8 @@
                             <th>{% trans "Next Run" %}</th>
                             <th>{% trans "Previous Run" %}</th>
                             <th>{% trans "Active" %}</th>
+                            <th>{% trans "Start time" %}</th>
+                            <th>{% trans "End time" %}</th>
                             <th>{% trans "Failed Message" %}</th>
                             <th>{% trans "Created" %}</th>
                             <th></th>
@@ -198,6 +200,16 @@
 
                             return '<span class="fa ' + icon + '" title="' + (row.isActiveDescription) + '"></span>';
                         },
+                        "visible": false
+                    },
+                    {
+                        "data": "fromDt",
+                        "render": dataTableDateFromUnix,
+                        "visible": false
+                    },
+                    {
+                        "data": "toDt",
+                        "render": dataTableDateFromUnix,
                         "visible": false
                     },
                     {

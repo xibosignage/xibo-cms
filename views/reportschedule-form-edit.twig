@@ -43,6 +43,14 @@
 
                 {% set title %}{% trans "Schedule Name" %}{% endset %}
                 {{ forms.input("name", title, reportSchedule.name) }}
+
+                {% set title %}{% trans "Start Time" %}{% endset %}
+                {% set helpText %}{% trans "Provide a date and time to start the schedule. Leave empty to Run as normal." %}{% endset %}
+                {{ forms.dateTime("fromDt", title, reportSchedule.fromDt, helpText, "starttime-control") }}
+
+                {% set title %}{% trans "End Time" %}{% endset %}
+                {% set helpText %}{% trans "Provide a date and time to end the schedule. Leave empty to Run indefinitely." %}{% endset %}
+                {{ forms.dateTime("toDt", title, reportSchedule.toDt, helpText, "endtime-control") }}
             </form>
         </div>
     </div>

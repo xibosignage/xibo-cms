@@ -49,6 +49,14 @@
                 {% set helpText %}{% trans "The name for this report schedule" %}{% endset %}
                 {{ forms.input("name", title, "", helpText, "", "required") }}
 
+                {% set title %}{% trans "Start Time" %}{% endset %}
+                {% set helpText %}{% trans "Provide a date and time to start the schedule. Leave empty to Run as normal." %}{% endset %}
+                {{ forms.dateTime("fromDt", title, "", helpText, "starttime-control") }}
+
+                {% set title %}{% trans "End Time" %}{% endset %}
+                {% set helpText %}{% trans "Provide a date and time to end the schedule. Leave empty to Run indefinitely." %}{% endset %}
+                {{ forms.dateTime("toDt", title, "", helpText, "endtime-control") }}
+
                 {% set title %}{% trans "Should an email be sent?" %}{% endset %}
                 {{ forms.checkbox("sendEmail", title, sendEmail) }}
 
