@@ -22,7 +22,8 @@
 
 use Monolog\Logger;
 use Monolog\Processor\UidProcessor;
-use Psr\Container\ContainerInterface;
+use Nyholm\Psr7\ServerRequest;
+use Slim\Http\ServerRequest as Request;
 use Slim\Views\TwigMiddleware;
 use Xibo\Factory\ContainerFactory;
 
@@ -34,8 +35,9 @@ ini_set('display_errors', 0);
 
 require PROJECT_ROOT . '/vendor/autoload.php';
 
-if (!file_exists(PROJECT_ROOT . '/web/settings.php'))
+if (!file_exists(PROJECT_ROOT . '/web/settings.php')) {
     die('Not configured');
+}
 
 // convert all the command line arguments into a URL
 $argv = $GLOBALS['argv'];
@@ -50,7 +52,7 @@ try {
 }
 $container->set('name', 'xtr');
 
-$container->set('logger', function (ContainerInterface $container) {
+$container->set('logger', function () {
     $logger = new Logger('CONSOLE');
 
     $uidProcessor = new UidProcessor();
@@ -74,31 +76,6 @@ if (\Xibo\Helper\Environment::migrationPending()) {
     die('Upgrade pending');
 }
 
-/*
-// Set up the environment so that Slim can route
-$app->environment = Slim\Environment::mock([
-    'PATH_INFO'   => $pathInfo
-]);
-
-// Twig templates
-$twig = new \Slim\Views\Twig();
-$twig->parserOptions = array(
-    'debug' => true,
-    'cache' => PROJECT_ROOT . '/cache'
-);
-$twig->parserExtensions = array(
-    new \Slim\Views\TwigExtension(),
-    new \Xibo\Twig\TransExtension(),
-    new \Xibo\Twig\ByteFormatterTwigExtension(),
-    new \Xibo\Twig\UrlDecodeTwigExtension(),
-    new \Xibo\Twig\DateFormatTwigExtension()
-);
-
-// Configure the template folder
-$twig->twigTemplateDirs = [PROJECT_ROOT . '/views'];
-
-$app->view($twig);
-*/
 $twigMiddleware = TwigMiddleware::createFromContainer($app);
 
 $app->add(new \Xibo\Middleware\Storage($app));
@@ -112,23 +89,18 @@ $app->add(new \Xibo\Middleware\Xmr($app));
 \Xibo\Middleware\State::setMiddleWare($app);
 
 $app->addRoutingMiddleware();
-$app->addErrorMiddleware(true, true, true);
+$errorMiddleware = $app->addErrorMiddleware(true, true, true);
+$errorMiddleware->setDefaultErrorHandler(\Xibo\Middleware\Handlers::jsonErrorHandler($container));
 
-
-/*
-// Configure the Slim error handler
-$app->error(function (\Exception $e) use ($app) {
-    $app->container->get('\Xibo\Controller\Error')->handler($e);
-});
-
-// Configure a not found handler
-$app->notFound(function () use ($app) {
-    $app->container->get('\Xibo\Controller\Error')->notFound();
-});
-*/
 // All routes
 $app->get('/', ['\Xibo\Controller\Task','poll']);
 $app->get('/{id}', ['\Xibo\Controller\Task','run']);
+
+// if we passed taskId in console
+if (!empty($argv)) {
+    $request = new Request(new ServerRequest('GET', $pathInfo));
+    return $app->handle($request);
+}
 
 // Run app
 $app->run();
