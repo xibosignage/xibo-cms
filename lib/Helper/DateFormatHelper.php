@@ -192,6 +192,41 @@ class DateFormatHelper
         return $momentFormat;
     }
 
+        /**
+     * @inheritdoc
+     */
+    public static function convertMomentToJalaliFormat($format)
+    {
+        $replacements = [
+            'DD' => 'jDD',
+            'ddd' => 'ddd',
+            'D' => 'jD',
+            'dddd' => 'dddd',
+            'E' => 'E',
+            'e' => 'e',
+            'DDD' => 'jDDD',
+            'W' => '',
+            'MMMM' => 'jMMMM',
+            'MM' => 'jMM',
+            'MMM' => 'jMMM',
+            'M' => 'jM',
+            'YYYY' => 'jYYYY',
+            'YY' => 'jYY',
+            'a' => 'a',
+            'A' => 'A',
+            'h' => 'h',
+            'H' => 'H',
+            'hh' => 'hh',
+            'HH' => 'HH',
+            'mm' => 'mm',
+            'ss' => 'ss',
+            'SSS' => 'SSS',
+            'X' => 'X'
+        ];
+        $timeOnly = strtr($format, $replacements);
+        return trim($timeOnly);
+    }
+
     /**
      * Timezone identifiers
      * @return array

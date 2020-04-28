@@ -128,6 +128,8 @@ $(document).ready(function() {
 
                 if (this.options.view !== 'agenda') {
 
+                    $('.cal-event-time-bar').hide();
+
                     // Serialise
                     var displayGroups = $('#DisplayList').serialize();
                     var displayLayouts = $('#campaignId').serialize();
@@ -219,6 +221,28 @@ $(document).ready(function() {
                         });
                 } else {
 
+                    // Show time slider on agenda view and call the calendar view on slide stop event
+                    $('.cal-event-time-bar').show();
+
+                    const $timePicker = $('#timePicker');
+
+                    let momentNow = moment().tz ? moment().tz(timezone) : moment();
+
+                    $timePicker.slider({
+                        value: (momentNow.hour() * 60) + momentNow.minute(),
+                        tooltip: 'always',
+                        formatter: function(value) {
+                            return moment().startOf("day").minute(value).format(jsTimeFormat);
+                        }
+                    }).off('slideStop').on('slideStop', function(ev) {
+                        calendar.view();
+                    });
+
+                    $('.time-picker-step-btn').off().on('click', function() {
+                        $timePicker.slider('setValue', $timePicker.slider('getValue') + $(this).data('step'));
+                        calendar.view();
+                    });
+
                     // Get selected display groups
                     var selectedDisplayGroup = $('.cal-context').data().selectedTab;
                     var displayGroupsList = [];
@@ -267,9 +291,9 @@ $(document).ready(function() {
                     var url = calendarOptions.agendaLink.replace(":id", selectedDisplayGroup);
                                     
                     var dateMoment = moment(this.options.position.start.getTime() / 1000, "X");
-                    var timeFromSlider = ( $('#timePickerSlider').length ) ? $('#timePicker').slider('getValue') : 0
+                    var timeFromSlider = ( $('#timePickerSlider').length ) ? $('#timePicker').slider('getValue') : 0;
                     var timeMoment = moment(timeFromSlider*60, "X");
-                    
+
                     // Add hour to date to get the selected date
                     var dateSelected = moment(dateMoment + timeMoment);
 
@@ -381,34 +405,7 @@ $(document).ready(function() {
                     return;
                 }
             },
-            onAfterViewLoad: function(view) {
-                // Show time slider on agenda view and call the calendar view on slide stop event
-                if (this.options.view == 'agenda') {
-                    $('.cal-event-time-bar').show();
-
-                    const $timePicker = $('#timePicker');
-                    
-                    let momentNow = moment().tz ? moment().tz(timezone) : moment();
-                    
-                    $timePicker.slider({
-                        value: (momentNow.hour() * 60) + momentNow.minute(),
-                        tooltip: 'always',
-                        formatter: function(value) {
-                            return moment().startOf("day").minute(value).format(jsTimeFormat);
-                        }
-                    }).off('slideStop').on('slideStop', function(ev) {
-                        calendar.view();
-                    });
-
-                    $('.time-picker-step-btn').off().on('click', function() {
-                        $timePicker.slider('setValue', $timePicker.slider('getValue') + $(this).data('step'));
-                        calendar.view();
-                    });
-
-                } else {
-                    $('.cal-event-time-bar').hide();
-                }
-                
+            onAfterViewLoad: function(view) {                
                 // Sync the date of the date picker to the current calendar date
                 if (this.options.position.start != undefined && this.options.position.start != "") {
                     // Update timepicker
