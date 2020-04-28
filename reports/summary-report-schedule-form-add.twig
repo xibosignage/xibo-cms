@@ -50,11 +50,11 @@
                 {{ forms.input("name", title, "", helpText, "", "required") }}
 
                 {% set title %}{% trans "Start Time" %}{% endset %}
-                {% set helpText %}{% trans "Provide a date and time to start the schedule. Leave empty to Run as normal." %}{% endset %}
+                {% set helpText %}{% trans "Set a future date and time to run this report. Leave blank to run from the next collection point." %}{% endset %}
                 {{ forms.dateTime("fromDt", title, "", helpText, "starttime-control") }}
 
                 {% set title %}{% trans "End Time" %}{% endset %}
-                {% set helpText %}{% trans "Provide a date and time to end the schedule. Leave empty to Run indefinitely." %}{% endset %}
+                {% set helpText %}{% trans "Set a future date and time to end the schedule. Leave blank to run indefinitely." %}{% endset %}
                 {{ forms.dateTime("toDt", title, "", helpText, "endtime-control") }}
 
                 {% set title %}{% trans "Should an email be sent?" %}{% endset %}
