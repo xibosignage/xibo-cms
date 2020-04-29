@@ -64,7 +64,7 @@ $(document).ready(function() {
         const navigateToCalendarDate = function() {
             if(calendar != undefined) {
                 // Add event to the picker to update the calendar
-                calendar.navigate('date', moment($('#dateInputLink').val()));
+                calendar.navigate('date', moment($('#dateInput input[data-input]').val()));
             }
         };
 
@@ -72,42 +72,35 @@ $(document).ready(function() {
         let pickerOptions = {};
 
         if( calendarType == 'Jalali') {
-            const linkedFormat = $('#dateInputLink').data().linkFormat;
-
             pickerOptions = {
-                initialValue: false,
-                altField: '#dateInputLink',
                 autoClose: true,
+                altField: '#dateInputLink',
                 altFieldFormatter: function(unixTime) {
                     let newDate = moment.unix(unixTime / 1000);
                     newDate.set('hour', 0);
                     newDate.set('minute', 0);
                     newDate.set('second', 0);
-                    return newDate.format(linkedFormat);
+
+                    return newDate.format(systemDateOnlyFormat);
                 },
                 onSelect: function() {},
                 onHide: function() {
                     // Trigger change after close
                     $('#dateInput').trigger('change');
                     $('#dateInputLink').trigger('change');
-
-                    // Callback if exists
-                    if(navigateToCalendarDate != null && typeof navigateToCalendarDate == 'function') {
-                        navigateToCalendarDate();
-                    }
                 }
             };
         } else if( calendarType == 'Gregorian') {
             pickerOptions = {
-                allowInput: false,
                 wrap: true,
+                altFormat: jsDateOnlyFormat
             };
         }
 
         // Create the date input shortcut
         initDatePicker(
             $('#dateInput'), 
-            dateOnlyFormat, 
+            systemDateOnlyFormat, 
             pickerOptions, 
             navigateToCalendarDate,
             false // clear button
@@ -134,6 +127,8 @@ $(document).ready(function() {
                 $('#DisplayList').prop('disabled', isShowAll);
 
                 if (this.options.view !== 'agenda') {
+
+                    $('.cal-event-time-bar').hide();
 
                     // Serialise
                     var displayGroups = $('#DisplayList').serialize();
@@ -226,6 +221,28 @@ $(document).ready(function() {
                         });
                 } else {
 
+                    // Show time slider on agenda view and call the calendar view on slide stop event
+                    $('.cal-event-time-bar').show();
+
+                    const $timePicker = $('#timePicker');
+
+                    let momentNow = moment().tz ? moment().tz(timezone) : moment();
+
+                    $timePicker.slider({
+                        value: (momentNow.hour() * 60) + momentNow.minute(),
+                        tooltip: 'always',
+                        formatter: function(value) {
+                            return moment().startOf("day").minute(value).format(jsTimeFormat);
+                        }
+                    }).off('slideStop').on('slideStop', function(ev) {
+                        calendar.view();
+                    });
+
+                    $('.time-picker-step-btn').off().on('click', function() {
+                        $timePicker.slider('setValue', $timePicker.slider('getValue') + $(this).data('step'));
+                        calendar.view();
+                    });
+
                     // Get selected display groups
                     var selectedDisplayGroup = $('.cal-context').data().selectedTab;
                     var displayGroupsList = [];
@@ -274,9 +291,9 @@ $(document).ready(function() {
                     var url = calendarOptions.agendaLink.replace(":id", selectedDisplayGroup);
                                     
                     var dateMoment = moment(this.options.position.start.getTime() / 1000, "X");
-                    var timeFromSlider = ( $('#timePickerSlider').length ) ? $('#timePicker').slider('getValue') : 0
+                    var timeFromSlider = ( $('#timePickerSlider').length ) ? $('#timePicker').slider('getValue') : 0;
                     var timeMoment = moment(timeFromSlider*60, "X");
-                    
+
                     // Add hour to date to get the selected date
                     var dateSelected = moment(dateMoment + timeMoment);
 
@@ -388,42 +405,11 @@ $(document).ready(function() {
                     return;
                 }
             },
-            onAfterViewLoad: function(view) {
-                // Show time slider on agenda view and call the calendar view on slide stop event
-                if (this.options.view == 'agenda') {
-                    $('.cal-event-time-bar').show();
-
-                    const $timePicker = $('#timePicker');
-                    
-                    let momentNow = moment().tz ? moment().tz(timezone) : moment();
-                    
-                    $timePicker.slider({
-                        value: (momentNow.hour() * 60) + momentNow.minute(),
-                        tooltip: 'always',
-                        formatter: function(value) {
-                            return moment().startOf("day").minute(value).format(jsTimeFormat);
-                        }
-                    }).off('slideStop').on('slideStop', function(ev) {
-                        calendar.view();
-                    });
-
-                    $('.time-picker-step-btn').off().on('click', function() {
-                        $timePicker.slider('setValue', $timePicker.slider('getValue') + $(this).data('step'));
-                        calendar.view();
-                    });
-
-                } else {
-                    $('.cal-event-time-bar').hide();
-                }
-                
+            onAfterViewLoad: function(view) {                
                 // Sync the date of the date picker to the current calendar date
                 if (this.options.position.start != undefined && this.options.position.start != "") {
-
-                    // Date format
-                    let dateFormat = (calendarType == 'Jalali') ? systemDateOnlyFormat : dateOnlyFormat;
-                    
                     // Update timepicker
-                    updateDatePicker($('#dateInput'), moment.unix(this.options.position.start.getTime() / 1000).format(systemDateOnlyFormat), dateFormat);
+                    updateDatePicker($('#dateInput'), moment.unix(this.options.position.start.getTime() / 1000).format(systemDateOnlyFormat), systemDateOnlyFormat);
                 }
                 
                 if (typeof this.getTitle === "function")

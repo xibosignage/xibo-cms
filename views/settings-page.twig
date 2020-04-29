@@ -1071,7 +1071,7 @@
                                     {% set helpText %}{% trans "Elevate the log level until this date." %}{% endset %}
 
                                     {% if theme.isSettingEditable("ELEVATE_LOG_UNTIL") %}
-                                        {{ forms.datetime("ELEVATE_LOG_UNTIL", title, elevateLogUntil, helpText) }}
+                                        {{ forms.dateTime("ELEVATE_LOG_UNTIL", title, elevateLogUntil, helpText) }}
                                     {% else %}
                                         {{ forms.disabled("ELEVATE_LOG_UNTIL", title, elevateLogUntil, helpText) }}
                                     {% endif %}

@@ -192,66 +192,39 @@ class DateFormatHelper
         return $momentFormat;
     }
 
-    /**
+        /**
      * @inheritdoc
      */
-    public static function convertPhpToBootstrapFormat($format, $includeTime = true)
+    public static function convertMomentToJalaliFormat($format)
     {
         $replacements = [
-            'd' => 'dd',
-            'D' => '',
-            'j' => 'd',
-            'l' => '',
-            'N' => '',
-            'S' => '',
-            'w' => '',
-            'z' => '',
+            'DD' => 'jDD',
+            'ddd' => 'ddd',
+            'D' => 'jD',
+            'dddd' => 'dddd',
+            'E' => 'E',
+            'e' => 'e',
+            'DDD' => 'jDDD',
             'W' => '',
-            'F' => 'MM',
-            'm' => 'mm',
-            'M' => 'M',
-            'n' => 'i',
-            't' => '', // no equivalent
-            'L' => '', // no equivalent
-            'o' => 'yyyy',
-            'Y' => 'yyyy',
-            'y' => 'yy',
-            'a' => '',
-            'A' => '',
-            'B' => '', // no equivalent
-            'g' => '',
-            'G' => '',
-            'h' => '',
-            'H' => '',
-            'i' => '',
-            's' => '',
-            'u' => '',
-            'e' => '', // deprecated since version 1.6.0 of moment.js
-            'I' => '', // no equivalent
-            'O' => '', // no equivalent
-            'P' => '', // no equivalent
-            'T' => '', // no equivalent
-            'Z' => '', // no equivalent
-            'c' => '', // no equivalent
-            'r' => '', // no equivalent
-            'U' => '',
-            ':' => ''
+            'MMMM' => 'jMMMM',
+            'MM' => 'jMM',
+            'MMM' => 'jMMM',
+            'M' => 'jM',
+            'YYYY' => 'jYYYY',
+            'YY' => 'jYY',
+            'a' => 'a',
+            'A' => 'A',
+            'h' => 'h',
+            'H' => 'H',
+            'hh' => 'hh',
+            'HH' => 'HH',
+            'mm' => 'mm',
+            'ss' => 'ss',
+            'SSS' => 'SSS',
+            'X' => 'X'
         ];
-
-        if ($includeTime) {
-            $replacements['g'] = 'H';
-            $replacements['G'] = 'h';
-            $replacements['h'] = 'HH';
-            $replacements['H'] = 'hh';
-            $replacements['i'] = 'ii';
-            $replacements['s'] = 'ss';
-            $replacements['a'] = 'p';
-            $replacements['A'] = 'P';
-            $replacements[':'] = ':';
-        }
-
-        $momentFormat = strtr($format, $replacements);
-        return trim($momentFormat);
+        $timeOnly = strtr($format, $replacements);
+        return trim($timeOnly);
     }
 
     /**

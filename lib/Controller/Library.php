@@ -1964,6 +1964,7 @@ class Library extends Base
     public function usage(Request $request, Response $response, $id)
     {
         $media = $this->mediaFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if (!$this->getUser()->checkViewable($media)) {
             throw new AccessDeniedException();
@@ -1973,23 +1974,24 @@ class Library extends Base
         $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter(['mediaId' => $id], $request));
 
         // have we been provided with a date/time to restrict the scheduled events to?
-        $mediaDate = $this->getSanitizer($request->getParams())->getDate('mediaEventDate');
+        $mediaFromDate = $sanitizedParams->getDate('mediaEventFromDate');
+        $mediaToDate = $sanitizedParams->getDate('mediaEventToDate');
 
-        if ($mediaDate !== null) {
-            // Get a list of scheduled events that this mediaId is used on, based on the date provided
-            $toDate = $mediaDate->copy()->addDay();
+        // Media query array
+        $mediaQuery = [
+            'mediaId' => $id
+        ];
 
-            $events = $this->scheduleFactory->query(null, [
-                'futureSchedulesFrom' => $mediaDate->format('U'),
-                'futureSchedulesTo' => $toDate->format('U'),
-                'mediaId' => $id
-            ]);
-        } else {
-            // All scheduled events for this mediaId
-            $events = $this->scheduleFactory->query(null, [
-                'mediaId' => $id
-            ]);
+        if ($mediaFromDate !== null) {
+            $mediaQuery['futureSchedulesFrom'] = $mediaFromDate->format('U');
         }
+
+        if ($mediaToDate !== null) {
+            $mediaQuery['futureSchedulesTo'] = $mediaToDate->format('U');
+        }
+
+        // Query for events
+        $events = $this->scheduleFactory->query(null, $mediaQuery);
 
         // Total records returned from the schedules query
         $totalRecords = $this->scheduleFactory->countLast();
@@ -1999,9 +2001,9 @@ class Library extends Base
 
             // Generate this event
             // Assess the date?
-            if ($mediaDate !== null) {
+            if ($mediaFromDate !== null && $mediaToDate !== null) {
                 try {
-                    $scheduleEvents = $row->getEvents($mediaDate, $toDate);
+                    $scheduleEvents = $row->getEvents($mediaFromDate, $mediaToDate);
                 } catch (GeneralException $e) {
                     $this->getLog()->error('Unable to getEvents for ' . $row->eventId);
                     continue;

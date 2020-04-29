@@ -162,6 +162,7 @@ describe('Playlist Editor (Populated)', function() {
         });
     });
 
+    // Skip test for now ( it's failing in the test suite and being tested already in layout designer spec ) 
     it.skip('attaches expiry dates to a widget by drag and drop, and adds a link to open the form in the timeline', () => {
         // Create and alias for reload playlist
         cy.server();
@@ -179,11 +180,11 @@ describe('Playlist Editor (Populated)', function() {
 
             // Add dates
             cy.get('[data-test="widgetPropertiesForm"] .starttime-control .date-clear-button').click();
-            cy.get('[data-test="widgetPropertiesForm"] #fromDtLink').click();
+            cy.get('[data-test="widgetPropertiesForm"] #fromDt').siblings('.date-open-button').click();
             cy.get('.flatpickr-calendar.open .dayContainer .flatpickr-day:first').click();
 
             cy.get('[data-test="widgetPropertiesForm"] .endtime-control .date-clear-button').click();
-            cy.get('[data-test="widgetPropertiesForm"] #toDtLink').click();
+            cy.get('[data-test="widgetPropertiesForm"] #toDt').siblings('.date-open-button').click();
             cy.get('.flatpickr-calendar.open .dayContainer .flatpickr-day:first').click();
 
 

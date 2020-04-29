@@ -188,12 +188,10 @@
 {% macro date(name, title, value, helpText, groupClass, validation, accessKey) %}
     <div class="form-group {{ groupClass }}">
         <label class="control-label" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <input type="hidden" name="{{ name }}" id="{{ name }}" value="{{ value }}" />
         <div>
             <div class="input-group">
-                {% set linkedName %}{{ name }}Link{% endset %}
-                <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-                <input class="form-control datePicker dateControl" name="{{ linkedName }}" type="text" id="{{ linkedName }}" {{ validation }} data-link-field="{{ name }}" data-link-format="YYYY-MM-DD HH:mm:ss"   />
+                <span class="input-group-addon date-open-button" role="button"><i class="fa fa-calendar"></i></span>
+                <input class="form-control datePicker dateControl" type="text" {{ validation }} name="{{ name }}" id="{{ name }}" value="{{ value }}" />
                 <span class="input-group-addon date-clear-button hidden" role="button"><i class="fa fa-times"></i></span>
             </div>
         </div>
@@ -203,12 +201,10 @@
 {% macro dateMonth(name, title, value, helpText, groupClass, validation, accessKey) %}
     <div class="form-group {{ groupClass }}">
         <label class="control-label" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <input type="hidden" name="{{ name }}" id="{{ name }}" value="{{ value }}" />
         <div>
             <div class="input-group">
-                {% set linkedName %}{{ name }}Link{% endset %}
-                <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-                <input class="form-control dateMonthPicker dateControl" name="{{ linkedName }}" type="text" id="{{ linkedName }}" {{ validation }} data-link-field="{{ name }}" data-link-format="YYYY-MM-DD HH:mm:ss"  />
+                <span class="input-group-addon date-open-button" role="button"><i class="fa fa-calendar"></i></span>
+                <input class="form-control dateMonthPicker dateControl" type="text" {{ validation }} name="{{ name }}" id="{{ name }}" value="{{ value }}" />
                 <span class="input-group-addon date-clear-button hidden" role="button"><i class="fa fa-times"></i></span>
             </div>
         </div>
@@ -218,12 +214,10 @@
 {% macro dateTime(name, title, value, helpText, groupClass, validation, accessKey) %}
     <div class="form-group {{ groupClass }}">
         <label class="control-label" title="{{ helpText }}" for="{{ linkedName }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <input type="hidden" name="{{ name }}" id="{{ name }}" value="{{ value }}" />
         <div>
             <div class="input-group">
-                {% set linkedName %}{{ name }}Link{% endset %}
-                <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-                <input class="form-control dateTimePicker dateControl" name="{{ linkedName }}" type="text" id="{{ linkedName }}" {{ validation }} data-link-field="{{ name }}" data-link-format="YYYY-MM-DD HH:mm:ss"/>
+                <span class="input-group-addon date-open-button" role="button"><i class="fa fa-calendar"></i></span>
+                <input class="form-control dateTimePicker dateControl" type="text" {{ validation }} name="{{ name }}" id="{{ name }}" value="{{ value }}" />
                 <span class="input-group-addon date-clear-button hidden" role="button"><i class="fa fa-times"></i></span>
             </div>
         </div>
@@ -233,12 +227,10 @@
 {% macro time(name, title, value, helpText, groupClass, validation, accessKey) %}
     <div class="form-group {{ groupClass }}">
         <label class="control-label" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <input type="hidden" name="{{ name }}" id="{{ name }}" value="{{ value }}" />
         <div>
             <div class="input-group">
-                {% set linkedName %}{{ name }}Link{% endset %}
-                <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
-                <input class="form-control timePicker dateControl" name="{{ linkedName }}" type="text" id="{{ linkedName }}" {{ validation }} data-link-field="{{ name }}" data-link-format="HH:mm" />
+                <span class="input-group-addon date-open-button" role="button"><i class="fa fa-calendar"></i></span>
+                <input class="form-control timePicker dateControl" type="text" {{ validation }} name="{{ name }}" id="{{ name }}" value="{{ value }}" />
                 <span class="input-group-addon date-clear-button hidden" role="button"><i class="fa fa-times"></i></span>
             </div>
         </div>
