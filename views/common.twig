@@ -75,6 +75,10 @@
                     url: "{{ url_for("layout.discard", {id: ':id'}) }}",
                     type: 'PUT'
                 },
+                unlock: {
+                    url: "{{ url_for("layout.lock.release", {id: ':id'}) }}",
+                    type: 'PUT'
+                },
                 list: {
                     url: "{{ url_for("layout.view") }}"
                 },

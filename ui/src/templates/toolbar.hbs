@@ -1,7 +1,7 @@
 <nav class="navbar navbar-fixed-bottom">
     <div class="container-toolbar container-fluid">
 
-        <div class="navbar-header hide-on-read-only">
+        <div class="navbar-header hide-on-read-only hide-on-lock">
             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#toolbar-navbar-collapse"
                 aria-expanded="false">
                 <span class="sr-only">Toggle navigation</span>
@@ -13,7 +13,7 @@
 
         <div class="collapse navbar-collapse" id="toolbar-navbar-collapse">
             {{!-- Menu buttons --}}
-            <ul class="nav navbar-nav navbar-buttons toolbar-menu-left hide-on-read-only">
+            <ul class="nav navbar-nav navbar-buttons toolbar-menu-left hide-on-read-only hide-on-lock">
                 {{#each menuItems}}
                     <li>
                         <a id="btn-menu-{{@index}}" class="btn-menu-option {{state}}" data-toggle="tooltip" title="{{itemTitle}}"
@@ -24,7 +24,7 @@
                 {{/each}}
             </ul>
 
-            <ul class="nav navbar-nav toolbar-menu-content hide-on-read-only">
+            <ul class="nav navbar-nav toolbar-menu-content hide-on-read-only hide-on-lock">
                 {{!-- Menu items/tabs --}}
                 {{#each menuItems}}
                     <div id="content-{{@index}}" class="toolbar-pane toolbar-{{name}}-pane {{state}} {{#if search}}library-content{{/if}}">
@@ -80,7 +80,7 @@
             </ul>
 
             {{!-- Right buttons --}}
-            <ul class="nav navbar-nav navbar-right toolbar-menu-right hide-on-read-only">
+            <ul class="nav navbar-nav navbar-right toolbar-menu-right hide-on-read-only hide-on-lock">
                 <li>
                     <a id="undoContainer" data-toggle="tooltip" data-placement="top" title="{{trans.undoActiveTitle}}"
                         class="navbar-peek-button tooltip-always-on navbar-undo {{#if undoActive}}active{{/if}}">

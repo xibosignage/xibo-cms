@@ -1319,3 +1319,35 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 #layout-editor .select2-container {
     width: auto !important;
 }
+
+/* Locked mode */
+#layout-editor #lockedOverlay {
+    z-index: 1;
+    display: block;
+    position: absolute;
+}
+
+#layout-editor #lockedLayoutMessage {
+    margin: 5px 5%;
+    padding: 10px;
+    width: 90%;
+    line-height: 18px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: $designer-overlay-z-index;
+    position: fixed;
+    bottom: 0;
+}
+
+#page-wrapper #layout-editor #lockedLayoutMessage {
+    width: calc(90% - 180px);
+}
+
+#layout-editor.locked-for-user .hide-on-lock {
+    display: none;
+}
+
+#layout-editor:not(.locked) .show-on-lock, #layout-editor.locked.locked-for-user .show-on-lock {
+    display: none;
+}

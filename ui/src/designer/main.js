@@ -211,6 +211,13 @@ $(document).ready(function() {
                                 return (lD.layout.editable == true);
                             },
                             inactiveCheckClass: 'hidden',
+                        },
+                        {
+                            id: 'unlockLayout',
+                            title: layoutDesignerTrans.unlockTitle,
+                            logo: 'fa-unlock',
+                            class: 'btn-info show-on-lock',
+                            action: lD.showUnlockScreen
                         }
                     ],
                     // Custom actions
@@ -1587,7 +1594,6 @@ lD.getElementByTypeAndId = function(type, id, auxId) {
  * Call layout status
  */
 lD.checkLayoutStatus = function() {
-    
     const linkToAPI = urlsForApi.layout.status;
     let requestPath = linkToAPI.url;
 
@@ -1598,7 +1604,6 @@ lD.checkLayoutStatus = function() {
         url: requestPath,
         type: linkToAPI.type
     }).done(function(res) {
-
         if(!res.success) {
             // Login Form needed?
             if(res.login) {
@@ -1615,6 +1620,20 @@ lD.checkLayoutStatus = function() {
         } else {
             // Update layout status
             lD.layout.updateStatus(res.extra.status, res.html, res.extra.statusMessage);
+
+            if((Array.isArray(res.extra.isLocked) && res.extra.isLocked.length == 0)) {
+                // isLocked is not defined
+                lD.toggleLockedMode(false);
+
+                // Remove locked class to main container
+                lD.editorContainer.removeClass('locked');
+            } else {
+                // Add locked class to main container
+                lD.editorContainer.addClass('locked');
+
+                // Toggle locked mode according to the user flag
+                lD.toggleLockedMode(res.extra.isLocked.lockedUser, moment(res.extra.isLocked.expires, systemDateFormat).format(jsDateFormat));
+            }
         }
     }).fail(function(jqXHR, textStatus, errorThrown) {
         // Output error to console
@@ -1764,7 +1783,6 @@ lD.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
     const linkToAPI = urlsForApi.user.getPref;
 
     // Request elements based on filters
-    let self = this;
     $.ajax({
         url: linkToAPI.url + '?preference=' + prefToLoad,
         type: linkToAPI.type
@@ -1784,9 +1802,9 @@ lD.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
             } else {
                 // Just an error we dont know about
                 if(res.message == undefined) {
-                    console.error(res);
+                    console.warn(res);
                 } else {
-                    console.error(res.message);
+                    console.warn(res.message);
                 }
             }
         }
@@ -1803,4 +1821,115 @@ lD.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
 lD.resetTour = function() {
     layoutDesignerTour.restart();
     toastr.info(editorsTrans.resetTourNotification);
+};
+
+/**
+ * Locked mode
+ */
+lD.toggleLockedMode = function(enable = true, expiryDate = '') {
+    if(enable && !lD.readOnlyMode) {
+
+        // Enable overlay
+        let $customOverlay = lD.editorContainer.find('#lockedOverlay');
+        let $lockedMessage = $customOverlay.find('#lockedLayoutMessage');
+
+        const lockedMainMessage = layoutDesignerTrans.lockedModeMessage.replace('[expiryDate]', expiryDate);
+
+        if($customOverlay.length == 0) {
+            $customOverlay = $('.custom-overlay').clone();
+            $customOverlay.attr('id', 'lockedOverlay').addClass('locked').show();
+            $customOverlay.appendTo(lD.editorContainer);
+
+            // Create the read only alert message
+            $lockedMessage = $('<div id="lockedLayoutMessage" class="alert alert-warning text-center" role="alert"></div>');
+
+            // Prepend the element to the custom overlay
+            $customOverlay.after($lockedMessage);
+        }
+        
+        // Update locked overlay message content
+        $lockedMessage.html('<strong>' + layoutDesignerTrans.lockedModeTitle + '</strong>&nbsp;' + lockedMainMessage);
+
+        // Add locked class to main container
+        lD.editorContainer.addClass('locked-for-user');
+    } else {
+        // Remove overlay 
+        lD.editorContainer.find('#lockedOverlay').remove();
+
+        // Remove message
+        lD.editorContainer.find('#lockedLayoutMessage').remove();
+
+        // Remove locked class from main container
+        lD.editorContainer.removeClass('locked-for-user');
+    }
+};
+
+/**
+ * Layout unlock screen
+ */
+lD.showUnlockScreen = function() {
+
+    bootbox.dialog({
+        title: layoutDesignerTrans.unlockTitle,
+        message: layoutDesignerTrans.unlockMessage,
+        buttons: {
+            unlock: {
+                label: layoutDesignerTrans.unlockTitle,
+                className: "btn-info",
+                callback: function(res) {
+
+                    $(res.currentTarget).append('&nbsp;<i class="fa fa-cog fa-spin"></i>');
+
+                    lD.unlockLayout();
+
+                    // Prevent the modal to close ( close only when checkout layout resolves )
+                    return false;
+                }
+            }
+        }
+    }).attr('data-test', 'unlockModal');
+};
+
+
+/**
+ * Unlock layout
+ */
+lD.unlockLayout = function() {
+
+    const linkToAPI = urlsForApi.layout.unlock;
+    let requestPath = linkToAPI.url;
+
+    lD.common.showLoadingScreen();
+
+    // replace id if necessary/exists
+    requestPath = requestPath.replace(':id', lD.layout.parentLayoutId);
+
+    $.ajax({
+        url: requestPath,
+        type: linkToAPI.type
+    }).done(function(res) {
+        if(res.success) {
+            bootbox.hideAll();
+
+            toastr.success(res.message);
+
+            // Redirect to the layout grid
+            window.location.href = urlsForApi.layout.list.url;
+        } else {
+            // Login Form needed?
+            if(res.login) {
+                window.location.href = window.location.href;
+                location.reload(false);
+            } else {
+                toastr.error(res.message);
+            }
+
+            lD.common.hideLoadingScreen();
+        }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        lD.common.hideLoadingScreen();
+
+        // Output error to console
+        console.error(jqXHR, textStatus, errorThrown);
+    });
 };
