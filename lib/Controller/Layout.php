@@ -2769,7 +2769,7 @@ class Layout extends Base
 
         /** @var Item $lock */
         $lock = $this->container->get('pool')->getItem('locks/layout/' . $id);
-        $lock->set(false);
+        $lock->set([]);
         $lock->save();
 
         return $this->render($request, $response);

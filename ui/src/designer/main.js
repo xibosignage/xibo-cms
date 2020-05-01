@@ -1887,7 +1887,10 @@ lD.showUnlockScreen = function() {
                 }
             }
         }
-    }).attr('data-test', 'unlockModal');
+    }).attr({
+        'data-test': 'unlockLayoutModal',
+        'id': 'unlockLayoutModal'
+    });
 };
 
 
@@ -1902,7 +1905,7 @@ lD.unlockLayout = function() {
     lD.common.showLoadingScreen();
 
     // replace id if necessary/exists
-    requestPath = requestPath.replace(':id', lD.layout.parentLayoutId);
+    requestPath = requestPath.replace(':id', lD.layout.layoutId);
 
     $.ajax({
         url: requestPath,
@@ -1910,8 +1913,6 @@ lD.unlockLayout = function() {
     }).done(function(res) {
         if(res.success) {
             bootbox.hideAll();
-
-            toastr.success(res.message);
 
             // Redirect to the layout grid
             window.location.href = urlsForApi.layout.list.url;

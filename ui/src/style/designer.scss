@@ -1327,6 +1327,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     position: absolute;
 }
 
+/* Locked mode message */
 #layout-editor #lockedLayoutMessage {
     margin: 5px 5%;
     padding: 10px;
@@ -1344,10 +1345,23 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     width: calc(90% - 180px);
 }
 
-#layout-editor.locked-for-user .hide-on-lock {
-    display: none;
+/* Hide or show content based on the lock */
+#layout-editor.locked-for-user {
+    .hide-on-lock {
+        display: none;
+    }
+
+    .designer-region .preview-paging {
+        z-index: 1;
+    }
 }
 
 #layout-editor:not(.locked) .show-on-lock, #layout-editor.locked.locked-for-user .show-on-lock {
     display: none;
+}
+
+/* Resize unlock layout modal */
+#unlockLayoutModal .modal-content {
+    width: 60%;
+    margin: 0 auto;
 }
