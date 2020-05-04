@@ -141,7 +141,7 @@ class LayoutLock implements Middleware
             $locked = $this->lock->get();
             $this->app->getContainer()->get('logger')->debug('$locked is ' . var_export($locked, true) . ', key = ' . $key);
 
-            if ($this->lock->isMiss() || $locked === false) {
+            if ($this->lock->isMiss() || $locked === []) {
                 $this->app->getContainer()->get('logger')->debug('Lock miss or false. Locking for ' . $this->ttl . ' seconds. $locked is ' . var_export($locked, true) . ', key = ' . $key);
 
                 // so lock now

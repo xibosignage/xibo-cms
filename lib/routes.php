@@ -121,15 +121,15 @@ $app->group('/layout', function (RouteCollectorProxy $group) {
     $group->put('/discard/{id}', ['\Xibo\Controller\Layout','discard'])->setName('layout.discard');
     $group->put('/retire/{id}', ['\Xibo\Controller\Layout','retire'])->setName('layout.retire');
     $group->put('/unretire/{id}', ['\Xibo\Controller\Layout','unretire'])->setName('layout.unretire');
-    $group->get('/status/{id}', ['\Xibo\Controller\Layout','status'])->setName('layout.status');
 })->addMiddleware(new \Xibo\Middleware\LayoutLock($app));
+$app->get('/layout/status/{id}', ['\Xibo\Controller\Layout','status'])->setName('layout.status');
 
 $app->put('/layout/checkout/{id}', ['\Xibo\Controller\Layout','checkout'])->setName('layout.checkout');
 $app->get('/layout', ['\Xibo\Controller\Layout','grid'])->setName('layout.search');
 $app->post('/layout', ['\Xibo\Controller\Layout','add'])->setName('layout.add');
 $app->post('/layout/copy/{id}', ['\Xibo\Controller\Layout','copy'])->setName('layout.copy');
 $app->put('/layout/setenablestat/{id}', ['\Xibo\Controller\Layout','setEnableStat'])->setName('layout.setenablestat');
-$app->get('/layout/lock/release/{id}', ['\Xibo\Controller\Layout', 'releaseLock'])->setName('layout.lock.release');
+$app->put('/layout/lock/release/{id}', ['\Xibo\Controller\Layout', 'releaseLock'])->setName('layout.lock.release');
 // Layout Import
 //$app->map(['HEAD'],'/layout/import', ['\Xibo\Controller\Library','add');
 $app->post('/layout/import', ['\Xibo\Controller\Layout','import'])->setName('layout.import');

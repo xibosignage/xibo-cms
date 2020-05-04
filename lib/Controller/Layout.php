@@ -2084,6 +2084,9 @@ class Layout extends Base
         /** @var $locked Item */
         $locked = $this->pool->getItem('locks/layout/' . $layout->layoutId);
         $layout->isLocked = $locked->isMiss() ? [] : $locked->get();
+        if(!empty($layout->isLocked)) {
+            $layout->isLocked->lockedUser = ($layout->isLocked->userId != $this->getUser()->userId);
+        }
 
         switch ($layout->status) {
 
@@ -2766,7 +2769,7 @@ class Layout extends Base
 
         /** @var Item $lock */
         $lock = $this->container->get('pool')->getItem('locks/layout/' . $id);
-        $lock->set(false);
+        $lock->set([]);
         $lock->save();
 
         return $this->render($request, $response);
