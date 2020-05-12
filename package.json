@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/xibosignage/xibo-cms#readme",
   "devDependencies": {
-    "cypress": "^4.4.1"
+    "cypress": "^4.5.0"
   },
   "dependencies": {
     "@babel/core": "^7.8.7",

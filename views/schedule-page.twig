@@ -36,10 +36,10 @@
 
             <div class="btn-group pull-right xibo-calendar-controls">
                 <button class="inputgroup date" id="dateInput">
-                    <span class="input-group-addon" data-toggle>
+                    <span class="input-group-addon date-open-button" role="button">
                         <i class="glyphicon glyphicon-calendar"></i>
                     </span>
-                    <input type="hidden" class="form-control" id="dateInputLink" data-input data-link-format="YYYY-MM-DD HH:mm:ss" />
+                    <input type="text" class="form-control" id="dateInputLink" data-input />
                 </button>
             </div>
             <div class="btn-group pull-right xibo-calendar-controls">
@@ -596,12 +596,12 @@
                                     %>
                                     <div id="tab_<%= displayGroup['id'] %>" class="tab-pane fade in <%= isActive %> container-fluid">
                                         <% if(typeof resultItem.events != 'undefined') { %>
-                                            <div class="col-lg-9">
+                                            <div class="col-xs-12">
                                                 <%= cal._layouts(resultItem.events, resultItem.layouts, 1) %>
                                                 <%= cal._layouts(resultItem.events, resultItem.layouts, 3) %>
                                                 <%= cal._layouts(resultItem.events, resultItem.layouts, 4) %>
                                             </div>
-                                            <div class="col-lg-3">
+                                            <div class="col-xs-12">
                                                 <%= cal._displaygroups(resultItem.events, resultItem.displayGroups) %>
                                                 <%= cal._campaigns(resultItem.events, resultItem.campaigns) %>
                                             </div> 

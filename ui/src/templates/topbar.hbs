@@ -46,7 +46,7 @@
 
             {{!-- Buttons --}}
             {{#if customDropdownOptions}}
-                <li id="actionsSubmenu" class="dropdown navbar-submenu">
+                <li id="actionsSubmenu" class="dropdown navbar-submenu hide-on-lock">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
                         aria-expanded="false">{{trans.actions}}<span class="caret"></span></a>
 
@@ -67,7 +67,7 @@
 
             {{!-- Options menu --}}
             {{#if showOptions}}
-                <li class="dropdown navbar-submenu navbar-submenu-options" data-toggle="tooltip" data-placement="top"
+                <li class="dropdown navbar-submenu navbar-submenu-options hide-on-lock" data-toggle="tooltip" data-placement="top"
                     title="{{trans.options}}">
                     <a id="optionsContainer" href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
                         aria-haspopup="true" aria-expanded="false">

@@ -536,13 +536,15 @@ class UserGroup extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
+     * @param int|null $userId
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws AccessDeniedException
+     * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function aclForm(Request $request, Response $response, $id)
+    public function aclForm(Request $request, Response $response, $id, $userId = null)
     {
         // Check permissions to this function
         if (!$this->getUser()->isSuperAdmin()) {
@@ -551,6 +553,7 @@ class UserGroup extends Base
 
         // Use the factory to get all the entities
         $entities = $this->pageFactory->query();
+        $groupPermissions = [];
 
         // Load the Group we are working on
         // Get the object
@@ -563,6 +566,11 @@ class UserGroup extends Base
         // Get all permissions for this user and this object
         $permissions = $this->permissionFactory->getByGroupId('Page', $id);
 
+        // Get all Page permissions for groups our User is assigned to
+        if ($userId !== null) {
+            $groupPermissions = $this->permissionFactory->getByUserId('Xibo\Entity\Page', $userId);
+        }
+
         $checkboxes = [];
 
         foreach ($entities as $entity) {
@@ -570,6 +578,7 @@ class UserGroup extends Base
             // Check to see if this entity is set or not
             $entityId = $entity->getId();
             $viewChecked = 0;
+            $groupViewChecked = 0;
 
             foreach ($permissions as $permission) {
                 /* @var Permission $permission */
@@ -579,12 +588,21 @@ class UserGroup extends Base
                 }
             }
 
+            foreach ($groupPermissions as $groupPermission) {
+                /* @var Permission $permission */
+                if ($groupPermission->objectId == $entityId && $groupPermission->view == 1) {
+                    $groupViewChecked = 1;
+                    break;
+                }
+            }
+
             // Store this checkbox
             $checkbox = [
                 'id' => $entityId,
                 'name' => $entity->title,
                 'value_view' => $entityId . '_view',
-                'value_view_checked' => (($viewChecked == 1) ? 'checked' : '')
+                'value_view_checked' => (($viewChecked == 1) ? 'checked' : ''),
+                'value_view_group_checked' => (($groupViewChecked == 1) ? 'checked' : '')
             ];
 
             $checkboxes[] = $checkbox;
@@ -595,6 +613,7 @@ class UserGroup extends Base
             'groupId' => $id,
             'group' => $group->group,
             'permissions' => $checkboxes,
+            'isUserSpecific' => $group->isUserSpecific,
             'help' => $this->getHelp()->link('User', 'Acl')
         ];
 

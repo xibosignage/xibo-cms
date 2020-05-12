@@ -499,7 +499,7 @@ class Module extends Base
      *  @SWG\Parameter(
      *      name="type",
      *      in="path",
-     *      description="The type of the Widget e.g. Image",
+     *      description="The type of the Widget e.g. text. Media based Widgets like Image are added via POST /playlist/library/assign/{playlistId} call.",
      *      type="string",
      *      required=true
      *   ),

@@ -126,6 +126,8 @@ class ReportScheduleFactory extends BaseFactory
                 reportschedule.previousRunDt, 
                 reportschedule.createdDt, 
                 reportschedule.userId,
+                reportschedule.fromDt,
+                reportschedule.toDt,
                 reportschedule.isActive,
                 reportschedule.message,
                `user`.UserName AS owner 
@@ -192,7 +194,7 @@ class ReportScheduleFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'reportScheduleId', 'lastRunDt', 'previousRunDt', 'lastSavedReportId', 'isActive'
+                    'reportScheduleId', 'lastRunDt', 'previousRunDt', 'lastSavedReportId', 'isActive', 'fromDt', 'toDt'
                 ]
             ]);
         }

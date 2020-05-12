@@ -248,9 +248,9 @@ class UserGroupFactory extends BaseFactory
             $params['userId'] = $parsedFilter->getInt('userId');
         }
 
-        if ($parsedFilter->getInt('isUserSpecific', ['default' => -1]) != -1) {
+        if ($parsedFilter->getInt('isUserSpecific', ['default' => 0]) != -1) {
             $body .= ' AND isUserSpecific = :isUserSpecific ';
-            $params['isUserSpecific'] = $parsedFilter->getInt('isUserSpecific');
+            $params['isUserSpecific'] = $parsedFilter->getInt('isUserSpecific', ['default' => 0]);
         }
 
         if ($parsedFilter->getInt('isEveryone', ['default' => -1]) != -1) {

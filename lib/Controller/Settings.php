@@ -300,6 +300,10 @@ class Settings extends Base
             $this->getConfig()->changeSetting('DEFAULT_RESIZE_LIMIT', $sanitizedParams->getInt('DEFAULT_RESIZE_LIMIT'));
         }
 
+        if ($this->getConfig()->isSettingEditable('DATASET_HARD_ROW_LIMIT')) {
+            $this->getConfig()->changeSetting('DATASET_HARD_ROW_LIMIT', $sanitizedParams->getInt('DATASET_HARD_ROW_LIMIT'));
+        }
+
         if ($this->getConfig()->isSettingEditable('DEFAULT_LAYOUT')) {
             $this->getConfig()->changeSetting('DEFAULT_LAYOUT', $sanitizedParams->getInt('DEFAULT_LAYOUT'));
         }

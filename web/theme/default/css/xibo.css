@@ -993,7 +993,7 @@ ul li.active.tab-design:hover a {
 /* 
  * Date time picker 
  */
-input.datePicker[readonly], input.dateTimePicker[readonly], input.dateMonthPicker[readonly], input.timePicker[readonly] {
+input.datePicker[readonly], input.dateTimePicker[readonly], input.dateMonthPicker[readonly], input.timePicker[readonly], input.pwt-datepicker-input-element[readonly] {
     cursor: pointer;
     background-color: #fff;
 }

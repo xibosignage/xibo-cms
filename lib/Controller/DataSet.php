@@ -418,6 +418,34 @@ class DataSet extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="sourceId",
+     *      in="formData",
+     *      description="For remote DataSet, what type data is it? 1 - json, 2 - csv",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ignoreFirstRow",
+     *      in="formData",
+     *      description="For remote DataSet with sourceId 2 (CSV), should we ignore first row?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="rowLimit",
+     *      in="formData",
+     *      description="For remote DataSet, maximum number of rows this DataSet can hold, if left empty the CMS Setting for DataSet row limit will be used.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="limitPolicy",
+     *      in="formData",
+     *      description="For remote DataSet, what should happen when the DataSet row limit is reached? stop, fifo or truncate",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -466,6 +494,8 @@ class DataSet extends Base
             $dataSet->summarizeField = $sanitizedParams->getString('summarizeField');
             $dataSet->sourceId = $sanitizedParams->getInt('sourceId');
             $dataSet->ignoreFirstRow = $sanitizedParams->getCheckbox('ignoreFirstRow');
+            $dataSet->rowLimit = $sanitizedParams->getInt('rowLimit');
+            $dataSet->limitPolicy = $sanitizedParams->getString('limitPolicy') ?? 'stop';
         }
 
         // Also add one column
@@ -669,6 +699,34 @@ class DataSet extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="sourceId",
+     *      in="formData",
+     *      description="For remote DataSet, what type data is it? 1 - json, 2 - csv",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ignoreFirstRow",
+     *      in="formData",
+     *      description="For remote DataSet with sourceId 2 (CSV), should we ignore first row?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="rowLimit",
+     *      in="formData",
+     *      description="For remote DataSet, maximum number of rows this DataSet can hold, if left empty the CMS Setting for DataSet row limit will be used.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="limitPolicy",
+     *      in="formData",
+     *      description="For remote DataSet, what should happen when the DataSet row limit is reached? stop, fifo or truncate",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -706,6 +764,8 @@ class DataSet extends Base
             $dataSet->summarizeField = $sanitizedParams->getString('summarizeField');
             $dataSet->sourceId = $sanitizedParams->getInt('sourceId');
             $dataSet->ignoreFirstRow = $sanitizedParams->getCheckbox('ignoreFirstRow');
+            $dataSet->rowLimit = $sanitizedParams->getInt('rowLimit');
+            $dataSet->limitPolicy = $sanitizedParams->getString('limitPolicy') ?? 'stop';
         }
 
         $dataSet->save();

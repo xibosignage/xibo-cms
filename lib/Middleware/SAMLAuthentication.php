@@ -197,7 +197,7 @@ class SAMLAuthentication implements Middleware
                 } else {
                     // Check to ensure that our identity has been populated from attributes successfully
                     if (!isset($userData[$identityField]) || empty($userData[$identityField])) {
-                        throw new AccessDeniedException(__('%s not retrieved from the IdP and required since is the field to identify the user', $identityField));
+                        throw new AccessDeniedException(sprintf(__('%s not retrieved from the IdP and required since is the field to identify the user'), $identityField));
                     }
                 }
 

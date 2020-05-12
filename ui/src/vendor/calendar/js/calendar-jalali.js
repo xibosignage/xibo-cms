@@ -428,7 +428,7 @@ if(!String.prototype.formatNum) {
 		ms11: 'Dec',
 
 		jm0:  'Farvardin',
-		jm1:  'Ordibehest',
+        jm1:  'Ordibehesht',
 		jm2:  'Khordad',
 		jm3:  'Tir',
 		jm4:  'Mordad',
@@ -436,12 +436,12 @@ if(!String.prototype.formatNum) {
 		jm6:  'Mehr',
 		jm7:  'Aban',
 		jm8:  'Azar',
-		jm9:  'Day',
+        jm9:  'Dey',
 		jm10: 'Bahman',
 		jm11: 'Esfand',
 
 		jms0:  'Farvardin',
-		jms1:  'Ordibehest',
+        jms1:  'Ordibehesht',
 		jms2:  'Khordad',
 		jms3:  'Tir',
 		jms4:  'Mordad',
@@ -449,7 +449,7 @@ if(!String.prototype.formatNum) {
 		jms6:  'Mehr',
 		jms7:  'Aban',
 		jms8:  'Azar',
-		jms9:  'Day',
+        jms9:  'Dey',
 		jms10: 'Bahman',
 		jms11: 'Esfand',
 
@@ -459,7 +459,15 @@ if(!String.prototype.formatNum) {
 		d3: 'Wednesday',
 		d4: 'Thursday',
 		d5: 'Friday',
-		d6: 'Saturday'
+        d6: 'Saturday',
+        
+        jd0: 'Yekshanbeh',
+        jd1: 'Doshanbeh',
+        jd2: 'Seshhanbeh',
+        jd3: 'Chaharshanbeh',
+        jd4: 'Panjshanbeh',
+        jd5: 'Jomeh',
+        jd6: 'Shanbeh'
 	};
 
 	var browser_timezone = '';
@@ -654,9 +662,9 @@ if(!String.prototype.formatNum) {
 
 			// Getting list of days in a week in correct order. Works for month and week views
 			if(getExtentedOption(this, 'first_day') == 1) {
-				data.days_name = [this.locale.d1, this.locale.d2, this.locale.d3, this.locale.d4, this.locale.d5, this.locale.d6, this.locale.d0]
+				data.days_name = [this.locale.jd1, this.locale.jd2, this.locale.jd3, this.locale.jd4, this.locale.jd5, this.locale.jd6, this.locale.jd0]
 			} else {
-				data.days_name = [this.locale.d0, this.locale.d1, this.locale.d2, this.locale.d3, this.locale.d4, this.locale.d5, this.locale.d6]
+				data.days_name = [this.locale.jd0, this.locale.jd1, this.locale.jd2, this.locale.jd3, this.locale.jd4, this.locale.jd5, this.locale.jd6]
 			}
 
 			// Get all events between start and end
@@ -954,7 +962,7 @@ if(!String.prototype.formatNum) {
 					layoutName: layout.layout,
 					layoutStatus: layout.status,
 					eventFromDt: moment(event.fromDt, "X").tz ? moment(event.fromDt, "X").tz(timezone).format(jsDateFormat) : moment(event.fromDt, "X").format(jsDateFormat),
-					eventToDt: moment(event.toDt, "X").tz ? moment(event.toDt, "X").tz(timezone).format(jsDateFormat) : moment(event.toDt, "X").tz(timezone).format(jsDateFormat),
+					eventToDt: moment(event.toDt, "X").tz ? moment(event.toDt, "X").tz(timezone).format(jsDateFormat) : moment(event.toDt, "X").format(jsDateFormat),
 					eventDayPartId: event.dayPartId,
 					layoutDuration: layout.duration,
 					layoutDisplayOrder: event.displayOrder,
@@ -1221,8 +1229,6 @@ if(!String.prototype.formatNum) {
 
         var todayJal = moment(new Date(year, month, day));
 
-        console.log("" + year + month + day + " --- " + todayJal.toDate());
-
         var startJal, stopJal;
         switch(this.options.view) {
             case 'year':
@@ -1280,10 +1286,10 @@ if(!String.prototype.formatNum) {
                 return this.locale.title_week.format(p.getWeek() + 40, p.getJalaliFullYear());
                 break;
             case 'day':
-                return this.locale.title_day.format(this.locale['d' + p.getDay()], p.getJalaliDate(), this.locale['jm' + (p.getJalaliMonth() - 1)], p.getJalaliFullYear());
+                return this.locale.title_day.format(this.locale['jd' + p.getDay()], p.getJalaliDate(), this.locale['jm' + (p.getJalaliMonth() - 1)], p.getJalaliFullYear());
                 break;
             case 'agenda':
-                return this.locale.title_day.format(this.locale['d' + p.getDay()], p.getJalaliDate(), this.locale['jm' + (p.getJalaliMonth() - 1)], p.getJalaliFullYear());
+                return this.locale.title_day.format(this.locale['jd' + p.getDay()], p.getJalaliDate(), this.locale['jm' + (p.getJalaliMonth() - 1)], p.getJalaliFullYear());
                 break;
         }
         return;

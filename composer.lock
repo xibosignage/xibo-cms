@@ -5002,12 +5002,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/xibosignage/support.git",
-                "reference": "04f8c6fae5adc2259674d2e56ffbd479611a406b"
+                "reference": "3112507c60677bcf0fc117b19576a34c240d6ea4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/xibosignage/support/zipball/04f8c6fae5adc2259674d2e56ffbd479611a406b",
-                "reference": "04f8c6fae5adc2259674d2e56ffbd479611a406b",
+                "url": "https://api.github.com/repos/xibosignage/support/zipball/3112507c60677bcf0fc117b19576a34c240d6ea4",
+                "reference": "3112507c60677bcf0fc117b19576a34c240d6ea4",
                 "shasum": ""
             },
             "require": {
@@ -5041,7 +5041,7 @@
                 "source": "https://github.com/xibosignage/support/tree/master",
                 "issues": "https://github.com/xibosignage/support/issues"
             },
-            "time": "2020-03-31T08:22:32+00:00"
+            "time": "2020-04-24T12:03:31+00:00"
         },
         {
             "name": "xibosignage/xibo-xmr",
@@ -6578,5 +6578,6 @@
         "ext-zmq": "1",
         "ext-mongodb": "1.5.0",
         "ext-gd": "1"
-    }
+    },
+    "plugin-api-version": "1.1.0"
 }

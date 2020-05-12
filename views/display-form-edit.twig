@@ -196,7 +196,7 @@
                         {% else %}
                             {% set auditing = "" %}
                         {% endif %}
-                        {{ forms.datetime("auditingUntil", title, auditing, helpText) }}
+                        {{ forms.dateTime("auditingUntil", title, auditing, helpText) }}
 
                         {% set title %}{% trans "Bandwidth limit" %}{% endset %}
                         {% set helpText %}{% trans "The bandwidth limit that should be applied. Enter 0 for no limit." %}{% endset %}

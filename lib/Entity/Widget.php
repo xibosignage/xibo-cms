@@ -886,6 +886,9 @@ class Widget implements \JsonSerializable
             $action->delete();
         }
 
+        // Delete any actions that were targeting this Widget, to avoid orphaned records in action table.
+        $this->getStore()->update('DELETE FROM `action` WHERE widgetId = :widgetId', ['widgetId' => $this->widgetId]);
+
         // Unlink Media
         $this->mediaIds = [];
         $this->unlinkMedia();
