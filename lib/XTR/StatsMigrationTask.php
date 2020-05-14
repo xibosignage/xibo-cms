@@ -189,6 +189,7 @@ class StatsMigrationTask implements TaskInterface
 
         // Get low watermark from file
         $watermark = $this->getWatermarkFromFile($fileName, 'stat_archive');
+        $numberOfRecords = (int)$options['numberOfRecords'];
 
         $numberOfLoops = 0;
 
@@ -201,7 +202,7 @@ class StatsMigrationTask implements TaskInterface
                 ORDER BY statId DESC LIMIT :limit
             ');
             $stats->bindParam(':watermark', $watermark, \PDO::PARAM_INT);
-            $stats->bindParam(':limit', $options['numberOfRecords'], \PDO::PARAM_INT);
+            $stats->bindParam(':limit', $numberOfRecords, \PDO::PARAM_INT);
 
             // Run the select
             $stats->execute();
@@ -329,6 +330,7 @@ class StatsMigrationTask implements TaskInterface
 
         // Get low watermark from file
         $watermark = $this->getWatermarkFromFile($fileName, 'stat');
+        $numberOfRecords = (int)$options['numberOfRecords'];
 
         $numberOfLoops = 0;
 
@@ -337,7 +339,7 @@ class StatsMigrationTask implements TaskInterface
             $stats = $this->store->getConnection()
                 ->prepare('SELECT * FROM stat WHERE statId < :watermark ORDER BY statId DESC LIMIT :limit');
             $stats->bindParam(':watermark', $watermark, \PDO::PARAM_INT);
-            $stats->bindParam(':limit', $options['numberOfRecords'], \PDO::PARAM_INT);
+            $stats->bindParam(':limit', $numberOfRecords, \PDO::PARAM_INT);
 
             // Run the select
             $stats->execute();
