@@ -157,9 +157,6 @@ Viewer.prototype.renderLayout = function(layout, container) {
             this.renderRegion(region, this.DOMObject.find('#' + region.id), true, 1);
         }
     }
-
-    // Initialize tooltips
-    app.common.reloadTooltips(container);
 };
 
 /**
@@ -285,10 +282,6 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
                 this.showInlineEditor();
             }
         }
-
-        // Initialize tooltips
-        app.common.reloadTooltips(container);
-
     }.bind(this)).fail(function(res) {
         // Clear request var after response
         self.renderRequest = undefined;
@@ -391,9 +384,6 @@ Viewer.prototype.renderNavbar = function(element, data) {
     this.navbarContainer.find('#back-btn').click(function() {
         lD.selectObject();
     }.bind(this));
-
-    // Initialize tooltips
-    app.common.reloadTooltips(this.navbarContainer);
 };
 
 /**

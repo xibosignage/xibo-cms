@@ -6,7 +6,7 @@
     data-valid-ext="{{ validExtensions }}"
     data-max-size="{{ maxSize }}" 
     data-max-size-message="{{ maxSizeMessage }}"
-    title="{{description}}"
+    data-title="{{description}}"
     
     {{#each oneClickAdd}}
         {{#eq this ../mainObjectType}}data-one-click-add="{{this}}"{{/eq}}
@@ -14,14 +14,14 @@
 
     drop-to="region">
     
-    <div class="btn-favourite" title="{{trans.addAsFavourite}}">
+    <div class="btn-favourite" data-toggle="tooltip" data-title="{{trans.addAsFavourite}}">
         <i class="{{#if favourited}}fas{{else}}far{{/if}} fa-star"></i>
     </div>
 
-    <div class="add-area action-area" title="{{trans.add}}" data-toggle="tooltip" data-placement="left">
+    <div class="add-area action-area" data-title="{{trans.add}}" data-toggle="tooltip" data-placement="left">
         <i class="fa fa-plus"></i>
     </div>
-    <div class="drag-area action-area" title="{{trans.grab}}" data-toggle="tooltip" data-placement="right">
+    <div class="drag-area action-area" data-title="{{trans.grab}}" data-toggle="tooltip" data-placement="right">
         <i class="fa fa-hand-rock-o"></i>
     </div>
 

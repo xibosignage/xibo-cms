@@ -25,18 +25,15 @@ module.exports = {
     },
 
     /**
-     * Refresh ( enable/disable) Tooltips
+     * Refresh (enable/disable) Tooltips
      */
     reloadTooltips: function(container, forcedOption = null) {
         // Use global var or option
         let enableTooltips = (forcedOption != null) ? forcedOption : this.displayTooltips;
 
-        if(enableTooltips) {
-            container.find('[data-toggle="tooltip"]').tooltip({delay: tooltipDelay});
-        } else {
-            container.find('[data-toggle="tooltip"]').tooltip({delay: tooltipDelay});
-            container.find('[data-toggle="tooltip"]:not(.tooltip-always-on)').tooltip('destroy');
-        }
+        container.tooltip('destroy').tooltip({
+            selector: (enableTooltips) ? '[data-toggle="tooltip"]' : '[data-toggle="tooltip"].tooltip-always-on'
+        });
     },
 
     /**

@@ -420,14 +420,14 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
         .widget-transition.transition-in {
             background: $timeline-transition-in-bg-color;
-            border-radius: 80% 0 0 0;
+             @include border-radius(80% 0 0 0);
             text-align: right;
             padding-right: 5px;
         }
 
         .widget-transition.transition-out {
             background: $timeline-transition-out-bg-color;
-            border-radius: 0 80% 0 0;
+            @include border-radius(0 80% 0 0);
             text-align: left;
             padding-left: 5px;
         }

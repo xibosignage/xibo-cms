@@ -1,4 +1,4 @@
-<div id="{{ id }}" data-type="widget" data-widget-id="{{ widgetId }}" data-widget-type="{{ subType }}" data-widget-region="{{ regionId }}" class="designer-widget {{#eq isValid 0}}invalid-widget{{/eq}} selectable {{selectedFlag}} {{#if isEditable}}editable{{/if}} {{#if isPermissionsModifiable}}permissionsModifiable{{/if}} {{#if isDeletable}}deletable{{/if}}" style="
+<div id="{{ id }}" data-type="widget" data-widget-id="{{ widgetId }}" data-widget-type="{{ subType }}" data-parent-type="region" data-widget-region="{{ regionId }}" class="designer-widget {{#eq isValid 0}}invalid-widget{{/eq}} selectable {{selectedFlag}} {{#if isEditable}}editable{{/if}} {{#if isPermissionsModifiable}}permissionsModifiable{{/if}} {{#if isDeletable}}deletable{{/if}}" style="
 width: {{ durationPercentage }}%;">
     
     {{#each transitions}}
@@ -13,7 +13,7 @@ width: {{ durationPercentage }}%;">
     
     <div class="widgetLabel timelineMediaItemColouringDefault timelineMediaItemColouring_{{ subType }} {{ widgetColouring }}">
         <div class="widgetSubType">
-            <i class="fa module-icon-{{subType}} tooltip-always-on" data-toggle="tooltip" data-container="body" title="{{moduleName}}"></i>
+            <i class="fa module-icon-{{subType}} tooltip-always-on" data-toggle="tooltip" data-container="body" data-title="{{moduleName}}"></i>
         </div>
         <div class="widgetDuration">
             {{ duration }}
@@ -21,7 +21,7 @@ width: {{ durationPercentage }}%;">
     </div>
 
     <div class="widgetName">
-        <span class="tooltip-always-on" data-toggle="tooltip" data-container="body" title="{{widgetName}}">{{widgetName}}</span>
+        <span class="tooltip-always-on" data-toggle="tooltip" data-container="body" data-title="{{widgetName}}">{{widgetName}}</span>
     </div>
 
     <div class="widgetProperties">
@@ -30,13 +30,13 @@ width: {{ durationPercentage }}%;">
         {{/if}}
 
         {{#if actions }}
-            <i class="fa fa-paper-plane editProperty" data-toggle="tooltip" title="Actions" >{{ actions.length}}</i>
+            <i class="fa fa-paper-plane editProperty" data-toggle="tooltip" data-title="Actions" >{{ actions.length}}</i>
         {{/if}}
 
         {{#gt expireStatus 0}}
             <i class="fa {{expireStatusIcon}} editProperty" 
             data-toggle="tooltip" data-container="body" data-html="true" 
-            title="{{expireStatusTitle}}"
+            data-title="{{expireStatusTitle}}"
             data-property="Expiry"></i>
         {{/gt}}
     </div>

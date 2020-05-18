@@ -78,7 +78,7 @@ $loading-overlay-z-index: 4000;
 .form-container .nav>li>a {
     color: $properties-panel-nav-fg-color;
     background-color: lighten($properties-panel-nav-fg-color, 30%);
-    border-radius: 0;
+    @include border-radius(4px);
     padding: 5px 7px;
 }
 

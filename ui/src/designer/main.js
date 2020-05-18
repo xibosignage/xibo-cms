@@ -440,9 +440,6 @@ lD.refreshDesigner = function() {
     this.renderContainer(this.propertiesPanel, this.selectedObject);
     
     this.renderContainer(this.viewer, this.selectedObject);
-
-    // Reload tooltips
-    this.common.reloadTooltips(this.editorContainer);
 };
 
 
@@ -1739,9 +1736,6 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     let positionTop = ((position.y + contextMenuHeight) > $(window).height()) ? (position.y - contextMenuHeight) : position.y;
 
     lD.editorContainer.find('.context-menu').offset({top: positionTop, left: positionLeft});
-
-    // Initialize tooltips
-    lD.common.reloadTooltips(lD.editorContainer.find('.context-menu'));
 
     // Click overlay to close menu
     lD.editorContainer.find('.context-menu-overlay').click((ev)=> {
