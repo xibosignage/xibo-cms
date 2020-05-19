@@ -187,9 +187,6 @@ Navigator.prototype.render = function() {
         }
     }.bind(this));
 
-    // Initialize tooltips
-    app.common.reloadTooltips(this.DOMObject);
-
     // Render navbar
     this.renderNavbar();
 };
@@ -314,10 +311,6 @@ Navigator.prototype.renderNavbar = function() {
             }).attr('data-test', 'deleteRegionModal');
         }
     });
-
-    // Initialize tooltips
-    app.common.reloadTooltips(this.navbarContainer);
-    
 };
 
 Navigator.prototype.saveRegionPropertiesPanel = function() {

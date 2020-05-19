@@ -13,7 +13,7 @@ width: {{ durationPercentage }}%;">
     
     <div class="widgetLabel timelineMediaItemColouringDefault timelineMediaItemColouring_{{ subType }} {{ widgetColouring }}">
         <div class="widgetSubType">
-            <i class="fa module-icon-{{subType}} tooltip-always-on" data-toggle="tooltip" data-container="body" title="{{moduleName}}"></i>
+            <i class="fa module-icon-{{subType}} tooltip-always-on" data-toggle="tooltip" data-container="body" data-title="{{moduleName}}"></i>
         </div>
         <div class="widgetDuration">
             {{ duration }}
@@ -21,7 +21,7 @@ width: {{ durationPercentage }}%;">
     </div>
 
     <div class="widgetName">
-        <span class="tooltip-always-on" data-toggle="tooltip" data-container="body" title="{{widgetName}}">{{widgetName}}</span>
+        <span class="tooltip-always-on" data-toggle="tooltip" data-container="body" data-title="{{widgetName}}">{{widgetName}}</span>
     </div>
 
     <div class="widgetProperties">
@@ -32,7 +32,7 @@ width: {{ durationPercentage }}%;">
         {{#gt expireStatus 0}}
             <i class="fa {{expireStatusIcon}} editProperty" 
             data-toggle="tooltip" data-container="body" data-html="true" 
-            title="{{expireStatusTitle}}"
+            data-title="{{expireStatusTitle}}"
             data-property="Expiry"></i>
         {{/gt}}
     </div>

@@ -433,9 +433,6 @@ lD.refreshDesigner = function() {
     this.renderContainer(this.propertiesPanel, this.selectedObject);
     
     this.renderContainer(this.viewer, this.selectedObject);
-
-    // Reload tooltips
-    this.common.reloadTooltips(this.editorContainer);
 };
 
 
@@ -1556,7 +1553,7 @@ lD.clearTemporaryData = function() {
     lD.editorContainer.find('.colorpicker-element').colorpicker('destroy');
 
     // Hide open tooltips
-    lD.editorContainer.find('[data-toggle="tooltip"]').tooltip('hide');
+    lD.editorContainer.find('.tooltip').remove();
 
     // Remove text callback editor structure variables
     formHelpers.destroyCKEditor();
@@ -1720,9 +1717,6 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     let positionTop = ((position.y + contextMenuHeight) > $(window).height()) ? (position.y - contextMenuHeight) : position.y;
 
     lD.editorContainer.find('.context-menu').offset({top: positionTop, left: positionLeft});
-
-    // Initialize tooltips
-    lD.common.reloadTooltips(lD.editorContainer.find('.context-menu'));
 
     // Click overlay to close menu
     lD.editorContainer.find('.context-menu-overlay').click((ev)=> {
