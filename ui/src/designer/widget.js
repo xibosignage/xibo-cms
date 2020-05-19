@@ -523,7 +523,7 @@ Widget.prototype.getNextWidget = function(reverse = false) {
     const app = this.designerObject;
     
     // Get region widgets
-    let region = app.getElementByTypeAndId('region', this.regionId);
+    let region = (this.drawerWidget) ? app.getElementByTypeAndId('drawer') : app.getElementByTypeAndId('region', this.regionId);
     let widgets = region.widgets;
 
     // Calculate new index

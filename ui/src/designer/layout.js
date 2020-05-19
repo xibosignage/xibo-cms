@@ -31,6 +31,8 @@ let Layout = function(id, data) {
     this.regions = {};
     this.duration = null;
 
+    this.drawer = {};
+
     this.width = data.width;
     this.height = data.height;
 
@@ -127,6 +129,11 @@ Layout.prototype.createDataStructure = function(data) {
         if(regionDuration > layoutDuration) {
             layoutDuration = regionDuration;
         }
+    }
+
+    // Create drawer object if exists
+    for(let drawer in data.drawers) {
+        this.createDrawer(data.drawers[drawer]);
     }
 
     // Set layout duration
@@ -370,6 +377,58 @@ Layout.prototype.scale = function(container) {
     }
 
     return layoutClone;
+};
+
+/**
+ * Create drawer region for actions targets
+ */
+Layout.prototype.createDrawer = function(drawerData) {
+    // Create drawer as a region
+    let newDrawer = new Region(
+        drawerData.regionId,
+        drawerData
+    );
+
+    // Save index
+    newDrawer.index = 1;
+
+    // Widgets
+    const widgets = newDrawer.playlists.widgets;
+
+    newDrawer.numWidgets = widgets.length;
+
+    // Create widgets for this region
+    for(let widget in widgets) {
+
+        const newWidget = new Widget(
+            widgets[widget].widgetId,
+            widgets[widget],
+            drawerData.regionId,
+            this
+        );
+
+        // Save index
+        newWidget.index = parseInt(widget) + 1;
+
+        newWidget.designerObject = lD;
+
+        newWidget.drawerWidget = true;
+
+        // calculate expire status
+        newWidget.calculateExpireStatus();
+
+        // update duration
+        newWidget.getDuration();
+
+        // Add newWidget to the Region widget object
+        newDrawer.widgets[newWidget.id] = newWidget;
+
+        // Mark the region as not empty
+        newDrawer.isEmpty = false;
+    }
+
+    // Push Region to the Layout region array
+    this.drawer = newDrawer;
 };
 
 module.exports = Layout;

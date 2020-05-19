@@ -55,7 +55,7 @@ require('datatables.net-bs/css/dataTables.bootstrap.css');
 require('datatables.net-buttons-dt/css/buttons.dataTables.min.css');
 
 // timepicker
-require('timepicker/jquery.timepicker.min.css');
+require('timepicker/jquery.timepicker.css');
 
 // bootstrap-tour
 require('bootstrap-tourist/bootstrap-tourist.css');

@@ -67,6 +67,15 @@ $navigator-navbar-fg-colour: $xibo-color-white;
 $navigator-navbar-btn-bg-colour: $xibo-color-dark-blue;
 $navigator-navbar-btn-fg-colour: $xibo-color-white;
 
+$drawer-bg-color: #ccc;
+$drawer-fg-color: #797979;
+$drawer-toggle-bg-color: #ababab;
+$drawer-toggle-fg-color: #333333;
+$drawer-drop-bg-color: #ababab;
+$drawer-drop-fg-color: #333333;
+$drawer-hover-color:#337ab7;
+$drawer-height: 95px;
+
 $designer-overlay-z-index: 1050;
 
 $unsuccess-message-bg-color: darken($xibo-color-red, 30%);
@@ -420,14 +429,14 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
         .widget-transition.transition-in {
             background: $timeline-transition-in-bg-color;
-            border-radius: 80% 0 0 0;
+             @include border-radius(80% 0 0 0);
             text-align: right;
             padding-right: 5px;
         }
 
         .widget-transition.transition-out {
             background: $timeline-transition-out-bg-color;
-            border-radius: 0 80% 0 0;
+            @include border-radius(0 80% 0 0);
             text-align: left;
             padding-left: 5px;
         }
@@ -458,8 +467,8 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
             opacity: 0;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 0;
+            height: 0;
             @include box-shadow(inset 0 0 10px 10px darken($designer-colour-widget, 40%));
             background-color: $designer-colour-widget;
             transition: opacity 0.3s;
@@ -473,6 +482,8 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         /* Transition to showing the bigger shadow on hover */
         &.highlighted::after {
             opacity: 0.6;
+            width: 100%;
+            height: 100%;
         }
     }
 
@@ -522,7 +533,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     @include border-radius(4px);
     border: 2px solid $designer-module-border-color;
     background: $xibo-color-black;
-    min-height: calc(45vh + 42px); /* Fix for the reload of a viewer element */
+    min-height: calc(45vh + 46px); /* Fix for the reload of a viewer element */
 }
 
 #layout-editor #layout-viewer {
@@ -867,6 +878,17 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         color: $xibo-color-white;
         padding: 30px;
         background-color: $unsuccess-message-bg-color;
+    }
+
+    .loading-container {
+        height: calc(45vh + 46px);
+        @include border-radius(4px);
+        background: $designer-module-bg-color;
+        border: 2px solid $xibo-color-dark-blue;
+
+        .loading-icon {
+            color: $xibo-color-dark-blue;
+        }
     }
 
     #properties-panel-container {
@@ -1232,10 +1254,6 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     @include background-stripes(45deg, darken($widget-hover-color, 10%), $widget-hover-color, 10px, 4px);
 }
 
-#layout-editor  #layout-timeline .designer-widget.ui-droppable-active * {
-    visibility: hidden;
-}
-
 #layout-editor  #layout-timeline .designer-region.to-sort .designer-widget {
     background: $timeline-widget-to-sort-bg-color !important;
 }
@@ -1364,4 +1382,208 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 #unlockLayoutModal .modal-content {
     width: 60%;
     margin: 0 auto;
+}
+
+/* Action drawer */
+#layout-editor #actions-drawer {
+    overflow: hidden;
+
+    #actions-drawer-content {
+        background-color: $drawer-bg-color;
+        transition: margin-top 1s ease 0s;
+        width: 98%;
+        height: $drawer-height;
+        border-width: 0 2px;
+        border-style: solid;
+        border-color: $drawer-toggle-bg-color;
+        margin-left: 1%;
+        z-index: 1;
+        margin-top: -$drawer-height;
+        padding: 2px;
+        
+        &.ui-droppable-active {
+            @include z-index-set($designer-z-index-select);
+            @include background-stripes(45deg, $drawer-hover-color, lighten($drawer-hover-color, 20%), 10px, 4px);
+
+            &.ui-droppable-hover,
+            &:hover {
+                @include background-stripes(45deg, darken($drawer-hover-color, 20%), lighten($drawer-hover-color, 10%), 10px, 4px);
+            }
+
+            * {
+                visibility: hidden;
+            }
+        }
+
+        #actions-drawer-search-bar {
+            padding: 0 4px;
+            color: $drawer-toggle-fg-color;
+
+            input {
+                background: center;
+                border: none;
+                color: $drawer-toggle-fg-color;
+                margin: 4px;
+            }
+        }
+
+        &:hover #actions-drawer-widgets {
+            scrollbar-width: thin; /* For firefox */
+
+            &::-webkit-scrollbar {
+                display: block;
+            }
+        }
+
+        #actions-drawer-widgets {
+            display: -webkit-box;
+            height: 55px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none; /* For firefox */
+
+            /* SCROLLBAR */
+            /* width */
+            &::-webkit-scrollbar {
+                display: none;
+                height: 6px;
+            }
+
+            /* Track */
+            &::-webkit-scrollbar-track {
+                background: lighten($xibo-color-gray, 20%);
+                @include border-radius(4px);
+            }
+            
+            /* Handle */
+            &::-webkit-scrollbar-thumb {
+                background: $xibo-color-gray;
+                @include border-radius(4px);
+            }
+
+            /* Handle on hover */
+            &::-webkit-scrollbar-thumb:hover {
+                background: darken($xibo-color-gray, 20%);
+            }
+
+            .designer-widget {
+                width: 140px;
+                height: 45px;
+                position: relative;
+                background: #f9f9f9;
+                color: $timeline-widget-fg-color;
+                font-weight: bold;
+                border: 1px solid $timeline-widget-border-color;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                margin-right: 2px;
+                @include border-radius(4px);
+
+                .widgetLabel {
+                    float: left;
+                    height: inherit;
+                    color: $designer-module-bg-color;
+                    min-width: 20px;
+                    height: 100%;
+                    text-align: center;
+                    opacity: 0.85;
+                    padding: 0 4px;
+                    margin-left: 4px;
+                    opacity: 0.6;
+                }
+
+                .widgetName {
+                    font-style: italic;
+                    color: $timeline-widget-fg-color;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                    max-width: 90%;
+                    padding-left: 4px;
+                    text-align: left;
+                }
+
+                .widgetProperties {
+                    float: right;
+                    position: absolute;
+                    z-index: 2;
+                    right: 4px;
+                    top: 24px;
+                }
+
+                &.hideContent > * {
+                    display: none;
+                }
+
+                i.editProperty {
+                    float: right;
+                    cursor: pointer;
+                    padding: 2px;
+                    color: $widget-main-fg-color;
+                }
+
+                i.editProperty:hover {
+                    color: lighten($widget-main-fg-color, 20%);
+                }
+
+                &.invalid-widget {
+                    @include box-shadow(inset 0px 0px 10px 3px $xibo-color-red);
+                }
+
+                &:hover {
+                    background-color: $widget-hover-color;
+                }
+
+                &.ui-droppable-active {
+                    @include z-index-set($designer-z-index-select);
+                    @include background-stripes(45deg, $widget-hover-color, lighten($widget-hover-color, 10%), 10px, 4px);
+                    visibility: visible;
+                }
+
+                &.ui-droppable-active:hover {
+                    @include background-stripes(45deg, darken($widget-hover-color, 10%), $widget-hover-color, 10px, 4px);
+                }
+            }
+        }
+
+        .loading-container {
+            position: relative;
+            height: 95px;
+
+            .loading-icon {
+                font-size: 50px;
+            }
+        }
+    }
+    
+    #actions-drawer-toggle {
+        transition: background-color 1s ease 0s;
+        @include border-radius(0 0 4px 4px);
+        background-color: $drawer-toggle-bg-color;
+        color: $drawer-toggle-fg-color;
+        padding: 0px 20px;
+        font-size: 18px;
+        width: 98%;
+        position: relative;
+        bottom: 4px;
+    }
+
+    #actions-drawer-empty-message {
+        border: 2px dashed $drawer-fg-color;
+        @include border-radius(6px);
+        color: $drawer-fg-color;
+        line-height: 75px;
+        margin: 4px;
+    }
+
+    &.drawed {
+        #actions-drawer-content {
+            margin-top: 0px;
+        }
+
+        #actions-drawer-toggle {
+            background-color: $drawer-fg-color;
+        }
+    }
 }
