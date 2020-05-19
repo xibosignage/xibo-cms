@@ -17,6 +17,8 @@ let PropertiesPanel = function(parent, container) {
     this.formSerializedLoadData = '';
 
     this.inlineEditor = false;
+
+    this.openTabOnRender = '';
 };
 
 /**
@@ -299,6 +301,14 @@ PropertiesPanel.prototype.render = function(element, step) {
 
         if(app.readOnlyMode != undefined && app.readOnlyMode === true) {
             self.makeFormReadOnly();
+        }
+
+        if(self.openTabOnRender != '') {
+            // Open tab
+            self.DOMObject.find(self.openTabOnRender).tab('show');
+
+            // Reset flag
+            self.openTabOnRender = '';
         }
 
     }).fail(function(data) {

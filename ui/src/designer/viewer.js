@@ -176,7 +176,11 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
     container.html(loadingTemplate());
 
     // Get target element( get region if element is a Widget type )
-    const targetElement = (element.type === 'widget') ? lD.layout.regions[element.regionId] : element;
+    let targetElement = element;
+    
+    if(element.type === 'widget') {
+        targetElement = (element.drawerWidget) ? lD.layout.drawer : lD.layout.regions[element.regionId];
+    }
 
     // Stop rendering if the element is invalid
     if(targetElement == undefined) {
@@ -310,7 +314,7 @@ Viewer.prototype.renderNavbar = function(element, data) {
     if(element.type == 'widget') {
 
         const currentItem = element.index;
-        const parentRegion = lD.getElementByTypeAndId('region', element.regionId);
+        const parentRegion = (element.drawerWidget) ? lD.getElementByTypeAndId('drawer') : lD.getElementByTypeAndId('region', element.regionId);
         const totalItems = parentRegion.numWidgets;
 
         // Render widget toolbar

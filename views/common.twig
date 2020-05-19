@@ -107,6 +107,10 @@
                 addActionForm: {
                     url: "{{ url_for("action.add.form", {source: 'layout', id:':id'}) }}",
                     type: 'GET'
+                },
+                addDrawer: {
+                    url: "{{ url_for("region.add.drawer", {id: ':id'}) }}",
+                    type: 'POST'
                 }
             },
             region: {

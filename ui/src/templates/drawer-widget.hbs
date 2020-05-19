@@ -1,0 +1,32 @@
+<div id="{{ id }}" data-type="widget" data-widget-id="{{ widgetId }}" data-widget-type="{{ subType }}" data-parent-type="drawer" data-widget-region="{{ regionId }}" class="designer-widget drawer-widget {{#eq isValid 0}}invalid-widget{{/eq}} selectable {{selectedFlag}} {{#if isEditable}}editable{{/if}} {{#if isPermissionsModifiable}}permissionsModifiable{{/if}} {{#if isDeletable}}deletable{{/if}}">
+    
+    <div class="widgetLabel timelineMediaItemColouringDefault timelineMediaItemColouring_{{ subType }} {{ widgetColouring }}">
+        <div class="widgetSubType">
+            <i class="fa module-icon-{{subType}}" data-toggle="tooltip" data-title="{{moduleName}}"></i>
+        </div>
+        <div class="widgetDuration">
+            {{ duration }}
+        </div>
+    </div>
+
+    <div class="widgetName">
+        <span data-toggle="tooltip" data-title="{{widgetName}}">{{widgetName}}</span>
+    </div>
+
+    <div class="widgetProperties">
+        {{#if audio}}
+            <i class="fa fa-volume-up editProperty" data-property="Audio"></i>
+        {{/if}}
+
+        {{#gt expireStatus 0}}
+            <i class="fa {{expireStatusIcon}} editProperty" 
+            data-toggle="tooltip" data-container="body" data-html="true" 
+            data-title="{{expireStatusTitle}}"
+            data-property="Expiry"></i>
+        {{/gt}}
+
+        {{#each transitions}}
+            <i class="fa fa-sign-{{@key}} editProperty" data-property="Transition" data-property-type="{{@key}}"></i>
+        {{/each}}
+    </div>
+</div>
