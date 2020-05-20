@@ -170,6 +170,8 @@ class OpenWeatherMapProvider implements WeatherProvider
         $this->currentDay->temperatureNightRound = $this->forecast[0]->temperatureNightRound;
         $this->currentDay->temperatureEvening = $this->forecast[0]->temperatureEvening;
         $this->currentDay->temperatureEveningRound = $this->forecast[0]->temperatureEveningRound;
+        $this->currentDay->temperatureMean = $this->forecast[0]->temperatureMean;
+        $this->currentDay->temperatureMeanRound = $this->forecast[0]->temperatureMeanRound;
     }
 
     /**
@@ -239,6 +241,9 @@ class OpenWeatherMapProvider implements WeatherProvider
             $day->apparentTemperature = ($day->apparentTemperature) * 9 / 5 + 32;
             $day->temperatureHigh = ($day->temperatureHigh) * 9 / 5 + 32;
             $day->temperatureLow = ($day->temperatureLow) * 9 / 5 + 32;
+            $day->temperatureNight = ($day->temperatureNight) * 9 / 5 + 32;
+            $day->temperatureEvening = ($day->temperatureEvening) * 9 / 5 + 32;
+            $day->temperatureMorning = ($day->temperatureMorning) * 9 / 5 + 32;
 
         } else if ($requestUnit === 'imperial' && $day->temperatureUnit === 'C') {
             // Convert F to C
@@ -246,6 +251,9 @@ class OpenWeatherMapProvider implements WeatherProvider
             $day->apparentTemperature = ($day->apparentTemperature - 32) * 5 / 9;
             $day->temperatureHigh = ($day->temperatureHigh - 32) * 5 / 9;
             $day->temperatureLow = ($day->temperatureLow - 32) * 5 / 9;
+            $day->temperatureNight = ($day->temperatureNight - 32) * 5 / 9;
+            $day->temperatureEvening = ($day->temperatureEvening - 32) * 5 / 9;
+            $day->temperatureMorning = ($day->temperatureMorning - 32) * 5 / 9;
         }
 
         // Work out the mean
