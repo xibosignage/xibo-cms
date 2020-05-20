@@ -596,15 +596,19 @@
                                     %>
                                     <div id="tab_<%= displayGroup['id'] %>" class="tab-pane fade in <%= isActive %> container-fluid">
                                         <% if(typeof resultItem.events != 'undefined') { %>
-                                            <div class="col-xs-12">
-                                                <%= cal._layouts(resultItem.events, resultItem.layouts, 1) %>
-                                                <%= cal._layouts(resultItem.events, resultItem.layouts, 3) %>
-                                                <%= cal._layouts(resultItem.events, resultItem.layouts, 4) %>
-                                            </div>
-                                            <div class="col-xs-12">
+                                            <div class="col-xs-6">
                                                 <%= cal._displaygroups(resultItem.events, resultItem.displayGroups) %>
-                                                <%= cal._campaigns(resultItem.events, resultItem.campaigns) %>
                                             </div> 
+                                            <div class="col-xs-6">
+                                                <%= cal._campaigns(resultItem.events, resultItem.campaigns) %>
+                                            </div>
+
+                                            <hr>
+                                            
+                                            <%= cal._layouts(resultItem.events, resultItem.layouts, 1) %>
+                                            <%= cal._layouts(resultItem.events, resultItem.layouts, 3) %>
+                                            <%= cal._layouts(resultItem.events, resultItem.layouts, 4) %>
+                                            <%= cal._layouts(resultItem.events, resultItem.layouts, 5) %>
                                          <% } %>
                                     </div>
                                 <% } %>
@@ -617,7 +621,7 @@
         </script>
         
         <script type="text/x-handlebars-template" id="calendar-template-agenda-layouts">
-            <table id="layouts" class="table agenda-table">
+            <table class="table agenda-table agenda-table-layouts" data-type="layouts" width="100%">
                 <thead>
                     <tr class="table-title">
                         <th colspan="10">
@@ -627,6 +631,8 @@
                                 {% endverbatim %}{% trans "Overlay Layouts" %}{% verbatim %}
                             <% } else if (layouts.type == 4) { %>
                                 {% endverbatim %}{% trans "Interrupt Layouts" %}{% verbatim %}
+                            <% } else if (layouts.type == 5) { %>
+                                {% endraw %}{% trans "Campaign Layouts" %}{% raw %}
                             <% } %>
                             
                             <span class="pull-right badge" title="{% endverbatim %}{% trans "Number of Layouts" %}{% verbatim %}" data-toggle="tooltip" data-placement="top">
@@ -701,7 +707,7 @@
         </script>
 
         <script type="text/x-handlebars-template" id="calendar-template-agenda-displaygroups">
-            <table id="displaygroups" class="table agenda-table">
+            <table id="displaygroups" class="table agenda-table" data-type="displaygroups">
                 {% endverbatim %}
                 <thead>
                     <tr class="table-title">
@@ -732,7 +738,7 @@
         </script>
         
         <script type="text/x-handlebars-template" id="calendar-template-agenda-campaigns">
-            <table id="campaigns" class="table agenda-table">
+            <table id="campaigns" class="table agenda-table" data-type="campaigns">
                 {% endverbatim %}
                 <thead>
                     <tr class="table-title">
