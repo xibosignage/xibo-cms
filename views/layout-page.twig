@@ -207,7 +207,7 @@
                             if (type != "display")
                                 return data.duration;
 
-                            return moment().startOf("day").seconds(data.duration).format("H:mm:ss");
+                            return dataTableTimeFromSeconds(data.duration, type);
                         }
                     },
                     {
