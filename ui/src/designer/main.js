@@ -1608,7 +1608,7 @@ lD.clearTemporaryData = function() {
     lD.editorContainer.find('.colorpicker-element').colorpicker('destroy');
 
     // Hide open tooltips
-    lD.editorContainer.find('[data-toggle="tooltip"]').tooltip('hide');
+    lD.editorContainer.find('.tooltip').remove();
 
     // Remove text callback editor structure variables
     formHelpers.destroyCKEditor();

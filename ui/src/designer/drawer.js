@@ -155,6 +155,7 @@ Drawer.prototype.render = function() {
 
     // Render drawer template using layout object
     const html = drawerTemplate({
+        drawer: lD.layout.drawer,
         widgets: widgetArrayFiltered,
         readOnlyModeOn: readOnlyModeOn,
         searchQuery: self.searchQuery,

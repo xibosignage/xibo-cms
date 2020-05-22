@@ -140,7 +140,10 @@
                     "sortable": false,
                     "data": dataTableCreateTags
                 },
-                { "data": "totalDuration" },
+                {
+                    "data": "totalDuration",
+                    "render": dataTableTimeFromSeconds
+                },
                 {
                     "orderable": false,
                     "data": dataTableButtonsColumn

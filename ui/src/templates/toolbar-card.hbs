@@ -15,7 +15,11 @@
 
     drop-to="region">
     
-    <div class="btn-favourite" data-toggle="tooltip" data-title="{{trans.addAsFavourite}}">
+    <div class="btn-favourite" data-toggle="tooltip" data-placement="left" data-container=".editor-toolbar" 
+        {{#unless favourited}}
+            data-title="{{trans.addAsFavourite}}
+        {{/unless}}
+        ">
         <i class="{{#if favourited}}fas{{else}}far{{/if}} fa-star"></i>
     </div>
 
