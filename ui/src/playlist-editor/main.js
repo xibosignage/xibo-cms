@@ -858,7 +858,7 @@ pE.clearTemporaryData = function() {
     pE.editorContainer.find('.colorpicker-element').colorpicker('destroy');
 
     // Hide open tooltips
-    pE.editorContainer.find('[data-toggle="tooltip"]').tooltip('hide');
+    pE.editorContainer.find('.tooltip').remove();
 
     // Remove text callback editor structure variables
     formHelpers.destroyCKEditor();
