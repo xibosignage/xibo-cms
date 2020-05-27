@@ -109,8 +109,8 @@ class Tag extends Base
      * @param PlaylistFactory $playlistFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $displayGroupFactory, $layoutFactory, $tagFactory, $userFactory, $displayFactory, $mediaFactory, $scheduleFactory, $campaignFactory, $playlistFactory, Twig $view) {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $displayGroupFactory, $layoutFactory, $tagFactory, $userFactory, $displayFactory, $mediaFactory, $scheduleFactory, $campaignFactory, $playlistFactory, Twig $view) {
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->store = $store;
         $this->displayGroupFactory = $displayGroupFactory;
