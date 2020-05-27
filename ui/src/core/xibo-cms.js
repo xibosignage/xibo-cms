@@ -1826,13 +1826,18 @@ function makePagedSelect(element, parent) {
     });
 
     // Set initial value if exists
-    if(element.data("initialValue") != undefined) {
+    if(element.data("initialValue") != undefined && element.data("initialKey") != undefined) {
+
+        const initialValue = element.data("initialValue");
+        const initialKey = element.data("initialKey");
+
+        let dataObj = {};
+        dataObj[initialKey] = initialValue;
+
         $.ajax({
             url: element.data("searchUrl"),
             type: 'GET',
-            data: {
-                mediaId: element.data("initialValue")
-            }
+            data: dataObj
         }).then(function(data) {
             // create the option and append to Select2
             var option = new Option(data.data[0][element.data("textProperty")], data.data[0][element.data("idProperty")], true, true);
