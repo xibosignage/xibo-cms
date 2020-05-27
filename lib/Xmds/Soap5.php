@@ -88,7 +88,7 @@ class Soap5 extends Soap4
 
             // Determine if we are licensed or not
             if ($display->licensed == 0) {
-                // It is not licensed
+                // It is not authorised
                 $displayElement->setAttribute('status', 2);
                 $displayElement->setAttribute('code', 'WAITING');
                 $displayElement->setAttribute('message', 'Display is Registered and awaiting Authorisation from an Administrator in the CMS');
