@@ -76,7 +76,7 @@ class Image extends ModuleWidget
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",
-     *      description="The WidgetId ID",
+     *      description="The Widget ID",
      *      type="integer",
      *      required=true
      *  ),
