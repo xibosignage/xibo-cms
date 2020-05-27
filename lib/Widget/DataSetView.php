@@ -871,7 +871,7 @@ class DataSetView extends ModuleWidget
             throw new InvalidArgumentException(__('Limits cannot be lower than 0'), 'limit');
 
         // Check the bounds of the limits
-        if ($this->getOption('upperLimit') < $this->getOption('lowerLimit'))
+        if ($this->getOption('upperLimit') != 0 && $this->getOption('upperLimit') < $this->getOption('lowerLimit'))
             throw new InvalidArgumentException(__('Upper limit must be higher than lower limit'), 'limit');
 
         if ($this->getOption('updateInterval') !== null && !v::intType()->min(0)->validate($this->getOption('updateInterval', 0)))

@@ -299,7 +299,7 @@ class Soap
 
         // auth this request...
         if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Sender', 'This display is not licensed.');
+            throw new \SoapFault('Sender', 'This Display is not authorised.');
         }
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
@@ -817,7 +817,7 @@ class Soap
 
         // auth this request...
         if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Sender', "This display client is not licensed");
+            throw new \SoapFault('Sender', "This Display is not authorised.");
         }
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
@@ -1166,7 +1166,7 @@ class Soap
 
         // Authenticate this request...
         if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Receiver', "This display client is not licensed", $hardwareKey);
+            throw new \SoapFault('Receiver', "This Display is not authorised.", $hardwareKey);
         }
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
@@ -1254,7 +1254,7 @@ class Soap
 
         // Auth this request...
         if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Sender', 'This display client is not licensed.');
+            throw new \SoapFault('Sender', 'This Display is not authorised.');
         }
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
@@ -1444,7 +1444,7 @@ class Soap
 
         // Auth this request...
         if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Receiver', "This display client is not licensed");
+            throw new \SoapFault('Receiver', "This Display is not authorised.");
         }
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
@@ -1678,7 +1678,7 @@ class Soap
 
         // Auth this request...
         if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Receiver', 'This display client is not licensed');
+            throw new \SoapFault('Receiver', 'This Display is not authorised.');
         }
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
@@ -1791,7 +1791,7 @@ class Soap
 
         // Auth this request...
         if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Receiver', "This display client is not licensed");
+            throw new \SoapFault('Receiver', "This Display is not authorised.");
         }
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
