@@ -197,7 +197,7 @@ class OpenWeatherMapProvider implements WeatherProvider
             'dew_point' => null,
             'uvi' => null,
             'clouds' => $source['clouds']['all'],
-            'visibility' => $source['visibility'],
+            'visibility' => $source['visibility'] ?? 0,
             'wind_speed' => $source['wind']['speed'],
             'wind_deg' => $source['wind']['deg'] ?? 0,
             'weather' => $source['weather'],

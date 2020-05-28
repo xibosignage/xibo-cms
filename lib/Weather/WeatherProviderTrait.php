@@ -112,6 +112,7 @@ trait WeatherProviderTrait
     /** @inheritDoc */
     public function setLocation($lat, $long)
     {
+        $this->logger->debug('setLocation: Lat = ' . $lat . ', Long = ' . $long);
         $this->lat = $lat;
         $this->long = $long;
         return $this;
@@ -120,6 +121,7 @@ trait WeatherProviderTrait
     /** @inheritDoc */
     public function setLang($lang)
     {
+        $this->logger->debug('setLang: Lang = ' . $lang);
         $this->lang = $lang;
         return $this;
     }
@@ -127,6 +129,7 @@ trait WeatherProviderTrait
     /** @inheritDoc */
     public function setUnits($units)
     {
+        $this->logger->debug('setUnits: Units = ' . $units);
         $this->units = $units;
         return $this;
     }
