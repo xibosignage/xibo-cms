@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -337,18 +337,20 @@
 
                         {# keylock (local and remote) #}
                         {% set localKeylockTitle %}{% trans "Keylock (local)" %}{% endset %}
-                        {% set localKeylockHelp %}{% trans "Set the allowed key input for the monitor; Allow All, Block All, Power Only." %}{% endset %}
+                        {% set localKeylockHelp %}{% trans "Set the allowed key input for the monitor." %}{% endset %}
                         {% set remoteKeylockTitle %}{% trans "Keylock (remote)" %}{% endset %}
-                        {% set remoteKeylockHelp %}{% trans "Set the allowed key input for the monitor; Allow All, Block All, Power Only." %}{% endset %}
+                        {% set remoteKeylockHelp %}{% trans "Set the allowed key input for the monitor." %}{% endset %}
                         {% set allowallText %}{% trans "Allow All" %}{% endset %}
                         {% set blockallText %}{% trans "Block All" %}{% endset %}
                         {% set poweronlyText %}{% trans "Power Only" %}{% endset %}
                         {% set options = [
                             { val: "", text: "" },
                             { val: "allowall", text: allowallText },
-                            { val: "blockall", text: blockallText },
-                            { val: "poweronly", text: poweronlyText }
+                            { val: "blockall", text: blockallText }
                         ] %}
+                        {% if displayProfile.type == "lg" %}
+                            {% set options = options|merge([{ val: "poweronly", text: poweronlyText }], options) %}
+                        {% endif %}
                         {{ forms.dropdown("keylockLocal", "single", localKeylockTitle, lockOptions.keylock.local, options, "val", "text", localKeylockHelp) }}
                         {{ forms.dropdown("keylockRemote", "single", remoteKeylockTitle, lockOptions.keylock.remote, options, "val", "text", remoteKeylockHelp) }}
                     </div>
