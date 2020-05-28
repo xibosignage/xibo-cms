@@ -365,6 +365,9 @@ $app->get('/stats/proofofplay/view', ['\Xibo\Controller\Stats','displayProofOfPl
 $app->get('/stats/library/view', ['\Xibo\Controller\Stats','displayLibraryPage'])->setName('stats.library.view');
 $app->get('/stats/form/export', ['\Xibo\Controller\Stats','exportForm'])->setName('stats.export.form');
 $app->get('/stats/library', ['\Xibo\Controller\Stats','libraryUsageGrid'])->setName('stats.library.grid');
+// For charts
+$app->get('/stats/data/bandwidth', ['\Xibo\Controller\Stats','bandwidthData'])->setName('stats.bandwidth.data');
+$app->get('/stats/data/timeDisconnected', ['\Xibo\Controller\Stats','timeDisconnectedData'])->setName('stats.timeDisconnected.data');
 
 //
 // Audit Log

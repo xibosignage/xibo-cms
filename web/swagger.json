@@ -6382,6 +6382,72 @@
                 }
             }
         },
+        "/stats/timeDisconnected": {
+            "get": {
+                "tags": [
+                    "statistics"
+                ],
+                "operationId": "timeDisconnectedSearch",
+                "parameters": [
+                    {
+                        "name": "fromDt",
+                        "in": "query",
+                        "description": "The start date for the filter.",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "toDt",
+                        "in": "query",
+                        "description": "The end date for the filter.",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "displayId",
+                        "in": "query",
+                        "description": "An optional display Id to filter",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "displayIds",
+                        "in": "query",
+                        "description": "An optional array of display Id to filter",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "returnDisplayLocalTime",
+                        "in": "query",
+                        "description": "true/1/On if the results should be in display local time, otherwise CMS time",
+                        "required": false,
+                        "type": "boolean"
+                    },
+                    {
+                        "name": "returnDateFormat",
+                        "in": "query",
+                        "description": "A PHP formatted date format for how the dates in this call should be returned.",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/TimeDisconnectedData"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/tag": {
             "get": {
                 "tags": [
@@ -11132,6 +11198,28 @@
                 }
             }
         },
+        "TimeDisconnectedData": {
+            "properties": {
+                "display": {
+                    "type": "string"
+                },
+                "displayId": {
+                    "type": "integer"
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "start": {
+                    "type": "string"
+                },
+                "end": {
+                    "type": "string"
+                },
+                "isFinished": {
+                    "type": "boolean"
+                }
+            }
+        },
         "Application": {
             "properties": {
                 "key": {
@@ -12341,6 +12429,10 @@
                 },
                 "duration": {
                     "description": "A read-only estimate of this Layout's total duration in seconds. This is equal to the longest region duration and is valid when the layout status is 1 or 2.",
+                    "type": "integer"
+                },
+                "requiresDurationUpdate": {
+                    "description": "Flag indicating whether this Playlists requires a duration update",
                     "type": "integer"
                 },
                 "enableStat": {
