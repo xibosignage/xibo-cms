@@ -52,6 +52,7 @@ use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceGregorian;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
@@ -321,7 +322,11 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function getDate()
     {
-        return $this->dateService;
+        // This is a hack to work around issues with Jalali calendar returning the wrong date/time for caching
+        // essentially it caches in Jalali and never invalidates.
+        // this is not necessary in v3 because the BE uses Carbon in Gregorian
+        // xibosignage/xibo#2204
+        return new DateServiceGregorian();
     }
 
     /**
