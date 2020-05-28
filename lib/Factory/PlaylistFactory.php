@@ -399,7 +399,6 @@ class PlaylistFactory extends BaseFactory
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $playlist = $this->createEmpty()->hydrate($row, ['intProperties' => ['requiresDurationUpdate', 'isDynamic']]);
-            $playlist->excludeProperty('requiresDurationUpdate');
             $entries[] = $playlist;
         }
 
