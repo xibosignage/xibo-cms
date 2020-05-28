@@ -4476,7 +4476,7 @@
                     {
                         "name": "type",
                         "in": "path",
-                        "description": "The type of the Widget e.g. Image",
+                        "description": "The type of the Widget e.g. text. Media based Widgets like Image are added via POST /playlist/library/assign/{playlistId} call.",
                         "required": true,
                         "type": "string"
                     },
@@ -7560,19 +7560,19 @@
                 }
             }
         },
-        "/playlist/widget/audio/{playlistId}": {
+        "/playlist/widget/{widgetId}?audio": {
             "put": {
                 "tags": [
                     "widget"
                 ],
                 "summary": "Parameters for editing existing audio widget on a layout",
-                "description": "Parameters for editing existing audio widget on a layout, for adding new audio, please refer to POST /library documentation",
+                "description": "For uploading new audio files, please refer to POST /library documentation.\n     *               For assigning existing audio file to a Playlist please see POST /playlist/library/assign/{playlistId} documentation.\n     *               This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "WidgetAudioEdit",
                 "parameters": [
                     {
-                        "name": "playlistId",
+                        "name": "widgetId",
                         "in": "path",
-                        "description": "The Playlist ID",
+                        "description": "The Widget ID",
                         "required": true,
                         "type": "integer"
                     },
@@ -9307,19 +9307,19 @@
                 }
             }
         },
-        "/playlist/widget/image/{playlistId}": {
+        "/playlist/widget/{widgetId}?image": {
             "put": {
                 "tags": [
                     "widget"
                 ],
                 "summary": "Parameters for editing existing image on a layout",
-                "description": "Parameters for editing existing image on a layout, for adding new images, please refer to POST /library documentation. This call will replace existing Widget object, all not supplied parameters will be set to default.",
+                "description": "For uploading new image files, please refer to POST /library documentation.\n     *               For assigning existing image file to a Playlist please see POST /playlist/library/assign/{playlistId} documentation.\n     *               This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "WidgetImageEdit",
                 "parameters": [
                     {
-                        "name": "playlistId",
+                        "name": "widgetId",
                         "in": "path",
-                        "description": "The Playlist ID",
+                        "description": "The Widget ID",
                         "required": true,
                         "type": "integer"
                     },
@@ -10743,19 +10743,19 @@
                 }
             }
         },
-        "/playlist/widget/video/{playlistId}": {
+        "/playlist/widget/{widgetId}?video": {
             "put": {
                 "tags": [
                     "widget"
                 ],
                 "summary": "Parameters for editing existing video on a layout",
-                "description": "Parameters for editing existing video on a layout, for adding new videos, please refer to POST /library documentation.\n                    This call will replace existing Widget object, all not supplied parameters will be set to default.",
+                "description": "For uploading new video files, please refer to POST /library documentation.\n     *               For assigning existing video file to a Playlist please see POST /playlist/library/assign/{playlistId} documentation.\n     *               This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "WidgetVideoEdit",
                 "parameters": [
                     {
-                        "name": "playlistId",
+                        "name": "widgetId",
                         "in": "path",
-                        "description": "The Playlist ID",
+                        "description": "The Widget ID",
                         "required": true,
                         "type": "integer"
                     },
@@ -11925,6 +11925,20 @@
                 "autoApplyTransitions": {
                     "description": "Flag indicating whether the default transitions should be applied to this Layout",
                     "type": "integer"
+                },
+                "regions": {
+                    "description": "An array of Regions belonging to this Layout",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Region"
+                    }
+                },
+                "tags": {
+                    "description": "An array of Tags belonging to this Layout",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Tag"
+                    }
                 }
             }
         },
