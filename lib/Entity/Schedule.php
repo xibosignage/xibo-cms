@@ -437,6 +437,9 @@ class Schedule implements \JsonSerializable
             $this->scheduleReminders = $this->scheduleReminderFactory->query(null, ['eventId'=> $this->eventId]);
         }
 
+        // Set the original values now that we're loaded.
+        $this->setOriginals();
+
         // We are fully loaded
         $this->loaded = true;
     }
@@ -1207,11 +1210,45 @@ class Schedule implements \JsonSerializable
 
     /**
      * Manage the assignments
+     * @throws \Xibo\Exception\XiboException
      */
     private function manageAssignments()
     {
         $this->linkDisplayGroups();
         $this->unlinkDisplayGroups();
+
+        $this->getLog()->debug('manageAssignments: Assessing whether we need to notify');
+
+        // Get the difference between the original display groups assigned and the new display groups assigned
+        if ($this->inScheduleLookAhead()) {
+            $diff = [];
+            foreach ($this->getOriginalValue('displayGroups') as $element) {
+                /** @var \Xibo\Entity\DisplayGroup $element */
+                $diff[$element->getId()] = $element;
+            }
+
+            if (count($diff) > 0) {
+                $this->getLog()->debug('manageAssignments: There are ' . count($diff) . ' existing DisplayGroups on this Event');
+                $ids = array_map(function ($element) {
+                    return $element->getId();
+                }, $this->displayGroups);
+
+                $except = array_diff(array_keys($diff), $ids);
+
+                if (count($except) > 0) {
+                    foreach ($except as $item) {
+                        $this->getLog()->debug('manageAssignments: calling notify on displayGroupId ' . $diff[$item]->getId());
+                        $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($diff[$item]->getId());
+                    }
+                } else {
+                    $this->getLog()->debug('manageAssignments: No need to notify');
+                }
+            } else {
+                $this->getLog()->debug('manageAssignments: No change to DisplayGroup assignments');
+            }
+        } else {
+            $this->getLog()->debug('manageAssignments: Not in look-ahead');
+        }
     }
 
     /**
