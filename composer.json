@@ -61,7 +61,7 @@
     "respect/validation": "1.1.*",
     "intervention/imagecache": "~2.3",
     "emojione/emojione": "^1.4",
-    "phpmailer/phpmailer": "6.0.*",
+    "phpmailer/phpmailer": "6.1.*",
     "guzzlehttp/guzzle": "~6.0",
     "league/oauth2-client": "^2.4",
     "james-heinrich/getid3": "^1.9",
