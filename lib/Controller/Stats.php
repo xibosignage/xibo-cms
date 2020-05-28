@@ -1191,10 +1191,11 @@ class Stats extends Base
         $limit = '';
 
         // Paging
-        if ($filterBy !== null && $sanitizedQueryParams->getInt('start') !== null && $sanitizedQueryParams->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedQueryParams->getInt('start'), 0) . ', ' . $sanitizedQueryParams->getInt('length', ['default' => 10]);
+        $filterBy = $this->getSanitizer($filterBy);
+        if ($filterBy !== null && $filterBy->hasParam('start') && $filterBy->hasParam('length')) {
+            $limit = ' LIMIT ' . intval($filterBy->getInt('start', ['default' => 0])) . ', '
+                . $filterBy->getInt('length', ['default' => 10]);
         }
-
 
         $sql = $select . $body . $order . $limit;
         $maxDuration = 0;

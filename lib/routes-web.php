@@ -19,6 +19,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 
