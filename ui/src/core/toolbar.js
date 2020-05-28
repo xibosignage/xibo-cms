@@ -117,14 +117,17 @@ let Toolbar = function(parent, container, customActions = {}, showOptions = fals
 
     // Refresh opened menu and clear selections on window resize
     const self = this;
-    $(window).resize(_.debounce(function(e) {
+    $(window).on('resize.toolbar-' + self.parent.mainObjectType, _.debounce(function(e) {
         if(e.target === window) {
-            // Deselect previous selections
-            self.deselectCardsAndDropZones();
+            // Resize only if toolbar is visible
+            if(self.DOMObject.is(':visible')) {
+                // Deselect previous selections
+                self.deselectCardsAndDropZones();
 
-            // If there was a opened menu in the toolbar, open that tab
-            if(self.openedMenu != -1) {
-                self.openMenu(self.openedMenu, true);
+                // If there was a opened menu in the toolbar, open that tab
+                if(self.openedMenu != undefined && self.openedMenu != -1) {
+                    self.openMenu(self.openedMenu, true);
+                }
             }
         }
     }, 250));
@@ -164,12 +167,20 @@ Toolbar.prototype.loadPrefs = function() {
                 // Tooltip options
             app.common.displayTooltips = (loadedData.displayTooltips == 1 || loadedData.displayTooltips == undefined);
 
+            // Reload tooltips
+            app.common.reloadTooltips(app.editorContainer);
+
             // If there was a opened menu, load content for that one
             if(self.openedMenu != -1) {
                 self.openMenu(self.openedMenu, true);
             } else {
                 // Render to reflect the loaded toolbar
                 self.render();
+            }
+
+            // Reload topbar if exists
+            if(app.topbar != undefined) {
+                app.topbar.render();
             }
         } else {
             // Login Form needed?
@@ -348,7 +359,7 @@ Toolbar.prototype.render = function() {
         this.DOMObject.find('.hide-on-read-only').hide();
         
         // Create the read only alert message
-        let $readOnlyMessage = $('<div id="read-only-message" class="alert alert-info btn text-center navbar-nav" data-toggle="tooltip" data-placement="bottom" title="' + layoutDesignerTrans.readOnlyModeMessage + '" role="alert"><strong>' + layoutDesignerTrans.readOnlyModeTitle + '</strong>&nbsp;' + layoutDesignerTrans.readOnlyModeMessage + '</div>');
+        let $readOnlyMessage = $('<div id="read-only-message" class="alert alert-info btn text-center navbar-nav" data-toggle="tooltip" data-placement="bottom" data-title="' + layoutDesignerTrans.readOnlyModeMessage + '" role="alert"><strong>' + layoutDesignerTrans.readOnlyModeTitle + '</strong>&nbsp;' + layoutDesignerTrans.readOnlyModeMessage + '</div>');
 
         // Prepend the element to the bottom toolbar's content
         $readOnlyMessage.prependTo(this.DOMObject.find('.container-toolbar .navbar-collapse')).click(lD.checkoutLayout);
@@ -478,9 +489,6 @@ Toolbar.prototype.render = function() {
         if(this.openedMenu != -1 && this.menuItems[this.openedMenu].name === 'library') {
             this.mediaContentCreateWindow(this.openedMenu);
         }
-
-        // Initialize tooltips
-        app.common.reloadTooltips(this.DOMObject);
     }
 
     // Options menu
@@ -500,7 +508,9 @@ Toolbar.prototype.render = function() {
                 toastr.error(editorsTrans.tooltipsDisabled);
             }
 
-            app.refreshDesigner();
+            self.savePrefs();
+
+            app.common.reloadTooltips(app.editorContainer);
         });
 
         // Reset tour
@@ -1002,9 +1012,6 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
     if(!$.isEmptyObject(self.selectedQueue)){
         self.createQueue(menu);
     }
-
-    // Initialize tooltips
-    app.common.reloadTooltips(self.DOMObject);
 };
 
 /**

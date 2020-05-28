@@ -199,7 +199,7 @@
                                 return moment().startOf("day").seconds(data).format("H:mm:ss") + ' <span class="fa fa-clock-o" title="{{ "This duration will be updated at " }}' + moment(row.requiresDurationUpdate, "X").format(jsDateFormat) + '"></span>';
                             }
 
-                            return moment().startOf("day").seconds(data).format("H:mm:ss");
+                            return dataTableTimeFromSeconds(data, type, row);
                         }
                     },
                     {

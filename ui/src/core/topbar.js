@@ -122,7 +122,9 @@ Topbar.prototype.render = function() {
                 toastr.error(editorsTrans.tooltipsDisabled);
             }
 
-            app.refreshDesigner();
+            app.toolbar.savePrefs();
+
+            app.common.reloadTooltips(app.editorContainer);
         });
 
         // Reset tour
@@ -131,13 +133,6 @@ Topbar.prototype.render = function() {
                 app.resetTour();
             });
         }
-    }
-
-    // If in edit mode
-    if(app.readOnlyMode === undefined || app.readOnlyMode === false) {
-
-        // Initialize tooltips
-        app.common.reloadTooltips(this.DOMObject);
     }
 
     // Update layout status

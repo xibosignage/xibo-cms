@@ -501,6 +501,9 @@ class DataSetView extends ModuleWidget
             $styleSheet .= 'table.DataSetTable { font-size: ' . $this->getOption('fontSize') . 'px; }';
         }
 
+        // Table display CSS fix
+        $styleSheet .= 'table.DataSetTable.cycle-slide { display: table !important; }';
+
         // Get the JavaScript node
         $javaScript = $this->parseLibraryReferences($isPreview, $this->getRawNode('javaScript', ''));
 
@@ -868,7 +871,7 @@ class DataSetView extends ModuleWidget
             throw new InvalidArgumentException(__('Limits cannot be lower than 0'), 'limit');
 
         // Check the bounds of the limits
-        if ($this->getOption('upperLimit') < $this->getOption('lowerLimit'))
+        if ($this->getOption('upperLimit') != 0 && $this->getOption('upperLimit') < $this->getOption('lowerLimit'))
             throw new InvalidArgumentException(__('Upper limit must be higher than lower limit'), 'limit');
 
         if ($this->getOption('updateInterval') !== null && !v::intType()->min(0)->validate($this->getOption('updateInterval', 0)))

@@ -2,20 +2,20 @@
 
     {{!-- Controls --}}
     <div id="timeline-controls">
-        <a id="zoomInBtn" {{properties.zoomInDisable}} data-toggle="tooltip" title="{{trans.zoomIn}}">
+        <a id="zoomInBtn" {{properties.zoomInDisable}} data-toggle="tooltip" data-title="{{trans.zoomIn}}">
             <i class="fas fa-search-plus"></i>
         </a>
         <a id="findSelectedBtn" {{properties.zoomFindWidgetDisabled}} data-toggle="tooltip" data-container="#layout-editor"
-            title="{{trans.zoomFindSelected}}">
+            data-title="{{trans.zoomFindSelected}}">
             <i class="fas fa-search-location"></i>
         </a>
-        <a id="zoomReset" data-toggle="tooltip" title="{{trans.resetZoom}}">
+        <a id="zoomReset" data-toggle="tooltip" data-title="{{trans.resetZoom}}">
             <i class="fas fa-search"></i>
         </a>
-        <a id="zoomOutBtn" {{properties.zoomOutDisable}} data-toggle="tooltip" title="{{trans.zoomOut}}">
+        <a id="zoomOutBtn" {{properties.zoomOutDisable}} data-toggle="tooltip" data-title="{{trans.zoomOut}}">
             <i class="fas fa-search-minus"></i>
         </a>
-        <span id="zoomTimeSpan" class="pull-right" data-toggle="tooltip" title="{{trans.zoomDelta}}">
+        <span id="zoomTimeSpan" class="pull-right" data-toggle="tooltip" data-title="{{trans.zoomDelta}}">
             <i class="fa fa-hourglass-o"></i>&nbsp;{{properties.deltaTimeFormatted}}
         </span>
     </div>

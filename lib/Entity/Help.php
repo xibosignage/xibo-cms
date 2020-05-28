@@ -91,7 +91,7 @@ class Help
 
     public function delete()
     {
-        $this->getStore()->update('DELETE FROM `help` WHERE HelpID = :helpid', [
+        $this->getStore()->update('DELETE FROM `help` WHERE HelpID = :helpId', [
             'helpId' => $this->helpId
         ]);
     }
@@ -107,7 +107,7 @@ class Help
 
     private function edit()
     {
-        $this->getStore()->update('UPDATE `help` SET Topic = :topic, Category = :category, Link = :link WHERE HelpID = :helpid', [
+        $this->getStore()->update('UPDATE `help` SET Topic = :topic, Category = :category, Link = :link WHERE HelpID = :helpId', [
             'helpId' => $this->helpId,
             'topic' => $this->topic,
             'category' => $this->category,
