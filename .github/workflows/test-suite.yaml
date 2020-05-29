@@ -35,7 +35,7 @@ jobs:
           sleep 5
       - name: Run PHP Unit
         run: |
-          docker exec --user apache -t cms-web /bin/bash -c "cd /var/www/cms; php vendor/bin/phpunit --verbose --tap --log-junit results.xml"
+          docker exec --user apache -t cms-web /bin/bash -c "cd /var/www/cms; php vendor/bin/phpunit --log-junit results.xml"
       - name: Run Cypress
         run: |
           docker exec cms-db mysql -ucms -pjenkins cms -e "INSERT INTO oauth_clients (id, secret, name, userId, authCode, clientCredentials) VALUES ('MrGPc7e3IL1hA6w13l7Ru5giygxmNiafGNhFv89d', 'Pk6DdDgu2HzSoepcMHRabY60lDEvQ9ucTejYvc5dOgNVSNaOJirCUM83oAzlwe0KBiGR2Nhi6ltclyNC1rmcq0CiJZXzE42KfeatQ4j9npr6nMIQAzMal8O8RiYrIoono306CfyvSSJRfVfKExIjj0ZyE4TUrtPezJbKmvkVDzh8aj3kbanDKatirhwpfqfVdfgsqVNjzIM9ZgKHnbrTX7nNULL3BtxxNGgDMuCuvKiJFrLSyIIz1F4SNrHwHz', 'cypress', 1, 0, 1)"
