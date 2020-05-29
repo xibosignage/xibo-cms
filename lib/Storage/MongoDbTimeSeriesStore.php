@@ -134,9 +134,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         unset($statData['fromDt']);
         unset($statData['toDt']);
         unset($statData['tag']);
-
-        unset($statData['scheduleId']);
-
+        
         // Make an empty array to collect layout/media/display tags into
         $tagFilter = [];
 
