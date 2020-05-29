@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -46,6 +46,7 @@
                 <li><a href="#maintenance" role="tab" data-toggle="tab"><span>{% trans "Maintenance" %}</span></a></li>
                 <li><a href="#wol" role="tab" data-toggle="tab"><span>{% trans "Wake on LAN" %}</span></a></li>
                 <li><a href="#settings" role="tab" data-toggle="tab"><span>{% trans "Profile Settings" %}</span></a></li>
+                <li><a href="#remote" role="tab" data-toggle="tab"><span>{% trans "Remote" %}</span></a></li>
                 <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
             <form id="displayEditForm" class="DisplayForm XiboForm form-horizontal" method="put" action="{{ urlFor("display.edit", {id: display.displayId}) }}" data-gettag="{{ urlFor("tag.getByName") }}">
@@ -223,7 +224,17 @@
                         {% set helpText %}{% trans "Remove the XMR configuration for this Player and send a rekey action." %}{% endset %}
                         {{ forms.checkbox("rekeyXmr", title, 0, helpText) }}
                     </div>
-                </div>    
+
+                    <div class="tab-pane" id="remote">
+                        {% set title %}{% trans "TeamViewer Serial" %}{% endset %}
+                        {% set helpText %}{% trans "If TeamViewer is installed on the device, enter the serial number here." %}{% endset %}
+                        {{ forms.input("teamViewerSerial", title, teamViewerSerial, helpText) }}
+
+                        {% set title %}{% trans "Webkey Serial" %}{% endset %}
+                        {% set helpText %}{% trans "If Webkey is installed on the device, enter the serial number here." %}{% endset %}
+                        {{ forms.input("webkeySerial", title, webkeySerial, helpText) }}
+                    </div>
+                </div>
             </form>
 
 
