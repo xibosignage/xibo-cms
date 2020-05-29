@@ -190,6 +190,10 @@ class Stats extends Base
      *      type="integer"
      *  ),
      *  @SWG\Property(
+     *      property="scheduleId",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
      *      property="numberPlays",
      *      type="integer"
      *  ),
@@ -449,6 +453,7 @@ class Stats extends Base
             $entry['layoutId'] = $this->getSanitizer()->int($row['layoutId']);
             $entry['widgetId'] = $this->getSanitizer()->int($row['widgetId']);
             $entry['mediaId'] = $this->getSanitizer()->int($row['mediaId']);
+            $entry['scheduleId'] = $this->getSanitizer()->int($row['scheduleId'] ?? 0);
             $entry['tag'] = $this->getSanitizer()->string($row['tag']);
             $entry['statDate'] = isset($row['statDate']) ? $this->getDate()->parse($row['statDate'], 'U')->format($returnDateFormat) : '';
             $entry['engagements'] = $row['engagements'];
