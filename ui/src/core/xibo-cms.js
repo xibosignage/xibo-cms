@@ -274,7 +274,7 @@ function XiboInitialise(scope) {
     });
 
     // Date time controls
-    $(scope + ' .datePicker').each(function() {
+    $(scope + ' .datePicker:not(.datePickerHelper)').each(function() {
         if(calendarType == 'Jalali') {
             initDatePicker($(this), systemDateOnlyFormat, 
                 {
@@ -296,22 +296,28 @@ function XiboInitialise(scope) {
         }
     });
 
-    $(scope + ' .dateTimePicker').each(function() {
+    $(scope + ' .dateTimePicker:not(.datePickerHelper)').each(function() {
+        const enableSeconds = dateFormat.includes('s');
+
         if(calendarType == 'Jalali') {
             initDatePicker($(this), systemDateFormat, {
                 timePicker: {
-                    enabled: true
+                    enabled: true,
+                    second: {
+                        enabled: enableSeconds
+                    }
                 }
             });
         } else {
             initDatePicker($(this), systemDateFormat, {
                 enableTime: true,
+                enableSeconds: enableSeconds,
                 altFormat: jsDateFormat
             });
         }
     });
 
-    $(scope + ' .dateMonthPicker').each(function() {
+    $(scope + ' .dateMonthPicker:not(.datePickerHelper)').each(function() {
         if(calendarType == 'Jalali') {
             const linkedFormat = $(this).data().linkFormat;
             initDatePicker($(this), systemDateOnlyFormat, {
@@ -347,14 +353,16 @@ function XiboInitialise(scope) {
         }
     });
 
-    $(scope + ' .timePicker').each(function() {
+    $(scope + ' .timePicker:not(.datePickerHelper)').each(function() {
+        const enableSeconds = dateFormat.includes('s');
+
         if(calendarType == 'Jalali') {
             initDatePicker($(this), systemTimeFormat, {
                 onlyTimePicker: true,
                 format: jsTimeFormat,
                 timePicker: {
                     second: {
-                        enabled: false
+                        enabled: enableSeconds
                     }
                 },
                 altFieldFormatter: function(unixTime) {
@@ -369,6 +377,7 @@ function XiboInitialise(scope) {
                 {
                     enableTime: true,
                     noCalendar: true,
+                    enableSeconds: enableSeconds,
                     time_24hr: true,
                     altFormat: jsTimeFormat
                 }
@@ -1962,9 +1971,9 @@ function initDatePicker($element, dateTimeFormat, options = {}, onChangeCallback
     }
 
     let $inputElement = $element;
+    const initialValue = $element.val();
 
     if(calendarType == 'Jalali') {
-        const initialValue = $element.val();
 
         if(options.altField != undefined) {
             $inputElement = $(options.altField);
@@ -1996,6 +2005,8 @@ function initDatePicker($element, dateTimeFormat, options = {}, onChangeCallback
         flatpickr($element, Object.assign({
             altInput: true,
             allowInput: false,
+            defaultDate: ((initialValue != undefined) ? initialValue : null),
+            altInputClass: 'datePickerHelper ' + $element.attr('class'),
             dateFormat: dateTimeFormat,
             locale: language,
             parseDate: (datestr, format) => {
@@ -2061,5 +2072,23 @@ function updateDatePicker($element, date, format, triggerChange = false) {
             // Update jalali calendar
             $('#' + $element.attr('id') + 'Link').data().datepicker.setDate(moment(date, format).unix() * 1000);
         }
+    }
+}
+
+// Destroy date picker
+function destroyDatePicker($element) {
+    if(calendarType == 'Gregorian') {
+        // Destroy gregorian calendar
+        if($element[0]._flatpickr != undefined) {
+            $element[0]._flatpickr.destroy();
+        }
+
+        // Set value to text field if exists
+        if($element.attr('value') != undefined) {
+            $element.val($element.attr('value'));
+        }
+    } else if(calendarType == 'Jalali') {
+        // Destroy jalali calendar
+        $('#' + $element.attr('id') + 'Link').data().datepicker.destroy();
     }
 }

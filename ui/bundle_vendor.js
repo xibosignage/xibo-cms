@@ -100,9 +100,6 @@ require('colors.js');
 // chart.js
 require('chart.js');
 
-// timepicker
-require('timepicker');
-
 // form-serializer
 require('form-serializer');
 
