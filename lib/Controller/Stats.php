@@ -210,6 +210,10 @@ class Stats extends Base
      *      type="integer"
      *  ),
      *  @SWG\Property(
+     *      property="scheduleId",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
      *      property="numberPlays",
      *      type="integer"
      *  ),
@@ -460,6 +464,7 @@ class Stats extends Base
             $entry['layoutId'] = $sanitizedRow->getInt('layoutId', ['default' => 0]);
             $entry['widgetId'] = $widgetId;
             $entry['mediaId'] = $sanitizedRow->getInt('mediaId', ['default' => 0]);
+            $entry['scheduleId'] = $sanitizedRow->getInt('scheduleId', ['default' => 0]);
             $entry['tag'] = $sanitizedRow->getString('tag');
             $entry['statDate'] = isset($row['statDate']) ? $resultSet->getDateFromValue($row['statDate'])->format(DateFormatHelper::getSystemFormat()) : '';
             $entry['engagements'] = $resultSet->getEngagementsFromRow($row);
