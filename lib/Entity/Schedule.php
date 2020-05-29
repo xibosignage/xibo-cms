@@ -588,7 +588,7 @@ class Schedule implements \JsonSerializable
         // Manage display assignments
         if ($this->loaded) {
             // Manage assignments
-            $this->manageAssignments();
+            $this->manageAssignments($options['notify']);
         }
 
         // Notify
@@ -1210,9 +1210,10 @@ class Schedule implements \JsonSerializable
 
     /**
      * Manage the assignments
+     * @param bool $notify should we notify or not?
      * @throws \Xibo\Exception\XiboException
      */
-    private function manageAssignments()
+    private function manageAssignments($notify)
     {
         $this->linkDisplayGroups();
         $this->unlinkDisplayGroups();
@@ -1221,7 +1222,7 @@ class Schedule implements \JsonSerializable
         $originalDisplayGroups = $this->getOriginalValue('displayGroups');
 
         // Get the difference between the original display groups assigned and the new display groups assigned
-        if ($originalDisplayGroups !== null && $this->inScheduleLookAhead()) {
+        if ($notify && $originalDisplayGroups !== null && $this->inScheduleLookAhead()) {
             $diff = [];
             foreach ($originalDisplayGroups as $element) {
                 /** @var \Xibo\Entity\DisplayGroup $element */
