@@ -572,6 +572,7 @@ class Schedule implements \JsonSerializable
             $this->add();
             $auditMessage = 'Added';
             $this->loaded = true;
+            $isEdit = false;
         }
         else {
             // If this save action means there aren't any display groups assigned
@@ -583,12 +584,13 @@ class Schedule implements \JsonSerializable
                 $this->edit();
                 $auditMessage = 'Saved';
             }
+            $isEdit = true;
         }
 
         // Manage display assignments
         if ($this->loaded) {
             // Manage assignments
-            $this->manageAssignments($options['notify']);
+            $this->manageAssignments($isEdit && $options['notify']);
         }
 
         // Notify
