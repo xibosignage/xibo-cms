@@ -1218,11 +1218,12 @@ class Schedule implements \JsonSerializable
         $this->unlinkDisplayGroups();
 
         $this->getLog()->debug('manageAssignments: Assessing whether we need to notify');
+        $originalDisplayGroups = $this->getOriginalValue('displayGroups');
 
         // Get the difference between the original display groups assigned and the new display groups assigned
-        if ($this->inScheduleLookAhead()) {
+        if ($originalDisplayGroups !== null && $this->inScheduleLookAhead()) {
             $diff = [];
-            foreach ($this->getOriginalValue('displayGroups') as $element) {
+            foreach ($originalDisplayGroups as $element) {
                 /** @var \Xibo\Entity\DisplayGroup $element */
                 $diff[$element->getId()] = $element;
             }
