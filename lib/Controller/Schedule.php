@@ -1542,6 +1542,9 @@ class Schedule extends Base
             }
 
             $this->getLog()->debug('Processed start is: FromDt=' . $fromDt->toRssString());
+        } else {
+            // This is an always day part, which cannot be recurring, make sure we clear the recurring type if it has been set
+            $schedule->recurrenceType = '';
         }
 
         // Ready to do the add
