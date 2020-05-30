@@ -637,6 +637,9 @@ class Display extends Base
                 $display->thumbnail = $this->urlFor($request,'display.screenShot', ['id' => $display->displayId]) . '?' . Random::generateString();
             }
 
+            $display->teamViewerLink = (!empty($display->teamViewerSerial)) ? 'https://start.teamviewer.com/' . $display->teamViewerSerial : '';
+            $display->webkeyLink = (!empty($display->webkeySerial)) ? 'https://webkeyapp.com/mgm?publicid=' . $display->webkeySerial : '';
+
             // Edit and Delete buttons first
             if ($this->getUser()->checkEditable($display)) {
 
@@ -1167,6 +1170,20 @@ class Display extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="teamViewerSerial",
+     *      in="formData",
+     *      description="The TeamViewer serial number for this Display, if applicable",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="webkeySerial",
+     *      in="formData",
+     *      description="The Webkey serial number for this Display, if applicable",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1207,7 +1224,8 @@ class Display extends Base
         $display->timeZone = $sanitizedParams->getString('timeZone');
         $display->displayProfileId = $sanitizedParams->getInt('displayProfileId');
         $display->bandwidthLimit = $sanitizedParams->getInt('bandwidthLimit');
-
+        $display->teamViewerSerial = $sanitizedParams->getString('teamViewerSerial');
+        $display->webkeySerial = $sanitizedParams->getString('webkeySerial');
 
         // Get the display profile and use that to pull in any overrides
         // start with an empty config

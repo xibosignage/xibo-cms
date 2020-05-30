@@ -225,7 +225,9 @@ class DisplayFactory extends BaseFactory
                   `display`.newCmsKey,
                   `display`.orientation,
                   `display`.resolution,
-                  `display`.commercialLicence
+                  `display`.commercialLicence,
+                  `display`.teamViewerSerial,
+                  `display`.webkeySerial
               ';
 
         if ($parsedBody->getCheckbox('showTags') === 1) {
