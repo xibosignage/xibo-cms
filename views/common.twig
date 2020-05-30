@@ -107,6 +107,10 @@
                 addActionForm: {
                     url: "{{ url_for("action.add.form", {source: 'layout', id:':id'}) }}",
                     type: 'GET'
+                },
+                addDrawer: {
+                    url: "{{ url_for("region.add.drawer", {id: ':id'}) }}",
+                    type: 'POST'
                 }
             },
             region: {
@@ -321,7 +325,7 @@
                 search: "{{ "Search" |trans }}",
                 add: "{{ "Add" |trans }}",
                 grab: "{{ "Grab" |trans }}",
-                addAsFavourite: "{{ "Add as favourite" |trans }}",
+                addAsFavourite: "{{ "Mark as favourite" |trans }}",
                 addedToFavourites: "{{ "Module added to favourites!" |trans }}",
                 moduleNavStart: "{{ "Scroll to the start!" |trans }}",
                 moduleNavEnd: "{{ "Scroll to the end!" |trans }}",

@@ -546,7 +546,11 @@ let formHelpers = function() {
         } else if(this.namespace.mainRegion != undefined) {
             region = this.namespace.mainRegion;
         } else if(this.namespace.selectedObject.type == 'widget') {
-            region = this.namespace.getElementByTypeAndId('region', this.namespace.selectedObject.regionId);
+            if(this.namespace.selectedObject.drawerWidget) {
+                region = this.namespace.getElementByTypeAndId('drawer');
+            } else {
+                region = this.namespace.getElementByTypeAndId('region', this.namespace.selectedObject.regionId);
+            }
         } else if(this.namespace.selectedObject.type == 'region') {
             region = this.namespace.getElementByTypeAndId('region', this.namespace.selectedObject.id);
         }

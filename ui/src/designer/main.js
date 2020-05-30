@@ -34,6 +34,7 @@ const Navigator = require('../designer/navigator.js');
 const Timeline = require('../designer/timeline.js');
 const Viewer = require('../designer/viewer.js');
 const PropertiesPanel = require('../designer/properties-panel.js');
+const Drawer = require('../designer/drawer.js');
 const Manager = require('../core/manager.js');
 const Toolbar = require('../core/toolbar.js');
 const Topbar = require('../core/topbar.js');
@@ -86,6 +87,9 @@ window.lD = {
 
     // Properties Panel
     propertiesPanel: {},
+
+    // Drawer
+    drawer: {},
 };
 
 // Get Xibo app
@@ -138,6 +142,13 @@ $(document).ready(function() {
                     lD,
                     lD.editorContainer.find('#layout-viewer'),
                     lD.editorContainer.find('#layout-viewer-navbar')
+                );
+
+                // Initialise drawer
+                lD.drawer = new Drawer(
+                    lD,
+                    lD.editorContainer.find('#actions-drawer'),
+                    res.data[0].drawers
                 );
 
                 // Initialize bottom toolbar ( with custom buttons )
@@ -302,6 +313,7 @@ $(document).ready(function() {
             lD.renderContainer(lD.navigator);
             lD.renderContainer(lD.viewer, lD.selectedObject);
             lD.renderContainer(lD.timeline);
+            lD.renderContainer(lD.drawer);
         }
     }, 250));
 });
@@ -333,7 +345,13 @@ lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = nul
     } else if(!$.isEmptyObject(this.toolbar.selectedQueue) && $(this.toolbar.selectedQueue).data('to-add')) { // If there's a selected queue, use the drag&drop simulate to add those items to a object
         if(obj.data('type') == 'region') {
             const droppableId = $(obj).attr('id');
-            const playlistId = lD.layout.regions[droppableId].playlists.playlistId;
+            let playlistId;
+
+            if(droppableId == 'actions-drawer-content') {
+                playlistId = lD.layout.drawer.playlists.playlistId;
+            } else {
+                playlistId = lD.layout.regions[droppableId].playlists.playlistId;
+            }
 
             let mediaQueueArray = [];
 
@@ -356,9 +374,10 @@ lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = nul
         // Get object properties from the DOM ( or set to layout if not defined )
         const newSelectedId = (obj === null) ? this.layout.id : obj.attr('id');
         let newSelectedType = (obj === null) ? 'layout' : obj.data('type');
+        let newSelectedParentType = (obj === null) ? 'layout' : obj.data('parentType');
 
         const oldSelectedId = this.selectedObject.id;
-        
+
         // Unselect the previous selectedObject object if still selected
         if( this.selectedObject.selected ) {
 
@@ -370,9 +389,16 @@ lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = nul
                     break;
 
                 case 'widget':
-                    if(this.layout.regions[this.selectedObject.regionId].widgets[this.selectedObject.id]) {
-                        this.layout.regions[this.selectedObject.regionId].widgets[this.selectedObject.id].selected = false;
+                    if(this.selectedObject.drawerWidget) {
+                        if(this.layout.drawer.widgets[this.selectedObject.id]) {
+                            this.layout.drawer.widgets[this.selectedObject.id].selected = false;
+                        }
+                    } else {
+                        if(this.layout.regions[this.selectedObject.regionId].widgets[this.selectedObject.id]) {
+                            this.layout.regions[this.selectedObject.regionId].widgets[this.selectedObject.id].selected = false;
+                        }
                     }
+                    
                     break;
 
                 default:
@@ -411,8 +437,13 @@ lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = nul
                     this.selectedObject = this.layout.regions[newSelectedId];
                 }
             } else if(newSelectedType === 'widget') {
-                this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId].selected = true;
-                this.selectedObject = this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId];
+                if(newSelectedParentType == 'drawer') {
+                    this.layout.drawer.widgets[newSelectedId].selected = true;
+                    this.selectedObject = this.layout.drawer.widgets[newSelectedId];
+                } else {
+                    this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId].selected = true;
+                    this.selectedObject = this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId];
+                }
             }
 
             this.selectedObject.type = newSelectedType;
@@ -434,15 +465,13 @@ lD.refreshDesigner = function() {
     // Render containers with layout ( default )
     this.renderContainer(this.navigator, this.selectedObject);
     this.renderContainer(this.timeline);
+    this.renderContainer(this.drawer);
     this.renderContainer(this.toolbar);
     this.renderContainer(this.topbar);
     this.renderContainer(this.manager);
     this.renderContainer(this.propertiesPanel, this.selectedObject);
     
     this.renderContainer(this.viewer, this.selectedObject);
-
-    // Reload tooltips
-    this.common.reloadTooltips(this.editorContainer);
 };
 
 
@@ -1019,7 +1048,7 @@ lD.deleteSelectedObject = function() {
         lD.deleteObject(
             lD.selectedObject.type,
             lD.selectedObject[lD.selectedObject.type + 'Id'],
-            lD.layout.regions[lD.selectedObject.regionId].regionId
+            (lD.selectedObject.drawerWidget) ? lD.layout.drawer.regionId : lD.layout.regions[lD.selectedObject.regionId].regionId
         );
     }
 };
@@ -1036,8 +1065,13 @@ lD.deleteDraggedObject = function(draggable) {
     if(objectType === 'region') {
         objectId = lD.layout.regions[draggable.attr('id')].regionId;
     } else if(objectType === 'widget') {
-        objectId = lD.layout.regions[draggable.data('widgetRegion')].widgets[draggable.data('widgetId')].widgetId;
-        objectAuxId = lD.layout.regions[draggable.data('widgetRegion')].regionId;
+        if(draggable.data('parentType') == 'drawer') {
+            objectId = lD.layout.drawer.widgets[draggable.data('widgetId')].widgetId;
+            objectAuxId = lD.layout.drawer.regionId;
+        } else {
+            objectId = lD.layout.regions[draggable.data('widgetRegion')].widgets[draggable.data('widgetId')].widgetId;
+            objectAuxId = lD.layout.regions[draggable.data('widgetRegion')].regionId;
+        }
     }
 
     lD.deleteObject(objectType, objectId, objectAuxId);
@@ -1171,24 +1205,35 @@ lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
     const draggableType = $(draggable).data('type');
     const draggableSubType = $(draggable).data('subType');
 
+    let playlistId;
+
     if(draggableType == 'media') { // Adding media from search tab to a region
 
         // Get playlist Id
-        const playlistId = lD.layout.regions[droppableId].playlists.playlistId;
+        if(droppableId == 'actions-drawer-content') {
+            playlistId = lD.layout.drawer.playlists.playlistId;
+        } else {
+            playlistId = lD.layout.regions[droppableId].playlists.playlistId;
+        }
+
         const mediaId = $(draggable).data('mediaId');
 
         lD.addMediaToPlaylist(playlistId, mediaId, positionToAdd);
 
     } else if(draggableType == 'module') { // Add widget/module
 
-        // Get playlist Id
-        const playlistId = lD.layout.regions[droppableId].playlists.playlistId;
-
         // Get regionSpecific property
         const moduleData = $(draggable).data();
 
-        // Select region ( and avoid deselect if region was already selected )
-        lD.selectObject($(droppable), true);
+        // Get playlist Id
+        if(droppableId == 'actions-drawer-content') {
+            playlistId = lD.layout.drawer.playlists.playlistId;
+        } else {
+            playlistId = lD.layout.regions[droppableId].playlists.playlistId;
+            
+            // Select region ( and avoid deselect if region was already selected )
+            lD.selectObject($(droppable), true);
+        }
 
         lD.addModuleToPlaylist(playlistId, draggableSubType, moduleData, positionToAdd);
     } else if(draggableType == 'tool') { // Add tool
@@ -1563,7 +1608,7 @@ lD.clearTemporaryData = function() {
     lD.editorContainer.find('.colorpicker-element').colorpicker('destroy');
 
     // Hide open tooltips
-    lD.editorContainer.find('[data-toggle="tooltip"]').tooltip('hide');
+    lD.editorContainer.find('.tooltip').remove();
 
     // Remove text callback editor structure variables
     formHelpers.destroyCKEditor();
@@ -1583,8 +1628,14 @@ lD.getElementByTypeAndId = function(type, id, auxId) {
         element = lD.layout;
     } else if(type === 'region') {
         element = lD.layout.regions[id];
+    } else if(type === 'drawer') {
+        element = lD.layout.drawer;
     } else if(type === 'widget') {
-        element = lD.layout.regions[auxId].widgets[id];
+        if(lD.layout.drawer.id != undefined && (lD.layout.drawer.id == auxId || auxId == 'drawer')) {
+            element = lD.layout.drawer.widgets[id];
+        } else {
+            element = lD.layout.regions[auxId].widgets[id];
+        }
     }
 
     return element;
@@ -1739,9 +1790,6 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     let positionTop = ((position.y + contextMenuHeight) > $(window).height()) ? (position.y - contextMenuHeight) : position.y;
 
     lD.editorContainer.find('.context-menu').offset({top: positionTop, left: positionLeft});
-
-    // Initialize tooltips
-    lD.common.reloadTooltips(lD.editorContainer.find('.context-menu'));
 
     // Click overlay to close menu
     lD.editorContainer.find('.context-menu-overlay').click((ev)=> {

@@ -576,6 +576,25 @@ function dataTableDateFromUnix(data, type, row) {
     return moment(data, "X").tz ? moment(data, "X").tz(timezone).format(jsDateFormat) : moment(data, "X").format(jsDateFormat);
 }
 
+function dataTableTimeFromSeconds(data, type, row) {
+    if(type !== "display" && type !== "export")
+        return data;
+
+    if(data == null || data == 0)
+        return "";
+
+    // Get duration 
+    var duration = moment.duration(data * 1000);
+
+    // Get the number of hours
+    var hours = Math.floor(duration.asHours());
+
+    // Format string with leading zero
+    var hoursString = (hours < 10) ? '0' + hours : hours;
+
+    return hoursString + moment.utc(duration.asMilliseconds()).format(":mm:ss");
+}
+
 function dataTableSpacingPreformatted(data, type, row) {
     if (type !== "display")
         return data;

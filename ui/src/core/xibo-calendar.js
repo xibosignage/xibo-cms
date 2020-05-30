@@ -395,7 +395,7 @@ $(document).ready(function() {
                 if(this.options.view == 'agenda') {
                     // When agenda panel is ready, turn tables into datatables with paging
                     $('.agenda-panel').ready(function() {
-                        $('#layouts').dataTable({
+                        $('.agenda-table-layouts').dataTable({
                             "searching": false
                         });
                     });
@@ -459,7 +459,7 @@ $(document).ready(function() {
             }
             
             // Select the clicked element and the linked elements
-            agendaSelectLinkedElements($self.closest('table').prop('id'), $self.data("elemId"), events, $self.data("eventId"));
+            agendaSelectLinkedElements($self.closest('table').data('type'), $self.data("elemId"), events, $self.data("eventId"));
         });
     }
 });
@@ -1107,16 +1107,13 @@ var agendaSelectLinkedElements = function(elemType, elemID, data, eventId) {
     // Use the target events to select the corresponding objects
     for (var i = 0; i < targetEvents.length; i++) {
         // Select the corresponding layout
-        $('table#layouts tr[data-elem-id~="' + targetEvents[i].layoutId + '"][data-event-id~="' + targetEvents[i].eventId + '"]').addClass(selectClass['layouts']);
-        
-        // Select the corresponding layout
-        $('table#overlays tr[data-elem-id~="' + targetEvents[i].layoutId + '"][data-event-id~="' + targetEvents[i].eventId + '"]').addClass(selectClass['overlays']);
+        $('table[data-type="layouts"] tr[data-elem-id~="' + targetEvents[i].layoutId + '"][data-event-id~="' + targetEvents[i].eventId + '"]').addClass(selectClass['layouts']);
         
         // Select the corresponding display group
-        $('table#displaygroups tr[data-elem-id~="' + targetEvents[i].displayGroupId + '"]').addClass(selectClass['displaygroups']);
+        $('table[data-type="displaygroups"] tr[data-elem-id~="' + targetEvents[i].displayGroupId + '"]').addClass(selectClass['displaygroups']);
         
         // Select the corresponding campaigns
-        $('table#campaigns tr[data-elem-id~="' + targetEvents[i].campaignId + '"]').addClass(selectClass['campaigns']);
+        $('table[data-type="campaigns"] tr[data-elem-id~="' + targetEvents[i].campaignId + '"]').addClass(selectClass['campaigns']);
         
     }
     
