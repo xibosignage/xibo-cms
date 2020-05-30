@@ -1423,13 +1423,14 @@ class Schedule extends Base
                 // this happens when the date format provided does not include seconds and when the add
                 // event comes from the UI.
                 $this->getLog()->debug('Date format does not include seconds, removing them');
-                $schedule->fromDt = $fromDt->setTime($fromDt->hour, $fromDt->minute, 0)->format('U');
+                $schedule->fromDt = $fromDt->setTimeFromTimeString($fromDt->hour . ':' . $fromDt->minute . ':00')->format('U');
 
                 // If we have a toDt
                 if ($toDt !== null)
-                    $schedule->toDt = $toDt->setTime($toDt->hour, $toDt->minute, 0)->format('U');
+                    $schedule->toDt = $toDt->setTimeFromTimeString($toDt->hour . ':' . $toDt->minute . ':00')->format('U');
 
-                $schedule->recurrenceRange = ($recurrenceRange === null) ? null : $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
+                $schedule->recurrenceRange = ($recurrenceRange === null) ? null :
+                    $recurrenceRange->setTimeFromTimeString($recurrenceRange->hour . ':' . $recurrenceRange->minute . ':00')->format('U');
             } else {
                 $schedule->fromDt = $fromDt->format('U');
 
@@ -1440,6 +1441,9 @@ class Schedule extends Base
             }
 
             $this->getLog()->debug('Processed start is: FromDt=' . $fromDt->toRssString());
+        } else {
+            // This is an always day part, which cannot be recurring, make sure we clear the recurring type if it has been set
+            $schedule->recurrenceType = '';
         }
 
         // Ready to do the add
