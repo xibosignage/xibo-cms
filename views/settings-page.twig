@@ -970,7 +970,8 @@
 
                                 {% if theme.isSettingVisible("DATE_FORMAT") %}
                                     {% set title %}{% trans "Date Format" %}{% endset %}
-                                    {% set helpText %}{% trans "The Date Format to use when displaying dates in the CMS." %}{% endset %}
+                                    {% set manualUrl %}{{ helpService.address("advanced_dateFormat.html") }}{% endset %}
+                                    {% set helpText %}{% trans %}The Date Format to use when displaying dates in the CMS. See the <a href="{{ manualUrl }}">Manual</a> for allowed formats.{% endtrans %}{% endset %}
 
                                     {% if theme.isSettingEditable("DATE_FORMAT") %}
                                         {{ forms.input("DATE_FORMAT", title, theme.getSetting("DATE_FORMAT", "Y-m-d"), helpText, "required") }}

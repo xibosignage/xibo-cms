@@ -757,9 +757,6 @@ Timeline.prototype.render = function(layout) {
     if(!$.isEmptyObject(this.scrollOnLoad)) {
         this.scrollToWidget(this.scrollOnLoad);
     }
-
-    // Initialize tooltips
-    app.common.reloadTooltips(this.DOMObject);
 };
 
 /**

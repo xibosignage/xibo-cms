@@ -244,9 +244,16 @@ class Layout implements \JsonSerializable
     public $autoApplyTransitions;
 
     // Child items
-    /** @var Region[]  */
+    /**
+     * @SWG\Property(description="An array of Regions belonging to this Layout")
+     * @var Region[]
+     */
     public $regions = [];
 
+    /**
+     * @SWG\Property(description="An array of Tags belonging to this Layout")
+     * @var \Xibo\Entity\Tag[]
+     */
     public $tags = [];
     public $permissions = [];
     public $campaigns = [];

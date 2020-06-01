@@ -2,16 +2,16 @@
     <div class="context-menu context-menu-{{obj.type}}" >
         {{#if isSortable}}
             <div class="sort-controls-container">
-                <div class="context-menu-btn" title="{{trans.moveTopLeft}}" data-action="Move" data-action-type="topLeft" data-toggle="tooltip">
+                <div class="context-menu-btn" data-title="{{trans.moveTopLeft}}" data-action="Move" data-action-type="topLeft" data-toggle="tooltip">
                     <i class="fa fa-fast-backward"></i>
                 </div>
-                <div class="context-menu-btn" title="{{trans.moveLeft}}" data-action="Move" data-action-type="oneLeft" data-toggle="tooltip">
+                <div class="context-menu-btn" data-title="{{trans.moveLeft}}" data-action="Move" data-action-type="oneLeft" data-toggle="tooltip">
                     <i class="fa fa-backward"></i>
                 </div>
-                <div class="context-menu-btn" title="{{trans.moveRight}}" data-action="Move" data-action-type="oneRight" data-toggle="tooltip">
+                <div class="context-menu-btn" data-title="{{trans.moveRight}}" data-action="Move" data-action-type="oneRight" data-toggle="tooltip">
                     <i class="fa fa-forward"></i>
                 </div>
-                <div class="context-menu-btn" title="{{trans.moveTopRight}}" data-action="Move" data-action-type="topRight" data-toggle="tooltip">
+                <div class="context-menu-btn" data-title="{{trans.moveTopRight}}" data-action="Move" data-action-type="topRight" data-toggle="tooltip">
                     <i class="fa fa-fast-forward"></i>
                 </div>
             </div>
@@ -20,32 +20,32 @@
         <div class="main-button-container">
             {{#eq type "widget"}}
                 {{#if isEditable}}
-                    <div class="context-menu-btn" title="{{trans.editAudio}}" data-property="Audio" data-toggle="tooltip" data-placement="bottom">
+                    <div class="context-menu-btn" data-title="{{trans.editAudio}}" data-property="Audio" data-toggle="tooltip" data-placement="bottom">
                         <i class="fa tool-icon-audio"></i>
                     </div>
 
-                    <div class="context-menu-btn" title="{{trans.editExpiry}}" data-property="Expiry" data-toggle="tooltip" data-placement="bottom">
+                    <div class="context-menu-btn" data-title="{{trans.editExpiry}}" data-property="Expiry" data-toggle="tooltip" data-placement="bottom">
                         <i class="fa tool-icon-expiry"></i>
                     </div>
                 
-                    <div class="context-menu-btn" title="{{trans.editTransIn}}" data-property="Transition" data-property-type="in" data-toggle="tooltip" data-placement="bottom">
+                    <div class="context-menu-btn" data-title="{{trans.editTransIn}}" data-property="Transition" data-property-type="in" data-toggle="tooltip" data-placement="bottom">
                         <i class="fa tool-icon-transitionIn"></i>
                     </div>
                     
-                    <div class="context-menu-btn" title="{{trans.editTransOut}}" data-property="Transition" data-property-type="out" data-toggle="tooltip" data-placement="bottom">
+                    <div class="context-menu-btn" data-title="{{trans.editTransOut}}" data-property="Transition" data-property-type="out" data-toggle="tooltip" data-placement="bottom">
                         <i class="fa tool-icon-transitionOut"></i>
                     </div>
                 {{/if}}
             {{/eq}}
 
             {{#if isPermissionsModifiable}}
-                <div class="context-menu-btn permissionsBtn" title="{{trans.editPermissions}}" data-property="Permissions" data-toggle="tooltip" data-placement="bottom">
+                <div class="context-menu-btn permissionsBtn" data-title="{{trans.editPermissions}}" data-property="Permissions" data-toggle="tooltip" data-placement="bottom">
                     <i class="fa tool-icon-permissions"></i>
                 </div>
             {{/if}}
 
             {{#if isDeletable}}
-                <div class="context-menu-btn deleteBtn" title="{{trans.delete}}" data-action="Delete" data-toggle="tooltip" data-placement="bottom">
+                <div class="context-menu-btn deleteBtn" data-title="{{trans.delete}}" data-action="Delete" data-toggle="tooltip" data-placement="bottom">
                     <i class="fa fa-trash"></i>
                 </div>
             {{/if}}

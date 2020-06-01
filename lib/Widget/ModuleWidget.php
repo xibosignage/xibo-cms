@@ -52,6 +52,7 @@ use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DateServiceGregorian;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
@@ -111,6 +112,9 @@ abstract class ModuleWidget implements ModuleInterface
 
     /** @var Event */
     private $saveEvent;
+
+    /** @var array Cache of module templates */
+    private $moduleTemplates;
 
     //<editor-fold desc="Injected Factory Classes and Services ">
 
@@ -321,7 +325,11 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected function getDate()
     {
-        return $this->dateService;
+        // This is a hack to work around issues with Jalali calendar returning the wrong date/time for caching
+        // essentially it caches in Jalali and never invalidates.
+        // this is not necessary in v3 because the BE uses Carbon in Gregorian
+        // xibosignage/xibo#2204
+        return new DateServiceGregorian();
     }
 
     /**
@@ -1202,32 +1210,43 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function templatesAvailable($loadImage = true)
     {
-        if (!isset($this->module->settings['templates'])) {
-
-            $this->module->settings['templates'] = [];
+        if ($this->moduleTemplates === null) {
+            $this->moduleTemplates = [];
 
             // Scan the folder for template files
-            foreach (glob(PROJECT_ROOT . '/modules/' . $this->module->type . '/*.template.json') as $template) {
-                // Read the contents, json_decode and add to the array
-                $template = json_decode(file_get_contents($template), true);
+            $this->scanFolderForTemplates(PROJECT_ROOT . '/modules/' . $this->module->type . '/*.template.json', $loadImage);
 
-                if (isset($template['image'])) {
-                    $template['fileName'] = $template['image'];
-
-                    if ($loadImage) {
-                        // Find the URL to the module file representing this template image
-                        $template['image'] = $this->getApp()->urlFor('module.getTemplateImage', ['type' => $this->module->type, 'templateId' => $template['id']]);
-                    }
-                } else {
-                    $template['fileName'] = '';
-                    $template['image'] = '';
-                }
-
-                $this->module->settings['templates'][] = $template;
-            }
+            // Scan the custom folder for template files.
+            $this->scanFolderForTemplates(PROJECT_ROOT . '/custom/' . $this->module->type . '/*.template.json', $loadImage);
         }
 
-        return $this->module->settings['templates'];
+        return $this->moduleTemplates;
+    }
+
+    /**
+     * @param string $folder
+     * @param bool $loadImage
+     */
+    private function scanFolderForTemplates($folder, $loadImage = true)
+    {
+        foreach (glob($folder) as $template) {
+            // Read the contents, json_decode and add to the array
+            $template = json_decode(file_get_contents($template), true);
+
+            if (isset($template['image'])) {
+                $template['fileName'] = $template['image'];
+
+                if ($loadImage) {
+                    // Find the URL to the module file representing this template image
+                    $template['image'] = $this->getApp()->urlFor('module.getTemplateImage', ['type' => $this->module->type, 'templateId' => $template['id']]);
+                }
+            } else {
+                $template['fileName'] = '';
+                $template['image'] = '';
+            }
+
+            $this->moduleTemplates[] = $template;
+        }
     }
 
     /**

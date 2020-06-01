@@ -611,6 +611,21 @@ class Display extends Base
                 $display->thumbnail = $this->urlFor('display.screenShot', ['id' => $display->displayId]) . '?' . Random::generateString();
             }
 
+            // Remote support buttons.
+            $teamViewerSerial = '';
+            $webkeySerial = '';
+            foreach ($display->overrideConfig as $override) {
+                if ($override['name'] === 'teamViewerSerial') {
+                    $teamViewerSerial = $override['value'];
+                }
+                if ($override['name'] === 'webkeySerial') {
+                    $webkeySerial = $override['value'];
+                }
+            }
+
+            $display->teamViewerLink = (!empty($teamViewerSerial)) ? 'https://start.teamviewer.com/' . $teamViewerSerial : '';
+            $display->webkeyLink = (!empty($webkeySerial)) ? 'https://webkeyapp.com/mgm?publicid=' . $webkeySerial : '';
+
             // Edit and Delete buttons first
             if ($this->getUser()->checkEditable($display)) {
 
@@ -914,6 +929,18 @@ class Display extends Base
             }
         }
 
+        // These are temporary additions and will be removed in v3
+        $teamViewerSerial = '';
+        $webkeySerial = '';
+        foreach ($display->overrideConfig as $override) {
+            if ($override['name'] === 'teamViewerSerial') {
+                $teamViewerSerial = $override['value'];
+            }
+            if ($override['name'] === 'webkeySerial') {
+                $webkeySerial = $override['value'];
+            }
+        }
+
         $this->getState()->template = 'display-form-edit';
         $this->getState()->setData([
             'display' => $display,
@@ -927,7 +954,10 @@ class Display extends Base
             'help' => $this->getHelp()->link('Display', 'Edit'),
             'versions' => $playerVersions,
             'tags' => $tags,
-            'dayParts' => $dayparts
+            'dayParts' => $dayparts,
+            // These are temporary additions and will be removed in v3
+            'teamViewerSerial' => $teamViewerSerial,
+            'webkeySerial' => $webkeySerial
         ]);
     }
 
@@ -1114,6 +1144,20 @@ class Display extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="teamViewerSerial",
+     *      in="formData",
+     *      description="The TeamViewer serial number for this Display, if applicable",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="webkeySerial",
+     *      in="formData",
+     *      description="The Webkey serial number for this Display, if applicable",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1159,6 +1203,14 @@ class Display extends Base
         // Get the display profile and use that to pull in any overrides
         // start with an empty config
         $display->overrideConfig = $this->editConfigFields($display->getDisplayProfile(), []);
+
+        // Workaround
+        // in v3 these will have their own fields.
+        $profile = $display->getDisplayProfile();
+        $profile->setSetting('teamViewerSerial', $this->getSanitizer()->getString('teamViewerSerial'),
+            false, $display->overrideConfig);
+        $profile->setSetting('webkeySerial', $this->getSanitizer()->getString('webkeySerial'),
+            false, $display->overrideConfig);
 
         // Tags are stored on the displaygroup, we're just passing through here
         $display->tags = $this->tagFactory->tagsFromString($this->getSanitizer()->getString('tags'));
