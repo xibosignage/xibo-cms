@@ -113,7 +113,10 @@ class Playlist implements \JsonSerializable
     public $duration = 0;
 
     /**
-     * @var int Flag indicating whether this Playlists requires a duration update
+     * @var int
+     * @SWG\Property(
+     *     description="Flag indicating whether this Playlists requires a duration update"
+     * )
      */
     public $requiresDurationUpdate;
 

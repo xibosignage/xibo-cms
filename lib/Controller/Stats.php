@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2016 Daniel Garner
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -186,6 +187,10 @@ class Stats extends Base
      *  ),
      *  @SWG\Property(
      *      property="widgetId",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
+     *      property="scheduleId",
      *      type="integer"
      *  ),
      *  @SWG\Property(
@@ -382,41 +387,8 @@ class Stats extends Base
 
         // Do not filter by display if super admin and no display is selected
         // Super admin will be able to see stat records of deleted display, we will not filter by display later
-        $displayIds = [];
-        $displaysAccessible = [];
         $timeZoneCache = [];
-
-        if (!$this->getUser()->isSuperAdmin()) {
-            // Get an array of display id this user has access to.
-            foreach ($this->displayFactory->query() as $display) {
-                $displaysAccessible[] = $display->displayId;
-
-                // Cache the display timezone.
-                $timeZoneCache[$display->displayId] = $display->timeZone;
-            }
-
-            if (count($displaysAccessible) <= 0)
-                throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
-
-            // Set displayIds as [-1] if the user selected a display for which they don't have permission
-           if (count($displays) <= 0) {
-               $displayIds = $displaysAccessible;
-           } else {
-               foreach ($displays as $key => $id) {
-                   if (!in_array($id, $displaysAccessible)) {
-                       unset($displays[$key]);
-                   } else {
-                       $displayIds[] = $id;
-                   }
-               }
-
-               if (count($displays) <= 0 ) {
-                   $displayIds = [-1];
-               }
-           }
-        } else {
-            $displayIds = $displays;
-        }
+        $displayIds = $this->authoriseDisplayIds($displays, $timeZoneCache);
 
         // Call the time series interface getStats
         $resultSet =  $this->timeSeriesStore->getStats(
@@ -481,6 +453,7 @@ class Stats extends Base
             $entry['layoutId'] = $this->getSanitizer()->int($row['layoutId']);
             $entry['widgetId'] = $this->getSanitizer()->int($row['widgetId']);
             $entry['mediaId'] = $this->getSanitizer()->int($row['mediaId']);
+            $entry['scheduleId'] = $this->getSanitizer()->int($row['scheduleId'] ?? 0);
             $entry['tag'] = $this->getSanitizer()->string($row['tag']);
             $entry['statDate'] = isset($row['statDate']) ? $this->getDate()->parse($row['statDate'], 'U')->format($returnDateFormat) : '';
             $entry['engagements'] = $row['engagements'];
@@ -961,7 +934,7 @@ class Stats extends Base
     /**
      * @throws InvalidArgumentException
      */
-    public function timeDisconnectedGrid()
+    public function timeDisconnectedData()
     {
         $fromDt = $this->getSanitizer()->getDate('fromDt', $this->getSanitizer()->getDate('availabilityFromDt'));
         $toDt = $this->getSanitizer()->getDate('toDt', $this->getSanitizer()->getDate('availabilityToDt'));
@@ -1157,5 +1130,251 @@ class Stats extends Base
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($rows);
+    }
+
+    /**
+     * @SWG\Definition(
+     *  definition="TimeDisconnectedData",
+     *  @SWG\Property(
+     *      property="display",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="displayId",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
+     *      property="duration",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
+     *      property="start",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="end",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="isFinished",
+     *      type="boolean"
+     *  )
+     * )
+     *
+     * @SWG\Get(
+     *  path="/stats/timeDisconnected",
+     *  operationId="timeDisconnectedSearch",
+     *  tags={"statistics"},
+     *  @SWG\Parameter(
+     *      name="fromDt",
+     *      in="query",
+     *      description="The start date for the filter.",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="toDt",
+     *      in="query",
+     *      description="The end date for the filter.",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      in="query",
+     *      description="An optional display Id to filter",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="displayIds",
+     *      description="An optional array of display Id to filter",
+     *      in="query",
+     *      required=false,
+     *      type="array",
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *   @SWG\Parameter(
+     *      name="returnDisplayLocalTime",
+     *      in="query",
+     *      description="true/1/On if the results should be in display local time, otherwise CMS time",
+     *      type="boolean",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="returnDateFormat",
+     *      in="query",
+     *      description="A PHP formatted date format for how the dates in this call should be returned.",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(
+     *              ref="#/definitions/TimeDisconnectedData"
+     *          )
+     *      )
+     *  )
+     * )
+     * @throws \Xibo\Exception\InvalidArgumentException
+     */
+    public function gridTimeDisconnected()
+    {
+        // CMS timezone
+        $defaultTimezone = $this->getConfig()->getSetting('defaultTimezone');
+
+        $fromDt = $this->getSanitizer()->getDate('fromDt');
+        $toDt = $this->getSanitizer()->getDate('toDt');
+        $displayId = $this->getSanitizer()->getInt('displayId');
+        $displays = $this->getSanitizer()->getIntArray('displayIds');
+        $returnDisplayLocalTime = $this->getSanitizer()->getCheckbox('returnDisplayLocalTime');
+        $returnDateFormat = $this->getSanitizer()->getString('returnDateFormat', 'Y-m-d H:i:s');
+
+        // Merge displayId and displayIds
+        if ($displayId != 0) {
+            $displays = array_unique(array_merge($displays, [$displayId]));
+        }
+
+        $timeZoneCache = [];
+        $displayIds = $this->authoriseDisplayIds($displays, $timeZoneCache);
+
+        $params = [];
+        $select = '
+            SELECT displayevent.eventDate, 
+                    display.displayId, 
+                    display.display, 
+                    displayevent.start, 
+                    displayevent.end
+        ';
+        $body = '
+              FROM displayevent
+                INNER JOIN display 
+                ON displayevent.displayId = display.displayId
+             WHERE 1 = 1 
+        ';
+
+        if (count($displays) > 0) {
+            $body .= ' AND display.displayId IN (' . implode(',', $displayIds) . ') ';
+        }
+
+        if ($fromDt != null) {
+            $body .= ' AND displayevent.start >= :start ';
+            $params['start'] = $fromDt->format('U');
+        }
+
+        if ($toDt != null) {
+            $body .= ' AND displayevent.end < :end ';
+            $params['end'] = $toDt->format('U');
+        }
+
+        // Sorting?
+        $filterBy = $this->gridRenderFilter();
+        $sortOrder = $this->gridRenderSort();
+
+        $order = '';
+        if (is_array($sortOrder))
+            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        $limit = '';
+
+        // Paging
+        if ($filterBy !== null && $this->getSanitizer()->getInt('start', $filterBy) !== null
+            && $this->getSanitizer()->getInt('length', $filterBy) !== null) {
+            $limit = ' LIMIT ' . intval($this->getSanitizer()->getInt('start', $filterBy), 0) . ', '
+                . $this->getSanitizer()->getInt('length', 10, $filterBy);
+        }
+
+        $sql = $select . $body . $order . $limit;
+
+        // Run the main query
+        $rows = [];
+        foreach ($this->store->select($sql, $params) as $row) {
+            $entry = [];
+            $entry['displayId'] = $this->getSanitizer()->int($row['displayId']);
+            $entry['display'] = $this->getSanitizer()->string($row['display']);
+            $entry['isFinished'] = $row['end'] !== null;
+
+            // Get the start/end date
+            $start = $this->getDate()->parse($row['start'], 'U');
+            $end = $this->getDate()->parse($row['end'], 'U');
+
+            if ($returnDisplayLocalTime) {
+                // Convert the dates to the display timezone.
+                if (!array_key_exists($entry['displayId'], $timeZoneCache)) {
+                    try {
+                        $display = $this->displayFactory->getById($entry['displayId']);
+                        $timeZoneCache[$entry['displayId']] = (empty($display->timeZone)) ? $defaultTimezone : $display->timeZone;
+                    } catch (NotFoundException $e) {
+                        $timeZoneCache[$entry['displayId']] = $defaultTimezone;
+                    }
+                }
+                $start = $start->tz($timeZoneCache[$entry['displayId']]);
+                $end = $end->tz($timeZoneCache[$entry['displayId']]);
+            }
+            $entry['start'] = $start->format($returnDateFormat);
+            $entry['end'] = $end->format($returnDateFormat);
+            $entry['duration'] = $end->diffInSeconds($start);
+            $rows[] = $entry;
+        }
+
+        // Paging
+        if ($limit != '' && count($rows) > 0) {
+            $results = $this->store->select($select . $body, $params);
+            $this->getState()->recordsTotal = count($results);
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($rows);
+    }
+
+    /**
+     * @param $displays
+     * @param $timeZoneCache
+     * @return array|int[]
+     * @throws \Xibo\Exception\InvalidArgumentException
+     */
+    private function authoriseDisplayIds($displays, &$timeZoneCache)
+    {
+        $displayIds = [];
+        $displaysAccessible = [];
+
+        if (!$this->getUser()->isSuperAdmin()) {
+            // Get an array of display id this user has access to.
+            foreach ($this->displayFactory->query() as $display) {
+                $displaysAccessible[] = $display->displayId;
+
+                // Cache the display timezone.
+                $timeZoneCache[$display->displayId] = $display->timeZone;
+            }
+
+            if (count($displaysAccessible) <= 0)
+                throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
+
+            // Set displayIds as [-1] if the user selected a display for which they don't have permission
+            if (count($displays) <= 0) {
+                $displayIds = $displaysAccessible;
+            } else {
+                foreach ($displays as $key => $id) {
+                    if (!in_array($id, $displaysAccessible)) {
+                        unset($displays[$key]);
+                    } else {
+                        $displayIds[] = $id;
+                    }
+                }
+
+                if (count($displays) <= 0 ) {
+                    $displayIds = [-1];
+                }
+            }
+        } else {
+            $displayIds = $displays;
+        }
+
+        return $displayIds;
     }
 }

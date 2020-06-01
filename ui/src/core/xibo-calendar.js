@@ -441,9 +441,10 @@ var setupScheduleForm = function(dialog) {
     console.log("Setup schedule form");
 
     // geo schedule
-    let $isGeoAware = $('#isGeoAware').is(':checked');
+    let $geoAware = $('#isGeoAware');
+    let isGeoAware = $geoAware.is(':checked');
 
-    if ($isGeoAware ) {
+    if (isGeoAware) {
 
         // without this additional check the map will not load correctly, it should be initialised when we are on the Geo Location tab
         $('.nav-tabs a').on('shown.bs.tab', function(event){
@@ -456,10 +457,10 @@ var setupScheduleForm = function(dialog) {
     }
 
     // hide/show and generate map according to the Geo Schedule checkbox value
-    $('#isGeoAware').change(function() {
-        $isGeoAware = $('#isGeoAware').is(':checked');
+    $geoAware.change(function() {
+        isGeoAware = $('#isGeoAware').is(':checked');
 
-        if ($isGeoAware) {
+        if (isGeoAware) {
             $('#geoScheduleMap').removeClass('hidden');
             generateGeoMap();
         } else {
@@ -683,24 +684,37 @@ var setupScheduleForm = function(dialog) {
         });
     });
 
-    // Add a button for duplicating this event
-    if ($(dialog).find("#scheduleEditForm").length > 0) {
-        $button = $("<button>").addClass("btn btn-info").attr("id", "scheduleDuplateButton").html(translations.duplicate).on("click", function() {
-            duplicateScheduledEvent()
-        });
-
-        $(dialog).find('.modal-footer').prepend($button);
-    }
-
     // Popover
     $(dialog).find('[data-toggle="popover"]').popover();
 
-    var scheduleEditForm = $(dialog).find("#scheduleEditForm");
-    // Add a button for deleting single recurring event
-    if (scheduleEditForm.length > 0) {
-        $button = $("<button>").addClass("btn btn-primary").attr("id", "scheduleRecurringDeleteButton").html(translations.deleteRecurring).on("click", function() {
-            deleteRecurringScheduledEvent(scheduleEditForm.data('eventId'), scheduleEditForm.data('eventStart'), scheduleEditForm.data('eventEnd'))
-        });
+    // Post processing on the schedule-edit form.
+    let $scheduleEditForm = $(dialog).find("#scheduleEditForm");
+    if ($scheduleEditForm.length > 0) {
+        // Add a button for duplicating this event
+        let $button = $("<button>").addClass("btn btn-info")
+            .attr("id", "scheduleDuplateButton")
+            .html(translations.duplicate)
+            .on("click", function() {
+                duplicateScheduledEvent();
+            });
+
+        $(dialog).find('.modal-footer').prepend($button);
+
+        // Update the date/times for this event in the correct format.
+        $scheduleEditForm.find("#instanceStartDate").html(moment($scheduleEditForm.data().eventStart, "X").format(jsDateFormat));
+        $scheduleEditForm.find("#instanceEndDate").html(moment($scheduleEditForm.data().eventEnd, "X").format(jsDateFormat));
+
+        // Add a button for deleting single recurring event
+        $button = $("<button>").addClass("btn btn-primary")
+            .attr("id", "scheduleRecurringDeleteButton")
+            .html(translations.deleteRecurring)
+            .on("click", function() {
+                deleteRecurringScheduledEvent(
+                    $scheduleEditForm.data('eventId'),
+                    $scheduleEditForm.data('eventStart'),
+                    $scheduleEditForm.data('eventEnd')
+                );
+            });
 
         $(dialog).find('#recurringInfo').prepend($button);
     }

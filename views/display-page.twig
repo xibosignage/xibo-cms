@@ -193,6 +193,7 @@
                                 <th>{% trans "Last Command" %}</th>
                                 <th>{% trans "XMR Registered" %}</th>
                                 <th>{% trans "Commercial Licence" %}</th>
+                                <th>{% trans "Remote" %}</th>
                                 <th>{% trans "Row Menu" %}</th>
                             </tr>
                         </thead>
@@ -282,21 +283,7 @@
                 },
                 "columns": [
                     {"data": "displayId"},
-                    {
-                        "name": "display",
-                        "data": function (data, type) {
-                            if (type != "display")
-                                return data.display;
-
-                            if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" != "" && data.clientAddress != null && data.clientAddress != "") {
-                                var link = "{{ settings.SHOW_DISPLAY_AS_VNCLINK }}".replace('%s', data.clientAddress);
-                                return '<a href="' + link + '" title="{% trans "VNC to this Display" %}" target="{{ settings.SHOW_DISPLAY_AS_VNC_TGT }}">' + data.display + '</a>';
-                            }
-                            else {
-                                return data.display;
-                            }
-                        }
-                    },
+                    {"data": "display"},
                     {
                         "data": "mediaInventoryStatus",
                         "render": function (data, type, row) {
@@ -455,6 +442,33 @@
                             }
                         },
                         "visible": false
+                    },
+                    {
+                        "name": "remote",
+                        "render": function (data, type, row) {
+                            if (type !== "display")
+                                return "";
+
+                            var html = "<div class='remote-icons'>";
+                            if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" !== "" && row.clientAddress != null && row.clientAddress !== "") {
+                                var link = "{{ settings.SHOW_DISPLAY_AS_VNCLINK }}".replace('%s', row.clientAddress);
+                                html += '<a href="' + link + '" title="{% trans "VNC to this Display" %}" target="{{ settings.SHOW_DISPLAY_AS_VNC_TGT }}">'
+                                    + '<i class="fa fa-eye"></i></a>';
+                            }
+
+                            if (row.teamViewerLink !== "") {
+                                html += '<a href="' + row.teamViewerLink + '" title="{% trans "TeamViewer to this Display" %}" target="_blank">'
+                                    + '<img src="{{ theme.rootUri() }}theme/default/img/remote_icons/teamviewer.png" alt="TeamViewer Icon"></a>';
+                            }
+
+                            if (row.webkeyLink !== "") {
+                                html += '<a href="' + row.webkeyLink + '" title="{% trans "Webkey to this Display" %}" target="_blank">'
+                                    + '<img src="{{ theme.rootUri() }}theme/default/img/remote_icons/webkey.png" alt="Webkey Icon"></a>';
+                            }
+
+                            return html + "</div>";
+                        },
+                        "visible": true
                     },
                     {
                         "orderable": false,
