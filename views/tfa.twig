@@ -10,7 +10,7 @@
     <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
 
     <!-- Import CSS bundle from dist -->
-    <script src="{{ theme.rootUri() }}dist/style.bundle.min.js"></script>
+    <script src="{{ theme.rootUri() }}dist/style.bundle.min.js?{{ version }}"></script>
 
     <!-- Copyright 2006-2019 Spring Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
     <style type="text/css">
@@ -86,7 +86,7 @@
     </form>
 </div>
 <!-- Import JS bundle from dist -->
-<script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js"></script>
+<script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js?{{ version }}"></script>
 <script type="text/javascript">
     $(function() {
         $("#recovery-form-toggle").on("click", function (e) {
