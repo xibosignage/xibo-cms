@@ -2011,6 +2011,20 @@
                         "description": "Clear the cached XMR configuration and send a rekey",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "teamViewerSerial",
+                        "in": "formData",
+                        "description": "The TeamViewer serial number for this Display, if applicable",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "webkeySerial",
+                        "in": "formData",
+                        "description": "The Webkey serial number for this Display, if applicable",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -11201,6 +11215,9 @@
                     "type": "integer"
                 },
                 "widgetId": {
+                    "type": "integer"
+                },
+                "scheduleId": {
                     "type": "integer"
                 },
                 "numberPlays": {
