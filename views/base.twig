@@ -11,15 +11,15 @@
         <link href="{{ url_for("library.font.css") }}" rel="stylesheet">
         
         {# Import CSS bundle from dist #}
-        <script src="{{ theme.rootUri() }}dist/style.bundle.min.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/style.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
 
         {# Import user made CSS from theme #}
-        <link href="{{ theme.uri("css/dashboard.css") }}?{{ version }}" rel="stylesheet" media="screen">
-        <link href="{{ theme.uri("css/timeline.css") }}?{{ version }}" rel="stylesheet" media="screen">
-        <link href="{{ theme.uri("css/xibo.css") }}?{{ version }}" rel="stylesheet" media="screen">
-        <link href="{{ theme.uri("css/calendar.css") }}?{{ version }}" rel="stylesheet" media="screen">
-        <link href="{{ theme.uri("css/override.css") }}?{{ version }}" rel="stylesheet" media="screen">
-        <link href="{{ theme.uri("css/print.css") }}?{{ version }}" rel="stylesheet">
+        <link href="{{ theme.uri("css/dashboard.css") }}?v={{ version }}&rev={{revision}}" rel="stylesheet" media="screen">
+        <link href="{{ theme.uri("css/timeline.css") }}?v={{ version }}&rev={{revision}}" rel="stylesheet" media="screen">
+        <link href="{{ theme.uri("css/xibo.css") }}?v={{ version }}&rev={{revision}}" rel="stylesheet" media="screen">
+        <link href="{{ theme.uri("css/calendar.css") }}?v={{ version }}&rev={{revision}}" rel="stylesheet" media="screen">
+        <link href="{{ theme.uri("css/override.css") }}?v={{ version }}&rev={{revision}}" rel="stylesheet" media="screen">
+        <link href="{{ theme.uri("css/print.css") }}?v={{ version }}&rev={{revision}}" rel="stylesheet">
         <link href="{{ url_for("library.font.css") }}" rel="stylesheet">
         <!-- Copyright 2006-2019 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
         <!-- Please be sure you read this before removing the Source/About links from your theme: http://bit.ly/agplv3 -->
@@ -34,44 +34,44 @@
         </script>
 
         {# Import JS bundle from dist #}
-        <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
 
         {# Import JS system tools #}
-        <script src="{{ theme.rootUri() }}dist/systemTools.bundle.min.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/systemTools.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
 
         {# jquery-file-upload #}
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/tmpl.min.js?{{ version }}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-load-image/load-image.all.min.js?{{ version }}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.iframe-transport.js?{{ version }}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload.js?{{ version }}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-process.js?{{ version }}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-resize.js?{{ version }}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-validate.js?{{ version }}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-ui.js?{{ version }}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-image.js?{{ version }}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-video.js?{{ version }}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-audio.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/tmpl.min.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-load-image/load-image.all.min.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.iframe-transport.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-process.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-resize.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-validate.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-ui.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-image.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-video.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-audio.js?v={{ version }}&rev={{revision}}"></script>
 
         {# Import libraries copied to dist #}
-        <script src="{{ theme.rootUri() }}dist/vendor/ckeditor/ckeditor.js?{{ version }}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/bootstrap-fix/bootstrap-ckeditor-fix.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/ckeditor/ckeditor.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/bootstrap-fix/bootstrap-ckeditor-fix.js?v={{ version }}&rev={{revision}}"></script>
 
         {# Import XIBO js files #}
-        <script src="{{ theme.rootUri() }}dist/core/xibo-cms.js?{{ version }}"></script>
-        <script src="{{ theme.rootUri() }}dist/core/xibo-forms.js?{{ version }}"></script>
-        <script src="{{ theme.rootUri() }}dist/core/xibo-preview-timeline.js?{{ version }}"></script>
-        <script src="{{ theme.rootUri() }}dist/core/xibo-calendar.js?{{ version }}"></script>
-        <script src="{{ theme.rootUri() }}dist/core/xibo-datasets.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/core/xibo-cms.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/core/xibo-forms.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/core/xibo-preview-timeline.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/core/xibo-calendar.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/core/xibo-datasets.js?v={{ version }}&rev={{revision}}"></script>
 
 
         {# Dates #}
         {% if settings.CALENDAR_TYPE == "Jalali" %}
-            <script src="{{ theme.rootUri() }}dist/vendor/calendar/js/calendar-jalali.js?{{ version }}"></script>
+            <script src="{{ theme.rootUri() }}dist/vendor/calendar/js/calendar-jalali.js?v={{ version }}&rev={{revision}}"></script>
             <script type="text/javascript">
                 moment.loadPersian();
             </script>
         {% else %}
-            <script src="{{ theme.rootUri() }}dist/vendor/calendar/js/calendar.js?{{ version }}"></script>
+            <script src="{{ theme.rootUri() }}dist/vendor/calendar/js/calendar.js?v={{ version }}&rev={{revision}}"></script>
         {% endif %}
 
         {# Handle the inclusion of i18n #}
