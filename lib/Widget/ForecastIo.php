@@ -49,7 +49,6 @@ use Xibo\Weather\OpenWeatherMapProvider;
 
 /**
  * Class ForecastIo
- * Weather module powered by the DarkSky API
  * @package Xibo\Widget
  */
 class ForecastIo extends ModuleWidget

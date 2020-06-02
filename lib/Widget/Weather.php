@@ -54,13 +54,10 @@ use Xibo\Weather\OpenWeatherMapProvider;
 
 /**
  * Class Weather
- * Weather module powered by the DarkSky API
  * @package Xibo\Widget
  */
 class Weather extends ModuleWidget
 {
-    const API_ENDPOINT = 'https://api.darksky.net/forecast/';
-
     const WEATHER_BACKGROUNDS = array(
         "cloudy-image",
         "day-cloudy-image",
@@ -114,7 +111,7 @@ class Weather extends ModuleWidget
     );
     
     const WEATHER_SNIPPETS_FORECAST = array(
-            'time',
+        'time',
         'sunSet',
         'sunRise',
         'summary',
@@ -223,10 +220,12 @@ class Weather extends ModuleWidget
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Process any module settings you asked for.
         $apiKey = $sanitizedParams->getString('apiKey');
+        $owmApiKey = $sanitizedParams->getString('owmApiKey');
+        $owmIsPaidPlan = $sanitizedParams->getCheckbox('owmIsPaidPlan');
         $cachePeriod = $sanitizedParams->getInt('cachePeriod', ['default' => 300]);
 
         if ($this->module->enabled != 0) {
-            if ($apiKey == '')
+            if ($apiKey == '' && $owmApiKey == '')
                 throw new InvalidArgumentException(__('Missing API Key'), 'apiKey');
 
             if ($cachePeriod <= 0)
@@ -234,6 +233,8 @@ class Weather extends ModuleWidget
         }
 
         $this->module->settings['apiKey'] = $apiKey;
+        $this->module->settings['owmApiKey'] = $owmApiKey;
+        $this->module->settings['owmIsPaidPlan'] = $owmIsPaidPlan;
         $this->module->settings['cachePeriod'] = $cachePeriod;
 
         return $response;
@@ -585,7 +586,7 @@ class Weather extends ModuleWidget
         // Create a provider
         return $this->getProvider()
             ->setHttpClient(new Client($this->getConfig()->getGuzzleProxy(['connect_timeout' => 20])))
-            ->enableLogging($this->getLog())
+            //->enableLogging($this->getLog())
             ->setCachePeriod($this->getSetting('cachePeriod', 14400))
             ->setLocation($defaultLat, $defaultLong)
             ->setUnits($this->getOption('units', 'auto'))
@@ -999,7 +1000,6 @@ class Weather extends ModuleWidget
     public function getBackgroundOptions()
     {
         $initBackgrounds = [];
-        $resBackgrounds = [];
 
         foreach (self::WEATHER_BACKGROUNDS as $background) {
             if($this->getOption($background) != $background) {
