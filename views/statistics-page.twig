@@ -222,7 +222,7 @@
                 searchDelay: 3000,
                 "order": [[0, "asc"]],
                 ajax: {
-                    "url": "{{ url_for("stats.timeDisconnected.search") }}",
+                    "url": "{{ url_for("stats.timeDisconnected.data") }}",
                     "data": function (d) {
                         $.extend(d, $("#stats").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }

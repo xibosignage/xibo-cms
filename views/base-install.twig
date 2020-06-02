@@ -10,7 +10,7 @@
         <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
 
         {# Import CSS bundle from dist #}
-        <script src="{{ theme.rootUri() }}dist/style.bundle.min.js"></script>
+        <script src="{{ theme.rootUri() }}dist/style.bundle.min.js?{{ version }}"></script>
 
         <link href="{{ theme.uri("css/install.css") }}" rel="stylesheet" media="screen">
     </head>
@@ -50,7 +50,7 @@
             </div>
         </div>
 
-        <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js"></script>
-        <script src="{{ theme.rootUri() }}dist/core/install.js"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/core/install.js?{{ version }}"></script>
     </body>
 </html>

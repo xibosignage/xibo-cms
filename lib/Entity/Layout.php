@@ -45,7 +45,6 @@ use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\ModuleWidget;
-use Xibo\Widget\SubPlaylist;
 
 /**
  * Class Layout
@@ -254,16 +253,23 @@ class Layout implements \JsonSerializable
     public $code;
 
     // Child items
-    /** @var Region[]  */
+    /**
+     * @SWG\Property(description="An array of Regions belonging to this Layout")
+     * @var Region[]
+     */
     public $regions = [];
+
+    /**
+     * @SWG\Property(description="An array of Tags belonging to this Layout")
+     * @var \Xibo\Entity\Tag[]
+     */
+    public $tags = [];
 
     /** @var Region[]  */
     public $drawers = [];
 
     /** @var Action[] */
     public $actions = [];
-
-    public $tags = [];
     public $permissions = [];
     public $campaigns = [];
 

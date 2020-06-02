@@ -355,6 +355,18 @@ class Display implements \JsonSerializable
      */
     public $commercialLicence;
 
+    /**
+     * @SWG\Property(description="The TeamViewer serial number for this Display")
+     * @var string
+     */
+    public $teamViewerSerial;
+
+    /**
+     * @SWG\Property(description="The Webkey serial number for this Display")
+     * @var string
+     */
+    public $webkeySerial;
+
     /** @var array The configuration from the Display Profile  */
     private $profileConfig;
 
@@ -816,7 +828,9 @@ class Display implements \JsonSerializable
                     `newCmsKey` = :newCmsKey,
                     `orientation` = :orientation,
                     `resolution` = :resolution,
-                    `commercialLicence` = :commercialLicence
+                    `commercialLicence` = :commercialLicence,
+                    `teamViewerSerial` = :teamViewerSerial,
+                    `webkeySerial` = :webkeySerial
              WHERE displayid = :displayId
         ', [
             'display' => $this->display,
@@ -860,6 +874,8 @@ class Display implements \JsonSerializable
             'orientation' => $this->orientation,
             'resolution' => $this->resolution,
             'commercialLicence' => $this->commercialLicence,
+            'teamViewerSerial' => empty($this->teamViewerSerial) ? null : $this->teamViewerSerial,
+            'webkeySerial' => empty($this->webkeySerial) ? null : $this->webkeySerial,
             'displayId' => $this->displayId
         ]);
 

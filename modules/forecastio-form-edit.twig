@@ -223,7 +223,7 @@
 
                 </div>
                 
-                {% if module.getSetting("apiKey") == "" %}
+                {% if module.getSetting("apiKey") == "" and module.getSetting("owmApiKey") == "" %}
                     {% set message %}{% trans "The Weather Widget has not been configured yet, please ask your CMS Administrator to look at it for you." %}{% endset %}
                     {{ forms.message(message, "alert alert-danger") }}
                 {% endif %}

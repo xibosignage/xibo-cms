@@ -112,6 +112,8 @@ class DataSetRssFactory extends BaseFactory
 
         $body = '
               FROM `datasetrss`
+                INNER JOIN `dataset`
+                ON `dataset`.dataSetId = `datasetrss`.dataSetId
              WHERE 1 = 1
         ';
 

@@ -128,6 +128,9 @@ abstract class ModuleWidget implements ModuleInterface
     /** @var double The Preview Height */
     private $previewHeight;
 
+    /** @var array Cache of module templates */
+    private $moduleTemplates;
+
     //<editor-fold desc="Injected Factory Classes and Services ">
 
     /**
@@ -1265,35 +1268,46 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function templatesAvailable($loadImage = true)
     {
-        if (!isset($this->module->settings['templates'])) {
-
-            $this->module->settings['templates'] = [];
+        if ($this->moduleTemplates === null) {
+            $this->moduleTemplates = [];
 
             // Scan the folder for template files
-            foreach (glob(PROJECT_ROOT . '/modules/' . $this->module->type . '/*.template.json') as $template) {
-                // Read the contents, json_decode and add to the array
-                $template = json_decode(file_get_contents($template), true);
+            $this->scanFolderForTemplates(PROJECT_ROOT . '/modules/' . $this->module->type . '/*.template.json', $loadImage);
 
-                if (isset($template['image'])) {
-                    $template['fileName'] = $template['image'];
-
-                    if ($loadImage) {
-                        // Find the URL to the module file representing this template image
-                        $template['image'] = $this->urlFor('module.getTemplateImage', [
-                            'type' => $this->module->type,
-                            'templateId' => $template['id']
-                        ]);
-                    }
-                } else {
-                    $template['fileName'] = '';
-                    $template['image'] = '';
-                }
-
-                $this->module->settings['templates'][] = $template;
-            }
+            // Scan the custom folder for template files.
+            $this->scanFolderForTemplates(PROJECT_ROOT . '/custom/' . $this->module->type . '/*.template.json', $loadImage);
         }
 
-        return $this->module->settings['templates'];
+        return $this->moduleTemplates;
+    }
+
+    /**
+     * @param string $folder
+     * @param bool $loadImage
+     */
+    private function scanFolderForTemplates($folder, $loadImage = true)
+    {
+        foreach (glob($folder) as $template) {
+            // Read the contents, json_decode and add to the array
+            $template = json_decode(file_get_contents($template), true);
+
+            if (isset($template['image'])) {
+                $template['fileName'] = $template['image'];
+
+                if ($loadImage) {
+                    // Find the URL to the module file representing this template image
+                    $template['image'] = $this->urlFor('module.getTemplateImage', [
+                        'type' => $this->module->type,
+                        'templateId' => $template['id']
+                    ]);
+                }
+            } else {
+                $template['fileName'] = '';
+                $template['image'] = '';
+            }
+
+            $this->moduleTemplates[] = $template;
+        }
     }
 
     /**

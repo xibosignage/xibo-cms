@@ -457,8 +457,8 @@ class ForecastIo extends ModuleWidget
         // Create a provider
         return $this->getProvider()
             ->setHttpClient(new Client($this->getConfig()->getGuzzleProxy(['connect_timeout' => 20])))
-            ->enableLogging($this->getLog())
-            ->setLocation($defaultLat, $defaultLong)
+            //->enableLogging($this->getLog())
+            ->setLocation(round($defaultLat, 3), round($defaultLong, 3))
             ->setUnits($this->getOption('units', 'auto'))
             ->setLang($this->getOption('lang', 'en'));
     }

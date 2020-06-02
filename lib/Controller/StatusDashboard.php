@@ -148,12 +148,17 @@ class StatusDashboard extends Base
               SELECT MAX(FROM_UNIXTIME(month)) AS month,
                   IFNULL(SUM(Size), 0) AS size
                 FROM `bandwidth`
-                  INNER JOIN `lkdisplaydg`
+                  LEFT OUTER JOIN `lkdisplaydg`
                   ON lkdisplaydg.displayID = bandwidth.displayId
-                  INNER JOIN `displaygroup`
+                  LEFT OUTER JOIN `displaygroup`
                   ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID
-               WHERE month > :month AND displaygroup.isDisplaySpecific = 1';
+                    AND displaygroup.isDisplaySpecific = 1
+               WHERE month > :month ';
 
+            // Including this will break the LEFT OUTER join for everyone except super-admins, for whom this statement
+            // doesn't add any SQL.
+            // However, that is probably desirable, as otherwise deleted Displays the user never had permissions for
+            // will be counted in the SUM. Not desirable for a multi-tenant CMS
             $this->displayFactory->viewPermissionSql('Xibo\Entity\DisplayGroup', $sql, $params, '`lkdisplaydg`.displayGroupId');
 
             $sql .= ' GROUP BY MONTH(FROM_UNIXTIME(month)) ORDER BY MIN(month); ';
