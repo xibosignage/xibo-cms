@@ -646,7 +646,7 @@ var backGroundFormSetup = function(dialog) {
             backgroundImage.show();
 
             // Replace image source
-            src = backgroundImage.data().url.replace(":id", id);
+            src = backgroundImage.data().url.replace("?", "/" + id + "?");
             backgroundImage.attr("src", src);
         }
 

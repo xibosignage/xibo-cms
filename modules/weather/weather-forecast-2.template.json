@@ -1,10 +1,10 @@
 {
     "id": "weather-forecast-2",
-    "value": "Template 3 - Forecast horizontal list",
-    "main": "<div class=\"container\">\n    <div class=\"row row-details text-center\">\n        <div class=\"col-xs-12 row-day\">\n            <div class=\"col-xs-3 day\"><strong>[time|D]</strong></div>\n            <div class=\"col-xs-6 temp\">[temperatureMinRound]º - [temperatureMaxRound]º [temperatureUnit]</div>\n            <div class=\"col-xs-3 icon-up\"><i class=\"wi [wicon]\"></i></div>\n        </div>\n    </div>\n</div>",
-    "css": "body {\n    font-family: \"Helvetica\", \"Arial\", sans-serif;\n}\n\n.row-details {\n    background-color: #fff;\n}\n\n.row-day {\n    padding: 10px 0px;\n    border-bottom: #eee solid 1px;\n    color: #000;\n    font-size: 18px;\n}\n\n.day {\n    font-weight: bold;\n    color: #434343;\n}\n\n.temp {\n    font-weight: light;\n    color: #434343;\n}\n\n.icon-up {\n    color: #434343;\n}\n\n.shadowed {\n    text-shadow: 0px 0px 2px #111;\n    filter: dropshadow(color=#111, offx=2, offy=2);\n}\n\n.footer-powered-by {\n    color: #f9f9f9;\n    background: #333;\n    font-size: 10px;\n}",
+    "value": "Template 3 - Forecast vertical list",
+    "main": "<div class=\"container\">\n    <div class=\"row-day\">\n        <div class=\"day\"><strong>[time|D]</strong></div><div class=\"temp\">[temperatureMaxRound]º - [temperatureMinRound]º [temperatureUnit]</div><div class=\"icon-up\"><i class=\"wi [wicon]\"></i></div>\n    </div>\n</div>",
+    "css": "body {\n    font-family: \"Helvetica\", \"Arial\", sans-serif;\n}\n\n.row-day {\n    background-color: #fff;\n    padding: 9px 6px;\n    border-bottom: #eee solid 1px;\n    color: #000;\n    font-size: 18px;\n}\n\n.day, .icon-up {\n    display: inline-block;\n    font-weight: bold;\n    color: #434343;\n    width: 25%\n}\n\n.icon-up {\n    text-align: right;\n}\n\n.temp {\n    display: inline-block;\n    font-weight: light;\n    color: #434343;\n    text-align: center;\n    width: 50%\n}\n\n.shadowed {\n    text-shadow: 0px 0px 2px #111;\n    filter: dropshadow(color=#111, offx=2, offy=2);\n}\n\n.footer-powered-by {\n    color: #f9f9f9;\n    background: #333;\n    font-size: 10px;\n}",
     "widgetOriginalWidth": "250",
-    "widgetOriginalHeight": "48",
+    "widgetOriginalHeight": "40",
     "image": "modules/weather/template-thumbs/weather-forecast-2.png",
     "type": "forecast"
 }

@@ -636,8 +636,11 @@
 
             // Method to create a new input field based on the hidden form
             const createInputField = function(target, inputName, newValue = null) {
-                
                 let select2FixFlag = false;
+                let timepickerFixFlag = false;
+                let timepickerOptionsFixFlag = false;
+                let sliderFixFlag = false;
+                let sliderFixOptions = {};
 
                 // Grab input field from hidden table
                 let $inputFields = $settings.find('#' + inputName);
@@ -647,10 +650,28 @@
                     if( $settings.find('.multiSelect').length > 0) {
                         // Copy special fields ( timers, pictureOptions ) by selected option
                         $inputFields = $settings.find('.multiSelect option:selected[value="' + inputName + '"]').parents('.form-group:first').find('.multiSelect, .multiSelectInputs');
+                        
+                        $inputFields.each((key, el) => {
+                            if($(el).find('.timePickerDisplayEditForm').length > 0) {
+                                timepickerOptionsFixFlag = true;
+
+                                $(el).find('.input-group.timerInit').removeClass('timerInit');
+
+                                destroyDatePicker($(el).find('.timePickerDisplayEditForm:not(.datePickerHelper)'));
+                            } else if($(el).find('.pictureControlsSlider').length > 0) {
+                                sliderFixFlag = true;
+                                sliderFixOptions = $(el).find('.pictureControlsSlider').bootstrapSlider('getAttribute');
+                                $(el).find('.pictureControlsSlider').bootstrapSlider('destroy');
+                            }
+                        });
                     } 
-                } else if($inputFields.length == 1 && $inputFields.attr('type') == 'hidden') {
+                } else if($inputFields.length == 1 && $inputFields.hasClass('timePicker')) {
+                    timepickerFixFlag  = true;
+
+                    destroyDatePicker($inputFields);
+
                     // Time inputs
-                    $inputFields = $inputFields.parent().find('input');
+                    $inputFields = $inputFields.parent();
                 } else if($inputFields.length == 1 && $inputFields.hasClass('select2-hidden-accessible')) {
                     select2FixFlag = true;
                     // Destroy select2 before copying
@@ -670,13 +691,24 @@
                 // Add input field to the target
                 $(target).html($inputFields);
 
+                if(timepickerFixFlag) {
+                    XiboInitialise('#' + $inputFieldsOld.parents('form').attr('id'));
+                    XiboInitialise('#' + $(target).parents('form').attr('id'));
+                }
+
+                if(timepickerOptionsFixFlag) {
+                    timersFormInit($inputFieldsOld);
+                    timersFormInit($(target));
+                }
+
+                if(sliderFixFlag) {
+                    $inputFieldsOld.find('.pictureControlsSlider').bootstrapSlider(sliderFixOptions);
+                    $inputFields.find('.pictureControlsSlider').bootstrapSlider(sliderFixOptions);
+                }
+                
                 // Set value if defined
                 if(newValue != null) {
-                    if($(target).find('.multiSelectInputs .timePickerDisplayEditForm').length > 0) {
-                        // MULTI TIMERS
-                        $(target).find('#' + $(target).find('.timersOn').attr('id') + 'Link').timepicker('setTime', newValue.on);
-                        $(target).find('#' + $(target).find('.timersOff').attr('id') + 'Link').timepicker('setTime', newValue.off);
-                    } else if($(target).find('.multiSelectInputs .pictureControlsSlider').length > 0) {
+                    if($(target).find('.multiSelectInputs .pictureControlsSlider').length > 0) {
                         // SLIDER
                         if(!$.isNumeric(newValue)) { // If value is a label, get index
                             $(target).find('.multiSelectInputs .slider-tick-label').each(function(idx, el) {
@@ -688,7 +720,7 @@
                         }
                         
                         // Set value
-                        $(target).find('.pictureControlsSlider').slider('setAttribute', 'value', newValue);
+                        $(target).find('.pictureControlsSlider').bootstrapSlider('setValue', newValue);
                     } else if($inputFields.attr('type') == 'checkbox') {
                         // CHECKBOX
                         $($inputFields).prop('checked', newValue);
@@ -724,7 +756,7 @@
 
                 // Fixes for slider
                 $(target).find('.slider').addClass('scaled-slider');
-                $(target).find('.pictureControlsSlider').slider('refresh', { useCurrentValue: true });
+                $(target).find('.pictureControlsSlider').bootstrapSlider('refresh', { useCurrentValue: true });
 
                 let $newButton = $('<button class="btn btn-danger btn-xs pull-right button-close-override" type="button"><i class="fa fa-times"></i></button>').click(function (e) {
                     e.stopPropagation();
@@ -781,7 +813,7 @@
                     });
 
                     // Get value
-                    value = $(element).find('.multiSelectInputs .pictureControlsSlider').slider('getValue');
+                    value = $(element).find('.multiSelectInputs .pictureControlsSlider').bootstrapSlider('getValue');
 
                     // If specific value has a label, use it as value
                     if(labels[value] != undefined) {
@@ -827,7 +859,7 @@
 
             // Refresh on tab switch to fix broken labels
             $('a[data-toggle="tab"]').on('shown.bs.tab', () =>  {
-                $('.pictureControlsSlider').slider('refresh', { useCurrentValue: true });
+                $('.pictureControlsSlider').bootstrapSlider('refresh', { useCurrentValue: true });
             });
 
             // Call XiboInitialise on table

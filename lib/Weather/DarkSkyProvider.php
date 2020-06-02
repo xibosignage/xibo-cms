@@ -194,6 +194,7 @@ class DarkSkyProvider implements WeatherProvider
         $day->temperatureMorningRound = $day->temperatureRound;
         $day->temperatureEvening = $day->temperature;
         $day->temperatureEveningRound = $day->temperatureRound;
+        $day->windDirection = '--';
 
         // Wind direction
         foreach (self::cardinalDirections() as $dir => $angles) {
