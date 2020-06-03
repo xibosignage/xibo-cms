@@ -153,7 +153,7 @@ class Pdf extends ModuleWidget
         $data['file'] = ($this->isPreview()) ? $this->urlFor('library.download', ['id' => $this->getMediaId()]) : $this->getMedia()->storedAs;
 
         // Replace the head content
-        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/pdfjs/pdf.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/pdfjs/compatibility.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript">';
