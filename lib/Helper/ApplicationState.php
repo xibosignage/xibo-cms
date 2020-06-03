@@ -59,10 +59,12 @@ class ApplicationState
     /**
      * Sets the Default response if for a login box
      */
-    function Login()
+    public static function asRequiresLogin()
     {
-        $this->login = true;
-        $this->success = false;
+        return [
+            'login' => true,
+            'success' => false
+        ];
     }
 
     /**

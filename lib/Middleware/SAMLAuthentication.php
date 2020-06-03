@@ -378,13 +378,7 @@ class SAMLAuthentication implements Middleware
         $redirectToLogin = function (Request $request, SlimResponse $response) use ($app) {
 
             if ($this->isAjax($request)) {
-                /* @var ApplicationState $state */
-                $state = $app->getContainer()->get('state');
-                /* @var ApplicationState $state */
-                // Return a JSON response which tells the App to redirect to the login page
-                $response = $response->withHeader('Content-Type', 'application/json');
-                $state->Login();
-                return $response->withJson($state->asArray());
+                return $response->withJson(ApplicationState::asRequiresLogin());
             }
             else {
                 // Initiate SAML SSO
