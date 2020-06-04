@@ -23,6 +23,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{{ "User Groups"|trans }} | {% endblock %}
+
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         {% if currentUser.isSuperAdmin() %}

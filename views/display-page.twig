@@ -23,6 +23,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{{ "Displays"|trans }} | {% endblock %}
+
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a Display via user_code displayed on the Player screen" %}" href="{{ url_for("display.addViaCode.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Display (Code)" %}</a></li>
