@@ -279,12 +279,12 @@ class Action  extends Base
         $layout->load();
 
         // all widgets
-        $widgets = $layout->getAllWidgets();
+        $widgets = $layout->getDrawerWidgets();
 
         foreach ($widgets as $widget) {
             $module = $this->moduleFactory->createWithWidget($widget);
             // if we don't have a name set in the Widget
-            $widget->name = $module->getName();
+            $widget->name = sprintf('%s [%s]', $module->getName(), $module->getModuleType());
         }
 
         $this->getState()->template = 'action-form-add';
@@ -472,7 +472,7 @@ class Action  extends Base
         $layout->load();
 
         // all widgets, assigned to this layout or drawer
-        $widgets = $layout->getAllWidgets();
+        $widgets = $layout->getDrawerWidgets();
 
         foreach ($widgets as $widget) {
             $module = $this->moduleFactory->createWithWidget($widget);
