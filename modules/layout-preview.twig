@@ -37,9 +37,9 @@
     <body>
         {% include 'layout-preview-partial.twig' with {'layout': layout, 'previewOptions': previewOptions} %}
         {# Import JS bundle from dist #}
-        <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js?{{ version }}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/html5preloader/html5Preloader.js?{{ version }}"></script>
-        <script src="{{ theme.rootUri() }}dist/preview/html-preview.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/html5preloader/html5Preloader.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/preview/html-preview.js?v={{ version }}&rev={{revision}}"></script>
         <script type="text/javascript">
         
             var emptyRegionMessage = "{% trans "Empty Region" %}"; 

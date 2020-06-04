@@ -62,19 +62,6 @@ describe('Layout Designer (Empty)', function() {
             });
         });
 
-        it('shows a toast message ("Empty Region") when trying to Publish a layout with an empty region', () => {
-
-            cy.server();
-            cy.route('PUT', '/layout/publish/*').as('layoutPublish');
-
-            cy.get('#layout-editor-topbar li#actionsSubmenu').click();
-            cy.get('#layout-editor-topbar li#actionsSubmenu #publishLayout').click();
-
-            cy.get('button[data-bb-handler="Publish"]').click();
-
-            cy.get('.toast-error').contains('Empty Region');
-        });
-
         it('should create a new region from within the navigator edit', () => {
 
             // Open navigator edit

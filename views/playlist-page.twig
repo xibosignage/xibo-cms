@@ -21,6 +21,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{{ "Playlists"|trans }} | {% endblock %}
+
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ url_for("playlist.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Playlist" %}</a></li>
@@ -126,7 +128,7 @@
     {# Add common file #}
     {% include "common.twig" %}
     
-    <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?{{ version }}"></script>
+    <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
     <script type="text/javascript">
 
         {# Custom translations #}

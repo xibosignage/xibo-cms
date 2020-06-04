@@ -85,7 +85,7 @@ class Hls extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
     }
 
     /**
@@ -215,7 +215,7 @@ class Hls extends ModuleWidget
         $this
             ->initialiseGetResource()
             ->appendViewPortWidth($this->region->width)
-            ->appendJavaScriptFile('vendor/jquery-1.11.1.min.js')
+            ->appendJavaScriptFile('vendor/jquery.min.js')
             ->appendJavaScriptFile('vendor/hls/hls.min.js')
             ->appendJavaScript('
                 $(document).ready(function() {

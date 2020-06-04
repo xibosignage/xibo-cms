@@ -414,7 +414,7 @@ class MaintenanceRegularTask implements TaskInterface
                             $draft = $this->layoutFactory->getByParentId($layout->layoutId);
                             $draft->publishDraft();
                             $draft->load();
-                            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true]);
+                            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
 
                             $this->log->info('Published layout ID ' . $layout->layoutId . ' new layout id is ' . $draft->layoutId);
                         }

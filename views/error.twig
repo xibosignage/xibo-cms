@@ -22,6 +22,8 @@
 #}
 {% extends "non-authed.twig" %}
 
+{% block title %}{{ "Error"|trans }} | {% endblock %}
+
 {% block content %}
     <h3>{% trans "Error" %}</h3>
     {% if error != "" %}

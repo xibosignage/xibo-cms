@@ -22,10 +22,11 @@
 #}
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
+{% set displayName = display.display %}
 
+{% block title %}{% trans %}Manage {{ displayName }}{% endtrans %} | {% endblock %}
 
 {% block pageContent %}
-    {% set displayName = display.display %}
     {% set displayLastAccessed = display.lastAccessed %}
     {% if display.loggedIn == 1 %}
         {% set title %}{% trans %}Display {{ displayName }} is currently logged-in, seen {{ timeAgo }}.{% endtrans %}{% endset %}

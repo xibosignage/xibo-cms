@@ -47,6 +47,7 @@ use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Environment;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
@@ -663,19 +664,24 @@ class Display extends Base
 
             // Delete
             if ($this->getUser()->checkDeleteable($display)) {
-                $display->buttons[] = array(
+                $deleteButton = [
                     'id' => 'display_button_delete',
                     'url' => $this->urlFor($request,'display.delete.form', ['id' => $display->displayId]),
-                    'text' => __('Delete'),
-                    /*'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor('display.delete', ['id' => $display->displayId])),
-                        array('name' => 'commit-method', 'value' => 'delete'),
-                        array('name' => 'id', 'value' => 'display_button_delete'),
-                        array('name' => 'text', 'value' => __('Delete')),
-                        array('name' => 'rowtitle', 'value' => $display->display)
-                    )*/
-                );
+                    'text' => __('Delete')
+                ];
+
+                if (Environment::isDevMode()) {
+                    $deleteButton['multi-select'] = true;
+                    $deleteButton['dataAttributes'] = [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'display.delete', ['id' => $display->displayId])],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'display_button_delete'],
+                        ['name' => 'text', 'value' => __('Delete')],
+                        ['name' => 'rowtitle', 'value' => $display->display]
+                    ];
+                }
+
+                $display->buttons[] = $deleteButton;
             }
 
             if ($this->getUser()->checkEditable($display) || $this->getUser()->checkDeleteable($display)) {

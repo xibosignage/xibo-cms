@@ -24,6 +24,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{{ "Layout Designer"|trans }} | {% endblock %}
+
 {% block pageContent %}
 
     <!-- Editor structure -->
@@ -39,8 +41,8 @@
         {# Add common file #}
         {% include "common.twig" %}
 
-        <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?{{ version }}"></script>
-        <script src="{{ theme.rootUri() }}dist/layoutDesigner.bundle.min.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/layoutDesigner.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
         <script type="text/javascript">
 
             {# Custom translations #}

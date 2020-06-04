@@ -1,25 +1,25 @@
 /**
-* Xibo - Digital Signage - http://www.xibo.org.uk
-* Copyright (C) 2009-2017 Spring Signage Ltd
-*
-* This file is part of Xibo.
-*
-* Xibo is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* any later version.
-*
-* Xibo is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2009-2020 Xibo Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 jQuery.fn.extend({
     xiboTextRender: function(options, items) {
-      
+
         // Default options
         var defaults = {
             "fx": "none",
@@ -57,23 +57,23 @@ jQuery.fn.extend({
 
         var paddingBottom = paddingRight = 0;
         if (options.widgetDesignWidth > 0 && options.widgetDesignHeight > 0) {
-          if(options.itemsPerPage > 0){
-            if($(window).width() > $(window).height()){
-              //Landscape or square size plus padding
-              options.widgetDesignWidth = (options.itemsPerPage * options.widgetDesignWidth) + (options.widgetDesignPadding * (options.itemsPerPage - 1));
-              options.widgetDesignHeight = options.widgetDesignHeight;
-              width = options.widgetDesignWidth;
-              height = options.widgetDesignHeight;
-              paddingRight = options.widgetDesignPadding;
-            } else {
-              //Portrait size plus padding
-              options.widgetDesignHeight = (options.itemsPerPage * options.widgetDesignHeight) + (options.widgetDesignPadding * (options.itemsPerPage - 1));
-              options.widgetDesignWidth = options.widgetDesignWidth;
-              width = options.widgetDesignWidth;
-              height = options.widgetDesignHeight;
-              paddingBottom = options.widgetDesignPadding;
+            if(options.itemsPerPage > 0){
+                if($(window).width() > $(window).height()){
+                    //Landscape or square size plus padding
+                    options.widgetDesignWidth = (options.itemsPerPage * options.widgetDesignWidth) + (options.widgetDesignPadding * (options.itemsPerPage - 1));
+                    options.widgetDesignHeight = options.widgetDesignHeight;
+                    width = options.widgetDesignWidth;
+                    height = options.widgetDesignHeight;
+                    paddingRight = options.widgetDesignPadding;
+                } else {
+                    //Portrait size plus padding
+                    options.widgetDesignHeight = (options.itemsPerPage * options.widgetDesignHeight) + (options.widgetDesignPadding * (options.itemsPerPage - 1));
+                    options.widgetDesignWidth = options.widgetDesignWidth;
+                    width = options.widgetDesignWidth;
+                    height = options.widgetDesignHeight;
+                    paddingBottom = options.widgetDesignPadding;
+                }
             }
-          }
         }
 
         // For each matched element
@@ -81,10 +81,10 @@ jQuery.fn.extend({
 
             //console.log("[Xibo] Selected: " + this.tagName.toLowerCase());
             //console.log("[Xibo] Options: " + JSON.stringify(options));
-            
+
             // 1st Objective - filter the items array we have been given
-            // settings involved: 
-            //  items, 
+            // settings involved:
+            //  items,
             //  numItems (ticker number of items from the start/end),
             //  takeItemsFrom (ticker sort or reverse sort the array)
             //  randomiseItems (randomise the items)
@@ -120,12 +120,12 @@ jQuery.fn.extend({
                 //console.log("[Xibo] Reversing items");
                 items.reverse();
             }
-                
+
             // 2nd objective - put the items on the page
             // settings involved:
             //  fx (if we are single we might need to configure some pages for this)
             //  itemsPerPage (tells us how many items to put on per page)
-            //console.log("[Xibo] Putting " + options.numItems + " Items on the page"); 
+            //console.log("[Xibo] Putting " + options.numItems + " Items on the page");
 
             // Store the number of items (we might change this to number of pages)
             var numberOfItems = options.numItems;
@@ -136,7 +136,7 @@ jQuery.fn.extend({
 
             //console.log("[Xibo] We need to have " + numberOfPages + " pages");
             var appendTo = this;
-            
+
             // Loop around each of the items we have been given and append them to this element (in a div)
             for (var i = 0; i < items.length; i++) {
 
@@ -164,7 +164,7 @@ jQuery.fn.extend({
 
                 itemsThisPage++;
             }
-            
+
             // 4th objective - move the items around, start the timer
             // settings involved:
             //  fx (the way we are moving effects the HTML required)
@@ -225,7 +225,7 @@ jQuery.fn.extend({
 
                 // Make sure the speed is something sensible
                 options.speed = (options.speed == 0) ? 1 : options.speed;
-                
+
                 // Stack the articles up and move them across the screen
                 $(options.marqueeInlineSelector, this).css({
                     display: "inline",
@@ -242,10 +242,30 @@ jQuery.fn.extend({
             }
 
             if (marquee) {
+                // Which marquee to use?
+                var nua = navigator.userAgent;
+                var is_android = ((nua.indexOf('Mozilla/5.0') > -1
+                    && nua.indexOf('Android ') > -1
+                    && nua.indexOf('AppleWebKit') > -1)
+                    && !(nua.indexOf('Chrome') > -1));
+
                 // Create a DIV to scroll, and put this inside the body
                 var scroller = $("<div/>")
-                    .addClass("scroll")
-                    .attr({
+                    .addClass("scroll");
+
+                if (!is_android) {
+                    // in old marquee scroll delay is 85 milliseconds
+                    // options.speed is the scrollamount which is the number of pixels per 85 milliseconds
+                    // our new plugin speed is pixels per second
+                    scroller.attr({
+                        "data-is-legacy": false,
+                        "data-speed": options.speed / 25 * 1000,
+                        "data-direction": options.direction,
+                        scaleFactor: options.scaleFactor
+                    });
+                } else {
+                    scroller.attr({
+                        "data-is-legacy": true,
                         scrollamount: options.speed,
                         scaleFactor: options.scaleFactor,
                         behaviour: "scroll",
@@ -253,22 +273,28 @@ jQuery.fn.extend({
                         height: height,
                         width: width
                     });
+                }
 
                 $(this).wrapInner(scroller);
 
                 // Set some options on the extra DIV and make it a marquee
-                $(this).find('.scroll').marquee();
+                if (!is_android) {
+                    $(this).find('.scroll').marquee();
+                } else {
+                    $(this).find('.scroll').overflowMarquee();
+                }
 
                 // Correct for up / down
-                if (options.fx == "marqueeUp" || options.fx == "marqueeDown")
+                if (options.fx === "marqueeUp" || options.fx === "marqueeDown") {
                     $(this).children().children().css({"white-space": "normal", float: "none"});
+                }
             }
-            
+
             // Add aditional padding to the items
             if (paddingRight > 0 || paddingBottom > 0) {
                 // Add padding to all item elements
                 $(".item").css("padding", "0px " + paddingRight + "px " + paddingBottom  + "px 0px");
-                
+
                 // Exclude the last item on the page and the last on the content ( if there is no pages )
                 $(".page .item:last-child").css("padding", 0);
                 $("#content .item:last-child").css("padding", 0);

@@ -24,13 +24,11 @@
 namespace Xibo\Middleware;
 
 
-use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
-use Respect\Validation\Rules\Date;
 use Slim\App as App;
 use Slim\Routing\RouteContext;
 use Xibo\Helper\ByteFormatter;
@@ -132,5 +130,6 @@ class Theme implements Middleware
         ];
         $view['ckeditorConfig'] = $container->get('\Xibo\Controller\Library')->fontCKEditorConfig($request);
         $view['version'] = Environment::$WEBSITE_VERSION_NAME;
+        $view['revision'] = Environment::getGitCommit();
     }
 }

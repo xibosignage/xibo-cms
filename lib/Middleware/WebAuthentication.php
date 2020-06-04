@@ -120,14 +120,7 @@ class WebAuthentication implements Middleware
                 $response = $decoratedResponseFactory->createResponse();
 
                 if ($this->isAjax($request)) {
-
-                    $state = $app->getContainer()->get('state');
-                    /* @var ApplicationState $state */
-                    // Return a JSON response which tells the App to redirect to the login page
-
-                    $state->Login();
-
-                    return $response->withJson($state->asArray());
+                    return $response->withJson(ApplicationState::asRequiresLogin());
                 } else {
                     // TODO: this probably doesn't ever call commit. How deep in the onion are we?
                     return $response->withStatus(302)->withHeader('Location', $routeParser->urlFor('login'));
@@ -149,14 +142,7 @@ class WebAuthentication implements Middleware
                 $response = $decoratedResponseFactory->createResponse();
 
                 if ($this->isAjax($request)) {
-
-                    $state = $app->getContainer()->get('state');
-                    /* @var ApplicationState $state */
-                    // Return a JSON response which tells the App to redirect to the login page
-                    $state->Login();
-
-                    return $response
-                        ->withJson($state->asJson());
+                    return $response->withJson(ApplicationState::asRequiresLogin());
                 } else {
                     return $response
                         ->withStatus(302)

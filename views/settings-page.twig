@@ -23,6 +23,8 @@
 {% extends "authed.twig" %}
 {% import "forms.twig" as forms %}
 
+{% block title %}{{ "Settings"|trans }} | {% endblock %}
+
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-info btn-xs" ><a class="XiboFormButton btns" title="{% trans "Export database" %}" href="{{ url_for("maintenance.export.form") }}"> <i class="fa fa-cloud-upload" aria-hidden="true"></i> {% trans "Export" %}</a></li>
