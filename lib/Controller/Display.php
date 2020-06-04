@@ -663,20 +663,25 @@ class Display extends Base
             }
 
             // Delete
-            if (Environment::isDevMode() && $this->getUser()->checkDeleteable($display)) {
-                $display->buttons[] = [
+            if ($this->getUser()->checkDeleteable($display)) {
+                $deleteButton = [
                     'id' => 'display_button_delete',
                     'url' => $this->urlFor($request,'display.delete.form', ['id' => $display->displayId]),
-                    'text' => __('Delete'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
+                    'text' => __('Delete')
+                ];
+
+                if (Environment::isDevMode()) {
+                    $deleteButton['multi-select'] = true;
+                    $deleteButton['dataAttributes'] = [
                         ['name' => 'commit-url', 'value' => $this->urlFor($request, 'display.delete', ['id' => $display->displayId])],
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'display_button_delete'],
                         ['name' => 'text', 'value' => __('Delete')],
                         ['name' => 'rowtitle', 'value' => $display->display]
-                    ]
-                ];
+                    ];
+                }
+
+                $display->buttons[] = $deleteButton;
             }
 
             if ($this->getUser()->checkEditable($display) || $this->getUser()->checkDeleteable($display)) {

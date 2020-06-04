@@ -1169,12 +1169,11 @@ class Layout implements \JsonSerializable
 
     /**
      * Export the Layout as its XLF
-     * @param array $options
      * @return string
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function toXlf($options = [])
+    public function toXlf()
     {
         $this->getLog()->debug('Layout toXLF for Layout ' . $this->layout . ' - ' . $this->layoutId);
 
