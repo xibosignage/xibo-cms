@@ -85,22 +85,4 @@ class LayoutDraftTest extends LocalWebTestCase
 
         $this->assertSame(200, $response->getStatusCode(), $response->getBody());
     }
-
-    /**
-     * Test publishing the newly created layout (which has a region without any content)
-     */
-    public function testPublishLayoutWithError()
-    {
-        // Do nothing and try to publish
-        $response = $this->sendRequest('PUT','/layout/publish/' . $this->layout->layoutId, [
-            'publishNow' => 1
-        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-
-        // Expected invalid argument
-        $this->assertSame(422, $response->getStatusCode(), $response->getBody());
-        $object = json_decode($response->getBody());
-        $this->assertSame(false, $object->success);
-        $this->assertSame(422, $object->httpStatus);
-        $this->assertContains('There is an error with this Layout: Empty Region', $object->error);
-    }
 }

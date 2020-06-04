@@ -2079,8 +2079,8 @@ class Layout extends Base
         // Get the layout
         /* @var \Xibo\Entity\Layout $layout */
         $layout = $this->layoutFactory->getById($id);
-
         $layout->xlfToDisk();
+
         /** @var $locked Item */
         $locked = $this->pool->getItem('locks/layout/' . $layout->layoutId);
         $layout->isLocked = $locked->isMiss() ? [] : $locked->get();
@@ -2619,7 +2619,7 @@ class Layout extends Base
 
             // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
             // error message
-            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true]);
+            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
 
             // Return
             $this->getState()->hydrate([
