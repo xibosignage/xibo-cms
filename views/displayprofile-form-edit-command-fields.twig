@@ -22,20 +22,42 @@
 #}
 {% import "forms.twig" as forms %}
 {% block formHtml %}
-{% for field in commands %}
-    {% set title %}{% trans "Name" %}{% endset %}
-    {{ forms.disabled("command", title, field.command, field.description) }}
+    <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+    {% for field in commands %}
+        <div class="panel panel-default">
+            <div class="panel-heading" role="tab" id="heading{{ field.commandId }}">
+                <h4 class="panel-title">
+                    <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse{{ field.commandId }}"
+                       aria-expanded="true" aria-controls="collapse{{ field.commandId }}">
+                        {{ field.command }} | {{ field.code }}
+                    </a>
+                </h4>
+            </div>
+            <div id="collapse{{ field.commandId }}" class="panel-collapse collapse"
+                 role="tabpanel" aria-labelledby="heading{{ field.commandId }}" aria-expanded="false">
+                <div class="panel-body">
+                    {% set title %}{% trans "Name" %}{% endset %}
+                    {{ forms.disabled("command", title, field.command, field.description) }}
 
-    {% set fieldId = "commandString_" ~ field.commandId %}
-    {% set title %}{% trans "Command" %}{% endset %}
-    {% set helpText %}{% trans "The Command String for this Command on this display" %}{% endset %}
-    {{ forms.input(fieldId, title, field.commandString, helpText) }}
+                    {% if field.commandString != "" %}
+                        {{ forms.disabled("", "", "This Command has a default Command String."|trans, field.commandString) }}
+                    {% endif %}
 
-    {% set fieldId = "validationString_" ~ field.commandId %}
-    {% set title %}{% trans "Validation" %}{% endset %}
-    {% set helpText %}{% trans "The Validation String for this Command on this display" %}{% endset %}
-    {{ forms.input(fieldId, title, field.validationString, helpText) }}
+                    {% set fieldId = "commandString_" ~ field.commandId %}
+                    {% set title %}{% trans "Command" %}{% endset %}
+                    {% set helpText %}{% trans "The Command String for this Command on this display" %}{% endset %}
+                    {{ forms.input(fieldId, title, field.commandStringDisplayProfile, helpText) }}
 
-    <hr>
-{% endfor %}
+                    {% if field.validationString != "" %}
+                        {{ forms.disabled("", "", "This Command has a default Valildation String."|trans, field.validationString) }}
+                    {% endif %}
+
+                    {% set fieldId = "validationString_" ~ field.commandId %}
+                    {% set title %}{% trans "Validation" %}{% endset %}
+                    {% set helpText %}{% trans "The Validation String for this Command on this display" %}{% endset %}
+                    {{ forms.input(fieldId, title, field.validationStringDisplayProfile, helpText) }}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
 {% endblock %}

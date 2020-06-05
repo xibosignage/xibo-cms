@@ -908,7 +908,7 @@ class Display implements \JsonSerializable
     }
 
     /**
-     * @return array
+     * @return Command[]
      */
     public function getCommands()
     {
