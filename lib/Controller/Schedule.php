@@ -187,10 +187,16 @@ class Schedule extends Base
             }
         }
 
+        // get the default longitude and latitude from CMS options
+        $defaultLat = (float)$this->getConfig()->getSetting('DEFAULT_LAT');
+        $defaultLong = (float)$this->getConfig()->getSetting('DEFAULT_LONG');
+
         $data = [
             'displayGroupIds' => $displayGroupIds,
             'displayGroups' => $displayGroups,
-            'displayGroupsShowAll' => $displayGroupsShowAll
+            'displayGroupsShowAll' => $displayGroupsShowAll,
+            'defaultLat' => $defaultLat,
+            'defaultLong' => $defaultLong
         ];
 
         // Render the Theme and output

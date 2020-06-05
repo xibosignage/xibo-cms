@@ -105,14 +105,34 @@
         </div>         
     </div>
     <div class="row">
-        <!-- Time Slider -->
-        <div class="col-sm-12 cal-event-time-bar" style="display:none;">
-            <div class="btn slider-step-btn time-picker-step-btn" data-step="-1">
-                <span class="fa fa-step-backward"></span>
+        <div class="col-sm-12 cal-event-agenda-filter" style="display:none;">
+            <!-- Time Slider -->
+            <div class="cal-event-time-bar">
+                <div class="btn slider-step-btn time-picker-step-btn" data-step="-1">
+                    <span class="fa fa-step-backward"></span>
+                </div>
+                <input id="timePicker" data-slider-id='timePickerSlider' type="text" data-slider-min="0" data-slider-max="1439" data-slider-step="1" data-slider-value="0" data-slider-handle="square" />
+                <div class="btn slider-step-btn time-picker-step-btn" data-step="1">
+                    <span class="fa fa-step-forward"></span>
+                </div>
             </div>
-            <input id="timePicker" data-slider-id='timePickerSlider' type="text" data-slider-min="0" data-slider-max="1439" data-slider-step="1" data-slider-value="0" data-slider-handle="square" />
-            <div class="btn slider-step-btn time-picker-step-btn" data-step="1">
-                <span class="fa fa-step-forward"></span>
+
+            <!-- Geo location -->
+            <form class="form-inline cal-event-location">
+                <button id="toggleMap" type="button" class="btn btn-primary pull-right" title="{% trans "Map" %}"><i class="fa fa-map"></i></button>
+                <button id="getLocation" type="button" class="btn btn-default pull-right" title="{% trans "Get browser location!" %}"><i class="fa fa-map-marker"></i></button>
+                <button id="clearLocation" type="button" class="btn btn-default pull-right" title="{% trans "Clear coordinates!" %}"><i class="fa fa-times"></i></button>
+                <div class="form-group pull-right">
+                    <input type="email" class="form-control" id="geoLongitude" placeholder="Longitude">
+                </div>
+                <div class="form-group pull-right">
+                    <input type="text" class="form-control" id="geoLatitude" placeholder="Latitude">
+                </div>
+            </form>
+
+            <!-- Geo location map -->
+            <div class="cal-event-location-map" data-default-lat="{{ defaultLat }}" data-default-long="{{ defaultLong }}">
+                <div id="geoFilterAgendaMap" style="height: 400px; width: 100%" class="hidden"></div>
             </div>
         </div>
     </div>

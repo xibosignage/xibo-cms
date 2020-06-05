@@ -23,6 +23,7 @@
 var calendar;
 var events = [];
 let mymap;
+let mymapmarker;
 
 $(document).ready(function() {
 
@@ -105,7 +106,65 @@ $(document).ready(function() {
             navigateToCalendarDate,
             false // clear button
         );
+
+        // Location filter init
+        const $map = $('.cal-event-location-map #geoFilterAgendaMap');
+
+        // Get location button
+        $('#getLocation').off().click(function() {
+            const $self = $(this);
+
+            // Disable button
+            $self.prop('disabled', true);
+
+            navigator.geolocation.getCurrentPosition(function(location) { // success
+                // Populate location fields
+                $('#geoLatitude').val(location.coords.latitude).change();
+                $('#geoLongitude').val(location.coords.longitude).change();
+
+                // Reenable button
+                $self.prop('disabled', false);
+
+                // Redraw map
+                generateFilterGeoMap();
+            }, function error(err) { // error
+                console.warn(`ERROR(${err.code}): ${err.message}`);
+
+                // Reenable button
+                $self.prop('disabled', false);
+            }, { // options
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0
+            });
+        });
+
+        // Location map button
+        $('#toggleMap').off().click(function() {
+            $map.toggleClass('hidden');
+
+            if(!$map.hasClass('hidden')) {
+                generateFilterGeoMap();
+            }
+        });
+
+        // Clear location button
+        $('#clearLocation').off().click(function() {
+            // Populate location fields
+            $('#geoLatitude').val('').change();
+            $('#geoLongitude').val('').change();
+
+            if(!$map.hasClass('hidden')) {
+                generateFilterGeoMap();
+            }
+        });
+
+        // Change events reloads the calendar view and map
+        $('#geoLatitude, #geoLongitude').off().change(_.debounce(function() {
+            calendar.view();
+        }, 400));
         
+        // Calendar options
         var options = {
             time_start: '00:00',
             time_end: '00:00',
@@ -128,7 +187,7 @@ $(document).ready(function() {
 
                 if (this.options.view !== 'agenda') {
 
-                    $('.cal-event-time-bar').hide();
+                    $('.cal-event-agenda-filter').hide();
 
                     // Serialise
                     var displayGroups = $('#DisplayList').serialize();
@@ -222,7 +281,7 @@ $(document).ready(function() {
                 } else {
 
                     // Show time slider on agenda view and call the calendar view on slide stop event
-                    $('.cal-event-time-bar').show();
+                    $('.cal-event-agenda-filter').show();
 
                     const $timePicker = $('#timePicker');
 
@@ -343,7 +402,7 @@ $(document).ready(function() {
                             done();
                             
                         calendar._render();
-                    } else if(!jQuery.isEmptyObject(events['results'][selectedDisplayGroup]) && events['results'][selectedDisplayGroup]['request_date'] == params.date) {
+                    } else if(!jQuery.isEmptyObject(events['results'][selectedDisplayGroup]) && events['results'][selectedDisplayGroup]['request_date'] == params.date && events['results'][selectedDisplayGroup]['geoLatitude'] == $('#geoLatitude').val() && events['results'][selectedDisplayGroup]['geoLongitude'] == $('#geoLongitude').val()) {
                         // 2 - Use cache if the element was already saved for the requested date
                         if (done != undefined)
                             done();
@@ -356,11 +415,27 @@ $(document).ready(function() {
                         // 3 - make request to get the data for the events
                         getJsonRequestControl = $.getJSON(url, params)
                             .done(function(data) {
-                                
+
+                                let noEvents = true;
+
                                 if(!jQuery.isEmptyObject(data.data) && data.data.events != undefined && data.data.events.length > 0){
                                     events['results'][String(selectedDisplayGroup)] = data.data;
                                     events['results'][String(selectedDisplayGroup)]['request_date'] = params.date;
-                                } else {
+
+                                    noEvents = false;
+
+                                    if($('#geoLatitude').val() != undefined && $('#geoLatitude').val() != '' &&
+                                        $('#geoLongitude').val() != undefined && $('#geoLongitude').val() != '') {
+                                        events['results'][String(selectedDisplayGroup)]['geoLatitude'] = $('#geoLatitude').val();
+                                        events['results'][String(selectedDisplayGroup)]['geoLongitude'] = $('#geoLongitude').val();
+
+                                        events['results'][String(selectedDisplayGroup)]['events'] = filterEventsByLocation(events['results'][String(selectedDisplayGroup)]['events']);
+
+                                        noEvents = (data.data.events.length <= 0);
+                                    }
+                                }
+
+                                if(noEvents) {
                                     events['results'][String(selectedDisplayGroup)] = {};
                                     events['errorMessage'] = 'no_events';
                                 }
@@ -1244,4 +1319,88 @@ let generateGeoMap = function () {
         mymap.removeControl(drawControl);
         mymap.addControl(drawControlEditOnly);
     }
+};
+
+const generateFilterGeoMap = function() {
+    if(mymap !== undefined && mymap !== null) {
+        mymap.remove();
+    }
+
+    // Get location values
+    let defaultLat = $('#geoLatitude').val();
+    let defaultLong = $('#geoLongitude').val();
+
+    // If values are not set, get system default location
+    if(defaultLat == undefined || defaultLat == '' || defaultLong == undefined || defaultLong == '') {
+        defaultLat = $('.cal-event-location-map').data('defaultLat');
+        defaultLong = $('.cal-event-location-map').data('defaultLong');
+    }
+
+    // base map
+    mymap = L.map('geoFilterAgendaMap').setView([defaultLat, defaultLong], 13);
+
+    // base tile layer, provided by Open Street Map
+    L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        subdomains: ['a', 'b', 'c']
+    }).addTo(mymap);
+
+    // add search Control - allows searching by country/city and automatically moves map to that location
+    let searchControl = new L.Control.Search({
+        url: 'https://nominatim.openstreetmap.org/search?format=json&q={s}',
+        jsonpParam: 'json_callback',
+        propertyName: 'display_name',
+        propertyLoc: ['lat', 'lon'],
+        marker: L.circleMarker([0, 0], {radius: 30}),
+        autoCollapse: true,
+        autoType: false,
+        minLength: 2,
+        hideMarkerOnCollapse: true
+    });
+
+    mymap.addControl(searchControl);
+
+    const setMarker = function(lat, lng) {
+        if(mymapmarker != undefined) {
+            mymap.removeLayer(mymapmarker);
+        }
+
+        mymapmarker = L.marker([lat, lng], mymap).addTo(mymap);
+    };
+
+    // Click to create marker
+    mymap.on('click', function(e) {
+        $('#geoLatitude').val(e.latlng.lat).change();
+        $('#geoLongitude').val(e.latlng.lng).change();
+
+        setMarker(e.latlng.lat, e.latlng.lng);
+    });
+
+    if($('#geoLatitude').val() != undefined && $('#geoLatitude').val() != '' && 
+    $('#geoLongitude').val() != undefined && $('#geoLongitude').val() != '') {
+        setMarker($('#geoLatitude').val(), $('#geoLongitude').val());
+    }
+};
+
+const filterEventsByLocation = function(events) {
+    let eventsResult = [];
+
+    for(let index = 0;index < events.length; index++) {
+
+        let event = events[index];
+
+        if(event.geoLocation != '') {
+            let geoJSON = JSON.parse(event.geoLocation);
+            let point = [$('#geoLongitude').val(), $('#geoLatitude').val()];
+            let polygon = L.geoJSON(geoJSON);
+
+            let test = leafletPip.pointInLayer(point, polygon);
+
+            if(test.length > 0) {
+                eventsResult.push(event);
+            }
+        }
+    }
+
+    return eventsResult;
 };

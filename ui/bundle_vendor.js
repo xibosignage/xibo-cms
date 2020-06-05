@@ -126,4 +126,5 @@ require('leaflet');
 require('leaflet-draw');
 require('leaflet-search');
 window.L = require('leaflet');
+window.leafletPip = require('@mapbox/leaflet-pip');
 
