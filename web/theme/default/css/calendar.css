@@ -138,6 +138,11 @@
     width: 100%;
 }
 
+.cal-event-time-bar {
+    display: table;
+    width: inherit;
+}
+
 .cal-event-time-bar .slider.slider-horizontal {
     float: left;
     width: calc(100% - 68px);
@@ -160,8 +165,22 @@
     font-size: 14px;
 }
 
-.cal-event-time-bar {
+.cal-event-agenda-filter {
     margin-top: 30px;
+}
+
+.cal-event-location {
+    display: table;
+    width: inherit;
+    margin: 6px 0;
+}
+
+.cal-event-location > button, .cal-event-location > div {
+    margin: 0 2px;
+}
+
+.cal-event-location > button {
+    width: 40px;
 }
 
 .cal-context .tab-pane {

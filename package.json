@@ -30,6 +30,7 @@
     "@babel/plugin-transform-parameters": "^7.9.5",
     "@babel/preset-env": "^7.9.6",
     "@fortawesome/fontawesome-free": "^5.13.0",
+    "@mapbox/leaflet-pip": "^1.1.0",
     "ajax-bootstrap-select": "^1.4.5",
     "ajv": "^6.12.2",
     "autoprefixer": "^9.7.6",
