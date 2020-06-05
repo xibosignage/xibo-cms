@@ -532,9 +532,9 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             foreach ($layoutIds as $layoutId) {
                 try {
                     $campaignIds[] = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
-                } catch (NotFoundException $notFoundException) {
-                    // Ignore the missing one
-                    $this->getLog()->debug('Filter for Layout without Layout History Record, layoutId is ' . $layoutId);
+                } catch (XiboException $ignored) {
+                    // TODO: this is quite inefficient and could be reworked to return an empty TimeSeriesResults
+                    $campaignIds[] = -1;
                 }
             }
             $match['$match']['campaignId'] = [ '$in' => $campaignIds ];
