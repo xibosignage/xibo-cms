@@ -1385,6 +1385,8 @@ const filterEventsByLocation = function(events) {
             if(test.length > 0) {
                 eventsResult.push(event);
             }
+        } else {
+            eventsResult.push(event);
         }
     }
 
