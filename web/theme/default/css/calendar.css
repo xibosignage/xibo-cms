@@ -47,6 +47,16 @@
     padding: 0;
     border: none;
  }
+ 
+ .xibo-calendar-controls.dropdown {
+     min-width: 120px;
+ }
+
+ @media (max-width: 1400px) {
+    .xibo-calendar-controls.dropdown {
+        max-width: 360px;
+    }
+ }
 
  #cal-week-box {
  	z-index: 1000;

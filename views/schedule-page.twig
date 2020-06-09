@@ -65,22 +65,22 @@
                     data-trans-campaigns= "{% trans "Campaigns" %}"
                     data-trans-layouts= "{% trans "Layouts" %}"
                     data-allow-clear="true"
+                    data-width="100%"
                     title="{% trans "Layout / Campaign" %}"
-                    data-width="150px"
                     data-placeholder="{% trans "Layout / Campaign" %}"
+                    data-dropdownAutoWidth
                     >
                 </select>
             </div>
 
             <div class="xibo-calendar-controls dropdown pull-right">
                 <select id="DisplayList" class="form-control" name="displayGroupIds[]"
-                        data-width="150px"
                         data-placeholder="{% trans "Displays" %}"
                         data-search-url="{{ url_for("schedule.displayGroup.search") }}"
                         data-trans-groups="{% trans "Groups" %}"
                         data-trans-display="{% trans "Display" %}"
                         data-allow-clear="true"
-                        data-width="150px"
+                        data-width="100%"
                         data-placeholder="{% trans "Select Displays" %}" multiple>
                     {% for option in displayGroups %}
                         {% set itemOptionId = attribute(option, "displayGroupId") %}
@@ -995,6 +995,7 @@
             let $displaySelect = $('#DisplayList', dialog);
             $displaySelect.select2({
                 dropdownParent: $(dialog),
+                dropdownAutoWidth: true,
                 ajax: {
                     url: $displaySelect.data("searchUrl"),
                     dataType: "json",

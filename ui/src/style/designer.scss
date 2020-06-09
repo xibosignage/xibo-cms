@@ -950,8 +950,6 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
                     .col-sm-2 {
                         width: 22%;
-                        padding-left: 5px;
-                        padding-right: 5px;
                     }
 
                     .col-sm-10 {
@@ -960,6 +958,20 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
                     .col-sm-1, .col-sm-10, .col-sm-11, .col-sm-12, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9 {
                         padding-left: 4px;
                         padding-right: 4px;
+                    }
+                }
+
+                .sub-playlists {
+                    margin-left: -10px;
+                }
+
+                .row-special {
+                    margin-right: -5px;
+                    margin-left: -5px;
+                    
+                    .col-sm-1, .col-sm-10, .col-sm-11, .col-sm-12, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9 {
+                        padding-left: 3px;
+                        padding-right: 3px;
                     }
                 }
 
