@@ -6,7 +6,7 @@
         data-toggle="tooltip" 
         data-template='{{ previewTemplate }}'
         data-placement="right"
-        data-container="body"
+        data-container="#playlist-editor"
         data-title="{{widgetName}}"
     {{/if}}
     class="playlist-widget tooltip-always-on selectable {{#eq isValid 0}}invalid-widget{{/eq}} {{#if selected}}selected{{/if}} {{#if isEditable}}editable{{/if}} {{#if isPermissionsModifiable}}permissionsModifiable{{/if}} {{#if isDeletable}}deletable{{/if}}">
@@ -34,7 +34,7 @@
         {{/each}}
 
         {{#gt expireStatus 0}}
-            <i class="fa {{expireStatusIcon}} editProperty tooltip-always-on" data-toggle="tooltip" data-container="body"
+            <i class="fa {{expireStatusIcon}} editProperty" data-toggle="tooltip" data-container="#playlist-editor"
                 data-title="{{expireStatusTitle}}" data-property="Expiry"></i>
         {{/gt}}
     </div>
