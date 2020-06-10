@@ -368,12 +368,15 @@ ul.sidebar {
         @include border-radius(4px);
 
         .card-title {
-            display: inline-block;
+            display: block;
             position: relative;
             line-height: 30px;
             height: $toolbar-height;
             padding: 5px 2px;
             margin-left: 40px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .card-icon {
@@ -514,12 +517,15 @@ ul.sidebar {
             .card-title {
                 position: relative;
                 line-height: 15px;
-                padding: 0;
+                padding: 0 3px;
                 text-align: center;
                 overflow: hidden;
                 margin: 4px 0 0 0;
                 width: $toolbar-widgets-card-width;
                 height: auto;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
             .card-icon {

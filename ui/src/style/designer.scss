@@ -372,6 +372,13 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
             opacity: 0.85;
             padding: 0 4px;
             margin-left: 4px;
+
+            .widgetDuration {
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                overflow: hidden;
+                padding: 0 2px;
+            }
         }
 
         .widgetName {
