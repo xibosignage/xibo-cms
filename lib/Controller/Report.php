@@ -23,7 +23,6 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
-use GuzzleHttp\Psr7\Stream;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
@@ -35,6 +34,7 @@ use Xibo\Factory\SavedReportFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
+use Xibo\Helper\SendFile;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ReportServiceInterface;
@@ -1031,7 +1031,7 @@ class Report extends Base
             $body = ob_get_contents();
             ob_end_clean();
 
-            $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION'). 'temp/saved_report_'.$id.'.pdf';
+            $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/saved_report_' . $id . '.pdf';
 
             try {
                 $mpdf = new \Mpdf\Mpdf([
@@ -1059,14 +1059,12 @@ class Report extends Base
 
         // Return the file with PHP
         $this->setNoOutput(true);
-        $response = $response
-            ->withHeader('Content-Type', 'application/octet-stream')
-            ->withHeader('Content-Disposition', 'attachment; filename=' . basename($fileName))
-            ->withHeader('Content-Transfer-Encoding', 'binary')
-            ->withHeader('Content-Length', filesize($fileName))
-            ->withBody(new Stream(fopen($fileName, 'r')));
 
-        return $this->render($request, $response);
+        return $this->render($request, SendFile::decorateResponse(
+            $response,
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $fileName
+        ));
     }
 
     //</editor-fold>

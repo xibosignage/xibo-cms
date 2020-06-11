@@ -98,34 +98,64 @@ class Handlers
     public static function webErrorHandler($container)
     {
         return function (Request $request, \Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($container) {
-            $nyholmFactory = new Psr17Factory();
-            $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
-            /** @var Response $response */
-            $response = $decoratedResponseFactory->createResponse($exception->getCode());
+            // If we are in a transaction, then we should rollback.
+            if ($container->get('store')->getConnection()->inTransaction()) {
+                $container->get('store')->getConnection()->rollBack();
+            }
+            $container->get('store')->close();
 
-            if ($exception->getCode() == 404) {
-                $container->get('logger')->debug(sprintf('Page Not Found. %s', $request->getUri()->getPath()));
-                return $response = $response->withRedirect('/notFound');
-            } else {
-                /** @var \Xibo\Helper\Session $session */
-                $session = $container->get('session');
+            // Make a friendly message
+            $message = (!empty($exception->getMessage()))
+                ? $exception->getMessage()
+                : __('Unexpected Error, please contact support.');
 
+            // Firstly handle logging the error.
+            if ($logErrors && !self::handledError($exception)) {
                 /** @var \Psr\Log\LoggerInterface $logger */
                 $logger = $container->get('logger');
+                $logger->error('Error with message: ' . $exception->getMessage());
 
-                $message = ( !empty($exception->getMessage()) ) ? $exception->getMessage() : __('Unexpected Error, please contact support.');
-
-                // log the error
-                $logger->error('Error with message: ' . $message);
-                $logger->debug('Error with trace: ' . $exception->getTraceAsString());
-
-                $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($exception)));
-
-                if ($exception instanceof UpgradePendingException) {
-                    $exceptionClass = 'upgrade-in-progress-page';
+                if ($logErrorDetails) {
+                    $logger->debug('Error with trace: ' . $exception->getTraceAsString());
                 }
+            }
 
-                if ($request->getUri()->getPath() != '/error') {
+            // Create a response
+            // we're outside Slim's middleware here, so we have to handle the response ourselves.
+            $nyholmFactory = new Psr17Factory();
+            $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
+            $response = $decoratedResponseFactory->createResponse();
+
+            // What happens here if we are an XHR request, we shouldn't redirect as then we lose the request details
+            // in any client side debugging.
+            if ($request->isXhr() || $request->getUri()->getPath() === '/error') {
+                // XHR
+                // output some JSON telling the UI what to do.
+                $exceptionData = [
+                    'success' => false,
+                    'error' => $exception->getCode(),
+                    'message' => $message
+                ];
+
+                // TODO: we need to update the support library to make getErrorData public
+                /*if ($exception instanceof GeneralException) {
+                    array_merge($exception->getErrorData(), $exceptionData);
+                }*/
+                return $response->withJson($exceptionData);
+            } else {
+                // Normal request
+                // We need to redirect to an error page
+                if ($exception->getCode() == 404) {
+                    return $response = $response->withRedirect('/notFound');
+                } else {
+                    /** @var \Xibo\Helper\Session $session */
+                    $session = $container->get('session');
+
+                    $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($exception)));
+
+                    if ($exception instanceof UpgradePendingException) {
+                        $exceptionClass = 'upgrade-in-progress-page';
+                    }
 
                     // set data in session, this is handled and then cleared in Error Controller.
                     $session->set('exceptionMessage', $message);
@@ -134,25 +164,6 @@ class Handlers
                     $session->set('priorRoute', $request->getUri()->getPath());
 
                     return $response = $response->withRedirect('/error');
-                } else {
-                    // this should only happen when there is an error in Middleware or if something went horribly wrong.
-                    $mode = $container->get('configService')->getSetting('SERVER_MODE');
-
-                    if (strtolower($mode) === 'test') {
-                        $message = $exception->getMessage() . ' thrown in ' . $exception->getTraceAsString();
-                    } else {
-                        $message = $exception->getMessage();
-                    }
-
-                    // If we are in a transaction, then we should rollback.
-                    if ($container->get('store')->getConnection()->inTransaction()) {
-                        $container->get('store')->getConnection()->rollBack();
-                    }
-                    $container->get('store')->close();
-
-                    // attempt to render a twig template in this application state will not go well
-                    // as such return simple json response, with trace if the application is in test mode.
-                    return $response = $response->withJson(['error' => $message]);
                 }
             }
         };

@@ -21,7 +21,6 @@
  */
 namespace Xibo\Controller;
 use Carbon\Carbon;
-use GuzzleHttp\Psr7\Stream;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
@@ -29,6 +28,7 @@ use Xibo\Factory\AuditLogFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
+use Xibo\Helper\SendFile;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -197,16 +197,14 @@ class AuditLog extends Base
         }
 
         fclose($out);
-        // We want to output a load of stuff to the browser as a text file.
-        $response = $response->withHeader('Content-Type', 'text/csv;charset=utf-8')
-                             ->withHeader('Content-Disposition', 'attachment; filename="audittrail.csv"')
-                             ->withHeader('Content-Transfer-Encoding', 'binary')
-                             ->withHeader('Accept-Ranges', 'bytes')
-                             ->withHeader('Connection', 'Keep-Alive')
-                             ->withBody(new Stream(fopen($tempFileName, 'r')));
 
         $this->setNoOutput(true);
 
-        return $this->render($request, $response);
+        return $this->render($request, SendFile::decorateResponse(
+            $response,
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $tempFileName,
+            'audittrail.csv'
+        )->withHeader('Content-Type', 'text/csv;charset=utf-8'));
     }
 }
