@@ -22,7 +22,6 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
-use GuzzleHttp\Psr7\Stream;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
@@ -36,6 +35,7 @@ use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
+use Xibo\Helper\SendFile;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ReportServiceInterface;
@@ -818,17 +818,14 @@ class Stats extends Base
 
         fclose($out);
 
-        // We want to output a load of stuff to the browser as a text file.
-        $response = $response
-                        ->withHeader('Content-Type', 'text/csv')
-                        ->withHeader('Content-Disposition', 'attachment; filename=stats.csv')
-                        ->withHeader('Content-Transfer-Encoding', 'binary')
-                        ->withHeader('Accept-Ranges', 'bytes')
-                        ->withBody(new Stream(fopen($tempFileName, 'r')));
-
         $this->setNoOutput(true);
 
-        return $this->render($request, $response);
+        return $this->render($request, SendFile::decorateResponse(
+            $response,
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $tempFileName,
+            'stats.csv'
+        )->withHeader('Content-Type', 'text/csv'));
     }
 
     /**

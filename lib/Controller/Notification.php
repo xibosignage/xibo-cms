@@ -24,7 +24,6 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
-use GuzzleHttp\Psr7\Stream;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
@@ -36,6 +35,7 @@ use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\AttachmentUploadHandler;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
+use Xibo\Helper\SendFile;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DisplayNotifyService;
 use Xibo\Service\LogServiceInterface;
@@ -790,19 +790,15 @@ class Notification extends Base
     {
         $notification = $this->notificationFactory->getById($id);
 
-        $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION'). 'attachment/'.$notification->filename;
+        $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'attachment/' . $notification->filename;
 
         // Return the file with PHP
         $this->setNoOutput(true);
 
-        $response = $response
-            ->withHeader('Content-Type', 'application/octet-stream')
-            ->withHeader('Content-Disposition', 'attachment; filename='.  basename($fileName))
-            ->withHeader('Content-Transfer-Encoding', 'Binary')
-            ->withHeader('Content-Length', filesize($fileName))
-            ->withBody(new Stream(fopen($fileName, 'r')));
-
-        return $this->render($request, $response);
-
+        return $this->render($request, SendFile::decorateResponse(
+            $response,
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $fileName
+        ));
     }
 }

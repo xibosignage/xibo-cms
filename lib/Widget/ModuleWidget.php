@@ -55,7 +55,6 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\HttpCacheProvider;
-use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -1180,34 +1179,22 @@ abstract class ModuleWidget implements ModuleInterface
             $headers['X-Accel-Redirect'] = '/download/' . $media->storedAs;
         }
 
+        // Add the headers we've collected to our response
+        foreach ($headers as $header => $value) {
+            $response = $response->withHeader($header, $value);
+        }
+
         // Should we output the file via the application stack, or directly by reading the file.
         if ($sendFileMode == 'Off') {
             // Return the file with PHP
-            ob_end_flush();
+            $response = $response->withBody(new Stream(fopen($libraryPath, 'r')));
 
-            // add the php headers
-            foreach ($headers as $header => $value) {
-                header($header . ': ' . $value);
-            }
-
-            readfile($libraryPath);
-            exit;
+            $this->getLog()->debug('Returning Stream with response body, sendfile off.');
         } else {
-            // add the php headers
-            foreach ($headers as $header => $value) {
-                $response = $response->withHeader($header, $value);
-            }
-
-            $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/library_download_' . Random::generateString();
-            // Return the file to the browser as a file
-            $out = fopen($tempFileName, 'w');
-            fputs($out, $libraryPath);
-            fclose($out);
-
-            $response = $response->withBody(new Stream(fopen($tempFileName, 'r')));
-
-            return $response;
+            $this->getLog()->debug('Using sendfile to return the file, only output headers.');
         }
+
+        return $response;
     }
 
     /**
