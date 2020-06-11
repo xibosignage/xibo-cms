@@ -108,8 +108,45 @@ class StatisticsTest extends LocalWebTestCase
         // Publish the Layout
         $this->layout = $this->publish($this->layout);
 
-        $this->getLogger()->debug('Finished Setup');
+        // Record some stats for all tests to use.
+        // One word name for the event
+        $eventName = Random::generateString(10, 'event');
 
+        $response = $this->getXmdsWrapper()->SubmitStats($this->display->license, '<stats>
+            <stat fromdt="2018-02-12 00:00:00" todt="2018-02-15 00:00:00" type="layout" scheduleid="0" 
+                layoutid="' . $this->layout->layoutId . '" />
+            <stat fromdt="2018-02-12 00:00:00" todt="2018-02-13 00:00:00" type="media" scheduleid="0" 
+                layoutid="' . $this->layout->layoutId . '" mediaid="' . $this->widget->widgetId . '"/>
+            <stat fromdt="2018-02-14 00:00:00" todt="2018-02-15 00:00:00" type="media" scheduleid="0"
+                layoutid="' . $this->layout->layoutId . '" mediaid="' . $this->widget2->widgetId . '"/>
+            <stat fromdt="2018-02-12 00:00:00" todt="2018-02-15 00:00:00" type="widget" scheduleid="0"
+                layoutid="' . $this->layout->layoutId . '" mediaid="' . $this->textWidget->widgetId . '"/>
+            <stat fromdt="2018-02-12 00:00:00" todt="2018-02-15 00:00:00" type="event" scheduleid="0" 
+                layoutid="0" tag="'.$eventName.'"/>
+            <stat fromdt="2018-02-15 00:00:00" todt="2018-02-16 00:00:00" type="layout" scheduleid="0"
+                layoutid="' . $this->layout->layoutId . '"/>
+            <stat fromdt="2018-02-13 00:00:00" todt="2018-02-14 00:00:00" type="media" scheduleid="0"
+                layoutid="' . $this->layout->layoutId . '" mediaid="' . $this->widget->widgetId . '"/>
+            <stat fromdt="2018-02-15 00:00:00" todt="2018-02-16 00:00:00" type="media" scheduleid="0"
+                layoutid="' . $this->layout->layoutId . '" mediaid="' . $this->widget2->widgetId . '"/>
+            <stat fromdt="2018-02-15 00:00:00" todt="2018-02-16 00:00:00" type="widget" scheduleid="0"
+                layoutid="' . $this->layout->layoutId . '" mediaid="' . $this->textWidget->widgetId . '"/>
+            <stat fromdt="2018-02-15 00:00:00" todt="2018-02-16 00:00:00" type="event" scheduleid="0"
+                layoutid="0" tag="'.$eventName.'"/>
+            <stat fromdt="2018-02-16 00:00:00" todt="2018-02-17 00:00:00" type="layout" scheduleid="0"
+                layoutid="' . $this->layout->layoutId . '"/>
+            <stat fromdt="2018-02-16 00:00:00" todt="2018-02-16 12:00:00" type="media" scheduleid="0"
+                layoutid="' . $this->layout->layoutId . '" mediaid="' . $this->widget2->widgetId . '"/>
+            <stat fromdt="2018-02-16 12:00:00" todt="2018-02-17 00:00:00" type="media" scheduleid="0"
+                layoutid="' . $this->layout->layoutId . '" mediaid="' . $this->widget->widgetId . '"/>
+            <stat fromdt="2018-02-16 00:00:00" todt="2018-02-17 00:00:00" type="widget" scheduleid="0"
+                layoutid="' . $this->layout->layoutId . '" mediaid="' . $this->textWidget->widgetId . '"/>
+            <stat fromdt="2018-02-16 00:00:00" todt="2018-02-17 00:00:00" type="event" scheduleid="0" 
+                layoutid="0" tag="'.$eventName.'"/>
+        </stats>');
+        $this->assertSame(true, $response);
+
+        $this->getLogger()->debug('Finished Setup');
     }
 
     /**
@@ -152,180 +189,14 @@ class StatisticsTest extends LocalWebTestCase
 
     /**
      * Check if proof of play statistics are correct for all types
+     * @group broken
+     *
+     * TODO: I've no idea what we were trying to test here - this needs to be improved or removed.
+     * I believe the intention here was to test that the stats submitted are accurate and have been submitted
+     * correctly?
      */
     public function testProof()
     {
-
-        $hardwareId = $this->display->license;
-
-        // One word name for the event
-        $eventName = Random::generateString(10, 'event');
-
-        // First insert
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-12 00:00:00" 
-                        todt="2018-02-15 00:00:00" 
-                        type="layout" 
-                        scheduleid="0" 
-                        layoutid="' . $this->layout->layoutId . '" />
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-12 00:00:00" 
-                        todt="2018-02-13 00:00:00" 
-                        type="media" 
-                        scheduleid="0" 
-                        layoutid="' . $this->layout->layoutId . '" 
-                        mediaid="' . $this->widget->widgetId . '"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-14 00:00:00"
-                        todt="2018-02-15 00:00:00"
-                        type="media"
-                        scheduleid="0"
-                        layoutid="' . $this->layout->layoutId . '"
-                        mediaid="' . $this->widget2->widgetId . '"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-12 00:00:00"
-                        todt="2018-02-15 00:00:00"
-                        type="widget"
-                        scheduleid="0"
-                        layoutid="' . $this->layout->layoutId . '"
-                        mediaid="' . $this->textWidget->widgetId . '"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-12 00:00:00"
-                        todt="2018-02-15 00:00:00"
-                        type="event"
-                        scheduleid="0"
-                        layoutid="0"
-                        tag="'.$eventName.'"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        // Second insert
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-15 00:00:00"
-                        todt="2018-02-16 00:00:00"
-                        type="layout"
-                        scheduleid="0"
-                        layoutid="' . $this->layout->layoutId . '"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-13 00:00:00"
-                        todt="2018-02-14 00:00:00"
-                        type="media"
-                        scheduleid="0"
-                        layoutid="' . $this->layout->layoutId . '"
-                        mediaid="' . $this->widget->widgetId . '"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-15 00:00:00"
-                        todt="2018-02-16 00:00:00"
-                        type="media"
-                        scheduleid="0"
-                        layoutid="' . $this->layout->layoutId . '"
-                        mediaid="' . $this->widget2->widgetId . '"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-15 00:00:00"
-                        todt="2018-02-16 00:00:00"
-                        type="widget"
-                        scheduleid="0"
-                        layoutid="' . $this->layout->layoutId . '"
-                        mediaid="' . $this->textWidget->widgetId . '"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-15 00:00:00"
-                        todt="2018-02-16 00:00:00"
-                        type="event"
-                        scheduleid="0"
-                        layoutid="0"
-                        tag="'.$eventName.'"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        // Third insert
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-16 00:00:00"
-                        todt="2018-02-17 00:00:00"
-                        type="layout"
-                        scheduleid="0"
-                        layoutid="' . $this->layout->layoutId . '"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-16 12:00:00"
-                        todt="2018-02-17 00:00:00"
-                        type="media"
-                        scheduleid="0"
-                        layoutid="' . $this->layout->layoutId . '"
-                        mediaid="' . $this->widget->widgetId . '"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-16 00:00:00"
-                        todt="2018-02-16 12:00:00"
-                        type="media"
-                        scheduleid="0"
-                        layoutid="' . $this->layout->layoutId . '"
-                        mediaid="' . $this->widget2->widgetId . '"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-16 00:00:00"
-                        todt="2018-02-17 00:00:00"
-                        type="widget"
-                        scheduleid="0"
-                        layoutid="' . $this->layout->layoutId . '"
-                        mediaid="' . $this->textWidget->widgetId . '"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-16 00:00:00"
-                        todt="2018-02-17 00:00:00"
-                        type="event"
-                        scheduleid="0"
-                        layoutid="0"
-                        tag="'.$eventName.'"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
         // Get stats and see if they match with what we expect
         $response = $this->sendRequest('GET','/stats', [
             'fromDt' => '2018-02-12 00:00:00',
@@ -337,7 +208,7 @@ class StatisticsTest extends LocalWebTestCase
         $this->assertSame(200, $response->getStatusCode());
         $this->assertNotEmpty($response->getBody());
         $object = json_decode($response->getBody());
-        // $this->getLogger()->debug($response->getBody());
+
         $this->assertObjectHasAttribute('data', $object, $response->getBody());
         $stats = (new XiboStats($this->getEntityProvider()))->get([
             'fromDt' => '2018-02-12 00:00:00',
@@ -353,26 +224,19 @@ class StatisticsTest extends LocalWebTestCase
      */
     public function testExport()
     {
-        $hardwareId = $this->display->license;
-
-        // One insert
-        $xmds = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
-                        <stat fromdt="2018-02-12 00:00:00" 
-                        todt="2018-02-15 00:00:00" 
-                        type="layout" 
-                        scheduleid="0" 
-                        layoutid="' . $this->layout->layoutId . '" />
-                    </stats>');
-        $this->assertSame(true, $xmds);
-
         $response = $this->sendRequest('GET','/stats/export', [
             'fromDt' => '2018-02-12 00:00:00',
             'toDt' => '2018-02-15 00:00:00'
         ]);
 
+        // Check 200
         $this->assertSame(200, $response->getStatusCode());
-        $body = $response->getBody()->getContents();
-        $this->assertContains('layout,"2018-02-12', $body);
+
+        // We're expecting a send file header as we're testing within Docker
+        $this->assertTrue($response->hasHeader('X-Sendfile'));
+        $this->assertSame('text/csv', $response->getHeader('Content-Type')[0] ?? '');
+        $this->assertGreaterThan(0, $response->getHeader('Content-Length')[0] ?? 0);
+
+        // We can't test the body, because there isn't any web server involved with this request.
     }
 }

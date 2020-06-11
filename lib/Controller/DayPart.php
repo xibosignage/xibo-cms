@@ -521,7 +521,7 @@ class DayPart extends Base
 
     /**
      * Handle common inputs
-     * @param $dayPart
+     * @param \Xibo\Entity\DayPart $dayPart
      * @param Request $request
      */
     private function handleCommonInputs($dayPart, Request $request)
