@@ -68,6 +68,10 @@
                         {% set helpText %}{% trans "Allow the Client Credentials Grant for this Client?" %}{% endset %}
                         {{ forms.checkbox("clientCredentials", title, client.clientCredentials, helpText) }}
 
+                        {% set title %}{% trans "Is Confidential?" %}{% endset %}
+                        {% set helpText %}{% trans "Can this Application keep a secret?" %}{% endset %}
+                        {{ forms.checkbox("isConfidential", title, client.isConfidential, helpText) }}
+
                         {% set title %}{% trans "Redirect URI" %}{% endset %}
                         {% set helpText %}{% trans "White listed redirect URI's that will be allowed, only application for Authorization Code Grants" %}{% endset %}
                         {{ forms.input("redirectUri[]", title, "", helpText) }}

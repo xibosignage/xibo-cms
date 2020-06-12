@@ -1489,8 +1489,11 @@ function XiboSubmitResponse(response, form) {
 
         if (!apply) {
             // Next form URL is provided
-            if ($(form).data("nextFormUrl") != undefined) {
-                XiboFormRender($(form).data().nextFormUrl.replace(":id", response.id));
+            if ($(form).data("nextFormUrl") !== undefined) {
+                let responseId = ($(form).data("nextFormIdProperty") === undefined)
+                    ? response.id
+                    : response.data[$(form).data("nextFormIdProperty")];
+                XiboFormRender($(form).data().nextFormUrl.replace(":id", responseId));
             }
             // Back to the timeline form
             else if ((lastForm != undefined && (lastForm.indexOf("playlist/widget/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1)) && timelineForm != null) {

@@ -434,6 +434,14 @@ class Applications extends Base
             throw new InvalidArgumentException(__('Invalid user type'), 'userTypeId');
         }
 
+        // The dooh application is always confidential, and always client credentials
+        $application->clientCredentials = 1;
+        $application->isConfidential = 1;
+
+        // Add the all scope
+        $application->assignScope($this->applicationScopeFactory->getById('all'));
+
+        // Save
         $application->save();
 
         // Return
@@ -475,14 +483,13 @@ class Applications extends Base
         $client->clientCredentials = $sanitizedParams->getCheckbox('clientCredentials');
 
         if ($sanitizedParams->getCheckbox('resetKeys') == 1) {
-            $client->resetKeys();
+            $client->resetSecret();
         }
 
         // Delete all the redirect urls and add them again
         $client->load();
 
         foreach ($client->redirectUris as $uri) {
-            /* @var \Xibo\Entity\ApplicationRedirectUri $uri */
             $uri->delete();
         }
 
@@ -492,8 +499,9 @@ class Applications extends Base
         $redirectUris = $sanitizedParams->getArray('redirectUri');
 
         foreach ($redirectUris as $redirectUri) {
-            if ($redirectUri == '')
+            if ($redirectUri == '') {
                 continue;
+            }
 
             $redirect = $this->applicationRedirectUriFactory->create();
             $redirect->redirectUri = $redirectUri;
@@ -510,7 +518,6 @@ class Applications extends Base
             // Does this scope already exist?
             $found = false;
             foreach ($client->scopes as $existingScope) {
-                /** @var ApplicationScope $existingScope */
                 if ($scope->id == $existingScope->id) {
                     $found = true;
                     break;
@@ -518,10 +525,11 @@ class Applications extends Base
             }
 
             // Assign or unassign as necessary
-            if ($checked && !$found)
+            if ($checked && !$found) {
                 $client->assignScope($scope);
-            else if (!$checked && $found)
+            } else if (!$checked && $found) {
                 $client->unassignScope($scope);
+            }
         }
 
         // Change the ownership?

@@ -70,13 +70,7 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
      */
     public function create()
     {
-        $stripped = '';
         $application = $this->createEmpty();
-        // Make and ID/Secret
-        $bytes = openssl_random_pseudo_bytes(254, $strong);
-        $stripped .= str_replace(['/', '+', '='], '', base64_encode($bytes));
-        $application->secret = substr($stripped, 0, 254);
-        // Assign this user
         $application->userId = $this->getUser()->userId;
         return $application;
     }
@@ -209,7 +203,9 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row);
+            $entries[] = $this->createEmpty()->hydrate($row, [
+                'intProperties' => ['isConfidential']
+            ]);
         }
 
         // Paging
