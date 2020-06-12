@@ -22,6 +22,7 @@
 
 namespace Xibo\Entity;
 
+use League\OAuth2\Server\Entities\UserEntityInterface;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\Factory\CampaignFactory;
@@ -57,7 +58,7 @@ use Xibo\Support\Exception\NotFoundException;
  *
  * @SWG\Definition()
  */
-class User implements \JsonSerializable
+class User implements \JsonSerializable, UserEntityInterface
 {
     use EntityTrait;
 
@@ -469,6 +470,12 @@ class User implements \JsonSerializable
     public function getId()
     {
         return $this->userId;
+    }
+
+    /** @inheritDoc */
+    public function getIdentifier()
+    {
+        return $this->getLog();
     }
 
     /**

@@ -22,7 +22,7 @@
 
 
 namespace Xibo\Entity;
-use League\OAuth2\Server\Util\SecureKey;
+use League\OAuth2\Server\Entities\ClientEntityInterface;
 use Xibo\Factory\ApplicationRedirectUriFactory;
 use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\Service\LogServiceInterface;
@@ -34,7 +34,7 @@ use Xibo\Storage\StorageServiceInterface;
  *
  * @SWG\Definition
  */
-class Application implements \JsonSerializable
+class Application implements \JsonSerializable, ClientEntityInterface
 {
     use EntityTrait;
 
@@ -98,19 +98,13 @@ class Application implements \JsonSerializable
      */
     public $clientCredentials = 0;
 
-    /**
-     * @var array[ApplicationRedirectUri]
-     */
+    /** * @var ApplicationRedirectUri[] */
     public $redirectUris = [];
 
-    /**
-     * @var array[ApplicationScope]
-     */
+    /** * @var ApplicationScope[] */
     public $scopes = [];
 
-    /**
-     * @var ApplicationRedirectUriFactory
-     */
+    /** @var ApplicationRedirectUriFactory */
     private $applicationRedirectUriFactory;
 
     /** @var  ApplicationScopeFactory */
@@ -188,12 +182,22 @@ class Application implements \JsonSerializable
     }
 
     /**
+     * Get the hash for password verify
+     * @return string
+     */
+    public function getHash()
+    {
+        return password_hash($this->secret, PASSWORD_DEFAULT);
+    }
+
+    /**
      * Load
+     * @return $this
      */
     public function load()
     {
         if ($this->loaded)
-            return;
+            return $this;
 
         $this->redirectUris = $this->applicationRedirectUriFactory->getByClientId($this->key);
 
@@ -201,8 +205,12 @@ class Application implements \JsonSerializable
         $this->scopes = $this->applicationScopeFactory->getByClientId($this->key);
 
         $this->loaded = true;
+        return $this;
     }
 
+    /**
+     * @return $this
+     */
     public function save()
     {
         if ($this->key == null || $this->key == '')
@@ -213,11 +221,12 @@ class Application implements \JsonSerializable
         $this->getLog()->debug('Saving redirect uris: %s', json_encode($this->redirectUris));
 
         foreach ($this->redirectUris as $redirectUri) {
-            /* @var \Xibo\Entity\ApplicationRedirectUri $redirectUri */
             $redirectUri->save();
         }
 
         $this->manageScopeAssignments();
+
+        return $this;
     }
 
     public function delete()
@@ -325,5 +334,39 @@ class Application implements \JsonSerializable
         $sql = 'DELETE FROM `oauth_client_scopes` WHERE clientId = :clientId AND scopeId NOT IN (\'0\'' . $unassignIn . ')';
 
         $this->getStore()->update($sql, $params);
+    }
+
+    /** @inheritDoc */
+    public function getIdentifier()
+    {
+        return $this->key;
+    }
+
+    /** @inheritDoc */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /** @inheritDoc */
+    public function getRedirectUri()
+    {
+        $count = count($this->redirectUris);
+
+        if ($count <= 0) {
+            return null;
+        } else if (count($this->redirectUris) == 1) {
+            return $this->redirectUris[0]->redirectUri;
+        } else {
+            return array_map(function($el) {
+                return $el->redirectUri;
+            }, $this->redirectUris);
+        }
+    }
+
+    /** @inheritDoc */
+    public function isConfidential()
+    {
+        return ($this->clientCredentials == 1 || $this->authCode == 0);
     }
 }

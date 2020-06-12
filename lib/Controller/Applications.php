@@ -37,13 +37,12 @@ use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Session;
+use Xibo\OAuth\AuthCodeRepository;
+use Xibo\OAuth\ClientRepository;
+use Xibo\OAuth\RefreshTokenRepository;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\ApiClientStorage;
-use Xibo\Storage\AuthCodeRepository;
-use Xibo\Storage\RefreshTokenRepository;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\Storage\UserEntity;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\InvalidArgumentException;
 
@@ -224,9 +223,9 @@ class Applications extends Base
         $encryptionKey = $apiKeyPaths['publicKeyPath'];
 
         $server = new AuthorizationServer(
-            new ApiClientStorage($this->container->get('store'), $this->container->get('logService')),
-            new \Xibo\Storage\AccessTokenRepository($this->container->get('logService')),
-            new \Xibo\Storage\ScopeRepository(),
+            new ClientRepository($this->container->get('store'), $this->container->get('logService')),
+            new \Xibo\OAuth\AccessTokenRepository($this->container->get('logService')),
+            new \Xibo\OAuth\ScopeRepository(),
             $privateKey,
             $encryptionKey
         );
@@ -249,9 +248,7 @@ class Applications extends Base
             $authRequest->setAuthorizationApproved(true);
 
             // get oauth User Entity and set the UserId to the current web userId
-            $userEntity = new UserEntity();
-            $userEntity->userId = $this->getUser()->userId;
-            $authRequest->setUser($userEntity);
+            $authRequest->setUser($this->getUser());
 
             // Redirect back to the home page
             return $server->completeAuthorizationRequest($authRequest, $response);

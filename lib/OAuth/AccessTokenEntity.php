@@ -20,7 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Storage;
+namespace Xibo\OAuth;
 
 use Carbon\Carbon;
 use Lcobucci\JWT\Builder;
