@@ -84,6 +84,9 @@
         // create the table only when we are on Action tab
         $('.nav-tabs a').on('shown.bs.tab', function(event) {
             if ($(event.target).text() === 'Actions') {
+                // Expose the button
+                $('.action-button-add').removeClass("hidden");
+
                 // initialize the table only if it's not already initialized
                 if (!$.fn.DataTable.isDataTable('#actions')) {
                     // Configure the DataTable
@@ -105,15 +108,84 @@
                             }
                         },
                         "columns": [
-                            {"data": "actionId",},
+                            {"data": "actionId", "visible": false},
                             {"data": "ownerId", "visible": false},
-                            {"data": "triggerType"},
+                            {
+                                "data": "triggerType",
+                                "render": function(data, type, row, meta) {
+                                    if (type === "display") {
+                                        if (data === "touch") {
+                                            return "{{ "Touch/Click"|trans }}";
+                                        } else if (data === "webhook") {
+                                            return "{{ "Web hook"|trans }}"
+                                        } else {
+                                            return data;
+                                        }
+                                    } else {
+                                        return data;
+                                    }
+                                }
+                            },
                             {"data": "triggerCode", "visible": false},
-                            {"data": "actionType"},
-                            {"data": "target"},
-                            {"data": "targetId", "visible": false},
-                            {"data": "widgetId", "visible": false},
-                            {"data": "layoutCode", "visible": false},
+                            {
+                                "data": "actionType",
+                                "render": function(data, type, row, meta) {
+                                    if (type === "display") {
+                                        if (data === "next") {
+                                            return "{{ "Next"|trans }}";
+                                        } else if (data === "previous") {
+                                            return "{{ "Previous"|trans }}"
+                                        } else if (data === "navLayout") {
+                                            return "{{ "Navigate to Layout"|trans }}"
+                                        } else if (data === "navWidget") {
+                                            return "{{ "Navigate to Widget"|trans }}"
+                                        } else {
+                                            return data;
+                                        }
+                                    } else {
+                                        return data;
+                                    }
+                                }
+                            },
+                            {
+                                "data": "target",
+                                "render": function(data, type, row, meta) {
+                                    if (type === "display") {
+                                        if (data === "region") {
+                                            return "{{ "Region"|trans }}";
+                                        } else if (data === "screen") {
+                                            return "{{ "Screen"|trans }}"
+                                        } else {
+                                            return data;
+                                        }
+                                    } else {
+                                        return data;
+                                    }
+                                }
+                            },
+                            {
+                                "data": "targetId",
+                                "render": function(data, type, row, meta) {
+                                    if (type === "display" && data !== null && data !== "") {
+                                        return "<span title=\"" + data + "\">" + row.regionName + "</span>";
+                                    } else {
+                                        return data;
+                                    }
+                                },
+                                "visible": false
+                            },
+                            {
+                                "data": "widgetId",
+                                "render": function(data, type, row, meta) {
+                                    if (type === "display" && data !== null && data !== "") {
+                                        return "<span title=\"" + data + "\">" + row.widgetName + "</span>";
+                                    } else {
+                                        return data;
+                                    }
+                                },
+                                "visible": false
+                            },
+                            {"data": "layoutCode"},
                             {
                                 "orderable": false,
                                 "data": dataTableButtonsColumn
@@ -124,6 +196,9 @@
                     table.on('processing.dt', dataTableProcessing);
                     dataTableAddButtons(table, $('#actions_wrapper').find('.col-sm-6').eq(1), false);
                 }
+            } else {
+                // Hide the button
+                $('.action-button-add').addClass("hidden");
             }
         });
     }

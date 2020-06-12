@@ -3,6 +3,7 @@
 const loadingTemplate = require('../templates/loading.hbs');
 const propertiesPanel = require('../templates/properties-panel.hbs');
 const actionsTemplate = require('../templates/actions-form-template.hbs');
+const actionsButtonTemplate = require('../templates/actions-button-template.hbs');
 
 /**
  * Properties panel contructor
@@ -222,7 +223,6 @@ PropertiesPanel.prototype.render = function(element, step) {
 
             // render the html from actions template
             const actionsHtml = actionsTemplate({
-                addUrl: actionFormAddRequest,
                 trans: actionsTranslations
             });
 
@@ -232,6 +232,12 @@ PropertiesPanel.prototype.render = function(element, step) {
 
             // call the javascript to render the datatable when on Actions tab
             showActionsGrid(element.type, element[element.type + 'Id']);
+
+            // add a button to the button panel for adding an action.
+            self.DOMObject.find('.button-container').prepend($(actionsButtonTemplate({
+                addUrl: actionFormAddRequest,
+                trans: actionsTranslations
+            })));
         }
 
         // Store the extra
