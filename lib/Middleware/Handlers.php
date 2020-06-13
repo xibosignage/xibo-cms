@@ -22,11 +22,15 @@
 
 namespace Xibo\Middleware;
 
+use Illuminate\Support\Str;
 use Nyholm\Psr7\Factory\Psr17Factory;
+use Slim\Exception\HttpNotFoundException;
 use Slim\Exception\HttpSpecializedException;
 use Slim\Http\Factory\DecoratedResponseFactory;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Helper\Environment;
+use Xibo\Helper\Translate;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ExpiredException;
 use Xibo\Support\Exception\GeneralException;
@@ -48,22 +52,8 @@ class Handlers
     public static function jsonErrorHandler($container)
     {
         return function (Request $request, \Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($container) {
-            // If we are in a transaction, then we should rollback.
-            if ($container->get('store')->getConnection()->inTransaction()) {
-                $container->get('store')->getConnection()->rollBack();
-            }
-            $container->get('store')->close();
-
-            // Handle error handling
-            if ($logErrors && !self::handledError($exception)) {
-                /** @var \Psr\Log\LoggerInterface $logger */
-                $logger = $container->get('logger');
-                $logger->error('Error with message: ' . $exception->getMessage());
-
-                if ($logErrorDetails) {
-                    $logger->debug('Error with trace: ' . $exception->getTraceAsString());
-                }
-            }
+            self::rollbackAndCloseStore($container);
+            self::writeLog($logErrors, $logErrorDetails, $exception, $container);
 
             // Generate a response (start with a 500)
             $nyholmFactory = new Psr17Factory();
@@ -92,33 +82,15 @@ class Handlers
     }
 
     /**
+     * @param \Slim\App
      * @param \Psr\Container\ContainerInterface $container
      * @return \Closure
      */
-    public static function webErrorHandler($container)
+    public static function webErrorHandler($app, $container)
     {
-        return function (Request $request, \Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($container) {
-            // If we are in a transaction, then we should rollback.
-            if ($container->get('store')->getConnection()->inTransaction()) {
-                $container->get('store')->getConnection()->rollBack();
-            }
-            $container->get('store')->close();
-
-            // Make a friendly message
-            $message = (!empty($exception->getMessage()))
-                ? $exception->getMessage()
-                : __('Unexpected Error, please contact support.');
-
-            // Firstly handle logging the error.
-            if ($logErrors && !self::handledError($exception)) {
-                /** @var \Psr\Log\LoggerInterface $logger */
-                $logger = $container->get('logger');
-                $logger->error('Error with message: ' . $exception->getMessage());
-
-                if ($logErrorDetails) {
-                    $logger->debug('Error with trace: ' . $exception->getTraceAsString());
-                }
-            }
+        return function (Request $request, \Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($app, $container) {
+            self::rollbackAndCloseStore($container);
+            self::writeLog($logErrors, $logErrorDetails, $exception, $container);
 
             // Create a response
             // we're outside Slim's middleware here, so we have to handle the response ourselves.
@@ -126,11 +98,49 @@ class Handlers
             $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
             $response = $decoratedResponseFactory->createResponse();
 
-            // What happens here if we are an XHR request, we shouldn't redirect as then we lose the request details
-            // in any client side debugging.
-            if ($request->isXhr() || $request->getUri()->getPath() === '/error') {
-                // XHR
-                // output some JSON telling the UI what to do.
+            // We need to build all the functions required in the views manually because our middleware stack will
+            // not have been built for this handler.
+            // Slim4 has made this much more difficult!
+            // Terrible in fact.
+
+            // Get the Twig view
+            /** @var \Slim\Views\Twig $twig */
+            $twig = $container->get('view');
+
+            /** @var \Xibo\Service\ConfigService $configService */
+            $configService = $container->get('configService');
+            $configService->setDependencies($container->get('store'), $container->get('rootUri'));
+            $configService->loadTheme();
+
+            // Prepend our theme files to the view path
+            // Does this theme provide an alternative view path?
+            if ($configService->getThemeConfig('view_path') != '') {
+                $twig->getLoader()->prependPath(Str::replaceFirst('..', PROJECT_ROOT,
+                    $configService->getThemeConfig('view_path')));
+            }
+
+            // We have translated error/not-found
+            Translate::InitLocale($configService);
+
+            // Build up our own params to pass to Twig
+            $viewParams = [
+                'theme' => $configService,
+                'homeUrl' => '/',
+                'aboutUrl' => '/about',
+                'loginUrl' => '/login',
+                'version' => Environment::$WEBSITE_VERSION_NAME
+            ];
+
+            // Handle 404's
+            if ($exception instanceof HttpNotFoundException) {
+                return $twig->render($response, 'not-found.twig', $viewParams);
+            } else {
+                // Make a friendly message
+                $message = (!empty($exception->getMessage()))
+                    ? $exception->getMessage()
+                    : __('Unexpected Error, please contact support.');
+
+                // Parse out data for the exception
                 $exceptionData = [
                     'success' => false,
                     'error' => $exception->getCode(),
@@ -141,29 +151,21 @@ class Handlers
                 /*if ($exception instanceof GeneralException) {
                     array_merge($exception->getErrorData(), $exceptionData);
                 }*/
-                return $response->withJson($exceptionData);
-            } else {
-                // Normal request
-                // We need to redirect to an error page
-                if ($exception->getCode() == 404) {
-                    return $response = $response->withRedirect('/notFound');
-                } else {
-                    /** @var \Xibo\Helper\Session $session */
-                    $session = $container->get('session');
 
+                if ($request->isXhr()) {
+                    return $response->withJson($exceptionData);
+                } else {
                     $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($exception)));
 
                     if ($exception instanceof UpgradePendingException) {
                         $exceptionClass = 'upgrade-in-progress-page';
                     }
-
-                    // set data in session, this is handled and then cleared in Error Controller.
-                    $session->set('exceptionMessage', $message);
-                    $session->set('exceptionCode', $exception->getCode());
-                    $session->set('exceptionClass', $exceptionClass);
-                    $session->set('priorRoute', $request->getUri()->getPath());
-
-                    return $response = $response->withRedirect('/error');
+                    if (file_exists(PROJECT_ROOT . '/views/' . $exceptionClass . '.twig')) {
+                        $template = $exceptionClass;
+                    } else {
+                        $template = 'error';
+                    }
+                    return $twig->render($response, $template . '.twig', array_merge($viewParams, $exceptionData));
                 }
             }
         };
@@ -176,11 +178,7 @@ class Handlers
     public static function testErrorHandler($container)
     {
         return function (Request $request, \Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($container) {
-            // If we are in a transaction, then we should rollback.
-            if ($container->get('store')->getConnection()->inTransaction()) {
-                $container->get('store')->getConnection()->rollBack();
-            }
-            $container->get('store')->close();
+            self::rollbackAndCloseStore($container);
 
             $nyholmFactory = new Psr17Factory();
             $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
@@ -212,5 +210,37 @@ class Handlers
             || $e instanceof InstanceSuspendedException
             || $e instanceof UpgradePendingException
         );
+    }
+
+    /**
+     * @param \Psr\Container\ContainerInterface $container
+     */
+    private static function rollbackAndCloseStore($container)
+    {
+        // If we are in a transaction, then we should rollback.
+        if ($container->get('store')->getConnection()->inTransaction()) {
+            $container->get('store')->getConnection()->rollBack();
+        }
+        $container->get('store')->close();
+    }
+
+    /**
+     * @param bool $logErrors
+     * @param bool $logErrorDetails
+     * @param \Throwable $exception
+     * @param \Psr\Container\ContainerInterface $container
+     */
+    private static function writeLog(bool $logErrors, bool $logErrorDetails, \Throwable $exception, $container)
+    {
+        // Handle logging the error.
+        if ($logErrors && !self::handledError($exception)) {
+            /** @var \Psr\Log\LoggerInterface $logger */
+            $logger = $container->get('logger');
+            $logger->error($exception->getMessage());
+
+            if ($logErrorDetails) {
+                $logger->debug($exception->getTraceAsString());
+            }
+        }
     }
 }

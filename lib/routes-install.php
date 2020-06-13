@@ -42,7 +42,7 @@ $app->map(['GET', 'POST'],'/{step}', function(Request $request, Response $respon
         return (new PdoStorageService($container->get('logService')));
     });
 
-    $container->get('configService')->setDependencies($container->get('store'), $app->rootUri);
+    $container->get('configService')->setDependencies($container->get('store'), $container->get('rootUri'));
 
     /** @var Twig $view */
     $view = $container->get('view');

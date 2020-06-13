@@ -180,6 +180,14 @@ class Base
     }
 
     /**
+     * @return \Slim\Views\Twig
+     */
+    public function getView()
+    {
+        return $this->view;
+    }
+
+    /**
      * Is this the Api?
      * @param Request $request
      * @return bool
@@ -230,14 +238,9 @@ class Base
      */
     public function render(Request $request, Response $response)
     {
-        $parsedBody = $this->getSanitizer($request->getParams());
-
-        // TODO not sure what to do with it yet  $this->rendered:o
         if ($this->noOutput) {
             return $response;
         }
-
-       // $app = $this->getApp();
 
         // State will contain the current ApplicationState, including a success flag that can be used to determine
         // if we are in error or not.
@@ -249,11 +252,12 @@ class Base
         $grid = ($state->template === 'grid');
 
         if ($grid) {
+            $params = $this->getSanitizer($request->getParams());
             $recordsTotal = ($state->recordsTotal == null) ? count($data) : $state->recordsTotal;
             $recordsFiltered = ($state->recordsFiltered == null) ? $recordsTotal : $state->recordsFiltered;
 
             $data = [
-                'draw' => intval($parsedBody->getInt('draw')),
+                'draw' => intval($params->getInt('draw')),
                 'recordsTotal' => $recordsTotal,
                 'recordsFiltered' => $recordsFiltered,
                 'data' => $data
@@ -262,7 +266,6 @@ class Base
 
         // API Request
         if ($this->isApi($request)) {
-
             // Envelope by default - the APIView will un-pack if necessary
             $this->getState()->setData( [
                 'grid' => $grid,
@@ -273,11 +276,11 @@ class Base
                 'data' => $data
             ]);
 
-           // $this->getApp()->render('', $data, $state->httpStatus);
             return $this->renderApiResponse($request, $response->withStatus($state->httpStatus));
+
         } else if ($request->isXhr()) {
             // WEB Ajax
-
+            // --------
             // Are we a template that should be rendered to HTML
             // and then returned?
             if ($state->template != '' && $state->template != 'grid') {
@@ -286,18 +289,16 @@ class Base
 
             // We always return 200's
             // TODO: we might want to change this (we'd need to change the javascript to suit)
-          //  $response->withStatus(200);
             if ($grid) {
                 $json = $data;
             } else {
-                // TODO might be better to remove json_encode in application state
-                $json = json_decode($state->asJson());
+                $json = $state->asArray();
             }
 
            return $response->withJson($json, 200);
-        }
-        else {
+        } else {
             // WEB Normal
+            // ----------
             if (empty($state->template)) {
                 $this->getLog()->debug(sprintf('Template Missing. State: %s', json_encode($state)));
                 throw new ControllerNotImplemented(__('Template Missing'));
@@ -315,7 +316,6 @@ class Base
         }
         $this->rendered = true;
         return $response;
-
     }
 
     /**
@@ -444,15 +444,14 @@ class Base
      * Render a template to string
      * @param string $template
      * @param array $data
-     * @param Response $response
      * @return string
      * @throws \Twig\Error\LoaderError
      * @throws \Twig\Error\RuntimeError
      * @throws \Twig\Error\SyntaxError
      */
-    public function renderTemplateToString($template, $data, Response $response)
+    public function renderTemplateToString($template, $data)
     {
-        return $this->view->render($response, $template . '.twig', $data);
+        return $this->view->fetch($template . '.twig', $data);
     }
 
     /**
@@ -462,15 +461,13 @@ class Base
      */
     public function renderApiResponse(Request $request, Response $response)
     {
-        // JSONP Callback?
-        $jsonPCallback = $request->getParam('callback', null);
         $data = $this->getState()->getData();
-        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Don't envelope unless requested
-        if ($jsonPCallback != null ||  $request->getParam('envelope', 0) == 1 || $request->getAttribute('name') === 'test') {
+        if ($request->getParam('envelope', 0) == 1
+            || $request->getAttribute('name') === 'test'
+        ) {
             // Envelope
-
             // append error bool
             if (!$data['success']) {
                 $data['success'] = false;
@@ -478,19 +475,9 @@ class Base
 
             // append status code
             $data['status'] = $response->getStatusCode();
-/* TODO
-            // add flash messages
-            if (isset($this->data->flash) && is_object($this->data->flash)){
-                $flash = $this->data->flash->getMessages();
-                if (count($flash)) {
-                    $response['flash'] = $flash;
-                } else {
-                    unset($response['flash']);
-                }
-            }
-*/
+
             // Enveloped responses always return 200
-           $response = $response->withStatus(200);
+            $response = $response->withStatus(200);
         } else {
             // Don't envelope
             // Set status
@@ -506,8 +493,7 @@ class Base
                         'data' => $data['data']
                     ]
                 ];
-            }
-            else {
+            } else {
                 // Are we a grid?
                 if ($data['grid'] == true) {
                     // Set the response to our data['data'] object
@@ -518,6 +504,7 @@ class Base
                     $totalRows = $grid['recordsTotal'];
 
                     // Set some headers indicating our next/previous pages
+                    $sanitizedParams = $this->getSanitizer($request->getParams());
                     $start = $sanitizedParams->getInt('start', ['default' => 0]);
                     $size = $sanitizedParams->getInt('length', ['default' => 10]);
 
@@ -547,17 +534,7 @@ class Base
             }
         }
 
-        // JSON header
-        /**
-        if ($jsonPCallback !== null) {
-            $app->response()->body($jsonPCallback.'('.json_encode($response).')');
-        } else {
-            $app->response()->body(json_encode($response, JSON_PRETTY_PRINT));
-        }
-        */
-        $response = $response->withJson($data);
-
-        return $response;
+        return $response->withJson($data);
 
     }
 }

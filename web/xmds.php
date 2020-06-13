@@ -60,7 +60,7 @@ $container->set('logger', function () use($uidProcessor) {
 
 // Create a Slim application
 $app = \DI\Bridge\Slim\Bridge::create($container);
-$app->setBasePath(\Xibo\Middleware\State::determineBasePath());
+$app->setBasePath($container->get('basePath'));
 
 // Mock a request
 $request = new Request(new ServerRequest('GET', $app->getBasePath()));

@@ -32,14 +32,11 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App;
 use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
-use Stash\Driver\Composite;
-use Stash\Pool;
 use Xibo\Entity\User;
 use Xibo\Helper\Environment;
 use Xibo\Helper\NullSession;
 use Xibo\Helper\Session;
 use Xibo\Helper\Translate;
-use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\ReportService;
 use Xibo\Support\Exception\InstanceSuspendedException;
 use Xibo\Support\Exception\UpgradePendingException;
@@ -148,11 +145,8 @@ class State implements Middleware
     {
         $container = $app->getContainer();
 
-        // Set the root Uri
-        State::setRootUri($app);
-
         // Set the config dependencies
-        $container->get('configService')->setDependencies($container->get('store'), $app->rootUri);
+        $container->get('configService')->setDependencies($container->get('store'), $container->get('rootUri'));
 
         // set the system user for XTR/XMDS
         if ($container->get('name') == 'xtr' || $container->get('name') == 'xmds') {
@@ -183,7 +177,11 @@ class State implements Middleware
 
         // Set some public routes
         $request = $request->withAttribute('publicRoutes', [
-            '/login', '/login/forgotten', '/clock', '/about', '/login/ping',
+            '/login',
+            '/login/forgotten',
+            '/clock',
+            '/about',
+            '/login/ping',
             '/rss/{psk}',
             '/sssp_config.xml',
             '/sssp_dl.wgt',
@@ -297,83 +295,6 @@ class State implements Middleware
                 $app->add($object);
             }
         }
-    }
-
-    /**
-     * Set the Root URI
-     * @param App $app
-     */
-    public static function setRootUri(App $app)
-    {
-        // Set the root Uri
-        $basePath = self::determineBasePath();
-
-        // Static source, so remove index.php from the path
-        // this should only happen if rewrite is disabled
-        $basePath = str_replace('/index.php', '', $basePath);
-
-        // Replace out all of the entrypoints to get back to the root
-        $basePath = str_replace('/api/authorize', '', $basePath);
-        $basePath = str_replace('/api', '', $basePath);
-        $basePath = str_replace('/maintenance', '', $basePath);
-        $basePath = str_replace('/install', '', $basePath);
-
-        // Handle an empty (we always have our root with reference to `/`
-        if ($basePath == null) {
-            $basePath = '/';
-        }
-
-        $app->rootUri = $basePath;
-    }
-
-    /**
-     * Determine the Base Path
-     * @return mixed|string|string[]
-     */
-    public static function determineBasePath()
-    {
-        $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
-        $uri = (string) parse_url('http://a' . $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
-        if (stripos($uri, $_SERVER['SCRIPT_NAME']) === 0) {
-            return $_SERVER['SCRIPT_NAME'];
-        } else if ($scriptDir !== '/' && stripos($uri, $scriptDir) === 0) {
-            return $scriptDir;
-        } else {
-            return '';
-        }
-    }
-
-    /**
-     * Configure the Cache
-     * @param ContainerInterface $container
-     * @param ConfigServiceInterface $configService
-     * @param \PSR\Log\LoggerInterface $logWriter
-     */
-    public static function configureCache($container, $configService, $logWriter)
-    {
-        $drivers = [];
-
-        if ($configService->getCacheDrivers() != null && is_array($configService->getCacheDrivers())) {
-            $drivers = $configService->getCacheDrivers();
-        } else {
-            // File System Driver
-            $realPath = realpath($configService->getSetting('LIBRARY_LOCATION'));
-            $cachePath = ($realPath) ? $realPath . '/cache/' : $configService->getSetting('LIBRARY_LOCATION') . 'cache/';
-
-            $drivers[] = new \Stash\Driver\FileSystem(['path' => $cachePath]);
-        }
-
-        // Create a composite driver
-        $composite = new Composite(['drivers' => $drivers]);
-
-        // Create a pool using this driver set
-        $container->set('pool', function() use ($logWriter, $composite, $configService) {
-            $pool = new Pool($composite);
-            $pool->setLogger($logWriter);
-            $pool->setNamespace($configService->getCacheNamespace());
-            $configService->setPool($pool);
-            return $pool;
-        });
     }
 
     /**
@@ -606,18 +527,6 @@ class State implements Middleware
                     $c->get('playerVersionFactory'),
                     $c->get('dayPartFactory'),
                     $c->get('view')
-                );
-            },
-            '\Xibo\Controller\Error' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Error(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
-                    $c->get('view'),
-                    $c
                 );
             },
             '\Xibo\Controller\Fault' => function(ContainerInterface $c) {

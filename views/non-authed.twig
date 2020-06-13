@@ -71,7 +71,7 @@
 
             <p class="text-center">{% trans %}Version {{ version }}{% endtrans %}
                 | <a id="source-link" href="{{ theme.getThemeConfig("cms_source_url") }}">{% trans "Source" %}</a>
-                | <a id="about-link" class="XiboFormButton" href="{{ url_for("about") }}" title="{% trans "About" %}">{% trans "About" %}</a>
+                | <a id="about-link" class="XiboFormButton" href="{{ aboutUrl }}" title="{% trans "About" %}">{% trans "About" %}</a>
             </p>
         </div> <!-- /container -->
         <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>

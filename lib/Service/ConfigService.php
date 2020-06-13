@@ -23,9 +23,9 @@ namespace Xibo\Service;
 
 use Carbon\Carbon;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Helper\Environment;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\ConfigurationException;
 
 /**
  * Class ConfigService
@@ -86,6 +86,7 @@ class ConfigService implements ConfigServiceInterface
      * @var array
      */
     public $themeConfig = [];
+
     /** @var bool Has a theme been loaded? */
     private $themeLoaded = false;
 
@@ -275,7 +276,7 @@ class ConfigService implements ConfigServiceInterface
      * Get Theme Specific Settings
      * @param null $settingName
      * @param null $default
-     * @return null
+     * @return mixed|array|string
      */
     public function getThemeConfig($settingName = null, $default = null)
     {

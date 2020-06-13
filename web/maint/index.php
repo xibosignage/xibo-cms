@@ -60,7 +60,7 @@ $container->set('logger', function (ContainerInterface $container) {
 });
 
 $app = \DI\Bridge\Slim\Bridge::create($container);
-$app->setBasePath(\Xibo\Middleware\State::determineBasePath());
+$app->setBasePath($container->get('basePath'));
 $container->set('name', 'maint');
 
 // Config

@@ -72,7 +72,7 @@
 </head>
 <body>
     <div class="container">
-        <div class="form-signin text-center" action="{{ url_for("login") }}">
+        <div class="form-signin text-center" action="{{ loginUrl }}">
             <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ theme.uri("img/xibologo.png") }}"></a></p>
 
             <p>{% trans "The CMS is temporarily off-line as an upgrade is in progress. Please check with your system administrator for updates or refresh your page in a few minutes." %}</p>

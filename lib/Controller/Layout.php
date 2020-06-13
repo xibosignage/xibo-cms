@@ -1348,7 +1348,8 @@ class Layout extends Base
                 }
 
                 // provide our layout object to a template to render immediately
-                $layout->descriptionFormatted = $this->renderTemplateToString('layout-page-grid-widgetlist', $layout, $response);
+                $layout->descriptionFormatted = $this->renderTemplateToString('layout-page-grid-widgetlist',
+                    (array)$layout);
             }
 
             switch ($layout->status) {

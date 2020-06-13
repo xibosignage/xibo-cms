@@ -71,7 +71,7 @@ $app->add(new \Xibo\Middleware\State($app));
 $app->add(new \Xibo\Middleware\Log($app));
 $app->add(new \Xibo\Middleware\Storage($app));
 $app->addRoutingMiddleware();
-$app->setBasePath(\Xibo\Middleware\State::determineBasePath());
+$app->setBasePath($container->get('basePath'));
 
 // Define Custom Error Handler
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
