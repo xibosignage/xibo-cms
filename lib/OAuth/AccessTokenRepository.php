@@ -20,7 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Storage;
+namespace Xibo\OAuth;
 
 use League\OAuth2\Server\Entities\AccessTokenEntityInterface;
 use League\OAuth2\Server\Entities\ClientEntityInterface;
@@ -57,8 +57,8 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
         }
 
         // client credentials, we take user from the client entity
-        if($userIdentifier === null) {
-            $accessToken->setUserIdentifier($clientEntity->getUserIdentifier());
+        if ($userIdentifier === null) {
+            $accessToken->setUserIdentifier($clientEntity->userId);
         } else {
             // authentication code, we should have a userIdentifier here
             $accessToken->setUserIdentifier($userIdentifier);

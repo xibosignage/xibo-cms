@@ -63,6 +63,14 @@ class CASAuthentication implements Middleware
         );
     }
 
+    /**
+     * @return $this
+     */
+    public function addToRouter()
+    {
+        //TODO: move route definitions to this method.
+        return $this;
+    }
 
     /**
      * Uses a Hook to check every call for authorization
@@ -90,7 +98,7 @@ class CASAuthentication implements Middleware
 
         // Register CAS routes.
         $request = $request->withAttribute('excludedCsrfRoutes', CASAuthentication::casRoutes());
-        $app->logoutRoute = 'cas.logout';
+        $container->logoutRoute = 'cas.logout';
 
         $app->map(['GET', 'POST'],'/cas/login', function (SlimRequest $request, SlimResponse $response) use ($app) {
 

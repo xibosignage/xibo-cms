@@ -7,17 +7,20 @@
 
 
 namespace Xibo\Factory;
+use League\OAuth2\Server\Entities\ClientEntityInterface;
+use League\OAuth2\Server\Repositories\ScopeRepositoryInterface;
 use Xibo\Entity\ApplicationScope;
 use Xibo\Helper\SanitizerService;
-use Xibo\Support\Exception\NotFoundException;
+use Xibo\OAuth\ScopeEntity;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class ApplicationScopeFactory
  * @package Xibo\Factory
  */
-class ApplicationScopeFactory extends BaseFactory
+class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInterface
 {
     /**
      * Construct a factory
@@ -123,5 +126,39 @@ class ApplicationScopeFactory extends BaseFactory
         }
 
         return $entries;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getScopeEntityByIdentifier($scopeIdentifier)
+    {
+        $this->getLog()->debug('getScopeEntityByIdentifier: ' . $scopeIdentifier);
+
+        try {
+            return $this->getById($scopeIdentifier);
+        } catch (NotFoundException $e) {
+            return null;
+        }
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function finalizeScopes(array $scopes, $grantType, ClientEntityInterface $clientEntity, $userIdentifier = null)
+    {
+        $this->getLog()->debug('finalizeScopes');
+
+        // This needs to take the scopes array and compare it to the scopes assigned to the client entity, if they mismatch
+        // then it should remove.
+        $finalised = [];
+
+        /** @var \Xibo\Entity\Application $clientEntity */
+        foreach ($clientEntity->scopes as $scope) {
+            if (in_array($scope->getIdentifier(), $scopes)) {
+                $finalised[] = $scope->getIdentifier();
+            }
+        }
+        return $finalised;
     }
 }

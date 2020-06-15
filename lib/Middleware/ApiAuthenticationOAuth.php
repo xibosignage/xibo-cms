@@ -30,10 +30,11 @@ use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
 use Slim\Routing\RouteContext;
-use Xibo\Storage\AccessTokenRepository;
+use Xibo\OAuth\AccessTokenRepository;
 
 /**
  * Class ApiAuthenticationOAuth
+ * This middleware protects the API entry point
  * @package Xibo\Middleware
  */
 class ApiAuthenticationOAuth implements Middleware

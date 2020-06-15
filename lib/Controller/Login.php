@@ -51,24 +51,17 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class Login extends Base
 {
-    /**
-     * @var Session
-     */
+    /** @var Session */
     private $session;
 
     /** @var StorageServiceInterface  */
     private $store;
 
-    /**
-     * @var UserFactory
-     */
+    /** @var UserFactory */
     private $userFactory;
 
     /** @var \Stash\Interfaces\PoolInterface */
     private $pool;
-
-    /** @var Twig */
-    private $view;
 
     /** @var ContainerInterface */
     private $container;
@@ -96,7 +89,6 @@ class Login extends Base
         $this->userFactory = $userFactory;
         $this->pool = $pool;
         $this->store = $store;
-        $this->view  = $view;
         $this->container = $container;
     }
 
@@ -230,7 +222,6 @@ class Login extends Base
 
             // Get our user
             try {
-                /* @var User $user */
                 $user = $this->userFactory->getByName($username);
 
                 // DOOH user
@@ -481,18 +472,10 @@ class Login extends Base
      */
     private function generateEmailBody($subject, $body)
     {
-        // Generate Body
-        // Start an object buffer
-        ob_start();
-
-        // Render the template
-        echo $this->view->fetch('email-template.twig', ['config' => $this->getConfig(), 'subject' => $subject, 'body' => $body]);
-
-        $body = ob_get_contents();
-
-        ob_end_clean();
-
-        return $body;
+        return $this->renderTemplateToString('email-template.twig', [
+            'config' => $this->getConfig(),
+            'subject' => $subject, 'body' => $body
+        ]);
     }
 
     /**

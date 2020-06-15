@@ -55,11 +55,18 @@ class SAMLAuthentication implements Middleware
     /* @var App $app */
     private $app;
 
+    /**
+     * SAMLAuthentication constructor.
+     * @param $app
+     */
     public function __construct($app)
     {
         $this->app = $app;
     }
 
+    /**
+     * @return string[]
+     */
     public static function samlRoutes()
     {
         return [
@@ -71,57 +78,19 @@ class SAMLAuthentication implements Middleware
         ];
     }
 
-    public function samlLogout(SlimRequest $request, SlimResponse $response)
-    {
-        $container = $this->app->getContainer();
-        $routeParser = $this->app->getRouteCollector()->getRouteParser();
-
-        if (isset($container->get('configService')->samlSettings['workflow']) &&
-          isset($container->get('configService')->samlSettings['workflow']['slo']) &&
-            $container->get('configService')->samlSettings['workflow']['slo'] == true) {
-            // Initiate SAML SLO
-            $auth = new Auth($container->get('configService')->samlSettings);
-            $auth->logout();
-        } else {
-            return $response->withRedirect($routeParser->urlFor('logout'));
-        }
-    }
-
     /**
-     * Uses a Hook to check every call for authorization
-     * Will redirect to the login route if the user is unauthorized
-     *
-     * @param Request $request
-     * @param RequestHandler $handler
-     * @return Response
-     * @throws AccessDeniedException
-     * @throws ConfigurationException
-     * @throws NotFoundException
+     * @return $this
      */
-    public function process(Request $request, RequestHandler $handler): Response
+    public function addToRouter()
     {
         $app = $this->app;
-
-        $container = $app->getContainer();
-
-        /** @var User $user */
-        $user = $container->get('userFactory')->create();
-        // Get the current route pattern
-        $routeContext = RouteContext::fromRequest($request);
-        $route = $routeContext->getRoute();
-        $resource = $route->getPattern();
-
-        // Register SAML routes.
-        $request = $request->withAttribute('excludedCsrfRoutes', SAMLAuthentication::samlRoutes());
-        $app->logoutRoute = 'saml.logout';
-
         $app->get('/saml/metadata', function (SlimRequest $request, SlimResponse $response) {
             $settings = new Settings($this->app->getContainer()->get('configService')->samlSettings, true);
             $metadata = $settings->getSPMetadata();
             $errors = $settings->validateMetadata($metadata);
             if (empty($errors)) {
                 $response = $response->withHeader('Content-Type', 'text/xml')
-                                     ->write($metadata);
+                    ->write($metadata);
 
                 return $response;
             } else {
@@ -142,16 +111,14 @@ class SAMLAuthentication implements Middleware
             $this->samlLogout($request,  $response);
         })->setName('saml.logout');
 
-        $app->post('/saml/acs', function (SlimRequest $request, SlimResponse $response) {
+        $app->post('/saml/acs', function (SlimRequest $request, SlimResponse $response) use ($app) {
             // Assertion Consumer Endpoint
-            $app = $this->app;
+            /** @var \Psr\Log\LoggerInterface $logger */
+            $logger = $this->app->getContainer()->get('logger');
 
             // Log some interesting things
-            $app->getContainer()->get('logger')->debug('Arrived at the ACS route with own URL: ' . Utils::getSelfRoutedURLNoQuery());
+            $logger->debug('Arrived at the ACS route with own URL: ' . Utils::getSelfRoutedURLNoQuery());
 
-            // Inject the POST parameters required by the SAML toolkit
-            //$_POST = $this->app->request->post();
-            $_POST = $request->getParams();
             // Pull out the SAML settings
             $samlSettings = $this->app->getContainer()->get('configService')->samlSettings;
 
@@ -161,15 +128,18 @@ class SAMLAuthentication implements Middleware
             $errors = $auth->getErrors();
 
             if (!empty($errors)) {
-                throw new Error(
-                    'SAML SSO failed: '.implode(', ', $errors) . '. Last Reason: ' . $auth->getLastErrorReason()
-                );
+                $logger->error('Single Sign on Failed: ' . implode(', ', $errors) . '. Last Reason: ' . $auth->getLastErrorReason());
+                throw new AccessDeniedException(__('Your authentication provider could not log you in.'));
             } else {
                 // Pull out the SAML attributes
                 $samlAttrs = $auth->getAttributes();
 
+                $logger->debug('SAML attributes: ' . json_encode($samlAttrs));
+
                 // How should we look up the user?
-                $identityField = (isset($samlSettings['workflow']['field_to_identify'])) ? $samlSettings['workflow']['field_to_identify'] : 'UserName';
+                $identityField = (isset($samlSettings['workflow']['field_to_identify']))
+                    ? $samlSettings['workflow']['field_to_identify']
+                    : 'UserName';
 
                 if ($identityField !== 'nameId' && empty($samlAttrs)) {
                     // We will need some attributes
@@ -180,7 +150,7 @@ class SAMLAuthentication implements Middleware
                 $userData = [];
                 if (isset($samlSettings['workflow']) && isset($samlSettings['workflow']['mapping'])) {
                     foreach ($samlSettings['workflow']['mapping'] as $key => $value) {
-                        if (!empty($value) && isset($samlAttrs[$value]) ) {
+                        if (!empty($value) && isset($samlAttrs[$value])) {
                             $userData[$key] = $samlAttrs[$value];
                         }
                     }
@@ -210,7 +180,7 @@ class SAMLAuthentication implements Middleware
                             $user = $app->getContainer()->get('userFactory')->getByName($userData[$identityField]);
                             break;
 
-                        case 'UserId':
+                        case 'UserID':
                             $user = $app->getContainer()->get('userFactory')->getById($userData[$identityField][0]);
                             break;
 
@@ -307,7 +277,7 @@ class SAMLAuthentication implements Middleware
                         $group->save(['validate' => false]);
 
                         // Audit Log
-                        $app->getContainer()->get('logger')->audit('User', $user->userId, 'User created with SAML workflow', [
+                        $app->getContainer()->get('logService')->audit('User', $user->userId, 'User created with SAML workflow', [
                             'UserName' => $user->userName,
                             'IPAddress' => $request->getAttribute('ip_address'),
                             'UserAgent' => $request->getHeader('User-Agent')
@@ -373,6 +343,61 @@ class SAMLAuthentication implements Middleware
             }
         });
 
+        return $this;
+    }
+
+    /**
+     * @param \Slim\Http\ServerRequest $request
+     * @param \Slim\Http\Response $response
+     * @return \Psr\Http\Message\ResponseInterface|\Slim\Http\Response
+     * @throws \OneLogin\Saml2\Error
+     */
+    public function samlLogout(SlimRequest $request, SlimResponse $response)
+    {
+        $container = $this->app->getContainer();
+        $routeParser = $this->app->getRouteCollector()->getRouteParser();
+
+        if (isset($container->get('configService')->samlSettings['workflow'])
+            && isset($container->get('configService')->samlSettings['workflow']['slo'])
+            && $container->get('configService')->samlSettings['workflow']['slo'] == true
+        ) {
+            // Initiate SAML SLO
+            $auth = new Auth($container->get('configService')->samlSettings);
+            return $response->withRedirect($auth->logout());
+        } else {
+            return $response->withRedirect($routeParser->urlFor('logout'));
+        }
+    }
+
+    /**
+     * Uses a Hook to check every call for authorization
+     * Will redirect to the login route if the user is unauthorized
+     *
+     * @param Request $request
+     * @param RequestHandler $handler
+     * @return Response
+     * @throws AccessDeniedException
+     * @throws ConfigurationException
+     * @throws NotFoundException
+     */
+    public function process(Request $request, RequestHandler $handler): Response
+    {
+        $app = $this->app;
+
+        $container = $app->getContainer();
+
+        /** @var User $user */
+        $user = $container->get('userFactory')->create();
+
+        // Get the current route pattern
+        $routeContext = RouteContext::fromRequest($request);
+        $route = $routeContext->getRoute();
+        $resource = $route->getPattern();
+
+        // Register SAML routes.
+        $request = $request->withAttribute('excludedCsrfRoutes', SAMLAuthentication::samlRoutes());
+        $container->logoutRoute = 'saml.logout';
+
         // Create a function which we will call should the request be for a protected page
         // and the user not yet be logged in.
         $redirectToLogin = function (Request $request, SlimResponse $response) use ($app) {
@@ -387,7 +412,9 @@ class SAMLAuthentication implements Middleware
             }
         };
 
-        if (!in_array($resource, $request->getAttribute('publicRoutes', [])) && !in_array($resource, $request->getAttribute('excludedCsrfRoutes', [])) ) {
+        if (!in_array($resource, $request->getAttribute('publicRoutes', []))
+            && !in_array($resource, $request->getAttribute('excludedCsrfRoutes', []))
+        ) {
 
             $request = $request->withAttribute('public', false);
 
@@ -428,7 +455,10 @@ class SAMLAuthentication implements Middleware
             $request = $request->withAttribute('public', true);
 
             // If we are expired and come from ping/clock, then we redirect
-            if ( ( $container->get('session')->isExpired() && ($resource == '/login/ping' || $resource == 'clock') ) || $resource == '/login' ) {
+            if (($container->get('session')->isExpired()
+                    && ($resource == '/login/ping' || $resource == 'clock'))
+                || $resource == '/login'
+            ) {
                 $app->getContainer()->get('logger')->debug('should redirect to login , resource is ' . $resource);
 
                 $nyholmFactory = new Psr17Factory();

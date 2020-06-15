@@ -12,7 +12,7 @@ describe('Layout Designer (Empty)', function() {
             cy.visit('/layout/designer/111111111111');
 
             // See page not found message
-            cy.contains('Sorry we could not find that page');
+            cy.contains('Layout not found');
         });
     });
 

@@ -28,12 +28,11 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
-use Xibo\Storage\AuthCodeRepository;
-use Xibo\Storage\RefreshTokenRepository;
 use Xibo\Support\Exception\ConfigurationException;
 
 /**
  * Class ApiAuthorizationOAuth
+ * This middleware protects the AUTH entry point
  * @package Xibo\Middleware
  */
 class ApiAuthorizationOAuth implements Middleware
@@ -73,9 +72,9 @@ class ApiAuthorizationOAuth implements Middleware
             try {
 
                 $server = new \League\OAuth2\Server\AuthorizationServer(
-                    new \Xibo\Storage\ApiClientStorage($container->get('store'), $logger),
-                    new \Xibo\Storage\AccessTokenRepository($logger),
-                    new \Xibo\Storage\ScopeRepository(),
+                    $container->get('applicationFactory'),
+                    new \Xibo\OAuth\AccessTokenRepository($logger),
+                    $container->get('applicationScopeFactory'),
                     $privateKey,
                     $encryptionKey
                 );
@@ -87,8 +86,8 @@ class ApiAuthorizationOAuth implements Middleware
 
                 $server->enableGrantType(
                     new AuthCodeGrant(
-                        new AuthCodeRepository(),
-                        new RefreshTokenRepository(),
+                        new \Xibo\OAuth\AuthCodeRepository(),
+                        new \Xibo\OAuth\RefreshTokenRepository(),
                         new \DateInterval('PT10M')
                     ),
                     new \DateInterval('PT1H')
