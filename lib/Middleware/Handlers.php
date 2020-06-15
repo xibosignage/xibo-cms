@@ -82,13 +82,12 @@ class Handlers
     }
 
     /**
-     * @param \Slim\App
      * @param \Psr\Container\ContainerInterface $container
      * @return \Closure
      */
-    public static function webErrorHandler($app, $container)
+    public static function webErrorHandler($container)
     {
-        return function (Request $request, \Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($app, $container) {
+        return function (Request $request, \Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($container) {
             self::rollbackAndCloseStore($container);
             self::writeLog($logErrors, $logErrorDetails, $exception, $container);
 

@@ -117,7 +117,7 @@ $app->addRoutingMiddleware();
 
 // Add Error Middleware
 $app->addErrorMiddleware(false, true, true)
-    ->setDefaultErrorHandler(\Xibo\Middleware\Handlers::webErrorHandler($app, $container));
+    ->setDefaultErrorHandler(\Xibo\Middleware\Handlers::webErrorHandler($container));
 
 // All application routes
 require PROJECT_ROOT . '/lib/routes-web.php';
