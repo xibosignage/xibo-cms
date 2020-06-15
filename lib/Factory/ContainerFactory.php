@@ -48,6 +48,10 @@ if (!defined('PROJECT_ROOT')) {
     define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 }
 
+/**
+ * Class ContainerFactory
+ * @package Xibo\Factory
+ */
 class ContainerFactory
 {
     /**
