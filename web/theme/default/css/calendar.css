@@ -19,7 +19,8 @@
  */
 
  .xibo-calendar-controls {
- 	margin-left: 10px;
+     margin-left: 10px;
+     line-height: 0;
  }
  
  
@@ -27,6 +28,7 @@
     border: none;
     padding: 0;
     margin: 0;
+    height: 34px;
  }
  
  .xibo-calendar-controls #dateInput .input-group-addon {

@@ -122,27 +122,34 @@
     * Init/Update timePicker fields
     */
     function timersFormInit(container) {
+        const customTimeFormat = 'HH:mm';
         container.find('.input-group:not(.timerInit) .timePickerDisplayEditForm').each(function() {
-            const customTimeFormat = 'HH:mm';
-
             if(calendarType == 'Jalali') {
-                initDatePicker($(this), customTimeFormat, {
-                    onlyTimePicker: true,
-                    format: customTimeFormat,
-                    timePicker: {
-                        second: {
-                            enabled: false
-                        }
-                    },
-                    altFieldFormatter: function(unixTime) {
-                        let newDate = moment.unix(unixTime / 1000);
-                        newDate.set('second', 0);
+                initDatePicker(
+                    $(this),
+                    customTimeFormat,
+                    customTimeFormat,
+                    {
+                        onlyTimePicker: true,
+                        format: customTimeFormat,
+                        timePicker: {
+                            second: {
+                                enabled: false
+                            }
+                        },
+                        altFieldFormatter: function(unixTime) {
+                            let newDate = moment.unix(unixTime / 1000);
+                            newDate.set('second', 0);
 
-                        return newDate.format(customTimeFormat);
+                            return newDate.format(customTimeFormat);
+                        }
                     }
-                });
+                );
             } else {
-                initDatePicker($(this), customTimeFormat, 
+                initDatePicker(
+                    $(this),
+                    customTimeFormat,
+                    customTimeFormat,
                     {
                         enableTime: true,
                         noCalendar: true,

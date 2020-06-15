@@ -81,8 +81,7 @@ $(document).ready(function() {
                     newDate.set('hour', 0);
                     newDate.set('minute', 0);
                     newDate.set('second', 0);
-
-                    return newDate.format(systemDateOnlyFormat);
+                    return newDate.format(jsDateFormat);
                 },
                 onSelect: function() {},
                 onHide: function() {
@@ -101,7 +100,8 @@ $(document).ready(function() {
         // Create the date input shortcut
         initDatePicker(
             $('#dateInput'), 
-            systemDateOnlyFormat, 
+            systemDateFormat, 
+            jsDateOnlyFormat, 
             pickerOptions, 
             navigateToCalendarDate,
             false // clear button
@@ -484,7 +484,7 @@ $(document).ready(function() {
                 // Sync the date of the date picker to the current calendar date
                 if (this.options.position.start != undefined && this.options.position.start != "") {
                     // Update timepicker
-                    updateDatePicker($('#dateInput'), moment.unix(this.options.position.start.getTime() / 1000).format(systemDateOnlyFormat), systemDateOnlyFormat);
+                    updateDatePicker($('#dateInput'), moment.unix(this.options.position.start.getTime() / 1000).format(jsDateOnlyFormat), jsDateOnlyFormat);
                 }
                 
                 if (typeof this.getTitle === "function")
