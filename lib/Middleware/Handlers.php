@@ -53,7 +53,7 @@ class Handlers
     {
         return function (Request $request, \Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($container) {
             self::rollbackAndCloseStore($container);
-            self::writeLog($logErrors, $logErrorDetails, $exception, $container);
+            self::writeLog($request, $logErrors, $logErrorDetails, $exception, $container);
 
             // Generate a response (start with a 500)
             $nyholmFactory = new Psr17Factory();
@@ -89,7 +89,7 @@ class Handlers
     {
         return function (Request $request, \Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($container) {
             self::rollbackAndCloseStore($container);
-            self::writeLog($logErrors, $logErrorDetails, $exception, $container);
+            self::writeLog($request, $logErrors, $logErrorDetails, $exception, $container);
 
             // Create a response
             // we're outside Slim's middleware here, so we have to handle the response ourselves.
@@ -224,17 +224,22 @@ class Handlers
     }
 
     /**
+     * @param Request $request
      * @param bool $logErrors
      * @param bool $logErrorDetails
      * @param \Throwable $exception
      * @param \Psr\Container\ContainerInterface $container
      */
-    private static function writeLog(bool $logErrors, bool $logErrorDetails, \Throwable $exception, $container)
+    private static function writeLog($request, bool $logErrors, bool $logErrorDetails, \Throwable $exception, $container)
     {
+        /** @var \Psr\Log\LoggerInterface $logger */
+        $logger = $container->get('logger');
+
+        // Add a processor to our log handler
+        Log::addLogProcessorToLogger($logger, $request);
+
         // Handle logging the error.
         if ($logErrors && !self::handledError($exception)) {
-            /** @var \Psr\Log\LoggerInterface $logger */
-            $logger = $container->get('logger');
             $logger->error($exception->getMessage());
 
             if ($logErrorDetails) {

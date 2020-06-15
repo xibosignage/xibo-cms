@@ -64,7 +64,7 @@ try {
     die($e->getMessage());
 }
 
-
+// Configure Monolog
 $container->set('logger', function (ContainerInterface $container) {
     $logger = new Logger('WEB');
 
@@ -97,12 +97,12 @@ $app->add(new \Xibo\Middleware\Actions($app));
 $app->add(new \Xibo\Middleware\Theme($app));
 $app->add(new \Xibo\Middleware\CsrfGuard($app));
 
-if ($container->get('configService')->authentication != null) {
-    $authentication = $container->get('configService')->authentication;
-    $app->add((new $authentication($app))->addToRouter());
-} else {
-    $app->add(new \Xibo\Middleware\WebAuthentication($app));
-}
+// Authentication
+$authentication = ($container->get('configService')->authentication != null)
+    ? $container->get('configService')->authentication
+    : (new \Xibo\Middleware\WebAuthentication());
+$app->add($authentication->setDependencies($app)->addRoutes());
+
 // TODO reconfigure this and enable
 //$app->add(new Xibo\Middleware\HttpCache());
 $app->add(new \Xibo\Middleware\State($app));

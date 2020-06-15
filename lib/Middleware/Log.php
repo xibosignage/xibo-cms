@@ -22,15 +22,15 @@
 
 namespace Xibo\Middleware;
 
-use Monolog\Logger;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Psr\Log\LoggerInterface;
 use Slim\App as App;
 use Xibo\Helper\LogProcessor;
 
-class Log  implements Middleware
+class Log implements Middleware
 {
     /* @var App $app */
     private $app;
@@ -47,17 +47,26 @@ class Log  implements Middleware
      */
     public function process(Request $request, RequestHandler $handler): Response
     {
-        $method = $request->getMethod();
-        $route = $request->getUri()->getPath();
         $user = $this->app->getContainer()->get('user');
         $userId = (isset($user)) ? $user->userId : null;
 
-        /** @var Logger $logger */
-        $logger = $this->app->getContainer()->get('logger');
-        $logHelper = new LogProcessor($route, $method, $userId);
-        $logger->pushProcessor($logHelper);
+        self::addLogProcessorToLogger(
+            $this->app->getContainer()->get('logger'),
+            $request,
+            $userId
+        );
 
         return $handler->handle($request);
     }
 
+    /**
+     * @param LoggerInterface $logger
+     * @param \Psr\Http\Message\ServerRequestInterface $request
+     * @param int|null $userId
+     */
+    public static function addLogProcessorToLogger(LoggerInterface $logger, Request $request, $userId = null)
+    {
+        $logHelper = new LogProcessor($request->getUri()->getPath(), $request->getMethod(), $userId);
+        $logger->pushProcessor($logHelper);
+    }
 }
