@@ -1,48 +1,5 @@
-// Import
-@import "common";
-
-// Variables
-$toolbar-height: 50px;
-$toolbar-tab-min-width: 80px;
-$toolbar-z-index: 1040;
-
-$toolbar-tools-card-width: 150px;
-$toolbar-tools-card-height: 40px;
-
-$toolbar-widgets-card-width: 100px;
-$toolbar-widgets-card-margin: 2px;
-$toolbar-widgets-card-height: 40px;
-
-// Colours
-$toolbar-main-color: $xibo-color-secondary;
-$toolbar-secondary-color: $xibo-color-primary;
-$toolbar-blue: $xibo-color-secondary;
-$toolbar-light-blue: lighten($xibo-color-secondary, 20%);
-$toolbar-green: darken($xibo-color-green, 20%);
-$toolbar-orange: $xibo-color-orange;
-$toolbar-light-green: $xibo-color-green;
-$toolbar-dark-blue: $xibo-color-primary;
-$toolbar-card-color: $xibo-color-secondary;
-$toolbar-menu-content-bg-color: $xibo-color-white;
-$toolbar-disabled-color: $xibo-color-gray;
-
-$toolbar-tab-bg-color: $xibo-color-primary;
-$toolbar-tab-fg-color: $xibo-color-white;
-$toolbar-tab-hover-color: $xibo-color-light-blue;
-$toolbar-tab-border-color: $xibo-color-secondary;
-
-$bin-bg-color: $xibo-color-red;
-$bin-fg-color: $xibo-color-white;
-$bin-bg-color-hover: darken($xibo-color-red, 20%);
-
-$undo-bg-color: $xibo-color-orange;
-$undo-fg-color: $xibo-color-white;
-$undo-bg-color-hover: darken($xibo-color-orange, 20%);
-
-$multiselect-bg-color: $xibo-color-purple;
-$multiselect-fg-color: $xibo-color-white;
-$multiselect-bg-color-hover: darken($xibo-color-purple, 20%);
-$multiselect-bg-color-active: lighten($xibo-color-purple, 10%);
+@import "variables";
+@import "mixins";
 
 // CSS
 .sidebar-footer {
