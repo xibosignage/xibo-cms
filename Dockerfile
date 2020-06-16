@@ -56,7 +56,7 @@ RUN npm install --only=prod
 COPY ./ui ./ui
 
 # Build webpack
-RUN npm run build
+RUN npm run publish
 
 # Stage 3
 # Build the CMS container
