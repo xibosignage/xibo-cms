@@ -36,10 +36,7 @@
 }
 
 @mixin transparent-object($opacity) {
-    /* IE 8 */
-    -ms-filter: "progid:DXImageTransform@mixin Microsoft@mixin Alpha(Opacity=#{opacity})";
-
-    /* IE 5-7 */
+    /* IE */
     filter: alpha(opacity= $opacity);
 
     /* Netscape */

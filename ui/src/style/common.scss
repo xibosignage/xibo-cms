@@ -1,50 +1,9 @@
 // Import
 @import "mixins";
+@import "variables";
 $fa-font-path: "~font-awesome/fonts";
 @import "~font-awesome/scss/font-awesome";
 @import "~@fortawesome/fontawesome-free/scss/fontawesome";
-
-// Colour palette
-$xibo-color-primary: #30426a;
-$xibo-color-secondary: #337ab7;
-$xibo-color-red: #e64c4c;
-$xibo-color-yellow: #e1e732;
-$xibo-color-purple: #8f2ac3;
-$xibo-color-blue: #337ab7;
-$xibo-color-dark-blue: #273759;
-$xibo-color-light-blue: #c1e1fd;
-$xibo-color-green: #9fda5d;
-$xibo-color-orange: #efa662;
-$xibo-color-dark-orange: #f55106;
-$xibo-color-white: #f3f3f3;
-$xibo-color-gray: #888;
-$xibo-color-black: #333;
-$xibo-color-really-black: #181818;
-
-// Variables
-$form-editor-controls-bg-color: $xibo-color-black;
-$form-editor-controls-fg-color: $xibo-color-white;
-
-$properties-panel-nav-bg-color: $xibo-color-white;
-$properties-panel-nav-fg-color: $xibo-color-gray;
-$properties-panel-nav-active-bg-color: $xibo-color-white;
-$properties-panel-nav-active-fg-color: $xibo-color-secondary;
-
-$context-menu-bg-color: $xibo-color-primary;
-$context-menu-border-color: $xibo-color-secondary;
-
-$context-menu-btn-color: $xibo-color-white;
-$context-menu-btn-hover-color: $xibo-color-yellow;
-
-$context-menu-btn-move-color: $xibo-color-white;
-$context-menu-btn-move-hover-color: $xibo-color-yellow;
-
-$context-menu-bin-btn-color: $xibo-color-red;
-$context-menu-bin-btn-hover-color: lighten($xibo-color-red, 20%);
-
-$context-menu-shadow: darken($xibo-color-primary, 20%);
-
-$loading-overlay-z-index: 4000;
 
 // CSS
 /* Properties Panel */

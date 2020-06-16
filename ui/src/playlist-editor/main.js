@@ -37,7 +37,14 @@ const PropertiesPanel = require('../designer/properties-panel.js');
 const Manager = require('../core/manager.js');
 
 // Include CSS
-require('../style/designer.scss');
+if(typeof lD == 'undefined') {
+    // Include the layout designer code if we're in the playlist editor only
+    require('../style/common.scss');
+    require('../style/designer.scss');
+    require('../style/toolbar.scss');
+    require('../style/topbar.scss');
+}
+
 require('../style/playlist-editor.scss');
 
 // Common funtions/tools
