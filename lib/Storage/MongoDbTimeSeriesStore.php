@@ -25,9 +25,6 @@ namespace Xibo\Storage;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
-use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -35,6 +32,9 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class MongoDbTimeSeriesStore
@@ -585,8 +585,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                         'layoutId'=> 1,
                         'widgetId'=> 1,
                         'mediaId'=> 1,
+                        'campaignId'=> 1,
                         'statDate'=> 1,
                         'engagements'=> 1,
+                        'tagFilter' => 1
                     ]
                 ],
             ];

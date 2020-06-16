@@ -339,6 +339,13 @@ class Stats extends Base
      *      type="string",
      *      required=false
      *  ),
+     *  @SWG\Parameter(
+     *      name="embed",
+     *      in="query",
+     *      description="Should the return embed additional data, options are layoutTags,displayTags and mediaTags",
+     *      type="string",
+     *      required=false
+     *  ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -377,6 +384,11 @@ class Stats extends Base
         // Return formatting
         $returnDisplayLocalTime = $sanitizedQueryParams->getCheckbox('returnDisplayLocalTime');
         $returnDateFormat = $sanitizedQueryParams->getString('returnDateFormat', ['default' => DateFormatHelper::getSystemFormat()]);
+
+        // Embed Tags
+        $embed = explode(',', $sanitizedQueryParams->getString('embed', ['default' => '']));
+
+        // CMS timezone
         $defaultTimezone = $this->getConfig()->getSetting('defaultTimezone');
 
         // Paging
@@ -413,6 +425,9 @@ class Stats extends Base
                 'statId' => $statId,
                 'campaignId' => $campaignId,
                 'eventTag' => $eventTag,
+                'displayTags' => in_array('displayTags', $embed),
+                'layoutTags' => in_array('layoutTags', $embed),
+                'mediaTags' => in_array('mediaTags', $embed),
                 'start' => $start,
                 'length' => $length,
             ]);
@@ -462,12 +477,30 @@ class Stats extends Base
             $entry['start'] = $start->format($returnDateFormat);
             $entry['end'] = $end->format($returnDateFormat);
             $entry['layoutId'] = $sanitizedRow->getInt('layoutId', ['default' => 0]);
+            $entry['campaignId'] = $sanitizedRow->getInt('campaignId', ['default' => 0]);
             $entry['widgetId'] = $widgetId;
             $entry['mediaId'] = $sanitizedRow->getInt('mediaId', ['default' => 0]);
             $entry['scheduleId'] = $sanitizedRow->getInt('scheduleId', ['default' => 0]);
             $entry['tag'] = $sanitizedRow->getString('tag');
             $entry['statDate'] = isset($row['statDate']) ? $resultSet->getDateFromValue($row['statDate'])->format(DateFormatHelper::getSystemFormat()) : '';
             $entry['engagements'] = $resultSet->getEngagementsFromRow($row);
+
+            // Tags
+            // ----
+            // Display tags
+            if (in_array('displayTags', $embed)) {
+                $entry['displayTags'] = $row['tagFilter']['dg'] ?? [];
+            }
+
+            // Layout tags
+            if (in_array('layoutTags', $embed)) {
+                $entry['layoutTags'] = $row['tagFilter']['layout'] ?? [];
+            }
+
+            // Media tags
+            if (in_array('mediaTags', $embed)) {
+                $entry['mediaTags'] = $row['tagFilter']['media'] ?? [];
+            }
 
             $rows[] = $entry;
         }
