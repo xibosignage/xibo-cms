@@ -488,18 +488,19 @@ class Stats extends Base
             // Tags
             // ----
             // Display tags
+            $tagFilter = $resultSet->getTagFilterFromRow($row);
             if (in_array('displayTags', $embed)) {
-                $entry['displayTags'] = $row['tagFilter']['dg'] ?? [];
+                $entry['displayTags'] = $tagFilter['dg'] ?? [];
             }
 
             // Layout tags
             if (in_array('layoutTags', $embed)) {
-                $entry['layoutTags'] = $row['tagFilter']['layout'] ?? [];
+                $entry['layoutTags'] = $tagFilter['layout'] ?? [];
             }
 
             // Media tags
             if (in_array('mediaTags', $embed)) {
-                $entry['mediaTags'] = $row['tagFilter']['media'] ?? [];
+                $entry['mediaTags'] = $tagFilter['media'] ?? [];
             }
 
             $rows[] = $entry;

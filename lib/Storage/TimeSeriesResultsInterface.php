@@ -65,6 +65,12 @@ interface TimeSeriesResultsInterface
     public function getEngagementsFromRow($row);
 
     /**
+     * @param $row
+     * @return array
+     */
+    public function getTagFilterFromRow($row);
+
+    /**
      * @param string $value
      * @return \Carbon\Carbon
      */

@@ -76,7 +76,7 @@ class TimeSeriesMySQLResults implements TimeSeriesResultsInterface
     }
 
     /** @inheritDoc */
-    public function getTagsFromRow($row)
+    public function getTagFilterFromRow($row)
     {
         // Tags
         // Mimic the structure we have in Mongo.
