@@ -44,6 +44,9 @@
             // Configure the query for sorting and filtering
             formHelpers.configureQueryBuilder(this, datasetQueryBuilderTranslations);
 
+            // Set up the colour selectors
+            $(this).find("#backgroundColor").colorpicker().attr('autocomplete', 'off');
+
             // Setup editors
             formHelpers.setupDualTypeTextArea(this, 'ta_text', !$(this).data('formEditorOnly'));
             

@@ -1,7 +1,6 @@
 // Import
+@import "variables";
 @import "mixins";
-@import "common";
-@import "toolbar";
 
 // Variables
 $playlist-editor-main-background-color: $xibo-color-white;
@@ -332,6 +331,13 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
         height: 100%;
         text-align: center;
         float: left;
+
+        .widgetDuration {
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            padding: 0 2px;
+        }
     }
 
     .playlist-widget .widgetName {

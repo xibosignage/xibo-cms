@@ -402,13 +402,12 @@ $(document).ready(function() {
                 return;
             
             // If the click was in a layout table row create the breadcrumb trail
-            if ($self.closest('table').prop('id') == 'layouts' || $self.closest('table').prop('id') == 'overlays'){
+            if ($self.closest('table').data('type') == 'layouts'){
                 $('.cal-event-breadcrumb-trail').show();
-                //agendaCreateBreadcrumbTrail($self.data("id"), events);
                 
                 // Clean div content
                 $('.cal-event-breadcrumb-trail #content').html('');
-                
+
                 // Get the template and render it on the div
                 $('.cal-event-breadcrumb-trail #content').append(calendar._breadcrumbTrail($self.data("elemId"), events, $self.data("eventId")));
                 

@@ -42,7 +42,7 @@
         {{! Element Info }}
         {{#if extra}}
             <span class="info inline-editor-hide">
-                <span class="label-name">
+                <span class="label-name" title="{{extra.moduleName}}">
                     "{{extra.moduleName}}" ({{extra.type}})
                 </span>
                 <span class="label label-time">
@@ -51,7 +51,7 @@
             </span>
         {{else}}
             <span class="info inline-editor-hide">
-                <span class="label-name">
+                <span class="label-name" title="{{name}}">
                     "{{name}}" ({{type}})
                 </span>
             </span>
