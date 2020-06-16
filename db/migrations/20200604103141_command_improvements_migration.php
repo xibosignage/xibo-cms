@@ -20,13 +20,26 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Storage;
+use Phinx\Migration\AbstractMigration;
 
-use League\OAuth2\Server\Entities\RefreshTokenEntityInterface;
-use League\OAuth2\Server\Entities\Traits\EntityTrait;
-use League\OAuth2\Server\Entities\Traits\RefreshTokenTrait;
-
-class RefreshTokenEntity implements RefreshTokenEntityInterface
+/**
+ * Class CommandImprovementsMigration
+ */
+class CommandImprovementsMigration extends AbstractMigration
 {
-    use RefreshTokenTrait, EntityTrait;
+    /**
+     * @inheritDoc
+     */
+    public function change()
+    {
+        $table = $this->table('command');
+
+        if (!$table->hasColumn('availableOn')) {
+            $table
+                ->addColumn('availableOn', 'string', ['default' => null, 'null' => true, 'limit' => 50])
+                ->addColumn('commandString', 'string', ['default' => null, 'null' => true, 'limit' => 1000])
+                ->addColumn('validationString', 'string', ['default' => null, 'null' => true, 'limit' => 1000])
+                ->save();
+        }
+    }
 }

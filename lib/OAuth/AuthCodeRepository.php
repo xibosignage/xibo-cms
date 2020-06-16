@@ -20,48 +20,42 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Storage;
+namespace Xibo\OAuth;
 
-use League\OAuth2\Server\Entities\ClientEntityInterface;
-use League\OAuth2\Server\Entities\Traits\ClientTrait;
-use Xibo\Entity\EntityTrait;
+use League\OAuth2\Server\Entities\AuthCodeEntityInterface;
+use League\OAuth2\Server\Repositories\AuthCodeRepositoryInterface;
 
-
-class ClientEntity implements ClientEntityInterface
+class AuthCodeRepository implements AuthCodeRepositoryInterface
 {
-    use ClientTrait;
-    use EntityTrait;
-
-    /** @var string the secret hash */
-    protected $secret;
-
-    /** @var string the client identifier */
-    protected $id;
-
-    protected $userId;
-    protected $name;
-
     /**
-     * Get the hash for password verify
-     * @return string
+     * {@inheritdoc}
      */
-    public function getHash()
+    public function persistNewAuthCode(AuthCodeEntityInterface $authCodeEntity)
     {
-        return password_hash($this->secret, PASSWORD_DEFAULT);
+        // Some logic to persist the auth code to a database
     }
 
     /**
-     * Get the client's identifier.
-     *
-     * @return string
+     * {@inheritdoc}
      */
-    public function getIdentifier()
+    public function revokeAuthCode($codeId)
     {
-        return $this->id;
+        // Some logic to revoke the auth code in a database
     }
 
-    public function getUserIdentifier()
+    /**
+     * {@inheritdoc}
+     */
+    public function isAuthCodeRevoked($codeId)
     {
-        return $this->userId;
+        return false; // The auth code has not been revoked
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getNewAuthCode()
+    {
+        return new AuthCodeEntity();
     }
 }

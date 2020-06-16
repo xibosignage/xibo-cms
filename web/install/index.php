@@ -57,16 +57,15 @@ $container->set('logger', function () {
 
 // Create a Slim application
 $app = \DI\Bridge\Slim\Bridge::create($container);
-$app->setBasePath(\Xibo\Middleware\State::determineBasePath());
+$app->setBasePath($container->get('basePath'));
 // Config
 $twigMiddleware = TwigMiddleware::createFromContainer($app);
 
-new \Xibo\Middleware\Theme('default');
-// Set root URI
-\Xibo\Middleware\State::setRootUri($app);
+$app->add(new \Xibo\Middleware\Theme('default'));
 $app->add($twigMiddleware);
 $app->addRoutingMiddleware();
 $app->addErrorMiddleware(true, true, true);
+
 // Create an empty config object
 $emptyConfigService = new \Xibo\Service\ConfigService();
 $emptyConfigService->loadTheme('default');

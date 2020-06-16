@@ -108,7 +108,7 @@ class CsrfGuard implements Middleware
                 }
 
                 if ($token !== $userToken) {
-                    throw new ExpiredException(__('Sorry the form has expired. Please refresh.'), 'token');
+                    throw new ExpiredException(__('Sorry the form has expired. Please refresh.'));
                 }
             }
         }

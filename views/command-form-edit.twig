@@ -37,19 +37,51 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#description" role="tab" data-toggle="tab"><span>{% trans "Description" %}</span></a></li>
+            </ul>
             <form id="commandEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("command.edit", {id: command.commandId}) }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "The Name for this Command" %}{% endset %}
+                        {{ forms.input("command", title, command.command, helpText, "", "required") }}
 
-                {% set title %}{% trans "Name" %}{% endset %}
-                {% set helpText %}{% trans "The Name for this Command" %}{% endset %}
-                {{ forms.input("command", title, command.command, helpText, "", "required") }}
+                        {% set title %}{% trans "Reference" %}{% endset %}
+                        {% set helpText %}{% trans "A reference code for this command which is used to identify the command internally." %}{% endset %}
 
-                {% set title %}{% trans "Reference" %}{% endset %}
-                {% set helpText %}{% trans "A reference code for this command which is used to identify the command internally." %}{% endset %}
-                {{ forms.disabled("code", title, command.code, helpText, "", "required") }}
+                        {{ forms.disabled("code", title, command.code, helpText, "", "required") }}
 
-                {% set title %}{% trans "Description" %}{% endset %}
-                {% set helpText %}{% trans "Description of Command. This should be a textual description of what the command is trying to achieve. It should not be the actual command string - that is entered on the Display Settings Profile." %}{% endset %}
-                {{ forms.textarea("description", title, command.description, helpText) }}
+                        {% set fieldId = "commandString" %}
+                        {% set title %}{% trans "Command" %}{% endset %}
+                        {% set helpText %}{% trans "The Command String for this Command. An override for this can be provided in Display Settings." %}{% endset %}
+                        {{ forms.input(fieldId, title, command.commandString, helpText) }}
+
+                        {% set fieldId = "validationString" %}
+                        {% set title %}{% trans "Validation" %}{% endset %}
+                        {% set helpText %}{% trans "The Validation String for this Command. An override for this can be provided in Display Settings." %}{% endset %}
+                        {{ forms.input(fieldId, title, command.validationString, helpText) }}
+
+                        {% set options = [
+                            { optionid: "android", option: "Android" },
+                            { optionid: "windows", option: "Windows" },
+                            { optionid: "lg", option: "webOS" },
+                            { optionid: "sssp", option: "Tizen" },
+                            { optionid: "linux", option: "Linux" },
+                        ] %}
+                        {% set title %}{% trans "Available on" %}{% endset %}
+                        {% set helpText %}{% trans "Leave empty if this command should be available on all types of Display." %}{% endset %}
+
+                        {{ forms.dropdown("availableOn[]", "dropdownmulti", title, command.getAvailableOn(), options, "optionid", "option", helpText, "selectPicker") }}
+                    </div>
+
+                    <div class="tab-pane" id="description">
+                        {% set title %}{% trans "Description" %}{% endset %}
+                        {% set helpText %}{% trans "This should be a textual description of what the command is trying to achieve. It should not be the command string." %}{% endset %}
+                        {{ forms.textarea("description", title, command.description, helpText, "", "", 10) }}
+                    </div>
+                </div>
 
             </form>
         </div>

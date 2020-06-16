@@ -38,18 +38,18 @@
         <div class="col-md-12">
             <form id="actionFormEdit" class="XiboForm form-horizontal" method="put" action="{{ url_for("action.edit", {id: action.actionId}) }}">
                 {% set title %}{% trans "Trigger Type" %}{% endset %}
-                {% set helpText %}{% trans "Please select the trigger type for this Action" %}{% endset %}
-                {% set touch %}{% trans "Touch" %}{% endset %}
+                {% set helpText %}{% trans "How should the Player listen for this Action to be triggered?" %}{% endset %}
+                {% set touch %}{% trans "Touch/Click" %}{% endset %}
                 {% set webhook %}{% trans "Web hook" %}{% endset %}
                 {% set options = [
                     { typeid: "touch", type: touch },
                     { typeid: "webhook", type: webhook },
                 ] %}
-                {{ forms.dropdown("triggerType", "single", title,action.triggerType, options, "typeid","type", helpText) }}
+                {{ forms.dropdown("triggerType", "single", title, action.triggerType, options, "typeid", "type", helpText) }}
 
                 {% if source == 'layout' %}
                     {% set title %}{% trans "Trigger Code" %}{% endset %}
-                    {% set helpText %}{% trans "Please enter trigger code" %}{% endset %}
+                    {% set helpText %}{% trans "If this Action is triggered by a Web Hook then this Trigger Code must be present in the URL `trigger=` parameter." %}{% endset %}
                     {{ forms.input("triggerCode", title, action.triggerCode, helpText) }}
                 {% endif %}
 
@@ -58,8 +58,6 @@
                 {% set next %}{% trans "Next" %}{% endset %}
                 {% set previous %}{% trans "Previous" %}{% endset %}
                 {% set navLayout %}{% trans "Navigate to Layout" %}{% endset %}
-                {% set navRegion %}{% trans "Navigate to Region" %}{% endset %}
-                {% set navPlaylist %}{% trans "Navigate to Playlist" %}{% endset %}
                 {% set navWidget %}{% trans "Navigate to Widget" %}{% endset %}
                 {% set options = [
                     { typeid: "next", type: next },
@@ -70,11 +68,11 @@
                 {{ forms.dropdown("actionType", "single", title,action.actionType, options, "typeid","type", helpText) }}
 
                 {% set title %}{% trans "Widget" %}{% endset %}
-                {% set helpText %}{% trans "Widget that will load into target" %}{% endset %}
+                {% set helpText %}{% trans "Which Widget would you like to Navigate to? The Widget must be in the Interactive Draw for this Layout." %}{% endset %}
                 {{ forms.dropdown("widgetId", "single", title, action.widgetId, [{widgetId:null, name:""}]|merge(widgets), "widgetId", "name", helpText, "nav-control-widget") }}
 
                 {% set title %}{% trans "Layout Code" %}{% endset %}
-                {% set helpText %}{% trans "Please enter code identifier for the Layout" %}{% endset %}
+                {% set helpText %}{% trans "Please enter code identifier for the Layout. A Layout can be assigned a Code using Layout Edit." %}{% endset %}
 
                 {% set attributes = [
                     { name: "data-width", value: "100%" },
@@ -86,7 +84,7 @@
                 {{ forms.dropdown("layoutCode", "single", title, action.layoutCode, layout, "code", "code", helpText, "pagedSelect nav-control-layout", "", "", "", attributes) }}
 
                 {% set title %}{% trans "Target" %}{% endset %}
-                {% set helpText %}{% trans "Please select the target for this Action." %}{% endset %}
+                {% set helpText %}{% trans "Where will the Widget be loaded? Usually this will be a Region on this Layout. However if your Widget is a Shell Command you can target the Screen to have the command run without effecting any Regions." %}{% endset %}
                 {% set screen %}{% trans "Screen" %}{% endset %}
                 {% set region %}{% trans "Region" %}{% endset %}
                 {% set options = [
@@ -95,9 +93,8 @@
                 ] %}
                 {{ forms.dropdown("target", "single", title,action.target, options, "typeid","type", helpText, "target-control") }}
 
-                {% set title %}{% trans "Target ID" %}{% endset %}
-                {% set helpText %}{% trans "Select the Target ID for this Action" %}{% endset %}
-                {{ forms.dropdown("targetId", "single", title, action.targetId, [{regionId:null, name:""}]|merge(regions), "regionId","name", helpText, "targetid-control") }}
+                {% set helpText %}{% trans "Select the Region this Widget will be loaded into." %}{% endset %}
+                {{ forms.dropdown("targetId", "single", "", action.targetId, [{regionId:null, name:""}]|merge(regions), "regionId", "name", helpText, "targetid-control") }}
             </form>
         </div>
     </div>

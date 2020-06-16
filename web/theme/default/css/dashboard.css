@@ -405,3 +405,9 @@ ul.sidebar .sidebar-title {
 .notification-drawer-icon i {
   font-size: 20px;
 }
+.remote-icons a {
+    padding-right: 5px;
+}
+.capitalize {
+    text-transform: capitalize;
+}

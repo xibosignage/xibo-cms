@@ -56,7 +56,7 @@ RUN npm install --only=prod
 COPY ./ui ./ui
 
 # Build webpack
-RUN npm run build
+RUN npm run publish
 
 # Stage 3
 # Build the CMS container
@@ -113,6 +113,9 @@ RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PA
     sed -i "s/session.gc_probability = .*$/session.gc_probability = 1/" /etc/php7/php.ini && \
     sed -i "s/session.gc_divisor = .*$/session.gc_divisor = 100/" /etc/php7/php.ini
 
+# Capture the git commit for this build if we provide one
+ARG GIT_COMMIT=prod
+
 # Setup persistent environment variables
 ENV CMS_DEV_MODE=false \
     XMR_HOST=xmr \
@@ -148,7 +151,8 @@ ENV CMS_DEV_MODE=false \
     CMS_APACHE_TIMEOUT=30 \
     CMS_APACHE_OPTIONS_INDEXES=false \
     CMS_QUICK_CHART_URL=http://cms-quickchart:3400 \
-    XTR_ENABLED=true
+    XTR_ENABLED=true \
+    GIT_COMMIT=$GIT_COMMIT
 
 # Expose port 80
 EXPOSE 80

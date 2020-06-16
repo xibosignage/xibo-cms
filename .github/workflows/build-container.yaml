@@ -24,11 +24,11 @@ jobs:
       - name: Build Latest
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         run: |
-          docker build . -t xibosignage/xibo-cms:latest
+          docker build . -t xibosignage/xibo-cms:latest --build-arg GIT_COMMIT=${GITHUB_SHA}
       - name: Build Branch
         if: github.event_name == 'push' && github.ref != 'refs/heads/master'
         run: |
-          docker build . -t xibosignage/xibo-cms:${GITHUB_REF##*/}
+          docker build . -t xibosignage/xibo-cms:${GITHUB_REF##*/} --build-arg GIT_COMMIT=${GITHUB_SHA}
 
       - name: Push Latest
         if: github.event_name == 'push' && github.ref == 'refs/heads/master'
@@ -44,7 +44,7 @@ jobs:
       - name: Build Release
         if: github.event_name == 'release'
         run: |
-          docker build . -t xibosignage/xibo-cms:release-${GITHUB_REF##*/}
+          docker build . -t xibosignage/xibo-cms:release-${GITHUB_REF##*/} --build-arg GIT_COMMIT=${GITHUB_SHA}
       - name: Push Release
         if: github.event_name == 'release'
         run: |

@@ -187,10 +187,16 @@ class Schedule extends Base
             }
         }
 
+        // get the default longitude and latitude from CMS options
+        $defaultLat = (float)$this->getConfig()->getSetting('DEFAULT_LAT');
+        $defaultLong = (float)$this->getConfig()->getSetting('DEFAULT_LONG');
+
         $data = [
             'displayGroupIds' => $displayGroupIds,
             'displayGroups' => $displayGroups,
-            'displayGroupsShowAll' => $displayGroupsShowAll
+            'displayGroupsShowAll' => $displayGroupsShowAll,
+            'defaultLat' => $defaultLat,
+            'defaultLong' => $defaultLong
         ];
 
         // Render the Theme and output
@@ -1542,6 +1548,9 @@ class Schedule extends Base
             }
 
             $this->getLog()->debug('Processed start is: FromDt=' . $fromDt->toRssString());
+        } else {
+            // This is an always day part, which cannot be recurring, make sure we clear the recurring type if it has been set
+            $schedule->recurrenceType = '';
         }
 
         // Ready to do the add

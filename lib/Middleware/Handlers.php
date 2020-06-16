@@ -22,11 +22,15 @@
 
 namespace Xibo\Middleware;
 
+use Illuminate\Support\Str;
 use Nyholm\Psr7\Factory\Psr17Factory;
+use Slim\Exception\HttpNotFoundException;
 use Slim\Exception\HttpSpecializedException;
 use Slim\Http\Factory\DecoratedResponseFactory;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Helper\Environment;
+use Xibo\Helper\Translate;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ExpiredException;
 use Xibo\Support\Exception\GeneralException;
@@ -48,22 +52,8 @@ class Handlers
     public static function jsonErrorHandler($container)
     {
         return function (Request $request, \Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($container) {
-            // If we are in a transaction, then we should rollback.
-            if ($container->get('store')->getConnection()->inTransaction()) {
-                $container->get('store')->getConnection()->rollBack();
-            }
-            $container->get('store')->close();
-
-            // Handle error handling
-            if ($logErrors && !self::handledError($exception)) {
-                /** @var \Psr\Log\LoggerInterface $logger */
-                $logger = $container->get('logger');
-                $logger->error('Error with message: ' . $exception->getMessage());
-
-                if ($logErrorDetails) {
-                    $logger->debug('Error with trace: ' . $exception->getTraceAsString());
-                }
-            }
+            self::rollbackAndCloseStore($container);
+            self::writeLog($request, $logErrors, $logErrorDetails, $exception, $container);
 
             // Generate a response (start with a 500)
             $nyholmFactory = new Psr17Factory();
@@ -98,61 +88,83 @@ class Handlers
     public static function webErrorHandler($container)
     {
         return function (Request $request, \Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($container) {
+            self::rollbackAndCloseStore($container);
+            self::writeLog($request, $logErrors, $logErrorDetails, $exception, $container);
+
+            // Create a response
+            // we're outside Slim's middleware here, so we have to handle the response ourselves.
             $nyholmFactory = new Psr17Factory();
             $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
-            /** @var Response $response */
-            $response = $decoratedResponseFactory->createResponse($exception->getCode());
+            $response = $decoratedResponseFactory->createResponse();
 
-            if ($exception->getCode() == 404) {
-                $container->get('logger')->debug(sprintf('Page Not Found. %s', $request->getUri()->getPath()));
-                return $response = $response->withRedirect('/notFound');
+            // We need to build all the functions required in the views manually because our middleware stack will
+            // not have been built for this handler.
+            // Slim4 has made this much more difficult!
+            // Terrible in fact.
+
+            // Get the Twig view
+            /** @var \Slim\Views\Twig $twig */
+            $twig = $container->get('view');
+
+            /** @var \Xibo\Service\ConfigService $configService */
+            $configService = $container->get('configService');
+            $configService->setDependencies($container->get('store'), $container->get('rootUri'));
+            $configService->loadTheme();
+
+            // Prepend our theme files to the view path
+            // Does this theme provide an alternative view path?
+            if ($configService->getThemeConfig('view_path') != '') {
+                $twig->getLoader()->prependPath(Str::replaceFirst('..', PROJECT_ROOT,
+                    $configService->getThemeConfig('view_path')));
+            }
+
+            // We have translated error/not-found
+            Translate::InitLocale($configService);
+
+            // Build up our own params to pass to Twig
+            $viewParams = [
+                'theme' => $configService,
+                'homeUrl' => '/',
+                'aboutUrl' => '/about',
+                'loginUrl' => '/login',
+                'version' => Environment::$WEBSITE_VERSION_NAME
+            ];
+
+            // Handle 404's
+            if ($exception instanceof HttpNotFoundException) {
+                return $twig->render($response, 'not-found.twig', $viewParams);
             } else {
-                /** @var \Xibo\Helper\Session $session */
-                $session = $container->get('session');
+                // Make a friendly message
+                $message = (!empty($exception->getMessage()))
+                    ? $exception->getMessage()
+                    : __('Unexpected Error, please contact support.');
 
-                /** @var \Psr\Log\LoggerInterface $logger */
-                $logger = $container->get('logger');
+                // Parse out data for the exception
+                $exceptionData = [
+                    'success' => false,
+                    'error' => $exception->getCode(),
+                    'message' => $message
+                ];
 
-                $message = ( !empty($exception->getMessage()) ) ? $exception->getMessage() : __('Unexpected Error, please contact support.');
+                // TODO: we need to update the support library to make getErrorData public
+                /*if ($exception instanceof GeneralException) {
+                    array_merge($exception->getErrorData(), $exceptionData);
+                }*/
 
-                // log the error
-                $logger->error('Error with message: ' . $message);
-                $logger->debug('Error with trace: ' . $exception->getTraceAsString());
-
-                $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($exception)));
-
-                if ($exception instanceof UpgradePendingException) {
-                    $exceptionClass = 'upgrade-in-progress-page';
-                }
-
-                if ($request->getUri()->getPath() != '/error') {
-
-                    // set data in session, this is handled and then cleared in Error Controller.
-                    $session->set('exceptionMessage', $message);
-                    $session->set('exceptionCode', $exception->getCode());
-                    $session->set('exceptionClass', $exceptionClass);
-                    $session->set('priorRoute', $request->getUri()->getPath());
-
-                    return $response = $response->withRedirect('/error');
+                if ($request->isXhr()) {
+                    return $response->withJson($exceptionData);
                 } else {
-                    // this should only happen when there is an error in Middleware or if something went horribly wrong.
-                    $mode = $container->get('configService')->getSetting('SERVER_MODE');
+                    $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($exception)));
 
-                    if (strtolower($mode) === 'test') {
-                        $message = $exception->getMessage() . ' thrown in ' . $exception->getTraceAsString();
+                    if ($exception instanceof UpgradePendingException) {
+                        $exceptionClass = 'upgrade-in-progress-page';
+                    }
+                    if (file_exists(PROJECT_ROOT . '/views/' . $exceptionClass . '.twig')) {
+                        $template = $exceptionClass;
                     } else {
-                        $message = $exception->getMessage();
+                        $template = 'error';
                     }
-
-                    // If we are in a transaction, then we should rollback.
-                    if ($container->get('store')->getConnection()->inTransaction()) {
-                        $container->get('store')->getConnection()->rollBack();
-                    }
-                    $container->get('store')->close();
-
-                    // attempt to render a twig template in this application state will not go well
-                    // as such return simple json response, with trace if the application is in test mode.
-                    return $response = $response->withJson(['error' => $message]);
+                    return $twig->render($response, $template . '.twig', array_merge($viewParams, $exceptionData));
                 }
             }
         };
@@ -165,11 +177,7 @@ class Handlers
     public static function testErrorHandler($container)
     {
         return function (Request $request, \Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($container) {
-            // If we are in a transaction, then we should rollback.
-            if ($container->get('store')->getConnection()->inTransaction()) {
-                $container->get('store')->getConnection()->rollBack();
-            }
-            $container->get('store')->close();
+            self::rollbackAndCloseStore($container);
 
             $nyholmFactory = new Psr17Factory();
             $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
@@ -201,5 +209,42 @@ class Handlers
             || $e instanceof InstanceSuspendedException
             || $e instanceof UpgradePendingException
         );
+    }
+
+    /**
+     * @param \Psr\Container\ContainerInterface $container
+     */
+    private static function rollbackAndCloseStore($container)
+    {
+        // If we are in a transaction, then we should rollback.
+        if ($container->get('store')->getConnection()->inTransaction()) {
+            $container->get('store')->getConnection()->rollBack();
+        }
+        $container->get('store')->close();
+    }
+
+    /**
+     * @param Request $request
+     * @param bool $logErrors
+     * @param bool $logErrorDetails
+     * @param \Throwable $exception
+     * @param \Psr\Container\ContainerInterface $container
+     */
+    private static function writeLog($request, bool $logErrors, bool $logErrorDetails, \Throwable $exception, $container)
+    {
+        /** @var \Psr\Log\LoggerInterface $logger */
+        $logger = $container->get('logger');
+
+        // Add a processor to our log handler
+        Log::addLogProcessorToLogger($logger, $request);
+
+        // Handle logging the error.
+        if ($logErrors && !self::handledError($exception)) {
+            $logger->error($exception->getMessage());
+
+            if ($logErrorDetails) {
+                $logger->debug($exception->getTraceAsString());
+            }
+        }
     }
 }

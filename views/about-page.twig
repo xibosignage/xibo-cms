@@ -20,14 +20,34 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
-{% extends "authed.twig" %}
-{% import "inline.twig" as inline %}
+{% extends "non-authed.twig" %}
 
-{% block pageContent %}
-    <div class="widget">
-        <div class="widget-title">{% trans "Licence Information" %}</div>
-        <div class="widget-body">
-            {% include "licence.twig" %}
-        </div>
+{% block title %}{{ "About"|trans }} | {% endblock %}
+
+{% block style %}
+<style type="text/css">
+    .about-container {
+        padding: 19px 29px 29px;
+        margin: 10px auto 20px;
+        background-color: #fff;
+        border: 1px solid #e5e5e5;
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        border-radius: 5px;
+        -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.05);
+        -moz-box-shadow: 0 1px 2px rgba(0,0,0,.05);
+        box-shadow: 0 1px 2px rgba(0,0,0,.05);
+    }
+</style>
+{% endblock %}
+
+{% block header %}{% endblock %}
+{% block contentClass %}{% endblock %}
+
+{% block content %}
+    <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img src="{{ theme.uri("img/xibologo.png") }}" alt="Logo"></a></p>
+    <a class="btn btn-info" href="{{ url_for("home") }}">{% trans "Home" %}</a>
+    <div class="about-container">
+        {% include "licence.twig" %}
     </div>
 {% endblock %}

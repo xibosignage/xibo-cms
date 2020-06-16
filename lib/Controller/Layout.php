@@ -22,7 +22,6 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
-use GuzzleHttp\Psr7\Stream;
 use Parsedown;
 use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
@@ -49,6 +48,7 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\LayoutUploadHandler;
 use Xibo\Helper\SanitizerService;
+use Xibo\Helper\SendFile;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -1348,7 +1348,8 @@ class Layout extends Base
                 }
 
                 // provide our layout object to a template to render immediately
-                $layout->descriptionFormatted = $this->renderTemplateToString('layout-page-grid-widgetlist', $layout, $response);
+                $layout->descriptionFormatted = $this->renderTemplateToString('layout-page-grid-widgetlist',
+                    (array)$layout);
             }
 
             switch ($layout->status) {
@@ -2098,8 +2099,8 @@ class Layout extends Base
         // Get the layout
         /* @var \Xibo\Entity\Layout $layout */
         $layout = $this->layoutFactory->getById($id);
-
         $layout->xlfToDisk();
+
         /** @var $locked Item */
         $locked = $this->pool->getItem('locks/layout/' . $layout->layoutId);
         $layout->isLocked = $locked->isMiss() ? [] : $locked->get();
@@ -2220,26 +2221,11 @@ class Layout extends Base
         $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/export_' . $layoutName . '.zip';
         $layout->toZip($this->dataSetFactory, $fileName, ['includeData' => ($sanitizedParams->getCheckbox('includeData')== 1)]);
 
-        if (ini_get('zlib.output_compression')) {
-            ini_set('zlib.output_compression', 'Off');
-        }
-        $response = $response
-            ->withHeader('Content-Type', 'application/octet-stream')
-            ->withHeader('Content-Disposition', 'attachment; filename='.  basename($fileName))
-            ->withHeader('Content-Transfer-Encoding', 'Binary')
-            ->withHeader('Content-Length', filesize($fileName))
-            ->withBody(new Stream(fopen($fileName, 'r')));
-
-        // Send via Apache X-Sendfile header?
-        if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Apache') {
-            $response = $response->withHeader('X-Sendfile', $fileName);
-        }
-        // Send via Nginx X-Accel-Redirect?
-        if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Nginx') {
-            $response = $response->withHeader('X-Accel-Redirect', '/download/temp/' .  basename($fileName));
-        }
-
-        return $this->render($request, $response);
+        return $this->render($request, SendFile::decorateResponse(
+            $response,
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $fileName
+        ));
     }
 
     /**
@@ -2638,7 +2624,7 @@ class Layout extends Base
 
             // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
             // error message
-            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true]);
+            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
 
             // Return
             $this->getState()->hydrate([

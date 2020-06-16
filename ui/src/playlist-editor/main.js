@@ -37,7 +37,14 @@ const PropertiesPanel = require('../designer/properties-panel.js');
 const Manager = require('../core/manager.js');
 
 // Include CSS
-require('../style/designer.scss');
+if(typeof lD == 'undefined') {
+    // Include the layout designer code if we're in the playlist editor only
+    require('../style/common.scss');
+    require('../style/designer.scss');
+    require('../style/toolbar.scss');
+    require('../style/topbar.scss');
+}
+
 require('../style/playlist-editor.scss');
 
 // Common funtions/tools
@@ -696,9 +703,6 @@ pE.refreshDesigner = function() {
             this.toolbar.openMenu(2, true);
         }
     }
-
-    // Reload tooltips
-    this.common.reloadTooltips(this.editorContainer);
 };
 
 /**
@@ -861,7 +865,7 @@ pE.clearTemporaryData = function() {
     pE.editorContainer.find('.colorpicker-element').colorpicker('destroy');
 
     // Hide open tooltips
-    pE.editorContainer.find('[data-toggle="tooltip"]').tooltip('hide');
+    pE.editorContainer.find('.tooltip').remove();
 
     // Remove text callback editor structure variables
     formHelpers.destroyCKEditor();
@@ -1001,9 +1005,6 @@ pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     let positionTop = ((position.y + contextMenuHeight) > $(window).height()) ? (position.y - contextMenuHeight) : position.y;
 
     pE.editorContainer.find('.context-menu').offset({top: positionTop, left: positionLeft});
-
-    // Initialize tooltips
-    pE.common.reloadTooltips(pE.editorContainer.find('.context-menu'));
 
     // Click overlay to close menu
     pE.editorContainer.find('.context-menu-overlay').click((ev) => {

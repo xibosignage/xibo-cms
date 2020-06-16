@@ -23,6 +23,7 @@
 var calendar;
 var events = [];
 let mymap;
+let mymapmarker;
 
 $(document).ready(function() {
 
@@ -80,8 +81,7 @@ $(document).ready(function() {
                     newDate.set('hour', 0);
                     newDate.set('minute', 0);
                     newDate.set('second', 0);
-
-                    return newDate.format(systemDateOnlyFormat);
+                    return newDate.format(jsDateFormat);
                 },
                 onSelect: function() {},
                 onHide: function() {
@@ -100,12 +100,71 @@ $(document).ready(function() {
         // Create the date input shortcut
         initDatePicker(
             $('#dateInput'), 
-            systemDateOnlyFormat, 
+            systemDateFormat, 
+            jsDateOnlyFormat, 
             pickerOptions, 
             navigateToCalendarDate,
             false // clear button
         );
+
+        // Location filter init
+        const $map = $('.cal-event-location-map #geoFilterAgendaMap');
+
+        // Get location button
+        $('#getLocation').off().click(function() {
+            const $self = $(this);
+
+            // Disable button
+            $self.prop('disabled', true);
+
+            navigator.geolocation.getCurrentPosition(function(location) { // success
+                // Populate location fields
+                $('#geoLatitude').val(location.coords.latitude).change();
+                $('#geoLongitude').val(location.coords.longitude).change();
+
+                // Reenable button
+                $self.prop('disabled', false);
+
+                // Redraw map
+                generateFilterGeoMap();
+            }, function error(err) { // error
+                console.warn(`ERROR(${err.code}): ${err.message}`);
+
+                // Reenable button
+                $self.prop('disabled', false);
+            }, { // options
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0
+            });
+        });
+
+        // Location map button
+        $('#toggleMap').off().click(function() {
+            $map.toggleClass('hidden');
+
+            if(!$map.hasClass('hidden')) {
+                generateFilterGeoMap();
+            }
+        });
+
+        // Clear location button
+        $('#clearLocation').off().click(function() {
+            // Populate location fields
+            $('#geoLatitude').val('').change();
+            $('#geoLongitude').val('').change();
+
+            if(!$map.hasClass('hidden')) {
+                generateFilterGeoMap();
+            }
+        });
+
+        // Change events reloads the calendar view and map
+        $('#geoLatitude, #geoLongitude').off().change(_.debounce(function() {
+            calendar.view();
+        }, 400));
         
+        // Calendar options
         var options = {
             time_start: '00:00',
             time_end: '00:00',
@@ -128,7 +187,7 @@ $(document).ready(function() {
 
                 if (this.options.view !== 'agenda') {
 
-                    $('.cal-event-time-bar').hide();
+                    $('.cal-event-agenda-filter').hide();
 
                     // Serialise
                     var displayGroups = $('#DisplayList').serialize();
@@ -222,7 +281,7 @@ $(document).ready(function() {
                 } else {
 
                     // Show time slider on agenda view and call the calendar view on slide stop event
-                    $('.cal-event-time-bar').show();
+                    $('.cal-event-agenda-filter').show();
 
                     const $timePicker = $('#timePicker');
 
@@ -343,7 +402,7 @@ $(document).ready(function() {
                             done();
                             
                         calendar._render();
-                    } else if(!jQuery.isEmptyObject(events['results'][selectedDisplayGroup]) && events['results'][selectedDisplayGroup]['request_date'] == params.date) {
+                    } else if(!jQuery.isEmptyObject(events['results'][selectedDisplayGroup]) && events['results'][selectedDisplayGroup]['request_date'] == params.date && events['results'][selectedDisplayGroup]['geoLatitude'] == $('#geoLatitude').val() && events['results'][selectedDisplayGroup]['geoLongitude'] == $('#geoLongitude').val()) {
                         // 2 - Use cache if the element was already saved for the requested date
                         if (done != undefined)
                             done();
@@ -356,11 +415,27 @@ $(document).ready(function() {
                         // 3 - make request to get the data for the events
                         getJsonRequestControl = $.getJSON(url, params)
                             .done(function(data) {
-                                
+
+                                let noEvents = true;
+
                                 if(!jQuery.isEmptyObject(data.data) && data.data.events != undefined && data.data.events.length > 0){
                                     events['results'][String(selectedDisplayGroup)] = data.data;
                                     events['results'][String(selectedDisplayGroup)]['request_date'] = params.date;
-                                } else {
+
+                                    noEvents = false;
+
+                                    if($('#geoLatitude').val() != undefined && $('#geoLatitude').val() != '' &&
+                                        $('#geoLongitude').val() != undefined && $('#geoLongitude').val() != '') {
+                                        events['results'][String(selectedDisplayGroup)]['geoLatitude'] = $('#geoLatitude').val();
+                                        events['results'][String(selectedDisplayGroup)]['geoLongitude'] = $('#geoLongitude').val();
+
+                                        events['results'][String(selectedDisplayGroup)]['events'] = filterEventsByLocation(events['results'][String(selectedDisplayGroup)]['events']);
+
+                                        noEvents = (data.data.events.length <= 0);
+                                    }
+                                }
+
+                                if(noEvents) {
                                     events['results'][String(selectedDisplayGroup)] = {};
                                     events['errorMessage'] = 'no_events';
                                 }
@@ -395,7 +470,7 @@ $(document).ready(function() {
                 if(this.options.view == 'agenda') {
                     // When agenda panel is ready, turn tables into datatables with paging
                     $('.agenda-panel').ready(function() {
-                        $('#layouts').dataTable({
+                        $('.agenda-table-layouts').dataTable({
                             "searching": false
                         });
                     });
@@ -409,7 +484,7 @@ $(document).ready(function() {
                 // Sync the date of the date picker to the current calendar date
                 if (this.options.position.start != undefined && this.options.position.start != "") {
                     // Update timepicker
-                    updateDatePicker($('#dateInput'), moment.unix(this.options.position.start.getTime() / 1000).format(systemDateOnlyFormat), systemDateOnlyFormat);
+                    updateDatePicker($('#dateInput'), moment.unix(this.options.position.start.getTime() / 1000).format(jsDateOnlyFormat), jsDateOnlyFormat);
                 }
                 
                 if (typeof this.getTitle === "function")
@@ -445,13 +520,12 @@ $(document).ready(function() {
                 return;
             
             // If the click was in a layout table row create the breadcrumb trail
-            if ($self.closest('table').prop('id') == 'layouts' || $self.closest('table').prop('id') == 'overlays'){
+            if ($self.closest('table').data('type') == 'layouts'){
                 $('.cal-event-breadcrumb-trail').show();
-                //agendaCreateBreadcrumbTrail($self.data("id"), events);
                 
                 // Clean div content
                 $('.cal-event-breadcrumb-trail #content').html('');
-                
+
                 // Get the template and render it on the div
                 $('.cal-event-breadcrumb-trail #content').append(calendar._breadcrumbTrail($self.data("elemId"), events, $self.data("eventId")));
                 
@@ -459,7 +533,7 @@ $(document).ready(function() {
             }
             
             // Select the clicked element and the linked elements
-            agendaSelectLinkedElements($self.closest('table').prop('id'), $self.data("elemId"), events, $self.data("eventId"));
+            agendaSelectLinkedElements($self.closest('table').data('type'), $self.data("elemId"), events, $self.data("eventId"));
         });
     }
 });
@@ -471,9 +545,10 @@ var setupScheduleForm = function(dialog) {
     console.log("Setup schedule form");
 
     // geo schedule
-    let $isGeoAware = $('#isGeoAware').is(':checked');
+    let $geoAware = $('#isGeoAware');
+    let isGeoAware = $geoAware.is(':checked');
 
-    if ($isGeoAware ) {
+    if (isGeoAware) {
 
         // without this additional check the map will not load correctly, it should be initialised when we are on the Geo Location tab
         $('.nav-tabs a').on('shown.bs.tab', function(event){
@@ -486,10 +561,10 @@ var setupScheduleForm = function(dialog) {
     }
 
     // hide/show and generate map according to the Geo Schedule checkbox value
-    $('#isGeoAware').change(function() {
-        $isGeoAware = $('#isGeoAware').is(':checked');
+    $geoAware.change(function() {
+        isGeoAware = $('#isGeoAware').is(':checked');
 
-        if ($isGeoAware) {
+        if (isGeoAware) {
             $('#geoScheduleMap').removeClass('hidden');
             generateGeoMap();
         } else {
@@ -713,24 +788,37 @@ var setupScheduleForm = function(dialog) {
         });
     });
 
-    // Add a button for duplicating this event
-    if ($(dialog).find("#scheduleEditForm").length > 0) {
-        $button = $("<button>").addClass("btn btn-info").attr("id", "scheduleDuplateButton").html(translations.duplicate).on("click", function() {
-            duplicateScheduledEvent()
-        });
-
-        $(dialog).find('.modal-footer').prepend($button);
-    }
-
     // Popover
     $(dialog).find('[data-toggle="popover"]').popover();
 
-    var scheduleEditForm = $(dialog).find("#scheduleEditForm");
-    // Add a button for deleting single recurring event
-    if (scheduleEditForm.length > 0) {
-        $button = $("<button>").addClass("btn btn-primary").attr("id", "scheduleRecurringDeleteButton").html(translations.deleteRecurring).on("click", function() {
-            deleteRecurringScheduledEvent(scheduleEditForm.data('eventId'), scheduleEditForm.data('eventStart'), scheduleEditForm.data('eventEnd'))
-        });
+    // Post processing on the schedule-edit form.
+    let $scheduleEditForm = $(dialog).find("#scheduleEditForm");
+    if ($scheduleEditForm.length > 0) {
+        // Add a button for duplicating this event
+        let $button = $("<button>").addClass("btn btn-info")
+            .attr("id", "scheduleDuplateButton")
+            .html(translations.duplicate)
+            .on("click", function() {
+                duplicateScheduledEvent();
+            });
+
+        $(dialog).find('.modal-footer').prepend($button);
+
+        // Update the date/times for this event in the correct format.
+        $scheduleEditForm.find("#instanceStartDate").html(moment($scheduleEditForm.data().eventStart, "X").format(jsDateFormat));
+        $scheduleEditForm.find("#instanceEndDate").html(moment($scheduleEditForm.data().eventEnd, "X").format(jsDateFormat));
+
+        // Add a button for deleting single recurring event
+        $button = $("<button>").addClass("btn btn-primary")
+            .attr("id", "scheduleRecurringDeleteButton")
+            .html(translations.deleteRecurring)
+            .on("click", function() {
+                deleteRecurringScheduledEvent(
+                    $scheduleEditForm.data('eventId'),
+                    $scheduleEditForm.data('eventStart'),
+                    $scheduleEditForm.data('eventEnd')
+                );
+            });
 
         $(dialog).find('#recurringInfo').prepend($button);
     }
@@ -1093,16 +1181,13 @@ var agendaSelectLinkedElements = function(elemType, elemID, data, eventId) {
     // Use the target events to select the corresponding objects
     for (var i = 0; i < targetEvents.length; i++) {
         // Select the corresponding layout
-        $('table#layouts tr[data-elem-id~="' + targetEvents[i].layoutId + '"][data-event-id~="' + targetEvents[i].eventId + '"]').addClass(selectClass['layouts']);
-        
-        // Select the corresponding layout
-        $('table#overlays tr[data-elem-id~="' + targetEvents[i].layoutId + '"][data-event-id~="' + targetEvents[i].eventId + '"]').addClass(selectClass['overlays']);
+        $('table[data-type="layouts"] tr[data-elem-id~="' + targetEvents[i].layoutId + '"][data-event-id~="' + targetEvents[i].eventId + '"]').addClass(selectClass['layouts']);
         
         // Select the corresponding display group
-        $('table#displaygroups tr[data-elem-id~="' + targetEvents[i].displayGroupId + '"]').addClass(selectClass['displaygroups']);
+        $('table[data-type="displaygroups"] tr[data-elem-id~="' + targetEvents[i].displayGroupId + '"]').addClass(selectClass['displaygroups']);
         
         // Select the corresponding campaigns
-        $('table#campaigns tr[data-elem-id~="' + targetEvents[i].campaignId + '"]').addClass(selectClass['campaigns']);
+        $('table[data-type="campaigns"] tr[data-elem-id~="' + targetEvents[i].campaignId + '"]').addClass(selectClass['campaigns']);
         
     }
     
@@ -1233,4 +1318,90 @@ let generateGeoMap = function () {
         mymap.removeControl(drawControl);
         mymap.addControl(drawControlEditOnly);
     }
+};
+
+const generateFilterGeoMap = function() {
+    if(mymap !== undefined && mymap !== null) {
+        mymap.remove();
+    }
+
+    // Get location values
+    let defaultLat = $('#geoLatitude').val();
+    let defaultLong = $('#geoLongitude').val();
+
+    // If values are not set, get system default location
+    if(defaultLat == undefined || defaultLat == '' || defaultLong == undefined || defaultLong == '') {
+        defaultLat = $('.cal-event-location-map').data('defaultLat');
+        defaultLong = $('.cal-event-location-map').data('defaultLong');
+    }
+
+    // base map
+    mymap = L.map('geoFilterAgendaMap').setView([defaultLat, defaultLong], 13);
+
+    // base tile layer, provided by Open Street Map
+    L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        subdomains: ['a', 'b', 'c']
+    }).addTo(mymap);
+
+    // add search Control - allows searching by country/city and automatically moves map to that location
+    let searchControl = new L.Control.Search({
+        url: 'https://nominatim.openstreetmap.org/search?format=json&q={s}',
+        jsonpParam: 'json_callback',
+        propertyName: 'display_name',
+        propertyLoc: ['lat', 'lon'],
+        marker: L.circleMarker([0, 0], {radius: 30}),
+        autoCollapse: true,
+        autoType: false,
+        minLength: 2,
+        hideMarkerOnCollapse: true
+    });
+
+    mymap.addControl(searchControl);
+
+    const setMarker = function(lat, lng) {
+        if(mymapmarker != undefined) {
+            mymap.removeLayer(mymapmarker);
+        }
+
+        mymapmarker = L.marker([lat, lng], mymap).addTo(mymap);
+    };
+
+    // Click to create marker
+    mymap.on('click', function(e) {
+        $('#geoLatitude').val(e.latlng.lat).change();
+        $('#geoLongitude').val(e.latlng.lng).change();
+
+        setMarker(e.latlng.lat, e.latlng.lng);
+    });
+
+    if($('#geoLatitude').val() != undefined && $('#geoLatitude').val() != '' && 
+    $('#geoLongitude').val() != undefined && $('#geoLongitude').val() != '') {
+        setMarker($('#geoLatitude').val(), $('#geoLongitude').val());
+    }
+};
+
+const filterEventsByLocation = function(events) {
+    let eventsResult = [];
+
+    for(let index = 0;index < events.length; index++) {
+
+        let event = events[index];
+
+        if(event.geoLocation != '') {
+            let geoJSON = JSON.parse(event.geoLocation);
+            let point = [$('#geoLongitude').val(), $('#geoLatitude').val()];
+            let polygon = L.geoJSON(geoJSON);
+
+            let test = leafletPip.pointInLayer(point, polygon);
+
+            if(test.length > 0) {
+                eventsResult.push(event);
+            }
+        } else {
+            eventsResult.push(event);
+        }
+    }
+
+    return eventsResult;
 };

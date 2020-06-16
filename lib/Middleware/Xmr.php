@@ -83,7 +83,7 @@ class Xmr implements Middleware
         $container = $app->getContainer();
 
         // Handle display notifications
-        if ($container->get('displayNotifyService') != null) {
+        if ($container->has('displayNotifyService')) {
             try {
                 $container->get('displayNotifyService')->processQueue();
             } catch (GeneralException $e) {
@@ -92,7 +92,7 @@ class Xmr implements Middleware
         }
 
         // Handle player actions
-        if ($container->get('playerActionService') != null) {
+        if ($container->has('playerActionService')) {
             try {
                 $container->get('playerActionService')->processQueue();
             } catch (\Exception $e) {

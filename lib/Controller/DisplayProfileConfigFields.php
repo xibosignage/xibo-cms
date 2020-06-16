@@ -583,8 +583,8 @@ trait DisplayProfileConfigFields
                 }
 
                 // Get values from lockOptions params
-                $usblock = $sanitizedParams->getString('usblock', ['default' => '']);
-                $osdlock = $sanitizedParams->getString('osdlock', ['default' => '']);
+                $usblock = $sanitizedParams->getString('usblock', ['default' => 'empty']);
+                $osdlock = $sanitizedParams->getString('osdlock', ['default' => 'empty']);
                 $keylockLocal = $sanitizedParams->getString('keylockLocal', ['default' => '']);
                 $keylockRemote = $sanitizedParams->getString('keylockRemote', ['default' => '']);
 

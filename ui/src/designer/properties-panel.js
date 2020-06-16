@@ -3,6 +3,7 @@
 const loadingTemplate = require('../templates/loading.hbs');
 const propertiesPanel = require('../templates/properties-panel.hbs');
 const actionsTemplate = require('../templates/actions-form-template.hbs');
+const actionsButtonTemplate = require('../templates/actions-button-template.hbs');
 
 /**
  * Properties panel contructor
@@ -17,6 +18,8 @@ let PropertiesPanel = function(parent, container) {
     this.formSerializedLoadData = '';
 
     this.inlineEditor = false;
+
+    this.openTabOnRender = '';
 };
 
 /**
@@ -131,7 +134,7 @@ PropertiesPanel.prototype.back = function(element) {
 PropertiesPanel.prototype.makeFormReadOnly = function() {
 
     // Disable inputs, select, textarea and buttons
-    this.DOMObject.find('input, select, textarea, button').attr('disabled', 'disabled');
+    this.DOMObject.find('input, select, textarea, button:not(.copyTextAreaButton)').attr('disabled', 'disabled');
 
     // Hide bootstrap switch
     this.DOMObject.find('.bootstrap-switch').hide();
@@ -220,7 +223,6 @@ PropertiesPanel.prototype.render = function(element, step) {
 
             // render the html from actions template
             const actionsHtml = actionsTemplate({
-                addUrl: actionFormAddRequest,
                 trans: actionsTranslations
             });
 
@@ -230,6 +232,12 @@ PropertiesPanel.prototype.render = function(element, step) {
 
             // call the javascript to render the datatable when on Actions tab
             showActionsGrid(element.type, element[element.type + 'Id']);
+
+            // add a button to the button panel for adding an action.
+            self.DOMObject.find('.button-container').prepend($(actionsButtonTemplate({
+                addUrl: actionFormAddRequest,
+                trans: actionsTranslations
+            })));
         }
 
         // Store the extra
@@ -299,6 +307,14 @@ PropertiesPanel.prototype.render = function(element, step) {
 
         if(app.readOnlyMode != undefined && app.readOnlyMode === true) {
             self.makeFormReadOnly();
+        }
+
+        if(self.openTabOnRender != '') {
+            // Open tab
+            self.DOMObject.find(self.openTabOnRender).tab('show');
+
+            // Reset flag
+            self.openTabOnRender = '';
         }
 
     }).fail(function(data) {

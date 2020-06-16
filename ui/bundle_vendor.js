@@ -100,9 +100,6 @@ require('colors.js');
 // chart.js
 require('chart.js');
 
-// timepicker
-require('timepicker');
-
 // form-serializer
 require('form-serializer');
 
@@ -129,4 +126,5 @@ require('leaflet');
 require('leaflet-draw');
 require('leaflet-search');
 window.L = require('leaflet');
+window.leafletPip = require('@mapbox/leaflet-pip');
 

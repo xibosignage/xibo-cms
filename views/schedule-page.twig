@@ -23,6 +23,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{{ "Schedule"|trans }} | {% endblock %}
+
 {% block pageContent %}
     <div class="row">
         <div class="col-sm-12">
@@ -63,22 +65,22 @@
                     data-trans-campaigns= "{% trans "Campaigns" %}"
                     data-trans-layouts= "{% trans "Layouts" %}"
                     data-allow-clear="true"
+                    data-width="100%"
                     title="{% trans "Layout / Campaign" %}"
-                    data-width="150px"
                     data-placeholder="{% trans "Layout / Campaign" %}"
+                    data-dropdownAutoWidth
                     >
                 </select>
             </div>
 
             <div class="xibo-calendar-controls dropdown pull-right">
                 <select id="DisplayList" class="form-control" name="displayGroupIds[]"
-                        data-width="150px"
                         data-placeholder="{% trans "Displays" %}"
                         data-search-url="{{ url_for("schedule.displayGroup.search") }}"
                         data-trans-groups="{% trans "Groups" %}"
                         data-trans-display="{% trans "Display" %}"
                         data-allow-clear="true"
-                        data-width="150px"
+                        data-width="100%"
                         data-placeholder="{% trans "Select Displays" %}" multiple>
                     {% for option in displayGroups %}
                         {% set itemOptionId = attribute(option, "displayGroupId") %}
@@ -103,14 +105,34 @@
         </div>         
     </div>
     <div class="row">
-        <!-- Time Slider -->
-        <div class="col-sm-12 cal-event-time-bar" style="display:none;">
-            <div class="btn slider-step-btn time-picker-step-btn" data-step="-1">
-                <span class="fa fa-step-backward"></span>
+        <div class="col-sm-12 cal-event-agenda-filter" style="display:none;">
+            <!-- Time Slider -->
+            <div class="cal-event-time-bar">
+                <div class="btn slider-step-btn time-picker-step-btn" data-step="-1">
+                    <span class="fa fa-step-backward"></span>
+                </div>
+                <input id="timePicker" data-slider-id='timePickerSlider' type="text" data-slider-min="0" data-slider-max="1439" data-slider-step="1" data-slider-value="0" data-slider-handle="square" />
+                <div class="btn slider-step-btn time-picker-step-btn" data-step="1">
+                    <span class="fa fa-step-forward"></span>
+                </div>
             </div>
-            <input id="timePicker" data-slider-id='timePickerSlider' type="text" data-slider-min="0" data-slider-max="1439" data-slider-step="1" data-slider-value="0" data-slider-handle="square" />
-            <div class="btn slider-step-btn time-picker-step-btn" data-step="1">
-                <span class="fa fa-step-forward"></span>
+
+            <!-- Geo location -->
+            <form class="form-inline cal-event-location">
+                <button id="toggleMap" type="button" class="btn btn-primary pull-right" title="{% trans "Map" %}"><i class="fa fa-map"></i></button>
+                <button id="getLocation" type="button" class="btn btn-default pull-right" title="{% trans "Get browser location!" %}"><i class="fa fa-map-marker"></i></button>
+                <button id="clearLocation" type="button" class="btn btn-default pull-right" title="{% trans "Clear coordinates!" %}"><i class="fa fa-times"></i></button>
+                <div class="form-group pull-right">
+                    <input type="email" class="form-control" id="geoLongitude" placeholder="Longitude">
+                </div>
+                <div class="form-group pull-right">
+                    <input type="text" class="form-control" id="geoLatitude" placeholder="Latitude">
+                </div>
+            </form>
+
+            <!-- Geo location map -->
+            <div class="cal-event-location-map" data-default-lat="{{ defaultLat }}" data-default-long="{{ defaultLong }}">
+                <div id="geoFilterAgendaMap" style="height: 400px; width: 100%" class="hidden"></div>
             </div>
         </div>
     </div>
@@ -596,15 +618,22 @@
                                     %>
                                     <div id="tab_<%= displayGroup['id'] %>" class="tab-pane fade in <%= isActive %> container-fluid">
                                         <% if(typeof resultItem.events != 'undefined') { %>
-                                            <div class="col-xs-12">
+                                            <div class="col-lg-9 agenda-col">
                                                 <%= cal._layouts(resultItem.events, resultItem.layouts, 1) %>
                                                 <%= cal._layouts(resultItem.events, resultItem.layouts, 3) %>
                                                 <%= cal._layouts(resultItem.events, resultItem.layouts, 4) %>
+                                                <%= cal._layouts(resultItem.events, resultItem.layouts, 5) %>
                                             </div>
-                                            <div class="col-xs-12">
-                                                <%= cal._displaygroups(resultItem.events, resultItem.displayGroups) %>
-                                                <%= cal._campaigns(resultItem.events, resultItem.campaigns) %>
-                                            </div> 
+                                            <div class="col-lg-3 agenda-col">
+                                                <div class="row">
+                                                    <div class="col-xs-6 col-lg-12 agenda-col">
+                                                        <%= cal._displaygroups(resultItem.events, resultItem.displayGroups) %>
+                                                    </div> 
+                                                    <div class="col-xs-6 col-lg-12 agenda-col">
+                                                        <%= cal._campaigns(resultItem.events, resultItem.campaigns) %>
+                                                    </div>
+                                                </div>
+                                            </div>
                                          <% } %>
                                     </div>
                                 <% } %>
@@ -617,7 +646,7 @@
         </script>
         
         <script type="text/x-handlebars-template" id="calendar-template-agenda-layouts">
-            <table id="layouts" class="table agenda-table">
+            <table class="table agenda-table agenda-table-layouts" data-type="layouts" width="100%">
                 <thead>
                     <tr class="table-title">
                         <th colspan="10">
@@ -627,6 +656,8 @@
                                 {% endverbatim %}{% trans "Overlay Layouts" %}{% verbatim %}
                             <% } else if (layouts.type == 4) { %>
                                 {% endverbatim %}{% trans "Interrupt Layouts" %}{% verbatim %}
+                            <% } else if (layouts.type == 5) { %>
+                                {% endraw %}{% trans "Campaign Layouts" %}{% raw %}
                             <% } %>
                             
                             <span class="pull-right badge" title="{% endverbatim %}{% trans "Number of Layouts" %}{% verbatim %}" data-toggle="tooltip" data-placement="top">
@@ -701,7 +732,7 @@
         </script>
 
         <script type="text/x-handlebars-template" id="calendar-template-agenda-displaygroups">
-            <table id="displaygroups" class="table agenda-table">
+            <table id="displaygroups" class="table agenda-table" data-type="displaygroups"  width="100%">
                 {% endverbatim %}
                 <thead>
                     <tr class="table-title">
@@ -732,7 +763,7 @@
         </script>
         
         <script type="text/x-handlebars-template" id="calendar-template-agenda-campaigns">
-            <table id="campaigns" class="table agenda-table">
+            <table id="campaigns" class="table agenda-table" data-type="campaigns"  width="100%">
                 {% endverbatim %}
                 <thead>
                     <tr class="table-title">
@@ -964,6 +995,7 @@
             let $displaySelect = $('#DisplayList', dialog);
             $displaySelect.select2({
                 dropdownParent: $(dialog),
+                dropdownAutoWidth: true,
                 ajax: {
                     url: $displaySelect.data("searchUrl"),
                     dataType: "json",

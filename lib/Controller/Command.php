@@ -294,6 +294,27 @@ class Command extends Base
      *      type="string",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="commandString",
+     *      in="formData",
+     *      description="The Command String for this Command. Can be overridden on Display Settings.",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="validationString",
+     *      in="formData",
+     *      description="The Validation String for this Command. Can be overridden on Display Settings.",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="availableOn",
+     *      in="formData",
+     *      description="An array of Player types this Command is available on, empty for all.",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -305,6 +326,7 @@ class Command extends Base
      *      )
      *  )
      * )
+     *
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -320,6 +342,14 @@ class Command extends Base
         $command->description = $sanitizedParams->getString('description');
         $command->code = $sanitizedParams->getString('code');
         $command->userId = $this->getUser()->userId;
+        $command->commandString = $sanitizedParams->getString('commandString');
+        $command->validationString = $sanitizedParams->getString('validationString');
+        $availableOn = $sanitizedParams->getArray('availableOn');
+        if (empty($availableOn)) {
+            $command->availableOn = null;
+        } else {
+            $command->availableOn = implode(',', $availableOn);
+        }
         $command->save();
 
         // Return
@@ -343,6 +373,7 @@ class Command extends Base
      * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws NotFoundException
+     *
      * @SWG\Put(
      *  path="/command/{commandId}",
      *  operationId="commandEdit",
@@ -370,13 +401,33 @@ class Command extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="commandString",
+     *      in="formData",
+     *      description="The Command String for this Command. Can be overridden on Display Settings.",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="validationString",
+     *      in="formData",
+     *      description="The Validation String for this Command. Can be overridden on Display Settings.",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="availableOn",
+     *      in="formData",
+     *      description="An array of Player types this Command is available on, empty for all.",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
      *      @SWG\Schema(ref="#/definitions/Command")
      *  )
      * )
-     *
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -389,6 +440,14 @@ class Command extends Base
 
         $command->command = $sanitizedParams->getString('command');
         $command->description = $sanitizedParams->getString('description');
+        $command->commandString = $sanitizedParams->getString('commandString');
+        $command->validationString = $sanitizedParams->getString('validationString');
+        $availableOn = $sanitizedParams->getArray('availableOn');
+        if (empty($availableOn)) {
+            $command->availableOn = null;
+        } else {
+            $command->availableOn = implode(',', $availableOn);
+        }
         $command->save();
 
         // Return

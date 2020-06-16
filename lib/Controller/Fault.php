@@ -22,7 +22,6 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
-use GuzzleHttp\Psr7\Stream;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
@@ -31,6 +30,7 @@ use Xibo\Factory\LogFactory;
 use Xibo\Helper\Environment;
 use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
+use Xibo\Helper\SendFile;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -199,28 +199,12 @@ class Fault extends Base
         // Close the ZIP file
         $zip->close();
 
-        // Prepare the download
-        if (ini_get('zlib.output_compression')) {
-            ini_set('zlib.output_compression', 'Off');
-        }
-
-        $response = $response
-            ->withHeader('Content-Type', 'application/octet-stream')
-            ->withHeader('Content-Disposition', 'attachment; filename=troubleshoot.zip')
-            ->withHeader('Content-Transfer-Encoding', 'Binary')
-            ->withHeader('Content-Length', filesize($tempFileName))
-            ->withBody(new Stream(fopen($tempFileName, 'r')));
-
-        // Send via Apache X-Sendfile header?
-        if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Apache') {
-            $response = $response->withHeader('X-Sendfile', $tempFileName);
-        }
-        // Send via Nginx X-Accel-Redirect?
-        if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Nginx') {
-            $response = $response->withHeader('X-Accel-Redirect', '/download/temp/' . basename($tempFileName));
-        }
-
-        return $this->render($request, $response);
+        return $this->render($request, SendFile::decorateResponse(
+            $response,
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $tempFileName,
+            'troubleshoot.zip'
+        ));
     }
 
     /**

@@ -327,7 +327,6 @@ class Playlist extends Base
                 continue;
 
             $playlist->includeProperty('buttons');
-            $playlist->includeProperty('requiresDurationUpdate');
 
             switch ($playlist->enableStat) {
 

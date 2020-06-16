@@ -20,35 +20,42 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Storage;
+namespace Xibo\OAuth;
 
-use League\OAuth2\Server\Entities\ClientEntityInterface;
-use League\OAuth2\Server\Repositories\ScopeRepositoryInterface;
+use League\OAuth2\Server\Entities\RefreshTokenEntityInterface;
+use League\OAuth2\Server\Repositories\RefreshTokenRepositoryInterface;
 
-class ScopeRepository implements ScopeRepositoryInterface
+class RefreshTokenRepository implements RefreshTokenRepositoryInterface
 {
     /**
      * {@inheritdoc}
      */
-    public function getScopeEntityByIdentifier($scopeIdentifier)
+    public function persistNewRefreshToken(RefreshTokenEntityInterface $refreshTokenEntity)
     {
-        $scopes = [
-            'all'
-        ];
-        if (array_key_exists($scopeIdentifier, $scopes) === false) {
-            return;
-        }
-        $scope = new ScopeEntity();
-        $scope->setIdentifier($scopeIdentifier);
-        return $scope;
+        // Some logic to persist the refresh token in a database
     }
 
     /**
      * {@inheritdoc}
      */
-    public function finalizeScopes(array $scopes, $grantType, ClientEntityInterface $clientEntity, $userIdentifier = null)
+    public function revokeRefreshToken($tokenId)
     {
-        // TODO I suppose :)
-        return $scopes;
+        // Some logic to revoke the refresh token in a database
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function isRefreshTokenRevoked($tokenId)
+    {
+        return false; // The refresh token has not been revoked
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getNewRefreshToken()
+    {
+        return new RefreshTokenEntity();
     }
 }

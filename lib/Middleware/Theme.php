@@ -24,14 +24,14 @@
 namespace Xibo\Middleware;
 
 
-use Carbon\Carbon;
 use Illuminate\Support\Str;
+use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
-use Respect\Validation\Rules\Date;
 use Slim\App as App;
+use Slim\Interfaces\RouteParserInterface;
 use Slim\Routing\RouteContext;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
@@ -65,28 +65,29 @@ class Theme implements Middleware
         $app = $this->app;
         $app->getContainer()->get('configService')->loadTheme();
 
-        self::setTheme($app, $request);
+        self::setTheme($app->getContainer(), $request, $app->getRouteCollector()->getRouteParser());
 
         return $handler->handle($request);
     }
 
     /**
      * Set theme
-     * @param App $app
+     * @param \Psr\Container\ContainerInterface $container
      * @param Request $request
+     * @param RouteParserInterface $routeParser
      * @throws \Twig\Error\LoaderError
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public static function setTheme(App $app, Request $request)
+    public static function setTheme(ContainerInterface $container, Request $request, RouteParserInterface $routeParser)
     {
-        $container = $app->getContainer();
         $view = $container->get('view');
+
         // Provide the view path to Twig
         $twig = $view->getLoader();
         /* @var \Twig\Loader\FilesystemLoader $twig */
 
         // Append the module view paths
-        $twig->setPaths(array_merge($container->get('moduleFactory')->getViewPaths(), [PROJECT_ROOT . '/views', PROJECT_ROOT . '/custom', PROJECT_ROOT . '/reports']));
+        $twig->setPaths(array_merge($container->get('moduleFactory')->getViewPaths(), $twig->getPaths()));
 
         // Does this theme provide an alternative view path?
         if ($container->get('configService')->getThemeConfig('view_path') != '') {
@@ -104,16 +105,15 @@ class Theme implements Middleware
         $settings['DATE_ONLY_FORMAT_JS'] = DateFormatHelper::convertPhpToMomentFormat($settings['DATE_ONLY_FORMAT']);
         $settings['DATE_ONLY_FORMAT_JALALI_JS'] = DateFormatHelper::convertMomentToJalaliFormat($settings['DATE_ONLY_FORMAT_JS']);
         $settings['systemDateFormat'] = DateFormatHelper::convertPhpToMomentFormat(DateFormatHelper::getSystemFormat());
-        $settings['systemDateOnlyFormat'] = DateFormatHelper::convertPhpToMomentFormat(DateFormatHelper::extractDateOnlyFormat(DateFormatHelper::getSystemFormat()));
         $settings['systemTimeFormat'] = DateFormatHelper::convertPhpToMomentFormat(DateFormatHelper::extractTimeFormat(DateFormatHelper::getSystemFormat()));
 
         $routeContext = RouteContext::fromRequest($request);
         $route = $routeContext->getRoute();
-        $routeParser = $app->getRouteCollector()->getRouteParser();
+
         // Resolve the current route name
         $routeName = ($route == null) ? 'notfound' : $route->getName();
         $view['baseUrl'] = $routeParser->urlFor('home');
-        $view['logoutUrl'] = $routeParser->urlFor((empty($app->logoutRoute)) ? 'logout' : $app->logoutRoute);
+        $view['logoutUrl'] = $routeParser->urlFor((empty($container->logoutRoute)) ? 'logout' : $container->logoutRoute);
         $view['route'] = $routeName;
         $view['theme'] = $container->get('configService');
         $view['settings'] = $settings;
@@ -132,5 +132,6 @@ class Theme implements Middleware
         ];
         $view['ckeditorConfig'] = $container->get('\Xibo\Controller\Library')->fontCKEditorConfig($request);
         $view['version'] = Environment::$WEBSITE_VERSION_NAME;
+        $view['revision'] = Environment::getGitCommit();
     }
 }

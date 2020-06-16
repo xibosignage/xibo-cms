@@ -1,6 +1,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{{ "Layouts"|trans }} | {% endblock %}
+
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Layout and jump to the layout designer." %}" href="{{ url_for("layout.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Layout" %}</a></li>
@@ -209,7 +211,7 @@
                             if (type != "display")
                                 return data.duration;
 
-                            return moment().startOf("day").seconds(data.duration).format("H:mm:ss");
+                            return dataTableTimeFromSeconds(data.duration, type);
                         }
                     },
                     {

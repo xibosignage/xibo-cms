@@ -23,6 +23,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{{ "Commands"|trans }} | {% endblock %}
+
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ url_for("command.add.form") }}"><i class="fa fa-terminal" aria-hidden="true"></i> {% trans "Add Command" %}</a></li>
@@ -35,10 +37,14 @@
         <div class="widget-title">{% trans "Commands" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilter">
+                <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
+                            {% set title %}{% trans "Command" %}{% endset %}
+                            {{ inline.input("command", title) }}
 
+                            {% set title %}{% trans "Code" %}{% endset %}
+                            {{ inline.input("code", title) }}
                         </form>
                     </div>
                 </div>
@@ -48,6 +54,7 @@
                             <tr>
                                 <th>{% trans "Name" %}</th>
                                 <th>{% trans "Code" %}</th>
+                                <th>{% trans "Available On" %}</th>
                                 <th>{% trans "Description" %}</th>
                                 <th>{% trans "Permissions" %}</th>
                                 <th>{% trans "Row Menu" %}</th>
@@ -110,6 +117,34 @@
             "columns": [
                 { "data": "command", "render": dataTableSpacingPreformatted },
                 { "data": "code" },
+                {
+                    "data": "availableOn",
+                    "render": function(data, type) {
+
+                        if (type !== "display")
+                            return data;
+
+                        var returnData = '';
+
+                        if (typeof data !== undefined && data != null) {
+                            var arrayOfTags = data.split(',');
+
+                            returnData += '<div class="permissionsDiv">';
+
+                            for (var i = 0; i < arrayOfTags.length; i++) {
+                                var name = arrayOfTags[i];
+                                if (name !== '') {
+                                    returnData += '<li class="badge ' + ((name === 'lg') ? '' : 'capitalize') + '">'
+                                        + name.replace("lg", "webOS").replace("sssp", "Tizen") + '</span></li>'
+                                }
+                            }
+
+                            returnData += '</div>';
+                        }
+
+                        return returnData;
+                    }
+                },
                 { "data": "description" },
                 {
                     "data": "groupsWithPermissions",

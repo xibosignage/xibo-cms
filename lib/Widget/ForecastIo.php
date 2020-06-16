@@ -49,7 +49,6 @@ use Xibo\Weather\OpenWeatherMapProvider;
 
 /**
  * Class ForecastIo
- * Weather module powered by the DarkSky API
  * @package Xibo\Widget
  */
 class ForecastIo extends ModuleWidget
@@ -103,7 +102,7 @@ class ForecastIo extends ModuleWidget
     /** @inheritDoc */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
@@ -457,8 +456,8 @@ class ForecastIo extends ModuleWidget
         // Create a provider
         return $this->getProvider()
             ->setHttpClient(new Client($this->getConfig()->getGuzzleProxy(['connect_timeout' => 20])))
-            ->enableLogging($this->getLog())
-            ->setLocation($defaultLat, $defaultLong)
+            //->enableLogging($this->getLog())
+            ->setLocation(round($defaultLat, 3), round($defaultLong, 3))
             ->setUnits($this->getOption('units', 'auto'))
             ->setLang($this->getOption('lang', 'en'));
     }
@@ -689,7 +688,7 @@ class ForecastIo extends ModuleWidget
             'widgetDesignHeight'=> $widgetOriginalHeight
         );
 
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
         $javaScriptContent .= '<script>

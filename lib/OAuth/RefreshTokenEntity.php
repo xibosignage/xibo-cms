@@ -20,14 +20,13 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Storage;
+namespace Xibo\OAuth;
 
-use League\OAuth2\Server\Entities\AuthCodeEntityInterface;
-use League\OAuth2\Server\Entities\Traits\AuthCodeTrait;
+use League\OAuth2\Server\Entities\RefreshTokenEntityInterface;
 use League\OAuth2\Server\Entities\Traits\EntityTrait;
-use League\OAuth2\Server\Entities\Traits\TokenEntityTrait;
+use League\OAuth2\Server\Entities\Traits\RefreshTokenTrait;
 
-class AuthCodeEntity implements AuthCodeEntityInterface
+class RefreshTokenEntity implements RefreshTokenEntityInterface
 {
-    use EntityTrait, TokenEntityTrait, AuthCodeTrait;
+    use RefreshTokenTrait, EntityTrait;
 }

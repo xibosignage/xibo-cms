@@ -21,6 +21,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{{ "Playlists"|trans }} | {% endblock %}
+
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ url_for("playlist.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Playlist" %}</a></li>
@@ -126,7 +128,7 @@
     {# Add common file #}
     {% include "common.twig" %}
     
-    <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js"></script>
+    <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
     <script type="text/javascript">
 
         {# Custom translations #}
@@ -199,7 +201,7 @@
                                 return moment().startOf("day").seconds(data).format("H:mm:ss") + ' <span class="fa fa-clock-o" title="{{ "This duration will be updated at " }}' + moment(row.requiresDurationUpdate, "X").format(jsDateFormat) + '"></span>';
                             }
 
-                            return moment().startOf("day").seconds(data).format("H:mm:ss");
+                            return dataTableTimeFromSeconds(data, type, row);
                         }
                     },
                     {

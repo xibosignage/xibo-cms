@@ -23,6 +23,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{{ "Logs"|trans }} | {% endblock %}
+
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-warning btn-xs"><a class="XiboFormButton btns" title="{% trans "Truncate the Log" %}" href="{{ url_for("log.truncate.form") }}"> <i class="fa fa-scissors" aria-hidden="true"></i> {% trans "Truncate" %}</a></li>

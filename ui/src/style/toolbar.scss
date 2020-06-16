@@ -1,48 +1,5 @@
-// Import
-@import "common";
-
-// Variables
-$toolbar-height: 50px;
-$toolbar-tab-min-width: 80px;
-$toolbar-z-index: 1040;
-
-$toolbar-tools-card-width: 150px;
-$toolbar-tools-card-height: 40px;
-
-$toolbar-widgets-card-width: 100px;
-$toolbar-widgets-card-margin: 2px;
-$toolbar-widgets-card-height: 46px;
-
-// Colours
-$toolbar-main-color: $xibo-color-secondary;
-$toolbar-secondary-color: $xibo-color-primary;
-$toolbar-blue: $xibo-color-secondary;
-$toolbar-light-blue: lighten($xibo-color-secondary, 20%);
-$toolbar-green: darken($xibo-color-green, 20%);
-$toolbar-orange: $xibo-color-orange;
-$toolbar-light-green: $xibo-color-green;
-$toolbar-dark-blue: $xibo-color-primary;
-$toolbar-card-color: $xibo-color-secondary;
-$toolbar-menu-content-bg-color: $xibo-color-white;
-$toolbar-disabled-color: $xibo-color-gray;
-
-$toolbar-tab-bg-color: $xibo-color-primary;
-$toolbar-tab-fg-color: $xibo-color-white;
-$toolbar-tab-hover-color: $xibo-color-light-blue;
-$toolbar-tab-border-color: $xibo-color-secondary;
-
-$bin-bg-color: $xibo-color-red;
-$bin-fg-color: $xibo-color-white;
-$bin-bg-color-hover: darken($xibo-color-red, 20%);
-
-$undo-bg-color: $xibo-color-orange;
-$undo-fg-color: $xibo-color-white;
-$undo-bg-color-hover: darken($xibo-color-orange, 20%);
-
-$multiselect-bg-color: $xibo-color-purple;
-$multiselect-fg-color: $xibo-color-white;
-$multiselect-bg-color-hover: darken($xibo-color-purple, 20%);
-$multiselect-bg-color-active: lighten($xibo-color-purple, 10%);
+@import "variables";
+@import "mixins";
 
 // CSS
 .sidebar-footer {
@@ -368,12 +325,15 @@ ul.sidebar {
         @include border-radius(4px);
 
         .card-title {
-            display: inline-block;
+            display: block;
             position: relative;
             line-height: 30px;
             height: $toolbar-height;
             padding: 5px 2px;
             margin-left: 40px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .card-icon {
@@ -504,30 +464,35 @@ ul.sidebar {
         font-size: 0;
 
         .toolbar-card {
-            margin: $toolbar-widgets-card-margin;
+            margin: 0 $toolbar-widgets-card-margin;
             width: $toolbar-widgets-card-width;
             height: $toolbar-widgets-card-height;
             background: $xibo-color-primary;
+            @include border-radius(0px 0 4px 4px);
             font-size: 13px;
 
             .card-title {
                 position: relative;
-                line-height: 14px;
-                padding: 0;
+                line-height: 15px;
+                padding: 0 3px;
                 text-align: center;
                 overflow: hidden;
-                margin: 6px 0 0 0;
+                margin: 4px 0 0 0;
                 width: $toolbar-widgets-card-width;
+                height: auto;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
             .card-icon {
-                line-height: 20px;
-                font-size: 24px;
+                line-height: 10px;
+                font-size: 14px;
                 transform: translate(-50%);
                 padding: 0;
                 position: relative;
                 left: 50%;
-                top: 4px;
+                top: 3px;
             }
 
             .action-area {
@@ -541,6 +506,7 @@ ul.sidebar {
 
             &.card-selected .add-area {
                 width: $toolbar-widgets-card-width;
+                @include border-radius(0 0 0 4px);
             }
 
             &[data-one-click-add] .action-area {
@@ -549,6 +515,7 @@ ul.sidebar {
 
             .drag-area {
                 margin-left: calc(#{$toolbar-widgets-card-width} / 2);
+                @include border-radius(0 0 4px 0);
             }
 
             &.card-dragged .drag-area {
@@ -562,11 +529,12 @@ ul.sidebar {
                 position: absolute;
                 z-index: 3;
                 background: $xibo-color-primary;
-                width: 18px;
-                @include border-radius(4px);
+                width: 14px;
+                @include border-radius(0px 0 4px 4px);
                 margin: 0;
-                height: 18px;
+                height: 14px;
                 text-align: center;
+                font-size: 10px;
             }
 
             &:not(.card-selected):hover, &.favourited {
@@ -576,46 +544,34 @@ ul.sidebar {
             }
         }
 
-        &:hover .toolbar-pane-content-container {
-            margin-top: -6px;
-            scrollbar-width: thin; /* For firefox */
-
-            &::-webkit-scrollbar {
-                display: block;
-            }
-        }
-
         .toolbar-pane-content-container {
             float: left;
             scroll-behavior: smooth;
             overflow-x: scroll;
             overflow-y: hidden;
-            transform: rotateX(180deg);
             background: $xibo-color-white;
-            scrollbar-width: none; /* For firefox */
+            height: $toolbar-height;
+            scrollbar-width: thin; /* For firefox */
 
             /* SCROLLBAR */
             /* width */
             &::-webkit-scrollbar {
-                display: none;
-                height: 6px;
+                height: 7px;
             }
 
             /* Track */
             &::-webkit-scrollbar-track {
-                background: lighten($xibo-color-gray, 20%);
-                @include border-radius(4px);
+                background: lighten($xibo-color-gray, 40%);
             }
             
             /* Handle */
             &::-webkit-scrollbar-thumb {
-                background: $xibo-color-secondary;
-                @include border-radius(4px);
+                background: lighten($xibo-color-black, 40%);
             }
 
             /* Handle on hover */
             &::-webkit-scrollbar-thumb:hover {
-                background: lighten($xibo-color-secondary, 20%);
+                background: lighten($xibo-color-black, 20%);
             }
         }
 
@@ -623,13 +579,13 @@ ul.sidebar {
             max-height: $toolbar-height;
             width: auto;
             white-space: nowrap;
-            transform: rotateX(180deg);
             padding: 0 2px;
         }
 
         .toolbar-card {
             display: inline-block;
             white-space: normal;
+            position: relative;
         }
     }
 }

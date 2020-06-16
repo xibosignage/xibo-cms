@@ -107,6 +107,10 @@
                 addActionForm: {
                     url: "{{ url_for("action.add.form", {source: 'layout', id:':id'}) }}",
                     type: 'GET'
+                },
+                addDrawer: {
+                    url: "{{ url_for("region.add.drawer", {id: ':id'}) }}",
+                    type: 'POST'
                 }
             },
             region: {
@@ -266,7 +270,10 @@
                 tooltipsDisabled: "{{ "Tooltips disabled!" |trans }}",
                 tooltipsEnabled: "{{ "Tooltips enabled!" |trans }}",
                 publish: "{{ "Publish" |trans }}",
-                discard: "{{ "Discard"|trans }}"
+                discard: "{{ "Discard"|trans }}",
+                copyToClipboard: "{{ "Copy to Clipboard"|trans }}",
+                couldNotCopy: "{{ "Could not copy"|trans }}",
+                copied: "{{ "Copied!"|trans }}"
             };
 
             var uploadTrans = {
@@ -321,7 +328,7 @@
                 search: "{{ "Search" |trans }}",
                 add: "{{ "Add" |trans }}",
                 grab: "{{ "Grab" |trans }}",
-                addAsFavourite: "{{ "Add as favourite" |trans }}",
+                addAsFavourite: "{{ "Mark as favourite" |trans }}",
                 addedToFavourites: "{{ "Module added to favourites!" |trans }}",
                 moduleNavStart: "{{ "Scroll to the start!" |trans }}",
                 moduleNavEnd: "{{ "Scroll to the end!" |trans }}",

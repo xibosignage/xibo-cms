@@ -280,10 +280,13 @@ class Soap5 extends Soap4
                     // Append each individual command
                     foreach ($display->getCommands() as $command) {
                         try {
-                            /* @var \Xibo\Entity\Command $command */
+                            if (!$command->isReady()) {
+                                continue;
+                            }
+
                             $node = $return->createElement($command->code);
-                            $commandString = $return->createElement('commandString', $command->commandString);
-                            $validationString = $return->createElement('validationString', $command->validationString);
+                            $commandString = $return->createElement('commandString', $command->getCommandString());
+                            $validationString = $return->createElement('validationString', $command->getValidationString());
 
                             $node->appendChild($commandString);
                             $node->appendChild($validationString);

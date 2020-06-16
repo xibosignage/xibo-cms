@@ -2,7 +2,7 @@
     data-toggle="tooltip" 
     data-type="tool"
     data-sub-type="{{type}}"
-    title="{{description}}"
+    data-title="{{description}}"
     
     {{#each oneClickAdd}}
         {{#eq this ../mainObjectType}}data-one-click-add="{{this}}"{{/eq}}
@@ -10,10 +10,10 @@
 
     drop-to="{{dropTo}}">
 
-    <div class="add-area action-area" title="{{trans.add}}" data-toggle="tooltip" data-placement="left">
+    <div class="add-area action-area" data-title="{{trans.add}}" data-toggle="tooltip" data-placement="left">
         <i class="fa fa-plus"></i>
     </div>
-    <div class="drag-area action-area" title="{{trans.grab}}" data-toggle="tooltip" data-placement="right">
+    <div class="drag-area action-area" data-title="{{trans.grab}}" data-toggle="tooltip" data-placement="right">
         <i class="fa fa-hand-rock-o"></i>
     </div>
 

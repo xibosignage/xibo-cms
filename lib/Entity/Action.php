@@ -103,6 +103,7 @@ class Action implements \JsonSerializable
      */
     public $layoutCode;
 
+    /** @var \Xibo\Factory\PermissionFactory  */
     private $permissionFactory;
 
     /**

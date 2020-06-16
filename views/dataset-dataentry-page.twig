@@ -22,6 +22,9 @@
 #}
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
+{% set dataSetName = dataSet.dataSet %}
+
+{% block title %}{% trans %}Data Entry for {{ dataSetName }}{% endtrans %} | {% endblock %}
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
@@ -32,7 +35,6 @@
 
 
 {% block pageContent %}
-    {% set dataSetName = dataSet.dataSet %}
     {% set widgetTitle %}{% trans %}Data Entry for {{ dataSetName }}{% endtrans %}{% endset %}
     <div class="widget">
         <div class="widget-title">{{ widgetTitle }}</div>

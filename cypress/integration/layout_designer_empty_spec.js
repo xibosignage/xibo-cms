@@ -12,7 +12,7 @@ describe('Layout Designer (Empty)', function() {
             cy.visit('/layout/designer/111111111111');
 
             // See page not found message
-            cy.contains('Sorry we could not find that page');
+            cy.contains('Layout not found');
         });
     });
 
@@ -60,19 +60,6 @@ describe('Layout Designer (Empty)', function() {
 
                 cy.goToLayoutAndLoadPrefs(res);
             });
-        });
-
-        it('shows a toast message ("Empty Region") when trying to Publish a layout with an empty region', () => {
-
-            cy.server();
-            cy.route('PUT', '/layout/publish/*').as('layoutPublish');
-
-            cy.get('#layout-editor-topbar li#actionsSubmenu').click();
-            cy.get('#layout-editor-topbar li#actionsSubmenu #publishLayout').click();
-
-            cy.get('button[data-bb-handler="Publish"]').click();
-
-            cy.get('.toast-error').contains('Empty Region');
         });
 
         it('should create a new region from within the navigator edit', () => {

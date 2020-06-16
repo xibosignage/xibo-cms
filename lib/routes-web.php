@@ -19,6 +19,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 
@@ -26,11 +27,18 @@ use Slim\Http\ServerRequest as Request;
 $app->get('/', function (Request $request, Response $response) use ($app) {
 
     // Different controller depending on the homepage of the user.
-    $app->getContainer()->get('configService')->setDependencies($app->getContainer()->get('store'), $app->rootUri);
+    $app->getContainer()->get('configService')->setDependencies(
+        $app->getContainer()->get('store'),
+        $app->getContainer()->get('rootUri')
+    );
+
     $routeParser = $app->getRouteCollector()->getRouteParser();
+
     /* @var \Xibo\Entity\User $user */
     $user = $app->getContainer()->get('user');
+
     $app->getContainer()->get('logger')->debug('Showing the homepage: ' . $user->homePageId);
+
     /** @var \Xibo\Entity\Page $page */
     $page = $app->getContainer()->get('pageFactory')->getById($user->homePageId);
 
@@ -365,6 +373,9 @@ $app->get('/stats/proofofplay/view', ['\Xibo\Controller\Stats','displayProofOfPl
 $app->get('/stats/library/view', ['\Xibo\Controller\Stats','displayLibraryPage'])->setName('stats.library.view');
 $app->get('/stats/form/export', ['\Xibo\Controller\Stats','exportForm'])->setName('stats.export.form');
 $app->get('/stats/library', ['\Xibo\Controller\Stats','libraryUsageGrid'])->setName('stats.library.grid');
+// For charts
+$app->get('/stats/data/bandwidth', ['\Xibo\Controller\Stats','bandwidthData'])->setName('stats.bandwidth.data');
+$app->get('/stats/data/timeDisconnected', ['\Xibo\Controller\Stats','timeDisconnectedData'])->setName('stats.timeDisconnected.data');
 
 //
 // Audit Log
@@ -432,10 +443,6 @@ $app->get('/tag/view', ['\Xibo\Controller\Tag','displayPage'])->setName('tag.vie
 $app->get('/tag/form/add', ['\Xibo\Controller\Tag','addForm'])->setName('tag.add.form');
 $app->get('/tag/form/edit/{id}', ['\Xibo\Controller\Tag','editForm'])->setName('tag.edit.form');
 $app->get('/tag/form/delete/{id}', ['\Xibo\Controller\Tag','deleteForm'])->setName('tag.delete.form');
-
-// Errors
-$app->any('/notFound', ['\Xibo\Controller\Error', 'notFoundPage'])->setName('error.notFound');
-$app->any('/error', ['\Xibo\Controller\Error', 'errorPage'])->setName('error');
 
 // Actions
 $app->get('/action/form/add/{source}/{id}', ['\Xibo\Controller\Action', 'addForm'])->setName('action.add.form');

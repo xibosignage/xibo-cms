@@ -6,21 +6,21 @@
         data-toggle="tooltip" 
         data-template='{{ previewTemplate }}'
         data-placement="right"
-        data-container="body"
-        title="{{widgetName}}"
+        data-container="#playlist-editor"
+        data-title="{{widgetName}}"
     {{/if}}
     class="playlist-widget tooltip-always-on selectable {{#eq isValid 0}}invalid-widget{{/eq}} {{#if selected}}selected{{/if}} {{#if isEditable}}editable{{/if}} {{#if isPermissionsModifiable}}permissionsModifiable{{/if}} {{#if isDeletable}}deletable{{/if}}">
     
     <div class="widgetLabel timelineMediaItemColouringDefault timelineMediaItemColouring_{{ subType }} {{ widgetColouring }}">
         <div class="widgetSubType">
-            <i class="fa module-icon-{{subType}} tooltip-always-on" data-toggle="tooltip" title="{{moduleName}}"></i>
+            <i class="fa module-icon-{{subType}} tooltip-always-on" data-toggle="tooltip" data-title="{{moduleName}}"></i>
         </div>
-        <div class="widgetDuration">
+        <div class="widgetDuration tooltip-always-on" data-toggle="tooltip" data-title="{{duration}}">
             {{ duration }}
         </div>
     </div>
 
-    <div class="widgetName tooltip-always-on" data-toggle="tooltip" title="{{widgetName}}">
+    <div class="widgetName tooltip-always-on" data-toggle="tooltip" data-title="{{widgetName}}">
         {{widgetName}}
     </div>
 
@@ -34,8 +34,8 @@
         {{/each}}
 
         {{#gt expireStatus 0}}
-            <i class="fa {{expireStatusIcon}} editProperty" data-toggle="tooltip" data-container="body"
-                title="{{expireStatusTitle}}" data-property="Expiry"></i>
+            <i class="fa {{expireStatusIcon}} editProperty" data-toggle="tooltip" data-container="#playlist-editor"
+                data-title="{{expireStatusTitle}}" data-property="Expiry"></i>
         {{/gt}}
     </div>
 </div>

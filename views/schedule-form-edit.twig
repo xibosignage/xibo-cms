@@ -164,14 +164,16 @@
 
                         {% if recurringEvent %}
                             <div class="well text-info text-center form-error">
-                                <p>This is an instance of a scheduled recurring event: <span class="fa fa-info-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom"
-                                                                                             data-content="{% trans "Editing the Start and or End date/time will create a new Recurring Event across the Schedule. Any previously deleted instances of this event will be recreated with edits made here." %}"></span></p>
+                                <p>This is an instance of a scheduled recurring event:
+                                    <span class="fa fa-info-circle"
+                                          data-toggle="popover"
+                                          data-trigger="hover"
+                                          data-placement="bottom"
+                                          data-content="{% trans "Editing the Start and or End date/time will create a new Recurring Event across the Schedule. Any previously deleted instances of this event will be recreated with edits made here." %}"></span></p>
                                 <p>
-                                    Starting from <span class="text-warning"><b>{{ eventStart|date(jsDateFormat) }} </b></span>to<span class="text-warning"><b> {{ eventEnd|date(jsDateFormat) }}</b></span>
+                                    Starting from <span class="text-warning"><b id="instanceStartDate">-</b></span> to <span class="text-warning"><b id="instanceEndDate">-</b></span>
                                 </p>
                                 <div id="recurringInfo"></div>
-
-
                             </div>
                         {% endif %}
 

@@ -19,23 +19,15 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-namespace Xibo\Storage;
+
+namespace Xibo\OAuth;
+
+use League\OAuth2\Server\Entities\AuthCodeEntityInterface;
+use League\OAuth2\Server\Entities\Traits\AuthCodeTrait;
 use League\OAuth2\Server\Entities\Traits\EntityTrait;
-use League\OAuth2\Server\Entities\UserEntityInterface;
+use League\OAuth2\Server\Entities\Traits\TokenEntityTrait;
 
-class UserEntity implements UserEntityInterface
+class AuthCodeEntity implements AuthCodeEntityInterface
 {
-    use EntityTrait;
-
-    /**
-     * @OA\Property()
-     * userId
-     * @var integer
-     */
-    public $userId;
-
-    public function getIdentifier()
-    {
-        return $this->userId;
-    }
+    use EntityTrait, TokenEntityTrait, AuthCodeTrait;
 }

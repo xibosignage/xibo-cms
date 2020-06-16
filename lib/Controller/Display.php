@@ -47,6 +47,7 @@ use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Environment;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
@@ -637,6 +638,9 @@ class Display extends Base
                 $display->thumbnail = $this->urlFor($request,'display.screenShot', ['id' => $display->displayId]) . '?' . Random::generateString();
             }
 
+            $display->teamViewerLink = (!empty($display->teamViewerSerial)) ? 'https://start.teamviewer.com/' . $display->teamViewerSerial : '';
+            $display->webkeyLink = (!empty($display->webkeySerial)) ? 'https://webkeyapp.com/mgm?publicid=' . $display->webkeySerial : '';
+
             // Edit and Delete buttons first
             if ($this->getUser()->checkEditable($display)) {
 
@@ -660,19 +664,24 @@ class Display extends Base
 
             // Delete
             if ($this->getUser()->checkDeleteable($display)) {
-                $display->buttons[] = array(
+                $deleteButton = [
                     'id' => 'display_button_delete',
                     'url' => $this->urlFor($request,'display.delete.form', ['id' => $display->displayId]),
-                    'text' => __('Delete'),
-                    /*'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor('display.delete', ['id' => $display->displayId])),
-                        array('name' => 'commit-method', 'value' => 'delete'),
-                        array('name' => 'id', 'value' => 'display_button_delete'),
-                        array('name' => 'text', 'value' => __('Delete')),
-                        array('name' => 'rowtitle', 'value' => $display->display)
-                    )*/
-                );
+                    'text' => __('Delete')
+                ];
+
+                if (Environment::isDevMode()) {
+                    $deleteButton['multi-select'] = true;
+                    $deleteButton['dataAttributes'] = [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'display.delete', ['id' => $display->displayId])],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'display_button_delete'],
+                        ['name' => 'text', 'value' => __('Delete')],
+                        ['name' => 'rowtitle', 'value' => $display->display]
+                    ];
+                }
+
+                $display->buttons[] = $deleteButton;
             }
 
             if ($this->getUser()->checkEditable($display) || $this->getUser()->checkDeleteable($display)) {
@@ -1167,6 +1176,20 @@ class Display extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="teamViewerSerial",
+     *      in="formData",
+     *      description="The TeamViewer serial number for this Display, if applicable",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="webkeySerial",
+     *      in="formData",
+     *      description="The Webkey serial number for this Display, if applicable",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1207,7 +1230,8 @@ class Display extends Base
         $display->timeZone = $sanitizedParams->getString('timeZone');
         $display->displayProfileId = $sanitizedParams->getInt('displayProfileId');
         $display->bandwidthLimit = $sanitizedParams->getInt('bandwidthLimit');
-
+        $display->teamViewerSerial = $sanitizedParams->getString('teamViewerSerial');
+        $display->webkeySerial = $sanitizedParams->getString('webkeySerial');
 
         // Get the display profile and use that to pull in any overrides
         // start with an empty config

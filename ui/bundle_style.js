@@ -54,9 +54,6 @@ require('flatpickr/dist/plugins/monthSelect/style.css');
 require('datatables.net-bs/css/dataTables.bootstrap.css');
 require('datatables.net-buttons-dt/css/buttons.dataTables.min.css');
 
-// timepicker
-require('timepicker/jquery.timepicker.min.css');
-
 // bootstrap-tour
 require('bootstrap-tourist/bootstrap-tourist.css');
 

@@ -1,0 +1,10 @@
+{
+    "id": "weather-current-4",
+    "value": "Template 5 - Weather background only",
+    "main": "<div class=\"bg-div bg-[icon]\"></div>",
+    "css": ".footer-powered-by {\n    color: #f9f9f9;\n    font-size: 14px;\n    background-color: #111;\n    opacity: 0.5;\n}",
+    "widgetOriginalWidth": "",
+    "widgetOriginalHeight": "",
+    "image": "modules/weather/template-thumbs/weather-current-4.png",
+    "type": "current"
+}

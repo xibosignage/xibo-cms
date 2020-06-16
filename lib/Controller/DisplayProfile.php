@@ -359,17 +359,10 @@ class DisplayProfile extends Base
             }
         }
 
-        // Get a list of unassigned Commands
-        $unassignedCommands = array_udiff($this->commandFactory->query(), $displayProfile->commands, function($a, $b) {
-            /** @var \Xibo\Entity\Command $a */
-            /** @var \Xibo\Entity\Command $b */
-            return $a->getId() - $b->getId();
-        });
-
         $this->getState()->template = 'displayprofile-form-edit';
         $this->getState()->setData([
             'displayProfile' => $displayProfile,
-            'commands' => array_merge($displayProfile->commands, $unassignedCommands),
+            'commands' => $displayProfile->commands,
             'versions' => $playerVersions,
             'lockOptions' => json_decode($displayProfile->getSetting('lockOptions', '[]'), true),
             'dayParts' => $dayparts

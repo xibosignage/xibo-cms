@@ -23,7 +23,6 @@
 
 namespace Xibo\Controller;
 
-use GuzzleHttp\Psr7\Stream;
 use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -38,6 +37,7 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TaskFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\SanitizerService;
+use Xibo\Helper\SendFile;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -493,30 +493,12 @@ class Maintenance extends Base
 
         // Uncomment only if you are having permission issues
         // chmod($zipFile, 0777);
-
-        // Push file back to browser
-        if (ini_get('zlib.output_compression')) {
-            ini_set('zlib.output_compression', 'Off');
-        }
-
-        $size = filesize($zipFile);
-        $response = $response
-            ->withHeader('Content-Type', 'application/octet-stream')
-            ->withHeader('Content-Disposition', 'attachment; filename='.  basename($zipFile))
-            ->withHeader('Content-Transfer-Encoding', 'Binary')
-            ->withHeader('Content-Length', $size)
-            ->withBody(new Stream(fopen($zipFile, 'r')));
-
-        // Send via Apache X-Sendfile header?
-        if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Apache') {
-            $response = $response->withHeader('X-Sendfile', $zipFile);
-        }
-        // Send via Nginx X-Accel-Redirect?
-        if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Nginx') {
-            $response = $response->withHeader('X-Accel-Redirect', '/download/temp/' .  basename($zipFile));
-        }
-
         $this->setNoOutput(true);
-        return $this->render($request, $response);
+
+        return $this->render($request, SendFile::decorateResponse(
+            $response,
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $zipFile
+        ));
     }
 }

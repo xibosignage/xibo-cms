@@ -54,13 +54,10 @@ use Xibo\Weather\OpenWeatherMapProvider;
 
 /**
  * Class Weather
- * Weather module powered by the DarkSky API
  * @package Xibo\Widget
  */
 class Weather extends ModuleWidget
 {
-    const API_ENDPOINT = 'https://api.darksky.net/forecast/';
-
     const WEATHER_BACKGROUNDS = array(
         "cloudy-image",
         "day-cloudy-image",
@@ -76,95 +73,80 @@ class Weather extends ModuleWidget
 
     const WEATHER_SNIPPETS_CURRENT = array(
         'time',
+        'sunSet',
+        'sunRise',
         'summary',
         'icon',
-        'nearestStormDistance',
-        'nearestStormBearing',
-        'precipIntensity',
-        'precipProbability',
+        'wicon',
         'temperature',
+        'temperatureRound',
+        'temperatureNight',
+        'temperatureNightRound',
+        'temperatureMorning',
+        'temperatureMorningRound',
+        'temperatureEvening',
+        'temperatureEveningRound',
+        'temperatureHigh',
+        'temperatureMaxRound',
+        'temperatureLow',
+        'temperatureMinRound',
+        'temperatureMean',
+        'temperatureMeanRound',
         'apparentTemperature',
+        'apparentTemperatureRound',
         'dewPoint',
         'humidity',
+        'humidityPercent',
         'pressure',
         'windSpeed',
-        'windGust',
         'windBearing',
+        'windDirection',
         'cloudCover',
         'uvIndex',
         'visibility',
         'ozone',
-        'wicon',
-        'temperatureFloor',
-        'apparentTemperatureFloor',
-        'temperatureRound',
-        'apparentTemperatureRound',
-        'weekSummary',
         'temperatureUnit',
         'windSpeedUnit',
-        'windDirection',
-        'visibilityDistanceUnit',
-        'humidityPercent',
-        'temperatureMaxFloor',
-        'temperatureMinFloor',
-        'temperatureMeanFloor',
-        'temperatureMaxRound',
-        'temperatureMinRound',
-        'temperatureMeanRound'
+        'visibilityDistanceUnit'
     );
     
     const WEATHER_SNIPPETS_FORECAST = array(
         'time',
+        'sunSet',
+        'sunRise',
         'summary',
         'icon',
-        'sunriseTime',
-        'sunsetTime',
-        'moonPhase',
-        'precipIntensity',
-        'precipIntensityMax',
-        'precipIntensityMaxTime',
-        'precipProbability',
-        'precipType',
+        'wicon',
+        'temperature',
+        'temperatureRound',
+        'temperatureNight',
+        'temperatureNightRound',
+        'temperatureMorning',
+        'temperatureMorningRound',
+        'temperatureEvening',
+        'temperatureEveningRound',
         'temperatureHigh',
-        'temperatureHighTime',
+        'temperatureMaxRound',
         'temperatureLow',
-        'temperatureLowTime',
-        'apparentTemperatureHigh',
-        'apparentTemperatureHighTime',
-        'apparentTemperatureLow',
-        'apparentTemperatureLowTime',
+        'temperatureMinRound',
+        'temperatureMean',
+        'temperatureMeanRound',
+        'apparentTemperature',
+        'apparentTemperatureRound',
         'dewPoint',
         'humidity',
+        'humidityPercent',
         'pressure',
         'windSpeed',
-        'windGust',
-        'windGustTime',
         'windBearing',
+        'windDirection',
         'cloudCover',
         'uvIndex',
-        'uvIndexTime',
         'visibility',
         'ozone',
-        'temperatureMin',
-        'temperatureMinTime',
-        'temperatureMax',
-        'temperatureMaxTime',
-        'apparentTemperatureMin',
-        'apparentTemperatureMinTime',
-        'apparentTemperatureMax',
-        'apparentTemperatureMaxTime',
-        'wicon',
-        'temperatureMaxFloor',
-        'temperatureMinFloor',
-        'temperatureFloor',
-        'temperatureMaxRound',
-        'temperatureMinRound',
-        'temperatureRound',
         'temperatureUnit',
         'windSpeedUnit',
-        'visibilityDistanceUnit',
-        'humidityPercent',
-        'windDirection'
+        'visibilityDistanceUnit'
     );
 
     private $resourceFolder;
@@ -216,10 +198,9 @@ class Weather extends ModuleWidget
     /** @inheritDoc */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
 
         foreach ($this->mediaFactory->createModuleFileFromFolder($this->resourceFolder) as $media) {
             /* @var Media $media */
@@ -239,10 +220,12 @@ class Weather extends ModuleWidget
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Process any module settings you asked for.
         $apiKey = $sanitizedParams->getString('apiKey');
+        $owmApiKey = $sanitizedParams->getString('owmApiKey');
+        $owmIsPaidPlan = $sanitizedParams->getCheckbox('owmIsPaidPlan');
         $cachePeriod = $sanitizedParams->getInt('cachePeriod', ['default' => 300]);
 
         if ($this->module->enabled != 0) {
-            if ($apiKey == '')
+            if ($apiKey == '' && $owmApiKey == '')
                 throw new InvalidArgumentException(__('Missing API Key'), 'apiKey');
 
             if ($cachePeriod <= 0)
@@ -250,6 +233,8 @@ class Weather extends ModuleWidget
         }
 
         $this->module->settings['apiKey'] = $apiKey;
+        $this->module->settings['owmApiKey'] = $owmApiKey;
+        $this->module->settings['owmIsPaidPlan'] = $owmIsPaidPlan;
         $this->module->settings['cachePeriod'] = $cachePeriod;
 
         return $response;
@@ -601,7 +586,7 @@ class Weather extends ModuleWidget
         // Create a provider
         return $this->getProvider()
             ->setHttpClient(new Client($this->getConfig()->getGuzzleProxy(['connect_timeout' => 20])))
-            ->enableLogging($this->getLog())
+            //->enableLogging($this->getLog())
             ->setCachePeriod($this->getSetting('cachePeriod', 14400))
             ->setLocation($defaultLat, $defaultLong)
             ->setUnits($this->getOption('units', 'auto'))
@@ -836,7 +821,6 @@ class Weather extends ModuleWidget
         );
 
         $headContent = '
-            <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">
             <link href="' . $this->getResourceUrl('weather/weather-icons.min.css') . '" rel="stylesheet" media="screen">
             <link href="' . $this->getResourceUrl('weather/font-awesome.min.css')  . '" rel="stylesheet" media="screen">
             <link href="' . $this->getResourceUrl('weather/animate.css')  . '" rel="stylesheet" media="screen">
@@ -900,7 +884,7 @@ class Weather extends ModuleWidget
             $options['numRows'] = $daysRows;
         }
 
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
         $javaScriptContent .= '<script>
@@ -1016,7 +1000,6 @@ class Weather extends ModuleWidget
     public function getBackgroundOptions()
     {
         $initBackgrounds = [];
-        $resBackgrounds = [];
 
         foreach (self::WEATHER_BACKGROUNDS as $background) {
             if($this->getOption($background) != $background) {

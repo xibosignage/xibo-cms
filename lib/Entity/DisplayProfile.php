@@ -361,7 +361,7 @@ class DisplayProfile implements \JsonSerializable
 
         // Load any commands
         if ($options['loadCommands']) {
-            $this->commands = $this->commandFactory->getByDisplayProfileId($this->displayProfileId);
+            $this->commands = $this->commandFactory->getByDisplayProfileId($this->displayProfileId, $this->type);
         }
 
         // We are loaded
