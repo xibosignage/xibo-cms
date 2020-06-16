@@ -591,8 +591,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                         'layoutId'=> 1,
                         'widgetId'=> 1,
                         'mediaId'=> 1,
+                        'campaignId'=> 1,
                         'statDate'=> 1,
                         'engagements'=> 1,
+                        'tagFilter' => 1
                     ]
                 ],
             ];
