@@ -792,15 +792,17 @@ class Playlist extends Base
     public function copy($playlistId)
     {
         // Get the playlist
-        $playlist = $this->playlistFactory->getById($playlistId);
+        $originalPlaylist = $this->playlistFactory->getById($playlistId);
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($playlist))
+        if (!$this->getUser()->checkViewable($originalPlaylist))
             throw new AccessDeniedException();
 
         // Load the playlist for Copy
-        $playlist->load(['loadTags' => false]);
-        $playlist = clone $playlist;
+        $originalPlaylist->load(['loadTags' => false]);
+
+        // Clone the original
+        $playlist = clone $originalPlaylist;
 
         $playlist->name = $this->getSanitizer()->getString('name');
         $playlist->setOwner($this->getUser()->userId);
@@ -860,6 +862,9 @@ class Playlist extends Base
                 $permission->save();
             }
         }
+
+        // Clone the closure table for the original playlist
+        $originalPlaylist->cloneClosureTable($playlist->getId());
 
         // Return
         $this->getState()->hydrate([
