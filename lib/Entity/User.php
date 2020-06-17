@@ -866,6 +866,11 @@ class User implements \JsonSerializable, UserEntityInterface
         if ($this->userId == $this->configService->getSetting('SYSTEM_USER') &&  $this->retired === 1) {
             throw new InvalidArgumentException(__('This User is set as System User and cannot be retired'), 'userId');
         }
+
+        // Library quota
+        if (!empty($this->libraryQuota) && $this->libraryQuota < 0) {
+            throw new InvalidArgumentException(__('Library Quota must be a positive number.'), 'libraryQuota');
+        }
     }
 
     /**
