@@ -162,7 +162,12 @@ class StatsArchiveTask implements TaskInterface
         unlink($fileName);
 
         // Upload to the library
-        $media = $this->mediaFactory->create(__('Stats Export %s to %s - ' . Random::generateString(5), $fromDt->format('Y-m-d'), $toDt->format('Y-m-d')), 'stats.csv.zip', 'genericfile', $this->archiveOwner->getId());
+        $media = $this->mediaFactory->create(
+            __('Stats Export %s to %s - %s', $fromDt->format('Y-m-d'), $toDt->format('Y-m-d'), Random::generateString(5)),
+            'stats.csv.zip',
+            'genericfile',
+            $this->archiveOwner->getId()
+        );
         $media->save();
 
         // Set max attempts to -1 so that we continue deleting until we've removed all of the stats that we've exported
