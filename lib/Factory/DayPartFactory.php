@@ -157,7 +157,7 @@ class DayPartFactory extends BaseFactory
 
         if ($this->getSanitizer()->getString('name', $filterBy) != null) {
             $terms = explode(',', $this->getSanitizer()->getString('name', $filterBy));
-            $this->nameFilter('daypart', 'name', $terms, $body, $params, ($this->getSanitizer()->getCheckbox('useRegexForName') == 1));
+            $this->nameFilter('daypart', 'name', $terms, $body, $params, ($this->getSanitizer()->getCheckbox('useRegexForName', $filterBy) == 1));
         }
 
         // Sorting?

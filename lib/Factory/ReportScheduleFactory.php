@@ -147,7 +147,7 @@ class ReportScheduleFactory extends BaseFactory
         // Like
         if ($this->getSanitizer()->getString('name', $filterBy) != '') {
             $terms = explode(',', $this->getSanitizer()->getString('name', $filterBy));
-            $this->nameFilter('reportschedule', 'name', $terms, $body, $params, ($this->getSanitizer()->getCheckbox('useRegexForName') == 1));
+            $this->nameFilter('reportschedule', 'name', $terms, $body, $params, ($this->getSanitizer()->getCheckbox('useRegexForName', $filterBy) == 1));
         }
 
         if ($this->getSanitizer()->getInt('reportScheduleId', 0, $filterBy) != 0) {

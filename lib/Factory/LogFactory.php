@@ -128,7 +128,7 @@ class LogFactory extends BaseFactory
         // Filter by Display Name?
         if ($this->getSanitizer()->getString('display', $filterBy) != null) {
             $terms = explode(',', $this->getSanitizer()->getString('display', $filterBy));
-            $this->nameFilter('display', 'display', $terms, $body, $params, ($this->getSanitizer()->getCheckbox('useRegexForName') == 1));
+            $this->nameFilter('display', 'display', $terms, $body, $params, ($this->getSanitizer()->getCheckbox('useRegexForName', $filterBy) == 1));
         }
 
         if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {

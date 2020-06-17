@@ -256,7 +256,7 @@ class DataSetFactory extends BaseFactory
 
         if ($this->getSanitizer()->getString('dataSet', $filterBy) != null) {
             $terms = explode(',', $this->getSanitizer()->getString('dataSet', $filterBy));
-            $this->nameFilter('dataset', 'dataSet', $terms, $body, $params, ($this->getSanitizer()->getCheckbox('useRegexForName') == 1));
+            $this->nameFilter('dataset', 'dataSet', $terms, $body, $params, ($this->getSanitizer()->getCheckbox('useRegexForName', $filterBy) == 1));
         }
 
         if ($this->getSanitizer()->getString('dataSetExact', $filterBy) != '') {
