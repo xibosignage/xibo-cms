@@ -578,8 +578,8 @@ class Display implements \JsonSerializable
         if (!empty($this->latitude) && !v::latitude()->validate($this->latitude))
             throw new InvalidArgumentException(__('The latitude entered is not valid.'), 'latitude');
 
-        if ($this->bandwidthLimit !== null && !v::intType()->validate($this->bandwidthLimit)) {
-            throw new InvalidArgumentException(__('Bandwidth limit must be a whole number.'), 'bandwidthLimit');
+        if ($this->bandwidthLimit !== null && !v::intType()->min(0)->validate($this->bandwidthLimit)) {
+            throw new InvalidArgumentException(__('Bandwidth limit must be a whole number greater than 0.'), 'bandwidthLimit');
         }
     }
 
