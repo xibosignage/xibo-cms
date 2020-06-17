@@ -11,7 +11,7 @@
         <link href="{{ urlFor("library.font.css") }}" rel="stylesheet">
         
         {# Import CSS bundle from dist #}
-        <script src="{{ theme.rootUri() }}dist/style.bundle.min.js"></script>
+        <script src="{{ theme.rootUri() }}dist/style.bundle.min.js?{{ version }}"></script>
 
         {# Import user made CSS from theme #}
         <link href="{{ theme.uri("css/dashboard.css") }}?{{ version }}" rel="stylesheet" media="screen">
@@ -34,47 +34,47 @@
         </script>
 
         {# Import JS bundle from dist #}
-        <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js?{{ version }}"></script>
 
         {# Import JS system tools #}
-        <script src="{{ theme.rootUri() }}dist/systemTools.bundle.min.js"></script>
+        <script src="{{ theme.rootUri() }}dist/systemTools.bundle.min.js?{{ version }}"></script>
 
         {# jquery-file-upload #}
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/tmpl.min.js"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-load-image/load-image.all.min.js"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.iframe-transport.js"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload.js"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-process.js"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-resize.js"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-validate.js"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-ui.js"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-image.js"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-video.js"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-audio.js"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/tmpl.min.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-load-image/load-image.all.min.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.iframe-transport.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-process.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-resize.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-validate.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-ui.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-image.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-video.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-audio.js?{{ version }}"></script>
 
         {# Import libraries copied to dist #}
-        <script src="{{ theme.rootUri() }}dist/vendor/ckeditor/ckeditor.js"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/bootstrap-fix/bootstrap-ckeditor-fix.js"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/ckeditor/ckeditor.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor/bootstrap-fix/bootstrap-ckeditor-fix.js?{{ version }}"></script>
 
         {# Import XIBO js files #}
-        <script src="{{ theme.rootUri() }}dist/core/xibo-cms.js"></script>
-        <script src="{{ theme.rootUri() }}dist/core/xibo-forms.js"></script>
-        <script src="{{ theme.rootUri() }}dist/core/xibo-preview-timeline.js"></script>
-        <script src="{{ theme.rootUri() }}dist/core/xibo-calendar.js"></script>
-        <script src="{{ theme.rootUri() }}dist/core/xibo-datasets.js"></script>
+        <script src="{{ theme.rootUri() }}dist/core/xibo-cms.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/core/xibo-forms.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/core/xibo-preview-timeline.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/core/xibo-calendar.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/core/xibo-datasets.js?{{ version }}"></script>
 
 
         {# Dates #}
         {% if settings.CALENDAR_TYPE == "Jalali" %}
-            <script src="{{ theme.rootUri() }}dist/vendor/bootstrap-datetimepicker/js/jalali-date.js"></script>
-            <script src="{{ theme.rootUri() }}dist/vendor/bootstrap-datetimepicker/js/bootstrap-datetimepicker-jalali.min.js"></script>
-            <script src="{{ theme.rootUri() }}dist/vendor/calendar/js/calendar-jalali.js"></script>
+            <script src="{{ theme.rootUri() }}dist/vendor/bootstrap-datetimepicker/js/jalali-date.js?{{ version }}"></script>
+            <script src="{{ theme.rootUri() }}dist/vendor/bootstrap-datetimepicker/js/bootstrap-datetimepicker-jalali.min.js?{{ version }}"></script>
+            <script src="{{ theme.rootUri() }}dist/vendor/calendar/js/calendar-jalali.js?{{ version }}"></script>
             <script type="text/javascript">
                 moment.loadPersian();
             </script>
         {% else %}
-            <script src="{{ theme.rootUri() }}dist/vendor/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js"></script>
-            <script src="{{ theme.rootUri() }}dist/vendor/calendar/js/calendar.js"></script>
+            <script src="{{ theme.rootUri() }}dist/vendor/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js?{{ version }}"></script>
+            <script src="{{ theme.rootUri() }}dist/vendor/calendar/js/calendar.js?{{ version }}"></script>
         {% endif %}
 
         {# Handle the inclusion of i18n #}

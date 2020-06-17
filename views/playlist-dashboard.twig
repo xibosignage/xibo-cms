@@ -64,7 +64,7 @@
 {% block javaScript %}
     {# Add common file #}
     {% include "common.twig" %}
-    <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js"></script>
+    <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?{{ version }}"></script>
     <script type="text/javascript">
         // Define some global variables to keep hold of
         let template;

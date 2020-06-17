@@ -24,8 +24,8 @@
         {# Add common file #}
         {% include "common.twig" %}
 
-        <script src="{{ theme.rootUri() }}dist/layoutDesigner.bundle.min.js"></script>
-        <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js"></script>
+        <script src="{{ theme.rootUri() }}dist/layoutDesigner.bundle.min.js?{{ version }}"></script>
+        <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?{{ version }}"></script>
         <script type="text/javascript">
 
             {# Custom translations #}
