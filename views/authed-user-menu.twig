@@ -10,6 +10,9 @@
         <li><a class="XiboFormButton" href="{{ url_for("user.preferences.form") }}" title="{% trans "Preferences" %}">{% trans "Preferences" %}</a></li>
         <li><a class="XiboFormButton" href="{{ url_for("user.edit.profile.form") }}" title="{% trans "Edit Profile" %}">{% trans "Edit Profile" %}</a></li>
         <li><a id="reshowWelcomeMenuItem" href="#">{% trans "Reshow welcome" %}</a></li>
+        {% if horizontalNav %}
+            <li><a class="XiboFormButton" href="{{ url_for("about") }}" title="{% trans "About the CMS" %}">{% trans "About" %}</a></li>
+        {% endif %}
         <li><a class="XiboHelpButton" href="{{ helpService.link() }}">{% trans "Help" %}</a></li>
         <li class="divider"></li>
         <li><a title="{% trans "Logout" %}" href="{{ logoutUrl }}">{% trans "Logout" %}</a></li>
