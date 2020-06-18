@@ -84,18 +84,4 @@ class LayoutDraftTest extends LocalWebTestCase
 
         $this->assertSame(200, $this->client->response->status(), $this->client->response->getBody());
     }
-
-    /**
-     * Test publishing the newly created layout (which has a region without any content)
-     */
-    public function testPublishLayoutWithError()
-    {
-        // Do nothing and try to publish
-        $this->client->put('/layout/publish/' . $this->layout->layoutId, [
-            'publishNow' => 1
-        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-
-        // Expected invalid argument
-        $this->assertSame(500, $this->client->response->status(), $this->client->response->getBody());
-    }
 }

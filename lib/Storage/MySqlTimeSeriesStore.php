@@ -23,7 +23,6 @@
 namespace Xibo\Storage;
 
 use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
@@ -332,7 +331,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                 $params['layoutId_' . $i] = $layoutId;
             }
 
-            $body .= '  AND `stat`.campaignId IN (SELECT campaignId from layouthistory where layoutId IN (' . trim($layoutSql, ',') . ')) ';
+            $body .= '  AND `stat`.campaignId IN (SELECT campaignId FROM `layouthistory` WHERE layoutId IN (' . trim($layoutSql, ',') . ')) ';
         }
 
         // Media Filter
@@ -349,36 +348,25 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $body .= ' AND `media`.mediaId IN (' . trim($mediaSql, ',') . ')';
         }
 
-        // Campaign selection
-        // ------------------
-        // Get all the layouts of that campaign.
-        // Then get all the campaigns of the layouts
-        $campaignIds = [];
+        // Campaign
+        // --------
+        // Filter on Layouts linked to a Campaign
         if ($campaignId != null) {
-            try {
-                $campaign = $this->campaignFactory->getById($campaignId);
-                $layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId);
-                if (count($layouts) > 0) {
-                    foreach ($layouts as $layout) {
-                        $campaignIds[] = $layout->campaignId;
-                    }
-                }
-            } catch (NotFoundException $notFoundException) {
-                $this->log->error('CampaignIds not Found.');
-            }
+            $body .= ' AND stat.campaignId IN (
+                    SELECT lkcampaignlayout.campaignId 
+                      FROM `lkcampaignlayout`
+                        INNER JOIN `campaign`
+                        ON `lkcampaignlayout`.campaignId = `campaign`.campaignId
+                            AND `campaign`.isLayoutSpecific = 1
+                        INNER JOIN `lkcampaignlayout` lkcl 
+                        ON lkcl.layoutid = lkcampaignlayout.layoutId
+                     WHERE lkcl.campaignId = :campaignId 
+                ) ';
+            $params['campaignId'] = $campaignId;
         }
 
-        // Campaign Filter
-        if ($campaignId != null) {
-            if (count($campaignIds) != 0) {
-                $body .= ' AND stat.campaignId IN (' . implode(',', $campaignIds) . ')';
-            } else {
-                // we wont get any match as we store layout specific campaignId in stat
-                $body .= ' AND stat.campaignId = '. $campaignId;
-            }
-        }
-
-        $body .= " ORDER BY stat.statId ";
+        // Sorting
+        $body .= ' ORDER BY stat.statId ';
 
         $limit = '';
         if ($start !== null && $length !== null) {

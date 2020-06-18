@@ -1840,7 +1840,6 @@ class Layout extends Base
     public function status($layoutId)
     {
         // Get the layout
-        /* @var \Xibo\Entity\Layout $layout */
         $layout = $this->layoutFactory->getById($layoutId);
 
         $layout->xlfToDisk();
@@ -2296,7 +2295,7 @@ class Layout extends Base
 
             // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
             // error message
-            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true]);
+            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
 
             // Return
             $this->getState()->hydrate([

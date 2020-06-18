@@ -802,6 +802,11 @@ class User implements \JsonSerializable
         catch (NotFoundException $e) {
             throw new InvalidArgumentException(__('Selected home page does not exist'), 'homePageId');
         }
+
+        // Library quota
+        if (!empty($this->libraryQuota) && $this->libraryQuota < 0) {
+            throw new InvalidArgumentException(__('Library Quota must be a positive number.'), 'libraryQuota');
+        }
     }
 
     /**
