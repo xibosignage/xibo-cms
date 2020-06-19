@@ -524,6 +524,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
             callback: function() {
                 const $objects = $(this).find('.multi-delete-element');
                 let deletedElements = 0;
+                let index = 0;
 
                 // Show modal
                 pE.common.showLoadingScreen('deleteObjects');
@@ -531,8 +532,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
                 // Leave multi select mode
                 pE.toolbar.toggleMultiselectMode(false);
 
-                // Loop all items and make a delete request for each
-                for(let index = 0;index < $objects.length; index++) {
+                const deleteObject = function() {
                     const $element = $($objects[index]);
 
                     // Empty options object
@@ -564,6 +564,9 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
 
                             // Hide/close modal
                             bootbox.hideAll();
+                        } else {
+                            index++;
+                            deleteObject();
                         }
                         
                     }).catch((error) => { // Fail/error
@@ -580,8 +583,16 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
                         }
 
                         toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
+
+                        // Reload data
+                        pE.reloadData();
+
+                        // Hide/close modal
+                        bootbox.hideAll();
                     });
-                }
+                };
+
+                deleteObject();
 
                 return false;
             }
@@ -598,14 +609,14 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
 
         pE.common.showLoadingScreen('checkMediaIsUsed');
         let arrayOfWidgets = [];
+        let index = 0;
 
-        for(let index = 0;index < objectIds.length;index++) {
-
+        const getWidgetStatus = function() {
             let widgetId = objectIds[index];
             let widgetToDelete = pE.getElementByTypeAndId('widget', 'widget_' + widgetId);
             let linkToAPI = urlsForApi.media.isUsed;
             let requestPath = linkToAPI.url.replace(':id', widgetToDelete.mediaIds[0]);
-
+    
             if(widgetToDelete.isRegionSpecific()) {
                 arrayOfWidgets.push({
                     'objectId': widgetId,
@@ -614,10 +625,13 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
                     'hasMedia': false,
                     'dataUsed': false
                 });
-
+    
                 if(arrayOfWidgets.length == objectIds.length) {
                     createMultiDeleteModal(arrayOfWidgets);
                     pE.common.hideLoadingScreen('checkMediaIsUsed');
+                } else {
+                    index++;
+                    getWidgetStatus();
                 }
             } else {
                 // Request with count as being 2, for the published layout and draft
@@ -631,10 +645,13 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
                                 'hasMedia': true,
                                 'dataUsed': res.data.isUsed
                             });
-
+    
                             if(arrayOfWidgets.length == objectIds.length) {
                                 createMultiDeleteModal(arrayOfWidgets);
                                 pE.common.hideLoadingScreen('checkMediaIsUsed');
+                            } else {
+                                index++;
+                                getWidgetStatus();
                             }
                         } else {
                             if(res.login) {
@@ -645,14 +662,17 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
                             }
                         }
                     }).fail(function(jqXHR, textStatus, errorThrown) {
-
+    
                         pE.common.hideLoadingScreen('checkMediaIsUsed');
-
+    
                         // Output error to console
                         console.error(jqXHR, textStatus, errorThrown);
                     });
             }
-        }
+        };
+
+        // Start getting widget status
+        getWidgetStatus();
     }
 };
 
