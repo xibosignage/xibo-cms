@@ -329,6 +329,13 @@ class Stats extends Base
      *      type="string",
      *      required=false
      *  ),
+     *  @SWG\Parameter(
+     *      name="embed",
+     *      in="query",
+     *      description="Should the return embed additional data, options are layoutTags,displayTags and mediaTags",
+     *      type="string",
+     *      required=false
+     *  ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -362,6 +369,9 @@ class Stats extends Base
         $start = $this->getSanitizer()->getInt('start', 0);
         $length = $this->getSanitizer()->getInt('length', 10);
 
+        // Embed Tags
+        $embed = explode(',', $this->getSanitizer()->getString('embed', ''));
+
         // CMS timezone
         $defaultTimezone = $this->getConfig()->getSetting('defaultTimezone');
 
@@ -391,7 +401,7 @@ class Stats extends Base
         $displayIds = $this->authoriseDisplayIds($displays, $timeZoneCache);
 
         // Call the time series interface getStats
-        $resultSet =  $this->timeSeriesStore->getStats(
+        $resultSet = $this->timeSeriesStore->getStats(
             [
                 'fromDt'=> $fromDt,
                 'toDt'=> $toDt,
@@ -403,6 +413,9 @@ class Stats extends Base
                 'statId' => $statId,
                 'campaignId' => $campaignId,
                 'eventTag' => $eventTag,
+                'displayTags' => in_array('displayTags', $embed),
+                'layoutTags' => in_array('layoutTags', $embed),
+                'mediaTags' => in_array('mediaTags', $embed),
                 'start' => $start,
                 'length' => $length,
             ]);
@@ -453,6 +466,7 @@ class Stats extends Base
             $entry['layoutId'] = $this->getSanitizer()->int($row['layoutId']);
             $entry['widgetId'] = $this->getSanitizer()->int($row['widgetId']);
             $entry['mediaId'] = $this->getSanitizer()->int($row['mediaId']);
+            $entry['campaignId'] = $this->getSanitizer()->int($row['campaignId']);
             $entry['scheduleId'] = $this->getSanitizer()->int($row['scheduleId'] ?? 0);
             $entry['tag'] = $this->getSanitizer()->string($row['tag']);
             $entry['statDate'] = isset($row['statDate']) ? $this->getDate()->parse($row['statDate'], 'U')->format($returnDateFormat) : '';
@@ -462,6 +476,23 @@ class Stats extends Base
             // DEPRECATED
             $entry['minStart'] = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
             $entry['maxEnd'] = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
+
+            // Tags
+            // ----
+            // Display tags
+            if (in_array('displayTags', $embed)) {
+                $entry['displayTags'] = $row['tagFilter']['dg'] ?? [];
+            }
+
+            // Layout tags
+            if (in_array('layoutTags', $embed)) {
+                $entry['layoutTags'] = $row['tagFilter']['layout'] ?? [];
+            }
+
+            // Media tags
+            if (in_array('mediaTags', $embed)) {
+                $entry['mediaTags'] = $row['tagFilter']['media'] ?? [];
+            }
 
             $rows[] = $entry;
         }

@@ -283,7 +283,7 @@ class ScheduleFactory extends BaseFactory
     /**
      * @param array $sortOrder
      * @param array $filterBy
-     * @return array[Schedule]
+     * @return Schedule[]
      */
     public function query($sortOrder = null, $filterBy = [])
     {
@@ -329,6 +329,11 @@ class ScheduleFactory extends BaseFactory
         if ($this->getSanitizer()->getInt('eventId', $filterBy) !== null) {
             $sql .= ' AND `schedule`.eventId = :eventId ';
             $params['eventId'] = $this->getSanitizer()->getInt('eventId', $filterBy);
+        }
+
+        if ($this->getSanitizer()->getInt('eventTypeId', $filterBy) !== null) {
+            $sql .= ' AND `schedule`.eventTypeId = :eventTypeId ';
+            $params['eventTypeId'] = $this->getSanitizer()->getInt('eventTypeId', $filterBy);
         }
 
         if ($this->getSanitizer()->getInt('campaignId', $filterBy) !== null) {

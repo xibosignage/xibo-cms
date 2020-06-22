@@ -48,24 +48,24 @@
                         {% set helpText %}{% trans "Setting Spots to 0 will omit the first Playlist from the play order, and will be used as a Spot Fill option." %}{% endset %}
                         {{ forms.message(helpText) }}
 
-                        <div class="form-group">
-                            <div class="col-sm-1" for="subPlaylistId[]">#</div>
-                            <div class="col-sm-3">
+                        <div class="row row-special">
+                            <div class="col-sm-1 text-right" for="subPlaylistId[]">#</div>
+                            <div class="col-sm-3 text-center">
                                 {{ "Playlists"|trans }}
                             </div>
                             {% set helpText %}{% trans "How many spots would you like on this Sub-Playlist? This is used before ordering to expand or shrink the list to the specified size. Leave empty to use the count of Widgets." %}{% endset %}
-                            <div class="col-sm-2" title="{{ helpText }}" data-toggle="tooltip" data-placement="bottom">
+                            <div class="col-sm-2 text-center" title="{{ helpText }}" data-toggle="tooltip" data-placement="top">
                                 {{ "Spots"|trans }}
                             </div>
                             {% set helpText %}{% trans "Set the duration of all Widgets in the Playlist to a specific value in seconds. Leave empty to use each Widget duration." %}{% endset %}
-                            <div class="col-sm-2" title="{{ helpText }}" data-toggle="tooltip" data-placement="bottom">
+                            <div class="col-sm-2 text-center" title="{{ helpText }}" data-toggle="tooltip" data-placement="top">
                                 {{ "Spot Length"|trans }}
                             </div>
                             {% set helpText %}{% trans "If there are not enough Widgets fill all spots, how should the remaining spots be filled?" %}{% endset %}
-                            <div class="col-sm-2" title="{{ helpText }}" data-toggle="tooltip" data-placement="bottom">
+                            <div class="col-sm-3 text-center" title="{{ helpText }}" data-toggle="tooltip" data-placement="top">
                                 {{ "Spot Fill"|trans }}
                             </div>
-                            <div class="col-sm-1" title="{{ helpText }}" data-toggle="tooltip" data-placement="bottom">
+                            <div class="col-sm-1 text-center" title="{{ helpText }}" data-toggle="tooltip" data-placement="top">
                             </div>
                         </div>
 

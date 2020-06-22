@@ -23,7 +23,6 @@
 namespace Xibo\Storage;
 
 use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
@@ -179,7 +178,6 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function getStats($filterBy = [])
     {
-
         $fromDt = isset($filterBy['fromDt']) ? $filterBy['fromDt'] : null;
         $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
         $statDate = isset($filterBy['statDate']) ? $filterBy['statDate'] : null;
@@ -188,8 +186,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         if (isset($filterBy['statId'])) {
             if (!is_numeric($filterBy['statId'])) {
                 throw new InvalidArgumentException(__('Invalid statId provided'), 'statId');
-            }
-            else {
+            } else {
                 $statId = $filterBy['statId'];
             }
         } else {
@@ -203,18 +200,82 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $campaignId = isset($filterBy['campaignId']) ? $filterBy['campaignId'] : null;
         $eventTag = isset($filterBy['eventTag']) ? $filterBy['eventTag'] : null;
 
+        // Tag embedding
+        $embedDisplayTags = isset($filterBy['displayTags']) ? $filterBy['displayTags'] : false;
+        $embedLayoutTags = isset($filterBy['layoutTags']) ? $filterBy['layoutTags'] : false;
+        $embedMediaTags = isset($filterBy['mediaTags']) ? $filterBy['mediaTags'] : false;
+
         // Limit
         $start = isset($filterBy['start']) ? $filterBy['start'] : null;
         $length = isset($filterBy['length']) ? $filterBy['length'] : null;
 
         $params = [];
-        $select = ' SELECT stat.statId, stat.statDate, stat.type, stat.displayId, stat.widgetId, stat.layoutId, stat.mediaId, stat.start as start, stat.end as end, stat.tag, stat.duration, stat.count, stat.engagements, 
-        display.Display as display, layout.Layout as layout, media.Name AS media ';
+        $select = 'SELECT stat.statId, 
+            stat.statDate, 
+            stat.type, 
+            stat.displayId, 
+            stat.widgetId, 
+            stat.layoutId, 
+            stat.mediaId, 
+            stat.campaignId, 
+            stat.start as start, 
+            stat.end as end, 
+            stat.tag, 
+            stat.duration, 
+            stat.count, 
+            stat.engagements, 
+            display.Display as display, 
+            layout.Layout as layout, 
+            media.Name AS media ';
+
+        if ($embedDisplayTags) {
+            $select .= ', 
+                (
+                  SELECT GROUP_CONCAT(DISTINCT CONCAT(tag, \'|\', IFNULL(value, \'null\'))) 
+                    FROM tag 
+                      INNER JOIN lktagdisplaygroup 
+                      ON lktagdisplaygroup.tagId = tag.tagId 
+                   WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID 
+                  GROUP BY lktagdisplaygroup.displayGroupId
+                ) AS displayTags
+            ';
+        }
+
+        if ($embedMediaTags) {
+            $select .= ', 
+                (
+                  SELECT GROUP_CONCAT(DISTINCT CONCAT(tag, \'|\', IFNULL(value, \'null\'))) 
+                    FROM tag 
+                      INNER JOIN lktagmedia 
+                      ON lktagmedia.tagId = tag.tagId 
+                   WHERE lktagmedia.mediaId = media.mediaId 
+                  GROUP BY lktagmedia.mediaId
+                ) AS mediaTags
+            ';
+        }
+
+        if ($embedLayoutTags) {
+            $select .= ', 
+                (
+                  SELECT GROUP_CONCAT(DISTINCT CONCAT(tag, \'|\', IFNULL(value, \'null\'))) 
+                    FROM tag 
+                      INNER JOIN lktaglayout 
+                      ON lktaglayout.tagId = tag.tagId 
+                   WHERE lktaglayout.layoutId = layout.layoutId 
+                  GROUP BY lktaglayout.layoutId
+                ) AS layoutTags
+            ';
+        }
 
         $body = '
         FROM stat
             LEFT OUTER JOIN display
             ON stat.DisplayID = display.DisplayID
+            LEFT OUTER JOIN `lkdisplaydg`
+            ON lkdisplaydg.displayid = display.displayId
+            LEFT OUTER JOIN `displaygroup`
+            ON displaygroup.displaygroupid = lkdisplaydg.displaygroupid
+                AND `displaygroup`.isDisplaySpecific = 1
             LEFT OUTER JOIN layout
             ON layout.LayoutID = stat.LayoutID
             LEFT OUTER JOIN media
@@ -270,7 +331,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                 $params['layoutId_' . $i] = $layoutId;
             }
 
-            $body .= '  AND `stat`.campaignId IN (SELECT campaignId from layouthistory where layoutId IN (' . trim($layoutSql, ',') . ')) ';
+            $body .= '  AND `stat`.campaignId IN (SELECT campaignId FROM `layouthistory` WHERE layoutId IN (' . trim($layoutSql, ',') . ')) ';
         }
 
         // Media Filter
@@ -287,48 +348,36 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
             $body .= ' AND `media`.mediaId IN (' . trim($mediaSql, ',') . ')';
         }
 
-        // Campaign selection
-        // ------------------
-        // Get all the layouts of that campaign.
-        // Then get all the campaigns of the layouts
-        $campaignIds = [];
+        // Campaign
+        // --------
+        // Filter on Layouts linked to a Campaign
         if ($campaignId != null) {
-            try {
-                $campaign = $this->campaignFactory->getById($campaignId);
-                $layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId);
-                if (count($layouts) > 0) {
-                    foreach ($layouts as $layout) {
-                        $campaignIds[] = $layout->campaignId;
-                    }
-                }
-            } catch (NotFoundException $notFoundException) {
-                $this->log->error('CampaignIds not Found.');
-            }
+            $body .= ' AND stat.campaignId IN (
+                    SELECT lkcampaignlayout.campaignId 
+                      FROM `lkcampaignlayout`
+                        INNER JOIN `campaign`
+                        ON `lkcampaignlayout`.campaignId = `campaign`.campaignId
+                            AND `campaign`.isLayoutSpecific = 1
+                        INNER JOIN `lkcampaignlayout` lkcl 
+                        ON lkcl.layoutid = lkcampaignlayout.layoutId
+                     WHERE lkcl.campaignId = :campaignId 
+                ) ';
+            $params['campaignId'] = $campaignId;
         }
 
-        // Campaign Filter
-        if ($campaignId != null) {
-            if (count($campaignIds) != 0) {
-                $body .= ' AND stat.campaignId IN (' . implode(',', $campaignIds) . ')';
-            } else {
-                // we wont get any match as we store layoutspecific campaignid in stat
-                $body .= ' AND stat.campaignId = '. $campaignId;
-            }
-        }
-
-        $body .= " ORDER BY stat.statId ";
+        // Sorting
+        $body .= ' ORDER BY stat.statId ';
 
         $limit = '';
         if ($start !== null && $length !== null) {
             $limit = ' LIMIT ' . $start . ', ' . $length;
         }
 
-
         // Total count
         $resTotal = [];
         if ($start !== null && $length !== null) {
             $resTotal = $this->store->select('
-              SELECT COUNT(*) AS total FROM (   ' . $select. $body . ') total
+              SELECT COUNT(*) AS total FROM (   ' . $select . $body . ') total
             ', $params);
         }
 
@@ -336,7 +385,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $connection = $this->store->getConnection();
         $connection->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
 
-        /*Execute sql statement*/
+        // Execute sql statement
         $sql = $select . $body. $limit;
 
         $statement = $connection->prepare($sql);

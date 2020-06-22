@@ -623,7 +623,7 @@ class MediaFactory extends BaseFactory
 
         if ($this->getSanitizer()->getString('name', $filterBy) != null) {
             $terms = explode(',', $this->getSanitizer()->getString('name', $filterBy));
-            $this->nameFilter('media', 'name', $terms, $body, $params, ($this->getSanitizer()->getCheckbox('useRegexForName') == 1));
+            $this->nameFilter('media', 'name', $terms, $body, $params, ($this->getSanitizer()->getCheckbox('useRegexForName', $filterBy) == 1));
         }
 
         if ($this->getSanitizer()->getString('nameExact', $filterBy) != '') {

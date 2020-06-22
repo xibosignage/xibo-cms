@@ -267,6 +267,9 @@ class Layout implements \JsonSerializable
     // Private
     private $unassignTags = [];
 
+    // Handle empty regions
+    private $hasEmptyRegion = false;
+
     public static $loadOptionsMinimum = [
         'loadPlaylists' => false,
         'loadTags' => false,
@@ -462,6 +465,14 @@ class Layout implements \JsonSerializable
         }
 
         throw new NotFoundException(__('Cannot find region'));
+    }
+
+    /**
+     * @return bool if this Layout has an empty Region.
+     */
+    public function hasEmptyRegion()
+    {
+        return $this->hasEmptyRegion;
     }
 
     /**
@@ -995,7 +1006,7 @@ class Layout implements \JsonSerializable
         $this->load(['loadPlaylists' => true]);
 
         // Keep track of whether this layout has an empty region
-        $layoutHasEmptyRegion = false;
+        $this->hasEmptyRegion = false;
         $layoutCountRegionsWithDuration = 0;
 
         $document = new \DOMDocument();
@@ -1068,7 +1079,7 @@ class Layout implements \JsonSerializable
 
             if ($countWidgets <= 0) {
                 $this->getLog()->info('Layout has empty region - ' . $countWidgets . ' widgets. playlistId = ' . $region->getPlaylist()->getId());
-                $layoutHasEmptyRegion = true;
+                $this->hasEmptyRegion = true;
             }
 
             // Work out if we have any "lead regions", those are Widgets with a duration
@@ -1262,15 +1273,9 @@ class Layout implements \JsonSerializable
                     // Add the fileId attribute to the media element
                     $mediaNode->setAttribute('fileId', $media->mediaId);
                 }
-                //$this->getLog()->error($widget->widgetOptions, JSON_PRETTY_PRINT);
-
 
                 foreach ($widget->widgetOptions as $option) {
 
-                    //$this->getLog()->error($option->type);
-
-
-                    /* @var WidgetOption $option */
                     if (trim($option->value) === '')
                         continue;
 
@@ -1338,11 +1343,6 @@ class Layout implements \JsonSerializable
         $layoutNode->appendChild($tagsNode);
 
         // Update the layout status / duration accordingly
-        if ($layoutHasEmptyRegion) {
-            $status = ModuleWidget::$STATUS_INVALID;
-            $this->pushStatusMessage(__('Empty Region'));
-        }
-
         $this->status = ($status < $this->status) ? $status : $this->status;
 
         // Fire a layout.build event, passing the layout and the generated document.
@@ -1548,7 +1548,8 @@ class Layout implements \JsonSerializable
         $options = array_merge([
             'notify' => true,
             'collectNow' => true,
-            'exceptionOnError' => false
+            'exceptionOnError' => false,
+            'exceptionOnEmptyRegion' => true
         ], $options);
 
         $path = $this->getCachePath();
@@ -1607,9 +1608,21 @@ class Layout implements \JsonSerializable
                 $options['notify'] = false;
             }
 
-            if ($this->status === ModuleWidget::$STATUS_INVALID && $options['exceptionOnError']) {
-                $this->audit($this->layoutId, 'Publish layout failed, rollback', ['layoutId' => $this->layoutId]);
-                throw new InvalidArgumentException(__('There is an error with this Layout: %s', implode(',', $this->getStatusMessage())), 'status');
+            if ($options['exceptionOnError']) {
+                // Handle exception cases
+                if ($this->status === ModuleWidget::$STATUS_INVALID
+                    || ($options['exceptionOnEmptyRegion'] && $this->hasEmptyRegion())
+                ) {
+                    $this->audit($this->layoutId, 'Publish layout failed, rollback', ['layoutId' => $this->layoutId]);
+                    throw new InvalidArgumentException(__('There is an error with this Layout: %s',
+                        implode(',', $this->getStatusMessage())), 'status');
+                }
+
+                // If we have an empty region and we've not exceptioned, then we need to record that in our status
+                if ($this->hasEmptyRegion()) {
+                    $this->status = ModuleWidget::$STATUS_INVALID;
+                    $this->pushStatusMessage(__('Empty Region'));
+                }
             }
 
             $this->save([

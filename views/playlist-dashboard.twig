@@ -1,5 +1,6 @@
 {#
- * Copyright (C) 2019 Xibo Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -17,6 +18,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #}
 {% extends "authed.twig" %}
 {% import "forms.twig" as forms %}
@@ -56,6 +58,7 @@
 
                 <p>{{ libraryUpload.maxSizeMessage }}</p>
             </div>
+            {% include "theme-dashboard-message.twig" ignore missing %}
         </div>
     </div>
 
@@ -64,7 +67,7 @@
 {% block javaScript %}
     {# Add common file #}
     {% include "common.twig" %}
-    <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js"></script>
+    <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?{{ version }}"></script>
     <script type="text/javascript">
         // Define some global variables to keep hold of
         let template;

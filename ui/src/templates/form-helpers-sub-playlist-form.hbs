@@ -1,4 +1,4 @@
-<div class="form-group">
+<div class="row row-special">
     <label class="col-sm-1 control-label" for="subPlaylistId[]">{{ title }}</label>
     <div class="col-sm-3">
 
@@ -34,7 +34,7 @@
             <input class="form-control" name="subPlaylistIdSpotLength[]" type="number" value="{{ subPlaylistIdSpotLength }}" />
         </label>
     </div>
-    <div class="col-sm-2">
+    <div class="col-sm-3">
         <select class="form-control" name="subPlaylistIdSpotFill[]">
             <option value="repeat" {{#eq "repeat" subPlaylistIdSpotFill}}selected{{/eq}} data-template-result="{{ repeatHelpText }}">{{ repeatTitle }}</option>
             <option value="fill" {{#eq "fill" subPlaylistIdSpotFill}}selected{{/eq}} data-template-result="{{ fillHelpText }}">{{ fillTitle }}</option>

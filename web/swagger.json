@@ -6412,6 +6412,13 @@
                         "description": "A PHP formatted date format for how the dates in this call should be returned.",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "embed",
+                        "in": "query",
+                        "description": "Should the return embed additional data, options are layoutTags,displayTags and mediaTags",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
