@@ -278,6 +278,15 @@
                     {% set helpText = "Should the update command include dynamic link libraries? Only change this if your updates are failing."|trans %}
                     {{ forms.checkbox("installWithLoadedLinkLibraries", title, displayProfile.getSetting("installWithLoadedLinkLibraries"), helpText) }}
 
+                    {% set title = "Use Multiple Video Decoders"|trans %}
+                    {% set helpText = "Should the Player try to use Multiple Video Decoders when preparing and showing Video content."|trans %}
+                    {% set options = [
+                        { id: "default", value: "Device Default"|trans },
+                        { id: "on", value: "On"|trans },
+                        { id: "off", value: "Off"|trans }
+                    ] %}
+                    {{ forms.dropdown("useMultipleVideoDecoders", "single", title, displayProfile.getSetting("useMultipleVideoDecoders"), options, "id", "value", helpText) }}
+
                 </div>
 
                 {% if commands|length > 0 %}

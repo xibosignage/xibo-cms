@@ -593,7 +593,8 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'webCacheEnabled', 'default' => 0],
                 ['name' => 'serverPort', 'default' => 9696],
                 ['name' => 'installWithLoadedLinkLibraries', 'default' => 1, 'type' => 'checkbox'],
-                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox']
+                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
+                ['name' => 'useMultipleVideoDecoders', 'default' => 'default', 'type' => 'string']
             ],
             'linux' => [
                 ['name' => 'collectInterval', 'default' => 300],
