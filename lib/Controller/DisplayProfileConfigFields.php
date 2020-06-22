@@ -196,8 +196,8 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('forceHttps', $sanitizedParams->getCheckbox('forceHttps'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('useMultipleVideoDecoders')) {
-                    $displayProfile->setSetting('useMultipleVideoDecoders', $this->getSanitizer()->getString('useMultipleVideoDecoders'), $ownConfig, $config);
+                if ($sanitizedParams->hasParam('useMultipleVideoDecoders')) {
+                    $displayProfile->setSetting('useMultipleVideoDecoders', $sanitizedParams->getString('useMultipleVideoDecoders'), $ownConfig, $config);
                 }
 
                 break;
