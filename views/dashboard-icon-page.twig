@@ -24,6 +24,7 @@
 {% import "inline.twig" as inline %}
 
 {% block pageContent %}
+    {% include "theme-dashboard-message.twig" ignore missing %}
     <div id="dashbuttons">
         {% if currentUser.routeViewable("/schedule") %}
             <div class="dashicons">
