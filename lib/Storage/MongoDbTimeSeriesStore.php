@@ -536,57 +536,76 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
         $collection = $this->client->selectCollection($this->config['database'], $this->table);
 
+        $group = [
+            '$group' => [
+                '_id'=> null,
+                'count' => ['$sum' => 1],
+            ]
+        ];
+
+        if (count($match) > 0) {
+            $totalQuery = [
+                $match,
+                $group,
+            ];
+        } else {
+            $totalQuery = [
+                $group,
+            ];
+        }
 
         // Get total
         try {
-            $totalQuery = [
-                $match,
-                [
-                    '$group' => [
-                        '_id'=> null,
-                        'count' => ['$sum' => 1],
-                    ]
-                ],
-            ];
             $totalCursor = $collection->aggregate($totalQuery, ['allowDiskUse' => true]);
 
             $totalCount = $totalCursor->toArray();
             $total = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
 
         } catch (\MongoDB\Exception\RuntimeException $e) {
-            $this->log->error($e->getMessage());
+            $this->log->error('Error: Total Count. '. $e->getMessage());
             throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
         } catch (\Exception $e) {
-            $this->log->error($e->getMessage());
+            $this->log->error('Error: Total Count. '. $e->getMessage());
             throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
         }
 
         try {
-            $query = [
-                $match,
-                [
-                    '$project' => [
-                        'id'=> '$_id',
-                        'type'=> 1,
-                        'start'=> 1,
-                        'end'=> 1,
-                        'layout'=> '$layoutName',
-                        'display'=> '$displayName',
-                        'media'=> '$mediaName',
-                        'tag'=> '$eventName',
-                        'duration'=> '$duration',
-                        'count'=> '$count',
-                        'displayId'=> 1,
-                        'layoutId'=> 1,
-                        'widgetId'=> 1,
-                        'mediaId'=> 1,
-                        'campaignId'=> 1,
-                        'statDate'=> 1,
-                        'engagements'=> 1,
-                        'tagFilter' => 1
-                    ]
-                ],
+
+            $project = [
+                '$project' => [
+                    'id'=> '$_id',
+                    'type'=> 1,
+                    'start'=> 1,
+                    'end'=> 1,
+                    'layout'=> '$layoutName',
+                    'display'=> '$displayName',
+                    'media'=> '$mediaName',
+                    'tag'=> '$eventName',
+                    'duration'=> '$duration',
+                    'count'=> '$count',
+                    'displayId'=> 1,
+                    'layoutId'=> 1,
+                    'widgetId'=> 1,
+                    'mediaId'=> 1,
+                    'campaignId'=> 1,
+                    'statDate'=> 1,
+                    'engagements'=> 1,
+                    'tagFilter' => 1
+                ]
             ];
+
+            if (count($match) > 0) {
+
+                $query = [
+                    $match,
+                    $project,
+                ];
+            } else {
+
+                $query = [
+                    $project,
+                ];
+            }
 
             // Sort by id (statId) - we must sort before we do pagination as mongo stat has descending order indexing on start/end
             $query[]['$sort'] = ['id'=> 1];
@@ -604,10 +623,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $result->totalCount = $total;
 
         } catch (\MongoDB\Exception\RuntimeException $e) {
-            $this->log->error($e->getMessage());
+            $this->log->error('Error: Get total. '. $e->getMessage());
             throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
         } catch (\Exception $e) {
-            $this->log->error($e->getMessage());
+            $this->log->error('Error: Get total. '. $e->getMessage());
             throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
         }
 
