@@ -239,7 +239,7 @@ trait ReportTrait
      * @return string
      * @throws \Xibo\Exception\InvalidArgumentException
      */
-    public function getTemporaryPeriodsTable($fromDt, $toDt, $groupByFilter, $table = 'temp_periods', $customLabel = null)
+    public function getTemporaryPeriodsTable($fromDt, $toDt, $groupByFilter, $table = 'temp_periods', $customLabel = 'Y-m-d H:i:s')
     {
         // My from/to dt represent the entire range we're interested in.
         // we need to generate periods according to our grouping, within that range.
