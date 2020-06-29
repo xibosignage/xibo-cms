@@ -235,7 +235,7 @@ trait ReportTrait
      * @param \Jenssegers\Date\Date $toDt
      * @param string $groupByFilter
      * @param string $table
-     * @param string $customLabel
+     * @param string $customLabel Custom Label
      * @return string
      * @throws \Xibo\Exception\InvalidArgumentException
      */
