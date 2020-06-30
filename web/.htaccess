@@ -8,7 +8,7 @@ RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
 # requests for api authorize
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_URI} ^/authorize/.*$
+RewriteCond %{REQUEST_URI} ^/api/authorize/.*$
 RewriteRule ^ api/authorize/index.php [QSA,L]
 
 # requests that start with api go down to api/index.php
