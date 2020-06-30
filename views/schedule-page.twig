@@ -65,22 +65,22 @@
                     data-trans-campaigns= "{% trans "Campaigns" %}"
                     data-trans-layouts= "{% trans "Layouts" %}"
                     data-allow-clear="true"
+                    data-width="100%"
                     title="{% trans "Layout / Campaign" %}"
-                    data-width="150px"
                     data-placeholder="{% trans "Layout / Campaign" %}"
+                    data-dropdownAutoWidth
                     >
                 </select>
             </div>
 
             <div class="xibo-calendar-controls dropdown pull-right">
                 <select id="DisplayList" class="form-control" name="displayGroupIds[]"
-                        data-width="150px"
                         data-placeholder="{% trans "Displays" %}"
                         data-search-url="{{ url_for("schedule.displayGroup.search") }}"
                         data-trans-groups="{% trans "Groups" %}"
                         data-trans-display="{% trans "Display" %}"
                         data-allow-clear="true"
-                        data-width="150px"
+                        data-width="100%"
                         data-placeholder="{% trans "Select Displays" %}" multiple>
                     {% for option in displayGroups %}
                         {% set itemOptionId = attribute(option, "displayGroupId") %}
@@ -618,19 +618,22 @@
                                     %>
                                     <div id="tab_<%= displayGroup['id'] %>" class="tab-pane fade in <%= isActive %> container-fluid">
                                         <% if(typeof resultItem.events != 'undefined') { %>
-                                            <div class="col-xs-6">
-                                                <%= cal._displaygroups(resultItem.events, resultItem.displayGroups) %>
-                                            </div> 
-                                            <div class="col-xs-6">
-                                                <%= cal._campaigns(resultItem.events, resultItem.campaigns) %>
+                                            <div class="col-lg-9 agenda-col">
+                                                <%= cal._layouts(resultItem.events, resultItem.layouts, 1) %>
+                                                <%= cal._layouts(resultItem.events, resultItem.layouts, 3) %>
+                                                <%= cal._layouts(resultItem.events, resultItem.layouts, 4) %>
+                                                <%= cal._layouts(resultItem.events, resultItem.layouts, 5) %>
                                             </div>
-
-                                            <hr>
-                                            
-                                            <%= cal._layouts(resultItem.events, resultItem.layouts, 1) %>
-                                            <%= cal._layouts(resultItem.events, resultItem.layouts, 3) %>
-                                            <%= cal._layouts(resultItem.events, resultItem.layouts, 4) %>
-                                            <%= cal._layouts(resultItem.events, resultItem.layouts, 5) %>
+                                            <div class="col-lg-3 agenda-col">
+                                                <div class="row">
+                                                    <div class="col-xs-6 col-lg-12 agenda-col">
+                                                        <%= cal._displaygroups(resultItem.events, resultItem.displayGroups) %>
+                                                    </div> 
+                                                    <div class="col-xs-6 col-lg-12 agenda-col">
+                                                        <%= cal._campaigns(resultItem.events, resultItem.campaigns) %>
+                                                    </div>
+                                                </div>
+                                            </div>
                                          <% } %>
                                     </div>
                                 <% } %>
@@ -729,7 +732,7 @@
         </script>
 
         <script type="text/x-handlebars-template" id="calendar-template-agenda-displaygroups">
-            <table id="displaygroups" class="table agenda-table" data-type="displaygroups">
+            <table id="displaygroups" class="table agenda-table" data-type="displaygroups"  width="100%">
                 {% endverbatim %}
                 <thead>
                     <tr class="table-title">
@@ -760,7 +763,7 @@
         </script>
         
         <script type="text/x-handlebars-template" id="calendar-template-agenda-campaigns">
-            <table id="campaigns" class="table agenda-table" data-type="campaigns">
+            <table id="campaigns" class="table agenda-table" data-type="campaigns"  width="100%">
                 {% endverbatim %}
                 <thead>
                     <tr class="table-title">
@@ -992,6 +995,7 @@
             let $displaySelect = $('#DisplayList', dialog);
             $displaySelect.select2({
                 dropdownParent: $(dialog),
+                dropdownAutoWidth: true,
                 ajax: {
                     url: $displaySelect.data("searchUrl"),
                     dataType: "json",

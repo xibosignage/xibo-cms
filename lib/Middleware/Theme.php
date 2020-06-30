@@ -105,7 +105,6 @@ class Theme implements Middleware
         $settings['DATE_ONLY_FORMAT_JS'] = DateFormatHelper::convertPhpToMomentFormat($settings['DATE_ONLY_FORMAT']);
         $settings['DATE_ONLY_FORMAT_JALALI_JS'] = DateFormatHelper::convertMomentToJalaliFormat($settings['DATE_ONLY_FORMAT_JS']);
         $settings['systemDateFormat'] = DateFormatHelper::convertPhpToMomentFormat(DateFormatHelper::getSystemFormat());
-        $settings['systemDateOnlyFormat'] = DateFormatHelper::convertPhpToMomentFormat(DateFormatHelper::extractDateOnlyFormat(DateFormatHelper::getSystemFormat()));
         $settings['systemTimeFormat'] = DateFormatHelper::convertPhpToMomentFormat(DateFormatHelper::extractTimeFormat(DateFormatHelper::getSystemFormat()));
 
         $routeContext = RouteContext::fromRequest($request);

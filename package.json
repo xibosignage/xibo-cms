@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "cypress:open": "cypress open",
-    "build": "webpack"
+    "build": "webpack --mode=development",
+    "publish": "webpack --mode=production"
   },
   "directories": {
     "lib": "lib",

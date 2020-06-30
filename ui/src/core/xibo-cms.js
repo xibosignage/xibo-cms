@@ -276,22 +276,25 @@ function XiboInitialise(scope) {
     // Date time controls
     $(scope + ' .datePicker:not(.datePickerHelper)').each(function() {
         if(calendarType == 'Jalali') {
-            initDatePicker($(this), systemDateOnlyFormat, 
+            initDatePicker(
+                $(this),
+                systemDateFormat,
+                jsDateOnlyFormat,
                 {
                     altFieldFormatter: function(unixTime) {
                         let newDate = moment.unix(unixTime / 1000);
                         newDate.set('hour', 0);
                         newDate.set('minute', 0);
                         newDate.set('second', 0);
-                        return newDate.format(systemDateOnlyFormat);
+                        return newDate.format(systemDateFormat);
                     }
                 }
             );
         } else {
-            initDatePicker($(this), systemDateOnlyFormat,
-                {
-                    altFormat: jsDateOnlyFormat
-                }
+            initDatePicker(
+                $(this),
+                systemDateFormat,
+                jsDateOnlyFormat
             );
         }
     });
@@ -300,56 +303,76 @@ function XiboInitialise(scope) {
         const enableSeconds = dateFormat.includes('s');
 
         if(calendarType == 'Jalali') {
-            initDatePicker($(this), systemDateFormat, {
-                timePicker: {
-                    enabled: true,
-                    second: {
-                        enabled: enableSeconds
+            initDatePicker(
+                $(this),
+                systemDateFormat, 
+                jsDateFormat, 
+                {
+                    timePicker: {
+                        enabled: true,
+                        second: {
+                            enabled: enableSeconds
+                        }
                     }
                 }
-            });
+            );
         } else {
-            initDatePicker($(this), systemDateFormat, {
-                enableTime: true,
-                enableSeconds: enableSeconds,
-                altFormat: jsDateFormat
-            });
+            initDatePicker(
+                $(this),
+                systemDateFormat,
+                jsDateFormat,
+                {
+                    enableTime: true,
+                    enableSeconds: enableSeconds,
+                    altFormat: jsDateFormat
+                }
+            );
         }
     });
 
     $(scope + ' .dateMonthPicker:not(.datePickerHelper)').each(function() {
         if(calendarType == 'Jalali') {
             const linkedFormat = $(this).data().linkFormat;
-            initDatePicker($(this), systemDateOnlyFormat, {
-                format: "MMMM YYYY",
-                viewMode: 'month',
-                dayPicker: {
-                    enabled: false
-                },
-                altFieldFormatter: function(unixTime) {
-                    let newDate = moment.unix(unixTime / 1000);
-                    newDate.set('date', 1);
-                    newDate.set('hour', 0);
-                    newDate.set('minute', 0);
-                    newDate.set('second', 0);
-
-                    return newDate.format(systemDateOnlyFormat);
-                }
-            });
-        } else {
-            initDatePicker($(this), systemDateOnlyFormat, {
-                plugins: [new flatpickrMonthSelectPlugin({
-                    shorthand: false,
-                    dateFormat: systemDateOnlyFormat,
-                    altFormat: 'MMMM Y',
-                    parseDate: (datestr, format) => {
-                        return moment(datestr, format, true).toDate();
+            initDatePicker(
+                $(this),
+                systemDateFormat,
+                jsDateFormat,
+                {
+                    format: "MMMM YYYY",
+                    viewMode: 'month',
+                    dayPicker: {
+                        enabled: false
                     },
-                    formatDate: (date, format, locale) => {
-                        return moment(date).format(format);
+                    altFieldFormatter: function(unixTime) {
+                        let newDate = moment.unix(unixTime / 1000);
+                        newDate.set('date', 1);
+                        newDate.set('hour', 0);
+                        newDate.set('minute', 0);
+                        newDate.set('second', 0);
+
+                        return newDate.format(systemDateFormat);
                     }
-                })]
-            });
+                }
+            );
+        } else {
+            initDatePicker(
+                $(this),
+                systemDateFormat,
+                jsDateFormat,
+                {
+                    plugins: [new flatpickrMonthSelectPlugin({
+                        shorthand: false,
+                        dateFormat: systemDateFormat,
+                        altFormat: 'MMMM Y',
+                        parseDate: (datestr, format) => {
+                            return moment(datestr, format, true).toDate();
+                        },
+                        formatDate: (date, format, locale) => {
+                            return moment(date).format(format);
+                        }
+                    })]
+                }
+            );
         }
     });
 
@@ -357,23 +380,31 @@ function XiboInitialise(scope) {
         const enableSeconds = dateFormat.includes('s');
 
         if(calendarType == 'Jalali') {
-            initDatePicker($(this), systemTimeFormat, {
-                onlyTimePicker: true,
-                format: jsTimeFormat,
-                timePicker: {
-                    second: {
-                        enabled: enableSeconds
-                    }
-                },
-                altFieldFormatter: function(unixTime) {
-                    let newDate = moment.unix(unixTime / 1000);
-                    newDate.set('second', 0);
+            initDatePicker(
+                $(this),
+                systemTimeFormat,
+                jsTimeFormat,
+                {
+                    onlyTimePicker: true,
+                    format: jsTimeFormat,
+                    timePicker: {
+                        second: {
+                            enabled: enableSeconds
+                        }
+                    },
+                    altFieldFormatter: function(unixTime) {
+                        let newDate = moment.unix(unixTime / 1000);
+                        newDate.set('second', 0);
 
-                    return newDate.format(systemTimeFormat);
+                        return newDate.format(systemTimeFormat);
+                    }
                 }
-            });
+            );
         } else {
-            initDatePicker($(this), systemTimeFormat, 
+            initDatePicker(
+                $(this),
+                systemTimeFormat,
+                jsTimeFormat,
                 {
                     enableTime: true,
                     noCalendar: true,
@@ -1966,10 +1997,10 @@ function userPreferencesFormSubmit() {
 }
 
 // Initialise date time picker
-function initDatePicker($element, dateTimeFormat, options = {}, onChangeCallback = null, clearButtonActive = true, onClearCallback = null) {
+function initDatePicker($element, baseFormat, displayFormat, options = {}, onChangeCallback = null, clearButtonActive = true, onClearCallback = null) {
     // Check for date format
-    if(dateTimeFormat == undefined) {
-        console.error('dateTimeFormat needs to be defined!');
+    if(baseFormat == undefined || displayFormat == undefined) {
+        console.error('baseFormat and displayFormat needs to be defined!');
         return false;
     }
 
@@ -1989,7 +2020,7 @@ function initDatePicker($element, dateTimeFormat, options = {}, onChangeCallback
             initialValue: ((initialValue != undefined) ? initialValue : false),
             altField: '#' + $element.attr('id'),
             altFieldFormatter: function(unixTime) {
-                return (moment.unix(unixTime / 1000).format(dateTimeFormat));
+                return (moment.unix(unixTime / 1000).format(baseFormat));
             },
             onSelect: function() {
                 // Trigger change after close
@@ -2010,7 +2041,8 @@ function initDatePicker($element, dateTimeFormat, options = {}, onChangeCallback
             allowInput: false,
             defaultDate: ((initialValue != undefined) ? initialValue : null),
             altInputClass: 'datePickerHelper ' + $element.attr('class'),
-            dateFormat: dateTimeFormat,
+            altFormat: displayFormat,
+            dateFormat: baseFormat,
             locale: language,
             parseDate: (datestr, format) => {
                 return moment(datestr, format, true).toDate();

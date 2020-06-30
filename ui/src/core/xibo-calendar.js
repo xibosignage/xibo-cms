@@ -81,8 +81,7 @@ $(document).ready(function() {
                     newDate.set('hour', 0);
                     newDate.set('minute', 0);
                     newDate.set('second', 0);
-
-                    return newDate.format(systemDateOnlyFormat);
+                    return newDate.format(jsDateFormat);
                 },
                 onSelect: function() {},
                 onHide: function() {
@@ -101,7 +100,8 @@ $(document).ready(function() {
         // Create the date input shortcut
         initDatePicker(
             $('#dateInput'), 
-            systemDateOnlyFormat, 
+            systemDateFormat, 
+            jsDateOnlyFormat, 
             pickerOptions, 
             navigateToCalendarDate,
             false // clear button
@@ -484,7 +484,7 @@ $(document).ready(function() {
                 // Sync the date of the date picker to the current calendar date
                 if (this.options.position.start != undefined && this.options.position.start != "") {
                     // Update timepicker
-                    updateDatePicker($('#dateInput'), moment.unix(this.options.position.start.getTime() / 1000).format(systemDateOnlyFormat), systemDateOnlyFormat);
+                    updateDatePicker($('#dateInput'), moment.unix(this.options.position.start.getTime() / 1000).format(jsDateOnlyFormat), jsDateOnlyFormat);
                 }
                 
                 if (typeof this.getTitle === "function")
@@ -520,13 +520,12 @@ $(document).ready(function() {
                 return;
             
             // If the click was in a layout table row create the breadcrumb trail
-            if ($self.closest('table').prop('id') == 'layouts' || $self.closest('table').prop('id') == 'overlays'){
+            if ($self.closest('table').data('type') == 'layouts'){
                 $('.cal-event-breadcrumb-trail').show();
-                //agendaCreateBreadcrumbTrail($self.data("id"), events);
                 
                 // Clean div content
                 $('.cal-event-breadcrumb-trail #content').html('');
-                
+
                 // Get the template and render it on the div
                 $('.cal-event-breadcrumb-trail #content').append(calendar._breadcrumbTrail($self.data("elemId"), events, $self.data("eventId")));
                 
@@ -1399,6 +1398,8 @@ const filterEventsByLocation = function(events) {
             if(test.length > 0) {
                 eventsResult.push(event);
             }
+        } else {
+            eventsResult.push(event);
         }
     }
 

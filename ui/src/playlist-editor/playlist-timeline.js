@@ -93,9 +93,12 @@ PlaylistTimeline.prototype.render = function() {
 
     // Sortable widgets
     this.DOMObject.find('#timeline-container').sortable({
+        axis: 'y',
+        items: '.playlist-widget',
         start: function(event, ui) {
             pE.timeline.DOMObject.find('#unsaved').hide();
             saveOrderFunc.cancel();
+            pE.clearTemporaryData();
         },
         stop: function(event, ui) {
             // Mark target as "to be saved"

@@ -43,7 +43,10 @@ const Topbar = require('../core/topbar.js');
 const Common = require('../core/common.js');
 
 // Include CSS
+require('../style/common.scss');
 require('../style/designer.scss');
+require('../style/toolbar.scss');
+require('../style/topbar.scss');
 
 // Create layout designer namespace (lD)
 window.lD = {
