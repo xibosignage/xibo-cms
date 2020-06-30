@@ -73,8 +73,8 @@
 
             <p>{% trans "Please provide your credentials" %}</p>
 
-            <input id="username" class="form-control input-block-level" name="username" type="text" placeholder="{% trans "User" %}" autofocus>
-            <input id="password" class="form-control input-block-level" name="password" type="password" placeholder="{% trans "Password" %}">
+            <input id="username" class="form-control input-block-level" name="username" type="text" placeholder="{% trans "User" %}" autofocus autocomplete="username">
+            <input id="password" class="form-control input-block-level" name="password" type="password" placeholder="{% trans "Password" %}" autocomplete="current-password">
 
             {% if flash.login_message %}
             <div class="alert alert-danger">{{ flash.login_message }}</div>
