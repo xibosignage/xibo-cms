@@ -79,6 +79,16 @@ class TimeSeriesMongoDbResults implements TimeSeriesResultsInterface
         return isset($row['engagements']) ? $row['engagements'] : [];
     }
 
+    /** @inheritDoc */
+    public function getTagFilterFromRow($row)
+    {
+        return isset($row['tagFilter']) ? $row['tagFilter'] : [
+            'dg' => [],
+            'layout' => [],
+            'media' => []
+        ];
+    }
+
     /**
      * Gets an iterator for this result set
      * @return \IteratorIterator

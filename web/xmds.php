@@ -120,12 +120,16 @@ if (isset($_GET['file'])) {
     // Check nonce, output appropriate headers, log bandwidth and stop.
     try {
         /** @var \Xibo\Entity\RequiredFile $file */
-        if (!isset($_REQUEST['displayId']) || !isset($_REQUEST['type']) || !isset($_REQUEST['itemId']))
+        if (!isset($_REQUEST['displayId']) || !isset($_REQUEST['type']) || !isset($_REQUEST['itemId'])) {
             throw new NotFoundException(__('Missing params'));
+        }
+
+        $displayId = intval($_REQUEST['displayId']);
+        $itemId = intval($_REQUEST['itemId']);
 
         // Get the player nonce from the cache
         /** @var \Stash\Item $nonce */
-        $nonce = $container->get('pool')->getItem('/display/nonce/' . $_REQUEST['displayId']);
+        $nonce = $container->get('pool')->getItem('/display/nonce/' . $displayId);
 
         if ($nonce->isMiss()) {
             throw new NotFoundException(__('No nonce cache'));
@@ -138,15 +142,32 @@ if (isset($_GET['file'])) {
 
         switch ($_REQUEST['type']) {
             case 'L':
-                $file = $container->get('requiredFileFactory')->getByDisplayAndLayout($_REQUEST['displayId'], $_REQUEST['itemId']);
+                $file = $container->get('requiredFileFactory')->getByDisplayAndLayout($displayId, $itemId);
                 break;
 
             case 'M':
-                $file = $container->get('requiredFileFactory')->getByDisplayAndMedia($_REQUEST['displayId'], $_REQUEST['itemId']);
+                $file = $container->get('requiredFileFactory')->getByDisplayAndMedia($displayId, $itemId);
                 break;
 
             default:
                 throw new NotFoundException(__('Unknown type'));
+        }
+
+        // Bandwidth
+        // ---------
+        // We don't check bandwidth allowances on DELETE.
+        if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
+            // Check that we've not used all of our bandwidth already (if we have an allowance)
+            if ($container->get('bandwidthFactory')->isBandwidthExceeded($container->get('configService')->getSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB'))) {
+                throw new \Xibo\Support\Exception\InstanceSuspendedException('Bandwidth Exceeded');
+            }
+
+            // Check the display specific limit next.
+            $display = $container->get('displayFactory')->getById($displayId);
+            $usage = 0;
+            if ($container->get('bandwidthFactory')->isBandwidthExceeded($display->bandwidthLimit, $usage, $displayId)) {
+                throw new \Xibo\Support\Exception\InstanceSuspendedException('Bandwidth Exceeded');
+            }
         }
 
         // Only log bandwidth under certain conditions
@@ -162,15 +183,10 @@ if (isset($_GET['file'])) {
             // Log bandwidth for the file being requested
             $container->get('logService')->info('Delete request for ' . $file->path);
 
-            // Log bandwith here if we are a CDN
+            // Log bandwidth here if we are a CDN
             $logBandwidth = ($container->get('configService')->getSetting('CDN_URL') != '');
 
         } else {
-            // Check that we've not used all of our bandwidth already (if we have an allowance)
-            if ($container->get('bandwidthFactory')->isBandwidthExceeded($container->get('configService')->GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB'))) {
-                throw new \Xibo\Support\Exception\InstanceSuspendedException('Bandwidth Exceeded');
-            }
-
             // Log bandwidth here if we are NOT a CDN
             $logBandwidth = ($container->get('configService')->getSetting('CDN_URL') == '');
 
@@ -203,6 +219,9 @@ if (isset($_GET['file'])) {
             $container->get('logService')->notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404. ' . $e->getMessage());
             // 404
             header('HTTP/1.0 404 Not Found');
+        } else if ($e instanceof \Xibo\Support\Exception\InstanceSuspendedException) {
+            $container->get('logService')->debug('Bandwidth exceeded');
+            header('HTTP/1.0 403 Forbidden');
         }
         else {
             $container->get('logService')->error('Unknown Error: ' . $e->getMessage());

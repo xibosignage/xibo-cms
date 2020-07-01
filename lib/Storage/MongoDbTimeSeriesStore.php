@@ -25,9 +25,6 @@ namespace Xibo\Storage;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
-use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -35,6 +32,9 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class MongoDbTimeSeriesStore
@@ -480,33 +480,22 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $match['$match']['displayId'] = [ '$in' => $displayIds ];
         }
 
-        // Campaign selection
-        // ------------------
-        // Get all the layouts of that campaign.
-        // Then get all the campaigns of the layouts
-        $campaignIds = [];
+        // Campaign Filter
+        // ---------------
+        // Use the Layout Factory to get all Layouts linked to the provided CampaignId
         if ($campaignId != null) {
+            $campaignIds = [];
             try {
-                $campaign = $this->campaignFactory->getById($campaignId);
-                $layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId);
+                $layouts = $this->layoutFactory->getByCampaignId($campaignId, false);
                 if (count($layouts) > 0) {
                     foreach ($layouts as $layout) {
                         $campaignIds[] = $layout->campaignId;
                     }
-                }
-            } catch (NotFoundException $notFoundException) {
-                $this->log->error('Empty campaignIds.');
-            }
-        }
 
-        // Campaign Filter
-        if ($campaignId != null) {
-            if (count($campaignIds) != 0) {
-                $match['$match']['campaignId'] = ['$in' => $campaignIds];
-            } else {
-                // we wont get any match as we store layoutspecific campaignid in stat
-                $match['$match']['campaignId'] = ['$eq' => $campaignId];
-            }
+                    // Add to our match
+                    $match['$match']['campaignId'] = ['$in' => $campaignIds];
+                }
+            } catch (NotFoundException $ignored) {}
         }
 
         // Type Filter
@@ -585,8 +574,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                         'layoutId'=> 1,
                         'widgetId'=> 1,
                         'mediaId'=> 1,
+                        'campaignId'=> 1,
                         'statDate'=> 1,
                         'engagements'=> 1,
+                        'tagFilter' => 1
                     ]
                 ],
             ];
