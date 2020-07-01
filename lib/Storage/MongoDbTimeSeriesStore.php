@@ -468,6 +468,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             $toDt = new UTCDateTime($toDt->format('U')*1000);
             $match['$match']['start'] = [ '$lte' => $toDt];
+
+        } else if (($fromDt != null) && ($toDt == null)) {
+            $fromDt = new UTCDateTime($fromDt->format('U')*1000);
+            $match['$match']['start'] = [ '$gte' => $fromDt];
         }
 
         // statDate Filter
