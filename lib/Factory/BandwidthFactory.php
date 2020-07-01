@@ -106,7 +106,7 @@ class BandwidthFactory extends BaseFactory
 
             $usage = $sth->fetchColumn(0);
 
-            $this->getLog()->debug('Checking bandwidth usage against allowance: ' . ByteFormatter::format($limit * 1024) . '. ' . ByteFormatter::format($usage));
+            $this->getLog()->debug(sprintf('Checking bandwidth usage %s against allowance %s ' , ByteFormatter::format($usage), ByteFormatter::format($limit * 1024)));
 
             return ($usage >= ($limit * 1024));
 
