@@ -282,6 +282,8 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         // fromDt/toDt Filter
         if (($fromDt != null) && ($toDt != null)) {
             $body .= ' AND stat.end > '. $fromDt->format('U') . ' AND stat.start <= '. $toDt->format('U');
+        } else if (($fromDt != null) && empty($toDt)) {
+            $body .= ' AND stat.start >= '. $fromDt->format('U');
         }
 
         // statDate Filter
