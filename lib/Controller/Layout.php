@@ -1809,13 +1809,24 @@ class Layout extends Base
         // Copy the media on the layout and change the assignments.
         // https://github.com/xibosignage/xibo/issues/1283
         if ($sanitizedParams->getCheckbox('copyMediaFiles') == 1) {
+            // track which Media Id we already copied
+            $copiedMediaIds = [];
             foreach ($layout->getAllWidgets() as $widget) {
                 // Copy the media
                     if ( $widget->type === 'image' || $widget->type === 'video' || $widget->type === 'pdf' || $widget->type === 'powerpoint' || $widget->type === 'audio' ) {
                         $oldMedia = $this->mediaFactory->getById($widget->getPrimaryMediaId());
-                        $media = clone $oldMedia;
-                        $media->setOwner($this->getUser()->userId);
-                        $media->save();
+
+                        // check if we already cloned this media, if not, do it and add it the array
+                        if (!array_key_exists($oldMedia->mediaId, $copiedMediaIds)) {
+                            $media = clone $oldMedia;
+                            $media->setOwner($this->getUser()->userId);
+                            $media->save();
+                            $copiedMediaIds[$oldMedia->mediaId] = $media->mediaId;
+                        } else {
+                            // if we already cloned that media, look it up and assign to Widget.
+                            $mediaId = $copiedMediaIds[$oldMedia->mediaId];
+                            $media = $this->mediaFactory->getById($mediaId);
+                        }
 
                         $widget->unassignMedia($oldMedia->mediaId);
                         $widget->assignMedia($media->mediaId);
@@ -1828,9 +1839,17 @@ class Layout extends Base
             // Also handle the background image, if there is one
             if ($layout->backgroundImageId != 0) {
                 $oldMedia = $this->mediaFactory->getById($layout->backgroundImageId);
-                $media = clone $oldMedia;
-                $media->setOwner($this->getUser()->userId);
-                $media->save();
+                // check if we already cloned this media, if not, do it and add it the array
+                if (!array_key_exists($oldMedia->mediaId, $copiedMediaIds)) {
+                    $media = clone $oldMedia;
+                    $media->setOwner($this->getUser()->userId);
+                    $media->save();
+                    $copiedMediaIds[$oldMedia->mediaId] = $media->mediaId;
+                } else {
+                    // if we already cloned that media, look it up and assign to Layout backgroundImage.
+                    $mediaId = $copiedMediaIds[$oldMedia->mediaId];
+                    $media = $this->mediaFactory->getById($mediaId);
+                }
 
                 $layout->backgroundImageId = $media->mediaId;
             }

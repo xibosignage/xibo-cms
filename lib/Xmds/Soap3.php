@@ -156,7 +156,7 @@ class Soap3 extends Soap
 
         // Authenticate this request...
         if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Receiver', "This display client is not licensed");
+            throw new \SoapFault('Receiver', "This Display is not authorised.");
         }
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit

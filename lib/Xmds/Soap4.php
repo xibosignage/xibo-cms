@@ -112,7 +112,7 @@ class Soap4 extends Soap
 
             // Determine if we are licensed or not
             if ($display->licensed == 0) {
-                // It is not licensed
+                // It is not authorised
                 $displayElement->setAttribute('status', 2);
                 $displayElement->setAttribute('code', 'WAITING');
                 $displayElement->setAttribute('message', 'Display is awaiting licensing approval from an Administrator.');
@@ -337,7 +337,7 @@ class Soap4 extends Soap
 
         // Authenticate this request...
         if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Receiver', "This display client is not licensed");
+            throw new \SoapFault('Receiver', "This Display is not authorised.");
         }
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
@@ -522,7 +522,7 @@ class Soap4 extends Soap
 
         // Auth this request...
         if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Receiver', 'This display client is not licensed');
+            throw new \SoapFault('Receiver', 'This Display is not authorised.');
         }
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
@@ -661,7 +661,7 @@ class Soap4 extends Soap
 
         // Auth this request...
         if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Receiver', 'This display client is not licensed');
+            throw new \SoapFault('Receiver', 'This Display is not authorised.');
         }
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit

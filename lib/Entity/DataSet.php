@@ -552,7 +552,8 @@ class DataSet implements \JsonSerializable
             // Substitute in
 
             // handle case where lower limit is set to > 0 and upper limit to 0 https://github.com/xibosignage/xibo/issues/2187
-            if ($start != 0 && $size == 0) {
+            // it is with <= 0 because in some Widgets we calculate the size as upper - lower, https://github.com/xibosignage/xibo/issues/2263.
+            if ($start != 0 && $size <= 0) {
                 $size = PHP_INT_MAX;
             }
 

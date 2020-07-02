@@ -1256,7 +1256,7 @@ class Stats extends Base
 
         foreach ($this->store->select($sql, $params) as $row) {
             $sanitizedRow = $this->getSanitizer($row);
-            $this->getLog()->debug('STATS TIMEDISC ROW IS ' . json_encode($row));
+
             $entry = [];
             $entry['displayId'] = $sanitizedRow->getInt(('displayId'));
             $entry['display'] = $sanitizedRow->getString(('display'));
