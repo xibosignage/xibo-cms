@@ -37,6 +37,11 @@ if (!String.prototype.endsWith) {
     };
 }
 
+// Configure a global error handler for data tables
+$.fn.dataTable.ext.errMode = function (settings, helpPage, message) {
+    console.log(message);
+};
+
 // Set up the light boxes
 $(document).delegate('*[data-toggle="lightbox"]', 'click', function(event) {
     event.preventDefault();

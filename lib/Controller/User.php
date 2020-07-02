@@ -380,7 +380,8 @@ class User extends Base
                 $user->buttons[] = [
                     'id' => 'user_button_page_security',
                     'url' => $this->urlFor($request,'group.acl.form', ['id' => $user->groupId, 'userId' => $user->userId]),
-                    'text' => __('Page Security')
+                    'text' => __('Features'),
+                    'title' => __('Turn Features on/off for this User')
                 ];
             }
         }

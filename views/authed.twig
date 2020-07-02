@@ -127,14 +127,14 @@
                     <li class="divider"></li>
                     {{else}}
                         {{#if external}}
-                        <li class="{{ id }}"><a tabindex="-1" target="{{ linkType }}" href="{{ url }}">{{ text }}</a></li>
+                        <li class="{{ id }}"><a tabindex="-1" target="{{ linkType }}" href="{{ url }}"{{#if title}} title="{{title}}"{{/if}}>{{ text }}</a></li>
                         {{/if}}
 
                         {{#unless external}}
                             <li {{#each dataAttributes}}
                                 data-{{ name }}="{{ value }}"
                                 {{/each}}
-                                class="{{#if class}}{{ class }}{{else}}XiboFormButton{{/if}} {{ id }}" href="{{ url }}"><a tabindex="-1" href="#">{{ text }}</a>
+                                class="{{#if class}}{{ class }}{{else}}XiboFormButton{{/if}} {{ id }}" href="{{ url }}"{{#if title}} title="{{title}}"{{/if}}><a tabindex="-1" href="#">{{ text }}</a>
                             </li>
                         {{/unless}}
                     {{/if}}
