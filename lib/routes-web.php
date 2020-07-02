@@ -42,6 +42,12 @@ $app->get('/', function (Request $request, Response $response) use ($app) {
     /** @var \Xibo\Entity\Page $page */
     $page = $app->getContainer()->get('pageFactory')->getById($user->homePageId);
 
+    // Check to see if this user has permission for this page, and if not show a meaningful error telling them what
+    // has happened.
+    if (!$user->checkViewable($page)) {
+        throw new \Xibo\Support\Exception\AccessDeniedException(__('You do not have permission for your homepage, please contact your administrator'));
+    }
+
     return $response->withRedirect($routeParser->urlFor($page->getName() . '.view'));
 
 })->setName('home');

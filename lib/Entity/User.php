@@ -1211,9 +1211,8 @@ class User implements \JsonSerializable, UserEntityInterface
                 // Load all viewable pages into the permissions cache
                 $this->pagePermissionCache = $this->pageFactory->query();
             }
-        }
-        catch (\PDOException $e) {
-            $this->getLog()->info('SQL Error getting permissions: %s', $e->getMessage());
+        } catch (\PDOException $e) {
+            $this->getLog()->info('SQL Error getting permissions: ' . $e->getMessage());
 
             return false;
         }

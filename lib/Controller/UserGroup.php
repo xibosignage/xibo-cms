@@ -158,7 +158,7 @@ class UserGroup extends Base
                 continue;
 
             // we only want to show certain buttons, depending on the user logged in
-            if ($this->isEditable($group, $request)) {
+            if ($this->isEditable($group)) {
                 // Edit
                 $group->buttons[] = array(
                     'id' => 'usergroup_button_edit',
@@ -198,7 +198,8 @@ class UserGroup extends Base
                     $group->buttons[] = array(
                         'id' => 'usergroup_button_page_security',
                         'url' => $this->urlFor($request,'group.acl.form', ['id' => $group->groupId]),
-                        'text' => __('Page Security')
+                        'text' => __('Features'),
+                        'title' => __('Turn Features on/off for this User')
                     );
                 }
             }
@@ -246,7 +247,7 @@ class UserGroup extends Base
     {
         $group = $this->userGroupFactory->getById($id);
 
-        if (!$this->isEditable($group, $request)) {
+        if (!$this->isEditable($group)) {
             throw new AccessDeniedException();
         }
 
@@ -276,7 +277,7 @@ class UserGroup extends Base
     {
         $group = $this->userGroupFactory->getById($id);
 
-        if (!$this->isEditable($group, $request)) {
+        if (!$this->isEditable($group)) {
             throw new AccessDeniedException();
         }
 
@@ -609,7 +610,6 @@ class UserGroup extends Base
         }
 
         $data = [
-            'title' => sprintf(__('ACL for %s'), $group->group),
             'groupId' => $id,
             'group' => $group->group,
             'permissions' => $checkboxes,
@@ -728,7 +728,7 @@ class UserGroup extends Base
     {
         $group = $this->userGroupFactory->getById($id);
 
-        if (!$this->isEditable($group, $request)) {
+        if (!$this->isEditable($group)) {
             throw new AccessDeniedException();
         }
 
@@ -824,11 +824,11 @@ class UserGroup extends Base
         $group = $this->userGroupFactory->getById($id);
         $group->load();
 
-        if (!$this->isEditable($group, $request)) {
+        if (!$this->isEditable($group)) {
             throw new AccessDeniedException();
         }
 
-        $users = $sanitizedPaarams->getIntArray('userId');
+        $users = $sanitizedPaarams->getIntArray('userId', ['default' => []]);
 
         foreach ($users as $userId) {
 
@@ -845,7 +845,7 @@ class UserGroup extends Base
         }
 
         // Check to see if unassign has been provided.
-        $users = $sanitizedPaarams->getIntArray('unassignUserId');
+        $users = $sanitizedPaarams->getIntArray('unassignUserId', ['default' => []]);
 
         foreach ($users as $userId) {
 
@@ -919,7 +919,7 @@ class UserGroup extends Base
         $group = $this->userGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->isEditable($group, $request)) {
+        if (!$this->isEditable($group)) {
             throw new AccessDeniedException();
         }
 
@@ -955,7 +955,7 @@ class UserGroup extends Base
     {
         $group = $this->userGroupFactory->getById($id);
 
-        if (!$this->isEditable($group, $request)) {
+        if (!$this->isEditable($group)) {
             throw new AccessDeniedException();
         }
 
@@ -1024,7 +1024,7 @@ class UserGroup extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check we have permission to view this group
-        if (!$this->isEditable($group, $request)) {
+        if (!$this->isEditable($group)) {
             throw new AccessDeniedException();
         }
 

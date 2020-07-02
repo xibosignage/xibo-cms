@@ -93,8 +93,10 @@
                         ] %}
 
                         {% set title %}{% trans "Initial User Group" %}{% endset %}
-                        {% set helpText %}{% trans "What is the initial user group for this user?" %}{% endset %}
+                        {% set helpText %}{% trans "Select a User Group for this User so that they get access to the parts of the application they need." %}{% endset %}
                         {{ forms.dropdown("groupId", "single", title, options.defaultGroupId, options.groups, "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
+
+                        {{ forms.message("User Groups are an easy way to configure a set of features and permissions which can be applied to multiple users. After adding a User they can be assigned to multiple Groups or have individual permissions assigned to them directly."|trans, "well") }}
                     </div>
                     <div class="tab-pane" id="reference">
                         {% set title %}{% trans "First Name" %}{% endset %}
