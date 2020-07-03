@@ -1658,7 +1658,11 @@ class Layout extends Base
             throw new AccessDeniedException();
             
         // Edits always happen on Drafts, get the draft Layout using the Parent Layout ID
-        $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
+        if ($layout->schemaVersion < 2) {
+            $resolution = $this->resolutionFactory->getByDesignerDimensions($layout->width, $layout->height);
+        } else {
+            $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
+        }
 
         // If we have a background image, output it
         $backgroundId = $sanitizedParams->getInt('backgroundOverride', ['default' => $layout->backgroundImageId]);
