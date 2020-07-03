@@ -472,6 +472,261 @@ function XiboInitialise(scope) {
     $(scope + " .tags-with-value").each(function() {
         tagsWithValues($(this).closest("form").attr('id'));
     });
+
+    $(scope + " .XiboCommand").each(function() {
+        // Get main container
+        const $mainContainer = $(this);
+
+        // Get input and its value
+        const $input = $mainContainer.find('input');
+
+        // Hide main input
+        $input.hide();
+
+        const commandTypes = {
+            'freetext': 'freeText',
+            'tpv_led': 'philips',
+            'rs232': 'RS232',
+            'intent': 'Android Intents'
+        };
+
+        // Scope functions
+        const changeTypeTemplate = function(type) {
+            let initVal = $input.val();
+            let parsedVal = parseValue($input.val());
+            
+            const $targetContainer = $mainContainer.find('.command-inputs');
+
+            // Create template for the inputs
+            var inputTemplate = Handlebars.compile($('#command-input-' + type + '-template').html());
+            $targetContainer.html(inputTemplate({
+                value: parsedVal.value,
+                initVal: initVal,
+                unique: new Date().valueOf()
+            }));
+
+            // Extra templates for Android intent
+            if(type == 'intent') {
+                var inputExtraTemplate = Handlebars.compile($('#command-input-intent-extra-template').html());
+                if(parsedVal.value.extras != undefined){
+                    parsedVal.value.extras.forEach(function(el){
+                        $targetContainer.find('.intent-extra-container').append(inputExtraTemplate(el));
+                    });
+                }
+
+                // Add extra element
+                $targetContainer.on('click', '.intent-add-extra', function() {
+                    $targetContainer.find('.intent-extra-container').append(inputExtraTemplate({}));
+                    updateValue(type);
+                });
+
+                // Remove extra element
+                $targetContainer.on('click', '.intent-remove-extra', function() {
+                    $(this).parents('.intent-extra-element').remove();
+                    updateValue(type);
+                });
+            }
+
+            // Bind input changes to the old input field
+            $targetContainer.change('input, select', function() {
+                updateValue(type);
+            });
+
+            updateValue(type);
+        };
+
+        // Parse and set value to main input
+        const parseValue = function(value) {
+            let valueObj = {};
+
+            if(value == '' || value == undefined) {
+                valueObj.type = 'freetext';
+                valueObj.value = '';
+            } else {
+                let splitValue = value.split('|');
+
+                if(splitValue.length == 1) {
+                    // free text
+                    valueObj.type = 'freetext';
+                    valueObj.value = value;
+                } else {
+                    valueObj.type = splitValue[0];
+
+                    switch (valueObj.type) {
+                        case 'intent':
+                            // intent|<type|activity,service,broadcast>|<activity>|[<extras>]
+                            valueObj.value = {
+                                // <type|activity,service,broadcast>
+                                type: splitValue[1],
+                                // [<extras>]
+                                //{
+                                //  "name": "<extra name>",
+                                //  "type": "<type|string,int,bool,intArray>",
+                                //  "value": <the value of the above type>
+                                //}
+                                extras: (splitValue.length > 3) ? JSON.parse(splitValue[3]) : []
+                            };
+                            break;
+                        case 'rs232':
+                            // rs232|<connection string>|<command>
+                            const connectionStringRaw = splitValue[1].split(',');
+                            const connectionString = {
+                                deviceName: connectionStringRaw[0],
+                                baudRate: connectionStringRaw[1],
+                                dataBits: connectionStringRaw[2],
+                                parity: connectionStringRaw[3],
+                                stopBits: connectionStringRaw[4],
+                                handshake: connectionStringRaw[5],
+                                hexSupport: connectionStringRaw[6]
+                            };
+
+                            valueObj.value = {
+                                // <COM#>,<Baud Rate>,<Data Bits>,<Parity|None,Odd,Even,Mark,Space>,<StopBits|None,One,Two,OnePointFive>,<Handshake|None,XOnXOff,RequestToSend,RequestToSendXOnXOff>,<HexSupport|0,1,default 0>
+                                // <DeviceName>,<Baud Rate>,<Data Bits>,<Parity>,<StopBits>,<FlowControl>
+                                cs: connectionString,
+                                command: splitValue[2]
+                            };
+                            break;
+                        default:
+                            valueObj.value = splitValue[1];
+                            break;
+                    }
+                }
+            }
+
+            return valueObj;
+        };
+
+        const updateValue = function(type) {
+            let builtString = '';
+            let invalidValue = false;
+            const $container = $mainContainer.find('.command-inputs');
+
+            // Reset invalid class
+            $container.removeClass('invalid');
+
+            //$input.val();
+            switch (type) {
+                case 'tpv_led':
+                    builtString = 'tpv_led|' + $container.find('.tpv-led-command').val();
+                    break;
+                case 'rs232':
+
+                    // Get values
+                    const deviceNameVal = $container.find('.rs232-device-name').val();
+                    const baudRateVal = $container.find('.rs232-baud-rate').val();
+                    const dataBitsVal = $container.find('.rs232-data-bits').val();
+                    const parityVal = $container.find('.rs232-parity').val();
+                    const stopBitsVal = $container.find('.rs232-stop-bits').val();
+                    const handshakeVal = $container.find('.rs232-handshake').val();
+                    const hexSupportVal = $container.find('.rs232-hex-support').val();
+                    const commandVal = $container.find('.rs232-command').val();
+
+                    if([deviceNameVal, baudRateVal, dataBitsVal].includes('')) {
+                        $container.addClass('invalid');
+                        invalidValue = true;
+                    }
+
+                    builtString = 'rs232|';
+                    builtString += (deviceNameVal != '') ? (deviceNameVal + ',') : '';
+                    builtString += (baudRateVal != '') ? (baudRateVal + ',') : '';
+                    builtString += (dataBitsVal != '') ? (dataBitsVal + ',') : '';
+                    builtString += (parityVal != '') ? (parityVal + ',') : '';
+                    builtString += (stopBitsVal != '') ? (stopBitsVal + ',') : '';
+                    builtString += (handshakeVal != '') ? (handshakeVal + ',') : '';
+                    builtString += hexSupportVal;
+                    builtString += '|' + commandVal;
+                    break;
+                case 'intent':
+                    builtString = 'intent|' + $container.find('.intent-type').val() + '|activity';
+                    // Extra values array
+                    let extraValues = [];
+
+                    // Get values from input fields
+                    $container.find('.intent-extra-element').each(function() {
+                        const $el = $(this);
+                        $el.removeClass('invalid');
+                        let extraName = $el.find('.extra-name').val();
+                        let extraType = $el.find('.extra-type').val();
+                        let extraValue = $el.find('.extra-value').val();
+
+                        // Validate values
+                        if(extraType == 'intArray') {
+                            // Transform the value into an array
+                            extraValue = extraValue.replace(' ', '').split(',').map((x) => {
+                                return (x != '') ? Number(x) : '';
+                            });
+                            
+                            // Check if all the array elements are numbers ( and non empty )
+                            if(extraValue.find(x => isNaN(x) || x == '') != undefined) {
+                                extraValue = '';
+                            }
+                        } else if(extraType == 'int' && extraValue != '') {
+                            extraValue = isNaN(Number(extraValue)) ? '' : Number(extraValue);
+                        } else if(extraType == 'bool' && extraValue != '') {
+                            extraValue = (extraValue == 'true');
+                        }
+
+                        // Add to final command if all fields are correct
+                        if(![extraName, extraType, extraValue].includes('')) {
+                            extraValues.push({
+                                name: extraName,
+                                type: extraType,
+                                value: extraValue
+                            });
+                        } else {
+                            invalidValue = true;
+                            $el.addClass('invalid');
+                        }
+                    });
+
+                    // Append extra values array in JSON format
+                    if(extraValues.length > 0) {
+                        builtString += '|' + JSON.stringify(extraValues);
+                    }
+
+                    break;
+                default:
+                    builtString = $container.find('.free-text').val();
+                    break;
+            }
+
+            if(invalidValue) {
+                $input.val('');
+                $mainContainer.find('.command-preview').html($mainContainer.find('.command-preview').data('invalidMessage')).addClass('invalid');
+            } else {
+                $input.val(builtString);
+                $mainContainer.find('.command-preview').html(builtString).removeClass('invalid');
+            }
+        };
+
+        // Get init command type
+        const initType = parseValue($input.val()).type;
+
+        // Create basic type element
+        var optionsTemplate = Handlebars.compile($('#command-input-main-template').html());
+        $input.before(optionsTemplate({
+            types: commandTypes,
+            type: initType,
+            unique: new Date().valueOf()
+        }));
+
+        // Set template on first run
+        changeTypeTemplate(initType);
+
+        // Set template on command type change
+        $(this).find('.command-type').change(function () {
+            changeTypeTemplate($(this).val());
+        });
+
+        // Link checkbox to input preview
+        $(this).find('.show-command-preview').change(function () {
+            $mainContainer.find('.command-preview').toggle($(this).is(':checked'));
+        });
+
+        // Disable main input
+        $input.attr('readonly', 'readonly');
+    });
 }
 
 /**

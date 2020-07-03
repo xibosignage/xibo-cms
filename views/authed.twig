@@ -113,6 +113,15 @@
         {% set userPreferences = currentUser.getUserOptions() %}
         var userPreferences = {{ userPreferences|json_encode|raw }};
         var userPreferencesUrl = "{{ url_for("user.pref") }}";
+
+        // Equals helper for the templates below
+        Handlebars.registerHelper('eq', function(v1, v2, opts) {
+            if (v1 === v2) {
+                return opts.fn(this);
+            } else {
+                return opts.inverse(this);
+            }
+        });
     </script>
 
     {% verbatim %}
@@ -330,6 +339,124 @@
         </tr>
     {% } %}
     </script>
+
+    <script type="text/x-handlebars-template" id="command-input-main-template">
+        <input type="checkbox" class="show-command-preview pull-right" id="showCommandPreview{{ unique }}" name="showCommandPreview{{ unique }}" title="{% endverbatim %}{% trans "Show command preview!" %}{% verbatim %}">
+        <label for="showCommandPreview{{ unique }}" class="pull-right show-command-preview-label">{% endverbatim %}{% trans "Show command preview!" %}{% verbatim %}</label>
+
+        <select class="command-type form-control form-control-inline">
+            {{#each types}}
+                <option value="{{ @key }}" {{#eq @key ../type}}selected="selected"{{/eq}}>{{ this }}</option>
+            {{/each}}
+        </select>
+        <div class="command-inputs panel panel-default"></div>
+
+        <pre class="command-preview" data-invalid-message="{% endverbatim %}{% trans 'Invalid command!' %}{% verbatim %}">
+            <code>
+            <!-- your code here -->
+            </code>
+        </pre>
+    </script>
+
+    <script type="text/x-handlebars-template" id="command-input-freetext-template">
+        <input class="free-text form-control form-control-inline" value="{{ initVal }}">
+    </script>
+
+    <script type="text/x-handlebars-template" id="command-input-tpv_led-template">
+        <select name="tpv_ledCommand{{ unique }}" id="tpv_ledCommand{{ unique }}" class="tpv-led-command form-control form-control-inline" style="width:100%">
+            <option value="off" {{#eq value "off"}}selected="selected"{{/eq}}>{% endverbatim %}{% trans "Off" %}{% verbatim %}</option>
+            <option value="red" {{#eq value "red"}}selected="selected"{{/eq}}>{% endverbatim %}{% trans "Red" %}{% verbatim %}</option>
+            <option value="green" {{#eq value "green"}}selected="selected"{{/eq}}>{% endverbatim %}{% trans "Green" %}{% verbatim %}</option>
+            <option value="blue" {{#eq value "blue"}}selected="selected"{{/eq}}>{% endverbatim %}{% trans "Blue" %}{% verbatim %}</option>
+            <option value="white" {{#eq value "white"}}selected="selected"{{/eq}}>{% endverbatim %}{% trans "White" %}{% verbatim %}</option>
+        </select>
+    </script>
+
+    <script type="text/x-handlebars-template" id="command-input-rs232-template">
+        <div class="form-group-command form-group-rs232">
+            <input class="form-control form-control-inline rs232-text-input rs232-device-name" placeholder="{% endverbatim %}{% trans "Device Name/COM" %}{% verbatim %}" value="{{ value.cs.deviceName }}">
+            <input class="form-control form-control-inline rs232-text-input rs232-baud-rate" placeholder="{% endverbatim %}{% trans "Baud Rate" %}{% verbatim %}" value="{{ value.cs.baudRate }}">
+            <input class="form-control form-control-inline rs232-text-input rs232-data-bits" placeholder="{% endverbatim %}{% trans "Data Bits" %}{% verbatim %}" value="{{ value.cs.dataBits }}">
+        </div>
+        <div class="form-group-command form-group-rs232">
+            <div class="col-xs-12 col-sm-6">
+                <label for="rs232Parity{{ unique }}">{% endverbatim %}{% trans "Parity:" %}{% verbatim %}</label>
+                <select name="rs232Parity{{ unique }}" id="rs232Parity{{ unique }}" class="rs232-parity form-control">
+                    <option value="None" {{#eq value.cs.parity "None"}}selected="selected"{{/eq}}>None</option>
+                    <option value="Odd" {{#eq value.cs.parity "Odd"}}selected="selected"{{/eq}}>Odd</option>
+                    <option value="Even" {{#eq value.cs.parity "Even"}}selected="selected"{{/eq}}>Even</option>
+                    <option value="Mark" {{#eq value.cs.parity "Mark"}}selected="selected"{{/eq}}>Mark</option>
+                    <option value="Space" {{#eq value.cs.parity "Space"}}selected="selected"{{/eq}}>Space</option>
+                </select>
+            </div>
+
+            <div class="col-xs-12 col-sm-6">
+                <label for="rs232StopBits{{ unique }}">{% endverbatim %}{% trans "Stop Bits:" %}{% verbatim %}</label>
+                <select name="rs232StopBits{{ unique }}" id="rs232StopBits{{ unique }}" class="rs232-stop-bits form-control">
+                    <option value="None" {{#eq value.cs.stopBits "None"}}selected="selected"{{/eq}}>None</option>
+                    <option value="One" {{#eq value.cs.stopBits "One"}}selected="selected"{{/eq}}>One</option>
+                    <option value="Two" {{#eq value.cs.stopBits "Two"}}selected="selected"{{/eq}}>Two</option>
+                    <option value="OnePointFive" {{#eq value.cs.stopBits "OnePointFive"}}selected="selected"{{/eq}}>OnePointFive</option>
+                </select>
+            </div>
+
+            <div class="col-xs-12 col-sm-6">
+                <label for="rs232Handshake{{ unique }}">{% endverbatim %}{% trans "Handshake:" %}{% verbatim %}</label>
+                <select name="rs232Handshake{{ unique }}" id="rs232Handshake{{ unique }}" class="rs232-handshake form-control">
+                    <option value="None" {{#eq value.cs.handshake "None"}}selected="selected"{{/eq}}>None</option>
+                    <option value="XOnXOff" {{#eq value.cs.handshake "XOnXOff"}}selected="selected"{{/eq}}>XOnXOff</option>
+                    <option value="RequestToSend" {{#eq value.cs.handshake "RequestToSend"}}selected="selected"{{/eq}}>RequestToSend</option>
+                    <option value="RequestToSendXOnXOff" {{#eq value.cs.handshake "RequestToSendXOnXOff"}}selected="selected"{{/eq}}>RequestToSendXOnXOff</option>
+                </select>
+            </div>
+            
+            <div class="col-xs-12 col-sm-6">
+                <label for="rs232HexSupport{{ unique }}">{% endverbatim %}{% trans "HexSupport:" %}{% verbatim %}</label>
+                <select name="rs232HexSupport{{ unique }}" id="rs232HexSupport{{ unique }}" class="rs232-hex-support form-control">
+                    <option value="0" {{#eq value.cs.hexSupport "0"}}selected="selected"{{/eq}}>0</option>
+                    <option value="1" {{#eq value.cs.hexSupport "1"}}selected="selected"{{/eq}}>1</option>
+                    <option value="default 0" {{#eq value.cs.hexSupport "default 0"}}selected="selected"{{/eq}}>default 0</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group-command form-group-rs232 command-group">
+            <input class="form-control rs232-command" placeholder="{% endverbatim %}{% trans "Command" %}{% verbatim %}" value="{{ value.command }}">
+        </div>
+    </script>
+
+    <script type="text/x-handlebars-template" id="command-input-intent-template">
+        <div class="form-group-command">
+            <label for="intentType{{ unique }}">{% endverbatim %}{% trans "Type:" %}{% verbatim %}</label>
+            <select name="intentType{{ unique }}" id="intentType{{ unique }}" class="intent-type form-control form-control-inline">
+                <option value="activity" {{#eq value.type "activity"}}selected="selected"{{/eq}}>activity</option>
+                <option value="service" {{#eq value.type "service"}}selected="selected"{{/eq}}>service</option>
+                <option value="broadcast" {{#eq value.type "broadcast"}}selected="selected"{{/eq}}>broadcast</option>
+            </select>
+        </div>
+
+        <div class="form-group-command">
+            <label for="intentExtraContainer{{ unique }}" class="intent-extra-container-label">{% endverbatim %}{% trans "Extra:" %}{% verbatim %}</label>
+            <button class="intent-add-extra btn btn-info btn-sm pull-right" type="button">
+                <i class="fa fa-plus"></i>
+            </button>
+
+            <div id="intentExtraContainer{{ unique }}" class="intent-extra-container"></div>
+        </div>
+    </script>
+
+    <script type="text/x-handlebars-template" id="command-input-intent-extra-template">
+        <div class="intent-extra-element">
+            <input class="form-control form-control-inline extra-name" placeholder="{% endverbatim %}{% trans "Name" %}{% verbatim %}" value="{{ name }}">
+            <select class="form-control form-control-inline extra-type">
+                <option value="string" {{#eq type "string"}}selected="selected"{{/eq}}>string</option>
+                <option value="int" {{#eq type "int"}}selected="selected"{{/eq}}>int</option>
+                <option value="bool" {{#eq type "bool"}}selected="selected"{{/eq}}>bool</option>
+                <option value="intArray" {{#eq type "intArray"}}selected="selected"{{/eq}}>intArray</option
+            </select>
+            <input class="form-control form-control-inline extra-value" placeholder="{% endverbatim %}{% trans "Value" %}{% verbatim %}" value="{{ value }}">
+            <button type="button" class="btn btn-sm btn-warning pull-right intent-remove-extra"><i class="fa fa-minus fa-plus"></i></button>
+        </div>
+    </script>
     {% endverbatim %}
 
     <script type="text/x-handlebars-template" id="layout-background-image-upload-template">
@@ -407,7 +534,4 @@
             </div>
         </form>
     </script>
-
-
-
 {% endblock %}

@@ -55,7 +55,7 @@
                         {% set fieldId = "commandString" %}
                         {% set title %}{% trans "Command" %}{% endset %}
                         {% set helpText %}{% trans "The Command String for this Command. An override for this can be provided in Display Settings." %}{% endset %}
-                        {{ forms.input(fieldId, title, "", helpText) }}
+                        {{ forms.input(fieldId, title, "", helpText, "XiboCommand") }}
 
                         {% set fieldId = "validationString" %}
                         {% set title %}{% trans "Validation" %}{% endset %}
