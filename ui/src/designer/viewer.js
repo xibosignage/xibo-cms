@@ -157,9 +157,6 @@ Viewer.prototype.renderLayout = function(layout, container) {
             this.renderRegion(region, this.DOMObject.find('#' + region.id), true, 1);
         }
     }
-
-    // Initialize tooltips
-    app.common.reloadTooltips(container);
 };
 
 /**
@@ -179,7 +176,11 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
     container.html(loadingTemplate());
 
     // Get target element( get region if element is a Widget type )
-    const targetElement = (element.type === 'widget') ? lD.layout.regions[element.regionId] : element;
+    let targetElement = element;
+    
+    if(element.type === 'widget') {
+        targetElement = (element.drawerWidget) ? lD.layout.drawer : lD.layout.regions[element.regionId];
+    }
 
     // Stop rendering if the element is invalid
     if(targetElement == undefined) {
@@ -285,10 +286,6 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
                 this.showInlineEditor();
             }
         }
-
-        // Initialize tooltips
-        app.common.reloadTooltips(container);
-
     }.bind(this)).fail(function(res) {
         // Clear request var after response
         self.renderRequest = undefined;
@@ -307,6 +304,7 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
 Viewer.prototype.renderNavbar = function(element, data) {
 
     const app = this.parent;
+    const readOnlyModeOn = (app.readOnlyMode != undefined && app.readOnlyMode === true);
     
     // Stop if navbar container does not exist
     if(this.navbarContainer === null || this.navbarContainer === undefined || (element.type == 'widget' && data.extra.empty)) {
@@ -316,7 +314,7 @@ Viewer.prototype.renderNavbar = function(element, data) {
     if(element.type == 'widget') {
 
         const currentItem = element.index;
-        const parentRegion = lD.getElementByTypeAndId('region', element.regionId);
+        const parentRegion = (element.drawerWidget) ? lD.getElementByTypeAndId('drawer') : lD.getElementByTypeAndId('region', element.regionId);
         const totalItems = parentRegion.numWidgets;
 
         // Render widget toolbar
@@ -327,6 +325,7 @@ Viewer.prototype.renderNavbar = function(element, data) {
                 extra: data.extra,
                 type: element.type,
                 pagingEnable: (totalItems > 1),
+                readOnlyModeOn: readOnlyModeOn,
                 trans: viewerTrans
             }
         ));
@@ -348,6 +347,7 @@ Viewer.prototype.renderNavbar = function(element, data) {
                 type: element.type,
                 name: element.name,
                 trans: viewerTrans,
+                readOnlyModeOn: readOnlyModeOn,
                 renderLayout: true
             }
         ));
@@ -373,6 +373,7 @@ Viewer.prototype.renderNavbar = function(element, data) {
             {
                 type: element.type,
                 name: element.name,
+                readOnlyModeOn: readOnlyModeOn,
                 trans: viewerTrans
             }
         ));
@@ -387,9 +388,6 @@ Viewer.prototype.renderNavbar = function(element, data) {
     this.navbarContainer.find('#back-btn').click(function() {
         lD.selectObject();
     }.bind(this));
-
-    // Initialize tooltips
-    app.common.reloadTooltips(this.navbarContainer);
 };
 
 /**

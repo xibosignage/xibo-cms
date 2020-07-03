@@ -23,16 +23,14 @@
 
 namespace Xibo\XTR;
 use Psr\Container\ContainerInterface;
-use Slim\Helper\Set;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Task;
 use Xibo\Entity\User;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Interface TaskInterface
@@ -54,22 +52,16 @@ interface TaskInterface
     public function setLogger($logger);
 
     /**
-     * @param SanitizerServiceInterface $sanitizer
+     * @param SanitizerInterface $sanitizer
      * @return $this
      */
     public function setSanitizer($sanitizer);
 
     /**
      * @param $array
-     * @return \Xibo\Support\Sanitizer\SanitizerInterface
+     * @return SanitizerInterface
      */
     public function getSanitizer($array);
-
-    /**
-     * @param DateServiceInterface $date
-     * @return $this
-     */
-    public function setDate($date);
 
     /**
      * Set the task

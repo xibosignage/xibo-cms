@@ -21,8 +21,8 @@
  */
 namespace Xibo\Controller;
 
-use Xibo\Exception\InvalidArgumentException;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
@@ -38,6 +38,7 @@ trait DisplayProfileConfigFields
      * @param Request $request
      * @return null|array
      * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function editConfigFields($displayProfile, $config = null, Request $request)
     {
@@ -193,6 +194,10 @@ trait DisplayProfileConfigFields
 
                 if ($sanitizedParams->hasParam('forceHttps')) {
                     $displayProfile->setSetting('forceHttps', $sanitizedParams->getCheckbox('forceHttps'), $ownConfig, $config);
+                }
+
+                if ($sanitizedParams->hasParam('useMultipleVideoDecoders')) {
+                    $displayProfile->setSetting('useMultipleVideoDecoders', $sanitizedParams->getString('useMultipleVideoDecoders'), $ownConfig, $config);
                 }
 
                 break;
@@ -582,8 +587,8 @@ trait DisplayProfileConfigFields
                 }
 
                 // Get values from lockOptions params
-                $usblock = $sanitizedParams->getString('usblock', ['default' => '']);
-                $osdlock = $sanitizedParams->getString('osdlock', ['default' => '']);
+                $usblock = $sanitizedParams->getString('usblock', ['default' => 'empty']);
+                $osdlock = $sanitizedParams->getString('osdlock', ['default' => 'empty']);
                 $keylockLocal = $sanitizedParams->getString('keylockLocal', ['default' => '']);
                 $keylockRemote = $sanitizedParams->getString('keylockRemote', ['default' => '']);
 

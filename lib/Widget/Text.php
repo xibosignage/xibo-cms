@@ -23,8 +23,8 @@ namespace Xibo\Widget;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Exception\InvalidArgumentException;
 use Xibo\Helper\Translate;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Text
@@ -37,7 +37,7 @@ class Text extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.marquee.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
@@ -186,7 +186,7 @@ class Text extends ModuleWidget
         $this
             ->initialiseGetResource()
             ->appendViewPortWidth($this->region->width)
-            ->appendJavaScriptFile('vendor/jquery-1.11.1.min.js')
+            ->appendJavaScriptFile('vendor/jquery.min.js')
             ->appendJavaScriptFile('xibo-layout-scaler.js')
             ->appendJavaScriptFile('xibo-text-render.js')
             ->appendJavaScriptFile('xibo-image-render.js')

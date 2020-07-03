@@ -24,12 +24,12 @@
 namespace Xibo\Widget;
 
 
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
-use Jenssegers\Date\Date;
 use Stash\Invalidation;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\GeneralException;
 
 /**
  * Class AlphaVantageBase
@@ -43,7 +43,7 @@ abstract class AlphaVantageBase extends ModuleWidget
      * @param $toCurrency
      * @return array
      * @throws ConfigurationException
-     * @throws XiboException
+     * @throws GeneralException
      */
     protected function getCurrencyExchangeRate($fromCurrency, $toCurrency)
     {
@@ -75,7 +75,7 @@ abstract class AlphaVantageBase extends ModuleWidget
 
                 // Cache this and expire in the cache period
                 $cache->set($data);
-                $cache->expiresAt(Date::now()->addSeconds($this->getSetting('cachePeriod', 14400)));
+                $cache->expiresAt(Carbon::now()->addSeconds($this->getSetting('cachePeriod', 14400)));
 
                 $this->getPool()->save($cache);
             } else {
@@ -85,14 +85,14 @@ abstract class AlphaVantageBase extends ModuleWidget
             return $data;
 
         } catch (GuzzleException $guzzleException) {
-            throw new XiboException('Guzzle exception getting currency exchange rate. E = ' . $guzzleException->getMessage(), $guzzleException->getCode(), $guzzleException);
+            throw new GeneralException('Guzzle exception getting currency exchange rate. E = ' . $guzzleException->getMessage(), $guzzleException->getCode(), $guzzleException);
         }
     }
     /**
      * @param $symbol
      * @return array
      * @throws ConfigurationException
-     * @throws XiboException
+     * @throws GeneralException
      */
     protected function getStockQuote($symbol)
     {
@@ -123,7 +123,7 @@ abstract class AlphaVantageBase extends ModuleWidget
 
                 // Cache this and expire in the cache period
                 $cache->set($data);
-                $cache->expiresAt(Date::now()->addSeconds($this->getSetting('cachePeriod', 14400)));
+                $cache->expiresAt(Carbon::now()->addSeconds($this->getSetting('cachePeriod', 14400)));
 
                 $this->getPool()->save($cache);
             } else {
@@ -132,7 +132,7 @@ abstract class AlphaVantageBase extends ModuleWidget
 
             return $data;
         } catch (GuzzleException $guzzleException) {
-            throw new XiboException('Guzzle exception getting currency exchange rate. E = ' . $guzzleException->getMessage(), $guzzleException->getCode(), $guzzleException);
+            throw new GeneralException('Guzzle exception getting currency exchange rate. E = ' . $guzzleException->getMessage(), $guzzleException->getCode(), $guzzleException);
         }
     }
 
@@ -155,11 +155,11 @@ abstract class AlphaVantageBase extends ModuleWidget
      * @param $base
      * @param $pairs
      * @return mixed
-     * @throws XiboException
+     * @throws GeneralException
      */
     protected function getPriorDay($base, $pairs)
     {
-        $yesterday = Date::yesterday()->format('Y-m-d');
+        $yesterday = Carbon::yesterday()->format('Y-m-d');
 
         try {
             $cache = $this->getPool()->getItem($this->makeCacheKey(md5($base . $yesterday)));
@@ -187,7 +187,7 @@ abstract class AlphaVantageBase extends ModuleWidget
 
                 // Cache this and expire tomorrow (results are valid for the entire day regardless of settings)
                 $cache->set($data);
-                $cache->expiresAt(Date::tomorrow());
+                $cache->expiresAt(Carbon::tomorrow());
 
                 $this->getPool()->save($cache);
             } else {
@@ -203,7 +203,7 @@ abstract class AlphaVantageBase extends ModuleWidget
             return $return;
 
         } catch (GuzzleException $guzzleException) {
-            throw new XiboException('Guzzle exception getting currency exchange rate. E = ' . $guzzleException->getMessage(), $guzzleException->getCode(), $guzzleException);
+            throw new GeneralException('Guzzle exception getting currency exchange rate. E = ' . $guzzleException->getMessage(), $guzzleException->getCode(), $guzzleException);
         }
     }
 }

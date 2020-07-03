@@ -23,11 +23,12 @@
 namespace Xibo\Service;
 
 use Slim\Http\ServerRequest as Request;
-use Slim\Slim;
 use Xibo\Factory\SavedReportFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Report\ReportInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Support\Exception\GeneralException;
 
 /**
  * Interface ReportServiceInterface
@@ -43,11 +44,10 @@ interface ReportServiceInterface
      * @param TimeSeriesStoreInterface $timeSeriesStore
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
-     * @param DateServiceInterface $date
-     * @param SanitizerServiceInterface $sanitizer
+     * @param SanitizerService $sanitizer
      * @param SavedReportFactory $savedReportFactory
  */
-    public function __construct($app, $state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer, $savedReportFactory);
+    public function __construct($app, $state, $store, $timeSeriesStore, $log, $config, $sanitizer, $savedReportFactory);
 
     // List all reports that are available
     public function listReports();
@@ -55,19 +55,21 @@ interface ReportServiceInterface
     /**
      * Get report by report name
      * @param string $reportName
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws GeneralException
      */
     public function getReportByName($reportName);
 
     /**
      * Get report class by report name
      * @param string $reportName
+     * @throws GeneralException
      */
     public function getReportClass($reportName);
 
     /**
      * Create the report object by report classname
      * @param string $className
+     * @throws GeneralException
      * @return ReportInterface
      */
     public function createReportObject($className);
@@ -75,6 +77,8 @@ interface ReportServiceInterface
     /**
      * Populate form title and hidden fields
      * @param string $reportName
+     * @param Request $request
+     * @throws GeneralException
      * @return array
      */
     public function getReportScheduleFormData($reportName, Request $request);
@@ -82,6 +86,8 @@ interface ReportServiceInterface
     /**
      * Set Report Schedule form data
      * @param string $reportName
+     * @param Request $request
+     * @throws GeneralException
      * @return array
      */
     public function setReportScheduleFormData($reportName, Request $request);
@@ -90,6 +96,7 @@ interface ReportServiceInterface
      * Generate saved report name
      * @param string $reportName
      * @param string $filterCriteria
+     * @throws GeneralException
      * @return string
      */
     public function generateSavedReportName($reportName, $filterCriteria);
@@ -98,6 +105,7 @@ interface ReportServiceInterface
      * Get saved report results
      * @param int $savedreportId
      * @param string $reportName
+     * @throws GeneralException
      * @return array
      */
     public function getSavedReportResults($savedreportId, $reportName);
@@ -107,6 +115,7 @@ interface ReportServiceInterface
      * @param string $reportName
      * @param string $filterCriteria
      * @param int $userId
+     * @throws GeneralException
      * @return array
      */
     public function runReport($reportName, $filterCriteria, $userId);
@@ -114,6 +123,7 @@ interface ReportServiceInterface
     /**
      * Get report email template twig file name
      * @param string $reportName
+     * @throws GeneralException
      * @return string
      */
     public function getReportEmailTemplate($reportName);
@@ -122,6 +132,7 @@ interface ReportServiceInterface
      * Get chart script
      * @param int $savedreportId
      * @param string $reportName
+     * @throws GeneralException
      * @return array
      */
     public function getReportChartScript($savedreportId, $reportName);

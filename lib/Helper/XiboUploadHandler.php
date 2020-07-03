@@ -8,10 +8,10 @@ use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Event\LibraryReplaceEvent;
 use Xibo\Event\LibraryReplaceWidgetEvent;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\LibraryFullException;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\LibraryFullException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class XiboUploadHandler
@@ -95,12 +95,14 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $oldMedia = $controller->getMediaFactory()->getById($this->options['oldMediaId']);
 
                 // Check permissions
-                if (!$controller->getUser()->checkEditable($oldMedia))
+                if (!$controller->getUser()->checkEditable($oldMedia)) {
                     throw new AccessDeniedException(__('Access denied replacing old media'));
+                }
 
                 // Check to see if we are changing the media type
-                if ($oldMedia->mediaType != $module->getModuleType() && $this->options['allowMediaTypeChange'] == 0)
-                    throw new \InvalidArgumentException(__('You cannot replace this media with an item of a different type'));
+                if ($oldMedia->mediaType != $module->getModuleType() && $this->options['allowMediaTypeChange'] == 0) {
+                    throw new InvalidArgumentException(__('You cannot replace this media with an item of a different type'));
+                }
 
                 // Set the old record to edited
                 $oldMedia->isEdited = 1;
@@ -190,7 +192,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                                 if ($this->options['allowMediaTypeChange'] == 1) {
                                     $widget->type = $module->getModuleType();
                                 } else {
-                                    throw new \InvalidArgumentException(__('You cannot replace this media with an item of a different type'));
+                                    throw new InvalidArgumentException(__('You cannot replace this media with an item of a different type'));
                                 }
                             }
 

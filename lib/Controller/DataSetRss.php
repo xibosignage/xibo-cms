@@ -23,26 +23,26 @@
 
 namespace Xibo\Controller;
 
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
+use Carbon\Carbon;
 use Carbon\Exceptions\InvalidDateException;
-use Jenssegers\Date\Date;
 use PicoFeed\Syndication\Rss20FeedBuilder;
 use PicoFeed\Syndication\Rss20ItemBuilder;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DataSetRssFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 class DataSetRss extends Base
 {
@@ -68,7 +68,6 @@ class DataSetRss extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param DataSetRssFactory $dataSetRssFactory
      * @param DataSetFactory $dataSetFactory
@@ -77,9 +76,9 @@ class DataSetRss extends Base
      * @param StorageServiceInterface $store
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $dataSetRssFactory, $dataSetFactory, $dataSetColumnFactory, $pool, $store, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $dataSetRssFactory, $dataSetFactory, $dataSetColumnFactory, $pool, $store, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->dataSetRssFactory = $dataSetRssFactory;
         $this->dataSetFactory = $dataSetFactory;
@@ -94,12 +93,10 @@ class DataSetRss extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function displayPage(Request $request, Response $response, $id)
     {
@@ -123,12 +120,10 @@ class DataSetRss extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Get(
      *  path="/dataset/{dataSetId}/rss",
      *  operationId="dataSetRSSSearch",
@@ -151,18 +146,19 @@ class DataSetRss extends Base
      *      )
      *  )
      * )
-     *
      */
     public function grid(Request $request, Response $response, $id)
     {
         $dataSet = $this->dataSetFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getQueryParams());
 
         if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
         }
         
         $feeds = $this->dataSetRssFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
-            'dataSetId' => $id
+            'dataSetId' => $id,
+            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName')
         ], $request), $request);
 
         foreach ($feeds as $feed) {
@@ -201,12 +197,10 @@ class DataSetRss extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function addForm(Request $request, Response $response, $id)
     {
@@ -244,13 +238,11 @@ class DataSetRss extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/dataset/{dataSetId}/rss",
      *  operationId="dataSetRssAdd",
@@ -310,7 +302,6 @@ class DataSetRss extends Base
      *      )
      *  )
      * )
-     *
      */
     public function add(Request $request, Response $response, $id)
     {
@@ -358,6 +349,8 @@ class DataSetRss extends Base
     }
 
     /**
+     * @param Request $request
+     * @param Response $response
      * @param \Xibo\Entity\DataSetRss $feed
      */
     private function handleFormFilterAndOrder(Request $request, Response $response, $feed)
@@ -425,12 +418,10 @@ class DataSetRss extends Base
      * @param $id
      * @param $rssId
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function editForm(Request $request, Response $response, $id, $rssId)
     {
@@ -468,13 +459,11 @@ class DataSetRss extends Base
      * @param $rssId
      *
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/dataset/{dataSetId}/rss/{rssId}",
      *  operationId="dataSetRssEdit",
@@ -542,7 +531,6 @@ class DataSetRss extends Base
      *      description="successful operation"
      *  )
      * )
-     *
      */
     public function edit(Request $request, Response $response, $id, $rssId)
     {
@@ -597,12 +585,10 @@ class DataSetRss extends Base
      * @param $rssId
      *
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function deleteForm(Request $request, Response $response, $id, $rssId)
     {
@@ -631,12 +617,10 @@ class DataSetRss extends Base
      * @param $rssId
      *
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Delete(
      *  path="/dataset/{dataSetId}/rss/{rssId}",
      *  operationId="dataSetRSSDelete",
@@ -662,7 +646,6 @@ class DataSetRss extends Base
      *      description="successful operation"
      *  )
      * )
-     *
      */
     public function delete(Request $request, Response $response, $id, $rssId)
     {
@@ -688,7 +671,10 @@ class DataSetRss extends Base
     }
 
     /**
+     * @param Request $request
+     * @param Response $response
      * @param $psk
+     * @throws \Exception
      */
     public function feed(Request $request, Response $response, $psk)
     {
@@ -704,7 +690,7 @@ class DataSetRss extends Base
             $dataSet = $this->dataSetFactory->getById($feed->dataSetId);
 
             // What is the edit date of this data set
-            $dataSetEditDate = ($dataSet->lastDataEdit == 0) ? $this->getDate()->parse()->subMonths(2) : $this->getDate()->parse($dataSet->lastDataEdit, 'U');
+            $dataSetEditDate = ($dataSet->lastDataEdit == 0) ? Carbon::now()->subMonths(2) : Carbon::createFromTimestamp($dataSet->lastDataEdit);
 
             // Do we have this feed in the cache?
             $cache = $this->pool->getItem('/dataset/rss/' . $feed->id);
@@ -713,7 +699,7 @@ class DataSetRss extends Base
 
             if ($cache->isMiss() || $cache->getCreation() < $dataSetEditDate) {
                 // We need to recache
-                $this->getLog()->debug('Generating RSS feed and saving to cache. Created on ' . (($cache->getCreation() !== false) ? $cache->getCreation()->format('Y-m-d H:i:s') : 'never'));
+                $this->getLog()->debug('Generating RSS feed and saving to cache. Created on ' . (($cache->getCreation() !== false) ? $cache->getCreation()->format(DateFormatHelper::getSystemFormat()) : 'never'));
 
                 $output = $this->generateFeed($feed, $dataSetEditDate, $dataSet);
 
@@ -734,10 +720,10 @@ class DataSetRss extends Base
 
     /**
      * @param \Xibo\Entity\DataSetRss $feed
-     * @param Date $dataSetEditDate
+     * @param Carbon $dataSetEditDate
      * @param \Xibo\Entity\DataSet $dataSet
      * @return string
-     * @throws XiboException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     private function generateFeed($feed, $dataSetEditDate, $dataSet)
     {
@@ -872,9 +858,9 @@ class DataSetRss extends Base
         ];
 
         // Set the timezone for SQL
-        $dateNow = $this->getDate()->parse();
+        $dateNow = Carbon::now();
 
-        $this->store->setTimeZone($this->getDate()->getLocalDate($dateNow, 'P'));
+        $this->store->setTimeZone($dateNow->format('P'));
 
         // Get the data (complete table, filtered)
         $dataSetResults = $dataSet->getData($filter);
@@ -900,7 +886,7 @@ class DataSetRss extends Base
                         $item->withContent($value);
                     } else if ($mappings[$key]['dataSetColumnId'] === $feed->publishedDateColumnId) {
                         try {
-                            $date = $this->getDate()->parse($value, 'U');
+                            $date = Carbon::createFromTimestamp($value);
                         } catch (InvalidDateException $dateException) {
                             $date = $dataSetEditDate;
                         }

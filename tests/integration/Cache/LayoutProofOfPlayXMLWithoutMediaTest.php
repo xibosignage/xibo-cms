@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,7 +22,9 @@
 
 namespace Xibo\Tests\integration\Cache;
 
+use Carbon\Carbon;
 use Xibo\Entity\Display;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboImage;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
@@ -84,8 +86,8 @@ class LayoutProofOfPlayXMLWithoutMediaTest extends LocalWebTestCase
         // Schedule the Layout "always" onto our display
         //  deleting the layoutOff will remove this at the end
         $event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
-            date('Y-m-d H:i:s', time()+3600),
-            date('Y-m-d H:i:s', time()+7200),
+            Carbon::now()->addSeconds(3600)->format(DateFormatHelper::getSystemFormat()),
+            Carbon::now()->addSeconds(7200)->format(DateFormatHelper::getSystemFormat()),
             $this->layoutOff->campaignId,
             [$this->display->displayGroupId],
             0,
@@ -115,8 +117,8 @@ class LayoutProofOfPlayXMLWithoutMediaTest extends LocalWebTestCase
         // Schedule the LayoutOn "always" onto our display
         //  deleting the layoutOn will remove this at the end
         $event2 = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
-            date('Y-m-d H:i:s', time()+3600),
-            date('Y-m-d H:i:s', time()+7200),
+            Carbon::now()->addSeconds(3600)->format(DateFormatHelper::getSystemFormat()),
+            Carbon::now()->addSeconds(7200)->format(DateFormatHelper::getSystemFormat()),
             $this->layoutOn->campaignId,
             [$this->display2->displayGroupId],
             0,
@@ -138,8 +140,6 @@ class LayoutProofOfPlayXMLWithoutMediaTest extends LocalWebTestCase
     {
         $this->getLogger()->debug('Tear Down');
 
-        parent::tearDown();
-
         // Delete the LayoutOff
         $this->deleteLayout($this->layoutOff);
 
@@ -151,6 +151,8 @@ class LayoutProofOfPlayXMLWithoutMediaTest extends LocalWebTestCase
 
         // Delete the Display2
         $this->deleteDisplay($this->display2);
+
+        parent::tearDown();
     }
     // </editor-fold>
 
@@ -216,10 +218,10 @@ class LayoutProofOfPlayXMLWithoutMediaTest extends LocalWebTestCase
         $this->widget = (new XiboText($this->getEntityProvider()))->hydrate($response);
 
         // Publish layout
-        $response = $this->client->put('/layout/publish/' . $this->layoutOff->layoutId, [
+        $response = $this->sendRequest('PUT','/layout/publish/' . $this->layoutOff->layoutId, [
             'publishNow' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-        $response = json_decode($response, true);
+        $response = json_decode($response->getBody(), true);
 
         $this->layoutOff = $this->constructLayoutFromResponse($response['data']);
         $this->getLogger()->debug($this->layoutOff->enableStat);
@@ -257,10 +259,10 @@ class LayoutProofOfPlayXMLWithoutMediaTest extends LocalWebTestCase
         $this->widget = (new XiboText($this->getEntityProvider()))->hydrate($response);
 
         // Publish layout
-        $response = $this->client->put('/layout/publish/' . $this->layoutOn->layoutId, [
+        $response = $this->sendRequest('PUT','/layout/publish/' . $this->layoutOn->layoutId, [
             'publishNow' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-        $response = json_decode($response, true);
+        $response = json_decode($response->getBody(), true);
 
         $this->layoutOn = $this->constructLayoutFromResponse($response['data']);
         $this->getLogger()->debug($this->layoutOn->enableStat);

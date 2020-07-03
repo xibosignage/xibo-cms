@@ -25,10 +25,10 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Command;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class CommandFactory
@@ -50,7 +50,7 @@ class CommandFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param PermissionFactory $permissionFactory
@@ -87,14 +87,20 @@ class CommandFactory extends BaseFactory
 
         return $commands[0];
     }
+
     /**
      * Get by Display Profile Id
-     * @param $displayProfileId
+     * @param int $displayProfileId
+     * @param string $type
      * @return array[Command]
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function getByDisplayProfileId($displayProfileId)
+    public function getByDisplayProfileId($displayProfileId, $type)
     {
-        return $this->query(null, ['displayProfileId' => $displayProfileId]);
+        return $this->query(null, [
+            'displayProfileId' => $displayProfileId,
+            'type' => $type
+        ]);
     }
 
     /**
@@ -113,10 +119,20 @@ class CommandFactory extends BaseFactory
         }
 
         $params = [];
-        $select = 'SELECT `command`.commandId, `command`.command, `command`.code, `command`.description, `command`.userId ';
+        $select = 'SELECT `command`.commandId, 
+            `command`.command, 
+            `command`.code, 
+            `command`.description, 
+            `command`.userId, 
+            `command`.availableOn, 
+            `command`.commandString, 
+            `command`.validationString ';
 
         if ($sanitizedFilter->getInt('displayProfileId') !== null) {
-            $select .= ', commandString, validationString ';
+            $select .= ', 
+                :displayProfileId AS displayProfileId, 
+                `lkcommanddisplayprofile`.commandString AS commandStringDisplayProfile, 
+                `lkcommanddisplayprofile`.validationString AS validationStringDisplayProfile ';
         }
 
         $select .= " , (SELECT GROUP_CONCAT(DISTINCT `group`.group)
@@ -135,7 +151,7 @@ class CommandFactory extends BaseFactory
 
         if ($sanitizedFilter->getInt('displayProfileId') !== null) {
             $body .= '
-                INNER JOIN `lkcommanddisplayprofile`
+                LEFT OUTER JOIN `lkcommanddisplayprofile`
                 ON `lkcommanddisplayprofile`.commandId = `command`.commandId
                     AND `lkcommanddisplayprofile`.displayProfileId = :displayProfileId
             ';
@@ -158,8 +174,13 @@ class CommandFactory extends BaseFactory
         }
 
         if ($sanitizedFilter->getString('code') != null) {
-            $body .= ' AND `code`.code = :code ';
+            $body .= ' AND `command`.code = :code ';
             $params['code'] = $sanitizedFilter->getString('code');
+        }
+
+        if ($sanitizedFilter->getString('type') != null) {
+            $body .= ' AND (IFNULL(`command`.availableOn, \'\') = \'\' OR `command`.availableOn LIKE :type) ';
+            $params['type'] = '%' . $sanitizedFilter->getString('type') . '%';
         }
 
         // Sorting?

@@ -22,15 +22,14 @@
 namespace Xibo\Factory;
 
 
-use Jenssegers\Date\Date;
+use Carbon\Carbon;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Schedule;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class ScheduleFactory
@@ -45,9 +44,6 @@ class ScheduleFactory extends BaseFactory
 
     /** @var PoolInterface  */
     private $pool;
-
-    /** @var  DateServiceInterface */
-    private $dateService;
 
     /**
      * @var DisplayGroupFactory
@@ -70,22 +66,20 @@ class ScheduleFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param ConfigServiceInterface $config
      * @param PoolInterface $pool
-     * @param DateServiceInterface $date
      * @param DisplayGroupFactory $displayGroupFactory
      * @param DayPartFactory $dayPartFactory
      * @param UserFactory $userFactory
      * @param ScheduleReminderFactory $scheduleReminderFactory
      * @param ScheduleExclusionFactory $scheduleExclusionFactory
      */
-    public function __construct($store, $log, $sanitizerService, $config, $pool, $date, $displayGroupFactory, $dayPartFactory, $userFactory, $scheduleReminderFactory, $scheduleExclusionFactory)
+    public function __construct($store, $log, $sanitizerService, $config, $pool, $displayGroupFactory, $dayPartFactory, $userFactory, $scheduleReminderFactory, $scheduleExclusionFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->config = $config;
         $this->pool = $pool;
-        $this->dateService = $date;
         $this->displayGroupFactory = $displayGroupFactory;
         $this->dayPartFactory = $dayPartFactory;
         $this->userFactory = $userFactory;
@@ -104,7 +98,6 @@ class ScheduleFactory extends BaseFactory
             $this->getLog(),
             $this->config,
             $this->pool,
-            $this->dateService,
             $this->displayGroupFactory,
             $this->dayPartFactory,
             $this->userFactory,
@@ -131,7 +124,6 @@ class ScheduleFactory extends BaseFactory
     /**
      * @param int $displayGroupId
      * @return array[Schedule]
-     * @throws NotFoundException
      */
     public function getByDisplayGroupId($displayGroupId)
     {
@@ -142,7 +134,6 @@ class ScheduleFactory extends BaseFactory
      * Get by Campaign ID
      * @param int $campaignId
      * @return array[Schedule]
-     * @throws NotFoundException
      */
     public function getByCampaignId($campaignId)
     {
@@ -153,7 +144,6 @@ class ScheduleFactory extends BaseFactory
      * Get by OwnerId
      * @param int $ownerId
      * @return array[Schedule]
-     * @throws NotFoundException
      */
     public function getByOwnerId($ownerId)
     {
@@ -164,7 +154,6 @@ class ScheduleFactory extends BaseFactory
      * Get by DayPartId
      * @param int $dayPartId
      * @return Schedule[]
-     * @throws NotFoundException
      */
     public function getByDayPartId($dayPartId)
     {
@@ -173,8 +162,8 @@ class ScheduleFactory extends BaseFactory
 
     /**
      * @param int $displayId
-     * @param Date $fromDt
-     * @param Date $toDt
+     * @param Carbon $fromDt
+     * @param Carbon $toDt
      * @param array $options
      * @return array
      */
@@ -283,7 +272,7 @@ class ScheduleFactory extends BaseFactory
     /**
      * @param array $sortOrder
      * @param array $filterBy
-     * @return array[Schedule]
+     * @return Schedule[]
      */
     public function query($sortOrder = null, $filterBy = [])
     {
@@ -330,6 +319,11 @@ class ScheduleFactory extends BaseFactory
         if ($parsedFilter->getInt('eventId') !== null) {
             $sql .= ' AND `schedule`.eventId = :eventId ';
             $params['eventId'] = $parsedFilter->getInt('eventId');
+        }
+
+        if ($parsedFilter->getInt('eventTypeId') !== null) {
+            $sql .= ' AND `schedule`.eventTypeId = :eventTypeId ';
+            $params['eventTypeId'] = $parsedFilter->getInt('eventTypeId');
         }
 
         if ($parsedFilter->getInt('campaignId') !== null) {

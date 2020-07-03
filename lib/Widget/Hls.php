@@ -25,7 +25,7 @@ namespace Xibo\Widget;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Hls
@@ -85,7 +85,7 @@ class Hls extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
     }
 
     /**
@@ -215,7 +215,7 @@ class Hls extends ModuleWidget
         $this
             ->initialiseGetResource()
             ->appendViewPortWidth($this->region->width)
-            ->appendJavaScriptFile('vendor/jquery-1.11.1.min.js')
+            ->appendJavaScriptFile('vendor/jquery.min.js')
             ->appendJavaScriptFile('vendor/hls/hls.min.js')
             ->appendJavaScript('
                 $(document).ready(function() {

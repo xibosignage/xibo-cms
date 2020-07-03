@@ -23,9 +23,8 @@
 namespace Xibo\Report;
 
 
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
 use Psr\Container\ContainerInterface;
+use Slim\Http\ServerRequest as Request;
 
 /**
  * Interface ReportInterface

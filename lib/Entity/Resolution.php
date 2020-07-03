@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (Resolution.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,9 +23,9 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
-use Xibo\Exception\InvalidArgumentException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Resolution
@@ -117,16 +118,22 @@ class Resolution implements \JsonSerializable
         return $this->userId;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function validate()
     {
-        if (!v::stringType()->notEmpty()->validate($this->resolution))
+        if (!v::stringType()->notEmpty()->validate($this->resolution)) {
             throw new InvalidArgumentException(__('Please provide a name'), 'name');
+        }
 
-        if (!v::intType()->notEmpty()->min(1)->validate($this->width))
+        if (!v::intType()->notEmpty()->min(1)->validate($this->width)) {
             throw new InvalidArgumentException(__('Please provide a width'), 'width');
+        }
 
-        if (!v::intType()->notEmpty()->min(1)->validate($this->height))
+        if (!v::intType()->notEmpty()->min(1)->validate($this->height)) {
             throw new InvalidArgumentException(__('Please provide a height'), 'height');
+        }
 
         // Set the designer width and height
         $factor = min (800 / $this->width, 800 / $this->height);
@@ -138,6 +145,7 @@ class Resolution implements \JsonSerializable
     /**
      * Save
      * @param bool|true $validate
+     * @throws InvalidArgumentException
      */
     public function save($validate = true)
     {

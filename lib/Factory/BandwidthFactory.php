@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (BandwidthFactory.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -11,8 +26,8 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Bandwidth;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
@@ -25,7 +40,7 @@ class BandwidthFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      */
     public function __construct($store, $log, $sanitizerService)
     {
@@ -91,7 +106,7 @@ class BandwidthFactory extends BaseFactory
 
             $usage = $sth->fetchColumn(0);
 
-            $this->getLog()->debug('Checking bandwidth usage against allowance: ' . ByteFormatter::format($limit * 1024) . '. ' . ByteFormatter::format($usage));
+            $this->getLog()->debug(sprintf('Checking bandwidth usage %s against allowance %s ' , ByteFormatter::format($usage), ByteFormatter::format($limit * 1024)));
 
             return ($usage >= ($limit * 1024));
 

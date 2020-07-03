@@ -22,10 +22,12 @@
 
 
 namespace Xibo\XTR;
+use Carbon\Carbon;
 use Xibo\Controller\Library;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\DateFormatHelper;
+use Xibo\Support\Exception\GeneralException;
 
 /**
  * Class MaintenanceDailyTask
@@ -86,7 +88,7 @@ class MaintenanceDailyTask implements TaskInterface
 
         if ($this->config->getSetting('MAINTENANCE_LOG_MAXAGE') != 0) {
 
-            $maxage = date('Y-m-d H:i:s', time() - (86400 * intval($this->config->getSetting('MAINTENANCE_LOG_MAXAGE'))));
+            $maxage = Carbon::now()->subSeconds(86400 * intval($this->config->getSetting('MAINTENANCE_LOG_MAXAGE')))->format(DateFormatHelper::getSystemFormat());
 
             try {
                 $this->store->update('DELETE FROM `log` WHERE logdate < :maxage', ['maxage' => $maxage]);
@@ -115,7 +117,7 @@ class MaintenanceDailyTask implements TaskInterface
 
     /**
      * Import Layouts
-     * @throws XiboException
+     * @throws GeneralException
      */
     private function importLayouts()
     {
@@ -168,7 +170,7 @@ class MaintenanceDailyTask implements TaskInterface
     {
         $this->runMessage .= '## ' . __('Purge Expired API Tokens') . PHP_EOL;
 
-        $params = ['now' => time()];
+        $params = ['now' => Carbon::now()->format('U')];
 
         try {
             // Run delete SQL for all token and session tables.

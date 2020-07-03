@@ -23,12 +23,13 @@
 
 namespace Xibo\XTR;
 
+use Carbon\Carbon;
 use Xibo\Entity\DataSet;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
+use Xibo\Support\Exception\GeneralException;
 
 /**
  * Class RemoteDataSetFetchTask
@@ -67,7 +68,7 @@ class RemoteDataSetFetchTask implements TaskInterface
     {
         $this->runMessage = '# ' . __('Fetching Remote-DataSets') . PHP_EOL . PHP_EOL;
 
-        $runTime = $this->date->getLocalDate(null, 'U');
+        $runTime = Carbon::now()->format('U');
 
         /** @var DataSet $dataSet */
         $dataSet = null;
@@ -85,6 +86,10 @@ class RemoteDataSetFetchTask implements TaskInterface
         foreach ($dataSets as $dataSet) {
 
             $this->log->debug('Processing ' . $dataSet->dataSet . '. ID:' . $dataSet->dataSetId);
+            $hardRowLimit = $this->config->getSetting('DATASET_HARD_ROW_LIMIT');
+            $softRowLimit = $dataSet->rowLimit;
+            $limitPolicy = $dataSet->limitPolicy;
+            $currentNumberOfRows = intval($this->store->select('SELECT COUNT(*) AS total FROM `dataset_' . $dataSet->dataSetId . '`', [])[0]['total']);
 
             try {
                 // Has this dataSet been accessed recently?
@@ -118,6 +123,37 @@ class RemoteDataSetFetchTask implements TaskInterface
                             $dataSet->saveLastClear($runTime);
                         }
 
+                        $rowsToAdd = $results->number;
+                        $this->log->debug('Current number of rows in DataSet ID ' . $dataSet->dataSetId . ' is: ' . $currentNumberOfRows . ' number of records to add ' . $rowsToAdd);
+
+                        // row limit reached
+                        if ($currentNumberOfRows + $rowsToAdd >= $hardRowLimit || $softRowLimit != null && $currentNumberOfRows + $rowsToAdd >= $softRowLimit) {
+
+                            // handle remote DataSets created before introduction of limit policy
+                            if ($limitPolicy == null) {
+                                $this->log->debug('No limit policy set, default to stop syncing.');
+                                $limitPolicy = 'stop';
+                            }
+
+                            // which limit policy was set?
+                            if ($limitPolicy === 'stop') {
+                                $this->log->info('DataSet ID ' . $dataSet->dataSetId . ' reached the row limit, due to selected limit policy, it will stop syncing');
+                                continue;
+                            } elseif ($limitPolicy === 'fifo') {
+                                // FiFo
+                                $this->log->info('DataSet ID ' . $dataSet->dataSetId . ' reached the row limit, due to selected limit policy, oldest rows will be removed');
+
+                                $this->store->update('DELETE FROM `dataset_' . $dataSet->dataSetId . '` ORDER BY id ASC LIMIT ' . $rowsToAdd, []);
+                            } elseif ($limitPolicy === 'truncate') {
+                                // truncate
+                                $this->log->info('DataSet ID ' . $dataSet->dataSetId . ' reached the row limit, due to selected limit policy, we will truncate the DataSet data');
+                                $dataSet->deleteData();
+
+                                // Update the last clear time.
+                                $dataSet->saveLastClear($runTime);
+                            }
+                        }
+
                         if ($dataSet->sourceId === 1) {
                             $this->dataSetFactory->processResults($dataSet, $results);
                         } else {
@@ -137,7 +173,7 @@ class RemoteDataSetFetchTask implements TaskInterface
                     $this->log->debug('Sync not required for ' . $dataSet->dataSetId);
                 }
 
-            } catch (XiboException $e) {
+            } catch (GeneralException $e) {
                 $this->appendRunMessage(__('Error syncing DataSet %s', $dataSet->dataSet));
                 $this->log->error('Error syncing DataSet ' . $dataSet->dataSetId . '. E = ' . $e->getMessage());
                 $this->log->debug($e->getTraceAsString());
@@ -146,7 +182,7 @@ class RemoteDataSetFetchTask implements TaskInterface
                 $notification = $this->notificationFactory->createEmpty();
                 $notification->subject = __('Remote DataSet %s failed to synchronise', $dataSet->dataSet);
                 $notification->body = 'The error is: ' . $e->getMessage();
-                $notification->createdDt = $this->date->getLocalDate(null, 'U');
+                $notification->createdDt = Carbon::now()->format('U');
                 $notification->releaseDt = $notification->createdDt;
                 $notification->isEmail = 0;
                 $notification->isInterrupt = 0;

@@ -25,11 +25,11 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class UserFactory
@@ -60,7 +60,7 @@ class UserFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param ConfigServiceInterface $configService
      * @param PermissionFactory $permissionFactory
      * @param UserOptionFactory $userOptionFactory
@@ -106,8 +106,9 @@ class UserFactory extends BaseFactory
     {
         $users = $this->query(null, array('disableUserCheck' => 1, 'userId' => $userId));
 
-        if (count($users) <= 0)
+        if (count($users) <= 0) {
             throw new NotFoundException(__('User not found'));
+        }
 
         return $users[0];
     }
@@ -115,14 +116,16 @@ class UserFactory extends BaseFactory
     /**
      * Load by client Id
      * @param string $clientId
+     * @return mixed
      * @throws NotFoundException
      */
     public function loadByClientId($clientId)
     {
         $users = $this->query(null, array('disableUserCheck' => 1, 'clientId' => $clientId));
 
-        if (count($users) <= 0)
+        if (count($users) <= 0) {
             throw new NotFoundException(sprintf('User not found'));
+        }
 
         return $users[0];
     }
@@ -137,8 +140,9 @@ class UserFactory extends BaseFactory
     {
         $users = $this->query(null, array('disableUserCheck' => 1, 'exactUserName' => $userName));
 
-        if (count($users) <= 0)
+        if (count($users) <= 0) {
             throw new NotFoundException(__('User not found'));
+        }
 
         return $users[0];
     }
@@ -152,8 +156,10 @@ class UserFactory extends BaseFactory
     public function getByEmail($email) {
         $users = $this->query(null, array('disableUserCheck' => 1, 'email' => $email));
 
-        if (count($users) <= 0)
+        if (count($users) <= 0) {
             throw new NotFoundException(__('User not found'));
+        }
+
         return $users[0];
     }
 
@@ -188,14 +194,11 @@ class UserFactory extends BaseFactory
     /**
      * Get system user
      * @return User
+     * @throws NotFoundException
      */
     public function getSystemUser()
     {
-        $user = $this->create();
-        $user->userId = 1;
-        $user->userName = 'system';
-        $user->userTypeId = 1;
-        $user->email = $this->configService->getSetting('mail_to');
+        $user = $this->getById($this->configService->getSetting('SYSTEM_USER'));
 
         return $user;
     }
@@ -316,7 +319,7 @@ class UserFactory extends BaseFactory
 
         if ($parsedFilter->getString('userName') != null) {
             $terms = explode(',', $parsedFilter->getString('userName'));
-            $this->nameFilter('user', 'userName', $terms, $body, $params);
+            $this->nameFilter('user', 'userName', $terms, $body, $params, ($parsedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         // Email Provided

@@ -1,4 +1,4 @@
-describe.skip('Layout Designer (Populated)', function() { //FIXME: Tests skipped for now, need update to the new Layout Designer revamp
+describe('Layout Designer (Populated)', function() {
 
     beforeEach(function() {
         cy.login();
@@ -26,7 +26,7 @@ describe.skip('Layout Designer (Populated)', function() { //FIXME: Tests skipped
         cy.route('/playlist/widget/form/edit/*').as('reloadWidget');
 
         // Select the first widget from the first region on timeline ( image )
-        cy.get('#timeline-container [data-type="region"]:first-child [data-type="widget"]:first-child').click();
+        cy.get('#layout-timeline .designer-region:first [data-type="widget"]:first-child').click();
 
         // Type the new name in the input
         cy.get('#properties-panel input[name="name"]').clear().type('newName');
@@ -56,26 +56,23 @@ describe.skip('Layout Designer (Populated)', function() { //FIXME: Tests skipped
         cy.route('/region/form/edit/*').as('reloadRegion');
 
         // Open navigator edit
-        cy.get('#layout-navigator #edit-btn').click();
+        cy.get('#layout-viewer-navbar #navigator-edit-btn').click();
 
         // Select the first region on navigator
         cy.get('#layout-navigator [data-type="region"]:first-child').click();
 
         // Type the new name in the input
-        cy.get('#layout-navigator-properties-panel input[name="name"]').clear().type('newName');
+        cy.get('#properties-panel input[name="name"]').clear().type('newName');
 
         // Save form
-        cy.get('#layout-navigator-navbar button#save-btn').click();
+        cy.get('#properties-panel button#save').click();
 
         // Should show a notification for the name change
         cy.get('.toast-success').contains('newName');
 
         // Check if the values are the same entered after reload
         cy.wait('@reloadRegion').then(() => {
-            // Select the first region on navigator
-            cy.get('#layout-navigator [data-type="region"]:first-child').click();
-
-            cy.get('#layout-navigator-properties-panel input[name="name"]').should('have.attr', 'value').and('equal', 'newName');
+            cy.get('#properties-panel input[name="name"]').should('have.attr', 'value').and('equal', 'newName');
         });
     });
 
@@ -151,13 +148,13 @@ describe.skip('Layout Designer (Populated)', function() { //FIXME: Tests skipped
         cy.route('/layout?layoutId=*').as('reloadLayout');
 
         // Open toolbar Tools tab
-        cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Widgets').should('be.visible').click();
-        cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
+        cy.get('#layout-editor-toolbar #btn-menu-2').should('be.visible').click();
+        cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click();
 
         // Open the audio form
         cy.dragToElement(
-            '#layout-editor-toolbar #content-0 .toolbar-pane-content [data-sub-type="audio"] .drag-area',
-            '#timeline-container [data-type="region"]:first-child [data-type="widget"]:nth-child(2)'
+            '#layout-editor-toolbar #content-1 .toolbar-pane-content [data-sub-type="audio"] .drag-area',
+            '#layout-timeline .designer-region:first [data-type="widget"]:nth-child(2)'
         ).then(() => {
 
             // Select the 1st option
@@ -170,7 +167,7 @@ describe.skip('Layout Designer (Populated)', function() { //FIXME: Tests skipped
 
             // Check if the widget has the audio icon
             cy.wait('@reloadLayout').then(() => {
-                cy.get('#timeline-container [data-type="region"]:first-child [data-type="widget"]:nth-child(2)')
+                cy.get('#layout-timeline .designer-region:first [data-type="widget"]:nth-child(2)')
                     .find('i[data-property="Audio"]').click();
 
                 cy.get('[data-test="widgetPropertiesForm"]').contains('Audio for');
@@ -185,28 +182,30 @@ describe.skip('Layout Designer (Populated)', function() { //FIXME: Tests skipped
         cy.route('/layout?layoutId=*').as('reloadLayout');
 
         // Open toolbar Tools tab
-        cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Widgets').should('be.visible').click();
-        cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
+        cy.get('#layout-editor-toolbar #btn-menu-2').should('be.visible').click();
+        cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click();
 
         // Open the audio form
         cy.dragToElement(
-            '#layout-editor-toolbar #content-0 .toolbar-pane-content [data-sub-type="expiry"] .drag-area',
-            '#timeline-container [data-type="region"]:first-child [data-type="widget"]:nth-child(2)'
+            '#layout-editor-toolbar #content-1 .toolbar-pane-content [data-sub-type="expiry"] .drag-area',
+            '#layout-timeline .designer-region:first [data-type="widget"]:nth-child(2)'
         ).then(() => {
 
             // Add dates
-            cy.get('[data-test="widgetPropertiesForm"] #fromDt_Link1').clear().type('2018-01-01');
-            cy.get('[data-test="widgetPropertiesForm"] #fromDt_Link2').clear().type('00:00');
+            cy.get('[data-test="widgetPropertiesForm"] .starttime-control .date-clear-button').click();
+            cy.get('[data-test="widgetPropertiesForm"] #fromDt').siblings('.date-open-button').click();
+            cy.get('.flatpickr-calendar.open .dayContainer .flatpickr-day:first').click();
 
-            cy.get('[data-test="widgetPropertiesForm"] #toDt_Link1').clear().type('2018-01-01');
-            cy.get('[data-test="widgetPropertiesForm"] #toDt_Link2').clear().type('23:45');
-
+            cy.get('[data-test="widgetPropertiesForm"] .endtime-control .date-clear-button').click();
+            cy.get('[data-test="widgetPropertiesForm"] #toDt').siblings('.date-open-button').click();
+            cy.get('.flatpickr-calendar.open .dayContainer .flatpickr-day:first').click();
+            
             // Save and close the form
             cy.get('[data-test="widgetPropertiesForm"] [data-bb-handler="done"]').click();
 
             // Check if the widget has the audio icon
             cy.wait('@reloadLayout').then(() => {
-                cy.get('#timeline-container [data-type="region"]:first-child [data-type="widget"]:nth-child(2)')
+                cy.get('#layout-timeline .designer-region:first [data-type="widget"]:nth-child(2)')
                     .find('i[data-property="Expiry"]').click();
 
                 cy.get('[data-test="widgetPropertiesForm"]').contains('Expiry for');
@@ -221,12 +220,12 @@ describe.skip('Layout Designer (Populated)', function() { //FIXME: Tests skipped
         cy.route('/layout?layoutId=*').as('reloadLayout');
 
         // Open toolbar Tools tab
-        cy.get('#layout-editor-toolbar .btn-menu-tab').contains('Tools').should('be.visible').click();
+        cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click();
 
         // Open the audio form
         cy.dragToElement(
             '#layout-editor-toolbar .toolbar-pane-content [data-sub-type="transitionIn"] .drag-area',
-            '#timeline-container [data-type="region"]:first-child [data-type="widget"]:nth-child(2)'
+            '#layout-timeline .designer-region:first [data-type="widget"]:nth-child(2)'
         ).then(() => {
 
             // Select the 1st option
@@ -239,7 +238,7 @@ describe.skip('Layout Designer (Populated)', function() { //FIXME: Tests skipped
 
             // Check if the widget has the audio icon
             cy.wait('@reloadLayout').then(() => {
-                cy.get('#timeline-container [data-type="region"]:first-child [data-type="widget"]:nth-child(2)')
+                cy.get('#layout-timeline .designer-region:first [data-type="widget"]:nth-child(2)')
                     .find('i[data-property="Transition"]').click();
 
                 cy.get('[data-test="widgetPropertiesForm"]').contains('Edit in Transition for');
@@ -255,11 +254,11 @@ describe.skip('Layout Designer (Populated)', function() { //FIXME: Tests skipped
         cy.route('/layout?layoutId=*').as('reloadLayout');
         cy.route('/region/form/edit/*').as('reloadRegion');
 
+        // Open navigator edit
+        cy.get('#layout-viewer-navbar #navigator-edit-btn').click();
+
         cy.get('#layout-navigator [data-type="region"]').then(($originalRegion) => {
             const regionId = $originalRegion.attr('id');
-
-            // Open navigator edit
-            cy.get('#layout-navigator #edit-btn').click();
 
             // Select region
             cy.get('#layout-navigator-content #' + regionId).click();
@@ -288,16 +287,12 @@ describe.skip('Layout Designer (Populated)', function() { //FIXME: Tests skipped
 
                 // Close the navigator edit
                 cy.wait('@reloadRegion');
-                cy.get('#layout-navigator #save-btn').click();
 
-                // Close navigator
-                cy.get('#layout-navigator #close-btn').click();
+                // Save
+                cy.get('#properties-panel button#save').click();
 
                 // Wait for the layout to reload
                 cy.wait('@reloadLayout');
-
-                // Open navigator edit
-                cy.get('#layout-navigator #edit-btn').click();
 
                 // Check if the region´s position are not the original
                 cy.get('#layout-navigator-content #' + regionId).then(($changedRegion) => {
@@ -313,7 +308,7 @@ describe.skip('Layout Designer (Populated)', function() { //FIXME: Tests skipped
         cy.route('/layout?layoutId=*').as('reloadLayout');
 
         // Select a widget from the navigator
-        cy.get('#layout-timeline [data-type="region"]:first-child [data-type="widget"]:first-child').click().then(($el) => {
+        cy.get('#layout-timeline .designer-region:first [data-type="widget"]:first-child').click().then(($el) => {
 
             const widgetId = $el.attr('id');
 
@@ -339,7 +334,7 @@ describe.skip('Layout Designer (Populated)', function() { //FIXME: Tests skipped
         cy.route('POST', '**/playlist/order/*').as('saveOrder');
         cy.route('/layout?layoutId=*').as('reloadLayout');
 
-        cy.get('#layout-timeline [data-type="region"]:first-child [data-type="widget"]:first-child').then(($oldWidget) => {
+        cy.get('#layout-timeline .designer-region:first [data-type="widget"]:first-child').then(($oldWidget) => {
 
             const offsetX = 50;
 
@@ -362,7 +357,7 @@ describe.skip('Layout Designer (Populated)', function() { //FIXME: Tests skipped
             // Reload layout and check if the new first widget has a different Id
             cy.wait('@reloadLayout');
 
-            cy.get('#layout-timeline [data-type="region"]:first-child [data-type="widget"]:first-child').then(($newWidget) => {
+            cy.get('#layout-timeline .designer-region:first [data-type="widget"]:first-child').then(($newWidget) => {
                 expect($oldWidget.attr('id')).not.to.eq($newWidget.attr('id'));
             });
         });
@@ -373,7 +368,8 @@ describe.skip('Layout Designer (Populated)', function() { //FIXME: Tests skipped
         cy.server();
         cy.route('PUT', '/layout/publish/*').as('layoutPublish');
 
-        cy.get('#layout-editor-toolbar a#publishLayout').click();
+        cy.get('#layout-editor-topbar li#actionsSubmenu').click();
+        cy.get('#layout-editor-topbar li#actionsSubmenu #publishLayout').click();
 
         cy.get('button[data-bb-handler="Publish"]').click();
 

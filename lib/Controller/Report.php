@@ -22,27 +22,28 @@
 
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Entity\Media;
 use Xibo\Entity\ReportSchedule;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
+use Xibo\Helper\SendFile;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ReportServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Report
@@ -97,7 +98,6 @@ class Report extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param TimeSeriesStoreInterface $timeSeriesStore
@@ -108,9 +108,9 @@ class Report extends Base
      * @param UserFactory $userFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $reportService, $reportScheduleFactory, $savedReportFactory, $mediaFactory, $userFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $timeSeriesStore, $reportService, $reportScheduleFactory, $savedReportFactory, $mediaFactory, $userFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->store = $store;
         $this->timeSeriesStore = $timeSeriesStore;
@@ -129,12 +129,9 @@ class Report extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function reportScheduleGrid(Request $request, Response $response)
     {
@@ -142,6 +139,7 @@ class Report extends Base
 
         $reportSchedules = $this->reportScheduleFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
             'name' => $sanitizedQueryParams->getString('name'),
+            'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
             'userId' => $sanitizedQueryParams->getInt('userId'),
             'reportScheduleId' => $sanitizedQueryParams->getInt('reportScheduleId'),
             'reportName' => $sanitizedQueryParams->getString('reportName')
@@ -150,14 +148,17 @@ class Report extends Base
         /** @var \Xibo\Entity\ReportSchedule $reportSchedule */
         foreach ($reportSchedules as $reportSchedule) {
 
+            if ($this->isApi($request))
+                continue;
+
             $reportSchedule->includeProperty('buttons');
 
             $cron = \Cron\CronExpression::factory($reportSchedule->schedule);
 
             if ($reportSchedule->lastRunDt == 0) {
-                $nextRunDt = $this->getDate()->parse()->format('U');
+                $nextRunDt = Carbon::now()->format('U');
             } else {
-                $nextRunDt = $cron->getNextRunDate(\DateTime::createFromFormat('U', $reportSchedule->lastRunDt))->format('U');
+                $nextRunDt = $cron->getNextRunDate(Carbon::createFromTimestamp($reportSchedule->lastRunDt))->format('U');
             }
 
             $reportSchedule->nextRunDt = $nextRunDt;
@@ -294,12 +295,10 @@ class Report extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function reportScheduleReset(Request $request, Response $response, $id)
     {
@@ -312,6 +311,12 @@ class Report extends Base
         $reportSchedule->lastRunDt = $reportSchedule->previousRunDt;
         $reportSchedule->save();
 
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => 'Success'
+        ]);
+
         return $this->render($request, $response);
     }
 
@@ -320,11 +325,9 @@ class Report extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function reportScheduleAdd(Request $request, Response $response)
     {
@@ -332,6 +335,23 @@ class Report extends Base
 
         $name = $sanitizedParams->getString('name');
         $reportName = $request->getParam('reportName', null);
+        $fromDt = $sanitizedParams->getDate('fromDt', ['default' => 0]);
+        $toDt = $sanitizedParams->getDate('toDt', ['default' => 0]);
+        $today = Carbon::now()->startOfDay();
+
+        // from and todt should be greater than today
+        if (!empty($fromDt)) {
+            $fromDt = $fromDt->format('U');
+            if ($fromDt < $today) {
+                throw new InvalidArgumentException(__('Start time cannot be earlier than today'), 'fromDt' );
+            }
+        }
+        if (!empty($toDt)) {
+            $toDt = $toDt->format('U');
+            if ($toDt < $today) {
+                throw new InvalidArgumentException(__('End time cannot be earlier than today'), 'toDt' );
+            }
+        }
 
         $this->getLog()->debug('Add Report Schedule: '. $name);
 
@@ -346,8 +366,10 @@ class Report extends Base
         $reportSchedule->schedule = $result['schedule'];
         $reportSchedule->lastRunDt = 0;
         $reportSchedule->previousRunDt = 0;
+        $reportSchedule->fromDt = $fromDt;
+        $reportSchedule->toDt = $toDt;
         $reportSchedule->userId = $this->getUser()->userId;
-        $reportSchedule->createdDt = $this->getDate()->getLocalDate(null, 'U');
+        $reportSchedule->createdDt = Carbon::now()->format('U');
 
         $reportSchedule->save();
 
@@ -368,12 +390,11 @@ class Report extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function reportScheduleEdit(Request $request, Response $response, $id)
     {
@@ -383,7 +404,31 @@ class Report extends Base
             throw new AccessDeniedException();
         }
 
-        $reportSchedule->name = $this->getSanitizer($request->getParams())->getString('name');
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $name = $sanitizedParams->getString('name');
+        $reportName = $request->getParam('reportName', null);
+        $fromDt = $sanitizedParams->getDate('fromDt', ['default' => 0]);
+        $toDt = $sanitizedParams->getDate('toDt', ['default' => 0]);
+        $today = Carbon::now()->startOfDay();
+
+        // from and todt should be greater than today
+        if (!empty($fromDt)) {
+            $fromDt = $fromDt->format('U');
+            if ($fromDt < $today) {
+                throw new InvalidArgumentException(__('Start time cannot be earlier than today'), 'fromDt' );
+            }
+        }
+        if (!empty($toDt)) {
+            $toDt = $toDt->format('U');
+            if ($toDt < $today) {
+                throw new InvalidArgumentException(__('End time cannot be earlier than today'), 'toDt' );
+            }
+        }
+
+        $reportSchedule->name = $name;
+        $reportSchedule->fromDt = $fromDt;
+        $reportSchedule->toDt = $toDt;
         $reportSchedule->save();
 
         // Return
@@ -403,13 +448,11 @@ class Report extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function reportScheduleDelete(Request $request, Response $response, $id)
     {
@@ -442,17 +485,15 @@ class Report extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function reportScheduleDeleteAllSavedReport(Request $request, Response $response, $id)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         $reportSchedule = $this->reportScheduleFactory->getById($id);
 
@@ -461,10 +502,24 @@ class Report extends Base
         }
 
         // Get all saved reports of the report schedule
-        $savedReports = $this->savedReportFactory->query(null, ['reportScheduleId' => $id]);
+        $savedReports = $this->savedReportFactory->query(null,
+            [
+                'reportScheduleId' => $reportSchedule->reportScheduleId
+            ]);
+
+
         foreach ($savedReports as $savedreport) {
             try {
+                /** @var Media $media */
+                $media = $this->mediaFactory->getById($savedreport->mediaId);
+
+                $savedreport->load();
+                $media->load();
+
+                // Delete
                 $savedreport->delete();
+                $media->delete();
+
             } catch (\RuntimeException $e) {
                 throw new InvalidArgumentException(__('Saved report cannot be deleted'), 'savedReportId');
             }
@@ -485,12 +540,11 @@ class Report extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function reportScheduleToggleActive(Request $request, Response $response, $id)
     {
@@ -526,11 +580,8 @@ class Report extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function displayReportSchedulePage(Request $request, Response $response)
     {
@@ -549,11 +600,8 @@ class Report extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function addReportScheduleForm(Request $request, Response $response)
     {
@@ -576,16 +624,25 @@ class Report extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function editReportScheduleForm(Request $request, Response $response, $id)
     {
         $reportSchedule = $this->reportScheduleFactory->getById($id, 0);
+
+        if ($reportSchedule->fromDt > 0) {
+            $reportSchedule->fromDt = Carbon::createFromTimestamp($reportSchedule->fromDt)->format(DateFormatHelper::getSystemFormat());
+        } else {
+            $reportSchedule->fromDt = '';
+        }
+
+        if ($reportSchedule->toDt > 0) {
+            $reportSchedule->toDt = Carbon::createFromTimestamp($reportSchedule->toDt)->format(DateFormatHelper::getSystemFormat());
+        } else {
+            $reportSchedule->toDt = '';
+        }
 
         $this->getState()->template = 'reportschedule-form-edit';
         $this->getState()->setData([
@@ -601,12 +658,10 @@ class Report extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function resetReportScheduleForm(Request $request, Response $response, $id)
     {
@@ -633,12 +688,10 @@ class Report extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function deleteReportScheduleForm(Request $request, Response $response, $id)
     {
@@ -664,12 +717,10 @@ class Report extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function deleteAllSavedReportReportScheduleForm(Request $request, Response $response, $id)
     {
@@ -695,12 +746,10 @@ class Report extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function toggleActiveReportScheduleForm(Request $request, Response $response, $id)
     {
@@ -729,11 +778,9 @@ class Report extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function savedReportGrid(Request $request, Response $response)
     {
@@ -741,6 +788,7 @@ class Report extends Base
 
         $savedReports = $this->savedReportFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
             'saveAs' => $sanitizedQueryParams->getString('saveAs'),
+            'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
             'userId' => $sanitizedQueryParams->getInt('userId'),
             'reportName' => $sanitizedQueryParams->getString('reportName')
         ], $request), $request);
@@ -818,11 +866,8 @@ class Report extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function displaySavedReportPage(Request $request, Response $response)
     {
@@ -842,12 +887,10 @@ class Report extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function deleteSavedReportForm(Request $request, Response $response, $id)
     {
@@ -873,13 +916,10 @@ class Report extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function savedReportDelete(Request $request, Response $response, $id)
     {
@@ -916,11 +956,8 @@ class Report extends Base
      * @param $id
      * @param $name
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function savedReportOpen(Request $request, Response $response, $id, $name)
     {
@@ -939,10 +976,13 @@ class Report extends Base
      * @param Response $response
      * @param $id
      * @param $name
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws NotFoundException
      * @throws \Twig\Error\LoaderError
      * @throws \Twig\Error\RuntimeError
      * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function savedReportExport(Request $request, Response $response, $id, $name)
     {
@@ -983,7 +1023,7 @@ class Report extends Base
                     'title' => $savedReport->saveAs,
                     'periodStart' => $savedReportData['chartData']['periodStart'],
                     'periodEnd' => $savedReportData['chartData']['periodEnd'],
-                    'generatedOn' => $this->getDate()->parse($savedReport->generatedOn, 'U')->format('Y-m-d H:i:s'),
+                    'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat()),
                     'tableData' => isset($tableData) ? $tableData : null,
                     'src' => isset($src) ? $src : null,
                     'placeholder' => isset($placeholder) ? $placeholder : null
@@ -991,7 +1031,7 @@ class Report extends Base
             $body = ob_get_contents();
             ob_end_clean();
 
-            $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION'). 'temp/saved_report_'.$id.'.pdf';
+            $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/saved_report_' . $id . '.pdf';
 
             try {
                 $mpdf = new \Mpdf\Mpdf([
@@ -1019,15 +1059,12 @@ class Report extends Base
 
         // Return the file with PHP
         $this->setNoOutput(true);
-        header('Content-Type: application/octet-stream');
-        header("Content-Transfer-Encoding: Binary");
-        header("Content-disposition: attachment; filename=\"" . basename($fileName) . "\"");
-        header('Content-Length: ' . filesize($fileName));
 
-        // Disable any buffering to prevent OOM errors.
-        ob_end_flush();
-        readfile($fileName);
-        exit;
+        return $this->render($request, SendFile::decorateResponse(
+            $response,
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $fileName
+        ));
     }
 
     //</editor-fold>
@@ -1040,11 +1077,8 @@ class Report extends Base
      * @param Response $response
      * @param $name
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function getReportForm(Request $request, Response $response, $name)
     {
@@ -1076,11 +1110,8 @@ class Report extends Base
      * @param Response $response
      * @param $name
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function getReportData(Request $request, Response $response, $name)
     {

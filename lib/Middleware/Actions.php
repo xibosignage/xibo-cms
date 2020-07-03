@@ -31,11 +31,10 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
 use Slim\Routing\RouteContext;
 use Xibo\Entity\UserNotification;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\NotFoundException;
 use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\Environment;
 use Xibo\Helper\Translate;
+use Xibo\Support\Exception\AccessDeniedException;
 
 /**
  * Class Actions
@@ -56,7 +55,8 @@ class Actions implements Middleware
     {
         $app = $this->app;
         $container = $app->getContainer();
-        $container->get('configService')->setDependencies($container->get('store'), $app->rootUri);
+        $container->get('configService')->setDependencies($container->get('store'), $container->get('rootUri'));
+
         // Get the current route pattern
         $routeContext = RouteContext::fromRequest($request);
         $route = $routeContext->getRoute();
@@ -74,7 +74,7 @@ class Actions implements Middleware
                         /** @var \Xibo\Entity\Layout $layout */
                         $layout = $container->get('layoutFactory')->createFromZip($folder . '/' . $file, null,
                             $container->get('userFactory')->getSystemUser()->getId(), false, false, true, false,
-                            true, $container->get('\Xibo\Controller\Library'), $request);
+                            true, $container->get('\Xibo\Controller\Library'));
                         $layout->save([
                             'audit' => false
                         ]);

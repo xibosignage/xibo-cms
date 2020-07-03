@@ -23,14 +23,14 @@
 
 namespace Xibo\Factory;
 
+use Carbon\Carbon;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class PlaylistFactory
@@ -38,11 +38,6 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class PlaylistFactory extends BaseFactory
 {
-    /**
-     * @var DateServiceInterface
-     */
-    public $dateService;
-
     /**
      * @var PermissionFactory
      */
@@ -66,21 +61,19 @@ class PlaylistFactory extends BaseFactory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
-     * @param DateServiceInterface $date
      * @param PermissionFactory $permissionFactory
      * @param WidgetFactory $widgetFactory
      * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $config, $sanitizerService, $user, $userFactory, $date, $permissionFactory, $widgetFactory, $tagFactory)
+    public function __construct($store, $log, $config, $sanitizerService, $user, $userFactory, $permissionFactory, $widgetFactory, $tagFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
 
         $this->config = $config;
-        $this->dateService = $date;
         $this->permissionFactory = $permissionFactory;
         $this->widgetFactory = $widgetFactory;
         $this->tagFactory = $tagFactory;
@@ -95,7 +88,6 @@ class PlaylistFactory extends BaseFactory
             $this->getStore(),
             $this->getLog(),
             $this->config,
-            $this->dateService,
             $this->permissionFactory,
             $this,
             $this->widgetFactory,
@@ -169,6 +161,7 @@ class PlaylistFactory extends BaseFactory
      * @param null $sortOrder
      * @param array $filterBy
      * @return Playlist[]
+     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
     {
@@ -262,11 +255,11 @@ class PlaylistFactory extends BaseFactory
                 // Not 0 and behind now.
                 $body .= ' AND `playlist`.requiresDurationUpdate <= :requiresDurationUpdate ';
                 $body .= ' AND `playlist`.requiresDurationUpdate <> 0 ';
-                $params['requiresDurationUpdate'] = time();
+                $params['requiresDurationUpdate'] = Carbon::now()->format('U');
             } else {
                 // Ahead of now means we don't need to update yet, or we are set to 0 and we never update
                 $body .= ' AND (`playlist`.requiresDurationUpdate > :requiresDurationUpdate OR `playlist`.requiresDurationUpdate = 0)';
-                $params['requiresDurationUpdate'] = time();
+                $params['requiresDurationUpdate'] = Carbon::now()->format('U');
             }
         }
 
@@ -307,7 +300,7 @@ class PlaylistFactory extends BaseFactory
         // Playlist Like
         if ($parsedFilter->getString('name') != '') {
             $terms = explode(',', $parsedFilter->getString('name'));
-            $this->nameFilter('playlist', 'name', $terms, $body, $params);
+            $this->nameFilter('playlist', 'name', $terms, $body, $params, ($parsedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         // Playlist exact name
@@ -382,14 +375,6 @@ class PlaylistFactory extends BaseFactory
             $params['mediaLike'] = '%' . $parsedFilter->getString('mediaLike') . '%';
         }
 
-        $user = $this->getUser();
-
-        if ( ($user->userTypeId == 1 && $user->showContentFrom == 2) || $user->userTypeId == 4 ) {
-            $body .= ' AND user.userTypeId = 4 ';
-        } else {
-            $body .= ' AND user.userTypeId <> 4 ';
-        }
-
         // Sorting?
         $order = '';
         if (is_array($sortOrder)) {
@@ -408,7 +393,6 @@ class PlaylistFactory extends BaseFactory
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $playlist = $this->createEmpty()->hydrate($row, ['intProperties' => ['requiresDurationUpdate', 'isDynamic']]);
-            $playlist->excludeProperty('requiresDurationUpdate');
             $entries[] = $playlist;
         }
 

@@ -23,6 +23,7 @@
 var calendar;
 var events = [];
 let mymap;
+let mymapmarker;
 
 $(document).ready(function() {
 
@@ -60,6 +61,110 @@ $(document).ready(function() {
         // Get some options for the calendar
         var calendarOptions = $("#CalendarContainer").data();
 
+        // Callback function to navigate to calendar date with the date picker
+        const navigateToCalendarDate = function() {
+            if(calendar != undefined) {
+                // Add event to the picker to update the calendar
+                calendar.navigate('date', moment($('#dateInput input[data-input]').val()));
+            }
+        };
+
+        // Select picker options
+        let pickerOptions = {};
+
+        if( calendarType == 'Jalali') {
+            pickerOptions = {
+                autoClose: true,
+                altField: '#dateInputLink',
+                altFieldFormatter: function(unixTime) {
+                    let newDate = moment.unix(unixTime / 1000);
+                    newDate.set('hour', 0);
+                    newDate.set('minute', 0);
+                    newDate.set('second', 0);
+                    return newDate.format(jsDateFormat);
+                },
+                onSelect: function() {},
+                onHide: function() {
+                    // Trigger change after close
+                    $('#dateInput').trigger('change');
+                    $('#dateInputLink').trigger('change');
+                }
+            };
+        } else if( calendarType == 'Gregorian') {
+            pickerOptions = {
+                wrap: true,
+                altFormat: jsDateOnlyFormat
+            };
+        }
+
+        // Create the date input shortcut
+        initDatePicker(
+            $('#dateInput'), 
+            systemDateFormat, 
+            jsDateOnlyFormat, 
+            pickerOptions, 
+            navigateToCalendarDate,
+            false // clear button
+        );
+
+        // Location filter init
+        const $map = $('.cal-event-location-map #geoFilterAgendaMap');
+
+        // Get location button
+        $('#getLocation').off().click(function() {
+            const $self = $(this);
+
+            // Disable button
+            $self.prop('disabled', true);
+
+            navigator.geolocation.getCurrentPosition(function(location) { // success
+                // Populate location fields
+                $('#geoLatitude').val(location.coords.latitude).change();
+                $('#geoLongitude').val(location.coords.longitude).change();
+
+                // Reenable button
+                $self.prop('disabled', false);
+
+                // Redraw map
+                generateFilterGeoMap();
+            }, function error(err) { // error
+                console.warn(`ERROR(${err.code}): ${err.message}`);
+
+                // Reenable button
+                $self.prop('disabled', false);
+            }, { // options
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0
+            });
+        });
+
+        // Location map button
+        $('#toggleMap').off().click(function() {
+            $map.toggleClass('hidden');
+
+            if(!$map.hasClass('hidden')) {
+                generateFilterGeoMap();
+            }
+        });
+
+        // Clear location button
+        $('#clearLocation').off().click(function() {
+            // Populate location fields
+            $('#geoLatitude').val('').change();
+            $('#geoLongitude').val('').change();
+
+            if(!$map.hasClass('hidden')) {
+                generateFilterGeoMap();
+            }
+        });
+
+        // Change events reloads the calendar view and map
+        $('#geoLatitude, #geoLongitude').off().change(_.debounce(function() {
+            calendar.view();
+        }, 400));
+        
+        // Calendar options
         var options = {
             time_start: '00:00',
             time_end: '00:00',
@@ -81,6 +186,8 @@ $(document).ready(function() {
                 $('#DisplayList').prop('disabled', isShowAll);
 
                 if (this.options.view !== 'agenda') {
+
+                    $('.cal-event-agenda-filter').hide();
 
                     // Serialise
                     var displayGroups = $('#DisplayList').serialize();
@@ -104,8 +211,8 @@ $(document).ready(function() {
                     
                     // Populate the events array via AJAX
                     var params = {
-                        "from": this.options.position.start.getTime(),
-                        "to": this.options.position.end.getTime()
+                        "from": moment(this.options.position.start.getTime()).format(systemDateFormat),
+                        "to": moment(this.options.position.end.getTime()).format(systemDateFormat)
                     };
 
                     // If there is already a request, abort it
@@ -173,6 +280,28 @@ $(document).ready(function() {
                         });
                 } else {
 
+                    // Show time slider on agenda view and call the calendar view on slide stop event
+                    $('.cal-event-agenda-filter').show();
+
+                    const $timePicker = $('#timePicker');
+
+                    let momentNow = moment().tz ? moment().tz(timezone) : moment();
+
+                    $timePicker.slider({
+                        value: (momentNow.hour() * 60) + momentNow.minute(),
+                        tooltip: 'always',
+                        formatter: function(value) {
+                            return moment().startOf("day").minute(value).format(jsTimeFormat);
+                        }
+                    }).off('slideStop').on('slideStop', function(ev) {
+                        calendar.view();
+                    });
+
+                    $('.time-picker-step-btn').off().on('click', function() {
+                        $timePicker.slider('setValue', $timePicker.slider('getValue') + $(this).data('step'));
+                        calendar.view();
+                    });
+
                     // Get selected display groups
                     var selectedDisplayGroup = $('.cal-context').data().selectedTab;
                     var displayGroupsList = [];
@@ -221,9 +350,9 @@ $(document).ready(function() {
                     var url = calendarOptions.agendaLink.replace(":id", selectedDisplayGroup);
                                     
                     var dateMoment = moment(this.options.position.start.getTime() / 1000, "X");
-                    var timeFromSlider = ( $('#timePickerSlider').length ) ? $('#timePicker').slider('getValue') : 0
+                    var timeFromSlider = ( $('#timePickerSlider').length ) ? $('#timePicker').slider('getValue') : 0;
                     var timeMoment = moment(timeFromSlider*60, "X");
-                    
+
                     // Add hour to date to get the selected date
                     var dateSelected = moment(dateMoment + timeMoment);
 
@@ -273,7 +402,7 @@ $(document).ready(function() {
                             done();
                             
                         calendar._render();
-                    } else if(!jQuery.isEmptyObject(events['results'][selectedDisplayGroup]) && events['results'][selectedDisplayGroup]['request_date'] == params.date) {
+                    } else if(!jQuery.isEmptyObject(events['results'][selectedDisplayGroup]) && events['results'][selectedDisplayGroup]['request_date'] == params.date && events['results'][selectedDisplayGroup]['geoLatitude'] == $('#geoLatitude').val() && events['results'][selectedDisplayGroup]['geoLongitude'] == $('#geoLongitude').val()) {
                         // 2 - Use cache if the element was already saved for the requested date
                         if (done != undefined)
                             done();
@@ -286,11 +415,27 @@ $(document).ready(function() {
                         // 3 - make request to get the data for the events
                         getJsonRequestControl = $.getJSON(url, params)
                             .done(function(data) {
-                                
+
+                                let noEvents = true;
+
                                 if(!jQuery.isEmptyObject(data.data) && data.data.events != undefined && data.data.events.length > 0){
                                     events['results'][String(selectedDisplayGroup)] = data.data;
                                     events['results'][String(selectedDisplayGroup)]['request_date'] = params.date;
-                                } else {
+
+                                    noEvents = false;
+
+                                    if($('#geoLatitude').val() != undefined && $('#geoLatitude').val() != '' &&
+                                        $('#geoLongitude').val() != undefined && $('#geoLongitude').val() != '') {
+                                        events['results'][String(selectedDisplayGroup)]['geoLatitude'] = $('#geoLatitude').val();
+                                        events['results'][String(selectedDisplayGroup)]['geoLongitude'] = $('#geoLongitude').val();
+
+                                        events['results'][String(selectedDisplayGroup)]['events'] = filterEventsByLocation(events['results'][String(selectedDisplayGroup)]['events']);
+
+                                        noEvents = (data.data.events.length <= 0);
+                                    }
+                                }
+
+                                if(noEvents) {
                                     events['results'][String(selectedDisplayGroup)] = {};
                                     events['errorMessage'] = 'no_events';
                                 }
@@ -325,7 +470,7 @@ $(document).ready(function() {
                 if(this.options.view == 'agenda') {
                     // When agenda panel is ready, turn tables into datatables with paging
                     $('.agenda-panel').ready(function() {
-                        $('#layouts').dataTable({
+                        $('.agenda-table-layouts').dataTable({
                             "searching": false
                         });
                     });
@@ -335,40 +480,13 @@ $(document).ready(function() {
                     return;
                 }
             },
-            onAfterViewLoad: function(view) {
-                
-                // Show time slider on agenda view and call the calendar view on slide stop event
-                if (this.options.view == 'agenda') {
-                    $('.cal-event-time-bar').show();
-
-                    const $timePicker = $('#timePicker');
-                    
-                    let momentNow = moment().tz ? moment().tz(timezone) : moment();
-                    
-                    $timePicker.slider({
-                        value: (momentNow.hour() * 60) + momentNow.minute(),
-                        tooltip: 'always',
-                        formatter: function(value) {
-                            return moment().startOf("day").minute(value).format(jsTimeFormat);
-                        }
-                    }).off('slideStop').on('slideStop', function(ev) {
-                        calendar.view();
-                    });
-
-                    $('.time-picker-step-btn').off().on('click', function() {
-                        $timePicker.slider('setValue', $timePicker.slider('getValue') + $(this).data('step'));
-                        calendar.view();
-                    });
-
-                } else {
-                    $('.cal-event-time-bar').hide();
-                }
-                
+            onAfterViewLoad: function(view) {                
                 // Sync the date of the date picker to the current calendar date
-                if (this.options.position.start != undefined && this.options.position.start != ""){
-                    $("#dateInput .form-control").datetimepicker('update', moment(this.options.position.start.getTime() / 1000, "X").format(systemDateFormat));
+                if (this.options.position.start != undefined && this.options.position.start != "") {
+                    // Update timepicker
+                    updateDatePicker($('#dateInput'), moment.unix(this.options.position.start.getTime() / 1000).format(jsDateOnlyFormat), jsDateOnlyFormat);
                 }
-                    
+                
                 if (typeof this.getTitle === "function")
                     $('h1.page-header').text(this.getTitle());
 
@@ -402,13 +520,12 @@ $(document).ready(function() {
                 return;
             
             // If the click was in a layout table row create the breadcrumb trail
-            if ($self.closest('table').prop('id') == 'layouts' || $self.closest('table').prop('id') == 'overlays'){
+            if ($self.closest('table').data('type') == 'layouts'){
                 $('.cal-event-breadcrumb-trail').show();
-                //agendaCreateBreadcrumbTrail($self.data("id"), events);
                 
                 // Clean div content
                 $('.cal-event-breadcrumb-trail #content').html('');
-                
+
                 // Get the template and render it on the div
                 $('.cal-event-breadcrumb-trail #content').append(calendar._breadcrumbTrail($self.data("elemId"), events, $self.data("eventId")));
                 
@@ -416,21 +533,8 @@ $(document).ready(function() {
             }
             
             // Select the clicked element and the linked elements
-            agendaSelectLinkedElements($self.closest('table').prop('id'), $self.data("elemId"), events, $self.data("eventId"));
-            
+            agendaSelectLinkedElements($self.closest('table').data('type'), $self.data("elemId"), events, $self.data("eventId"));
         });
-        
-        // Create the date input shortcut
-        $('#dateInput').datetimepicker({
-            format: bootstrapDateFormatDateOnly,
-            autoclose: true,
-            language: language,
-            calendarType: calendarType,
-            minView: 2,
-            todayHighlight: true
-        }).change(function() {
-            calendar.navigate("date", moment($("#dateInput .form-control").val(), jsDateFormat));
-        }).datetimepicker('update', moment(calendar.options.position.start.getTime() / 1000, "X").format(systemDateFormat));
     }
 });
 
@@ -438,87 +542,13 @@ $(document).ready(function() {
  * Callback for the schedule form
  */
 var setupScheduleForm = function(dialog) {
-
-    var $eventTypeId = $('#eventTypeId').val();
-    var $layoutSpecific = -1;
-    var $layoutControl = $(".layout-control");
-
-    if ($eventTypeId == 1) {
-
-        // Load Layouts only
-        $layoutSpecific = 1;
-
-        // Change Label and Helptext when Layout event type is selected
-        $layoutControl.children("label").text('Layout');
-        $layoutControl.children("div").children(".help-block").text('Please select a Layout for this Event to show');
-
-    } else if ($eventTypeId == 4) {
-
-        // Load Layouts only
-        $layoutSpecific = 1;
-
-        // Change Label and Helptext when Layout event type is selected
-        $layoutControl.children("label").text('Layout');
-        $layoutControl.children("div").children(".help-block").text('Please select a Layout for this Event to show');
-
-    } else if ($eventTypeId == 5) {
-
-        // Load Campaigns only
-        $layoutSpecific = 0;
-
-        // Change Label and Helptext when Campaign event type is selected
-        $layoutControl.children("label").text('Campaign');
-        $layoutControl.children("div").children(".help-block").text('Please select a Campaign for this Event to show');
-
-    } else {
-
-        // Load both Layouts and Campaigns
-        $layoutSpecific = -1;
-
-    }
-
-    $('#eventTypeId').change(function() {
-        $eventTypeId = $('#eventTypeId').val();
-
-        if ($eventTypeId == 1) {
-
-            // Load Layouts only
-            $layoutSpecific = 1;
-
-            // Change Label and Helptext when Layout event type is selected
-            $layoutControl.children("label").text('Layout');
-            $layoutControl.children("div").children(".help-block").text('Please select a Layout for this Event to show');
-
-        } else if ($eventTypeId == 4) {
-
-            // Load Layouts only
-            $layoutSpecific = 1;
-
-            // Change Label and Helptext when Layout event type is selected
-            $layoutControl.children("label").text('Layout');
-            $layoutControl.children("div").children(".help-block").text('Please select a Layout for this Event to show');
-
-        } else if ($eventTypeId == 5) {
-
-            // Load Campaigns only
-            $layoutSpecific = 0;
-
-            // Change Label and Helptext when Campaign event type is selected
-            $layoutControl.children("label").text('Campaign');
-            $layoutControl.children("div").children(".help-block").text('Please select a Campaign for this Event to show');
-
-        } else {
-
-            // Load both Layouts and Campaigns
-            $layoutSpecific = -1;
-
-        }
-    });
+    console.log("Setup schedule form");
 
     // geo schedule
-    let $isGeoAware = $('#isGeoAware').is(':checked');
+    let $geoAware = $('#isGeoAware');
+    let isGeoAware = $geoAware.is(':checked');
 
-    if ($isGeoAware ) {
+    if (isGeoAware) {
 
         // without this additional check the map will not load correctly, it should be initialised when we are on the Geo Location tab
         $('.nav-tabs a').on('shown.bs.tab', function(event){
@@ -531,16 +561,39 @@ var setupScheduleForm = function(dialog) {
     }
 
     // hide/show and generate map according to the Geo Schedule checkbox value
-    $('#isGeoAware').change(function() {
-        $isGeoAware = $('#isGeoAware').is(':checked');
+    $geoAware.change(function() {
+        isGeoAware = $('#isGeoAware').is(':checked');
 
-        if ($isGeoAware) {
+        if (isGeoAware) {
             $('#geoScheduleMap').removeClass('hidden');
             generateGeoMap();
         } else {
             $('#geoScheduleMap').addClass('hidden');
         }
     });
+
+    // Share of voice
+    var shareOfVoice = $("#shareOfVoice");
+    var shareOfVoicePercentage = $("#shareOfVoicePercentage");
+    shareOfVoice.on("change paste keyup", function() {
+        convertShareOfVoice(shareOfVoice.val());
+    });
+
+    shareOfVoicePercentage.on("change paste keyup", function() {
+        var percentage = shareOfVoicePercentage.val();
+        var conversion;
+        conversion = (3600 * percentage) / 100;
+        shareOfVoice.val(conversion);
+    });
+
+
+    var convertShareOfVoice = function(seconds) {
+        var conversion;
+        conversion = (100 * seconds) / 3600;
+        shareOfVoicePercentage.val(conversion.toFixed(2));
+    };
+
+    convertShareOfVoice(shareOfVoice.val());
 
     // Select lists
     var $campaignSelect = $('#campaignId', dialog);
@@ -550,7 +603,7 @@ var setupScheduleForm = function(dialog) {
             dataType: "json",
             data: function(params) {
                 var query = {
-                    isLayoutSpecific: $layoutSpecific,
+                    isLayoutSpecific: $campaignSelect.data("searchIsLayoutSpecific"),
                     retired: 0,
                     totalDuration: 0,
                     name: params.term,
@@ -584,41 +637,16 @@ var setupScheduleForm = function(dialog) {
                 return query;
             },
             processResults: function(data, params) {
-                var results = [];
-                var campaigns = [];
-                var layouts = [];
+                let results = [];
 
-                $.each(data.data, function(index, element) {
-                    if (element.isLayoutSpecific === 1) {
-                        layouts.push({
-                            "id": element.campaignId,
-                            "text": element.campaign
-                        });
-                    } else {
-                        campaigns.push({
-                            "id": element.campaignId,
-                            "text": element.campaign
-                        });
-                    }
+                $.each(data.data, function(index, el) {
+                    results.push({
+                        "id": el["campaignId"],
+                        "text": el["campaign"]
+                    });
                 });
 
-                if (campaigns.length > 0 && $eventTypeId != 4) {
-                    results.push({
-                        "text": $campaignSelect.data('transCampaigns'),
-                        "children": campaigns
-                    })
-                }
-
-                if (layouts.length > 0) {
-                    results.push({
-                        "text": $campaignSelect.data('transLayouts'),
-                        "children": layouts
-                    })
-                }
-
-                console.log(results);
-
-                var page = params.page || 1;
+                let page = params.page || 1;
                 page = (page > 1) ? page - 1 : page;
 
                 return {
@@ -715,12 +743,12 @@ var setupScheduleForm = function(dialog) {
     
     // Hide/Show form elements according to the selected options
     // Initial state of the components
-    processScheduleFormElements($("#recurrenceType"));
-    processScheduleFormElements($("#eventTypeId"));
-    processScheduleFormElements($("#campaignId"));
+    processScheduleFormElements($("#recurrenceType", dialog));
+    processScheduleFormElements($("#eventTypeId", dialog));
+    processScheduleFormElements($("#campaignId", dialog));
 
     // Events on change
-    $("#recurrenceType, #eventTypeId, #dayPartId, #campaignId").on("change", function() { processScheduleFormElements($(this)) });
+    $("#recurrenceType, #eventTypeId, #dayPartId, #campaignId", dialog).on("change", function() { processScheduleFormElements($(this)) });
 
     // Handle the repeating monthly selector
     // Run when the tab changes
@@ -760,24 +788,37 @@ var setupScheduleForm = function(dialog) {
         });
     });
 
-    // Add a button for duplicating this event
-    if ($(dialog).find("#scheduleEditForm").length > 0) {
-        $button = $("<button>").addClass("btn btn-info").attr("id", "scheduleDuplateButton").html(translations.duplicate).on("click", function() {
-            duplicateScheduledEvent()
-        });
-
-        $(dialog).find('.modal-footer').prepend($button);
-    }
-
     // Popover
     $(dialog).find('[data-toggle="popover"]').popover();
 
-    var scheduleEditForm = $(dialog).find("#scheduleEditForm");
-    // Add a button for deleting single recurring event
-    if (scheduleEditForm.length > 0) {
-        $button = $("<button>").addClass("btn btn-primary").attr("id", "scheduleRecurringDeleteButton").html(translations.deleteRecurring).on("click", function() {
-            deleteRecurringScheduledEvent(scheduleEditForm.data('eventId'), scheduleEditForm.data('eventStart'), scheduleEditForm.data('eventEnd'))
-        });
+    // Post processing on the schedule-edit form.
+    let $scheduleEditForm = $(dialog).find("#scheduleEditForm");
+    if ($scheduleEditForm.length > 0) {
+        // Add a button for duplicating this event
+        let $button = $("<button>").addClass("btn btn-info")
+            .attr("id", "scheduleDuplateButton")
+            .html(translations.duplicate)
+            .on("click", function() {
+                duplicateScheduledEvent();
+            });
+
+        $(dialog).find('.modal-footer').prepend($button);
+
+        // Update the date/times for this event in the correct format.
+        $scheduleEditForm.find("#instanceStartDate").html(moment($scheduleEditForm.data().eventStart, "X").format(jsDateFormat));
+        $scheduleEditForm.find("#instanceEndDate").html(moment($scheduleEditForm.data().eventEnd, "X").format(jsDateFormat));
+
+        // Add a button for deleting single recurring event
+        $button = $("<button>").addClass("btn btn-primary")
+            .attr("id", "scheduleRecurringDeleteButton")
+            .html(translations.deleteRecurring)
+            .on("click", function() {
+                deleteRecurringScheduledEvent(
+                    $scheduleEditForm.data('eventId'),
+                    $scheduleEditForm.data('eventStart'),
+                    $scheduleEditForm.data('eventEnd')
+                );
+            });
 
         $(dialog).find('#recurringInfo').prepend($button);
     }
@@ -822,7 +863,7 @@ var beforeSubmitScheduleForm = function(form) {
 
     var reminderEventTemplate = Handlebars.compile($("#reminderEventTemplate").html());
 
-    console.log(reminderFields.data().reminders.length);
+    //console.log(reminderFields.data().reminders.length);
     if(reminderFields.data().reminders.length == 0) {
         // Add a template row
         var context = {
@@ -831,8 +872,6 @@ var beforeSubmitScheduleForm = function(form) {
         };
         reminderFields.append(reminderEventTemplate(context));
     } else {
-
-        console.log(reminderFields.data().reminders)
         // For each of the existing codes, create form components
         var i = 0;
         $.each(reminderFields.data().reminders, function(index, field) {
@@ -897,7 +936,6 @@ var processScheduleFormElements = function(el) {
             var startTimeControlDisplay = (fieldVal == 2) ? "block" : "block";
             var dayPartControlDisplay = (fieldVal == 2) ? "none" : "block";
             var commandControlDisplay = (fieldVal == 2) ? "block" : "none";
-            var previewControlDisplay = (fieldVal == 2) ? "none" : "block";
             var scheduleSyncControlDisplay = (fieldVal == 1) ? "block" : "none";
             let interruptControlDisplay = (fieldVal == 4) ? "block" : "none";
 
@@ -907,27 +945,22 @@ var processScheduleFormElements = function(el) {
             $(".starttime-control").css('display', startTimeControlDisplay);
             $(".day-part-control").css('display', dayPartControlDisplay);
             $(".command-control").css('display', commandControlDisplay);
-            $(".preview-button-container").css('display', previewControlDisplay);
             $(".sync-schedule-control").css('display', scheduleSyncControlDisplay);
             $(".interrupt-control").css('display', interruptControlDisplay);
 
-            // Depending on the event type selected we either want to filter in or filter out the
-            // campaigns.
-            $('#campaignId').parent().find(".bootstrap-select li").each(function() {
-                if (fieldVal == 1) {
-                    // Normal layout event - everything is visible.
-                    $(this).css("display", "block");
-                } else if (fieldVal == 3) {
-                    // Overlay layout, hide all campaigns
-                    if ($(this).data("optgroup") == 1)
-                        $(this).css("display", "none");
-                }
-            });
-
             // If the fieldVal is 2 (command), then we should set the dayPartId to be 0 (custom)
-            if (fieldVal == 2) {
-                console.log('Setting dayPartId to custom');
-                $("#dayPartId").val(0);
+            if (fieldVal === 2) {
+                // Determine what the custom day part is.
+                let $dayPartId = $("#dayPartId");
+                let customDayPartId = 0;
+                $dayPartId.find("option").each(function(i, el) {
+                    if ($(el).data("isCustom") === 1) {
+                        customDayPartId = $(el).val();
+                    }
+                });
+
+                console.log('Setting dayPartId to custom: ' + customDayPartId);
+                $dayPartId.val(customDayPartId);
 
                 var $startTime = $(".starttime-control");
                 $startTime.find("input[name=fromDt_Link2]").show();
@@ -936,6 +969,31 @@ var processScheduleFormElements = function(el) {
             
             // Call funtion for the daypart ID 
             processScheduleFormElements($('#dayPartId'));
+
+            // Change the help text and label of the campaignId dropdown
+            let $campaignSelect = el.closest("form").find("#campaignId");
+            let $layoutControl = $(".layout-control");
+            let searchIsLayoutSpecific = -1;
+
+            if (fieldVal === "1" || fieldVal === "3" || fieldVal === "4") {
+                // Load Layouts only
+                searchIsLayoutSpecific = 1;
+
+                // Change Label and Help text when Layout event type is selected
+                $layoutControl.children("label").text($campaignSelect.data("transLayout"));
+                $layoutControl.children("div").children(".help-block").text($campaignSelect.data("transLayoutHelpText"));
+
+            } else {
+                // Load Campaigns only
+                searchIsLayoutSpecific = 0;
+
+                // Change Label and Help text when Campaign event type is selected
+                $layoutControl.children("label").text('Campaign');
+                $layoutControl.children("div").children(".help-block").text('Please select a Campaign for this Event to show');
+            }
+
+            // Set the search criteria
+            $campaignSelect.data("searchIsLayoutSpecific", searchIsLayoutSpecific);
             
             break;
         
@@ -976,6 +1034,8 @@ var processScheduleFormElements = function(el) {
             break;
 
         case 'campaignId':
+            console.log('Process: campaignId, val = ' + fieldVal + ', visibility = ' + el.is(":visible"));
+
             // Update the preview button URL
             var $previewButton = $("#previewButton");
 
@@ -988,7 +1048,7 @@ var processScheduleFormElements = function(el) {
 
             break;
     }
-}
+};
 
 var duplicateScheduledEvent = function() {
     // Set the edit form URL to that of the add form
@@ -1121,16 +1181,13 @@ var agendaSelectLinkedElements = function(elemType, elemID, data, eventId) {
     // Use the target events to select the corresponding objects
     for (var i = 0; i < targetEvents.length; i++) {
         // Select the corresponding layout
-        $('table#layouts tr[data-elem-id~="' + targetEvents[i].layoutId + '"][data-event-id~="' + targetEvents[i].eventId + '"]').addClass(selectClass['layouts']);
-        
-        // Select the corresponding layout
-        $('table#overlays tr[data-elem-id~="' + targetEvents[i].layoutId + '"][data-event-id~="' + targetEvents[i].eventId + '"]').addClass(selectClass['overlays']);
+        $('table[data-type="layouts"] tr[data-elem-id~="' + targetEvents[i].layoutId + '"][data-event-id~="' + targetEvents[i].eventId + '"]').addClass(selectClass['layouts']);
         
         // Select the corresponding display group
-        $('table#displaygroups tr[data-elem-id~="' + targetEvents[i].displayGroupId + '"]').addClass(selectClass['displaygroups']);
+        $('table[data-type="displaygroups"] tr[data-elem-id~="' + targetEvents[i].displayGroupId + '"]').addClass(selectClass['displaygroups']);
         
         // Select the corresponding campaigns
-        $('table#campaigns tr[data-elem-id~="' + targetEvents[i].campaignId + '"]').addClass(selectClass['campaigns']);
+        $('table[data-type="campaigns"] tr[data-elem-id~="' + targetEvents[i].campaignId + '"]').addClass(selectClass['campaigns']);
         
     }
     
@@ -1261,4 +1318,90 @@ let generateGeoMap = function () {
         mymap.removeControl(drawControl);
         mymap.addControl(drawControlEditOnly);
     }
+};
+
+const generateFilterGeoMap = function() {
+    if(mymap !== undefined && mymap !== null) {
+        mymap.remove();
+    }
+
+    // Get location values
+    let defaultLat = $('#geoLatitude').val();
+    let defaultLong = $('#geoLongitude').val();
+
+    // If values are not set, get system default location
+    if(defaultLat == undefined || defaultLat == '' || defaultLong == undefined || defaultLong == '') {
+        defaultLat = $('.cal-event-location-map').data('defaultLat');
+        defaultLong = $('.cal-event-location-map').data('defaultLong');
+    }
+
+    // base map
+    mymap = L.map('geoFilterAgendaMap').setView([defaultLat, defaultLong], 13);
+
+    // base tile layer, provided by Open Street Map
+    L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        subdomains: ['a', 'b', 'c']
+    }).addTo(mymap);
+
+    // add search Control - allows searching by country/city and automatically moves map to that location
+    let searchControl = new L.Control.Search({
+        url: 'https://nominatim.openstreetmap.org/search?format=json&q={s}',
+        jsonpParam: 'json_callback',
+        propertyName: 'display_name',
+        propertyLoc: ['lat', 'lon'],
+        marker: L.circleMarker([0, 0], {radius: 30}),
+        autoCollapse: true,
+        autoType: false,
+        minLength: 2,
+        hideMarkerOnCollapse: true
+    });
+
+    mymap.addControl(searchControl);
+
+    const setMarker = function(lat, lng) {
+        if(mymapmarker != undefined) {
+            mymap.removeLayer(mymapmarker);
+        }
+
+        mymapmarker = L.marker([lat, lng], mymap).addTo(mymap);
+    };
+
+    // Click to create marker
+    mymap.on('click', function(e) {
+        $('#geoLatitude').val(e.latlng.lat).change();
+        $('#geoLongitude').val(e.latlng.lng).change();
+
+        setMarker(e.latlng.lat, e.latlng.lng);
+    });
+
+    if($('#geoLatitude').val() != undefined && $('#geoLatitude').val() != '' && 
+    $('#geoLongitude').val() != undefined && $('#geoLongitude').val() != '') {
+        setMarker($('#geoLatitude').val(), $('#geoLongitude').val());
+    }
+};
+
+const filterEventsByLocation = function(events) {
+    let eventsResult = [];
+
+    for(let index = 0;index < events.length; index++) {
+
+        let event = events[index];
+
+        if(event.geoLocation != '') {
+            let geoJSON = JSON.parse(event.geoLocation);
+            let point = [$('#geoLongitude').val(), $('#geoLatitude').val()];
+            let polygon = L.geoJSON(geoJSON);
+
+            let test = leafletPip.pointInLayer(point, polygon);
+
+            if(test.length > 0) {
+                eventsResult.push(event);
+            }
+        } else {
+            eventsResult.push(event);
+        }
+    }
+
+    return eventsResult;
 };

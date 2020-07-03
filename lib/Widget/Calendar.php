@@ -22,16 +22,16 @@
 
 namespace Xibo\Widget;
 
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use ICal\ICal;
-use Jenssegers\Date\Date;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Invalidation;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Calendar
@@ -77,7 +77,7 @@ class Calendar extends ModuleWidget
     /** @inheritdoc */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-text-render.js')->save();
@@ -302,11 +302,11 @@ class Calendar extends ModuleWidget
         $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
         $this->setOption('uri', urlencode($sanitizedParams->getString('uri')));
         $this->setOption('name', $sanitizedParams->getString('name'));
-        $this->setOption('customInterval', $sanitizedParams->getString('customInterval'));
+        $this->setOption('customInterval', $sanitizedParams->getString('customInterval', ['defaultOnEmptyString' => true]));
         $this->setOption('eventLabelNow', $sanitizedParams->getString('eventLabelNow'));
 
         // Other options
-        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat'));
+        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat', ['defaultOnEmptyString' => true]));
         $this->setOption('numItems', $sanitizedParams->getInt('numItems'));
         $this->setOption('itemsPerPage', $sanitizedParams->getInt('itemsPerPage'));
         $this->setOption('effect', $sanitizedParams->getString('effect'));
@@ -336,10 +336,12 @@ class Calendar extends ModuleWidget
 
         $this->isValid();
         $this->saveWidget();
+
+        return $response;
     }
 
-    /** @inheritdoc
-     * @throws \Xibo\Exception\ConfigurationException
+    /**
+     * @inheritdoc
      */
     public function getResource($displayId = 0)
     {
@@ -361,17 +363,17 @@ class Calendar extends ModuleWidget
         // Get the feed URL contents from cache or source
         $items = $this->parseFeed($this->getFeed(), $template, $currentEventTemplate);
 
-            // Do we have a no-data message to display?
-            $noDataMessage = $this->getRawNode('noDataMessage');
+        // Do we have a no-data message to display?
+        $noDataMessage = $this->getRawNode('noDataMessage');
 
         // Return no data message as the last element ( removed after JS event filtering )
             if ($noDataMessage != '') {
                 $items[] = [
                     'startDate' => 0,
-                    'endDate' => Date::now()->addYear()->format('c'),
+                    'endDate' => Carbon::now()->addYear()->format('c'),
                     'item' => $noDataMessage,
-                'currentEventItem' => $noDataMessage,
-                'noDataMessage' => 1
+                    'currentEventItem' => $noDataMessage,
+                    'noDataMessage' => 1
                 ];
             } else {
                 $this->getLog()->error('Request failed for Widget=' . $this->getWidgetId() . '. Due to No Records Found');
@@ -414,7 +416,7 @@ class Calendar extends ModuleWidget
 
         // Include some vendor items and javascript
         $this
-            ->appendJavaScriptFile('vendor/jquery-1.11.1.min.js')
+            ->appendJavaScriptFile('vendor/jquery.min.js')
             ->appendJavaScriptFile('vendor/moment.js')
             ->appendJavaScriptFile('xibo-layout-scaler.js')
             ->appendJavaScriptFile('xibo-image-render.js')
@@ -584,7 +586,7 @@ class Calendar extends ModuleWidget
         // $iCal->eventsFromInterval only works for future events
         $excludeAllDay = $this->getOption('excludeAllDay', 0) == 1;
 
-        $startOfDay = Date::now()->startOfDay();
+        $startOfDay = Carbon::now()->startOfDay();
         $endOfDay = $startOfDay->copy()->addDay()->startOfDay();
 
         $this->getLog()->debug('Start of day is ' . $startOfDay->toDateTimeString());
@@ -597,8 +599,8 @@ class Calendar extends ModuleWidget
         foreach ($iCal->eventsFromInterval($this->getOption('customInterval', '1 week')) as $event) {
             try {
                 /** @var \ICal\Event $event */
-                $startDt = Date::instance($iCal->iCalDateToDateTime($event->dtstart));
-                $endDt = Date::instance($iCal->iCalDateToDateTime($event->dtend));
+                $startDt = Carbon::instance($iCal->iCalDateToDateTime($event->dtstart));
+                $endDt = Carbon::instance($iCal->iCalDateToDateTime($event->dtend));
 
                 if ($useEventTimezone === 1) {
                     $startDt->setTimezone($iCal->defaultTimeZone);
@@ -638,8 +640,8 @@ class Calendar extends ModuleWidget
     /**
      * @param $matches
      * @param $string
-     * @param Date $startDt
-     * @param Date $endDt
+     * @param Carbon $startDt
+     * @param Carbon $endDt
      * @param $dateFormat
      * @param $event
      * @return mixed
@@ -699,14 +701,16 @@ class Calendar extends ModuleWidget
     public function isValid()
     {
         // Must have a duration
-        if ($this->getUseDuration() == 1 && $this->getDuration() == 0)
+        if ($this->getUseDuration() == 1 && $this->getDuration() == 0) {
             throw new InvalidArgumentException(__('Please enter a duration'), 'duration');
+        }
 
         // Validate the URL
-        if (!v::url()->notEmpty()->validate(urldecode($this->getOption('uri'))))
+        if (!v::url()->notEmpty()->validate(urldecode($this->getOption('uri')))) {
             throw new InvalidArgumentException(__('Please enter a feed URI containing the events you want to display'), 'uri');
+        }
 
-        if ($this->getWidgetId() != '') {
+        if ($this->getWidgetId() != null) {
             $customInterval = $this->getOption('customInterval');
 
             if ($customInterval != '') {
@@ -714,7 +718,7 @@ class Calendar extends ModuleWidget
                 $dateInterval = \DateInterval::createFromDateString($customInterval);
 
                 // Use now and add the date interval to it
-                $now = Date::now();
+                $now = Carbon::now();
                 $check = $now->copy()->add($dateInterval);
 
                 if ($now->equalTo($check))

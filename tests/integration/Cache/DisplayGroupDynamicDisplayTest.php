@@ -1,14 +1,31 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2017-18 Spring Signage Ltd
- * (DisplayGroupDynamicDisplayTest.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
 namespace Xibo\Tests\integration\Cache;
 
+use Carbon\Carbon;
 use Xibo\Entity\Display;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboDisplayGroup;
@@ -68,8 +85,8 @@ class DisplayGroupDynamicDisplayTest extends LocalWebTestCase
         // Schedule the Layout "always" onto our display group
         //  deleting the layout will remove this at the end
         $event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
-            date('Y-m-d H:i:s', time()),
-            date('Y-m-d H:i:s', time()+7200),
+            Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+            Carbon::now()->addSeconds(7200)->format(DateFormatHelper::getSystemFormat()),
             $this->layout->campaignId,
             [$this->displayGroup->displayGroupId],
             0,
@@ -120,8 +137,10 @@ class DisplayGroupDynamicDisplayTest extends LocalWebTestCase
         // Make sure our Display is already DONE
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
 
+        $this->getLogger()->debug('Renaming display');
+
         // Rename the display
-        $this->client->put('/display/' . $this->display->displayId, [
+        $response = $this->sendRequest('PUT','/display/' . $this->display->displayId, [
             'display' => Random::generateString(10, 'testedited'),
             'defaultLayoutId' => $this->display->defaultLayoutId,
             'auditingUntil' => null,
@@ -133,6 +152,9 @@ class DisplayGroupDynamicDisplayTest extends LocalWebTestCase
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
         // There isn't anything directly on the display - so that will NOT trigger anything. The schedule is on the Display Group.
+        $this->getLogger()->debug('Finished renaming display');
+
+        $this->assertLessThan(300, $response->getStatusCode(), 'Non-success status code, body =' . $response->getBody()->getContents());
 
         // Validate the display status afterwards
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_PENDING), 'Display Status isnt as expected');

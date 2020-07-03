@@ -24,8 +24,8 @@ namespace Xibo\Widget;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class GoogleTraffic
@@ -85,7 +85,7 @@ class GoogleTraffic extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
     }
 
     /**
@@ -303,7 +303,7 @@ class GoogleTraffic extends ModuleWidget
         }
 
         // Include some vendor items
-        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
 
         return $this->renderTemplate([
             'viewPortWidth' => ($this->isPreview()) ? $this->region->width : '[[ViewPortWidth]]',

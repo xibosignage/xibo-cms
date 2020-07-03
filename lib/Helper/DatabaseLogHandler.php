@@ -35,13 +35,21 @@ use Xibo\Storage\PdoStorageService;
 class DatabaseLogHandler extends AbstractProcessingHandler
 {
     private static $statement;
-    protected $level;
+    protected $level = Logger::ERROR;
 
+    /**
+     * @param int $level The minimum logging level at which this handler will be triggered
+     */
     public function __construct($level = Logger::ERROR)
     {
         parent::__construct($level);
     }
 
+    /**
+     * Gets minimum logging level at which this handler will be triggered.
+     *
+     * @return int
+     */
     public function getLevel()
     {
         return $this->level;
@@ -57,6 +65,13 @@ class DatabaseLogHandler extends AbstractProcessingHandler
 
         return $this;
     }
+
+    /**
+     * Writes the record down to the log of the implementing handler
+     *
+     * @param  array $record
+     * @return void
+     */
     protected function write(array $record)
     {
         if (self::$statement == NULL) {

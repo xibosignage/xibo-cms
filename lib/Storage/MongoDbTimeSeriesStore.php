@@ -25,18 +25,16 @@ namespace Xibo\Storage;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
-use Xibo\Exception\GeneralException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class MongoDbTimeSeriesStore
@@ -46,9 +44,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 {
     /** @var LogServiceInterface */
     private $log;
-
-    /** @var DateServiceInterface */
-    private $dateService;
 
     /** @var array */
     private $config;
@@ -67,6 +62,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     private $widgets = [];
     private $layouts = [];
     private $displayGroups = [];
+    private $layoutsNotFound = [];
+    private $mediaItemsNotFound = [];
 
     /** @var  MediaFactory */
     protected $mediaFactory;
@@ -98,10 +95,9 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     /**
      * @inheritdoc
      */
-    public function setDependencies($log, $date, $layoutFactory = null, $campaignFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null, $displayGroupFactory = null)
+    public function setDependencies($log, $layoutFactory = null, $campaignFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null, $displayGroupFactory = null)
     {
         $this->log = $log;
-        $this->dateService = $date;
         $this->mediaFactory = $mediaFactory;
         $this->widgetFactory = $widgetFactory;
         $this->layoutFactory = $layoutFactory;
@@ -138,9 +134,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         unset($statData['fromDt']);
         unset($statData['toDt']);
         unset($statData['tag']);
-
-        unset($statData['scheduleId']);
-
+        
         // Make an empty array to collect layout/media/display tags into
         $tagFilter = [];
 
@@ -155,16 +149,24 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             } else {
 
                 try {
+
+                    // Media exists in not found cache
+                    if (in_array($statData['mediaId'], $this->mediaItemsNotFound)) {
+                        return;
+                    }
+
                     $media = $this->mediaFactory->getById($statData['mediaId']);
 
                     // Cache media
                     $this->mediaItems[$statData['mediaId']] = $media;
 
                 } catch (NotFoundException $error) {
-                    // Media not found ignore and log the stat
-                    $this->log->error('Media not found. Media Id: '. $statData['mediaId'] .',Layout Id: '. $statData['layoutId']
-                        .', FromDT: '.$statData['start'].', ToDt: '.$statData['end'].', Type: '.$statData['type']
-                        .', Duration: '.$statData['duration'] .', Count '.$statData['count']);
+
+                    // Cache Media not found, ignore and log the stat
+                    if (!in_array($statData['mediaId'], $this->mediaItemsNotFound)) {
+                        $this->mediaItemsNotFound[] = $statData['mediaId'];
+                        $this->log->error('Media not found. Media Id: '. $statData['mediaId']);
+                    }
 
                     return;
                 }
@@ -195,6 +197,9 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             } else {
 
+                // We are already doing getWidgetForStat is XMDS,
+                // checking widgetId not found does not require
+                // We should always be able to get the widget
                 try {
                     $widget = $this->widgetFactory->getById($statData['widgetId']);
 
@@ -203,9 +208,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
                 } catch (\Exception $error) {
                     // Widget not found, ignore and log the stat
-                    $this->log->error('Widget not found. Widget Id: '. $statData['widgetId'] .',Layout Id: '. $statData['layoutId']
-                        .', FromDT: '.$statData['start'].', ToDt: '.$statData['end'].', Type: '.$statData['type']
-                        .', Duration: '.$statData['duration'] .', Count '.$statData['count']);
+                    $this->log->error('Widget not found. Widget Id: '. $statData['widgetId']);
 
                     return;
                 }
@@ -235,6 +238,11 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
                 try {
 
+                    // Layout exists in not found cache
+                    if (in_array($statData['layoutId'], $this->layoutsNotFound)) {
+                        return;
+                    }
+
                     // Get the layout campaignId - this can give us a campaignId of a layoutId which id was replaced when draft to published
                     $layout = $this->layoutFactory->getByLayoutHistory($statData['layoutId']);
 
@@ -247,10 +255,22 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                     // All we can do here is log
                     // we shouldn't ever get in this situation because the campaignId we used above will have
                     // already been looked up in the layouthistory table.
-                    $this->log->alert('Error processing statistic into MongoDB. Layout not found. Stat is: ' . json_encode($statData));
+
+                    // Cache layouts not found
+                    if (!in_array($statData['layoutId'], $this->layoutsNotFound)) {
+                        $this->layoutsNotFound[] = $statData['layoutId'];
+                        $this->log->alert('Error processing statistic into MongoDB. Layout not found. Layout Id: ' . $statData['layoutId']);
+                    }
+
                     return;
-                } catch (XiboException $error) {
-                    $this->log->error('Layout not found. Layout Id: '. $statData['layoutId']);
+                } catch (GeneralException $error) {
+
+                    // Cache layouts not found
+                    if (!in_array($statData['layoutId'], $this->layoutsNotFound)) {
+                        $this->layoutsNotFound[] = $statData['layoutId'];
+                        $this->log->error('Layout not found. Layout Id: '. $statData['layoutId']);
+                    }
+
                     return;
                 }
             }
@@ -388,15 +408,16 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 ]
             ])->toArray();
 
+            if(count($earliestDate) > 0) {
+                return [
+                    'minDate' => $earliestDate[0]['minDate']->toDateTime()->format('U')
+                ];
+            }
+
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
         }
 
-        if(count($earliestDate) > 0) {
-            return [
-                'minDate' => $earliestDate[0]['minDate']->toDateTime()->format('U')
-            ];
-        }
         return [];
     }
 
@@ -425,6 +446,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $layoutIds = isset($filterBy['layoutIds']) ? $filterBy['layoutIds'] : [];
         $mediaIds = isset($filterBy['mediaIds']) ? $filterBy['mediaIds'] : [];
         $campaignId = isset($filterBy['campaignId']) ? $filterBy['campaignId'] : null;
+        $eventTag = isset($filterBy['eventTag']) ? $filterBy['eventTag'] : null;
 
         // Limit
         $start = isset($filterBy['start']) ? $filterBy['start'] : null;
@@ -440,6 +462,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             $toDt = new UTCDateTime($toDt->format('U')*1000);
             $match['$match']['start'] = [ '$lte' => $toDt];
+
+        } else if (($fromDt != null) && ($toDt == null)) {
+            $fromDt = new UTCDateTime($fromDt->format('U') * 1000);
+            $match['$match']['start'] = ['$gte' => $fromDt];
         }
 
         // statDate Filter
@@ -458,38 +484,32 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $match['$match']['displayId'] = [ '$in' => $displayIds ];
         }
 
-        // Campaign selection
-        // ------------------
-        // Get all the layouts of that campaign.
-        // Then get all the campaigns of the layouts
-        $campaignIds = [];
+        // Campaign Filter
+        // ---------------
+        // Use the Layout Factory to get all Layouts linked to the provided CampaignId
         if ($campaignId != null) {
+            $campaignIds = [];
             try {
-                $campaign = $this->campaignFactory->getById($campaignId);
-                $layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId);
+                $layouts = $this->layoutFactory->getByCampaignId($campaignId, false);
                 if (count($layouts) > 0) {
                     foreach ($layouts as $layout) {
                         $campaignIds[] = $layout->campaignId;
                     }
-                }
-            } catch (NotFoundException $notFoundException) {
-                $this->log->error('Empty campaignIds.');
-            }
-        }
 
-        // Campaign Filter
-        if ($campaignId != null) {
-            if (count($campaignIds) != 0) {
-                $match['$match']['campaignId'] = ['$in' => $campaignIds];
-            } else {
-                // we wont get any match as we store layoutspecific campaignid in stat
-                $match['$match']['campaignId'] = ['$eq' => $campaignId];
-            }
+                    // Add to our match
+                    $match['$match']['campaignId'] = ['$in' => $campaignIds];
+                }
+            } catch (NotFoundException $ignored) {}
         }
 
         // Type Filter
         if ($type != null) {
             $match['$match']['type'] = $type;
+        }
+
+        // Event Tag Filter
+        if ($eventTag != null) {
+            $match['$match']['eventName'] = $eventTag;
         }
 
         // Layout Filter
@@ -513,43 +533,132 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         }
 
         $collection = $this->client->selectCollection($this->config['database'], $this->table);
+
+        $group = [
+            '$group' => [
+                '_id'=> null,
+                'count' => ['$sum' => 1],
+            ]
+        ];
+
+        if (count($match) > 0) {
+            $totalQuery = [
+                $match,
+                $group,
+            ];
+        } else {
+            $totalQuery = [
+                $group,
+            ];
+        }
+
+        // Get total
         try {
-           $query = [
-               $match,
-               [
-                   '$project' => [
-                       'id'=> '$_id',
-                       'type'=> 1,
-                       'start'=> 1,
-                       'end'=> 1,
-                       'layout'=> '$layoutName',
-                       'display'=> '$displayName',
-                       'media'=> '$mediaName',
-                       'tag'=> '$eventName',
-                       'duration'=> '$duration',
-                       'count'=> '$count',
-                       'displayId'=> 1,
-                       'layoutId'=> 1,
-                       'widgetId'=> 1,
-                       'mediaId'=> 1,
-                       'statDate'=> 1,
-                       'engagements'=> 1,
-                   ]
-               ],
-           ];
+            $totalCursor = $collection->aggregate($totalQuery, ['allowDiskUse' => true]);
+
+            $totalCount = $totalCursor->toArray();
+            $total = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
+
+        } catch (\MongoDB\Exception\RuntimeException $e) {
+            $this->log->error('Error: Total Count. '. $e->getMessage());
+            throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
+        } catch (\Exception $e) {
+            $this->log->error('Error: Total Count. '. $e->getMessage());
+            throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
+        }
+
+        try {
+            $query = [
+                $match,
+                [
+                    '$project' => [
+                        'id'=> '$_id',
+                        'type'=> 1,
+                        'start'=> 1,
+                        'end'=> 1,
+                        'layout'=> '$layoutName',
+                        'display'=> '$displayName',
+                        'media'=> '$mediaName',
+                        'tag'=> '$eventName',
+                        'duration'=> '$duration',
+                        'count'=> '$count',
+                        'displayId'=> 1,
+                        'layoutId'=> 1,
+                        'widgetId'=> 1,
+                        'mediaId'=> 1,
+                        'campaignId'=> 1,
+                        'statDate'=> 1,
+                        'engagements'=> 1,
+                        'tagFilter' => 1
+                    ]
+                ],
+            ];
+
+            if (count($match) > 0) {
+
+                $query = [
+                    $match,
+                    $project,
+                ];
+            } else {
+
+                $query = [
+                    $project,
+                ];
+            }
+
+            // Sort by id (statId) - we must sort before we do pagination as mongo stat has descending order indexing on start/end
+            $query[]['$sort'] = ['id'=> 1];
 
             if ($start !== null && $length !== null) {
                 $query[]['$skip'] =  $start;
                 $query[]['$limit'] = $length;
             }
 
-            $cursor = $collection->aggregate($query);
+            $cursor = $collection->aggregate($query, ['allowDiskUse' => true]);
+
+            $result = new TimeSeriesMongoDbResults($cursor);
+
+            // Total
+            $result->totalCount = $total;
 
         } catch (\MongoDB\Exception\RuntimeException $e) {
-            $this->log->error($e->getMessage());
+            $this->log->error('Error: Get total. '. $e->getMessage());
+            throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
+        } catch (\Exception $e) {
+            $this->log->error('Error: Get total. '. $e->getMessage());
+            throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
         }
 
-        $result = new TimeSeriesMongoDbResults($cursor);
+        return $result;
+    }
+
+    /** @inheritdoc */
+    public function getExportStatsCount($filterBy = [])
+    {
+        // do we consider that the fromDt and toDt will always be provided?
+        $fromDt = isset($filterBy['fromDt']) ? $filterBy['fromDt'] : null;
+        $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
+        $displayIds = isset($filterBy['displayIds']) ? $filterBy['displayIds'] : [];
+
+        // Match query
+        $match = [];
+
+        // fromDt/toDt Filter
+        if (($fromDt != null) && ($toDt != null)) {
+            $fromDt = new UTCDateTime($fromDt->format('U')*1000);
+            $match['$match']['end'] = [ '$gt' => $fromDt];
+
+            $toDt = new UTCDateTime($toDt->format('U')*1000);
+            $match['$match']['start'] = [ '$lte' => $toDt];
+        }
+
+        // Displays Filter
+        if (count($displayIds) != 0) {
+            $match['$match']['displayId'] = [ '$in' => $displayIds ];
+        }
+
+        $collection = $this->client->selectCollection($this->config['database'], $this->table);
 
         // Get total
         try {
@@ -562,17 +671,20 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                     ]
                 ],
             ];
-            $totalCursor = $collection->aggregate($totalQuery);
+            $totalCursor = $collection->aggregate($totalQuery, ['allowDiskUse' => true]);
+
+            $totalCount = $totalCursor->toArray();
+            $total = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
 
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
+            throw new GeneralException(__('Sorry we encountered an error getting total number of Proof of Play data, please consult your administrator'));
+        } catch (\Exception $e) {
+            $this->log->error($e->getMessage());
+            throw new GeneralException(__('Sorry we encountered an error getting total number of Proof of Play data, please consult your administrator'));
         }
-        $totalCount = $totalCursor->toArray();
 
-        // Total
-        $result->totalCount = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
-
-        return $result;
+        return $total;
     }
 
     /** @inheritdoc */

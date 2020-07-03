@@ -21,8 +21,9 @@
  */
 
 namespace Xibo\XTR;
+use Carbon\Carbon;
 use Xibo\Factory\MediaFactory;
-use Xibo\Service\DateServiceInterface;
+use Xibo\Helper\DateFormatHelper;
 
 /**
  * Class ClearCachedMediaDataTask
@@ -32,16 +33,12 @@ class ClearCachedMediaDataTask implements TaskInterface
 {
     use TaskTrait;
 
-    /** @var DateServiceInterface */
-    private $date;
-
     /** @var MediaFactory */
     private $mediaFactory;
 
     /** @inheritdoc */
     public function setFactories($container)
     {
-        $this->date = $container->get('dateService');
         $this->mediaFactory = $container->get('mediaFactory');
         return $this;
     }
@@ -63,7 +60,7 @@ class ClearCachedMediaDataTask implements TaskInterface
     private function runClearCache()
     {
 
-        $cutOffDate = $this->date->parse('2019-11-26', 'Y-m-d')->startOfDay()->format('Y-m-d H:i:s');
+        $cutOffDate = Carbon::createFromFormat('Y-m-d', '2019-11-26')->startOfDay()->format(DateFormatHelper::getSystemFormat());
 
         // Update the MD5 and fileSize to null
         $this->store->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, modifiedDt = :modifiedDt
@@ -71,7 +68,7 @@ class ClearCachedMediaDataTask implements TaskInterface
             'fileSize' => null,
             'md5' => null,
             'createdDt' => $cutOffDate,
-            'modifiedDt' => date('Y-m-d H:i:s')
+            'modifiedDt' => date(DateFormatHelper::getSystemFormat())
 
         ]);
 

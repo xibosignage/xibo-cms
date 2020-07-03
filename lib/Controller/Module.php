@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -30,11 +31,6 @@ use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Event\WidgetAddEvent;
 use Xibo\Event\WidgetEditEvent;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -50,11 +46,16 @@ use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetAudioFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Module
@@ -138,7 +139,6 @@ class Module extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param ModuleFactory $moduleFactory
@@ -154,10 +154,13 @@ class Module extends Base
      * @param WidgetAudioFactory $widgetAudioFactory
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
+     * @param $dataSetFactory
+     * @param Twig $view
+     * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $moduleFactory, $playlistFactory, $mediaFactory, $permissionFactory, $userGroupFactory, $widgetFactory, $transitionFactory, $regionFactory, $layoutFactory, $displayGroupFactory, $widgetAudioFactory, $displayFactory, $scheduleFactory, $dataSetFactory, Twig $view, ContainerInterface $container)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $moduleFactory, $playlistFactory, $mediaFactory, $permissionFactory, $userGroupFactory, $widgetFactory, $transitionFactory, $regionFactory, $layoutFactory, $displayGroupFactory, $widgetAudioFactory, $displayFactory, $scheduleFactory, $dataSetFactory, Twig $view, ContainerInterface $container)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->store = $store;
         $this->moduleFactory = $moduleFactory;
@@ -182,11 +185,8 @@ class Module extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     function displayPage(Request $request, Response $response)
     {
@@ -203,12 +203,9 @@ class Module extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function grid(Request $request, Response $response)
     {
@@ -269,12 +266,10 @@ class Module extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function settingsForm(Request $request, Response $response, $id)
     {
@@ -305,12 +300,10 @@ class Module extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function settings(Request $request, Response $response, $id)
     {
@@ -353,11 +346,8 @@ class Module extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function verifyForm(Request $request, Response $response)
     {
@@ -375,11 +365,8 @@ class Module extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function verify(Request $request, Response $response)
     {
@@ -403,12 +390,9 @@ class Module extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function installListForm(Request $request, Response $response)
     {
@@ -432,12 +416,9 @@ class Module extends Base
      * @param Response $response
      * @param string $name
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function installForm(Request $request,Response $response, $name)
     {
@@ -452,7 +433,7 @@ class Module extends Base
         } else if (file_exists(PROJECT_ROOT . '/custom/' . $name . '.json')) {
             $module = json_decode(file_get_contents(PROJECT_ROOT . '/custom/' . $name . '.json'));
         } else {
-            throw new \InvalidArgumentException(__('Invalid module'));
+            throw new InvalidArgumentException(__('Invalid module'), 'name');
         }
 
         $this->getState()->template = 'module-form-install';
@@ -470,12 +451,9 @@ class Module extends Base
      * @param Response $response
      * @param string $name
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function install(Request $request,Response $response, $name)
     {
@@ -490,7 +468,7 @@ class Module extends Base
         } else if (file_exists(PROJECT_ROOT . '/custom/' . $name . '.json')) {
             $moduleDetails = json_decode(file_get_contents(PROJECT_ROOT . '/custom/' . $name . '.json'));
         } else {
-            throw new \InvalidArgumentException(__('Invalid module'));
+            throw new InvalidArgumentException(__('Invalid module'), 'name');
         }
 
         // All modules should be capable of autoload
@@ -521,7 +499,7 @@ class Module extends Base
      *  @SWG\Parameter(
      *      name="type",
      *      in="path",
-     *      description="The type of the Widget e.g. Image",
+     *      description="The type of the Widget e.g. text. Media based Widgets like Image are added via POST /playlist/library/assign/{playlistId} call.",
      *      type="string",
      *      required=true
      *   ),
@@ -556,15 +534,13 @@ class Module extends Base
      * @param string $type
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function addWidget(Request $request, Response $response,$type, $id)
     {
@@ -652,12 +628,10 @@ class Module extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function editWidgetForm(Request $request, Response $response, $id)
     {
@@ -712,14 +686,11 @@ class Module extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function editWidget(Request $request, Response $response, $id)
     {
@@ -762,12 +733,10 @@ class Module extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function deleteWidgetForm(Request $request, Response $response, $id)
     {
@@ -815,14 +784,11 @@ class Module extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function deleteWidget(Request $request, Response $response, $id)
     {
@@ -886,12 +852,10 @@ class Module extends Base
      * @param string $type
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function editWidgetTransitionForm(Request $request, Response $response, $type, $id)
     {
@@ -986,13 +950,11 @@ class Module extends Base
      * @param string $type
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function editWidgetTransition(Request $request, Response $response,$type, $id)
     {
@@ -1029,7 +991,7 @@ class Module extends Base
                 break;
 
             default:
-                throw new \InvalidArgumentException(__('Unknown transition type'));
+                throw new InvalidArgumentException(__('Unknown transition type'), 'type');
         }
 
         $widget->save();
@@ -1050,12 +1012,10 @@ class Module extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function widgetAudioForm(Request $request, Response $response, $id)
     {
@@ -1136,13 +1096,11 @@ class Module extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function widgetAudio(Request $request, Response $response, $id)
     {
@@ -1165,7 +1123,7 @@ class Module extends Base
 
         // Pull in the parameters we are expecting from the form.
         $mediaId = $sanitizedParams->getInt('mediaId');
-        $volume = $sanitizedParams->getInt('volume', 100);
+        $volume = $sanitizedParams->getInt('volume', ['default' => 100]);
         $loop = $sanitizedParams->getCheckbox('loop');
 
         // Remove existing audio records.
@@ -1219,13 +1177,11 @@ class Module extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function widgetAudioDelete(Request $request, Response $response, $id)
     {
@@ -1268,12 +1224,10 @@ class Module extends Base
      * @param string $tab
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function getTab(Request $request, Response $response,$tab, $id)
     {
@@ -1303,11 +1257,9 @@ class Module extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function getDataSets(Request $request, Response $response)
     {
@@ -1326,7 +1278,7 @@ class Module extends Base
      * @param $type
      * @param $templateId
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function getTemplateImage($type, $templateId)
     {
@@ -1347,13 +1299,10 @@ class Module extends Base
      * @param $regionId
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function getResource(Request $request, Response $response, $regionId, $id)
     {
@@ -1385,7 +1334,10 @@ class Module extends Base
         }
 
         $this->setNoOutput(true);
-        $response->getBody()->write($resource);
+
+        if (!empty($resource)) {
+            $response->getBody()->write($resource);
+        }
 
         return $this->render($request, $response);
     }
@@ -1397,11 +1349,9 @@ class Module extends Base
      * @param $name
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function customFormRender(Request $request, Response $response, $id, $name)
     {
@@ -1426,11 +1376,9 @@ class Module extends Base
      * @param $name
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function customFormExecute(Request $request, Response $response, $id, $name)
     {
@@ -1503,12 +1451,9 @@ class Module extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function clearCacheForm(Request $request, Response $response, $id)
     {
@@ -1529,12 +1474,9 @@ class Module extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function clearCache(Request $request, Response $response, $id)
     {
@@ -1554,12 +1496,10 @@ class Module extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function widgetExpiryForm(Request $request, Response $response, $id)
     {
@@ -1573,8 +1513,8 @@ class Module extends Base
         $this->getState()->template = 'module-form-expiry';
         $this->getState()->setData([
             'module' => $module,
-            'fromDt' => ($module->widget->fromDt === Widget::$DATE_MIN) ? '' : $this->getDate()->getLocalDate($module->widget->fromDt),
-            'toDt' => ($module->widget->toDt === Widget::$DATE_MAX) ? '' : $this->getDate()->getLocalDate($module->widget->toDt),
+            'fromDt' => ($module->widget->fromDt === Widget::$DATE_MIN) ? '' : Carbon::createFromTimestamp($module->widget->fromDt)->format(DateFormatHelper::getSystemFormat()),
+            'toDt' => ($module->widget->toDt === Widget::$DATE_MAX) ? '' : Carbon::createFromTimestamp($module->widget->toDt)->format(DateFormatHelper::getSystemFormat()),
             'deleteOnExpiry' => $module->getOption('deleteOnExpiry', 0)
         ]);
 
@@ -1633,13 +1573,11 @@ class Module extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function widgetExpiry(Request $request, Response $response, $id)
     {
@@ -1690,10 +1628,10 @@ class Module extends Base
         ]);
 
         if ($this->isApi($request)) {
-            $widget->createdDt = $this->getDate()->getLocalDate($widget->createdDt);
-            $widget->modifiedDt = $this->getDate()->getLocalDate($widget->modifiedDt);
-            $widget->fromDt = $this->getDate()->getLocalDate($widget->fromDt);
-            $widget->toDt = $this->getDate()->getLocalDate($widget->toDt);
+            $widget->createdDt = Carbon::createFromTimestamp($widget->createdDt)->format(DateFormatHelper::getSystemFormat());
+            $widget->modifiedDt = Carbon::createFromTimestamp($widget->modifiedDt)->format(DateFormatHelper::getSystemFormat());
+            $widget->fromDt = Carbon::createFromTimestamp($widget->fromDt)->format(DateFormatHelper::getSystemFormat());
+            $widget->toDt = Carbon::createFromTimestamp($widget->toDt)->format(DateFormatHelper::getSystemFormat());
         }
 
         // Successful

@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (ResolutionTest.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 namespace Xibo\Tests\Integration;
@@ -57,12 +72,12 @@ class ResolutionTest extends LocalWebTestCase
 
     public function testListAll()
     {
-        $this->client->get('/resolution');
+        $response = $this->sendRequest('GET','/resolution');
 
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
     }
 
     /**
@@ -82,13 +97,13 @@ class ResolutionTest extends LocalWebTestCase
             }
         }
         # Create new resolutions with data from provideSuccessCases
-        $response = $this->client->post('/resolution', [
+        $response = $this->sendRequest('POST','/resolution', [
             'resolution' => $resolutionName,
             'width' => $resolutionWidth,
             'height' => $resolutionHeight
         ]);
-        $this->assertSame(200, $this->client->response->status(), "Not successful: " . $response);
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         $this->assertSame($resolutionName, $object->data->resolution);
@@ -125,13 +140,13 @@ class ResolutionTest extends LocalWebTestCase
     public function testAddFailure($resolutionName, $resolutionWidth, $resolutionHeight)
     {
         # create new resolution with data from provideFailureCases
-        $response = $this->client->post('/resolution', [
+        $response = $this->sendRequest('POST','/resolution', [
             'resolution' => $resolutionName,
             'width' => $resolutionWidth,
             'height' => $resolutionHeight
         ]);
         # Check if it fails as expected
-        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
+        $this->assertSame(422, $response->getStatusCode(), 'Expecting failure, received ' . $response->getStatusCode());
     }
 
     /**
@@ -160,15 +175,16 @@ class ResolutionTest extends LocalWebTestCase
         $newWidth = 2400;
         # Change the resolution name, width and enable flag
         $name = Random::generateString(8, 'phpunit');
-        $this->client->put('/resolution/' . $resolution->resolutionId, [
+
+        $response = $this->sendRequest('PUT','/resolution/' . $resolution->resolutionId, [
             'resolution' => $name,
             'width' => $newWidth,
             'height' => $resolution->height,
             'enabled' => 0
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
        
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $this->client->response->body());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
+        $object = json_decode($response->getBody());
         # Examine the returned object and check that it's what we expect
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
@@ -196,10 +212,10 @@ class ResolutionTest extends LocalWebTestCase
         $res1 = (new XiboResolution($this->getEntityProvider()))->create($name1, 1000, 500);
         $res2 = (new XiboResolution($this->getEntityProvider()))->create($name2, 2000, 760);
         # Delete the one we created last
-        $this->client->delete('/resolution/' . $res2->resolutionId);
+        $response = $this->sendRequest('DELETE','/resolution/' . $res2->resolutionId);
         # This should return 204 for success
-        $response = json_decode($this->client->response->body());
-        $this->assertSame(200, $response->status, $this->client->response->body());
+        $object = json_decode($response->getBody());
+        $this->assertSame(204, $object->status, $response->getBody());
         # Check only one remains
         $resolutions = (new XiboResolution($this->getEntityProvider()))->get();
         $this->assertEquals(count($this->startResolutions) + 1, count($resolutions));

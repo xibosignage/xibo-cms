@@ -30,12 +30,13 @@ interface TimeSeriesResultsInterface
 {
     /**
      * Time series results constructor
+     * @param null $object
      */
     public function __construct($object = null);
 
     /**
      * Get statistics array
-     * @return array[array statData]
+     * @return array
      */
     public function getArray();
 
@@ -50,5 +51,29 @@ interface TimeSeriesResultsInterface
      * @return integer
      */
     public function getTotalCount();
+
+    /**
+     * @param $row
+     * @return string|int
+     */
+    public function getIdFromRow($row);
+
+    /**
+     * @param $row
+     * @return array
+     */
+    public function getEngagementsFromRow($row);
+
+    /**
+     * @param $row
+     * @return array
+     */
+    public function getTagFilterFromRow($row);
+
+    /**
+     * @param string $value
+     * @return \Carbon\Carbon
+     */
+    public function getDateFromValue($value);
 
 }

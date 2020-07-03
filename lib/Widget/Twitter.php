@@ -21,6 +21,7 @@
  */
 namespace Xibo\Widget;
 
+use Carbon\Carbon;
 use Emojione\Client;
 use Emojione\Ruleset;
 use Respect\Validation\Validator as v;
@@ -28,8 +29,8 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Invalidation;
 use Xibo\Entity\Media;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Twitter
@@ -86,7 +87,7 @@ class Twitter extends TwitterBase
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-text-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
@@ -107,7 +108,7 @@ class Twitter extends TwitterBase
                 $this->getLog()->debug('Deleting old emoji svg file');
                 $oldSvg->delete();
             }
-        } catch (XiboException $xiboException) {
+        } catch (GeneralException $xiboException) {
             $this->getLog()->error('Unable to delete old SVG reference during Twitter install. E = ' . $xiboException->getMessage());
             $this->getLog()->debug($xiboException->getTraceAsString());
         }
@@ -417,7 +418,7 @@ class Twitter extends TwitterBase
         $this->setOption('speed', $sanitizedParams->getInt('speed'));
         $this->setOption('backgroundColor', $sanitizedParams->getString('backgroundColor'));
         $this->setOption('noTweetsMessage', $sanitizedParams->getString('noTweetsMessage'));
-        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat'));
+        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat', ['defaultOnEmptyString' => true]));
         $this->setOption('resultType', $sanitizedParams->getString('resultType'));
         $this->setOption('tweetDistance', $sanitizedParams->getInt('tweetDistance'));
         $this->setOption('tweetCount', $sanitizedParams->getInt('tweetCount'));
@@ -453,13 +454,17 @@ class Twitter extends TwitterBase
      * @param int $displayId
      * @param bool $isPreview
      * @return array|false
-     * @throws \Xibo\Exception\XiboException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
     protected function getTwitterFeed($displayId = 0, $isPreview = true)
     {
         // Do we need to add a geoCode?
         $geoCode = '';
+        $template = null;
+        $resultContent = null;
+
         $distance = $this->getOption('tweetDistance');
         if ($distance != 0) {
             // Use the display ID or the default.
@@ -557,7 +562,7 @@ class Twitter extends TwitterBase
         $return = array();
 
         // Expiry time for any media that is downloaded
-        $expires = $this->getDate()->parse()->addHours($this->getSetting('cachePeriodImages', 24))->format('U');
+        $expires = Carbon::now()->addHours($this->getSetting('cachePeriodImages', 24))->format('U');
 
         // Remove URL setting
         $removeUrls = $this->getOption('removeUrls', 1)  == 1;
@@ -656,7 +661,7 @@ class Twitter extends TwitterBase
                         break;
 
                     case 'Date':
-                        $replace = $this->getDate()->getLocalDate(strtotime($tweet->created_at), $dateFormat);
+                        $replace = Carbon::createFromTimestamp(strtotime($tweet->created_at))->format($dateFormat);
                         break;
   
                     case 'Location':
@@ -744,6 +749,11 @@ class Twitter extends TwitterBase
     /** @inheritdoc */
     public function getResource($displayId = 0)
     {
+        $css = null;
+        $widgetOriginalWidth = null;
+        $widgetOriginalHeight = null;
+        $widgetOriginalPadding = null;
+
         // Make sure we are set up correctly
         if ($this->getSetting('apiKey') == '' || $this->getSetting('apiSecret') == '') {
             $this->getLog()->error('Twitter Module not configured. Missing API Keys');
@@ -846,7 +856,7 @@ class Twitter extends TwitterBase
         $data['head'] = $headContent;
 
         // Add some scripts to the JavaScript Content
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
 
         // Need the cycle plugin?
         if ($this->getOption('effect') != 'none')

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,7 +22,7 @@
 
 namespace Xibo\Tests\Integration;
 
-use Jenssegers\Date\Date;
+use Carbon\Carbon;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboStats;
@@ -100,7 +100,7 @@ class StatisticsWidgetTest extends LocalWebTestCase
         $this->deleteDisplay($this->display);
 
         // Delete stat records
-        self::$container->timeSeriesStore->deleteStats(Date::now(), Date::createFromFormat("Y-m-d H:i:s", '2018-02-12 00:00:00'));
+        self::$container->get('timeSeriesStore')->deleteStats(Carbon::now(), Carbon::createFromFormat("Y-m-d H:i:s", '2018-02-12 00:00:00'));
     }
 
     /**
@@ -149,20 +149,26 @@ class StatisticsWidgetTest extends LocalWebTestCase
         $this->assertSame(true, $response);
 
         // Get stats and see if they match with what we expect
-        $this->client->get('/stats' , [
+        $response = $this->sendRequest('GET','/stats' , [
             'fromDt' => '2018-02-12 00:00:00',
             'toDt' => '2018-02-17 00:00:00',
             'displayId' => $this->display->displayId,
+            'layoutId' => [$this->layout->layoutId],
             'type' => $type
         ]);
 
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        //$this->getLogger()->debug($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $stats = (new XiboStats($this->getEntityProvider()))->get(['fromDt' => '2018-02-12 00:00:00', 'toDt' => '2018-02-17 00:00:00', 'layoutId' => $this->layout->layoutId]);
-        // print_r($stats);
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        //$this->getLogger()->debug($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
+        $stats = (new XiboStats($this->getEntityProvider()))->get([
+            'fromDt' => '2018-02-12 00:00:00',
+            'toDt' => '2018-02-17 00:00:00',
+            'displayId' => $this->display->displayId,
+            'layoutId' => [$this->layout->layoutId],
+            'type' => $type
+        ]);
         $this->assertNotEquals(0, count($stats));
 
     }

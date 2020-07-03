@@ -22,13 +22,16 @@
 
 
 namespace Xibo\XTR;
-use Jenssegers\Date\Date;
+
+use Carbon\Carbon;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\TaskRunException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\TaskRunException;
 
 /**
  * Class StatsArchiveTask
@@ -85,12 +88,12 @@ class StatsArchiveTask implements TaskInterface
                 return;
             }
 
-            /** @var Date $earliestDate */
-            $earliestDate = $this->date->parse($earliestDate['minDate'], 'U')->setTime(0, 0, 0);
+            /** @var Carbon $earliestDate */
+            $earliestDate = Carbon::createFromTimestamp($earliestDate['minDate'])->setTime(0, 0, 0);
 
             // Take the earliest date and roll forward until the current time
-            /** @var Date $now */
-            $now = $this->date->parse()->subDay($periodSizeInDays * $periodsToKeep)->setTime(0, 0, 0);
+            /** @var Carbon $now */
+            $now = Carbon::now()->subDays($periodSizeInDays * $periodsToKeep)->setTime(0, 0, 0);
             $i = 0;
 
             while ($earliestDate < $now && $i < $maxPeriods) {
@@ -114,12 +117,13 @@ class StatsArchiveTask implements TaskInterface
 
     /**
      * Export stats to the library
-     * @param Date $fromDt
-     * @param Date $toDt
+     * @param Carbon $fromDt
+     * @param Carbon $toDt
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     private function exportStatsToLibrary($fromDt, $toDt)
     {
-        $this->runMessage .= ' - ' . $this->date->getLocalDate($fromDt) . ' / ' . $this->date->getLocalDate($toDt) . PHP_EOL;
+        $this->runMessage .= ' - ' . $fromDt->format(DateFormatHelper::getSystemFormat()) . ' / ' . $toDt->format(DateFormatHelper::getSystemFormat()) . PHP_EOL;
 
         $resultSet = $this->timeSeriesStore->getStats([
             'fromDt'=> $fromDt,
@@ -138,14 +142,14 @@ class StatsArchiveTask implements TaskInterface
 
             if ($this->timeSeriesStore->getEngine() == 'mongodb') {
 
-                $statDate = isset($row['statDate']) ? $this->date->parse($row['statDate']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s') : null;
-                $start = $this->date->parse($row['start']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
-                $end = $this->date->parse($row['end']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
+                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()) : null;
+                $start = Carbon::createFromTimestamp($row['start']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
+                $end = Carbon::createFromTimestamp($row['end']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
             } else {
 
-                $statDate = isset($row['statDate']) ?$this->date->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : null;
-                $start = $this->date->parse($row['start'], 'U')->format('Y-m-d H:i:s');
-                $end = $this->date->parse($row['end'], 'U')->format('Y-m-d H:i:s');
+                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate'])->format(DateFormatHelper::getSystemFormat()) : null;
+                $start = Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat());
+                $end = Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat());
             }
 
             // Read the columns
@@ -173,8 +177,9 @@ class StatsArchiveTask implements TaskInterface
         $zipName = $this->config->getSetting('LIBRARY_LOCATION') . 'temp/stats.csv.zip';
         $zip = new \ZipArchive();
         $result = $zip->open($zipName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-        if ($result !== true)
-            throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
+        if ($result !== true) {
+            throw new InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
+        }
 
         $zip->addFile($fileName, 'stats.csv');
         $zip->close();
@@ -183,7 +188,12 @@ class StatsArchiveTask implements TaskInterface
         unlink($fileName);
 
         // Upload to the library
-        $media = $this->mediaFactory->create(__('Stats Export %s to %s - ' . Random::generateString(5), $fromDt->format('Y-m-d'), $toDt->format('Y-m-d')), 'stats.csv.zip', 'genericfile', $this->archiveOwner->getId());
+        $media = $this->mediaFactory->create(
+            __('Stats Export %s to %s - %s', $fromDt->format('Y-m-d'), $toDt->format('Y-m-d'), Random::generateString(5)),
+            'stats.csv.zip',
+            'genericfile',
+            $this->archiveOwner->getId()
+        );
         $media->save();
 
         // Set max attempts to -1 so that we continue deleting until we've removed all of the stats that we've exported
@@ -231,7 +241,7 @@ class StatsArchiveTask implements TaskInterface
 
         if ($this->config->getSetting('MAINTENANCE_STAT_MAXAGE') != 0) {
 
-            $maxage = Date::now()->subDays(intval($this->config->getSetting('MAINTENANCE_STAT_MAXAGE')));
+            $maxage = Carbon::now()->subDays(intval($this->config->getSetting('MAINTENANCE_STAT_MAXAGE')));
             $maxAttempts = $this->getOption('statsDeleteMaxAttempts', 10);
             $statsDeleteSleep = $this->getOption('statsDeleteSleep', 3);
 

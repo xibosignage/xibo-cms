@@ -21,15 +21,16 @@
  */
 namespace Xibo\Widget;
 
+use Carbon\Carbon;
 use Emojione\Client;
 use Emojione\Ruleset;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Invalidation;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class TwitterMetro
@@ -85,7 +86,7 @@ class TwitterMetro extends TwitterBase
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-metro-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
@@ -370,7 +371,7 @@ class TwitterMetro extends TwitterBase
         $this->setOption('speed', $sanitizedParams->getInt('speed'));
         $this->setOption('backgroundColor', $sanitizedParams->getString('backgroundColor'));
         $this->setOption('noTweetsMessage', $sanitizedParams->getString('noTweetsMessage'));
-        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat'));
+        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat', ['defaultOnEmptyString' => true]));
         $this->setOption('resultType', $sanitizedParams->getString('resultType'));
         $this->setOption('tweetDistance', $sanitizedParams->getInt('tweetDistance'));
         $this->setOption('tweetCount', $sanitizedParams->getInt('tweetCount', ['default' => 60]));
@@ -404,7 +405,7 @@ class TwitterMetro extends TwitterBase
      * @param int $displayId
      * @param bool $isPreview
      * @return array|false
-     * @throws XiboException
+     * @throws GeneralException
      * @throws \GuzzleHttp\Exception\GuzzleException
      */
     protected function getTwitterFeed($displayId = 0, $isPreview = true)
@@ -500,7 +501,7 @@ class TwitterMetro extends TwitterBase
         $return = [];
 
         // Expiry time for any media that is downloaded
-        $expires = $this->getDate()->parse()->addHours($this->getSetting('cachePeriodImages', 24))->format('U');
+        $expires = Carbon::now()->addHours($this->getSetting('cachePeriodImages', 24))->format('U');
 
         // Remove URL setting
         $removeUrls = $this->getOption('removeUrls', 1)  == 1;
@@ -596,7 +597,7 @@ class TwitterMetro extends TwitterBase
 
                     case 'Date':
                         if($tweet->created_at != '')
-                            $replace = $this->getDate()->getLocalDate(strtotime($tweet->created_at), $dateFormat);
+                            $replace = Carbon::createFromTimestamp(strtotime($tweet->created_at))->format($dateFormat);
                         break;
   
                     case 'Location':
@@ -781,7 +782,7 @@ class TwitterMetro extends TwitterBase
         $data['head'] = $headContent;
 
         // Add some scripts to the JavaScript Content
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
 
         // Get the colors array
         if ($this->getOption('overrideColorTemplate') == 0) {

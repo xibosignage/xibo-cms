@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,12 +22,9 @@
 namespace Xibo\Entity;
 
 
+use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Exception\DeadlockException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
@@ -37,6 +34,10 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\DeadlockException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Display
@@ -354,6 +355,18 @@ class Display implements \JsonSerializable
      */
     public $commercialLicence;
 
+    /**
+     * @SWG\Property(description="The TeamViewer serial number for this Display")
+     * @var string
+     */
+    public $teamViewerSerial;
+
+    /**
+     * @SWG\Property(description="The Webkey serial number for this Display")
+     * @var string
+     */
+    public $webkeySerial;
+
     /** @var array The configuration from the Display Profile  */
     private $profileConfig;
 
@@ -517,9 +530,9 @@ class Display implements \JsonSerializable
      */
     public function isAuditing()
     {
-        $this->getLog()->debug(sprintf('Testing whether this display is auditing. %d vs %d.', $this->auditingUntil, time()));
+        $this->getLog()->debug(sprintf('Testing whether this display is auditing. %d vs %d.', $this->auditingUntil, Carbon::now()->format('U')));
         // Test $this->auditingUntil against the current date.
-        return ($this->auditingUntil >= time());
+        return ($this->auditingUntil >= Carbon::now()->format('U'));
     }
 
     /**
@@ -568,7 +581,7 @@ class Display implements \JsonSerializable
         if ($this->hasPropertyChanged('macAddress')) {
             // Mac address change detected
             $this->numberOfMacAddressChanges++;
-            $this->lastChanged = time();
+            $this->lastChanged = Carbon::now()->format('U');
         }
 
         // Lat/Long
@@ -578,8 +591,8 @@ class Display implements \JsonSerializable
         if (!empty($this->latitude) && !v::latitude()->validate($this->latitude))
             throw new InvalidArgumentException(__('The latitude entered is not valid.'), 'latitude');
 
-        if ($this->bandwidthLimit !== null && !v::intType()->validate($this->bandwidthLimit)) {
-            throw new InvalidArgumentException(__('Bandwidth limit must be a whole number.'), 'bandwidthLimit');
+        if ($this->bandwidthLimit !== null && !v::intType()->min(0)->validate($this->bandwidthLimit)) {
+            throw new InvalidArgumentException(__('Bandwidth limit must be a whole number greater than 0.'), 'bandwidthLimit');
         }
     }
 
@@ -642,7 +655,7 @@ class Display implements \JsonSerializable
     /**
      * Save
      * @param array $options
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function save($options = [])
     {
@@ -692,7 +705,7 @@ class Display implements \JsonSerializable
 
     /**
      * Delete
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function delete()
     {
@@ -721,6 +734,10 @@ class Display implements \JsonSerializable
         $this->getLog()->audit('Display', $this->displayId, 'Display Deleted', ['displayId' => $this->displayId]);
     }
 
+    /**
+     * @throws GeneralException
+     * @throws NotFoundException
+     */
     private function add()
     {
         $this->displayId = $this->getStore()->insert('
@@ -764,6 +781,10 @@ class Display implements \JsonSerializable
     }
 
 
+    /**
+     * @throws GeneralException
+     * @throws NotFoundException
+     */
     private function edit()
     {
         $this->getStore()->update('
@@ -807,7 +828,9 @@ class Display implements \JsonSerializable
                     `newCmsKey` = :newCmsKey,
                     `orientation` = :orientation,
                     `resolution` = :resolution,
-                    `commercialLicence` = :commercialLicence
+                    `commercialLicence` = :commercialLicence,
+                    `teamViewerSerial` = :teamViewerSerial,
+                    `webkeySerial` = :webkeySerial
              WHERE displayid = :displayId
         ', [
             'display' => $this->display,
@@ -851,6 +874,8 @@ class Display implements \JsonSerializable
             'orientation' => $this->orientation,
             'resolution' => $this->resolution,
             'commercialLicence' => $this->commercialLicence,
+            'teamViewerSerial' => empty($this->teamViewerSerial) ? null : $this->teamViewerSerial,
+            'webkeySerial' => empty($this->webkeySerial) ? null : $this->webkeySerial,
             'displayId' => $this->displayId
         ]);
 
@@ -871,7 +896,7 @@ class Display implements \JsonSerializable
      * Get the Settings Profile for this Display
      * @param array $options
      * @return array
-     * @throws \Xibo\Exception\XiboException
+     * @throws GeneralException
      */
     public function getSettings($options = [])
     {
@@ -883,7 +908,7 @@ class Display implements \JsonSerializable
     }
 
     /**
-     * @return array
+     * @return Command[]
      */
     public function getCommands()
     {

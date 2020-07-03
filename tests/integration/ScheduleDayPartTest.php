@@ -1,11 +1,30 @@
 <?php
-
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 namespace Xibo\Tests\integration;
 
-
-use Jenssegers\Date\Date;
+use Carbon\Carbon;
 use Xibo\Entity\Display;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDaypart;
 use Xibo\Tests\Helper\DisplayHelperTrait;
@@ -42,7 +61,7 @@ class ScheduleDayPartTest extends LocalWebTestCase
         $layout = $this->getDraft($this->layout);
 
         $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist->playlistId);
-        $response = $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'], [
+        $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'], [
             'text' => 'Widget A',
             'duration' => 100,
             'useDuration' => 1
@@ -70,7 +89,7 @@ class ScheduleDayPartTest extends LocalWebTestCase
         // calculate a few hours either side of now
         // must be tomorrow
         // must not cross the day boundary
-        $now = Date::now()->startOfDay()->addDay()->addHour();
+        $now = Carbon::now()->startOfDay()->addDay()->addHour();
 
         $this->dayPart = (new XiboDaypart($this->getEntityProvider()))->create(
             Random::generateString(5),
@@ -103,12 +122,12 @@ class ScheduleDayPartTest extends LocalWebTestCase
     {
         // Our CMS is in GMT
         // Create a schedule one hours time in my player timezone
-        $date = Date::now()->addDay()->setTime(0,0,0);
+        $date = Carbon::now()->addDay()->setTime(0,0,0);
 
-        $this->getLogger()->debug('Event start will be at: ' . $date->format('Y-m-d H:i:s'));
+        $this->getLogger()->debug('Event start will be at: ' . $date->format(DateFormatHelper::getSystemFormat()));
 
-        $response = $this->client->post('/schedule', [
-            'fromDt' => $date->format('Y-m-d H:i:s'),
+        $response = $this->sendRequest('POST','/schedule', [
+            'fromDt' => $date->format(DateFormatHelper::getSystemFormat()),
             'dayPartId' => $this->dayPart->dayPartId,
             'eventTypeId' => 1,
             'campaignId' => $this->layout->campaignId,
@@ -121,8 +140,8 @@ class ScheduleDayPartTest extends LocalWebTestCase
             'syncTimezone' => 0
         ]);
 
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $response);
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
 

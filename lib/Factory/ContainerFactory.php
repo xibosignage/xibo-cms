@@ -32,7 +32,6 @@ use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Entity\User;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\SanitizerService;
-use Xibo\Helper\Translate;
 use Xibo\Middleware\State;
 use Xibo\Service\ConfigService;
 use Xibo\Service\HelpService;
@@ -44,13 +43,20 @@ use Xibo\Twig\ByteFormatterTwigExtension;
 use Xibo\Twig\DateFormatTwigExtension;
 use Xibo\Twig\TransExtension;
 use Xibo\Twig\UrlDecodeTwigExtension;
-define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
+
+if (!defined('PROJECT_ROOT')) {
+    define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
+}
+
+/**
+ * Class ContainerFactory
+ * @package Xibo\Factory
+ */
 class ContainerFactory
 {
     /**
      * Create DI Container with definitions
      *
-     * @param $channel
      * @return ContainerInterface
      * @throws Exception
      */
@@ -59,11 +65,48 @@ class ContainerFactory
         $containerBuilder = new ContainerBuilder();
 
         $containerBuilder->addDefinitions([
+            'basePath' => function (ContainerInterface $c) {
+                $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
+                $uri = (string) parse_url('http://a' . $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+                if (stripos($uri, $_SERVER['SCRIPT_NAME']) === 0) {
+                    return $_SERVER['SCRIPT_NAME'];
+                } else if ($scriptDir !== '/' && stripos($uri, $scriptDir) === 0) {
+                    return $scriptDir;
+                } else {
+                    return '';
+                }
+            },
+            'rootUri' => function (ContainerInterface $c) {
+                // Work out whether we're in a folder, and what our base path is relative to that folder
+                // Static source, so remove index.php from the path
+                // this should only happen if rewrite is disabled
+                $basePath = str_replace('/index.php', '', $c->get('basePath'));
+
+                // Replace out all of the entrypoints to get back to the root
+                $basePath = str_replace('/api/authorize', '', $basePath);
+                $basePath = str_replace('/api', '', $basePath);
+                $basePath = str_replace('/maintenance', '', $basePath);
+                $basePath = str_replace('/install', '', $basePath);
+
+                // Handle an empty (we always have our root with reference to `/`
+                if ($basePath == null) {
+                    $basePath = '/';
+                }
+
+                return $basePath;
+            },
             'logService' => function (ContainerInterface $c) {
                 return new \Xibo\Service\LogService($c->get('logger'));
             },
             'view' => function (ContainerInterface $c) {
-                $view =  Twig::create([PROJECT_ROOT . '/views', PROJECT_ROOT . '/modules', PROJECT_ROOT . '/reports', PROJECT_ROOT . '/custom'], ['cache' => PROJECT_ROOT . '/cache']);
+                $view =  Twig::create([
+                    PROJECT_ROOT . '/views',
+                    PROJECT_ROOT . '/modules',
+                    PROJECT_ROOT . '/reports',
+                    PROJECT_ROOT . '/custom'
+                ], [
+                    'cache' => PROJECT_ROOT . '/cache'
+                ]);
                 $view->addExtension(new TransExtension());
                 $view->addExtension(new ByteFormatterTwigExtension());
                 $view->addExtension(new UrlDecodeTwigExtension());
@@ -81,7 +124,6 @@ class ContainerFactory
                 if ($c->get('configService')->timeSeriesStore == null) {
                     return (new MySqlTimeSeriesStore())
                         ->setDependencies($c->get('logService'),
-                            $c->get('dateService'),
                             $c->get('layoutFactory'),
                             $c->get('campaignFactory'))
                         ->setStore($c->get('store'));
@@ -91,7 +133,6 @@ class ContainerFactory
 
                     return $timeSeriesStore->setDependencies(
                         $c->get('logService'),
-                        $c->get('dateService'),
                         $c->get('layoutFactory'),
                         $c->get('campaignFactory'),
                         $c->get('mediaFactory'),
@@ -104,12 +145,6 @@ class ContainerFactory
             'state' => function() {
                 return new ApplicationState();
             },
-            'dateService' => function() {
-                $date = new \Xibo\Service\DateServiceGregorian();
-                $date->setLocale(Translate::GetLocale(2));
-
-                return $date;
-            },
             'dispatcher' => function() {
                 return new EventDispatcher();
             },
@@ -119,13 +154,12 @@ class ContainerFactory
                     $c->get('pool'),
                     $c->get('logService'),
                     $c->get('configService'),
-                    $c->get('dateService'),
                     $c->get('sanitizerService'),
                     $c->get('dispatcher')
                 );
             },
             'configService' => function(ContainerInterface $c) {
-               return ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
+                return ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
             },
             'user' => function (ContainerInterface $c) {
                 return new User(
@@ -143,13 +177,13 @@ class ContainerFactory
                     $c->get('store'),
                     $c->get('configService'),
                     $c->get('pool'),
-        '/'
+                    '/'
                 );
             },
             'pool' => function(ContainerInterface $c) {
                 $drivers = [];
 
-                $c->get('configService')->setDependencies($c->get('store'), 'http://localhost/');
+                $c->get('configService')->setDependencies($c->get('store'), $c->get('rootUri'));
 
                 if ($c->get('configService')->getCacheDrivers() != null && is_array($c->get('configService')->getCacheDrivers())) {
                     $drivers = $c->get('configService')->getCacheDrivers();
@@ -184,7 +218,11 @@ class ContainerFactory
 
         $containerBuilder->addDefinitions(State::registerControllersWithDi());
         $containerBuilder->addDefinitions(State::registerFactoriesWithDi());
-        // $containerBuilder->enableCompilation(PROJECT_ROOT . '/cache');
+
+        // Should we compile the container?
+        /*if (!Environment::isDevMode()) {
+            $containerBuilder->enableCompilation(PROJECT_ROOT . '/cache');
+        }*/
 
         return $containerBuilder->build();
     }

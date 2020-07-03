@@ -1,0 +1,10 @@
+{
+    "id": "weather-1",
+    "value": "Template 1 - Simple weather",
+    "main": "<div class=\"info\">\n<div class=\"block-container\">\n    <div class=\"date shadowed\"> [time|M] <br>[time|d]</div>\n</div><div class=\"block-container\">\n    <div class=\"shadowed temp\">[temperatureRound]º[temperatureUnit]</div>\n</div>\n</div>\n<div class=\"main-icon-container\">\n    <div class=\"main-icon shadowed\"><i class=\"wi [wicon]\"></i></div>\n</div>",
+    "css": "#content {\n    color: #fff;\n}\n\n.info .block-container {\n    display: inline-block;\n    height: 110px;\n    width: 50%;\n}\n\n.shadowed {\n    text-shadow: 0px 0px 5px rgba(0, 0, 0, 0.4);\n    filter: dropshadow(color=rgba(0, 0, 0, 0.4), offx=5, offy=5);\n}\n\n.date {\n    font-family: 'Roboto', sans-serif;\n    font-weight: 900;\n    font-size: 30px;\n    text-transform: uppercase;\n    float: left;\n    padding: 4px;\n}\n\n.temp {\n    font-family: 'Roboto', sans-serif;\n    font-size: 70px;\n    font-weight: 900;\n    line-height: 70px;\n    float: right;\n    text-align: right;\n    padding: 4px;\n}\n\n.main-icon-container {\n    text-align: center;\n}\n\n.main-icon {\n    font-size: 0;\n}\n\n.main-icon i {\n    font-size: 110px;\n}\n\n.footer-powered-by {\n    color: #f9f9f9;\n    background-color: #000;\n    opacity: 0.6;\n}",
+    "widgetOriginalWidth": "250",
+    "widgetOriginalHeight": "250",
+    "image": "modules/weather/template-thumbs/weather-1.png",
+    "type": "current,forecast"
+}

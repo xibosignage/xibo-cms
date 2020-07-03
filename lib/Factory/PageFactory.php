@@ -23,12 +23,11 @@
 
 namespace Xibo\Factory;
 
-use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Page;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class PageFactory
@@ -40,7 +39,7 @@ class PageFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      */
     public function __construct($store, $log, $sanitizerService)
     {
@@ -67,7 +66,7 @@ class PageFactory extends BaseFactory
         $pages = $this->query(null, ['pageId' => $pageId, 'disableUserCheck' => 1]);
 
         if (count($pages) <= 0)
-            throw new NotFoundException('Unknown Route');
+            throw new NotFoundException(__('Unknown Route'));
 
         return $pages[0];
     }
@@ -83,13 +82,14 @@ class PageFactory extends BaseFactory
         $pages = $this->query(null, array('name' => $page, 'disableUserCheck' => 1));
 
         if (count($pages) <= 0)
-            throw new NotFoundException('Unknown Route');
+            throw new NotFoundException(__('Unknown Route'));
 
         return $pages[0];
     }
 
     /**
      * @return Page[]
+     * @throws NotFoundException
      */
     public function getForHomepage()
     {

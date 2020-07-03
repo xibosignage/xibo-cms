@@ -21,7 +21,6 @@
  */
 namespace Xibo\Middleware;
 
-use League\OAuth2\Server\CryptKey;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\ResourceServer;
 use Psr\Container\ContainerInterface;
@@ -31,10 +30,11 @@ use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
 use Slim\Routing\RouteContext;
-use Xibo\Storage\AccessTokenRepository;
+use Xibo\OAuth\AccessTokenRepository;
 
 /**
  * Class ApiAuthenticationOAuth
+ * This middleware protects the API entry point
  * @package Xibo\Middleware
  */
 class ApiAuthenticationOAuth implements Middleware
@@ -56,8 +56,9 @@ class ApiAuthenticationOAuth implements Middleware
      * @param RequestHandler $handler
      * @return Response
      * @throws OAuthServerException
-     * @throws \Xibo\Exception\NotFoundException
-     * @throws \Xibo\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\AccessDeniedException
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function process(Request $request, RequestHandler $handler): Response
     {
@@ -68,14 +69,12 @@ class ApiAuthenticationOAuth implements Middleware
         $this->app->getContainer()->set('server', function (ContainerInterface $container) {
             // oAuth Resource
             $logger = $container->get('logger');
-            $apiKeyPaths = $container->get('configService')->apiKeyPaths;
-            // TODO this is temporary solution to remove the notice from API responses - ultimately we should have them with correct permissions (600, 660) and we should check it here.
-            $publicKey = new CryptKey( $apiKeyPaths['publicKeyPath'], null, false);
-            $accessTokenRepository = new AccessTokenRepository($logger);
+            $apiKeyPaths = $container->get('configService')->getApiKeyDetails();
 
+            $accessTokenRepository = new AccessTokenRepository($logger);
             return new ResourceServer(
                 $accessTokenRepository,
-                $publicKey
+                $apiKeyPaths['publicKeyPath']
             );
         });
 

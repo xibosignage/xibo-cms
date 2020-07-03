@@ -20,25 +20,24 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
-use Slim\Routing\RouteContext;
+use Carbon\Carbon;
 use Exception;
 use GuzzleHttp\Client;
 use PicoFeed\PicoFeedException;
 use PicoFeed\Reader\Reader;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
+use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
@@ -84,7 +83,6 @@ class StatusDashboard extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param PoolInterface $pool
@@ -94,9 +92,9 @@ class StatusDashboard extends Base
      * @param MediaFactory $mediaFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $userFactory, $displayFactory, $displayGroupFactory, $mediaFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $pool, $userFactory, $displayFactory, $displayGroupFactory, $mediaFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->store = $store;
         $this->pool = $pool;
@@ -111,11 +109,9 @@ class StatusDashboard extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function displays(Request $request, Response $response)
     {
@@ -133,13 +129,9 @@ class StatusDashboard extends Base
      * View
      * @param Request $request
      * @param Response $response
-     * @param null $args
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     function displayPage(Request $request, Response $response)
     {
@@ -150,18 +142,23 @@ class StatusDashboard extends Base
         try {
             // Get some data for a bandwidth chart
             $dbh = $this->store->getConnection();
-            $params = ['month' => time() - (86400 * 365)];
+            $params = ['month' => Carbon::now()->subSeconds(86400 * 365)->format('U')];
 
             $sql = '
               SELECT MAX(FROM_UNIXTIME(month)) AS month,
                   IFNULL(SUM(Size), 0) AS size
                 FROM `bandwidth`
-                  INNER JOIN `lkdisplaydg`
+                  LEFT OUTER JOIN `lkdisplaydg`
                   ON lkdisplaydg.displayID = bandwidth.displayId
-                  INNER JOIN `displaygroup`
+                  LEFT OUTER JOIN `displaygroup`
                   ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID
-               WHERE month > :month AND displaygroup.isDisplaySpecific = 1';
+                    AND displaygroup.isDisplaySpecific = 1
+               WHERE month > :month ';
 
+            // Including this will break the LEFT OUTER join for everyone except super-admins, for whom this statement
+            // doesn't add any SQL.
+            // However, that is probably desirable, as otherwise deleted Displays the user never had permissions for
+            // will be counted in the SUM. Not desirable for a multi-tenant CMS
             $this->displayFactory->viewPermissionSql('Xibo\Entity\DisplayGroup', $sql, $params, '`lkdisplaydg`.displayGroupId');
 
             $sql .= ' GROUP BY MONTH(FROM_UNIXTIME(month)) ORDER BY MIN(month); ';
@@ -192,9 +189,7 @@ class StatusDashboard extends Base
 
             foreach ($results as $row) {
                 $sanitizedRow = $this->getSanitizer($row);
-                $timestamp = $this->getDate()->parse($sanitizedRow->getString('month'))->format('U');
-
-                $labels[] = $this->getDate()->getLocalDate($timestamp, 'F');
+                $labels[] = Carbon::createFromTimeString($sanitizedRow->getString('month'))->format('F');
 
                 $size = ((double)$row['size']) / (pow(1024, $base));
                 $usage[] = round($size, 2);
@@ -204,7 +199,7 @@ class StatusDashboard extends Base
 
             // What if we are empty?
             if (count($results) == 0) {
-                $labels[] = $this->getDate()->getLocalDate(null, 'F');
+                $labels[] = Carbon::now()->format('F');
                 $usage[] = 0;
                 $limit[] = 0;
             }
@@ -309,7 +304,7 @@ class StatusDashboard extends Base
             // Add an empty one
             $displayGroupIds[] = -1;
 
-            $params = ['now' => time()];
+            $params = ['now' => Carbon::now()->format('U')];
 
             $sql = '
               SELECT IFNULL(COUNT(*), 0) AS count_scheduled 
@@ -385,7 +380,7 @@ class StatusDashboard extends Base
                                 'title' => $item->getTitle(),
                                 'description' => $content,
                                 'link' => $item->getUrl(),
-                                'date' => $this->getDate()->getLocalDate($item->getDate()->format('U'))
+                                'date' => Carbon::createFromTimestamp($item->getDate()->format('U'))
                             );
                         }
 
@@ -469,11 +464,8 @@ class StatusDashboard extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     function displayGroups(Request $request, Response $response)
     {

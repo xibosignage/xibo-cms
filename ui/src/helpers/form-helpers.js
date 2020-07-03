@@ -5,7 +5,8 @@ const templates = {
     subPlaylistFormTemplate: require('../templates/form-helpers-sub-playlist-form.hbs'),
     twittermetroColorsTemplate: require('../templates/form-helpers-twitter-metro-colors.hbs'),
     chartColorsTemplate: require('../templates/form-helpers-chart-colors.hbs'),
-    chartGraphConfigTemplate: require('../templates/form-helpers-chart-graph-config.hbs')
+    chartGraphConfigTemplate: require('../templates/form-helpers-chart-graph-config.hbs'),
+    worldClockTemplate: require('../templates/form-helpers-world-clock.hbs')
 };
 
 let formHelpers = function() {
@@ -545,7 +546,11 @@ let formHelpers = function() {
         } else if(this.namespace.mainRegion != undefined) {
             region = this.namespace.mainRegion;
         } else if(this.namespace.selectedObject.type == 'widget') {
-            region = this.namespace.getElementByTypeAndId('region', this.namespace.selectedObject.regionId);
+            if(this.namespace.selectedObject.drawerWidget) {
+                region = this.namespace.getElementByTypeAndId('drawer');
+            } else {
+                region = this.namespace.getElementByTypeAndId('region', this.namespace.selectedObject.regionId);
+            }
         } else if(this.namespace.selectedObject.type == 'region') {
             region = this.namespace.getElementByTypeAndId('region', this.namespace.selectedObject.id);
         }
@@ -1346,6 +1351,63 @@ let formHelpers = function() {
         if(typeof window[widgetType + '_form_edit_open'] === 'function') {
             window[widgetType + '_form_edit_open'].bind(container)();
         }
+
+        // Create copy buttons for text areas
+        container.find('textarea').each((key, el) => {
+            let $newButton = $('<button/>', {
+                html: '<i class="fas fa-copy"></i>',
+                type: 'button',
+                title: editorsTrans.copyToClipboard,
+                'data-container': '#properties-panel',
+                class: 'btn btn-xs copyTextAreaButton',
+                click: function() {
+                    const $input = $(el);
+                    let disabled = false;
+
+                    if($input.attr('disabled') == 'disabled') {
+                        $input.attr('disabled', false);
+                        disabled = true;
+                    }
+
+                    // Select the input to copy 
+                    $input.focus();
+                    $input.select();
+
+                    // Try to copy to clipboard and give feedback
+                    try {
+                        var success = document.execCommand('copy');
+                        if(success) {
+                            $newButton.trigger('copied', [editorsTrans.copied]);
+                        } else {
+                            $newButton.trigger('copied', [editorsTrans.couldNotCopy]);
+                        }
+                    } catch(err) {
+                        $newButton.trigger('copied', [editorsTrans.couldNotCopy]);
+                    }
+
+                    // Unselect the input
+                    $input.focus();
+                    $input.blur();
+
+                    // Restore disabled if existed
+                    if(disabled) {
+                        $input.attr('disabled', true);
+                    }
+                }
+            }).tooltip();
+
+            // Handler for updating the tooltip message.
+            $newButton.bind('copied', function(event, message) {
+                $(this).attr('title', message)
+                    .tooltip('fixTitle')
+                    .tooltip('show')
+                    .attr('title', editorsTrans.copyToClipboard)
+                    .tooltip('fixTitle');
+            });
+            
+            // Add button to the text area
+            $(el).before($newButton);
+        });
 
         // Hide/Show back button depending on the type of widget
         if(container.find('form').data('formStep') != undefined && container.find('form').data('formStep') > 1) {

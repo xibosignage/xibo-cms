@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -21,10 +22,9 @@
 namespace Xibo\Tests\Integration;
 
 
-use Jenssegers\Date\Date;
+use Carbon\Carbon;
 use Xibo\Entity\Display;
-use Xibo\Helper\Random;
-use Xibo\OAuth2\Client\Entity\XiboDaypart;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Tests\Helper\DisplayHelperTrait;
 use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
@@ -63,7 +63,7 @@ class ScheduleNotificationTest extends LocalWebTestCase
         $layout = $this->getDraft($this->layout);
 
         $response = $this->getEntityProvider()->post('/playlist/widget/text/' . $layout->regions[0]->regionPlaylist->playlistId);
-        $response = $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'], [
+        $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'], [
             'text' => 'Widget A',
             'duration' => 100,
             'useDuration' => 1
@@ -115,14 +115,14 @@ class ScheduleNotificationTest extends LocalWebTestCase
     {
         // Our CMS is in GMT
         // Create a schedule one hours time in my player timezone
-        $localNow = Date::now()->setTimezone($this->timeZone);
+        $localNow = Carbon::now()->setTimezone($this->timeZone);
         $date = $localNow->copy()->addHour()->startOfHour();
 
-        $this->getLogger()->debug('Event start will be at: ' . $date->format('Y-m-d H:i:s'));
+        $this->getLogger()->debug('Event start will be at: ' . $date->format(DateFormatHelper::getSystemFormat()));
 
-        $response = $this->client->post('/schedule', [
-            'fromDt' => $date->format('Y-m-d H:i:s'),
-            'toDt' => $date->copy()->addMinutes(30)->format('Y-m-d H:i:s'),
+        $response = $this->sendRequest('POST','/schedule', [
+            'fromDt' => $date->format(DateFormatHelper::getSystemFormat()),
+            'toDt' => $date->copy()->addMinutes(30)->format(DateFormatHelper::getSystemFormat()),
             'eventTypeId' => 1,
             'campaignId' => $this->layout->campaignId,
             'displayGroupIds' => [$this->display->displayGroupId],
@@ -149,8 +149,8 @@ class ScheduleNotificationTest extends LocalWebTestCase
             'embed' => 'scheduleReminders'
         ]);
 
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $response);
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
+        $object = json_decode($response->getBody());
 
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
@@ -163,8 +163,8 @@ class ScheduleNotificationTest extends LocalWebTestCase
         //$this->getLogger()->debug($xml->saveXML());
 
         // Check the filter from and to dates are correct
-        $this->assertEquals($localNow->startOfHour()->format('Y-m-d H:i:s'), $xml->documentElement->getAttribute('filterFrom'), 'Filter from date incorrect');
-        $this->assertEquals($localNow->addDays(2)->format('Y-m-d H:i:s'), $xml->documentElement->getAttribute('filterTo'), 'Filter to date incorrect');
+        $this->assertEquals($localNow->startOfHour()->format(DateFormatHelper::getSystemFormat()), $xml->documentElement->getAttribute('filterFrom'), 'Filter from date incorrect');
+        $this->assertEquals($localNow->addDays(2)->format(DateFormatHelper::getSystemFormat()), $xml->documentElement->getAttribute('filterTo'), 'Filter to date incorrect');
 
         // Check our event is present.
         $layouts = $xml->getElementsByTagName('layout');
@@ -173,7 +173,7 @@ class ScheduleNotificationTest extends LocalWebTestCase
 
         foreach ($layouts as $layout) {
             $xmlFromDt = $layout->getAttribute('fromdt');
-            $this->assertEquals($date->format('Y-m-d H:i:s'), $xmlFromDt, 'From date doesnt match: ' . $xmlFromDt);
+            $this->assertEquals($date->format(DateFormatHelper::getSystemFormat()), $xmlFromDt, 'From date doesnt match: ' . $xmlFromDt);
         }
     }
 
@@ -182,14 +182,14 @@ class ScheduleNotificationTest extends LocalWebTestCase
         // Our CMS is in GMT
         // Create a schedule one hours time in my player timezone
         // we start this schedule the day before
-        $localNow = Date::now()->setTimezone($this->timeZone);
+        $localNow = Carbon::now()->setTimezone($this->timeZone);
         $date = $localNow->copy()->subDay()->addHour()->startOfHour();
 
-        $this->getLogger()->debug('Event start will be at: ' . $date->format('Y-m-d H:i:s'));
+        $this->getLogger()->debug('Event start will be at: ' . $date->format(DateFormatHelper::getSystemFormat()));
 
-        $response = $this->client->post('/schedule', [
-            'fromDt' => $date->format('Y-m-d H:i:s'),
-            'toDt' => $date->copy()->addMinutes(30)->format('Y-m-d H:i:s'),
+        $response = $this->sendRequest('POST','/schedule', [
+            'fromDt' => $date->format(DateFormatHelper::getSystemFormat()),
+            'toDt' => $date->copy()->addMinutes(30)->format(DateFormatHelper::getSystemFormat()),
             'eventTypeId' => 1,
             'campaignId' => $this->layout->campaignId,
             'displayGroupIds' => [$this->display->displayGroupId],
@@ -216,8 +216,8 @@ class ScheduleNotificationTest extends LocalWebTestCase
             'embed' => 'scheduleReminders'
         ]);
 
-        $this->assertSame(200, $this->client->response->status(), 'Not successful: ' . $response);
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
 
@@ -229,8 +229,8 @@ class ScheduleNotificationTest extends LocalWebTestCase
         //$this->getLogger()->debug($xml->saveXML());
 
         // Check the filter from and to dates are correct
-        $this->assertEquals($localNow->startOfHour()->format('Y-m-d H:i:s'), $xml->documentElement->getAttribute('filterFrom'), 'Filter from date incorrect');
-        $this->assertEquals($localNow->addDays(2)->format('Y-m-d H:i:s'), $xml->documentElement->getAttribute('filterTo'), 'Filter to date incorrect');
+        $this->assertEquals($localNow->startOfHour()->format(DateFormatHelper::getSystemFormat()), $xml->documentElement->getAttribute('filterFrom'), 'Filter from date incorrect');
+        $this->assertEquals($localNow->addDays(2)->format(DateFormatHelper::getSystemFormat()), $xml->documentElement->getAttribute('filterTo'), 'Filter to date incorrect');
 
         // Check our event is present.
         $layouts = $xml->getElementsByTagName('layout');
@@ -240,7 +240,7 @@ class ScheduleNotificationTest extends LocalWebTestCase
             $date->addDay();
 
             $xmlFromDt = $layout->getAttribute('fromdt');
-            $this->assertEquals($date->format('Y-m-d H:i:s'), $xmlFromDt, 'From date doesnt match: ' . $xmlFromDt);
+            $this->assertEquals($date->format(DateFormatHelper::getSystemFormat()), $xmlFromDt, 'From date doesnt match: ' . $xmlFromDt);
         }
     }
 }

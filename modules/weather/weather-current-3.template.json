@@ -1,0 +1,10 @@
+{
+    "id": "weather-current-3",
+    "value": "Template 4 - Weather fullscreen",
+    "main": "<div class=\"corner-info\">\n    <div class=\"top-container\">\n        <div class=\"row\">\n            <div class=\"block-container\">\n                <div class=\"text-right temp shadowed\">[temperatureRound]º[temperatureUnit]</div>\n            </div><div class=\"block-container\">\n                <div class=\"rotateInUpRight main-icon shadowed\"><i class=\"wi [wicon]\"></i></div>\n            </div>\n        </div>\n        <div class=\"row\">\n            <div class=\"block-container-full\">\n                <div class=\"date shadowed\"> [time|M] [time|d]</div>\n            </div>\n        </div>\n\n        <div class=\"row bg-footer\">\n            <div class=\"forecast-current\">[summary]</div>\n            <div class=\"forecast-second\">||Wind||: [windDirection] [windSpeed] [windSpeedUnit]</div>\n            <div class=\"forecast-second\">||Humidity||: [humidityPercent]%</div>\n        </div>\n    </div>\n</div>",
+    "css": "#content {\n    color: #fff;\n}\n\n.shadowed {\ntext-shadow: 0px 0px 2px rgba(0, 0, 0, 0.4);\n    filter: dropshadow(color=rgba(0, 0, 0, 0.4), offx=2, offy=2);\n}\n\n.corner-info {\n    width: 200px;\n    background-color: #000;\n    background-color: #0008;\n    opacity: 0.6;\n    border-radius: 0 0 30px 0;\n    padding: 8px;\n}\n\n.block-container {\n    display: inline-block;\n    width: 50%;\n    height: 50px;\n    vertical-align: top;\n}\n\n.date {\n    font-family: 'Roboto', sans-serif;\n    font-weight: 900;\n    font-size: 20px;\n    text-transform: uppercase;\n}\n\n.temp {\n    font-family: 'Roboto', sans-serif;\n    font-size: 30px;\n    font-weight: 900;\n}\n\n.main-icon {\n    font-size: 0;\n    padding: 8px;\n}\n\n.main-icon i {\n    font-size: 50px;\n    padding: 5px;\n}\n\n.footer-powered-by {\n    color: #f9f9f9;\n    font-size: 14px;\n    background-color: #111;\n    opacity: 0.5;\n}",
+    "widgetOriginalWidth": "1920",
+    "widgetOriginalHeight": "1080",
+    "image": "modules/weather/template-thumbs/weather-current-3.png",
+    "type": "current"
+}

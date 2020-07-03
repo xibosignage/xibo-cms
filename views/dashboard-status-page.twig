@@ -24,6 +24,7 @@
 {% import "inline.twig" as inline %}
 
 {% block pageContent %}
+    {% include "theme-dashboard-message.twig" ignore missing %}
     <div class="row">
         <div class="col-lg-3 col-md-6 col-xs-12">
             <div class="widget">
@@ -738,7 +739,7 @@
                         else
                             icon = "fa-cloud-download";
 
-                        return "<span class='fa " + icon + "' title='" + (row.statusDescription) + "'></span>";
+                        return '<span class="fa ' + icon + '" title="' + (row.statusDescription) + '"></span>';
                     }
                 },
                 {"data": "licensed", "render": dataTableTickCrossColumn},

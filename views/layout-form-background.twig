@@ -38,63 +38,70 @@
 
 {% block formHtml %}
     <div class="row">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+        </ul>
         <div class="col-md-12">
             <form id="layoutEditForm" class="form-horizontal" method="put" action="{{ url_for("layout.edit.background", {id: layout.layoutId}) }}">
-                {% set title %}{% trans "Background Colour" %}{% endset %}
-                {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
-                {{ forms.input("backgroundColor", title, layout.backgroundColor, helpText) }}
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Background Colour" %}{% endset %}
+                        {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
+                        {{ forms.input("backgroundColor", title, layout.backgroundColor, helpText) }}
 
-                {% set attributes = [
-                    { name: "data-allow-clear", value: "true" },
-                    { name: "data-placeholder--id", value: null },
-                    { name: "data-placeholder--value", value: "" },
-                    { name: "data-search-url", value: url_for("library.search") },
-                    { name: "data-search-term", value: "media" },
-                    { name: "data-search-term-tags", value: "tags" },
-                    { name: "data-width", value: "100%" },
-                    { name: "data-id-property", value: "mediaId" },
-                    { name: "data-text-property", value: "name" },
-                    { name: "data-filter-options", value: '{"type":"image"}' }
-                ] %}
+                        {% set attributes = [
+                            { name: "data-allow-clear", value: "true" },
+                            { name: "data-placeholder--id", value: null },
+                            { name: "data-placeholder--value", value: "" },
+                            { name: "data-search-url", value: url_for("library.search") },
+                            { name: "data-search-term", value: "media" },
+                            { name: "data-search-term-tags", value: "tags" },
+                            { name: "data-width", value: "100%" },
+                            { name: "data-id-property", value: "mediaId" },
+                            { name: "data-text-property", value: "name" },
+                            { name: "data-filter-options", value: '{"type":"image"}' }
+                        ] %}
 
-                {% set title %}{% trans "Background Image" %}{% endset %}
-                {% set helpText %}{% trans "Pick an image from the Library to use as your background. Please note that Windows Players only support JPG image files." %}{% endset %}
-                {% set noneMessage %}{% trans "None" %}{% endset %}
-                {% set backgrounds = [{mediaId: null, name: noneMessage}]|merge(backgrounds) %}
-                {{ forms.dropdown("backgroundImageId", "single", title, backgroundId, backgrounds, "mediaId", "name", helpText, "pagedSelect background-image-fields", "", "b", "", attributes) }}
-                
-                <div class="text-center">
-                    <div id="bg_not_found_icon">
-                        <i class="fa bg_not_found_icon fa-2x"></i>
-                        <span>{% trans "No Background Image" %}</span>
+                        {% set title %}{% trans "Background Image" %}{% endset %}
+                        {% set helpText %}{% trans "Pick an image from the Library to use as your background. Please note that Windows Players only support JPG image files." %}{% endset %}
+                        {% set noneMessage %}{% trans "None" %}{% endset %}
+                        {% set backgrounds = [{mediaId: null, name: noneMessage}]|merge(backgrounds) %}
+                        {{ forms.dropdown("backgroundImageId", "single", title, backgroundId, backgrounds, "mediaId", "name", helpText, "pagedSelect background-image-fields", "", "b", "", attributes) }}
+
+                        <div class="text-center">
+                            <div id="bg_not_found_icon">
+                                <i class="fa bg_not_found_icon fa-2x"></i>
+                                <span>{% trans "No Background Image" %}</span>
+                            </div>
+
+                            <img id="bg_image_image" data-url="{{ url_for("library.download") }}?preview=1&width=200&height=100" alt="{% trans "Background thumbnail" %}" />
+                        </div>
+
+                        <div class="row background-image-fields background-image-add-button text-center">
+                            <div class="col-xs-12">
+                                <button id="backgroundAddButton" class="btn btn-default" type="button"><i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
+                                    {% trans "Add a new background image?" %}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div id="layoutEditFormBackgroundUpload" style="display: none;"></div>
+                        </div>
+
+                        {% set title %}{% trans "Resolution" %}{% endset %}
+                        {% set helpText %}{% trans "Change the resolution" %}{% endset %}
+                        {{ forms.dropdown("resolutionId", "single", title, resolution.resolutionId, resolutions, "resolutionId", "resolution", helpText, "resolution-group") }}
+
+                        {% set title %}{% trans "Layer" %}{% endset %}
+                        {% set helpText %}{% trans "The layering order of the background image (z-index). Advanced use only." %}{% endset %}
+                        {{ forms.input("backgroundzIndex", title, layout.backgroundzIndex, helpText) }}
+
+                        {% set title %}{% trans "Automatically apply Transitions?" %}{% endset %}
+                        {% set helpText %}{% trans "When enabled, the default Transition type and duration will be applied to all widgets on this Layout." %}{% endset %}
+                        {{ forms.checkbox("autoApplyTransitions", title, layout.autoApplyTransitions, helpText) }}
                     </div>
-            
-                    <img id="bg_image_image" data-url="{{ url_for("library.download") }}?preview=1&width=200&height=100" alt="{% trans "Background thumbnail" %}" />
                 </div>
-
-                <div class="row background-image-fields background-image-add-button text-center">
-                    <div class="col-xs-12">
-                        <button id="backgroundAddButton" class="btn btn-default" type="button"><i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
-                            {% trans "Add a new background image?" %}
-                        </button>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <div id="layoutEditFormBackgroundUpload" style="display: none;"></div>
-                </div>
-
-                {% set title %}{% trans "Resolution" %}{% endset %}
-                {% set helpText %}{% trans "Change the resolution" %}{% endset %}
-                {{ forms.dropdown("resolutionId", "single", title, resolution.resolutionId, resolutions, "resolutionId", "resolution", helpText, "resolution-group") }}
-
-                {% set title %}{% trans "Layer" %}{% endset %}
-                {% set helpText %}{% trans "The layering order of the background image (z-index). Advanced use only." %}{% endset %}
-                {{ forms.input("backgroundzIndex", title, layout.backgroundzIndex, helpText) }}
-
-                {% set title %}{% trans "Automatically apply Transitions?" %}{% endset %}
-                {% set helpText %}{% trans "When enabled, the default Transition type and duration will be applied to all widgets on this Layout." %}{% endset %}
-                {{ forms.checkbox("autoApplyTransitions", title, layout.autoApplyTransitions, helpText) }}
             </form>
         </div>
     </div>

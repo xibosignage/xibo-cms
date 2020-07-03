@@ -1,6 +1,6 @@
 <?php
 /**
-* Copyright (C) 2018 Xibo Signage Ltd
+* Copyright (C) 2020 Xibo Signage Ltd
 *
 * Xibo - Digital Signage - http://www.xibo.org.uk
 *
@@ -22,7 +22,6 @@
 namespace Xibo\Entity;
 
 
-use Xibo\Exception\XiboException;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -168,7 +167,6 @@ class PlayerVersion implements \JsonSerializable
 
     /**
      * Delete
-     * @throws XiboException
      */
     public function delete()
     {

@@ -28,11 +28,12 @@ use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Pool;
 use Xibo\Entity\Media;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class MediaFactory
@@ -70,7 +71,7 @@ class MediaFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
@@ -169,13 +170,15 @@ class MediaFactory extends BaseFactory
      * Create module files from folder
      * @param string $folder The path to the folder to add.
      * @return array[Media]
+     * @throws InvalidArgumentException
      */
     public function createModuleFileFromFolder($folder)
     {
         $media = [];
 
-        if (!is_dir($folder))
-            throw new \InvalidArgumentException(__('Not a folder'));
+        if (!is_dir($folder)) {
+            throw new InvalidArgumentException(__('Not a folder'));
+        }
 
         foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
             if (is_dir($folder . DIRECTORY_SEPARATOR . $file)) continue;
@@ -196,6 +199,10 @@ class MediaFactory extends BaseFactory
      * @param $expiry
      * @param array $requestOptions
      * @return Media
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     public function queueDownload($name, $uri, $expiry, $requestOptions = [])
     {
@@ -429,6 +436,7 @@ class MediaFactory extends BaseFactory
      * Get by Type
      * @param string $type
      * @return array[Media]
+     * @throws NotFoundException
      */
     public function getByMediaType($type)
     {
@@ -439,6 +447,7 @@ class MediaFactory extends BaseFactory
      * Get by Display Group Id
      * @param int $displayGroupId
      * @return array[Media]
+     * @throws NotFoundException
      */
     public function getByDisplayGroupId($displayGroupId)
     {
@@ -450,6 +459,7 @@ class MediaFactory extends BaseFactory
      * @param int $layoutId
      * @param int $edited
      * @return array[Media]
+     * @throws NotFoundException
      */
     public function getByLayoutId($layoutId, $edited = -1)
     {
@@ -460,6 +470,7 @@ class MediaFactory extends BaseFactory
      * @param null $sortOrder
      * @param array $filterBy
      * @return Media[]
+     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
     {
@@ -603,19 +614,20 @@ class MediaFactory extends BaseFactory
             $dataSets = $this->getStore()->select($dataSetSql, []);
 
             if (count($dataSets) > 0) {
-
                 $body .= ' AND media.mediaID NOT IN (';
 
                 $first = true;
                 foreach ($dataSets as $dataSet) {
+                    $sanitizedDataSet = $this->getSanitizer($dataSet);
 
-                    if (!$first)
+                    if (!$first) {
                         $body .= ' UNION ALL ';
+                    }
 
                     $first = false;
 
-                    $dataSetId = $sanitizedFilter->getInt('dataSetId', $dataSet);
-                    $heading = $sanitizedFilter->getString('heading', $dataSet);
+                    $dataSetId = $sanitizedDataSet->getInt('dataSetId');
+                    $heading = $sanitizedDataSet->getString('heading');
 
                     $body .= ' SELECT `' .  $heading . '` AS mediaId FROM `dataset_' . $dataSetId . '`';
                 }
@@ -626,7 +638,7 @@ class MediaFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('name') != null) {
             $terms = explode(',', $sanitizedFilter->getString('name'));
-            $this->nameFilter('media', 'name', $terms, $body, $params);
+            $this->nameFilter('media', 'name', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         if ($sanitizedFilter->getString('nameExact') != '') {
@@ -756,19 +768,11 @@ class MediaFactory extends BaseFactory
         }
 
         // Duration
-        if ($sanitizedFilter->getString('duration') != null) {
-            $duration = $this->parseComparisonOperator($sanitizedFilter->getString('duration'));
+        if ($sanitizedFilter->getInt('duration') != null) {
+            $duration = $this->parseComparisonOperator($sanitizedFilter->getInt('duration'));
 
             $body .= ' AND `media`.duration ' . $duration['operator'] . ' :duration ';
             $params['duration'] = $duration['variable'];
-        }
-
-        $user = $this->getUser();
-
-        if ( ($user->userTypeId == 1 && $user->showContentFrom == 2) || $user->userTypeId == 4 ) {
-            $body .= ' AND user.userTypeId = 4 ';
-        } else {
-            $body .= ' AND user.userTypeId <> 4 ';
         }
 
         // Sorting?

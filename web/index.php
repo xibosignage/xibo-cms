@@ -22,28 +22,29 @@
 
 use Monolog\Logger;
 use Monolog\Processor\UidProcessor;
-use Nyholm\Psr7\Factory\Psr17Factory;
 use Psr\Container\ContainerInterface;
-use Slim\Http\Factory\DecoratedResponseFactory;
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
 use Slim\Views\TwigMiddleware;
-use Xibo\Exception\UpgradePendingException;
 use Xibo\Factory\ContainerFactory;
 
 DEFINE('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 
-error_reporting(1);
-ini_set('display_errors', 1);
-
 require PROJECT_ROOT . '/vendor/autoload.php';
+
+// Enable/Disable logging
+if (\Xibo\Helper\Environment::isDevMode() || \Xibo\Helper\Environment::isForceDebugging()) {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+} else {
+    error_reporting(0);
+    ini_set('display_errors', 0);
+}
 
 // Should we show the installer?
 if (!file_exists('settings.php')) {
     // Check to see if the install app is available
     if (file_exists(PROJECT_ROOT . '/web/install/index.php')) {
-        header('Location: install/');
+        header('Location: install/1');
         exit();
     } else {
         // We can't do anything here - no install app and no settings file.
@@ -63,7 +64,7 @@ try {
     die($e->getMessage());
 }
 
-
+// Configure Monolog
 $container->set('logger', function (ContainerInterface $container) {
     $logger = new Logger('WEB');
 
@@ -79,103 +80,44 @@ $container->set('logger', function (ContainerInterface $container) {
 
 // Create a Slim application
 $app = \DI\Bridge\Slim\Bridge::create($container);
-$app->setBasePath(\Xibo\Middleware\State::determineBasePath());
+$app->setBasePath($container->get('basePath'));
 
 // Config
-$app->config = $container->get('configService');
-$app->router = $app->getRouteCollector()->getRouteParser();
-
+$container->get('configService');
 $container->set('name', 'web');
 
 //
 // Middleware (onion, outside inwards and then out again - i.e. the last one is first and last);
 //
-$twigMiddleware = TwigMiddleware::createFromContainer($app);
+// Handle additional Middleware
+\Xibo\Middleware\State::setMiddleWare($app);
+
 $app->add(new RKA\Middleware\IpAddress(true, []));
 $app->add(new \Xibo\Middleware\Actions($app));
 $app->add(new \Xibo\Middleware\Theme($app));
-
-if ($container->get('configService')->authentication != null) {
-    $authentication = $container->get('configService')->authentication;
-    $app->add(new $authentication($app));
-} else {
-    $app->add(new \Xibo\Middleware\WebAuthentication($app));
-}
-$app->add(new Xibo\Middleware\HttpCache());
-$app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\CsrfGuard($app));
+
+// Authentication
+$authentication = ($container->get('configService')->authentication != null)
+    ? $container->get('configService')->authentication
+    : (new \Xibo\Middleware\WebAuthentication());
+$app->add($authentication->setDependencies($app)->addRoutes());
+
+// TODO reconfigure this and enable
+//$app->add(new Xibo\Middleware\HttpCache());
 $app->add(new \Xibo\Middleware\State($app));
 $app->add(new \Xibo\Middleware\Log($app));
-$app->add($twigMiddleware);
+$app->add(TwigMiddleware::createFromContainer($app));
+$app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\Xmr($app));
-
 $app->addRoutingMiddleware();
-
-// Handle additional Middleware
-\Xibo\Middleware\State::setMiddleWare($app);
 //
 // End Middleware
 //
 
-// Define Custom Error Handler
-$customErrorHandler = function (Request $request, Throwable $exception, bool $displayErrorDetails, bool $logErrors, bool $logErrorDetails) use ($app) {
-    $nyholmFactory = new Psr17Factory();
-    $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
-    /** @var Response $response */
-    $response = $decoratedResponseFactory->createResponse($exception->getCode());
-
-    if ($exception->getCode() == 404) {
-        $app->getContainer()->get('logger')->debug(sprintf('Page Not Found. %s', $request->getUri()->getPath()));
-        return $response = $response->withRedirect('/notFound');
-    } else {
-        $container = $app->getContainer();
-        /** @var \Xibo\Helper\Session $session */
-        $session = $container->get('session');
-        $logger = $container->get('logger');
-
-        $message = ( !empty($exception->getMessage()) ) ? $exception->getMessage() : __('Unexpected Error, please contact support.');
-
-        // log the error
-        $logger->error('Error with message: ' . $message);
-        $logger->debug('Error with trace: ' . $exception->getTraceAsString());
-
-        $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($exception)));
-
-        if ($exception instanceof UpgradePendingException) {
-            $exceptionClass = 'upgrade-in-progress-page';
-        }
-
-        if ($request->getUri()->getPath() != '/error') {
-
-            // set data in session, this is handled and then cleared in Error Controller.
-            $session->set('exceptionMessage', $message);
-            $session->set('exceptionCode', $exception->getCode());
-            $session->set('exceptionClass', $exceptionClass);
-            $session->set('priorRoute', $request->getUri()->getPath());
-
-            return $response = $response->withRedirect('/error');
-        } else {
-            // this should only happen when there is an error in Middleware or if something went horribly wrong.
-            $mode = $container->get('configService')->getSetting('SERVER_MODE');
-
-            if (strtolower($mode) === 'test') {
-                $message = $exception->getMessage() . ' thrown in ' . $exception->getTraceAsString();
-            } else {
-                $message = $exception->getMessage();
-            }
-
-            $container->get('state')->setCommitState(false);
-
-            // attempt to render a twig template in this application state will not go well
-            // as such return simple json response, with trace if the application is in test mode.
-            return $response = $response->withJson(['error' => $message]);
-        }
-    }
-};
-
 // Add Error Middleware
-$errorMiddleware = $app->addErrorMiddleware(true, true, true);
-$errorMiddleware->setDefaultErrorHandler($customErrorHandler);
+$app->addErrorMiddleware(false, true, true)
+    ->setDefaultErrorHandler(\Xibo\Middleware\Handlers::webErrorHandler($container));
 
 // All application routes
 require PROJECT_ROOT . '/lib/routes-web.php';
@@ -184,8 +126,8 @@ require PROJECT_ROOT . '/lib/routes.php';
 // Run App
 try {
     $app->run();
-}
-catch (Exception $e) {
+} catch (Exception $e) {
     echo 'Fatal Error - sorry this shouldn\'t happen. ';
-    echo $e->getMessage();
+    echo '<br>' . $e->getMessage();
+    echo '<br><br><code>' . nl2br($e->getTraceAsString()) . '</code>';
 }

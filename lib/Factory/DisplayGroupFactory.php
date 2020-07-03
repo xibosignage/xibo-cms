@@ -25,10 +25,10 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\DisplayGroup;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DisplayGroupFactory
@@ -50,7 +50,7 @@ class DisplayGroupFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param PermissionFactory $permissionFactory
@@ -117,6 +117,7 @@ class DisplayGroupFactory extends BaseFactory
     /**
      * @param int $displayId
      * @return array[DisplayGroup]
+     * @throws NotFoundException
      */
     public function getByDisplayId($displayId)
     {
@@ -127,6 +128,7 @@ class DisplayGroupFactory extends BaseFactory
      * Get Display Groups by MediaId
      * @param int $mediaId
      * @return array[DisplayGroup]
+     * @throws NotFoundException
      */
     public function getByMediaId($mediaId)
     {
@@ -137,6 +139,7 @@ class DisplayGroupFactory extends BaseFactory
      * Get Display Groups by eventId
      * @param int $eventId
      * @return array[DisplayGroup]
+     * @throws NotFoundException
      */
     public function getByEventId($eventId)
     {
@@ -147,6 +150,7 @@ class DisplayGroupFactory extends BaseFactory
      * Get Display Groups by isDynamic
      * @param int $isDynamic
      * @return array[DisplayGroup]
+     * @throws NotFoundException
      */
     public function getByIsDynamic($isDynamic)
     {
@@ -157,6 +161,7 @@ class DisplayGroupFactory extends BaseFactory
      * Get Display Groups by their ParentId
      * @param int $parentId
      * @return array[DisplayGroup]
+     * @throws NotFoundException
      */
     public function getByParentId($parentId)
     {
@@ -211,6 +216,7 @@ class DisplayGroupFactory extends BaseFactory
      * Get Display Groups assigned to Notifications
      * @param int $notificationId
      * @return array[DisplayGroup]
+     * @throws NotFoundException
      */
     public function getByNotificationId($notificationId)
     {
@@ -221,6 +227,7 @@ class DisplayGroupFactory extends BaseFactory
      * Get by OwnerId
      * @param int $ownerId
      * @return DisplayGroup[]
+     * @throws NotFoundException
      */
     public function getByOwnerId($ownerId)
     {
@@ -351,7 +358,7 @@ class DisplayGroupFactory extends BaseFactory
         // Filter by DisplayGroup Name?
         if ($parsedBody->getString('displayGroup') != null) {
             $terms = explode(',', $parsedBody->getString('displayGroup'));
-            $this->nameFilter('displaygroup', 'displayGroup', $terms, $body, $params);
+            $this->nameFilter('displaygroup', 'displayGroup', $terms, $body, $params, ($parsedBody->getCheckbox('useRegexForName') == 1));
         }
 
         // Tags

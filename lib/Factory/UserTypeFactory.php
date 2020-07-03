@@ -26,10 +26,10 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\User;
 use Xibo\Entity\UserType;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class UserTypeFactory
@@ -41,7 +41,7 @@ class UserTypeFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      */
     public function __construct($store, $log, $sanitizerService)
     {
@@ -58,6 +58,7 @@ class UserTypeFactory extends BaseFactory
 
     /**
      * @return User[]
+     * @throws NotFoundException
      */
     public function getAllRoles()
     {
@@ -66,6 +67,7 @@ class UserTypeFactory extends BaseFactory
 
     /**
      * @return User[]
+     * @throws NotFoundException
      */
     public function getNonAdminRoles()
     {

@@ -24,7 +24,6 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
-use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -33,8 +32,8 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
 
 /**
  * Class DayPart
@@ -67,7 +66,6 @@ class DayPart extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param DayPartFactory $dayPartFactory
      * @param DisplayGroupFactory $displayGroupFactory
@@ -77,9 +75,9 @@ class DayPart extends Base
      * @param ScheduleFactory $scheduleFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $dayPartFactory, $displayGroupFactory, $displayFactory, $layoutFactory, $mediaFactory, $scheduleFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $dayPartFactory, $displayGroupFactory, $displayFactory, $layoutFactory, $mediaFactory, $scheduleFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->dayPartFactory = $dayPartFactory;
         $this->displayGroupFactory = $displayGroupFactory;
@@ -94,11 +92,8 @@ class DayPart extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function displayPage(Request $request, Response $response)
     {
@@ -149,11 +144,9 @@ class DayPart extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function grid(Request $request, Response $response)
     {
@@ -162,6 +155,7 @@ class DayPart extends Base
         $filter = [
             'dayPartId' => $sanitizedParams->getInt('dayPartId'),
             'name' => $sanitizedParams->getString('name'),
+            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
             'isAlways' => $sanitizedParams->getInt('isAlways'),
             'isCustom' => $sanitizedParams->getInt('isCustom')
         ];
@@ -230,11 +224,8 @@ class DayPart extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function addForm(Request $request, Response $response)
     {
@@ -254,12 +245,10 @@ class DayPart extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function editForm(Request $request, Response $response, $id)
     {
@@ -290,12 +279,10 @@ class DayPart extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function deleteForm(Request $request, Response $response, $id)
     {
@@ -395,11 +382,9 @@ class DayPart extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     public function add(Request $request, Response $response)
     {
@@ -427,12 +412,11 @@ class DayPart extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
      * @SWG\Put(
      *  path="/daypart/{dayPartId}",
      *  operationId="dayPartEdit",
@@ -504,12 +488,10 @@ class DayPart extends Base
      *      @SWG\Schema(ref="#/definitions/DayPart")
      *  )
      * )
-     *
      */
     public function edit(Request $request, Response $response, $id)
     {
         $dayPart = $this->dayPartFactory->getById($id)
-            ->setDateService($this->getDate())
             ->setChildObjectDependencies($this->displayGroupFactory, $this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->dayPartFactory)
             ->load();
 
@@ -539,7 +521,7 @@ class DayPart extends Base
 
     /**
      * Handle common inputs
-     * @param $dayPart
+     * @param \Xibo\Entity\DayPart $dayPart
      * @param Request $request
      */
     private function handleCommonInputs($dayPart, Request $request)
@@ -554,9 +536,9 @@ class DayPart extends Base
         $dayPart->endTime = $sanitizedParams->getString('endTime');
 
         // Exceptions
-        $exceptionDays = $sanitizedParams->getArray('exceptionDays');
-        $exceptionStartTimes = $sanitizedParams->getArray('exceptionStartTimes');
-        $exceptionEndTimes = $sanitizedParams->getArray('exceptionEndTimes');
+        $exceptionDays = $sanitizedParams->getArray('exceptionDays', ['default' => []]);
+        $exceptionStartTimes = $sanitizedParams->getArray('exceptionStartTimes', ['default' => []]);
+        $exceptionEndTimes = $sanitizedParams->getArray('exceptionEndTimes', ['default' => []]);
 
         // Clear down existing exceptions
         $dayPart->exceptions = [];
@@ -602,12 +584,10 @@ class DayPart extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      * @SWG\Delete(
      *  path="/daypart/{dayPartId}",
      *  operationId="dayPartDelete",
@@ -626,7 +606,6 @@ class DayPart extends Base
      *      description="successful operation"
      *  )
      * )
-     *
      */
     public function delete(Request $request, Response $response, $id)
     {
@@ -637,7 +616,6 @@ class DayPart extends Base
         }
 
         $dayPart
-            ->setDateService($this->getDate())
             ->setScheduleFactory($this->scheduleFactory)
             ->delete();
 

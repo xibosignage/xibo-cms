@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -19,16 +19,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 namespace Xibo\Entity;
 
+use League\OAuth2\Server\Entities\UserEntityInterface;
 use Respect\Validation\Validator as v;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\DuplicateEntityException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\LibraryFullException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
@@ -49,6 +44,13 @@ use Xibo\Helper\Pbkdf2Hash;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\DuplicateEntityException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\LibraryFullException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class User
@@ -56,7 +58,7 @@ use Xibo\Storage\StorageServiceInterface;
  *
  * @SWG\Definition()
  */
-class User implements \JsonSerializable
+class User implements \JsonSerializable, UserEntityInterface
 {
     use EntityTrait;
 
@@ -420,6 +422,7 @@ class User implements \JsonSerializable
      * @param WidgetFactory $widgetFactory
      * @param PlayerVersionFactory $playerVersionFactory
      * @param PlaylistFactory $playlistFactory
+     * @param $dataSetFactory
      * @return $this
      */
     public function setChildObjectDependencies($campaignFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $displayFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory, $dataSetFactory)
@@ -469,6 +472,12 @@ class User implements \JsonSerializable
         return $this->userId;
     }
 
+    /** @inheritDoc */
+    public function getIdentifier()
+    {
+        return $this->getLog();
+    }
+
     /**
      * Get Option
      * @param string $option
@@ -487,7 +496,7 @@ class User implements \JsonSerializable
 
         $this->getLog()->debug(sprintf('UserOption %s not found', $option));
 
-        throw new NotFoundException('User Option not found');
+        throw new NotFoundException(__('User Option not found'));
     }
 
     /**
@@ -509,6 +518,7 @@ class User implements \JsonSerializable
      * @param string $option
      * @param mixed $default
      * @return mixed
+     * @throws NotFoundException
      */
     public function getOptionValue($option, $default)
     {
@@ -545,7 +555,8 @@ class User implements \JsonSerializable
     /**
      * Set a new password
      * @param string $password
-     * @param string[Optional] $oldPassword
+     * @param null $oldPassword
+     * @throws GeneralException
      */
     public function setNewPassword($password, $oldPassword = null)
     {
@@ -574,8 +585,10 @@ class User implements \JsonSerializable
     /**
      * Check password
      * @param string $password
-     * @throws NotFoundException if the user has not been loaded
      * @throws AccessDeniedException if the passwords don't match
+     * @throws DuplicateEntityException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException if the user has not been loaded
      */
     public function checkPassword($password)
     {
@@ -615,6 +628,8 @@ class User implements \JsonSerializable
     /**
      * Update hash if required
      * @param string $password
+     * @throws DuplicateEntityException
+     * @throws InvalidArgumentException
      */
     private function updateHashIfRequired($password)
     {
@@ -687,6 +702,7 @@ class User implements \JsonSerializable
     /**
      * Does this User have any children
      * @return int
+     * @throws NotFoundException
      */
     public function countChildren()
     {
@@ -701,7 +717,8 @@ class User implements \JsonSerializable
     /**
      * Reassign all
      * @param User $user
-     * @throws XiboException
+     * @throws GeneralException
+     * @throws NotFoundException
      */
     public function reassignAllTo($user)
     {
@@ -711,42 +728,65 @@ class User implements \JsonSerializable
 
         $this->getLog()->debug('There are %d children', $this->countChildren());
 
-        // Go through each item and reassign the owner to the provided user.
-        foreach ($this->media as $media) {
-            /* @var Media $media */
-            $media->setOwner($user->getOwnerId());
-            $media->save();
-        }
-        foreach ($this->events as $event) {
-            /* @var Schedule $event */
-            $event->load();
-            $event->setOwner($user->getOwnerId());
-            $event->setDisplayFactory($this->displayFactory);
-            $event->load();
-            $event->save(['generate' => false]);
-        }
-        foreach ($this->layouts as $layout) {
-            /* @var Layout $layout */
-            $layout->setOwner($user->getOwnerId(), true);
-            $layout->save(['saveTags' => false]);
-        }
-        foreach ($this->campaigns as $campaign) {
-            /* @var Campaign $campaign */
-            $campaign->setOwner($user->getOwnerId());
-            $campaign->save(['saveTags' => false]);
-        }
-        foreach ($this->playlists as $playlist) {
-            $playlist->setOwner($user->getOwnerId());
-            $playlist->save(['saveTags' => false]);
-        }
-        foreach($this->displayGroupFactory->getByOwnerId($this->userId) as $displayGroup) {
-            $displayGroup->setOwner($user->getOwnerId());
-            $displayGroup->save(['saveTags' => false, 'manageDynamicDisplayLinks' => false]);
-        }
-        foreach($this->dataSetFactory->getByOwnerId($this->userId) as $dataSet) {
-            $dataSet->setOwner($user->getOwnerId());
-            $dataSet->save();
-        }
+        // Reassign media
+        $this->getStore()->update('UPDATE `media` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign events
+        $this->getStore()->update('UPDATE `schedule` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign layouts
+        $this->getStore()->update('UPDATE `layout` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign regions
+        $this->getStore()->update('UPDATE `region` SET ownerId = :userId WHERE ownerId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign widgets
+        $this->getStore()->update('UPDATE `widget` SET ownerId = :userId WHERE ownerId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign campaigns
+        $this->getStore()->update('UPDATE `campaign` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign playlists
+        $this->getStore()->update('UPDATE `playlist` SET ownerId = :userId WHERE ownerId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign display groups
+        $this->getStore()->update('UPDATE `displaygroup` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign display profiles
+        $this->getStore()->update('UPDATE `displayprofile` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign datasets
+        $this->getStore()->update('UPDATE `dataset` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
 
         // Reassign resolutions
         $this->getStore()->update('UPDATE `resolution` SET userId = :userId WHERE userId = :oldUserId', [
@@ -760,6 +800,21 @@ class User implements \JsonSerializable
             'oldUserId' => $this->userId
         ]);
 
+        // Reassign saved_resports
+        $this->getStore()->update('UPDATE `saved_report` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign Actions
+        $this->getStore()->update('UPDATE `action` SET ownerId = :userId WHERE ownerId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Delete oAuth Clients - security concern
+        $this->getStore()->update('DELETE FROM `oauth_clients` WHERE userId = :userId', ['userId' => $this->userId]);
+
         // Load again
         $this->loaded = false;
         $this->load(true);
@@ -769,7 +824,8 @@ class User implements \JsonSerializable
 
     /**
      * Validate
-     * @throws XiboException
+     * @throws DuplicateEntityException
+     * @throws InvalidArgumentException
      */
     public function validate()
     {
@@ -801,12 +857,28 @@ class User implements \JsonSerializable
         catch (NotFoundException $e) {
             throw new InvalidArgumentException(__('Selected home page does not exist'), 'homePageId');
         }
+
+        // System User
+        if ($this->userId == $this->configService->getSetting('SYSTEM_USER') &&  $this->userTypeId != 1) {
+            throw new InvalidArgumentException(__('This User is set as System User and needs to be super admin'), 'userId');
+        }
+
+        if ($this->userId == $this->configService->getSetting('SYSTEM_USER') &&  $this->retired === 1) {
+            throw new InvalidArgumentException(__('This User is set as System User and cannot be retired'), 'userId');
+        }
+
+        // Library quota
+        if (!empty($this->libraryQuota) && $this->libraryQuota < 0) {
+            throw new InvalidArgumentException(__('Library Quota must be a positive number.'), 'libraryQuota');
+        }
     }
 
     /**
      * Save User
      * @param array $options
-     * @throws \Xibo\Exception\XiboException
+     * @throws DuplicateEntityException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
     public function save($options = [])
     {
@@ -847,17 +919,20 @@ class User implements \JsonSerializable
 
     /**
      * Delete User
+     * @throws ConfigurationException
+     * @throws DuplicateEntityException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
      */
     public function delete()
     {
         $this->getLog()->debug('Deleting %d', $this->userId);
 
         // We must ensure everything is loaded before we delete
-        if ($this->hash == null)
+        if ($this->hash == null) {
             $this->load(true);
+        }
 
         // Remove the user specific group
         $group = $this->userGroupFactory->getById($this->groupId);
@@ -918,6 +993,10 @@ class User implements \JsonSerializable
             $dataSet->delete();
         }
 
+        // Delete Actions
+        $this->getStore()->update('DELETE FROM `action` WHERE ownerId = :userId', ['userId' => $this->userId]);
+        // Delete oAuth clients
+        $this->getStore()->update('DELETE FROM `oauth_clients` WHERE userId = :userId', ['userId' => $this->userId]);
         // Delete user specific entities
         $this->getStore()->update('DELETE FROM `resolution` WHERE userId = :userId', ['userId' => $this->userId]);
         $this->getStore()->update('DELETE FROM `daypart` WHERE userId = :userId', ['userId' => $this->userId]);
@@ -964,6 +1043,9 @@ class User implements \JsonSerializable
 
     /**
      * Update user
+     * @throws DuplicateEntityException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
     private function update()
     {
@@ -1075,8 +1157,9 @@ class User implements \JsonSerializable
      * @param $route string
      * @param $method string
      * @param $scopes array[ScopeEntity]
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws ConfigurationException
+     * @throws NotFoundException
      */
     public function routeAuthentication($route, $method = null, $scopes = null)
     {
@@ -1108,6 +1191,7 @@ class User implements \JsonSerializable
      * @param $route string
      * @return bool
      * @throws ConfigurationException
+     * @throws NotFoundException
      */
     public function routeViewable($route)
     {
@@ -1127,9 +1211,8 @@ class User implements \JsonSerializable
                 // Load all viewable pages into the permissions cache
                 $this->pagePermissionCache = $this->pageFactory->query();
             }
-        }
-        catch (\PDOException $e) {
-            $this->getLog()->info('SQL Error getting permissions: %s', $e->getMessage());
+        } catch (\PDOException $e) {
+            $this->getLog()->info('SQL Error getting permissions: ' . $e->getMessage());
 
             return false;
         }
@@ -1155,7 +1238,8 @@ class User implements \JsonSerializable
      * Given an array of routes, count the ones that are viewable
      * @param $routes
      * @return int
-     * @throws \Xibo\Exception\ConfigurationException
+     * @throws ConfigurationException
+     * @throws NotFoundException
      */
     public function countViewable($routes)
     {
@@ -1214,17 +1298,20 @@ class User implements \JsonSerializable
     /**
      * Check that this object can be used with the permissions sytem
      * @param object $object
+     * @throws InvalidArgumentException
      */
     private function checkObjectCompatibility($object)
     {
-        if (!method_exists($object, 'getId') || !method_exists($object, 'getOwnerId') || !method_exists($object, 'permissionsClass'))
-            throw new \InvalidArgumentException(__('Provided Object not under permission management'));
+        if (!method_exists($object, 'getId') || !method_exists($object, 'getOwnerId') || !method_exists($object, 'permissionsClass')) {
+            throw new InvalidArgumentException(__('Provided Object not under permission management'), 'object');
+        }
     }
 
     /**
      * Get a permission object
      * @param object $object
      * @return \Xibo\Entity\Permission
+     * @throws InvalidArgumentException
      */
     public function getPermission($object)
     {
@@ -1255,7 +1342,7 @@ class User implements \JsonSerializable
      * Check the given object is viewable
      * @param object $object
      * @return bool
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws InvalidArgumentException
      */
     public function checkViewable($object)
     {
@@ -1285,7 +1372,7 @@ class User implements \JsonSerializable
      * Check the given object is editable
      * @param object $object
      * @return bool
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws InvalidArgumentException
      */
     public function checkEditable($object)
     {
@@ -1315,22 +1402,23 @@ class User implements \JsonSerializable
      * Check the given object is delete-able
      * @param object $object
      * @return bool
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws InvalidArgumentException
      */
     public function checkDeleteable($object)
     {
         // Check that this object has the necessary methods
         $this->checkObjectCompatibility($object);
-
         // Admin users
         // Note here that the DOOH user isn't allowed to outright delete other users things
-        if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId())
+        if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId()) {
             return true;
+        }
 
         // Group Admins
-        if ($this->userTypeId == 2 && count(array_intersect($this->groups, $this->userGroupFactory->getByUserId($object->getOwnerId()))))
+        if ($this->userTypeId == 2 && count(array_intersect($this->groups, $this->userGroupFactory->getByUserId($object->getOwnerId())))) {
             // Group Admin and in the same group as the owner.
             return true;
+        }
 
         // Get the permissions for that entity
         $permissions = $this->loadPermissions($object->permissionsClass());
@@ -1346,7 +1434,7 @@ class User implements \JsonSerializable
      * Check the given objects permissions are modify-able
      * @param object $object
      * @return bool
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws InvalidArgumentException
      */
     public function checkPermissionsModifyable($object)
     {
@@ -1452,6 +1540,7 @@ class User implements \JsonSerializable
     /**
      * Tests the supplied password against the password policy
      * @param string $password
+     * @throws InvalidArgumentException
      */
     public function testPasswordAgainstPolicy($password)
     {
@@ -1463,8 +1552,9 @@ class User implements \JsonSerializable
             $policyError = $this->configService->getSetting('USER_PASSWORD_ERROR');
             $policyError = ($policyError == '') ? __('Your password does not meet the required complexity') : $policyError;
 
-            if(!preg_match($policy, $password, $matches))
-                throw new \InvalidArgumentException($policyError);
+            if(!preg_match($policy, $password, $matches)) {
+                throw new InvalidArgumentException($policyError);
+            }
         }
     }
 

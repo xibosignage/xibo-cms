@@ -26,13 +26,15 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
-use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Command
@@ -58,15 +60,14 @@ class Command extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param CommandFactory $commandFactory
      * @param DisplayProfileFactory $displayProfileFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $commandFactory, $displayProfileFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $commandFactory, $displayProfileFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->commandFactory = $commandFactory;
         $this->displayProfileFactory = $displayProfileFactory;
@@ -76,11 +77,8 @@ class Command extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      */
     public function displayPage(Request $request, Response $response)
     {
@@ -129,11 +127,9 @@ class Command extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
      */
     function grid(Request $request, Response $response)
     {
@@ -204,11 +200,8 @@ class Command extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      */
     public function addForm(Request $request, Response $response)
     {
@@ -223,12 +216,10 @@ class Command extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
      */
     public function editForm(Request $request, Response $response, $id)
     {
@@ -252,12 +243,10 @@ class Command extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
      */
     public function deleteForm(Request $request, Response $response, $id)
     {
@@ -305,6 +294,27 @@ class Command extends Base
      *      type="string",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="commandString",
+     *      in="formData",
+     *      description="The Command String for this Command. Can be overridden on Display Settings.",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="validationString",
+     *      in="formData",
+     *      description="The Validation String for this Command. Can be overridden on Display Settings.",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="availableOn",
+     *      in="formData",
+     *      description="An array of Player types this Command is available on, empty for all.",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -316,15 +326,12 @@ class Command extends Base
      *      )
      *  )
      * )
+     *
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      */
     public function add(Request $request, Response $response)
     {
@@ -335,6 +342,14 @@ class Command extends Base
         $command->description = $sanitizedParams->getString('description');
         $command->code = $sanitizedParams->getString('code');
         $command->userId = $this->getUser()->userId;
+        $command->commandString = $sanitizedParams->getString('commandString');
+        $command->validationString = $sanitizedParams->getString('validationString');
+        $availableOn = $sanitizedParams->getArray('availableOn');
+        if (empty($availableOn)) {
+            $command->availableOn = null;
+        } else {
+            $command->availableOn = implode(',', $availableOn);
+        }
         $command->save();
 
         // Return
@@ -354,13 +369,11 @@ class Command extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\InvalidArgumentException
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
+     *
      * @SWG\Put(
      *  path="/command/{commandId}",
      *  operationId="commandEdit",
@@ -388,13 +401,33 @@ class Command extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="commandString",
+     *      in="formData",
+     *      description="The Command String for this Command. Can be overridden on Display Settings.",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="validationString",
+     *      in="formData",
+     *      description="The Validation String for this Command. Can be overridden on Display Settings.",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="availableOn",
+     *      in="formData",
+     *      description="An array of Player types this Command is available on, empty for all.",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
      *      @SWG\Schema(ref="#/definitions/Command")
      *  )
      * )
-     *
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -407,6 +440,14 @@ class Command extends Base
 
         $command->command = $sanitizedParams->getString('command');
         $command->description = $sanitizedParams->getString('description');
+        $command->commandString = $sanitizedParams->getString('commandString');
+        $command->validationString = $sanitizedParams->getString('validationString');
+        $availableOn = $sanitizedParams->getArray('availableOn');
+        if (empty($availableOn)) {
+            $command->availableOn = null;
+        } else {
+            $command->availableOn = implode(',', $availableOn);
+        }
         $command->save();
 
         // Return
@@ -426,12 +467,10 @@ class Command extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
      * @SWG\Delete(
      *  path="/command/{commandId}",
      *  operationId="commandDelete",

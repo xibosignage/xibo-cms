@@ -23,6 +23,8 @@
 {% extends "authed.twig" %}
 {% import "forms.twig" as forms %}
 
+{% block title %}{{ "Settings"|trans }} | {% endblock %}
+
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-info btn-xs" ><a class="XiboFormButton btns" title="{% trans "Export database" %}" href="{{ url_for("maintenance.export.form") }}"> <i class="fa fa-cloud-upload" aria-hidden="true"></i> {% trans "Export" %}</a></li>
@@ -223,6 +225,17 @@
                                         {{ forms.number("DEFAULT_RESIZE_LIMIT", title, theme.getSetting("DEFAULT_RESIZE_LIMIT", 0), helpText) }}
                                     {% else %}
                                         {{ forms.disabled("DEFAULT_RESIZE_LIMIT", title, theme.getSetting("DEFAULT_RESIZE_LIMIT", 0), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("DATASET_HARD_ROW_LIMIT") %}
+                                    {% set title %}{% trans "DataSet maximum number of Rows" %}{% endset %}
+                                    {% set helpText %}{% trans "The maximum number of rows per DataSet, once the limit is met the limit policy defined per DataSet will dictate further action." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DATASET_HARD_ROW_LIMIT") %}
+                                        {{ forms.number("DATASET_HARD_ROW_LIMIT", title, theme.getSetting("DATASET_HARD_ROW_LIMIT", 0), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("DATASET_HARD_ROW_LIMIT", title, theme.getSetting("DATASET_HARD_ROW_LIMIT", 0), helpText) }}
                                     {% endif %}
                                 {% endif %}
                             </div>
@@ -970,7 +983,8 @@
 
                                 {% if theme.isSettingVisible("DATE_FORMAT") %}
                                     {% set title %}{% trans "Date Format" %}{% endset %}
-                                    {% set helpText %}{% trans "The Date Format to use when displaying dates in the CMS." %}{% endset %}
+                                    {% set manualUrl %}{{ helpService.address("advanced_dateFormat.html") }}{% endset %}
+                                    {% set helpText %}{% trans %}The Date Format to use when displaying dates in the CMS. See the <a href="{{ manualUrl }}">Manual</a> for allowed formats.{% endtrans %}{% endset %}
 
                                     {% if theme.isSettingEditable("DATE_FORMAT") %}
                                         {{ forms.input("DATE_FORMAT", title, theme.getSetting("DATE_FORMAT", "Y-m-d"), helpText, "required") }}
@@ -1060,7 +1074,7 @@
                                     {% set helpText %}{% trans "Elevate the log level until this date." %}{% endset %}
 
                                     {% if theme.isSettingEditable("ELEVATE_LOG_UNTIL") %}
-                                        {{ forms.datetime("ELEVATE_LOG_UNTIL", title, elevateLogUntil, helpText) }}
+                                        {{ forms.dateTime("ELEVATE_LOG_UNTIL", title, elevateLogUntil, helpText) }}
                                     {% else %}
                                         {{ forms.disabled("ELEVATE_LOG_UNTIL", title, elevateLogUntil, helpText) }}
                                     {% endif %}
@@ -1085,6 +1099,26 @@
                             </div>
                             <div class="tab-pane" id="tab_users">
                                 <h3 class="section-heading">{% trans "Users" %}</h3>
+
+                                {% if theme.isSettingVisible("SYSTEM_USER") %}
+                                    {% set title %}{% trans "System User" %}{% endset %}
+                                    {% set helpText %}{% trans "The system User for this CMS" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("SYSTEM_USER") %}
+                                        {% set attributes = [
+                                            { name: "data-width", value: "100%" },
+                                            { name: "data-search-url", value: url_for("user.search") },
+                                            { name: "data-search-term", value: "userName" },
+                                            { name: "data-search-term-tags", value: "tags" },
+                                            { name: "data-id-property", value: "userId" },
+                                            { name: "data-text-property", value: "userName" },
+                                            { name: "data-filter-options", value: '{"userTypeId":"1"}' }
+                                        ] %}
+                                        {{ forms.dropdown("SYSTEM_USER", "single", title, systemUser.userId, [systemUser], "userId", "userName", helpText, "pagedSelect", "", "", "", attributes) }}
+                                    {% else %}
+                                        {{ forms.disabled("SYSTEM_USER", title, theme.getSetting("SYSTEM_USER"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
 
                                 {% if theme.isSettingVisible("DEFAULT_USERGROUP") %}
                                     {% set title %}{% trans "Default User Group" %}{% endset %}

@@ -24,6 +24,7 @@ use Monolog\Logger;
 use Nyholm\Psr7\ServerRequest;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ContainerFactory;
+use Xibo\Support\Exception\NotFoundException;
 
 define('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
@@ -56,12 +57,19 @@ $container->set('logger', function () use($uidProcessor) {
 
     return $logger;
 });
+
 // Create a Slim application
 $app = \DI\Bridge\Slim\Bridge::create($container);
-$app->setBasePath(\Xibo\Middleware\State::determineBasePath());
+$app->setBasePath($container->get('basePath'));
+
+// Mock a request
 $request = new Request(new ServerRequest('GET', $app->getBasePath()));
 $request = $request->withAttribute('name', 'xmds');
 $container->set('name', 'xmds');
+
+// Start time of transaction (for logs)
+$startTime = microtime(true);
+
 // Set state
 \Xibo\Middleware\State::setState($app, $request);
 
@@ -86,8 +94,9 @@ $sanitizer = $container->get('sanitizerService')->getSanitizer($_REQUEST);
 $version = $sanitizer->getInt('v', ['default' => 3]);
 
 // Version Request?
-if (isset($_GET['what']))
+if (isset($_GET['what'])) {
     die(\Xibo\Helper\Environment::$XMDS_VERSION);
+}
 
 // Is the WSDL being requested.
 if (isset($_GET['wsdl']) || isset($_GET['WSDL'])) {
@@ -111,33 +120,54 @@ if (isset($_GET['file'])) {
     // Check nonce, output appropriate headers, log bandwidth and stop.
     try {
         /** @var \Xibo\Entity\RequiredFile $file */
-        if (!isset($_REQUEST['displayId']) || !isset($_REQUEST['type']) || !isset($_REQUEST['itemId']))
-            throw new \Xibo\Exception\NotFoundException('Missing params');
+        if (!isset($_REQUEST['displayId']) || !isset($_REQUEST['type']) || !isset($_REQUEST['itemId'])) {
+            throw new NotFoundException(__('Missing params'));
+        }
+
+        $displayId = intval($_REQUEST['displayId']);
+        $itemId = intval($_REQUEST['itemId']);
 
         // Get the player nonce from the cache
         /** @var \Stash\Item $nonce */
-        $nonce = $container->get('pool')->getItem('/display/nonce/' . $_REQUEST['displayId']);
+        $nonce = $container->get('pool')->getItem('/display/nonce/' . $displayId);
 
         if ($nonce->isMiss()) {
-            throw new \Xibo\Exception\NotFoundException('No nonce cache');
+            throw new NotFoundException(__('No nonce cache'));
         }
 
         // Check the nonce against the nonce we received
         if ($nonce->get() != $_REQUEST['file']) {
-            throw new \Xibo\Exception\NotFoundException('Nonce mismatch');
+            throw new NotFoundException(__('Nonce mismatch'));
         }
 
         switch ($_REQUEST['type']) {
             case 'L':
-                $file = $container->get('requiredFileFactory')->getByDisplayAndLayout($_REQUEST['displayId'], $_REQUEST['itemId']);
+                $file = $container->get('requiredFileFactory')->getByDisplayAndLayout($displayId, $itemId);
                 break;
 
             case 'M':
-                $file = $container->get('requiredFileFactory')->getByDisplayAndMedia($_REQUEST['displayId'], $_REQUEST['itemId']);
+                $file = $container->get('requiredFileFactory')->getByDisplayAndMedia($displayId, $itemId);
                 break;
 
             default:
-                throw new \Xibo\Exception\NotFoundException('Unknown type');
+                throw new NotFoundException(__('Unknown type'));
+        }
+
+        // Bandwidth
+        // ---------
+        // We don't check bandwidth allowances on DELETE.
+        if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
+            // Check that we've not used all of our bandwidth already (if we have an allowance)
+            if ($container->get('bandwidthFactory')->isBandwidthExceeded($container->get('configService')->getSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB'))) {
+                throw new \Xibo\Support\Exception\InstanceSuspendedException('Bandwidth Exceeded');
+            }
+
+            // Check the display specific limit next.
+            $display = $container->get('displayFactory')->getById($displayId);
+            $usage = 0;
+            if ($container->get('bandwidthFactory')->isBandwidthExceeded($display->bandwidthLimit, $usage, $displayId)) {
+                throw new \Xibo\Support\Exception\InstanceSuspendedException('Bandwidth Exceeded');
+            }
         }
 
         // Only log bandwidth under certain conditions
@@ -153,15 +183,10 @@ if (isset($_GET['file'])) {
             // Log bandwidth for the file being requested
             $container->get('logService')->info('Delete request for ' . $file->path);
 
-            // Log bandwith here if we are a CDN
+            // Log bandwidth here if we are a CDN
             $logBandwidth = ($container->get('configService')->getSetting('CDN_URL') != '');
 
         } else {
-            // Check that we've not used all of our bandwidth already (if we have an allowance)
-            if ($container->get('bandwidthFactory')->isBandwidthExceeded($container->get('configService')->GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB'))) {
-                throw new \Xibo\Exception\InstanceSuspendedException('Bandwidth Exceeded');
-            }
-
             // Log bandwidth here if we are NOT a CDN
             $logBandwidth = ($container->get('configService')->getSetting('CDN_URL') == '');
 
@@ -190,10 +215,13 @@ if (isset($_GET['file'])) {
         }
     }
     catch (\Exception $e) {
-        if ($e instanceof \Xibo\Exception\NotFoundException || $e instanceof \Xibo\Exception\FormExpiredException) {
+        if ($e instanceof \Xibo\Support\Exception\NotFoundException || $e instanceof \Xibo\Support\Exception\ExpiredException) {
             $container->get('logService')->notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404. ' . $e->getMessage());
             // 404
             header('HTTP/1.0 404 Not Found');
+        } else if ($e instanceof \Xibo\Support\Exception\InstanceSuspendedException) {
+            $container->get('logService')->debug('Bandwidth exceeded');
+            header('HTTP/1.0 403 Forbidden');
         }
         else {
             $container->get('logService')->error('Unknown Error: ' . $e->getMessage());
@@ -208,7 +236,7 @@ if (isset($_GET['file'])) {
 }
 
 // Town down all logging
-//$container->get('logService')->setLevel(\Xibo\Service\LogService::resolveLogLevel('error'));
+$container->get('logService')->setLevel(\Xibo\Service\LogService::resolveLogLevel('error'));
 
 try {
     $wsdl = PROJECT_ROOT . '/lib/Xmds/service_v' . $version . '.wsdl';
@@ -229,7 +257,6 @@ try {
         $container->get('store'),
         $container->get('timeSeriesStore'),
         $container->get('logService'),
-        $container->get('dateService'),
         $container->get('sanitizerService'),
         $container->get('configService'),
         $container->get('requiredFileFactory'),
@@ -250,23 +277,26 @@ try {
     );
     $soap->handle();
 
-    // Finish any XMR work that has been logged during the request
-    \Xibo\Middleware\Xmr::finish($app);
-
     // Get the stats for this connection
     $stats = $container->get('store')->stats();
-    $stats['length'] = microtime(true) - $app->startTime;
+
+    $stats['length'] = microtime(true) - $startTime;
 
     $container->get('logService')->info('PDO stats: %s.', json_encode($stats, JSON_PRETTY_PRINT));
 
-    if ($container->get('store')->getConnection()->inTransaction())
+    if ($container->get('store')->getConnection()->inTransaction()) {
         $container->get('store')->getConnection()->commit();
-}
-catch (Exception $e) {
+    }
+
+    // Finish any XMR work that has been logged during the request
+    \Xibo\Middleware\Xmr::finish($app);
+
+} catch (Exception $e) {
     $container->get('logService')->error($e->getMessage());
 
-    if ($container->get('store')->getConnection()->inTransaction())
+    if ($container->get('store')->getConnection()->inTransaction()) {
         $container->get('store')->getConnection()->rollBack();
+    }
 
     header('HTTP/1.1 500 Internal Server Error');
     header('Content-Type: text/plain');

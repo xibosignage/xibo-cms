@@ -33,10 +33,6 @@ use Xibo\Entity\Permission;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
@@ -59,8 +55,11 @@ use Xibo\Helper\QuickChartQRProvider;
 use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class User
@@ -149,7 +148,6 @@ class User extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param UserFactory $userFactory
      * @param UserTypeFactory $userTypeFactory
@@ -171,11 +169,11 @@ class User extends Base
      * @param ContainerInterface $container
      * @param DataSetFactory $dataSetFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userFactory,
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $userFactory,
                                 $userTypeFactory, $userGroupFactory, $pageFactory, $permissionFactory,
                                 $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory, Twig $view, ContainerInterface $container, $dataSetFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->userFactory = $userFactory;
         $this->userTypeFactory = $userTypeFactory;
@@ -202,12 +200,9 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function displayPage(Request $request, Response $response)
     {
@@ -237,11 +232,8 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function myDetails(Request $request, Response $response)
     {
@@ -303,22 +295,20 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     function grid(Request $request, Response $response)
     {
-        $sanitizedPrams = $this->getSanitizer($request->getQueryParams());
+        $sanitizedParams = $this->getSanitizer($request->getQueryParams());
 
         // Filter our users?
         $filterBy = [
-            'userId' => $sanitizedPrams->getInt('userId'),
-            'userTypeId' => $sanitizedPrams->getInt('userTypeId'),
-            'userName' => $sanitizedPrams->getString('userName'),
-            'retired' => $sanitizedPrams->getInt('retired')
+            'userId' => $sanitizedParams->getInt('userId'),
+            'userTypeId' => $sanitizedParams->getInt('userTypeId'),
+            'userName' => $sanitizedParams->getString('userName'),
+            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
+            'retired' => $sanitizedParams->getInt('retired')
         ];
 
         // Load results into an array
@@ -363,7 +353,7 @@ class User extends Base
                 ];
             }
 
-            if ($this->getUser()->isSuperAdmin()) {
+            if ($this->getUser()->isSuperAdmin() && $user->userId != $this->getConfig()->getSetting('SYSTEM_USER')) {
                 // Delete
                 $user->buttons[] = [
                     'id' => 'user_button_delete',
@@ -389,8 +379,9 @@ class User extends Base
                 // Page Security
                 $user->buttons[] = [
                     'id' => 'user_button_page_security',
-                    'url' => $this->urlFor($request,'group.acl.form', ['id' => $user->groupId]),
-                    'text' => __('Page Security')
+                    'url' => $this->urlFor($request,'group.acl.form', ['id' => $user->groupId, 'userId' => $user->userId]),
+                    'text' => __('Features'),
+                    'title' => __('Turn Features on/off for this User')
                 ];
             }
         }
@@ -551,14 +542,12 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function add(Request $request, Response $response)
     {
@@ -797,13 +786,12 @@ class User extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -845,7 +833,7 @@ class User extends Base
 
         // Make sure the user has permission to access this page.
         if (!$user->checkViewable($this->pageFactory->getById($user->homePageId))) {
-            throw new \InvalidArgumentException(__('User does not have permission for this homepage'));
+            throw new InvalidArgumentException(__('User does not have permission for this homepage'));
         }
 
         // If we are a super admin
@@ -856,8 +844,9 @@ class User extends Base
 
             if ($newPassword != null && $newPassword != '') {
                 // Make sure they are the same
-                if ($newPassword != $retypeNewPassword)
-                    throw new \InvalidArgumentException(__('Passwords do not match'));
+                if ($newPassword != $retypeNewPassword) {
+                    throw new InvalidArgumentException(__('Passwords do not match'));
+                }
 
                 // Set the new password
                 $user->setNewPassword($newPassword);
@@ -925,18 +914,22 @@ class User extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function delete(Request $request, Response $response, $id)
     {
         $user = $this->userFactory->getById($id);
+
+        // System User
+        if ($user->userId == $this->getConfig()->getSetting('SYSTEM_USER')) {
+            throw new InvalidArgumentException(__('This User is set as System User and cannot be deleted.'), 'userId');
+        }
 
         if (!$this->getUser()->checkDeleteable($user)) {
             throw new AccessDeniedException();
@@ -958,8 +951,9 @@ class User extends Base
                 // Check to see if we have any child data that would prevent us from deleting
                 $children = $user->countChildren();
 
-                if ($children > 0)
-                    throw new \InvalidArgumentException(sprintf(__('This user cannot be deleted as it has %d child items'), $children));
+                if ($children > 0) {
+                    throw new InvalidArgumentException(sprintf(__('This user cannot be deleted as it has %d child items'), $children));
+                }
             }
         }
 
@@ -980,12 +974,10 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function addForm(Request $request, Response $response)
     {
@@ -1022,12 +1014,10 @@ class User extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function editForm(Request $request, Response $response, $id)
     {
@@ -1059,12 +1049,10 @@ class User extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function deleteForm(Request $request, Response $response, $id)
     {
@@ -1091,11 +1079,8 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function editProfileForm(Request $request, Response $response)
     {
@@ -1122,14 +1107,12 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws XiboException
+     * @throws \QRException
      * @throws \RobThree\Auth\TwoFactorAuthException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function editProfile(Request $request, Response $response)
     {
@@ -1230,13 +1213,10 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws GeneralException
      * @throws \QRException
      * @throws \RobThree\Auth\TwoFactorAuthException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function tfaSetup(Request $request, Response $response)
     {
@@ -1307,11 +1287,8 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function tfaRecoveryGenerate(Request $request, Response $response)
     {
@@ -1340,11 +1317,8 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function tfaRecoveryShow(Request $request, Response $response)
     {
@@ -1369,11 +1343,8 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function forceChangePasswordPage(Request $request, Response $response)
     {
@@ -1394,13 +1365,10 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function forceChangePassword(Request $request, Response $response)
     {
@@ -1470,12 +1438,10 @@ class User extends Base
      * @param string $entity
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function permissionsGrid(Request $request, Response $response,$entity, $id)
     {
@@ -1507,12 +1473,10 @@ class User extends Base
      * @param $entity
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function permissionsForm(Request $request, Response $response,$entity, $id)
     {
@@ -1603,13 +1567,13 @@ class User extends Base
      * @param string $entity
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws ConfigurationException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function permissions(Request $request, Response $response,$entity, $id)
     {
@@ -1652,7 +1616,7 @@ class User extends Base
             if ($object->permissionsClass() == 'Xibo\Entity\Campaign') {
                 $this->getLog()->debug('Changing owner on child Layout');
 
-                foreach ($this->layoutFactory->getByCampaignId($object->getId(), true, true, $request ) as $layout) {
+                foreach ($this->layoutFactory->getByCampaignId($object->getId(), true, true) as $layout) {
                     $layout->setOwner($ownerId, true);
                     $layout->save(['notify' => false]);
                 }
@@ -1730,15 +1694,16 @@ class User extends Base
      * @param string $entity
      * @param int $objectId
      * @return string
+     * @throws InvalidArgumentException
      */
     private function parsePermissionsEntity($entity, $objectId)
     {
         if ($entity == '') {
-            throw new \InvalidArgumentException(__('Permissions requested without an entity'));
+            throw new InvalidArgumentException(__('Permissions requested without an entity'));
         }
 
         if ($objectId == 0) {
-            throw new \InvalidArgumentException(__('Permissions form requested without an object'));
+            throw new InvalidArgumentException(__('Permissions form requested without an object'));
         }
 
         // Check to see that we can resolve the entity
@@ -1746,7 +1711,7 @@ class User extends Base
 
         if (!$this->container->has($entity) || !method_exists($this->container->get($entity), 'getById')) {
             $this->getLog()->error(sprintf('Invalid Entity %s', $entity));
-            throw new \InvalidArgumentException(__('Permissions form requested with an invalid entity'));
+            throw new InvalidArgumentException(__('Permissions form requested with an invalid entity'));
         }
 
         return $this->container->get($entity);
@@ -1767,11 +1732,13 @@ class User extends Base
 
             // Check and see what permissions we have been provided for this selection
             // If all permissions are 0, then the record is deleted
-            if (array_key_exists($row->groupId, $groupIds)) {
-                $row->view = (array_key_exists('view', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['view'] : 0);
-                $row->edit = (array_key_exists('edit', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['edit'] : 0);
-                $row->delete = (array_key_exists('delete', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['delete'] : 0);
-                $row->save();
+            if (is_array($groupIds)) {
+                if (array_key_exists($row->groupId, $groupIds)) {
+                    $row->view = (array_key_exists('view', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['view'] : 0);
+                    $row->edit = (array_key_exists('edit', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['edit'] : 0);
+                    $row->delete = (array_key_exists('delete', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['delete'] : 0);
+                    $row->save();
+                }
             }
         }
     }
@@ -1781,11 +1748,8 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function myApplications(Request $request, Response $response)
     {
@@ -1824,12 +1788,9 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function pref(Request $request, Response $response)
     {
@@ -1869,12 +1830,10 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @return Response
-     * @throws ConfigurationException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function prefEdit(Request $request, Response $response)
     {
@@ -1910,12 +1869,11 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function membershipForm(Request $request, Response $response, $id)
     {
@@ -1963,7 +1921,7 @@ class User extends Base
             'help' =>  $this->getHelp()->link('User', 'Members')
         ]);
 
-        $this->render($request, $response);
+        return $this->render($request, $response);
     }
 
     /**
@@ -1971,12 +1929,12 @@ class User extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function assignUserGroup(Request $request, Response $response, $id)
     {
@@ -1988,7 +1946,7 @@ class User extends Base
 
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Go through each ID to assign
-        foreach ($sanitizedParams->getIntArray('userGroupId') as $userGroupId) {
+        foreach ($sanitizedParams->getIntArray('userGroupId', ['default' => []]) as $userGroupId) {
             $userGroup = $this->userGroupFactory->getById($userGroupId);
 
             if (!$this->getUser()->checkEditable($userGroup)) {
@@ -2000,7 +1958,7 @@ class User extends Base
         }
 
         // Have we been provided with unassign id's as well?
-        foreach ($sanitizedParams->getIntArray('unassignUserGroupId') as $userGroupId) {
+        foreach ($sanitizedParams->getIntArray('unassignUserGroupId', ['default' => []]) as $userGroupId) {
             $userGroup = $this->userGroupFactory->getById($userGroupId);
 
             if (!$this->getUser()->checkEditable($userGroup)) {
@@ -2026,12 +1984,10 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function userWelcomeSetUnSeen(Request $request, Response $response)
     {
@@ -2052,12 +2008,10 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function userWelcomeSetSeen(Request $request, Response $response)
     {
@@ -2078,11 +2032,8 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function preferencesForm(Request $request, Response $response)
     {
@@ -2124,12 +2075,10 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function prefEditFromForm(Request $request, Response $response)
     {

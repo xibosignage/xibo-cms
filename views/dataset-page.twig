@@ -24,6 +24,8 @@
 {% import "inline.twig" as inline %}
 {% import "forms.twig" as forms %}
 
+{% block title %}{{ "DataSets"|trans }} | {% endblock %}
+
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new DataSet" %}" href="{{ url_for("dataSet.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add DataSet" %}</a></li>
@@ -38,8 +40,19 @@
                 <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline" onsubmit="return false">
-                            {% set title %}{% trans "Name" %}{% endset %}
-                            {{ inline.input("dataSet", title) }}
+
+                            <div class="form-group ">
+                                <label class="control-label" title="" for="dataSet" accesskey="">{% trans "Name" %}</label>
+                                <div>
+                                    <div class="input-group">
+                                        <input class="form-control" name="dataSet" type="text" id="dataSet" value="">
+
+                                        <span class="input-group-addon">
+                                            <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </form>
                     </div>
                 </div>

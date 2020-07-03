@@ -32,11 +32,14 @@ class Environment
     public static $WEBSITE_VERSION_NAME = '3.0.0-alpha';
     public static $XMDS_VERSION = '5';
     public static $XLF_VERSION = 3;
-    public static $VERSION_REQUIRED = '7.0.8';
+    public static $VERSION_REQUIRED = '7.2.9';
     public static $VERSION_UNSUPPORTED = '8.0';
 
     /** @var null cache migration status for the whole request */
     private static $_migration_status = null;
+
+    /** @var string the git commit ref */
+    private static $_git_commit = null;
 
     /**
      * Is there a migration pending?
@@ -65,6 +68,25 @@ class Environment
         }
 
         return self::$_migration_status;
+    }
+
+    /**
+     * Get Git Commit
+     * @return string
+     */
+    public static function getGitCommit()
+    {
+        if (self::$_git_commit === null) {
+            if (isset($_SERVER['GIT_COMMIT']) && $_SERVER['GIT_COMMIT'] === 'dev') {
+                $out = [];
+                exec('cat /var/www/cms/.git/$(cat /var/www/cms/.git/HEAD | cut -d\' \' -f2)', $out);
+                self::$_git_commit = $out[0] ?? 'unavailable';
+            } else {
+                self::$_git_commit = $_SERVER['GIT_COMMIT'] ?? 'unavailable';
+            }
+        }
+
+        return self::$_git_commit;
     }
 
     /**

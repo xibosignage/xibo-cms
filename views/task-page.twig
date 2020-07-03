@@ -23,6 +23,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{{ "Tasks"|trans }} | {% endblock %}
+
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         {% if settings.TASK_CONFIG_LOCKED_CHECKB == 0 or settings.TASK_CONFIG_LOCKED_CHECKB == "Unchecked" %}
@@ -145,7 +147,7 @@
                             icon = "fa-clock-o";
                         }
 
-                        return "<span class='fa " + icon + "' title='" + title + "'></span>";
+                        return '<span class="fa ' + icon + '" title="' + title + '"></span>';
                     }
                 },
                 {
@@ -172,7 +174,7 @@
                         else
                             icon = "fa-times";
 
-                        return "<span class='fa " + icon + "' title='" + ((row.lastRunMessage === null) ? "" : row.lastRunMessage) + "'></span>";
+                        return '<span class="fa ' + icon + '" title="' + ((row.lastRunMessage === null) ? "" : row.lastRunMessage) + '"></span>';
                     }
                 },
                 {

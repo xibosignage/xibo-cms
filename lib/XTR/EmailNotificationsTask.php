@@ -24,7 +24,8 @@
 namespace Xibo\XTR;
 
 
-use Slim\View;
+use Carbon\Carbon;
+use Slim\Views\Twig;
 use Xibo\Entity\UserNotification;
 use Xibo\Factory\UserNotificationFactory;
 
@@ -36,7 +37,7 @@ class EmailNotificationsTask implements TaskInterface
 {
     use TaskTrait;
 
-    /** @var View */
+    /** @var Twig */
     private $view;
 
     /** @var UserNotificationFactory */
@@ -58,7 +59,9 @@ class EmailNotificationsTask implements TaskInterface
         $this->processQueue();
     }
 
-    /** Process Queue of emails */
+    /** Process Queue of emails
+     * @throws \PHPMailer\PHPMailer\Exception
+     */
     private function processQueue()
     {
         // Handle queue of notifications to email.
@@ -75,8 +78,9 @@ class EmailNotificationsTask implements TaskInterface
             $this->log->debug('Notification found: ' . $notification->notificationId);
 
             // System notification for the system user
-            if ($notification->isSystem == 1 && $notification->userId == 0)
-                $notification->email = $this->user->email;
+            if ($notification->isSystem == 1 && $notification->userId == 0) {
+                $notification->email = $this->user->email ?? $this->config->getSetting('mail_to');
+            }
 
             if ($notification->email != '') {
 
@@ -122,7 +126,7 @@ class EmailNotificationsTask implements TaskInterface
             }
 
             // Mark as sent
-            $notification->setEmailed($this->date->getLocalDate(null, 'U'));
+            $notification->setEmailed(Carbon::now()->format('U'));
             $notification->save();
         }
 
@@ -142,7 +146,7 @@ class EmailNotificationsTask implements TaskInterface
         ob_start();
 
         // Render the template
-        $this->view->display('email-template.twig', ['config' => $this->config, 'subject' => $subject, 'body' => $body]);
+        $this->view->fetch('email-template.twig', ['config' => $this->config, 'subject' => $subject, 'body' => $body]);
 
         $body = ob_get_contents();
 

@@ -25,16 +25,15 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\NotFoundException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DisplayProfile
@@ -72,7 +71,6 @@ class DisplayProfile extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param PoolInterface $pool
      * @param DisplayProfileFactory $displayProfileFactory
@@ -81,9 +79,9 @@ class DisplayProfile extends Base
      * @param DayPartFactory $dayPartFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $pool, $displayProfileFactory, $commandFactory, $playerVersionFactory, $dayPartFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $pool, $displayProfileFactory, $commandFactory, $playerVersionFactory, $dayPartFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->pool = $pool;
         $this->displayProfileFactory = $displayProfileFactory;
@@ -97,11 +95,8 @@ class DisplayProfile extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     function displayPage(Request $request, Response $response)
     {
@@ -158,11 +153,8 @@ class DisplayProfile extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     function grid(Request $request, Response $response)
     {
@@ -171,6 +163,7 @@ class DisplayProfile extends Base
         $filter = [
             'displayProfileId' => $parsedQueryParams->getInt('displayProfileId'),
             'displayProfile' => $parsedQueryParams->getString('displayProfile'),
+            'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'type' => $parsedQueryParams->getString('type')
         ];
 
@@ -178,7 +171,7 @@ class DisplayProfile extends Base
         $profiles = $this->displayProfileFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
 
         if (count($profiles) <= 0)
-            throw new NotFoundException('Display Profile not found', 'DisplayProfile');
+            throw new NotFoundException(__('Display Profile not found'), 'DisplayProfile');
 
         foreach ($profiles as $profile) {
             /* @var \Xibo\Entity\DisplayProfile $profile */
@@ -237,11 +230,8 @@ class DisplayProfile extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     function addForm(Request $request, Response $response)
     {
@@ -294,12 +284,9 @@ class DisplayProfile extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     public function add(Request $request, Response $response)
     {
@@ -332,12 +319,10 @@ class DisplayProfile extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function editForm(Request $request, Response $response, $id)
     {
@@ -374,17 +359,10 @@ class DisplayProfile extends Base
             }
         }
 
-        // Get a list of unassigned Commands
-        $unassignedCommands = array_udiff($this->commandFactory->query(), $displayProfile->commands, function($a, $b) {
-            /** @var \Xibo\Entity\Command $a */
-            /** @var \Xibo\Entity\Command $b */
-            return $a->getId() - $b->getId();
-        });
-
         $this->getState()->template = 'displayprofile-form-edit';
         $this->getState()->setData([
             'displayProfile' => $displayProfile,
-            'commands' => array_merge($displayProfile->commands, $unassignedCommands),
+            'commands' => $displayProfile->commands,
             'versions' => $playerVersions,
             'lockOptions' => json_decode($displayProfile->getSetting('lockOptions', '[]'), true),
             'dayParts' => $dayparts
@@ -400,13 +378,11 @@ class DisplayProfile extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @SWG\Put(
      *  path="/displayprofile/{displayProfileId}",
      *  operationId="displayProfileEdit",
@@ -500,12 +476,10 @@ class DisplayProfile extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     function deleteForm(Request $request, Response $response, $id)
     {
@@ -530,13 +504,11 @@ class DisplayProfile extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @SWG\Delete(
      *  path="/displayprofile/{displayProfileId}",
      *  operationId="displayProfileDelete",
@@ -581,12 +553,10 @@ class DisplayProfile extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function copyForm(Request $request, Response $response, $id)
     {
@@ -610,13 +580,11 @@ class DisplayProfile extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @SWG\Post(
      *  path="/displayprofile/{displayProfileId}/copy",
      *  operationId="displayProfileCopy",

@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
@@ -29,10 +30,11 @@ use Xibo\Factory\LogFactory;
 use Xibo\Helper\Environment;
 use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
+use Xibo\Helper\SendFile;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Fault
@@ -58,16 +60,15 @@ class Fault extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param LogFactory $logFactory
      * @param DisplayFactory $displayFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $logFactory, $displayFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $logFactory, $displayFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->store = $store;
         $this->logFactory = $logFactory;
@@ -78,11 +79,8 @@ class Fault extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     function displayPage(Request $request, Response $response)
     {
@@ -106,7 +104,9 @@ class Fault extends Base
     /**
      * @param Request $request
      * @param Response $response
-     * @throws \Xibo\Exception\XiboException
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function collect(Request $request, Response $response)
     {
@@ -118,8 +118,9 @@ class Fault extends Base
         $zip = new \ZipArchive();
 
         $result = $zip->open($tempFileName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-        if ($result !== true)
-            throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: ' . $result));
+        if ($result !== true) {
+            throw new InvalidArgumentException(__('Can\'t create ZIP. Error Code: ' . $result));
+        }
 
         // Decide what we output based on the options selected.
         $outputVersion = $sanitizedParams->getCheckbox('outputVersion') == 1;
@@ -130,7 +131,7 @@ class Fault extends Base
         $outputDisplayProfile = $sanitizedParams->getCheckbox('outputDisplayProfile') == 1;
 
         if (!$outputVersion && !$outputLog && !$outputEnvCheck && !$outputSettings && !$outputDisplays && !$outputDisplayProfile) {
-            throw new \InvalidArgumentException(__('Please select at least one option'));
+            throw new InvalidArgumentException(__('Please select at least one option'));
         }
 
         $environmentVariables = [
@@ -151,7 +152,7 @@ class Fault extends Base
             fputcsv($out, ['logId', 'runNo', 'logDate', 'channel', 'page', 'function', 'message', 'display.display', 'type']);
 
             // Do some post processing
-            foreach ($this->logFactory->query(['logId'], ['fromDt' => (time() - (60 * 10))]) as $row) {
+            foreach ($this->logFactory->query(['logId'], ['fromDt' => (Carbon::now()->subSeconds(60 * 10)->format('U'))]) as $row) {
                 /* @var \Xibo\Entity\LogEntry $row */
                 fputcsv($out, [$row->logId, $row->runNo, $row->logDate, $row->channel, $row->page, $row->function, $row->message, $row->display, $row->type]);
             }
@@ -198,50 +199,25 @@ class Fault extends Base
         // Close the ZIP file
         $zip->close();
 
-        // Prepare the download
-        if (ini_get('zlib.output_compression')) {
-            ini_set('zlib.output_compression', 'Off');
-        }
-
-        header('Content-Type: application/octet-stream');
-        header("Content-Transfer-Encoding: Binary");
-        header("Content-disposition: attachment; filename=troubleshoot.zip");
-        header('Content-Length: ' . filesize($tempFileName));
-
-        // Send via Apache X-Sendfile header?
-        if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Apache') {
-            header("X-Sendfile: $tempFileName");
-            $response->withStatus(200);
-        }
-        // Send via Nginx X-Accel-Redirect?
-        if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Nginx') {
-            header("X-Accel-Redirect: /download/temp/" . basename($tempFileName));
-            $response->withStatus(200);
-        }
-
-        // Return the file with PHP
-        // Disable any buffering to prevent OOM errors.
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-        readfile($tempFileName);
-        exit;
+        return $this->render($request, SendFile::decorateResponse(
+            $response,
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $tempFileName,
+            'troubleshoot.zip'
+        ));
     }
 
     /**
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function debugOn(Request $request, Response $response)
     {
-        $this->getConfig()->changeSetting('audit', 'DEBUG');
-        $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', $this->getDate()->parse()->addMinutes(30)->format('U'));
+        $this->getConfig()->changeSetting('audit', 'debug');
+        $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', Carbon::now()->addMinutes(30)->format('U'));
 
         // Return
         $this->getState()->hydrate([
@@ -255,11 +231,8 @@ class Fault extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function debugOff(Request $request, Response $response)
     {

@@ -20,6 +20,7 @@
  */
 namespace Xibo\Helper;
 
+use Carbon\Carbon;
 use Xibo\Service\LogService;
 use Xibo\Storage\PdoStorageService;
 
@@ -140,10 +141,10 @@ class Session implements \SessionHandlerInterface
 
                 if ($this->gcCalled) {
                     // Delete sessions older than 10 times the max lifetime
-                    $db->update('DELETE FROM `session` WHERE IsExpired = 1 AND session_expiration < :expiration', array('expiration' => (time() - ($this->maxLifetime * 10))));
+                    $db->update('DELETE FROM `session` WHERE IsExpired = 1 AND session_expiration < :expiration', array('expiration' => Carbon::now()->subSeconds($this->maxLifetime * 10)->format('U')));
 
                     // Update expired sessions as expired
-                    $db->update('UPDATE `session` SET IsExpired = 1 WHERE session_expiration < :expiration', array('expiration' => time()));
+                    $db->update('UPDATE `session` SET IsExpired = 1 WHERE session_expiration < :expiration', array('expiration' => Carbon::now()->format('U')));
                 }
 
                 $db->commitIfNecessary();
@@ -188,14 +189,14 @@ class Session implements \SessionHandlerInterface
 
             if (!$row = $sth->fetch()) {
                 // New session.
-                $this->insertSession($key, '', time(), time() + $this->maxLifetime);
+                $this->insertSession($key, '', Carbon::now()->format('U'), Carbon::now()->addSeconds($this->maxLifetime)->format('U'));
 
                 $this->expired = false;
 
             } else {
                 // Existing session
                 // Check the session hasn't expired
-                if ($row['session_expiration'] < time())
+                if ($row['session_expiration'] < Carbon::now()->format('U'))
                     $this->expired = true;
                 else
                     $this->expired = $row['isexpired'];
@@ -231,10 +232,10 @@ class Session implements \SessionHandlerInterface
         //$this->log->debug('Session write');
 
         // What should we do with expiry?
-        $expiry = ($this->refreshExpiry) ? time() + $this->maxLifetime : $this->sessionExpiry;
+        $expiry = ($this->refreshExpiry) ? Carbon::now()->addSeconds($this->maxLifetime)->format('U') : $this->sessionExpiry;
 
         try {
-            $this->updateSession($key, $val, time(), $expiry);
+            $this->updateSession($key, $val, Carbon::now()->format('U'), $expiry);
 
         } catch (\PDOException $e) {
             $this->log->error('Error writing session data: %s', $e->getMessage());
@@ -293,7 +294,7 @@ class Session implements \SessionHandlerInterface
         // PHP7 calls open/close on regenerate
         // PHP5 does neither
         if (version_compare(phpversion(), '7.0') === -1) {
-            $this->insertSession($this->key, '', time(), time() + $this->maxLifetime);
+            $this->insertSession($this->key, '', Carbon::now()->format('U'), (int)Carbon::now()->addSeconds($this->maxLifetime)->format('U'));
         }
     }
 
@@ -417,7 +418,7 @@ class Session implements \SessionHandlerInterface
             'session_id' => $key,
             'session_data' => $data,
             'session_expiration' => $expiry,
-            'lastAccessed' => date('Y-m-d H:i:s', $lastAccessed),
+            'lastAccessed' => Carbon::createFromTimestamp($lastAccessed)->format(DateFormatHelper::getSystemFormat()),
             'userId' => $this->userId,
             'expired' => ($this->expired) ? 1 : 0,
             'useragent' => substr($_SERVER['HTTP_USER_AGENT'], 0, 253),
@@ -451,7 +452,7 @@ class Session implements \SessionHandlerInterface
         $params = [
             'session_data' => $data,
             'session_expiration' => $expiry,
-            'lastAccessed' => date('Y-m-d H:i:s', $lastAccessed),
+            'lastAccessed' => Carbon::createFromTimestamp($lastAccessed)->format(DateFormatHelper::getSystemFormat()),
             'userId' => $this->userId,
             'expired' => ($this->expired) ? 1 : 0,
             'session_id' => $key

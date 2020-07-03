@@ -22,12 +22,12 @@
 namespace Xibo\Controller;
 
 
+use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 
 /**
@@ -48,13 +48,12 @@ class Clock extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param Session $session
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $session)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config);
 
         $this->session = $session;
     }
@@ -81,18 +80,15 @@ class Clock extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function clock(Request $request, Response $response)
     {
         $this->session->refreshExpiry = false;
 
         if ($request->isXhr() || $this->isApi($request)) {
-            $output = $this->getDate()->getLocalDate(null, 'H:i T');
+            $output = Carbon::now()->format('H:i T');
 
             $this->getState()->setData(array('time' => $output));
             $this->getState()->html = $output;
@@ -101,7 +97,7 @@ class Clock extends Base
             return $this->render($request, $response);
         } else {
             // We are returning the response directly, so write the body.
-            $response->getBody()->write($this->getDate()->getLocalDate(null, 'c'));
+            $response->getBody()->write(Carbon::now()->format('c'));
             return $response;
         }
     }

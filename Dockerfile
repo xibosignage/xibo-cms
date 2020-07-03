@@ -25,13 +25,13 @@ RUN composer install --no-interaction --no-dev --optimize-autoloader
 WORKDIR /app/vendor
 RUN find -type d -name '.git' -exec rm -r {} + && \
     find -path ./twig/twig/lib/Twig -prune -type d -name 'Test' -exec rm -r {} + && \
-    find -type d -name 'tests' -exec rm -r {} + && \
-    find -type d -name 'benchmarks' -exec rm -r {} + && \
-    find -type d -name 'smoketests' -exec rm -r {} + && \
-    find -type d -name 'demo' -exec rm -r {} + && \
-    find -type d -name 'doc' -exec rm -r {} + && \
-    find -type d -name 'docs' -exec rm -r {} + && \
-    find -type d -name 'examples' -exec rm -r {} + && \
+    find -type d -name 'tests' -depth -exec rm -r {} + && \
+    find -type d -name 'benchmarks' -depth -exec rm -r {} + && \
+    find -type d -name 'smoketests' -depth -exec rm -r {} + && \
+    find -type d -name 'demo' -depth -exec rm -r {} + && \
+    find -type d -name 'doc' -depth -exec rm -r {} + && \
+    find -type d -name 'docs' -depth -exec rm -r {} + && \
+    find -type d -name 'examples' -depth -exec rm -r {} + && \
     find -type f -name 'phpunit.xml' -exec rm -r {} + && \
     find -type f -name '*.md' -exec rm -r {} +
 
@@ -56,7 +56,7 @@ RUN npm install --only=prod
 COPY ./ui ./ui
 
 # Build webpack
-RUN npm run build
+RUN npm run publish
 
 # Stage 3
 # Build the CMS container
@@ -94,6 +94,7 @@ RUN apk update && apk upgrade && apk add tar \
     apache2 \
     ca-certificates \
     tzdata \
+    openssl \
     && rm -rf /var/cache/apk/*
 
 RUN apk add --no-cache build-base php7-dev php7-pear openssl-dev \
@@ -111,6 +112,9 @@ COPY --from=sendfile /usr/lib/apache2/mod_xsendfile.so /usr/lib/apache2/mod_xsen
 RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PARSE/" /etc/php7/php.ini && \
     sed -i "s/session.gc_probability = .*$/session.gc_probability = 1/" /etc/php7/php.ini && \
     sed -i "s/session.gc_divisor = .*$/session.gc_divisor = 100/" /etc/php7/php.ini
+
+# Capture the git commit for this build if we provide one
+ARG GIT_COMMIT=prod
 
 # Setup persistent environment variables
 ENV CMS_DEV_MODE=false \
@@ -136,14 +140,19 @@ ENV CMS_DEV_MODE=false \
     CMS_PHP_UPLOAD_MAX_FILESIZE=2G \
     CMS_PHP_MAX_EXECUTION_TIME=300 \
     CMS_PHP_MEMORY_LIMIT=256M \
+    CMS_PHP_COOKIE_SECURE=Off \
+    CMS_PHP_COOKIE_HTTP_ONLY=On \
+    CMS_PHP_COOKIE_SAMESITE=Lax \
     CMS_APACHE_START_SERVERS=2 \
     CMS_APACHE_MIN_SPARE_SERVERS=5 \
     CMS_APACHE_MAX_SPARE_SERVERS=10 \
     CMS_APACHE_MAX_REQUEST_WORKERS=60 \
     CMS_APACHE_MAX_CONNECTIONS_PER_CHILD=300 \
     CMS_APACHE_TIMEOUT=30 \
+    CMS_APACHE_OPTIONS_INDEXES=false \
     CMS_QUICK_CHART_URL=http://cms-quickchart:3400 \
-    XTR_ENABLED=true
+    XTR_ENABLED=true \
+    GIT_COMMIT=$GIT_COMMIT
 
 # Expose port 80
 EXPOSE 80

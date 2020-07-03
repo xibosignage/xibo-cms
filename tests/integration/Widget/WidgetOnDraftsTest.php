@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -17,8 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
- * (WidgetOnDraftsTest.php)
  */
 
 namespace Xibo\Tests\integration\Widget;
@@ -61,12 +60,12 @@ class WidgetOnDraftsTest extends LocalWebTestCase
         // Get my Playlist
         $playlistId = $this->layout->regions[0]->regionPlaylist->playlistId;
 
-        // Add a widget (and widget will do, it doesn't matter)
-        $response = $this->client->post('/playlist/widget/localVideo/' . $playlistId);
+        // Add a widget (any widget will do, it doesn't matter)
+        $response = $this->sendRequest('POST','/playlist/widget/localVideo/' . $playlistId);
 
-        $this->getLogger()->debug('Response from Widget Add is ' . $response);
+        $this->getLogger()->debug('Response from Widget Add is ' . $response->getBody()->getContents());
 
-        $this->assertSame(500, $this->client->response->status(), $response);
+        $this->assertSame(422, $response->getStatusCode(), $response->getBody());
     }
 
     /**
@@ -80,11 +79,11 @@ class WidgetOnDraftsTest extends LocalWebTestCase
         // Get my Playlist
         $playlistId = $layout->regions[0]->regionPlaylist->playlistId;
 
-        // Add a widget (and widget will do, it doesn't matter)
-        $response = $this->client->post('/playlist/widget/localVideo/' . $playlistId);
+        // Add a widget (any widget will do, it doesn't matter)
+        $response = $this->sendRequest('POST','/playlist/widget/localVideo/' . $playlistId);
 
-        $this->getLogger()->debug('Response from Widget Add is ' . $response);
+        $this->getLogger()->debug('Response from Widget Add is ' . $response->getBody()->getContents());
 
-        $this->assertSame(200, $this->client->response->status(), $response);
+        $this->assertSame(200, $response->getStatusCode(), $response);
     }
 }

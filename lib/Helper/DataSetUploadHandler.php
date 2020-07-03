@@ -1,10 +1,32 @@
 <?php
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 namespace Xibo\Helper;
 
+use Carbon\Carbon;
 use Exception;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class DataSetUploadHandler
@@ -18,8 +40,11 @@ class DataSetUploadHandler extends BlueImpUploadHandler
      */
     protected function handle_form_data($file, $index)
     {
-        $controller = $this->options['controller'];
         /* @var \Xibo\Controller\DataSet $controller */
+        $controller = $this->options['controller'];
+
+        /* @var SanitizerInterface $sanitizer */
+        $sanitizer = $this->options['sanitizer'];
 
         // Handle form data, e.g. $_REQUEST['description'][$index]
         $fileName = $file->name;
@@ -33,12 +58,13 @@ class DataSetUploadHandler extends BlueImpUploadHandler
             $controller = $this->options['controller'];
             $dataSet = $controller->getDataSetFactory()->getById($this->options['dataSetId']);
 
-            if (!$controller->getUser()->checkEditable($dataSet))
+            if (!$controller->getUser()->checkEditable($dataSet)) {
                 throw new AccessDeniedException();
+            }
 
             // We are allowed to edit - pull all required parameters from the request object
-            $overwrite = $controller->getSanitizer()->getCheckbox('overwrite');
-            $ignoreFirstRow = $controller->getSanitizer()->getCheckbox('ignorefirstrow');
+            $overwrite = $sanitizer->getCheckbox('overwrite');
+            $ignoreFirstRow = $sanitizer->getCheckbox('ignorefirstrow');
 
             $controller->getLog()->debug('Options provided - overwrite = %d, ignore first row = %d', $overwrite, $ignoreFirstRow);
 
@@ -117,7 +143,7 @@ class DataSetUploadHandler extends BlueImpUploadHandler
             // TODO: update list content definitions
 
             // Save the dataSet
-            $dataSet->lastDataEdit = time();
+            $dataSet->lastDataEdit = Carbon::now()->format('U');
             $dataSet->save(['validate' => false, 'saveColumns' => false]);
 
             // Tidy up the temporary file

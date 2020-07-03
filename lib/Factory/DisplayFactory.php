@@ -25,12 +25,12 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Display;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DisplayFactory
@@ -60,7 +60,7 @@ class DisplayFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param DisplayNotifyServiceInterface $displayNotifyService
@@ -142,6 +142,7 @@ class DisplayFactory extends BaseFactory
      * @param array $sortOrder
      * @param array $filterBy
      * @return Display[]
+     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
     {
@@ -224,7 +225,9 @@ class DisplayFactory extends BaseFactory
                   `display`.newCmsKey,
                   `display`.orientation,
                   `display`.resolution,
-                  `display`.commercialLicence
+                  `display`.commercialLicence,
+                  `display`.teamViewerSerial,
+                  `display`.webkeySerial
               ';
 
         if ($parsedBody->getCheckbox('showTags') === 1) {
@@ -320,7 +323,7 @@ class DisplayFactory extends BaseFactory
         // Filter by Display Name?
         if ($parsedBody->getString('display') != null) {
             $terms = explode(',', $parsedBody->getString('display'));
-            $this->nameFilter('display', 'display', $terms, $body, $params);
+            $this->nameFilter('display', 'display', $terms, $body, $params, ($parsedBody->getCheckbox('useRegexForName') == 1));
         }
 
         if ($parsedBody->getString('macAddress') != '') {

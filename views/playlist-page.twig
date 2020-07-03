@@ -21,6 +21,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{{ "Playlists"|trans }} | {% endblock %}
+
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ url_for("playlist.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Playlist" %}</a></li>
@@ -41,16 +43,24 @@
                             </ul>
                             <div class="tab-content">
                                 <div class="tab-pane active" id="general-filter">
-                                    {% set title %}{% trans "Name" %}{% endset %}
-                                    {{ inline.input("name", title) }}
+
+                                    <div class="form-group ">
+                                        <label class="control-label" title="" for="name" accesskey="">{% trans "Name" %}</label>
+                                        <div>
+                                            <div class="input-group">
+                                                <input class="form-control" name="name" type="text" id="name" value="">
+                                                <span class="input-group-addon">
+                                                    <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     {% set title %}{% trans "Tags" %}{% endset %}
+                                    {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
                                     {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                                    {{ inline.inputWithTags("tags", title, null, helpText) }}
-
-                                    {% set title %}{% trans "Exact match?" %}{% endset %}
-                                    {{ inline.checkbox("exactTags", title) }}
-
+                                    {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                                    
                                     {% set attributes = [
                                     { name: "data-live-search", value: "true" },
                                     { name: "data-selected-text-format", value: "count > 4" }
@@ -118,7 +128,7 @@
     {# Add common file #}
     {% include "common.twig" %}
     
-    <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js"></script>
+    <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
     <script type="text/javascript">
 
         {# Custom translations #}
@@ -191,7 +201,7 @@
                                 return moment().startOf("day").seconds(data).format("H:mm:ss") + ' <span class="fa fa-clock-o" title="{{ "This duration will be updated at " }}' + moment(row.requiresDurationUpdate, "X").format(jsDateFormat) + '"></span>';
                             }
 
-                            return moment().startOf("day").seconds(data).format("H:mm:ss");
+                            return dataTableTimeFromSeconds(data, type, row);
                         }
                     },
                     {
@@ -227,7 +237,7 @@
                             else
                                 icon = "fa-level-down";
 
-                            return "<span class='fa " + icon + "' title='" + (data.enableStatDescription) + "'></span>";
+                            return '<span class="fa ' + icon + '" title="' + (data.enableStatDescription) + '"></span>';
                         }
                     },
                     {
@@ -306,22 +316,6 @@
             usageTable.on('draw', dataTableDraw);
             usageTable.on('processing.dt', dataTableProcessing);
 
-            $("#playlistEventDateLink").datetimepicker({
-                format: bootstrapDateFormatDateOnly,
-                autoclose: true,
-                language: language,
-                calendarType: calendarType,
-                minView: 2,
-                todayHighlight: true
-            });
-
-            $("#dateClearButton").on("click", function () {
-                $("#playlistEventDateLink").val("")
-                $("#playlistEventDate").val("");
-                $("#playlistEventDateLink").datetimepicker("update");
-                usageTable.ajax.reload();
-            });
-
             // Layouts tab
             var usageTableLayouts = $("#usageReportLayoutsTable").DataTable({
                 "language": dataTablesLanguage,
@@ -346,19 +340,7 @@
 
             usageTableLayouts.on('draw', dataTableDraw);
             usageTableLayouts.on('processing.dt', dataTableProcessing);
-
-            // Tidy up timepickers on modal close
-            if(dialog.hasClass('modal')) {
-                dialog.on("hide.bs.modal", function(e) {
-                    if(e.namespace === 'bs.modal') {
-                        // Remove colour pickers
-                        dialog.find("#playlistEventDateLink").datetimepicker('remove');
-                    }
-                });
-            }
         }
-
-
 
         function playlistFormPopulateMediaTable(dialog) {
             nameFilter = $(dialog).find("input[name=filterMediaName]").val();

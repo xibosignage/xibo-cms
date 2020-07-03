@@ -28,9 +28,6 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Entity\Task;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -40,11 +37,14 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TaskFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\SanitizerService;
+use Xibo\Helper\SendFile;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\GeneralException;
 
 /**
  * Class Maintenance
@@ -89,7 +89,6 @@ class Maintenance extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param TaskFactory $taskFactory
@@ -103,9 +102,9 @@ class Maintenance extends Base
      * @param Twig $view
      * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $taskFactory, $mediaFactory, $layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory, $playerVersionFactory, Twig $view, ContainerInterface $container)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $taskFactory, $mediaFactory, $layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory, $playerVersionFactory, Twig $view, ContainerInterface $container)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
         $this->taskFactory = $taskFactory;
         $this->store = $store;
         $this->mediaFactory = $mediaFactory;
@@ -123,11 +122,8 @@ class Maintenance extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
      * @throws ControllerNotImplemented
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
+     * @throws GeneralException
      */
     public function run(Request $request, Response $response)
     {
@@ -194,7 +190,8 @@ class Maintenance extends Base
      * @param $class
      * @param Request $request
      * @param Response $response
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
      */
     private function runTask($class, Request $request, Response $response)
     {
@@ -223,11 +220,8 @@ class Maintenance extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
      * @throws ControllerNotImplemented
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
+     * @throws GeneralException
      */
     public function tidyLibraryForm(Request $request, Response $response)
     {
@@ -244,12 +238,10 @@ class Maintenance extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
      * @throws ControllerNotImplemented
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function tidyLibrary(Request $request, Response $response)
     {
@@ -425,11 +417,9 @@ class Maintenance extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
      * @throws ControllerNotImplemented
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
+     * @throws GeneralException
      */
     public function exportForm(Request $request, Response $response)
     {
@@ -446,11 +436,10 @@ class Maintenance extends Base
      * Backup the Database
      * @param Request $request
      * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException
      * @throws ControllerNotImplemented
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
+     * @throws GeneralException
      */
     public function export(Request $request, Response $response)
     {
@@ -504,38 +493,12 @@ class Maintenance extends Base
 
         // Uncomment only if you are having permission issues
         // chmod($zipFile, 0777);
-
-        // Push file back to browser
-        if (ini_get('zlib.output_compression')) {
-            ini_set('zlib.output_compression', 'Off');
-        }
-
-        $size = filesize($zipFile);
-
-        header('Content-Type: application/octet-stream');
-        header("Content-Transfer-Encoding: Binary");
-        header("Content-disposition: attachment; filename=\"" . basename($zipFile) . "\"");
-        header('Content-Length: ' . $size);
-
-        // Send via Apache X-Sendfile header?
-        if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Apache') {
-            header("X-Sendfile: $zipFile");
-            //$this->getApp()->halt(200);
-        }
-        // Send via Nginx X-Accel-Redirect?
-        if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Nginx') {
-            header("X-Accel-Redirect: /download/temp/" . basename($zipFile));
-            //$this->getApp()->halt(200);
-        }
-
-        // Return the file with PHP
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-        readfile($zipFile);
-
         $this->setNoOutput(true);
-        $this->render($request, $response);
-        exit;
+
+        return $this->render($request, SendFile::decorateResponse(
+            $response,
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $zipFile
+        ));
     }
 }

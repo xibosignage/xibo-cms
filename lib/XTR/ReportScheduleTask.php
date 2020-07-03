@@ -22,6 +22,7 @@
 
 namespace Xibo\XTR;
 
+use Carbon\Carbon;
 use Slim\Views\Twig;
 use Xibo\Controller\Library;
 use Xibo\Factory\MediaFactory;
@@ -30,8 +31,9 @@ use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
-use Xibo\Service\DateServiceInterface;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ReportServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 
 /**
@@ -44,9 +46,6 @@ class ReportScheduleTask implements TaskInterface
 
     /** @var Twig */
     private $view;
-
-    /** @var DateServiceInterface */
-    private $date;
 
     /** @var MediaFactory */
     private $mediaFactory;
@@ -73,7 +72,6 @@ class ReportScheduleTask implements TaskInterface
     public function setFactories($container)
     {
         $this->view = $container->get('view');
-        $this->date = $container->get('dateService');
         $this->userFactory = $container->get('userFactory');
         $this->mediaFactory = $container->get('mediaFactory');
         $this->savedReportFactory = $container->get('savedReportFactory');
@@ -98,6 +96,9 @@ class ReportScheduleTask implements TaskInterface
 
     /**
      * Run report schedule
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     private function runReportSchedule()
     {
@@ -109,22 +110,40 @@ class ReportScheduleTask implements TaskInterface
 
             $cron = \Cron\CronExpression::factory($reportSchedule->schedule);
             $nextRunDt = $cron->getNextRunDate(\DateTime::createFromFormat('U', $reportSchedule->lastRunDt))->format('U');
-            $now = time();
+            $now = Carbon::now()->format('U');
+            var_dump('Report name '. $reportSchedule->name);
 
-            if ($nextRunDt <= $now) {
+            // if report start date is greater than now
+            // then dont run the report schedule
+            if ($reportSchedule->fromDt > $now) {
+                var_dump('Report schedule start date is in future');
+                $this->log->debug('Report schedule start date is in future '. $reportSchedule->fromDt);
+                continue;
+            }
+
+            // if report end date is less than or equal to now
+            // then disable report schedule
+            if ($reportSchedule->toDt != 0 && $reportSchedule->toDt <= $now) {
+                var_dump('Report schedule end date has passed');
+                $reportSchedule->message = 'Report schedule end date has passed';
+                $reportSchedule->isActive = 0;
+            }
+
+            if ($nextRunDt <= $now  && $reportSchedule->isActive) {
 
                 // random run of report schedules
                 $skip = $this->skipReportRun($now, $nextRunDt);
                 if ($skip == true) {
+                    var_dump('Report skipped ');
                     continue;
                 }
+                var_dump('Report not skipped ');
 
                 // execute the report
-                $rs = $this->reportScheduleFactory->getById($reportSchedule->reportScheduleId, 1);
-                $rs->previousRunDt = $rs->lastRunDt;
-                $rs->lastRunDt = time();
+                $reportSchedule->previousRunDt = $reportSchedule->lastRunDt;
+                $reportSchedule->lastRunDt = Carbon::now()->format('U');
 
-                $this->log->debug('Last run date is updated to '. $rs->lastRunDt);
+                $this->log->debug('Last run date is updated to '. $reportSchedule->lastRunDt);
 
                 try {
                     // Get the generated saved as report name
@@ -146,7 +165,7 @@ class ReportScheduleTask implements TaskInterface
                     $result = $zip->open($zipName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
 
                     if ($result !== true) {
-                        throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
+                        throw new InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
                     }
 
                     $zip->addFile($fileName, 'reportschedule.json');
@@ -155,32 +174,32 @@ class ReportScheduleTask implements TaskInterface
                     // Remove the JSON file
                     unlink($fileName);
 
-                    $runDateTimestamp = $this->date->parse()->format('U');
+                    $runDateTimestamp = Carbon::now()->format('U');
 
                     // Upload to the library
                     $media = $this->mediaFactory->create(__('reportschedule_' . $reportSchedule->reportScheduleId . '_' . $runDateTimestamp ), 'reportschedule.json.zip', 'savedreport', $reportSchedule->userId);
                     $media->save();
 
                     // Save Saved report
-                    $savedReport = $this->savedReportFactory->create($saveAs, $reportSchedule->reportScheduleId, $media->mediaId, time(), $reportSchedule->userId);
+                    $savedReport = $this->savedReportFactory->create($saveAs, $reportSchedule->reportScheduleId, $media->mediaId, Carbon::now()->format('U'), $reportSchedule->userId);
                     $savedReport->save();
 
                     $this->createPdfAndNotification($reportSchedule, $savedReport, $media);
 
                     // Add the last savedreport in Report Schedule
                     $this->log->debug('Last savedReportId in Report Schedule: '. $savedReport->savedReportId);
-                    $rs->lastSavedReportId = $savedReport->savedReportId;
-                    $rs->message = null;
+                    $reportSchedule->lastSavedReportId = $savedReport->savedReportId;
+                    $reportSchedule->message = null;
 
                 } catch (\Exception $error) {
-                    $rs->isActive = 0;
-                    $rs->message = $error->getMessage();
+                    $reportSchedule->isActive = 0;
+                    $reportSchedule->message = $error->getMessage();
                     $this->log->error('Error: ' . $error->getMessage());
                 }
-
-                // Finally save schedule report
-                $rs->save();
             }
+
+            // Finally save schedule report
+            $reportSchedule->save();
         }
     }
 
@@ -189,6 +208,10 @@ class ReportScheduleTask implements TaskInterface
      * @param $reportSchedule
      * @param $savedReport
      * @param $media
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     private function createPdfAndNotification($reportSchedule, $savedReport, $media)
     {
@@ -227,7 +250,7 @@ class ReportScheduleTask implements TaskInterface
                     'title' => $savedReport->saveAs,
                     'periodStart' => $savedReportData['chartData']['periodStart'],
                     'periodEnd' => $savedReportData['chartData']['periodEnd'],
-                    'generatedOn' => $this->date->parse($savedReport->generatedOn, 'U')->format('Y-m-d H:i:s'),
+                    'generatedOn' => Carbon::createFromFormat( 'U', $savedReport->generatedOn)->format('Y-m-d H:i:s'),
                     'tableData' => isset($tableData) ? $tableData : null,
                     'src' => isset($src) ? $src : null,
                     'placeholder' => isset($placeholder) ? $placeholder : null
@@ -262,8 +285,8 @@ class ReportScheduleTask implements TaskInterface
                     $notification = $this->notificationFactory->createEmpty();
                     $notification->subject = $report->description;
                     $notification->body = __('Attached please find the report for %s', $savedReport->saveAs);
-                    $notification->createdDt = $this->date->getLocalDate(null, 'U');
-                    $notification->releaseDt = time();
+                    $notification->createdDt = Carbon::now()->format('U');
+                    $notification->releaseDt = Carbon::now()->format('U');
                     $notification->isEmail = 1;
                     $notification->isInterrupt = 0;
                     $notification->userId = $savedReport->userId; // event owner

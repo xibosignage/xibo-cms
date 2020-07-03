@@ -24,6 +24,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{{ "Layout Designer"|trans }} | {% endblock %}
+
 {% block pageContent %}
 
     <!-- Editor structure -->
@@ -39,8 +41,8 @@
         {# Add common file #}
         {% include "common.twig" %}
 
-        <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js"></script>
-        <script src="{{ theme.rootUri() }}dist/layoutDesigner.bundle.min.js"></script>
+        <script src="{{ theme.rootUri() }}dist/layoutDesigner.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
         <script type="text/javascript">
 
             {# Custom translations #}
@@ -52,10 +54,14 @@
                     publishMessage: "{% trans "Are you sure you want to publish this Layout? If it is already in use the update will automatically get pushed." %}",
                     checkoutTitle: "{% trans "Checkout" %}",
                     scheduleTitle: "{% trans "Schedule Now" %}",
+                    unlockTitle: "{% trans "Unlock layout" %}",
                     saveTemplateTitle: "{% trans "Save Template" %}",
                     readOnlyModeTitle: "{% trans "Read Only Mode" %}",
                     readOnlyModeMessage: "{% trans "You are viewing this Layout in read only mode, checkout by clicking on this message or from the Actions menu above!" %}",
+                    lockedModeTitle: "{% trans "Locked Layout" %}",
+                    lockedModeMessage: "{% trans "This layout is being locked by another user. Lock expires on: [expiryDate]" %}",
                     checkoutMessage: "{% trans "Layout is not editable, please checkout!" %}",
+                    unlockMessage: "{% trans "The current layout will be unlocked to other users. You will also be redirected to the Layouts page" %}",
                     viewModeTitle: "{% trans "View" %}",
                     regionEditModeMessage: "{% trans "Editing Regions" %}",
                     welcomeModalMessage: "{% trans "This Layout is Published and cannot be edited. You can checkout the Layout for editing below, or continue to view it in a read only mode." %}"
@@ -87,6 +93,7 @@
                     emptyRegion: "{% trans "Empty Region" %}",
                     addToThisPosition: "{% trans "Add to this position" %}",
                     hiddenContentInWidget: "{% trans "Zoom in to see more details!" %}",
+                    widgetActions: "{% trans "Widget Actions:" %}"
                 };
 
                 var navigatorTrans = {
@@ -102,6 +109,13 @@
                     save: "{% trans "Save" %}",
                     saveDesc: "{% trans "Save changes" %}"
                 };
+
+                var drawerTrans = {
+                    title: "{% trans "Drawer" %}",
+                    search: "{% trans "Search" %}",
+                    emptyDrawer: "{% trans "Add widgets to be used as targets in actions" %}",
+                    toggleDrawer: "{% trans "Toggle drawer" %}"
+                };
             {% endautoescape %}
         </script>
 
@@ -112,5 +126,5 @@
         {% endfor %}
 
         {% include "region-designer-javascript.twig" %}
-
+        {% include "action-designer-javascript.twig" %}
     {% endblock %}

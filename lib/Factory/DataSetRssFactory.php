@@ -25,10 +25,10 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\DataSetRss;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 class DataSetRssFactory extends BaseFactory
 {
@@ -36,7 +36,7 @@ class DataSetRssFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param \Xibo\Entity\User $user
      * @param UserFactory $userFactory
      */
@@ -82,10 +82,12 @@ class DataSetRssFactory extends BaseFactory
 
         return $feeds[0];
     }
+
     /**
      * @param $sortOrder
      * @param $filterBy
      * @return DataSetRss[]
+     * @throws NotFoundException
      */
     public function query($sortOrder, $filterBy)
     {
@@ -110,6 +112,8 @@ class DataSetRssFactory extends BaseFactory
 
         $body = '
               FROM `datasetrss`
+                INNER JOIN `dataset`
+                ON `dataset`.dataSetId = `datasetrss`.dataSetId
              WHERE 1 = 1
         ';
 
@@ -133,7 +137,7 @@ class DataSetRssFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('title', $filterBy) != null) {
             $terms = explode(',', $sanitizedFilter->getString('title'));
-            $this->nameFilter('datasetrss', 'title', $terms, $body, $params);
+            $this->nameFilter('datasetrss', 'title', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         // Sorting?

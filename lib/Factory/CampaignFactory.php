@@ -25,10 +25,10 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Campaign;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class CampaignFactory
@@ -60,12 +60,13 @@ class CampaignFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param PermissionFactory $permissionFactory
      * @param ScheduleFactory $scheduleFactory
      * @param DisplayFactory $displayFactory
+     * @param $tagFactory
      */
     public function __construct($store, $log, $sanitizerService, $user, $userFactory, $permissionFactory, $scheduleFactory, $displayFactory, $tagFactory)
     {
@@ -129,6 +130,7 @@ class CampaignFactory extends BaseFactory
      * Get Campaign by Owner Id
      * @param int $ownerId
      * @return array[Campaign]
+     * @throws NotFoundException
      */
     public function getByOwnerId($ownerId)
     {
@@ -139,6 +141,7 @@ class CampaignFactory extends BaseFactory
      * Get Campaign by Layout
      * @param int $layoutId
      * @return array[Campaign]
+     * @throws NotFoundException
      */
     public function getByLayoutId($layoutId)
     {
@@ -149,7 +152,9 @@ class CampaignFactory extends BaseFactory
      * Query Campaigns
      * @param array $sortOrder
      * @param array $filterBy
+     * @param array $options
      * @return array[Campaign]
+     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [], $options = [])
     {
@@ -264,7 +269,7 @@ class CampaignFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('name') != '') {
             $terms = explode(',', $sanitizedFilter->getString('name'));
-            $this->nameFilter('campaign', 'Campaign', $terms, $body, $params);
+            $this->nameFilter('campaign', 'Campaign', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         // Exclude templates by default
@@ -286,14 +291,6 @@ class CampaignFactory extends BaseFactory
                 $group .= ' OR campaign.campaignId = :includeCampaignId ';
                 $params['includeCampaignId'] = $sanitizedFilter->getInt('includeCampaignId');
             }
-        }
-
-        $user = $this->getUser();
-
-        if ( ($user->userTypeId == 1 && $user->showContentFrom == 2) || $user->userTypeId == 4 ) {
-            $body .= ' AND user.userTypeId = 4 ';
-        } else {
-            $body .= ' AND user.userTypeId <> 4 ';
         }
 
         // Sorting?

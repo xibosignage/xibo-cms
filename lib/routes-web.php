@@ -19,6 +19,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 
@@ -26,13 +27,26 @@ use Slim\Http\ServerRequest as Request;
 $app->get('/', function (Request $request, Response $response) use ($app) {
 
     // Different controller depending on the homepage of the user.
-    $app->getContainer()->get('configService')->setDependencies($app->getContainer()->get('store'), $app->rootUri);
+    $app->getContainer()->get('configService')->setDependencies(
+        $app->getContainer()->get('store'),
+        $app->getContainer()->get('rootUri')
+    );
+
     $routeParser = $app->getRouteCollector()->getRouteParser();
+
     /* @var \Xibo\Entity\User $user */
     $user = $app->getContainer()->get('user');
+
     $app->getContainer()->get('logger')->debug('Showing the homepage: ' . $user->homePageId);
+
     /** @var \Xibo\Entity\Page $page */
     $page = $app->getContainer()->get('pageFactory')->getById($user->homePageId);
+
+    // Check to see if this user has permission for this page, and if not show a meaningful error telling them what
+    // has happened.
+    if (!$user->checkViewable($page)) {
+        throw new \Xibo\Support\Exception\AccessDeniedException(__('You do not have permission for your homepage, please contact your administrator'));
+    }
 
     return $response->withRedirect($routeParser->urlFor($page->getName() . '.view'));
 
@@ -114,6 +128,8 @@ $app->get('/layout/form/unretire/{id}', ['\Xibo\Controller\Layout','unretireForm
 $app->get('/layout/form/setenablestat/{id}', ['\Xibo\Controller\Layout','setEnableStatForm'])->setName('layout.setenablestat.form');
 $app->get('/layout/form/export/{id}', ['\Xibo\Controller\Layout','exportForm'])->setName('layout.export.form');
 $app->get('/layout/form/campaign/assign/{id}', ['\Xibo\Controller\Layout','assignToCampaignForm'])->setName('layout.assignTo.campaign.form');
+// Layout with Codes
+$app->get('/layout/codes', ['\Xibo\Controller\Layout', 'getLayoutCodes'])->setName('layout.code.search');
 
 //
 // regions
@@ -283,7 +299,7 @@ $app->get('/group/form/add', ['\Xibo\Controller\UserGroup','addForm'])->setName(
 $app->get('/group/form/edit/{id}', ['\Xibo\Controller\UserGroup','editForm'])->setName('group.edit.form');
 $app->get('/group/form/delete/{id}', ['\Xibo\Controller\UserGroup','deleteForm'])->setName('group.delete.form');
 $app->get('/group/form/copy/{id}', ['\Xibo\Controller\UserGroup','copyForm'])->setName('group.copy.form');
-$app->get('/group/form/acl/{id}', ['\Xibo\Controller\UserGroup','aclForm'])->setName('group.acl.form');
+$app->get('/group/form/acl/{id}/[{userId}]', ['\Xibo\Controller\UserGroup','aclForm'])->setName('group.acl.form');
 $app->get('/group/form/members/{id}', ['\Xibo\Controller\UserGroup','membersForm'])->setName('group.members.form');
 
 //
@@ -358,10 +374,14 @@ $app->get('/help/form/delete/{id}', ['\Xibo\Controller\Help','deleteForm'])->set
 // Stats
 //
 $app->get('/stats/view', ['\Xibo\Controller\Stats','displayPage'])->setName('stats.view');
+$app->get('/stats/getExportStatsCount', ['\Xibo\Controller\Stats','getExportStatsCount'])->setName('stats.getExportStatsCount');
 $app->get('/stats/proofofplay/view', ['\Xibo\Controller\Stats','displayProofOfPlayPage'])->setName('stats.proofofplay.view');
 $app->get('/stats/library/view', ['\Xibo\Controller\Stats','displayLibraryPage'])->setName('stats.library.view');
 $app->get('/stats/form/export', ['\Xibo\Controller\Stats','exportForm'])->setName('stats.export.form');
 $app->get('/stats/library', ['\Xibo\Controller\Stats','libraryUsageGrid'])->setName('stats.library.grid');
+// For charts
+$app->get('/stats/data/bandwidth', ['\Xibo\Controller\Stats','bandwidthData'])->setName('stats.bandwidth.data');
+$app->get('/stats/data/timeDisconnected', ['\Xibo\Controller\Stats','timeDisconnectedData'])->setName('stats.timeDisconnected.data');
 
 //
 // Audit Log
@@ -417,7 +437,7 @@ $app->get('/report/savedreport/form/delete/{id}', ['\Xibo\Controller\Report','de
 // Ad hoc report
 //
 $app->get('/report/form/{name}', ['\Xibo\Controller\Report','getReportForm'])->setName('report.form');
-
+$app->get('/report/data/{name}', ['\Xibo\Controller\Report','getReportData'])->setName('report.data');
 
 // Player Software
 $app->get('/playersoftware/view', ['\Xibo\Controller\PlayerSoftware','displayPage'])->setName('playersoftware.view');
@@ -430,6 +450,7 @@ $app->get('/tag/form/add', ['\Xibo\Controller\Tag','addForm'])->setName('tag.add
 $app->get('/tag/form/edit/{id}', ['\Xibo\Controller\Tag','editForm'])->setName('tag.edit.form');
 $app->get('/tag/form/delete/{id}', ['\Xibo\Controller\Tag','deleteForm'])->setName('tag.delete.form');
 
-// Errors
-$app->get('/notFound', ['\Xibo\Controller\Error', 'notFoundPage'])->setName('error.notFound');
-$app->any('/error', ['\Xibo\Controller\Error', 'errorPage'])->setName('error');
+// Actions
+$app->get('/action/form/add/{source}/{id}', ['\Xibo\Controller\Action', 'addForm'])->setName('action.add.form');
+$app->get('/action/form/edit/{id}', ['\Xibo\Controller\Action', 'editForm'])->setName('action.edit.form');
+$app->get('/action/form/delete/{id}', ['\Xibo\Controller\Action', 'deleteForm'])->setName('action.delete.form');

@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2014 Daniel Garner
  *
  * This file is part of Xibo.
  *
@@ -20,13 +21,14 @@
  */
 namespace Xibo\Xmds;
 
+use Carbon\Carbon;
 use Intervention\Image\ImageManagerStatic as Img;
-use Jenssegers\Date\Date;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Soap4
@@ -44,21 +46,38 @@ class Soap4 extends Soap
      * @param int $clientCode
      * @param string $operatingSystem
      * @param string $macAddress
+     * @param null $xmrChannel
+     * @param null $xmrPubKey
      * @return string
+     * @throws GeneralException
+     * @throws NotFoundException
      * @throws \SoapFault
      */
     public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress, $xmrChannel = null, $xmrPubKey = null)
     {
         $this->logProcessor->setRoute('RegisterDisplay');
 
+        $sanitized = $this->getSanitizer([
+            'serverKey' => $serverKey,
+            'hardwareKey' => $hardwareKey,
+            'displayName' => $displayName,
+            'clientType' => $clientType,
+            'clientVersion' => $clientVersion,
+            'clientCode' => $clientCode,
+            'operatingSystem' => $operatingSystem,
+            'macAddress' => $macAddress,
+            'xmrChannel' => $xmrChannel,
+            'xmrPubKey' => $xmrPubKey
+        ]);
+
         // Sanitize
-        $serverKey = $this->getSanitizer()->string($serverKey);
-        $hardwareKey = $this->getSanitizer()->string($hardwareKey);
-        $displayName = $this->getSanitizer()->string($displayName);
-        $clientType = $this->getSanitizer()->string($clientType);
-        $clientVersion = $this->getSanitizer()->string($clientVersion);
-        $clientCode = $this->getSanitizer()->int($clientCode);
-        $macAddress = $this->getSanitizer()->string($macAddress);
+        $serverKey = $sanitized->getString('serverKey');
+        $hardwareKey = $sanitized->getString('hardwareKey');
+        $displayName = $sanitized->getString('displayName');
+        $clientType = $sanitized->getString('clientType');
+        $clientVersion = $sanitized->getString('clientVersion');
+        $clientCode = $sanitized->getInt('clientCode');
+        $macAddress = $sanitized->getString('macAddress');
         $clientAddress = $this->getIp();
 
         // Check the serverKey matches
@@ -85,15 +104,15 @@ class Soap4 extends Soap
             $this->getLog()->debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);
 
             // Now
-            $dateNow = $this->getDate()->parse();
+            $dateNow = Carbon::now();
 
             // Append the time
-            $displayElement->setAttribute('date', $this->getDate()->getLocalDate($dateNow));
+            $displayElement->setAttribute('date', $dateNow->format(DateFormatHelper::getSystemFormat()));
             $displayElement->setAttribute('timezone', $this->getConfig()->getSetting('defaultTimezone'));
 
             // Determine if we are licensed or not
             if ($display->licensed == 0) {
-                // It is not licensed
+                // It is not authorised
                 $displayElement->setAttribute('status', 2);
                 $displayElement->setAttribute('code', 'WAITING');
                 $displayElement->setAttribute('message', 'Display is awaiting licensing approval from an Administrator.');
@@ -131,7 +150,7 @@ class Soap4 extends Soap
                         if ($timeParts[0] == '00' && $timeParts[1] == '00') {
                             $arrayItem['value'] = 0;
                         } else {
-                            $arrayItem['value'] = Date::now()->setTime(intval($timeParts[0]), intval($timeParts[1]));
+                            $arrayItem['value'] = Carbon::now()->setTime(intval($timeParts[0]), intval($timeParts[1]));
                         }
                     }
 
@@ -204,7 +223,7 @@ class Soap4 extends Soap
                     $dateNow->timezone($display->timeZone);
 
                     // Append Local Time
-                    $displayElement->setAttribute('localDate', $this->getDate()->getLocalDate($dateNow));
+                    $displayElement->setAttribute('localDate', $dateNow->format(DateFormatHelper::getSystemFormat()));
                 }
             }
 
@@ -241,7 +260,7 @@ class Soap4 extends Soap
         // Send Notification if required
         $this->alertDisplayUp();
 
-        $display->lastAccessed = time();
+        $display->lastAccessed = Carbon::now()->format('U');
         $display->loggedIn = 1;
         $display->clientAddress = $clientAddress;
         $display->macAddress = $macAddress;
@@ -267,7 +286,7 @@ class Soap4 extends Soap
      * @param string $hardwareKey Display Hardware Key
      * @return string $requiredXml Xml Formatted String
      * @throws \SoapFault
-     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function RequiredFiles($serverKey, $hardwareKey)
     {
@@ -284,10 +303,10 @@ class Soap4 extends Soap
      * @param int $chunkOffset The Offset of the Chunk Requested
      * @param string $chunkSize The Size of the Chunk Requested
      * @return mixed
-     * @throws NotFoundException
-     * @throws XiboException
      * @throws \SoapFault
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function GetFile($serverKey, $hardwareKey, $fileId, $fileType, $chunkOffset, $chunkSize)
     {
@@ -309,7 +328,6 @@ class Soap4 extends Soap
         $chunkOffset = $sanitizer->getDouble('chunkOffset');
         $chunkSize = $sanitizer->getDouble('chunkSize');
 
-        $this->getLog()->debug('GET FILE  GET ' . ' hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: ' . $fileType . ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize);
         $libraryLocation = $this->getConfig()->getSetting("LIBRARY_LOCATION");
 
         // Check the serverKey matches
@@ -319,7 +337,7 @@ class Soap4 extends Soap
 
         // Authenticate this request...
         if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Receiver', "This display client is not licensed");
+            throw new \SoapFault('Receiver', "This Display is not authorised.");
         }
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
@@ -354,11 +372,11 @@ class Soap4 extends Soap
                 $this->getLog()->debug(json_encode($media));
 
                 if (!file_exists($libraryLocation . $media->storedAs))
-                    throw new NotFoundException('Media exists but file missing from library. ' . $libraryLocation);
+                    throw new NotFoundException(__('Media exists but file missing from library. ') . $libraryLocation);
 
                 // Return the Chunk size specified
                 if (!$f = fopen($libraryLocation . $media->storedAs, 'r'))
-                    throw new NotFoundException('Unable to get file pointer');
+                    throw new NotFoundException(__('Unable to get file pointer'));
 
                 fseek($f, $chunkOffset);
 
@@ -368,13 +386,13 @@ class Soap4 extends Soap
                 $chunkSize = strlen($file);
 
                 if ($chunkSize === 0)
-                    throw new NotFoundException('Empty file');
+                    throw new NotFoundException(__('Empty file'));
 
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
                 $requiredFile->save();
 
             } else {
-                throw new NotFoundException('Unknown FileType Requested.');
+                throw new NotFoundException(__('Unknown FileType Requested.'));
             }
         }
         catch (NotFoundException $e) {
@@ -390,10 +408,11 @@ class Soap4 extends Soap
 
     /**
      * Returns the schedule for the hardware key specified
-     * @return string
      * @param string $serverKey
      * @param string $hardwareKey
+     * @return string
      * @throws \SoapFault
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function Schedule($serverKey, $hardwareKey)
     {
@@ -409,6 +428,7 @@ class Soap4 extends Soap
      * @param string $reason
      * @return bool
      * @throws \SoapFault
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function BlackList($serverKey, $hardwareKey, $mediaId, $type, $reason)
     {
@@ -417,11 +437,12 @@ class Soap4 extends Soap
 
     /**
      * Submit client logging
-     * @return bool
      * @param string $serverKey
      * @param string $hardwareKey
      * @param string $logXml
+     * @return bool
      * @throws \SoapFault
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function SubmitLog($serverKey, $hardwareKey, $logXml)
     {
@@ -430,11 +451,12 @@ class Soap4 extends Soap
 
     /**
      * Submit display statistics to the server
-     * @return bool
      * @param string $serverKey
      * @param string $hardwareKey
      * @param string $statXml
+     * @return bool
      * @throws \SoapFault
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function SubmitStats($serverKey, $hardwareKey, $statXml)
     {
@@ -448,6 +470,7 @@ class Soap4 extends Soap
      * @param string $inventory
      * @return bool
      * @throws \SoapFault
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function MediaInventory($serverKey, $hardwareKey, $inventory)
     {
@@ -462,8 +485,8 @@ class Soap4 extends Soap
      * @param string $regionId
      * @param string $mediaId
      * @return mixed
-     * @throws NotFoundException
      * @throws \SoapFault
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function GetResource($serverKey, $hardwareKey, $layoutId, $regionId, $mediaId)
     {
@@ -476,8 +499,9 @@ class Soap4 extends Soap
      * @param string $hardwareKey
      * @param string $status
      * @return bool
-     * @throws NotFoundException
      * @throws \SoapFault
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function NotifyStatus($serverKey, $hardwareKey, $status)
     {
@@ -498,7 +522,7 @@ class Soap4 extends Soap
 
         // Auth this request...
         if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Receiver', 'This display client is not licensed');
+            throw new \SoapFault('Receiver', 'This Display is not authorised.');
         }
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
@@ -549,7 +573,7 @@ class Soap4 extends Soap
 
         if (!empty($timeZone)) {
             // Validate the provided data and log/ignore if not well formatted
-            if (array_key_exists($timeZone, $this->getDate()->timezoneList())) {
+            if (array_key_exists($timeZone, DateFormatHelper::timezoneList())) {
                 $this->display->timeZone = $timeZone;
             } else {
                 $this->getLog()->info('Ignoring Incorrect timezone string: ' . $timeZone);
@@ -593,7 +617,7 @@ class Soap4 extends Soap
         try {
             if (count($this->display->getChangedProperties()) > 0)
                 $this->display->save(Display::$saveOptionsMinimum);
-        } catch (XiboException $xiboException) {
+        } catch (GeneralException $xiboException) {
             $this->getLog()->error($xiboException->getMessage());
             throw new \SoapFault('Receiver', 'Unable to save status update');
         }
@@ -608,6 +632,8 @@ class Soap4 extends Soap
      * @param string $screenShot
      * @return bool
      * @throws \SoapFault
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function SubmitScreenShot($serverKey, $hardwareKey, $screenShot)
     {
@@ -635,7 +661,7 @@ class Soap4 extends Soap
 
         // Auth this request...
         if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Receiver', 'This display client is not licensed');
+            throw new \SoapFault('Receiver', 'This Display is not authorised.');
         }
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
@@ -697,7 +723,7 @@ class Soap4 extends Soap
         $this->display->save(Display::$saveOptionsMinimum);
 
         // Cache the current screen shot time
-        $this->display->setCurrentScreenShotTime($this->getPool(), $this->getDate()->getLocalDate());
+        $this->display->setCurrentScreenShotTime($this->getPool(), Carbon::now()->format(DateFormatHelper::getSystemFormat()));
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$SCREENSHOT, filesize($location));
 

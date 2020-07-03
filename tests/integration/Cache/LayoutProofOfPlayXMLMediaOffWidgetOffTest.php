@@ -22,7 +22,9 @@
 
 namespace Xibo\Tests\integration\Cache;
 
+use Carbon\Carbon;
 use Xibo\Entity\Display;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboImage;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
@@ -82,7 +84,7 @@ class LayoutProofOfPlayXMLMediaOffWidgetOffTest extends LocalWebTestCase
         $this->getLogger()->debug('Setup test for ' . get_class() .' Test');
 
         // Set global widget enable stat set to Off
-        self::$container->configService->changeSetting('WIDGET_STATS_ENABLED_DEFAULT', 'Off');
+        self::$container->get('configService')->changeSetting('WIDGET_STATS_ENABLED_DEFAULT', 'Off');
         $this->getStore()->commitIfNecessary();
 
         // Create a Layout with enableStat Off (by default)
@@ -118,8 +120,8 @@ class LayoutProofOfPlayXMLMediaOffWidgetOffTest extends LocalWebTestCase
         // Schedule the Layout "always" onto our display
         //  deleting the layout will remove this at the end
         $event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
-            date('Y-m-d H:i:s', time()+3600),
-            date('Y-m-d H:i:s', time()+7200),
+            Carbon::now()->addSeconds(3600)->format(DateFormatHelper::getSystemFormat()),
+            Carbon::now()->addSeconds(7200)->format(DateFormatHelper::getSystemFormat()),
             $this->layoutOff->campaignId,
             [$this->display->displayGroupId],
             0,
@@ -157,8 +159,8 @@ class LayoutProofOfPlayXMLMediaOffWidgetOffTest extends LocalWebTestCase
         // Schedule the LayoutOn "always" onto our display
         //  deleting the layoutOn will remove this at the end
         $event2 = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
-            date('Y-m-d H:i:s', time()+3600),
-            date('Y-m-d H:i:s', time()+7200),
+            Carbon::now()->addSeconds(3600)->format(DateFormatHelper::getSystemFormat()),
+            Carbon::now()->addSeconds(7200)->format(DateFormatHelper::getSystemFormat()),
             $this->layoutOn->campaignId,
             [$this->display2->displayGroupId],
             0,
@@ -180,8 +182,6 @@ class LayoutProofOfPlayXMLMediaOffWidgetOffTest extends LocalWebTestCase
     {
         $this->getLogger()->debug('Tear Down');
 
-        parent::tearDown();
-
         // Delete the LayoutOn
         $this->deleteLayout($this->layoutOff);
 
@@ -198,8 +198,10 @@ class LayoutProofOfPlayXMLMediaOffWidgetOffTest extends LocalWebTestCase
         $this->media->deleteAssigned();
 
         // Set global widget enable stat set to Inherit
-        self::$container->configService->changeSetting('WIDGET_STATS_ENABLED_DEFAULT', 'Inherit');
+        self::$container->get('configService')->changeSetting('WIDGET_STATS_ENABLED_DEFAULT', 'Inherit');
         $this->getStore()->commitIfNecessary();
+
+        parent::tearDown();
 
     }
     // </editor-fold>
@@ -236,10 +238,10 @@ class LayoutProofOfPlayXMLMediaOffWidgetOffTest extends LocalWebTestCase
     public function testLayoutOff()
     {
         // Publish layout
-        $response = $this->client->put('/layout/publish/' . $this->layoutOff->layoutId, [
+        $response = $this->sendRequest('PUT','/layout/publish/' . $this->layoutOff->layoutId, [
             'publishNow' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-        $response = json_decode($response, true);
+        $response = json_decode($response->getBody(), true);
 
         $this->layoutOff = $this->constructLayoutFromResponse($response['data']);
 
@@ -265,10 +267,10 @@ class LayoutProofOfPlayXMLMediaOffWidgetOffTest extends LocalWebTestCase
     {
 
         // Publish layout
-        $response = $this->client->put('/layout/publish/' . $this->layoutOn->layoutId, [
+        $response = $this->sendRequest('PUT','/layout/publish/' . $this->layoutOn->layoutId, [
             'publishNow' => 1
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
-        $response = json_decode($response, true);
+        $response = json_decode($response->getBody(), true);
 
         $this->layoutOn = $this->constructLayoutFromResponse($response['data']);
 

@@ -20,14 +20,18 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
+use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Factory\AuditLogFactory;
+use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
+use Xibo\Helper\SendFile;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class AuditLog
@@ -47,14 +51,13 @@ class AuditLog extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param AuditLogFactory $auditLogFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $auditLogFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $auditLogFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->auditLogFactory = $auditLogFactory;
     }
@@ -63,11 +66,8 @@ class AuditLog extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function displayPage(Request $request, Response $response)
     {
@@ -80,11 +80,8 @@ class AuditLog extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     function grid(Request $request, Response $response)
     {
@@ -105,11 +102,11 @@ class AuditLog extends Base
 
         // Get the dates and times
         if ($filterFromDt == null) {
-            $filterFromDt = $this->getDate()->parse()->sub('1 day');
+            $filterFromDt = Carbon::now()->sub('1 day');
         }
 
         if ($filterToDt == null) {
-            $filterToDt = $this->getDate()->parse();
+            $filterToDt = Carbon::now();
         }
 
         $search['fromTimeStamp'] = $filterFromDt->format('U');
@@ -151,11 +148,8 @@ class AuditLog extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function exportForm(Request $request, Response $response)
     {
@@ -172,21 +166,20 @@ class AuditLog extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function export(Request $request, Response $response)
+    public function export(Request $request, Response $response) : Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // We are expecting some parameters
         $filterFromDt = $sanitizedParams->getDate('filterFromDt');
         $filterToDt = $sanitizedParams->getDate('filterToDt');
+        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/audittrail_' . Random::generateString();
 
         if ($filterFromDt == null || $filterToDt == null) {
-            throw new \InvalidArgumentException(__('Please provide a from/to date.'));
+            throw new InvalidArgumentException(__('Please provide a from/to date.'), 'filterFromDt');
         }
 
         $fromTimeStamp = $filterFromDt->setTime(0, 0, 0)->format('U');
@@ -194,24 +187,24 @@ class AuditLog extends Base
 
         $rows = $this->auditLogFactory->query('logId', ['fromTimeStamp' => $fromTimeStamp, 'toTimeStamp' => $toTimeStamp]);
 
-        $out = fopen('php://output', 'w');
+        $out = fopen($tempFileName, 'w');
         fputcsv($out, ['ID', 'Date', 'User', 'Entity', 'EntityId', 'Message', 'Object']);
 
         // Do some post processing
         foreach ($rows as $row) {
             /* @var \Xibo\Entity\AuditLog $row */
-            fputcsv($out, [$row->logId, $this->getDate()->getLocalDate($row->logDate), $row->userName, $row->entity, $row->entityId, $row->message, $row->objectAfter]);
+            fputcsv($out, [$row->logId, Carbon::createFromTimestamp($row->logDate)->format(DateFormatHelper::getSystemFormat()), $row->userName, $row->entity, $row->entityId, $row->message, $row->objectAfter]);
         }
 
         fclose($out);
 
-        // We want to output a load of stuff to the browser as a text file.
-        $response->withHeader('Content-Type', 'text/csv');
-        $response->withHeader('Content-Disposition', 'attachment; filename="audittrail.csv"');
-        $response->withHeader('Content-Transfer-Encoding', 'binary"');
-        $response->withHeader('Accept-Ranges', 'bytes');
         $this->setNoOutput(true);
 
-        return $this->render($request, $response);
+        return $this->render($request, SendFile::decorateResponse(
+            $response,
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $tempFileName,
+            'audittrail.csv'
+        )->withHeader('Content-Type', 'text/csv;charset=utf-8'));
     }
 }

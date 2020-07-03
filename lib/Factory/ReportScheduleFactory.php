@@ -25,12 +25,11 @@ namespace Xibo\Factory;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class ReportScheduleFactory
@@ -46,28 +45,23 @@ class ReportScheduleFactory extends BaseFactory
     /** @var PoolInterface  */
     private $pool;
 
-    /** @var  DateServiceInterface */
-    private $dateService;
-
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
      * @param PoolInterface $pool
-     * @param DateServiceInterface $date
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $pool, $date)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $pool)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
 
         $this->config = $config;
         $this->pool = $pool;
-        $this->dateService = $date;
     }
 
     /**
@@ -85,6 +79,7 @@ class ReportScheduleFactory extends BaseFactory
     /**
      * Loads only the reportSchedule information
      * @param int $reportScheduleId
+     * @param int $disableUserCheck
      * @return ReportSchedule
      * @throws NotFoundException
      */
@@ -108,6 +103,7 @@ class ReportScheduleFactory extends BaseFactory
      * @param null $sortOrder
      * @param array $filterBy
      * @return ReportSchedule[]
+     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
     {
@@ -130,6 +126,8 @@ class ReportScheduleFactory extends BaseFactory
                 reportschedule.previousRunDt, 
                 reportschedule.createdDt, 
                 reportschedule.userId,
+                reportschedule.fromDt,
+                reportschedule.toDt,
                 reportschedule.isActive,
                 reportschedule.message,
                `user`.UserName AS owner 
@@ -149,7 +147,7 @@ class ReportScheduleFactory extends BaseFactory
         // Like
         if ($sanitizedFilter->getString('name') != '') {
             $terms = explode(',', $sanitizedFilter->getString('name'));
-            $this->nameFilter('reportschedule', 'name', $terms, $body, $params);
+            $this->nameFilter('reportschedule', 'name', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         if ($sanitizedFilter->getInt('reportScheduleId', ['default' => 0]) != 0) {
@@ -196,7 +194,7 @@ class ReportScheduleFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'reportScheduleId', 'lastRunDt', 'previousRunDt', 'lastSavedReportId', 'isActive'
+                    'reportScheduleId', 'lastRunDt', 'previousRunDt', 'lastSavedReportId', 'isActive', 'fromDt', 'toDt'
                 ]
             ]);
         }

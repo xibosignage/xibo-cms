@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -21,13 +21,12 @@
  */
 
 namespace Xibo\XTR;
+use Carbon\Carbon;
 use Xibo\Entity\Task;
-use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TaskFactory;
-use Xibo\Factory\UserFactory;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class StatsMigrationTask
@@ -36,12 +35,6 @@ use Xibo\Factory\UserFactory;
 class StatsMigrationTask implements TaskInterface
 {
     use TaskTrait;
-
-    /** @var  User */
-    private $archiveOwner;
-
-    /** @var UserFactory */
-    private $userFactory;
 
     /** @var TaskFactory */
     private $taskFactory;
@@ -52,17 +45,21 @@ class StatsMigrationTask implements TaskInterface
     /** @var LayoutFactory */
     private $layoutFactory;
 
+    /** @var bool Does the Archive Table exist? */
     private $archiveExist;
 
+    /** @var array Cache of displayIds found */
     private $displays = [];
+
+    /** @var array Cache of displayIds not found */
     private $displaysNotFound = [];
 
-    public $archiveTask;
+    /** @var Task The Stats Archive Task */
+    private $archiveTask;
 
     /** @inheritdoc */
     public function setFactories($container)
     {
-        $this->userFactory = $container->get('userFactory');
         $this->taskFactory = $container->get('taskFactory');
         $this->layoutFactory = $container->get('layoutFactory');
         $this->displayFactory = $container->get('displayFactory');
@@ -75,15 +72,19 @@ class StatsMigrationTask implements TaskInterface
         $this->migrateStats();
     }
 
+    /**
+     * Migrate Stats
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
     public function migrateStats()
     {
         // Config options
         $options = [
-            'killSwitch' => $this->getOption('killSwitch', 0),
-            'numberOfRecords' => $this->getOption('numberOfRecords', 10000),
-            'numberOfLoops' => $this->getOption('numberOfLoops', 1000),
-            'pauseBetweenLoops' => $this->getOption('pauseBetweenLoops', 10),
-            'optimiseOnComplete' => $this->getOption('optimiseOnComplete', 1),
+            'killSwitch' => (int)$this->getOption('killSwitch', 0),
+            'numberOfRecords' => (int)$this->getOption('numberOfRecords', 10000),
+            'numberOfLoops' => (int)$this->getOption('numberOfLoops', 1000),
+            'pauseBetweenLoops' => (int)$this->getOption('pauseBetweenLoops', 10),
+            'optimiseOnComplete' => (int)$this->getOption('optimiseOnComplete', 1),
         ];
 
         // read configOverride
@@ -93,7 +94,6 @@ class StatsMigrationTask implements TaskInterface
         }
 
         if ($options['killSwitch'] == 0) {
-
 
             // Stat Archive Task
             $this->archiveTask = $this->taskFactory->getByClass('\Xibo\XTR\\StatsArchiveTask');
@@ -114,6 +114,7 @@ class StatsMigrationTask implements TaskInterface
 
                 $statArchiveSqlCount =  0;
                 if ( $this->archiveExist === true) {
+                    /** @noinspection SqlResolve */
                     $statArchiveSql = $this->store->getConnection()->prepare('SELECT statId FROM stat_archive LIMIT 1');
                     $statArchiveSql->execute();
                     $statArchiveSqlCount = $statArchiveSql->rowCount();
@@ -194,6 +195,7 @@ class StatsMigrationTask implements TaskInterface
 
         while ($watermark > 0) {
             $count = 0;
+            /** @noinspection SqlResolve */
             $stats = $this->store->getConnection()->prepare('
                 SELECT statId, type, statDate, scheduleId, displayId, layoutId, mediaId, widgetId, start, `end`, tag
                   FROM stat_archive
@@ -217,6 +219,7 @@ class StatsMigrationTask implements TaskInterface
                 $this->log->debug('End of records in stat_archive (migration to MYSQL). Dropping table.');
 
                 // Drop the stat_archive table
+                /** @noinspection SqlResolve */
                 $this->store->update('DROP TABLE `stat_archive`;', []);
 
                 $this->appendRunMessage(__('Done.'. PHP_EOL));
@@ -274,17 +277,17 @@ class StatsMigrationTask implements TaskInterface
 
                 $params = [
                     'type' => $stat['type'],
-                    'statDate' =>  $this->date->parse($stat['statDate'])->format('U'),
+                    'statDate' =>  Carbon::createFromTimestamp($stat['statDate'])->format('U'),
                     'scheduleId' => (int) $stat['scheduleId'],
                     'displayId' => (int) $stat['displayId'],
                     'campaignId' => $campaignId,
                     'layoutId' => (int) $stat['layoutId'],
                     'mediaId' => (int) $stat['mediaId'],
                     'widgetId' => (int) $stat['widgetId'],
-                    'start' => $this->date->parse($stat['start'])->format('U'),
-                    'end' => $this->date->parse($stat['end'])->format('U'),
+                    'start' => Carbon::createFromTimestamp($stat['start'])->format('U'),
+                    'end' => Carbon::createFromTimestamp($stat['end'])->format('U'),
                     'tag' => $stat['tag'],
-                    'duration' => isset($stat['duration']) ? (int) $stat['duration'] : $this->date->parse($stat['end'])->format('U') - $this->date->parse($stat['start'])->format('U'),
+                    'duration' => isset($stat['duration']) ? (int) $stat['duration'] : Carbon::createFromTimestamp($stat['end'])->format('U') - Carbon::createFromTimestamp($stat['start'])->format('U'),
                     'count' => isset($stat['count']) ? (int) $stat['count'] : 1,
                 ];
 
@@ -384,11 +387,11 @@ class StatsMigrationTask implements TaskInterface
 
                 $entry = [];
 
-                $entry['statDate'] = $this->date->parse($stat['statDate'], 'U');
+                $entry['statDate'] = Carbon::createFromTimestamp($stat['statDate'])->format('U');
 
                 $entry['type'] = $stat['type'];
-                $entry['fromDt'] = $this->date->parse($stat['start'], 'U');
-                $entry['toDt'] = $this->date->parse($stat['end'], 'U');
+                $entry['fromDt'] = Carbon::createFromTimestamp($stat['start'])->format('U');
+                $entry['toDt'] = Carbon::createFromTimestamp($stat['end'])->format('U');
                 $entry['scheduleId'] = (int) $stat['scheduleId'];
                 $entry['mediaId'] = (int) $stat['mediaId'];
                 $entry['layoutId'] = (int) $stat['layoutId'];
@@ -436,6 +439,7 @@ class StatsMigrationTask implements TaskInterface
 
         while ($watermark > 0) {
             $count = 0;
+            /** @noinspection SqlResolve */
             $stats = $this->store->getConnection()->prepare('
                 SELECT statId, type, statDate, scheduleId, displayId, layoutId, mediaId, widgetId, start, `end`, tag
                   FROM stat_archive
@@ -459,6 +463,7 @@ class StatsMigrationTask implements TaskInterface
                 $this->log->debug('End of records in stat_archive (migration to Mongo). Dropping table.');
 
                 // Drop the stat_archive table
+                /** @noinspection SqlResolve */
                 $this->store->update('DROP TABLE `stat_archive`;', []);
 
                 $this->appendRunMessage(__('Done.'. PHP_EOL));
@@ -507,9 +512,9 @@ class StatsMigrationTask implements TaskInterface
                     $campaignId = 0;
                 }
 
-                $statDate = $this->date->parse($stat['statDate']);
-                $start = $this->date->parse($stat['start']);
-                $end = $this->date->parse($stat['end']);
+                $statDate = Carbon::createFromTimestamp($stat['statDate']);
+                $start =  Carbon::createFromTimestamp($stat['start']);
+                $end =  Carbon::createFromTimestamp($stat['end']);
 
                 $entry['statDate'] = $statDate;
                 $entry['type'] = $stat['type'];
@@ -568,6 +573,7 @@ class StatsMigrationTask implements TaskInterface
         } else {
 
             // Save mysql low watermark in file if .watermark.txt file is not found
+            /** @noinspection SqlResolve */
             $statId = $this->store->select('SELECT MAX(statId) as statId FROM '.$tableName, []);
             $watermark = (int) $statId[0]['statId'];
 

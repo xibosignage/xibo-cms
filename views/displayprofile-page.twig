@@ -23,6 +23,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{{ "Display Setting Profiles"|trans }} | {% endblock %}
+
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-info btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Display Settings Profile" %}" href="{{ url_for("displayProfile.add.form") }}"> <i class="fa fa-cogs" aria-hidden="true"></i> {% trans "Add Profile" %}</a></li>
@@ -37,8 +39,18 @@
                 <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {% set title %}{% trans "Name" %}{% endset %}
-                            {{ inline.input("displayProfile", title) }}
+
+                            <div class="form-group ">
+                                <label class="control-label" title="" for="displayProfile" accesskey="">{% trans "Name" %}</label>
+                                <div>
+                                    <div class="input-group">
+                                        <input class="form-control" name="displayProfile" type="text" id="displayProfile" value="">
+                                        <span class="input-group-addon">
+                                            <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
 
                             {% set title %}{% trans "Type" %}{% endset %}
                             {% set android %}{% trans "Android" %}{% endset %}

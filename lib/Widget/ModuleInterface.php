@@ -22,10 +22,10 @@
 
 namespace Xibo\Widget;
 
-use Jenssegers\Date\Date;
+use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Exception\XiboException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Factory\ModuleFactory;
 
 /**
@@ -39,7 +39,7 @@ interface ModuleInterface
      * @param \Slim\Http\ServerRequest $request
      * @param \Slim\Http\Response $response
      * @return Response
-     * @throws \Xibo\Exception\XiboException
+     * @throws GeneralException
      */
     public function add(Request $request, Response $response): Response;
 
@@ -48,7 +48,7 @@ interface ModuleInterface
      * @param \Slim\Http\ServerRequest $request
      * @param \Slim\Http\Response $response
      * @return \Slim\Http\Response
-     * @throws \Xibo\Exception\XiboException
+     * @throws GeneralException
      */
     public function edit(Request $request, Response $response): Response;
 
@@ -64,7 +64,8 @@ interface ModuleInterface
      * Module Settings
      * @param \Slim\Http\ServerRequest $request
      * @param \Slim\Http\Response $response
-     * @return mixed
+     * @throws GeneralException
+     * @return \Slim\Http\Response
      */
     public function settings(Request $request, Response $response): Response;
 
@@ -108,7 +109,7 @@ interface ModuleInterface
     /**
      * Is the Module Valid?
      * @return int (1 = Yes, 2 = Player Dependent)
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function isValid();
 
@@ -128,14 +129,14 @@ interface ModuleInterface
     /**
      * Get the Modified Date of this Widget
      * @param int $displayId The displayId, or 0 for preview
-     * @return Date the date this widgets was modified
+     * @return Carbon the date this widgets was modified
      */
     public function getModifiedDate($displayId);
 
     /**
      * Get the Cache Date for this Widget using the cache key
      * @param int $displayId The displayId we're requesting for, or 0 for preview
-     * @return Date
+     * @return Carbon
      */
     public function getCacheDate($displayId);
 
@@ -178,7 +179,7 @@ interface ModuleInterface
      * Get Resource or Cache
      * @param int $displayId The displayId we're requesting for, or 0 for preview
      * @return string
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function getResourceOrCache($displayId);
 
@@ -186,7 +187,7 @@ interface ModuleInterface
      * Get Resource
      * @param int $displayId The displayId we're requesting for, or 0 for preview
      * @return string|false
-     * @throws \Xibo\Exception\ConfigurationException
+     * @throws GeneralException
      */
     public function getResource($displayId = 0);
 

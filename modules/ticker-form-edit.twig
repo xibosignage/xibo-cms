@@ -86,7 +86,7 @@
                     <div class="tab-pane" id="configurationTab">
                         {% set title %}{% trans "Feed URL" %}{% endset %}
                         {% set helpText %}{% trans "The Link for the RSS feed" %}{% endset %}
-                        {{ forms.input("uri", title, module.getOption("uri"), helpText, "feed-fields") }}
+                        {{ forms.input("uri", title, module.getOption("uri")|url_decode, helpText, "feed-fields") }}
 
                         {% set title %}{% trans "Number of Items" %}{% endset %}
                         {% set helpText %}{% trans "The Number of RSS items you want to display" %}{% endset %}

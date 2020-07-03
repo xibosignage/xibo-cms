@@ -1,48 +1,79 @@
-{% extends "base.twig" %}
+{#
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>{% block title %}{% endblock %}{{ theme.getThemeConfig("theme_title") }}</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="public-path" content="{{ theme.rootUri() }}"/>
+        <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
 
-{% block content %}
-    <div id="page-wrapper" class="active">
-        <div class="collapse navbar-collapse" id="navbar-collapse-1">
-            <div id="sidebar-wrapper">
-                <ul class="sidebar">
-                    <li class="sidebar-main"><a href="{{ url_for("home") }}">{% trans "Dashboard" %}</a></li>
-                </ul>
+        <script src="{{ theme.rootUri() }}dist/style.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
 
-                <div class="sidebar-footer">
-                    <div class="col-sm-6">
-                        <a class="XiboFormButton" href="{{ url_for("about") }}" title="{% trans "About the CMS" %}">{% trans "About" %}</a>
-                    </div>
-                    <div class="col-sm-6">
-                        <a href="{{ helpService.address() }}" target="_blank" title="{% trans "Open the Manual in a new Window" %}">{% trans "Manual" %}</a>
-                    </div>
-                </div>
+        <!-- Copyright 2006-2020 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
+        <style type="text/css">
+            body {
+                padding-top: 40px;
+                padding-bottom: 40px;
+                background-color: #f5f5f5;
+            }
+
+            .form-signin {
+                max-width: 300px;
+                padding: 19px 29px 29px;
+                margin: 0 auto 20px;
+                background-color: #fff;
+                border: 1px solid #e5e5e5;
+                -webkit-border-radius: 5px;
+                -moz-border-radius: 5px;
+                border-radius: 5px;
+                -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.05);
+                -moz-box-shadow: 0 1px 2px rgba(0,0,0,.05);
+                box-shadow: 0 1px 2px rgba(0,0,0,.05);
+            }
+            .form-signin .form-signin-heading,
+            .form-signin .checkbox {
+                margin-bottom: 10px;
+            }
+
+        </style>
+        {% block style %}{% endblock %}
+    </head>
+    <body>
+        <div class="container">
+            <div class="{% block contentClass %}form-signin text-center{% endblock %}">
+                {% block header %}<p><a href="{{ theme.getThemeConfig("theme_url") }}"><img src="{{ theme.uri("img/xibologo.png") }}" alt="Logo"></a></p>{% endblock %}
+
+                {% block content %}{% endblock %}
             </div>
-        </div>
 
-        <div id="content-wrapper">
-            <div class="page-content">
-                <div class="row header">
-                    <div class="col-sm-12">
-                        <div class="meta pull-left">
-                            <div class="page"><img class="xibo-logo" src="{{ theme.uri("img/xibologo.png") }}"></div>
-                        </div>
-                        <div class="user pull-right">
-
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-sm-12">
-                        {% block actionMenu %}{% endblock %}
-                        {% block pageContent %}{% endblock %}
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-sm-12">
-                        {% block pageFooter %}{% endblock %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-{% endblock %}
+            <p class="text-center">{% trans %}Version {{ version }}{% endtrans %}
+                | <a id="source-link" href="{{ theme.getThemeConfig("cms_source_url") }}">{% trans "Source" %}</a>
+                | <a id="about-link" class="XiboFormButton" href="{{ aboutUrl }}" title="{% trans "About" %}">{% trans "About" %}</a>
+            </p>
+        </div> <!-- /container -->
+        <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
+    </body>
+</html>

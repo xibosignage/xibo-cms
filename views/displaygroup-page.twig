@@ -23,6 +23,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{{ "Display Groups"|trans }} | {% endblock %}
+
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Display Group" %}" href="{{ url_for("displayGroup.add.form") }}"> <i class="fa fa-desktop" aria-hidden="true"></i> {% trans "Add Display Group" %}</a></li>
@@ -40,8 +42,17 @@
                             {% set title %}{% trans "ID" %}{% endset %}
                             {{ inline.input("displayGroupId", title) }}
 
-                            {% set title %}{% trans "Name" %}{% endset %}
-                            {{ inline.input("displayGroup", title) }}
+                            <div class="form-group ">
+                                <label class="control-label" title="" for="displayGroup" accesskey="">{% trans "Name" %}</label>
+                                <div>
+                                    <div class="input-group">
+                                        <input class="form-control" name="displayGroup" type="text" id="displayGroup" value="">
+                                        <span class="input-group-addon">
+                                            <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
 
                             {% set title %}{% trans "Display" %}{% endset %}
                             {% set attributes = [
@@ -66,11 +77,9 @@
                             {{ inline.input("dynamicCriteria", title) }}
 
                             {% set title %}{% trans "Tags" %}{% endset %}
+                            {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
                             {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                            {{ inline.inputWithTags("tags", title, null, helpText) }}
-
-                            {% set title %}{% trans "Exact match?" %}{% endset %}
-                            {{ inline.checkbox("exactTags", title) }}
+                            {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
                         </form>
                     </div>
                 </div>
@@ -169,6 +178,7 @@
         let displayTable;
         let criteria;
         let criteriaTag;
+        let useRegexForName;
 
         function setDeleteMultiSelectFormOpen(dialog) {
             $(dialog).find('.save-button').prop('disabled', false);
@@ -220,6 +230,7 @@
 
                 criteria = $(dialog).find("input[name=dynamicCriteria]").val();
                 criteriaTag = $(dialog).find("input[name=dynamicCriteriaTags]").val();
+                useRegexForName = $(dialog).find("input[name=useRegexForName]").val();
 
                 if (criteria === "" && criteriaTag === "") {
                     if (displayTable != null) {
@@ -246,7 +257,7 @@
                             "data": function (d) {
                                 //console.log(criteria);
                                 //console.log(criteriaTag);
-                                $.extend(d, {display: criteria, tags: criteriaTag});
+                                $.extend(d, {display: criteria, tags: criteriaTag, useRegexForName: useRegexForName});
                             }
                         },
                         "columns": [

@@ -1,15 +1,31 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2017-18 Spring Signage Ltd
- * (ScheduleChangeOutsideRfTest.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
 namespace Xibo\Tests\integration\Cache;
 
-use Jenssegers\Date\Date;
+use Carbon\Carbon;
 use Xibo\Entity\Display;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboSchedule;
@@ -72,13 +88,13 @@ class ScheduleChangeOutsideRfTest extends LocalWebTestCase
         $this->display = $this->createDisplay();
 
         // Dates outside of RF
-        $date = Date::now()->addMonth(1);
+        $date = Carbon::now()->addMonth();
 
         // Schedule the Layout "always" onto our display
         //  deleting the layout will remove this at the end
         $this->event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
-            $date->format('Y-m-d H:i:s'),
-            $date->addHour()->format('Y-m-d H:i:s'),
+            $date->format(DateFormatHelper::getSystemFormat()),
+            $date->addHour()->format(DateFormatHelper::getSystemFormat()),
             $this->layout->campaignId,
             [$this->display->displayGroupId],
             0,
@@ -122,9 +138,9 @@ class ScheduleChangeOutsideRfTest extends LocalWebTestCase
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
 
         // Change the Schedule
-        $this->client->put('/schedule/' . $this->event->eventId, [
-            'fromDt' => date('Y-m-d H:i:s', $this->event->fromDt),
-            'toDt' => date('Y-m-d H:i:s', $this->event->toDt),
+        $this->sendRequest('PUT','/schedule/' . $this->event->eventId, [
+            'fromDt' => date(DateFormatHelper::getSystemFormat(), $this->event->fromDt),
+            'toDt' => date(DateFormatHelper::getSystemFormat(), $this->event->toDt),
             'eventTypeId' => 1,
             'campaignId' => $this->event->campaignId,
             'displayGroupIds' => [$this->display->displayGroupId],

@@ -21,12 +21,13 @@
  */
 namespace Xibo\Widget;
 
+use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\DataSetColumn;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DataSetView
@@ -39,7 +40,7 @@ class DataSetView extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-dataset-render.js')->save();
@@ -79,11 +80,13 @@ class DataSetView extends ModuleWidget
     /**
      * Get Data Set Columns
      * @return array[DataSetColumn]
+     * @throws InvalidArgumentException
      */
     public function dataSetColumnsSelected()
     {
-        if ($this->getOption('dataSetId') == 0)
-            throw new \InvalidArgumentException(__('DataSet not selected'));
+        if ($this->getOption('dataSetId') == 0) {
+            throw new InvalidArgumentException(__('DataSet not selected'));
+        }
 
         $columns = $this->dataSetColumnFactory->getByDataSetId($this->getOption('dataSetId'));
         $columnsSelected = [];
@@ -106,11 +109,13 @@ class DataSetView extends ModuleWidget
     /**
      * Get Data Set Columns
      * @return array[DataSetColumn]
+     * @throws InvalidArgumentException
      */
     public function dataSetColumnsNotSelected()
     {
-        if ($this->getOption('dataSetId') == 0)
-            throw new \InvalidArgumentException(__('DataSet not selected'));
+        if ($this->getOption('dataSetId') == 0) {
+            throw new InvalidArgumentException(__('DataSet not selected'));
+        }
 
         $columns = $this->dataSetColumnFactory->getByDataSetId($this->getOption('dataSetId'));
 
@@ -365,7 +370,7 @@ class DataSetView extends ModuleWidget
         } else {
 
             // Columns
-            $columns = $sanitizedParams->getIntArray('dataSetColumnId');
+            $columns = $sanitizedParams->getIntArray('dataSetColumnId', ['default' => []]);
 
             if (count($columns) == 0) {
                 $this->setOption('columns', '');
@@ -405,8 +410,8 @@ class DataSetView extends ModuleWidget
             }
 
             // Order and Filter criteria
-            $orderClauses = $sanitizedParams->getArray('orderClause');
-            $orderClauseDirections = $sanitizedParams->getArray('orderClauseDirection');
+            $orderClauses = $sanitizedParams->getArray('orderClause', ['default' => []]);
+            $orderClauseDirections = $sanitizedParams->getArray('orderClauseDirection', ['default' => []]);
             $orderClauseMapping = [];
 
             $i = -1;
@@ -425,7 +430,7 @@ class DataSetView extends ModuleWidget
 
             $this->setOption('orderClauses', json_encode($orderClauseMapping));
 
-            $filterClauses = $sanitizedParams->getArray('filterClause');
+            $filterClauses = $sanitizedParams->getArray('filterClause', ['default' => []]);
             $filterClauseOperator = $sanitizedParams->getArray('filterClauseOperator');
             $filterClauseCriteria = $sanitizedParams->getArray('filterClauseCriteria');
             $filterClauseValue = $sanitizedParams->getArray('filterClauseValue');
@@ -503,6 +508,9 @@ class DataSetView extends ModuleWidget
             $styleSheet .= 'table.DataSetTable { font-size: ' . $this->getOption('fontSize') . 'px; }';
         }
 
+        // Table display CSS fix
+        $styleSheet .= 'table.DataSetTable.cycle-slide { display: table !important; }';
+
         // Get the JavaScript node
         $javaScript = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', ''));
 
@@ -523,9 +531,7 @@ class DataSetView extends ModuleWidget
         $table = $this->dataSetTableHtml($displayId);
 
         // Work out how many pages we will be showing.
-        $pages = $table['countPages'];
-
-        $pages = ($rowsPerPage > 0) ? ceil($pages / $rowsPerPage) : $pages;
+        $pages = ceil($table['countPages']);
         $totalDuration = ($durationIsPerItem == 0) ? $duration : ($duration * $pages);
 
         // Replace and Control Meta options
@@ -536,11 +542,16 @@ class DataSetView extends ModuleWidget
         $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
         $headContent .= '<style type="text/css">' . $styleSheet . '</style>';
 
+        // If we are going to cycle between pages, make sure we hide all of the tables initially.
+        if ($rowsPerPage > 0) {
+            $headContent .= '<style type="text/css">table.DataSetTable {visibility:hidden;}</style>';
+        }
+
         $data['head'] = $headContent;
         $data['body'] = $table['html'];
 
         // Build some JS nodes
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
@@ -565,6 +576,10 @@ class DataSetView extends ModuleWidget
      * Get the Data Set Table
      * @param int $displayId
      * @return array
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     private function dataSetTableHtml($displayId = 0)
     {
@@ -662,7 +677,7 @@ class DataSetView extends ModuleWidget
         $columnIds = explode(',', $columnIds);
 
         // Set an expiry time for the media
-        $expires = time() + ($this->getOption('updateInterval', 3600) * 60);
+        $expires = Carbon::now()->addSeconds($this->getOption('updateInterval', 3600) * 60)->format('U');
 
         // Create a data set object, to get the results.
         try {
@@ -699,7 +714,7 @@ class DataSetView extends ModuleWidget
             }
 
             // Set the timezone for SQL
-            $dateNow = $this->getDate()->parse();
+            $dateNow = Carbon::now();
             if ($displayId != 0) {
                 $display = $this->displayFactory->getById($displayId);
                 $timeZone = $display->getSetting('displayTimeZone', '');
@@ -708,7 +723,7 @@ class DataSetView extends ModuleWidget
                 $this->getLog()->debug(sprintf('Display Timezone Resolved: %s. Time: %s.', $timeZone, $dateNow->toDateTimeString()));
             }
 
-            $this->getStore()->setTimeZone($this->getDate()->getLocalDate($dateNow, 'P'));
+            $this->getStore()->setTimeZone($dateNow->format('P'));
 
             // Get the data (complete table, filtered)
             $dataSetResults = $dataSet->getData($filter);
@@ -866,7 +881,7 @@ class DataSetView extends ModuleWidget
             throw new InvalidArgumentException(__('Limits cannot be lower than 0'), 'limit');
 
         // Check the bounds of the limits
-        if ($this->getOption('upperLimit') < $this->getOption('lowerLimit'))
+        if ($this->getOption('upperLimit') != 0 && $this->getOption('upperLimit') < $this->getOption('lowerLimit'))
             throw new InvalidArgumentException(__('Upper limit must be higher than lower limit'), 'limit');
 
         if ($this->getOption('updateInterval') !== null && !v::intType()->min(0)->validate($this->getOption('updateInterval', 0)))
@@ -893,7 +908,7 @@ class DataSetView extends ModuleWidget
         // Remote dataSets are kept "active" by required files
         $dataSet->setActive();
 
-        return $this->getDate()->parse($widgetModifiedDt, 'U');
+        return Carbon::createFromTimestamp($widgetModifiedDt);
     }
 
     /** @inheritdoc */

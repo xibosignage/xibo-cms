@@ -24,11 +24,11 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\PlayerVersion;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class PlayerVersionFactory
@@ -50,7 +50,7 @@ class PlayerVersionFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
@@ -149,6 +149,7 @@ class PlayerVersionFactory extends BaseFactory
      * @param null $sortOrder
      * @param array $filterBy
      * @return PlayerVersion[]
+     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
     {
@@ -222,7 +223,7 @@ class PlayerVersionFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('playerShowVersion') !== null) {
             $terms = explode(',', $sanitizedFilter->getString('playerShowVersion'));
-            $this->nameFilter('player_software', 'playerShowVersion', $terms, $body, $params);
+            $this->nameFilter('player_software', 'playerShowVersion', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         // Sorting?

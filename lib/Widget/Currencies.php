@@ -24,12 +24,15 @@
  */
 namespace Xibo\Widget;
 
+use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Helper\DateFormatHelper;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\DuplicateEntityException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Currencies
@@ -74,7 +77,7 @@ class Currencies extends AlphaVantageBase
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-finance-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
@@ -337,7 +340,7 @@ class Currencies extends AlphaVantageBase
         $this->setOption('speed', $sanitizedParams->getInt('speed'));
         $this->setOption('backgroundColor', $sanitizedParams->getString('backgroundColor'));
         $this->setOption('noRecordsMessage', $sanitizedParams->getString('noRecordsMessage'));
-        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat'));
+        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat', ['defaultOnEmptyString' => true]));
         $this->setOption('reverseConversion', $sanitizedParams->getCheckbox('reverseConversion'));
         $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 60]));
         $this->setOption('templateId', $sanitizedParams->getString('templateId'));
@@ -418,7 +421,7 @@ class Currencies extends AlphaVantageBase
 
                 $this->getLog()->debug('Percentage change requested, prior day is ' . var_export($priorDay, true));
 
-            } catch (XiboException $requestException) {
+            } catch (GeneralException $requestException) {
                 $this->getLog()->error('Problem getting percentage change currency information. E = ' . $requestException->getMessage());
                 $this->getLog()->debug($requestException->getTraceAsString());
             }
@@ -476,7 +479,7 @@ class Currencies extends AlphaVantageBase
             }
         } catch (ConfigurationException $configurationException) {
             throw $configurationException;
-        } catch (XiboException $requestException) {
+        } catch (GeneralException $requestException) {
             $this->getLog()->error('Problem getting currency information. E = ' . $requestException->getMessage());
             $this->getLog()->debug($requestException->getTraceAsString());
 
@@ -494,10 +497,10 @@ class Currencies extends AlphaVantageBase
      * @param $source
      * @param $baseCurrency
      * @return mixed
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\DuplicateEntityException
-     * @throws \Xibo\Exception\InvalidArgumentException
-     * @throws \Xibo\Exception\XiboException
+     * @throws ConfigurationException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws DuplicateEntityException
      */
     private function makeSubstitutions($data, $source, $baseCurrency)
     {
@@ -531,7 +534,7 @@ class Currencies extends AlphaVantageBase
                 if (stripos($replace, 'time|') > -1) {
                     $timeSplit = explode('|', $replace);
 
-                    $time = $this->getDate()->parse($data['time']. 'Y-m-d H:i:s')->format($timeSplit[1]);
+                    $time = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $data['time'])->format($timeSplit[1]);
 
                     $replacement = $time;
 
@@ -698,8 +701,10 @@ class Currencies extends AlphaVantageBase
 
     /**
      * @inheritdoc
-     * @throws \Xibo\Exception\NotFoundException
-     * @throws \Xibo\Exception\ConfigurationException
+     * @param $tab
+     * @return array
+     * @throws ConfigurationException
+     * @throws NotFoundException
      */
     public function getTab($tab)
     {
@@ -714,6 +719,14 @@ class Currencies extends AlphaVantageBase
     public function getResource($displayId = 0)
     {
         $data = [];
+
+        // Set the null values for template variables.
+        $mainTemplate = null;
+        $itemTemplate = null;
+        $styleSheet = null;
+        $widgetOriginalWidth = null;
+        $widgetOriginalHeight = null;
+        $maxItemsPerPage = null;
 
         // Replace the View Port Width?
         $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
@@ -817,7 +830,7 @@ class Currencies extends AlphaVantageBase
         $data['head'] = $headContent;
 
         // Add some scripts to the JavaScript Content
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
 

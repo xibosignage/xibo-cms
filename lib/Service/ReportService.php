@@ -22,13 +22,15 @@
 
 namespace Xibo\Service;
 
-use Nyholm\Psr7\ServerRequest;
-use Slim\Http\ServerRequest as Request;
+use Illuminate\Support\Str;
 use Psr\Container\ContainerInterface;
-use Xibo\Exception\NotFoundException;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\SavedReportFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class ReportScheduleService
@@ -66,12 +68,7 @@ class ReportService implements ReportServiceInterface
     private $config;
 
     /**
-     * @var DateServiceInterface
-     */
-    private $date;
-
-    /**
-     * @var SanitizerServiceInterface
+     * @var SanitizerService
      */
     private $sanitizer;
 
@@ -83,7 +80,7 @@ class ReportService implements ReportServiceInterface
     /**
      * @inheritdoc
      */
-    public function __construct($container, $state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer, $savedReportFactory)
+    public function __construct($container, $state, $store, $timeSeriesStore, $log, $config, $sanitizer, $savedReportFactory)
     {
         $this->container = $container;
         $this->state = $state;
@@ -91,7 +88,6 @@ class ReportService implements ReportServiceInterface
         $this->timeSeriesStore = $timeSeriesStore;
         $this->log = $log;
         $this->config = $config;
-        $this->date = $date;
         $this->sanitizer = $sanitizer;
         $this->savedReportFactory = $savedReportFactory;
     }
@@ -108,7 +104,7 @@ class ReportService implements ReportServiceInterface
         foreach ($files as $file) {
 
             $config = json_decode(file_get_contents($file));
-            $config->file = str_replace_first(PROJECT_ROOT, '', $file);
+            $config->file = Str::replaceFirst(PROJECT_ROOT, '', $file);
 
             $reports[] = $config;
         }
@@ -182,7 +178,6 @@ class ReportService implements ReportServiceInterface
             $this->timeSeriesStore,
             $this->log,
             $this->config,
-            $this->date,
             $this->sanitizer);
 
         $object->setFactories($this->container);
@@ -252,13 +247,15 @@ class ReportService implements ReportServiceInterface
         $zipFile = $this->config->getSetting('LIBRARY_LOCATION') . $savedReport->storedAs;
 
         // Do some pre-checks on the arguments we have been provided
-        if (!file_exists($zipFile))
-            throw new \InvalidArgumentException(__('File does not exist'));
+        if (!file_exists($zipFile)) {
+            throw new InvalidArgumentException(__('File does not exist'));
+        }
 
         // Open the Zip file
         $zip = new \ZipArchive();
-        if (!$zip->open($zipFile))
-            throw new \InvalidArgumentException(__('Unable to open ZIP'));
+        if (!$zip->open($zipFile)) {
+            throw new InvalidArgumentException(__('Unable to open ZIP'));
+        }
 
         // Get the reportscheduledetails
         $json = json_decode($zip->getFromName('reportschedule.json'), true);

@@ -25,10 +25,10 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Resolution;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class ResolutionFactory
@@ -40,7 +40,7 @@ class ResolutionFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      */
     public function __construct($store, $log, $sanitizerService)
     {
@@ -101,7 +101,7 @@ class ResolutionFactory extends BaseFactory
         $resolutions = $this->query(null, array('disableUserCheck' => 1, 'width' => $width, 'height' => $height));
 
         if (count($resolutions) <= 0)
-            throw new NotFoundException('Resolution not found');
+            throw new NotFoundException(__('Resolution not found'));
 
         return $resolutions[0];
     }
@@ -118,7 +118,7 @@ class ResolutionFactory extends BaseFactory
         $resolutions = $this->query(null, array('disableUserCheck' => 1, 'designerWidth' => $width, 'designerHeight' => $height));
 
         if (count($resolutions) <= 0)
-            throw new NotFoundException('Resolution not found');
+            throw new NotFoundException(__('Resolution not found'));
 
         return $resolutions[0];
     }

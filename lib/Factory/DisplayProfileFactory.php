@@ -23,11 +23,11 @@ namespace Xibo\Factory;
 
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\DisplayProfile;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DisplayProfileFactory
@@ -52,7 +52,7 @@ class DisplayProfileFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param ConfigServiceInterface $config
      * @param EventDispatcherInterface $dispatcher
      * @param CommandFactory $commandFactory
@@ -125,6 +125,7 @@ class DisplayProfileFactory extends BaseFactory
     /**
      * @param $clientType
      * @return DisplayProfile
+     * @throws NotFoundException
      */
     public function getUnknownProfile($clientType)
     {
@@ -179,7 +180,7 @@ class DisplayProfileFactory extends BaseFactory
             // Filter by DisplayProfile Name?
             if ($parsedFilter->getString('displayProfile') != null) {
                 $terms = explode(',', $parsedFilter->getString('displayProfile'));
-                $this->nameFilter('displayprofile', 'name', $terms, $body, $params);
+                $this->nameFilter('displayprofile', 'name', $terms, $body, $params, ($parsedFilter->getCheckbox('useRegexForName') == 1));
             }
 
             if ($parsedFilter->getString('type') != null) {

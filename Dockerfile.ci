@@ -82,6 +82,7 @@ RUN apk update && apk upgrade && apk add tar \
     apache2 \
     ca-certificates \
     tzdata \
+    openssl \
     && rm -rf /var/cache/apk/*
 
 RUN apk add --no-cache build-base php7-dev php7-pear openssl-dev \
@@ -108,6 +109,9 @@ RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PA
     sed -i "s/session.gc_probability = .*$/session.gc_probability = 1/" /etc/php7/php.ini && \
     sed -i "s/session.gc_divisor = .*$/session.gc_divisor = 100/" /etc/php7/php.ini
 
+# Capture the git commit for this build if we provide one
+ARG GIT_COMMIT=ci
+
 # Set some environment variables
 ENV CMS_DEV_MODE=true \
     MYSQL_HOST=db \
@@ -123,14 +127,19 @@ ENV CMS_DEV_MODE=true \
     CMS_PHP_UPLOAD_MAX_FILESIZE=2G \
     CMS_PHP_MAX_EXECUTION_TIME=300 \
     CMS_PHP_MEMORY_LIMIT=256M \
+    CMS_PHP_COOKIE_SECURE=Off \
+    CMS_PHP_COOKIE_HTTP_ONLY=On \
+    CMS_PHP_COOKIE_SAMESITE=Lax \
     CMS_APACHE_START_SERVERS=2 \
     CMS_APACHE_MIN_SPARE_SERVERS=5 \
     CMS_APACHE_MAX_SPARE_SERVERS=10 \
     CMS_APACHE_MAX_REQUEST_WORKERS=60 \
     CMS_APACHE_MAX_CONNECTIONS_PER_CHILD=300 \
     CMS_APACHE_TIMEOUT=30 \
+    CMS_APACHE_OPTIONS_INDEXES=false \
     CMS_QUICK_CHART_URL=http://cms-quickchart:3400 \
-    XTR_ENABLED=true
+    XTR_ENABLED=true \
+    GIT_COMMIT=$GIT_COMMIT
 
 # Expose port 80
 EXPOSE 80

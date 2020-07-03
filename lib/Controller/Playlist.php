@@ -23,15 +23,12 @@
 
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
@@ -45,10 +42,14 @@ use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Playlist
@@ -118,7 +119,6 @@ class Playlist extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param PlaylistFactory $playlistFactory
      * @param RegionFactory $regionFactory
@@ -135,10 +135,10 @@ class Playlist extends Base
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playlistFactory, $regionFactory, $mediaFactory, $permissionFactory,
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $playlistFactory, $regionFactory, $mediaFactory, $permissionFactory,
         $transitionFactory, $widgetFactory, $moduleFactory, $userGroupFactory, $userFactory, $tagFactory, Twig $view, $layoutFactory, $displayFactory, $scheduleFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->playlistFactory = $playlistFactory;
         $this->regionFactory = $regionFactory;
@@ -160,11 +160,8 @@ class Playlist extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function displayPage(Request $request, Response $response)
     {
@@ -255,12 +252,9 @@ class Playlist extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function grid(Request $request, Response $response)
     {
@@ -273,13 +267,14 @@ class Playlist extends Base
         // Playlists
         $playlists = $this->playlistFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
             'name' => $sanitizedParams->getString('name'),
+            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
             'userId' => $sanitizedParams->getInt('userId'),
             'tags' => $sanitizedParams->getString('tags'),
             'exactTags' => $sanitizedParams->getCheckbox('exactTags'),
             'playlistId' => $sanitizedParams->getInt('playlistId'),
             'ownerUserGroupId' => $sanitizedParams->getInt('ownerUserGroupId'),
             'mediaLike' => $sanitizedParams->getString('mediaLike'),
-            'regionSpecific' => 0
+            'regionSpecific' => $sanitizedParams->getInt('regionSpecific', ['default' => 0])
         ], $request), $request);
 
         foreach ($playlists as $playlist) {
@@ -289,11 +284,13 @@ class Playlist extends Base
 
                 $loadPermissions = in_array('permissions', $embed);
                 $loadTags = in_array('tags', $embed);
+                $loadActions = in_array('actions', $embed);
 
                 $playlist->load([
                     'loadPermissions' => $loadPermissions,
                     'loadWidgets' => true,
-                    'loadTags' => $loadTags
+                    'loadTags' => $loadTags,
+                    'loadActions' => $loadActions
                 ]);
 
                 foreach ($playlist->widgets as $widget) {
@@ -330,7 +327,6 @@ class Playlist extends Base
                 continue;
 
             $playlist->includeProperty('buttons');
-            $playlist->includeProperty('requiresDurationUpdate');
 
             switch ($playlist->enableStat) {
 
@@ -446,11 +442,8 @@ class Playlist extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function addForm(Request $request, Response $response)
     {
@@ -518,14 +511,11 @@ class Playlist extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function add(Request $request, Response $response)
     {
@@ -632,12 +622,10 @@ class Playlist extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function editForm(Request $request, Response $response, $id)
     {
@@ -730,14 +718,12 @@ class Playlist extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -779,12 +765,10 @@ class Playlist extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function deleteForm(Request $request, Response $response, $id)
     {
@@ -808,13 +792,12 @@ class Playlist extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function delete(Request $request, Response $response, $id)
     {
@@ -842,12 +825,10 @@ class Playlist extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function copyForm(Request $request, Response $response, $id)
     {
@@ -873,15 +854,13 @@ class Playlist extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @SWG\Post(
      *  path="/playlist/copy/{playlistId}",
      *  operationId="playlistCopy",
@@ -924,19 +903,22 @@ class Playlist extends Base
     public function copy(Request $request, Response $response, $id)
     {
         // Get the playlist
-        $playlist = $this->playlistFactory->getById($id);
+        $originalPlaylist = $this->playlistFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($playlist)) {
+        if (!$this->getUser()->checkViewable($originalPlaylist)) {
             throw new AccessDeniedException();
         }
 
         // Load the playlist for Copy
-        $playlist->load();
-        $playlist = clone $playlist;
+        $originalPlaylist->load(['loadTags' => false]);
+
+        // Clone the original
+        $playlist = clone $originalPlaylist;
 
         $playlist->name = $sanitizedParams->getString('name');
+        $playlist->setOwner($this->getUser()->userId);
 
         // Copy the media on the playlist and change the assignments.
         if ($sanitizedParams->getCheckbox('copyMediaFiles') == 1) {
@@ -954,6 +936,23 @@ class Playlist extends Base
                 $widget->setOptionValue('uri', 'attrib', $media->storedAs);
             }
         }
+
+        // Handle tags
+        $tags = '';
+
+        $arrayOfTags = array_filter(explode(',', $playlist->tags));
+        $arrayOfTagValues = array_filter(explode(',', $playlist->tagValues));
+
+        for ($i=0; $i<count($arrayOfTags); $i++) {
+            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
+                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
+                $tags .= ',';
+            } else {
+                $tags .= $arrayOfTags[$i] . ',';
+            }
+        }
+
+        $playlist->replaceTags($this->tagFactory->tagsFromString($tags));
 
         // Set from global setting
         if ($playlist->enableStat == null) {
@@ -977,6 +976,9 @@ class Playlist extends Base
             }
         }
 
+        // Clone the closure table for the original playlist
+        $originalPlaylist->cloneClosureTable($playlist->getId());
+
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 201,
@@ -995,12 +997,10 @@ class Playlist extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function timelineForm(Request $request, Response $response, $id)
     {
@@ -1059,13 +1059,10 @@ class Playlist extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function widgetGrid(Request $request, Response $response)
     {
@@ -1090,10 +1087,10 @@ class Playlist extends Base
             $widget->transition = sprintf('%s / %s', $widget->module->getTransition('in'), $widget->module->getTransition('out'));
 
             if ($this->isApi($request)) {
-                $widget->createdDt = $this->getDate()->getLocalDate($widget->createdDt);
-                $widget->modifiedDt = $this->getDate()->getLocalDate($widget->modifiedDt);
-                $widget->fromDt = $this->getDate()->getLocalDate($widget->fromDt);
-                $widget->toDt = $this->getDate()->getLocalDate($widget->toDt);
+                $widget->createdDt = Carbon::createFromTimestamp($widget->createdDt)->format(DateFormatHelper::getSystemFormat());
+                $widget->modifiedDt = Carbon::createFromTimestamp($widget->modifiedDt)->format(DateFormatHelper::getSystemFormat());
+                $widget->fromDt = Carbon::createFromTimestamp($widget->fromDt)->format(DateFormatHelper::getSystemFormat());
+                $widget->toDt = Carbon::createFromTimestamp($widget->toDt)->format(DateFormatHelper::getSystemFormat());
             }
         }
 
@@ -1110,14 +1107,12 @@ class Playlist extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @SWG\Post(
      *  path="/playlist/library/assign/{playlistId}",
      *  operationId="playlistLibraryAssign",
@@ -1166,7 +1161,6 @@ class Playlist extends Base
      *      @SWG\Schema(ref="#/definitions/Playlist")
      *  )
      * )
-     *
      */
     public function libraryAssign(Request $request, Response $response, $id)
     {
@@ -1307,14 +1301,12 @@ class Playlist extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @SWG\Post(
      *  path="/playlist/order/{playlistId}",
      *  operationId="playlistOrder",
@@ -1344,7 +1336,6 @@ class Playlist extends Base
      *      @SWG\Schema(ref="#/definitions/Playlist")
      *  )
      * )
-     *
      */
     function order(Request $request, Response $response, $id)
     {
@@ -1400,12 +1391,10 @@ class Playlist extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function usageForm(Request $request, Response $response, $id)
     {
@@ -1447,12 +1436,10 @@ class Playlist extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function usage(Request $request, Response $response, $id)
     {
@@ -1468,23 +1455,24 @@ class Playlist extends Base
         $displayIds = [];
 
         // have we been provided with a date/time to restrict the scheduled events to?
-        $playlistDate = $sanitizedParams->getDate('playlistEventDate');
+        $playlistFromDate = $sanitizedParams->getDate('playlistEventFromDate');
+        $playlistToDate = $sanitizedParams->getDate('playlistEventToDate');
 
-        if ($playlistDate !== null) {
-            // Get a list of scheduled events that this playlistId is used on, based on the date provided
-            $toDate = $playlistDate->copy()->addDay();
+        // Events query array
+        $eventsQuery = [
+            'playlistId' => $id
+        ];
 
-            $events = $this->scheduleFactory->query(null, [
-                'futureSchedulesFrom' => $playlistDate->format('U'),
-                'futureSchedulesTo' => $toDate->format('U'),
-                'playlistId' => $id
-            ]);
-        } else {
-            // All scheduled events for this playlistId
-            $events = $this->scheduleFactory->query(null, [
-                'playlistId' => $id
-            ]);
+        if ($playlistFromDate !== null) {
+            $eventsQuery['futureSchedulesFrom'] = $playlistFromDate->format('U');
         }
+
+        if ($playlistToDate !== null) {
+            $eventsQuery['futureSchedulesTo'] = $playlistToDate->format('U');
+        }
+
+        // Query for events
+        $events = $this->scheduleFactory->query(null, $eventsQuery);
 
         // Total records returned from the schedules query
         $totalRecords = $this->scheduleFactory->countLast();
@@ -1494,10 +1482,10 @@ class Playlist extends Base
 
             // Generate this event
             // Assess the date?
-            if ($playlistDate !== null) {
+            if ($playlistFromDate !== null && $playlistToDate !== null) {
                 try {
-                    $scheduleEvents = $row->getEvents($playlistDate, $toDate);
-                } catch (XiboException $e) {
+                    $scheduleEvents = $row->getEvents($playlistFromDate, $playlistToDate);
+                } catch (GeneralException $e) {
                     $this->getLog()->error('Unable to getEvents for ' . $row->eventId);
                     continue;
                 }
@@ -1562,12 +1550,10 @@ class Playlist extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function usageLayouts(Request $request, Response $response, $id)
     {
@@ -1624,14 +1610,12 @@ class Playlist extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @SWG\Put(
      *  path="/playlist/setenablestat/{playlistId}",
      *  operationId="playlistSetEnableStat",
@@ -1657,7 +1641,6 @@ class Playlist extends Base
      *      description="successful operation"
      *  )
      * )
-     *
      */
 
     function setEnableStat(Request $request, Response $response, $id)
@@ -1690,12 +1673,10 @@ class Playlist extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function setEnableStatForm(Request $request, Response $response, $id)
     {

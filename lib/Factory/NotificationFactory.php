@@ -23,13 +23,13 @@
 
 namespace Xibo\Factory;
 
-use Jenssegers\Date\Date;
+use Carbon\Carbon;
 use Xibo\Entity\Notification;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class NotificationFactory
@@ -47,7 +47,7 @@ class NotificationFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param UserGroupFactory $userGroupFactory
@@ -73,10 +73,11 @@ class NotificationFactory extends BaseFactory
     /**
      * @param string $subject
      * @param string $body
-     * @param Date $date
+     * @param Carbon $date
      * @param bool $isEmail
      * @param bool $addGroups
      * @return Notification
+     * @throws NotFoundException
      */
     public function createSystemNotification($subject, $body, $date, $isEmail = true, $addGroups = true)
     {
@@ -124,6 +125,7 @@ class NotificationFactory extends BaseFactory
      * @param int $fromDt
      * @param int $toDt
      * @return Notification[]
+     * @throws NotFoundException
      */
     public function getBySubjectAndDate($subject, $fromDt, $toDt)
     {
@@ -131,9 +133,10 @@ class NotificationFactory extends BaseFactory
     }
 
     /**
-     * @param array[Optional] $sortOrder
-     * @param array[Optional] $filterBy
+     * @param null $sortOrder
+     * @param array $filterBy
      * @return Notification[]
+     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
     {

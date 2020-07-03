@@ -21,20 +21,21 @@
  */
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Helper\DataSetUploadHandler;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DataSet
@@ -55,15 +56,14 @@ class DataSet extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param DataSetFactory $dataSetFactory
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $dataSetFactory, $dataSetColumnFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $dataSetFactory, $dataSetColumnFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->dataSetFactory = $dataSetFactory;
         $this->dataSetColumnFactory = $dataSetColumnFactory;
@@ -82,11 +82,8 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function displayPage(Request $request, Response $response)
     {
@@ -100,11 +97,9 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Get(
      *  path="/dataset",
      *  operationId="dataSetSearch",
@@ -160,6 +155,7 @@ class DataSet extends Base
         $filter = [
             'dataSetId' => $sanitizedParams->getInt('dataSetId'),
             'dataSet' => $sanitizedParams->getString('dataSet'),
+            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
             'code' => $sanitizedParams->getString('code'),
         ];
 
@@ -279,11 +275,9 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function addForm(Request $request, Response $response)
     {
@@ -424,6 +418,34 @@ class DataSet extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="sourceId",
+     *      in="formData",
+     *      description="For remote DataSet, what type data is it? 1 - json, 2 - csv",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ignoreFirstRow",
+     *      in="formData",
+     *      description="For remote DataSet with sourceId 2 (CSV), should we ignore first row?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="rowLimit",
+     *      in="formData",
+     *      description="For remote DataSet, maximum number of rows this DataSet can hold, if left empty the CMS Setting for DataSet row limit will be used.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="limitPolicy",
+     *      in="formData",
+     *      description="For remote DataSet, what should happen when the DataSet row limit is reached? stop, fifo or truncate",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -439,13 +461,10 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function add(Request $request, Response $response)
     {
@@ -475,6 +494,8 @@ class DataSet extends Base
             $dataSet->summarizeField = $sanitizedParams->getString('summarizeField');
             $dataSet->sourceId = $sanitizedParams->getInt('sourceId');
             $dataSet->ignoreFirstRow = $sanitizedParams->getCheckbox('ignoreFirstRow');
+            $dataSet->rowLimit = $sanitizedParams->getInt('rowLimit');
+            $dataSet->limitPolicy = $sanitizedParams->getString('limitPolicy') ?? 'stop';
         }
 
         // Also add one column
@@ -510,12 +531,10 @@ class DataSet extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function editForm(Request $request, Response $response, $id)
     {
@@ -542,14 +561,12 @@ class DataSet extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @SWG\Put(
      *  path="/dataset/{dataSetId}",
      *  operationId="dataSetEdit",
@@ -682,13 +699,40 @@ class DataSet extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="sourceId",
+     *      in="formData",
+     *      description="For remote DataSet, what type data is it? 1 - json, 2 - csv",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ignoreFirstRow",
+     *      in="formData",
+     *      description="For remote DataSet with sourceId 2 (CSV), should we ignore first row?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="rowLimit",
+     *      in="formData",
+     *      description="For remote DataSet, maximum number of rows this DataSet can hold, if left empty the CMS Setting for DataSet row limit will be used.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="limitPolicy",
+     *      in="formData",
+     *      description="For remote DataSet, what should happen when the DataSet row limit is reached? stop, fifo or truncate",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
      *      @SWG\Schema(ref="#/definitions/DataSet")
      *  )
      * )
-     *
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -720,6 +764,8 @@ class DataSet extends Base
             $dataSet->summarizeField = $sanitizedParams->getString('summarizeField');
             $dataSet->sourceId = $sanitizedParams->getInt('sourceId');
             $dataSet->ignoreFirstRow = $sanitizedParams->getCheckbox('ignoreFirstRow');
+            $dataSet->rowLimit = $sanitizedParams->getInt('rowLimit');
+            $dataSet->limitPolicy = $sanitizedParams->getString('limitPolicy') ?? 'stop';
         }
 
         $dataSet->save();
@@ -740,12 +786,10 @@ class DataSet extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function deleteForm(Request $request, Response $response, $id)
     {
@@ -756,7 +800,7 @@ class DataSet extends Base
         }
 
         if ($dataSet->isLookup) {
-            throw new \InvalidArgumentException(__('Lookup Tables cannot be deleted'));
+            throw new InvalidArgumentException(__('Lookup Tables cannot be deleted'));
         }
 
         // Set the form
@@ -775,13 +819,12 @@ class DataSet extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Delete(
      *  path="/dataset/{dataSetId}",
      *  operationId="dataSetDelete",
@@ -800,7 +843,6 @@ class DataSet extends Base
      *      description="successful operation"
      *  )
      * )
-     *
      */
     public function delete(Request $request, Response $response, $id)
     {
@@ -833,12 +875,10 @@ class DataSet extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function copyForm(Request $request, Response $response, $id)
     {
@@ -864,14 +904,12 @@ class DataSet extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @SWG\Post(
      *  path="/dataset/copy/{dataSetId}",
      *  operationId="dataSetCopy",
@@ -919,7 +957,6 @@ class DataSet extends Base
      *      @SWG\Schema(ref="#/definitions/DataSet")
      *  )
      * )
-     *
      */
     public function copy(Request $request, Response $response, $id)
     {
@@ -964,11 +1001,10 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/dataset/import/{dataSetId}",
      *  operationId="dataSetImport",
@@ -1015,7 +1051,6 @@ class DataSet extends Base
      *      description="successful operation"
      *  )
      * )
-     *
      */
     public function import(Request $request, Response $response, $id)
     {
@@ -1026,16 +1061,20 @@ class DataSet extends Base
         // Make sure the library exists
         Library::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
+        $sanitizer = $this->getSanitizer($request->getParams());
+
+
         $options = array(
             'userId' => $this->getUser()->userId,
             'dataSetId' => $id,
             'controller' => $this,
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
-            'script_url' => $this->urlFor($request,'dataSet.import'),
-            'upload_url' => $this->urlFor($request,'dataSet.import'),
+            'script_url' => $this->urlFor($request,'dataSet.import', ['id' => $id]),
+            'upload_url' => $this->urlFor($request,'dataSet.import', ['id' => $id]),
             'image_versions' => array(),
-            'accept_file_types' => '/\.csv/i'
+            'accept_file_types' => '/\.csv/i',
+            'sanitizer' => $sanitizer
         );
 
         try {
@@ -1049,7 +1088,7 @@ class DataSet extends Base
 
         $this->setNoOutput(true);
 
-        $this->render($request, $response);
+        return $this->render($request, $response);
     }
 
 
@@ -1070,12 +1109,10 @@ class DataSet extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/dataset/importjson/{dataSetId}",
      *  operationId="dataSetImportJson",
@@ -1114,14 +1151,15 @@ class DataSet extends Base
         $body = $request->getParsedBody();
 
         if (empty($body)) {
-            throw new \InvalidArgumentException(__('Missing JSON Body'));
+            throw new InvalidArgumentException(__('Missing JSON Body'));
         }
 
         // Expect 2 parameters
         $data = json_decode($body, true);
 
-        if (!isset($data['rows']) || !isset($data['uniqueKeys']))
-            throw new \InvalidArgumentException(__('Malformed JSON body, rows and uniqueKeys are required'));
+        if (!isset($data['rows']) || !isset($data['uniqueKeys'])) {
+            throw new InvalidArgumentException(__('Malformed JSON body, rows and uniqueKeys are required'));
+        }
 
         $this->getLog()->debug('Import JSON into DataSet with ' . count($data['rows']) . ' and unique keys ' . json_encode($data['uniqueKeys']));
 
@@ -1155,7 +1193,7 @@ class DataSet extends Base
                     }
                     else if ($columns[$key] == 3) {
                         // Date
-                        $value = $this->getDate()->getLocalDate($this->getDate()->parse($value));
+                        $value = Carbon::createFromTimeString($value)->format(DateFormatHelper::getSystemFormat());
                     }
                     else if ($columns[$key] == 5) {
                         // Media Id
@@ -1220,15 +1258,10 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \GuzzleHttp\Exception\GuzzleException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function testRemoteRequest(Request $request, Response $response)
     {

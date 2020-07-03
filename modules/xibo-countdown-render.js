@@ -86,15 +86,15 @@ jQuery.fn.extend({
                 if(t.total <= 0) {
                     $(clock).removeClass('warning').addClass('finished');
                     clearInterval(timeinterval);
-                    yearsSpan.html('00');
-                    monthsSpan.html('00');
-                    daysSpan.html('00');
+                    yearsSpan.html('0');
+                    monthsSpan.html('0');
+                    daysSpan.html('0');
                     hoursSpan.html('00');
                     minutesSpan.html('00');
                     secondsSpan.html('00');
-                    hoursAllSpan.html('00');
-                    minutesAllSpan.html('00');
-                    secondsAllSpan.html('00');
+                    hoursAllSpan.html('0');
+                    minutesAllSpan.html('0');
+                    secondsAllSpan.html('0');
                 }
             }
 
@@ -113,29 +113,6 @@ jQuery.fn.extend({
         };
 
         options = $.extend({}, defaults, options);
-
-        // Calculate the dimensions of this item based on the preview/original dimensions
-        var width = 0;
-        var height = 0;
-        if (options.previewWidth === 0 || options.previewHeight === 0) {
-            width = options.originalWidth;
-            height = options.originalHeight;
-        } else {
-            width = options.previewWidth;
-            height = options.previewHeight;
-        }
-
-        if (options.scaleOverride !== 0) {
-            width = width / options.scaleOverride;
-            height = height / options.scaleOverride;
-        }
-
-        if (options.widgetDesignWidth > 0 && options.widgetDesignHeight > 0) {
-            options.widgetDesignWidth = options.widgetDesignWidth;
-            options.widgetDesignHeight = options.widgetDesignHeight;
-            width = options.widgetDesignWidth;
-            height = options.widgetDesignHeight;
-        }
 
         // For each matched element
         this.each(function() {
@@ -159,7 +136,7 @@ jQuery.fn.extend({
                 warningDuration = options.countdownWarningDate;
             }
             // Get warning date
-            let warningDate = (warningDuration == 0 || warningDuration == '') ? false : getDate(warningDuration);
+            let warningDate = (warningDuration == 0 || warningDuration == '' || warningDuration == null) ? false : getDate(warningDuration);
 
             // Append template to the preview
             $("#content").append(body);

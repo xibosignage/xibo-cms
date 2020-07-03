@@ -1,10 +1,30 @@
 <?php
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 namespace Xibo\Helper;
 
 use Exception;
 use Xibo\Entity\Layout;
-use Xibo\Exception\LibraryFullException;
+use Xibo\Support\Exception\LibraryFullException;
 
 /**
  * Class LayoutUploadHandler
@@ -15,7 +35,6 @@ class LayoutUploadHandler extends BlueImpUploadHandler
     /**
      * @param $file
      * @param $index
-     * @throws \Xibo\Exception\ConfigurationException
      */
     protected function handle_form_data($file, $index)
     {
@@ -34,7 +53,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
                 throw new LibraryFullException(sprintf(__('Your library is full. Library Limit: %s K'), $this->options['libraryLimit']));
 
             // Check for a user quota
-            $controller->getUser($this->options['request'])->isQuotaFullByUser();
+            $controller->getUser()->isQuotaFullByUser();
 
             // Parse parameters
             $name = isset($_REQUEST['name']) ? $_REQUEST['name'][$index] : '';
@@ -54,12 +73,12 @@ class LayoutUploadHandler extends BlueImpUploadHandler
                 $importTags,
                 $useExistingDataSets,
                 $importDataSetData,
-                $this->options['libraryController'],
-                $this->options['request']
+                $this->options['libraryController']
             );
 
-            $layout->save();
+            $layout->save(['saveActions' => false]);
             $layout->managePlaylistClosureTable($layout);
+            $layout->manageActions($layout);
 
             @unlink($controller->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $fileName);
 
@@ -68,7 +87,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
             $file->id = $layout->layoutId;
 
         } catch (Exception $e) {
-            $controller->getLog()->error('Error importing Layout: %s', $e->getMessage());
+            $controller->getLog()->error(sprintf('Error importing Layout: %s', $e->getMessage()));
             $controller->getLog()->debug($e->getTraceAsString());
 
             $file->error = $e->getMessage();

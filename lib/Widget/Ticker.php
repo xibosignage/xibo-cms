@@ -22,6 +22,7 @@
 
 namespace Xibo\Widget;
 
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use PicoFeed\Config\Config;
@@ -34,8 +35,8 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Invalidation;
 use Xibo\Controller\Library;
-use Xibo\Exception\InvalidArgumentException;
 use Xibo\Helper\Environment;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Ticker
@@ -48,7 +49,7 @@ class Ticker extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.marquee.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
@@ -336,7 +337,7 @@ class Ticker extends ModuleWidget
         $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
         $this->setOption('xmds', true);
-        $this->setOption('uri', $sanitizedParams->getString('uri'));
+        $this->setOption('uri', urlencode($sanitizedParams->getString('uri')));
         $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 120]));
 
         if ($sanitizedParams->getInt('updateIntervalImages') !== null) {
@@ -354,7 +355,7 @@ class Ticker extends ModuleWidget
         $this->setOption('randomiseItems', $sanitizedParams->getCheckbox('randomiseItems'));
         $this->setOption('itemsSideBySide', $sanitizedParams->getCheckbox('itemsSideBySide'));
         $this->setOption('itemsPerPage', $sanitizedParams->getInt('itemsPerPage'));
-        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat'));
+        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat', ['defaultOnEmptyString' => true]));
         $this->setOption('allowedAttributes', $sanitizedParams->getString('allowedAttributes'));
         $this->setOption('stripTags', $sanitizedParams->getString('stripTags'));
         $this->setOption('decodeHtml', $sanitizedParams->getCheckbox('decodeHtml'));
@@ -460,6 +461,8 @@ class Ticker extends ModuleWidget
 
         // Generate a JSON string of substituted items.
         $items = $this->getRssItems($text);
+        // If due to errors we have $items set to false, change it to an empty array instead - to avoid php warnings
+        $items = (!$items) ? [] : $items;
 
         // Return empty string if there are no items to show.
         if (count($items) == 0) {
@@ -518,7 +521,7 @@ class Ticker extends ModuleWidget
         $data['head'] = $headContent;
 
         // Add some scripts to the JavaScript Content
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
 
         // Need the marquee plugin?
         if (stripos($effect, 'marquee') !== false)
@@ -549,7 +552,10 @@ class Ticker extends ModuleWidget
     /**
      * @param $text
      * @return array|mixed|null
-     * @throws \Xibo\Exception\ConfigurationException
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     private function getRssItems($text)
     {
@@ -695,12 +701,11 @@ class Ticker extends ModuleWidget
         $dateFormat = $this->getOption('dateFormat', $this->getConfig()->getSetting('DATE_FORMAT'));
 
         // Set an expiry time for the media
-        $expiresImage = $this->getDate()->parse()->addMinutes($this->getOption('updateIntervalImages', $this->getSetting('updateIntervalImages', 1440)))->format('U');
+        $expiresImage = Carbon::now()->addMinutes($this->getOption('updateIntervalImages', $this->getSetting('updateIntervalImages', 1440)))->format('U');
 
         // Render the content now
         foreach ($feedItems as $item) {
             /* @var Item $item */
-
             // Substitute for all matches in the template
             $rowString = $text;
 
@@ -817,7 +822,8 @@ class Ticker extends ModuleWidget
                             break;
 
                         case '[Date]':
-                            $replace = $this->getDate()->getLocalDate($item->getDate()->format('U'), $dateFormat);
+                            $replace = Carbon::createFromTimestamp($item->getDate()->format('U'))->format($dateFormat);
+
                             break;
 
                         case '[PermaLink]':

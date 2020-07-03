@@ -22,11 +22,12 @@
 
 namespace Xibo\Widget;
 
+use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\NotificationFactory;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class NotificationView
@@ -39,7 +40,7 @@ class NotificationView extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-text-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.marquee.min.js')->save();
@@ -202,6 +203,7 @@ class NotificationView extends ModuleWidget
      * @param $isPreview
      * @param $displayId
      * @return array
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     private function getNotifications($isPreview, $displayId = null)
     {
@@ -218,12 +220,12 @@ class NotificationView extends ModuleWidget
 
         if ($isPreview)
             $notifications = $this->getNotificationFactory()->query(['releaseDt DESC', 'createDt DESC', 'subject'], [
-                'releaseDt' => ($age === 0) ? null : $this->getDate()->parse()->subMinutes($age)->format('U'),
+                'releaseDt' => ($age === 0) ? null : Carbon::now()->subMinutes($age)->format('U'),
                 'userId' => $this->getUser()->userId
             ]);
         else
             $notifications = $this->getNotificationFactory()->query(['releaseDt DESC', 'createDt DESC', 'subject'], [
-                'releaseDt' => ($age === 0) ? null : $this->getDate()->parse()->subMinutes($age)->format('U'),
+                'releaseDt' => ($age === 0) ? null : Carbon::now()->subMinutes($age)->format('U'),
                 'displayId' => $displayId
             ]);
 
@@ -251,7 +253,7 @@ class NotificationView extends ModuleWidget
                         break;
 
                     case '[Date]':
-                        $replace = $this->getDate()->getLocalDate($notification->releaseDt, $dateFormat);
+                        $replace = Carbon::createFromTimestamp($notification->releaseDt)->format($dateFormat);
                         break;
                 }
 
@@ -283,7 +285,7 @@ class NotificationView extends ModuleWidget
         $items = $this->getNotifications($this->isPreview(), $displayId);
 
         // Include some vendor items
-        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js') . '"></script>';// Need the marquee plugin?
 
@@ -338,19 +340,19 @@ class NotificationView extends ModuleWidget
     /** @inheritdoc */
     public function getModifiedDate($displayId)
     {
-        $widgetModifiedDt = $this->getDate()->parse($this->widget->modifiedDt, 'U');
+        $widgetModifiedDt = Carbon::createFromTimestamp($this->widget->modifiedDt);
         $age = $this->getOption('age', 0);
 
         // Get the date/time of the last notification drawn by this Widget
         $notifications = $this->getNotificationFactory()->query(['releaseDt DESC', 'createDt DESC'], [
-            'releaseDt' => ($age === 0) ? null : $this->getDate()->parse()->subMinutes($age)->format('U'),
+            'releaseDt' => ($age === 0) ? null : Carbon::now()->subMinutes($age)->format('U'),
             'displayId' => $displayId,
             'length' => 1
         ]);
 
         // Get the release date from the notification returned
         $widgetModifiedDt = (count($notifications) > 0)
-            ? $this->getDate()->parse($notifications[0]->releaseDt, 'U')
+            ? Carbon::createFromTimestamp($notifications[0]->releaseDt)
             : $widgetModifiedDt;
 
         return $widgetModifiedDt;

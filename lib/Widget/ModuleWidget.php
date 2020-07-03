@@ -21,6 +21,8 @@
  */
 namespace Xibo\Widget;
 
+use Carbon\Carbon;
+use GuzzleHttp\Psr7\Stream;
 use Intervention\Image\ImageManagerStatic as Img;
 use Mimey\MimeTypes;
 use Psr\Container\ContainerInterface;
@@ -36,12 +38,6 @@ use Twig\Error\Error;
 use Xibo\Entity\Media;
 use Xibo\Entity\User;
 use Xibo\Event\Event;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\ControllerNotImplemented;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\ValueTooLargeException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
@@ -57,13 +53,18 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\HttpCacheProvider;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Exception\ValueTooLargeException;
 
 /**
  * Class ModuleWidget
@@ -126,6 +127,9 @@ abstract class ModuleWidget implements ModuleInterface
     /** @var double The Preview Height */
     private $previewHeight;
 
+    /** @var array Cache of module templates */
+    private $moduleTemplates;
+
     //<editor-fold desc="Injected Factory Classes and Services ">
 
     /**
@@ -147,11 +151,6 @@ abstract class ModuleWidget implements ModuleInterface
      * @var ConfigServiceInterface
      */
     private $configService;
-
-    /**
-     * @var DateServiceInterface
-     */
-    private $dateService;
 
     /**
      * @var SanitizerService
@@ -232,8 +231,7 @@ abstract class ModuleWidget implements ModuleInterface
      * @param PoolInterface $pool
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
-     * @param DateServiceInterface $date
-     * @param SanitizerServiceInterface $sanitizer
+     * @param SanitizerService $sanitizer
      * @param EventDispatcherInterface $dispatcher
      * @param ModuleFactory $moduleFactory
      * @param MediaFactory $mediaFactory
@@ -246,14 +244,15 @@ abstract class ModuleWidget implements ModuleInterface
      * @param PermissionFactory $permissionFactory
      * @param UserGroupFactory $userGroupFactory
      * @param PlaylistFactory $playlistFactory
+     * @param Twig $view
+     * @param ContainerInterface $container
      */
-    public function __construct($store, $pool, $log, $config, $date, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, Twig $view, ContainerInterface $container)
+    public function __construct($store, $pool, $log, $config, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, Twig $view, ContainerInterface $container)
     {
         $this->store = $store;
         $this->pool = $pool;
         $this->logService = $log;
         $this->configService = $config;
-        $this->dateService = $date;
         $this->sanitizerService = $sanitizer;
         $this->dispatcher = $dispatcher;
 
@@ -340,15 +339,6 @@ abstract class ModuleWidget implements ModuleInterface
     public function getConfig()
     {
         return $this->configService;
-    }
-
-    /**
-     * Get Date
-     * @return DateServiceInterface
-     */
-    protected function getDate()
-    {
-        return $this->dateService;
     }
 
     /**
@@ -463,7 +453,7 @@ abstract class ModuleWidget implements ModuleInterface
      * Set the duration
      * @param int $duration
      * @return $this
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     final protected function setDuration($duration)
     {
@@ -490,6 +480,7 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * @param $userId
      * @return \Xibo\Entity\Playlist[]
+     * @throws NotFoundException
      */
     final public function getAssignablePlaylists($userId)
     {
@@ -514,8 +505,9 @@ abstract class ModuleWidget implements ModuleInterface
      */
     final protected function setOption($name, $value)
     {
-        if (strlen($value) > 67108864)
+        if (strlen($value) > 67108864) {
             throw new ValueTooLargeException(__('Value too large for %s', $name), $name);
+        }
 
         $this->widget->setOptionValue($name, 'attrib', $value);
 
@@ -653,8 +645,7 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * @return array
-     * @throws \Xibo\Exception\NotFoundException
-     * @throws \Xibo\Exception\XiboException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     final public function getMediaTags()
     {
@@ -800,7 +791,7 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * Get Name
      * @return string
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws NotFoundException
      */
     public function getName()
     {
@@ -935,7 +926,7 @@ abstract class ModuleWidget implements ModuleInterface
      * @param $data
      * @param string $template
      * @return string
-     * @throws \Xibo\Exception\ConfigurationException
+     * @throws ConfigurationException
      */
     protected function renderTemplate($data, $template = 'get-resource')
     {
@@ -986,7 +977,7 @@ abstract class ModuleWidget implements ModuleInterface
      * Default behaviour for install / upgrade
      * this should be overridden for new modules
      * @param ModuleFactory $moduleFactory
-     * @throws ControllerNotImplemented
+     * @throws GeneralException
      */
     public function installOrUpdate($moduleFactory)
     {
@@ -996,6 +987,7 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Installs any files specific to this module
+     * @throws GeneralException
      */
     public function installFiles()
     {
@@ -1004,7 +996,7 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Validates and Installs a Module
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function installModule()
     {
@@ -1012,19 +1004,19 @@ abstract class ModuleWidget implements ModuleInterface
 
         // Validate some things.
         if ($this->module->type == '')
-            throw new \InvalidArgumentException(__('Module has not set the module type'));
+            throw new InvalidArgumentException(__('Module has not set the module type'));
 
         if ($this->module->name == '')
-            throw new \InvalidArgumentException(__('Module has not set the module name'));
+            throw new InvalidArgumentException(__('Module has not set the module name'));
 
         if ($this->module->description == '')
-            throw new \InvalidArgumentException(__('Module has not set the description'));
+            throw new InvalidArgumentException(__('Module has not set the description'));
 
         if (!is_numeric($this->module->previewEnabled))
-            throw new \InvalidArgumentException(__('Preview Enabled variable must be a number'));
+            throw new InvalidArgumentException(__('Preview Enabled variable must be a number'));
 
         if (!is_numeric($this->module->assignable))
-            throw new \InvalidArgumentException(__('Assignable variable must be a number'));
+            throw new InvalidArgumentException(__('Assignable variable must be a number'));
 
         // Save the module
         $this->module->save();
@@ -1187,25 +1179,22 @@ abstract class ModuleWidget implements ModuleInterface
             $headers['X-Accel-Redirect'] = '/download/' . $media->storedAs;
         }
 
+        // Add the headers we've collected to our response
+        foreach ($headers as $header => $value) {
+            $response = $response->withHeader($header, $value);
+        }
+
         // Should we output the file via the application stack, or directly by reading the file.
         if ($sendFileMode == 'Off') {
             // Return the file with PHP
-            ob_end_flush();
+            $response = $response->withBody(new Stream(fopen($libraryPath, 'r')));
 
-            // add the php headers
-            foreach ($headers as $header => $value) {
-                header($header . ': ' . $value);
-            }
-
-            readfile($libraryPath);
-            exit;
+            $this->getLog()->debug('Returning Stream with response body, sendfile off.');
         } else {
-            // add the php headers
-            foreach ($headers as $header => $value) {
-                $response = $response->withHeader($header, $value);
-            }
-            return $response;
+            $this->getLog()->debug('Using sendfile to return the file, only output headers.');
         }
+
+        return $response;
     }
 
     /**
@@ -1266,35 +1255,46 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function templatesAvailable($loadImage = true)
     {
-        if (!isset($this->module->settings['templates'])) {
-
-            $this->module->settings['templates'] = [];
+        if ($this->moduleTemplates === null) {
+            $this->moduleTemplates = [];
 
             // Scan the folder for template files
-            foreach (glob(PROJECT_ROOT . '/modules/' . $this->module->type . '/*.template.json') as $template) {
-                // Read the contents, json_decode and add to the array
-                $template = json_decode(file_get_contents($template), true);
+            $this->scanFolderForTemplates(PROJECT_ROOT . '/modules/' . $this->module->type . '/*.template.json', $loadImage);
 
-                if (isset($template['image'])) {
-                    $template['fileName'] = $template['image'];
-
-                    if ($loadImage) {
-                        // Find the URL to the module file representing this template image
-                        $template['image'] = $this->urlFor('module.getTemplateImage', [
-                            'type' => $this->module->type,
-                            'templateId' => $template['id']
-                        ]);
-                    }
-                } else {
-                    $template['fileName'] = '';
-                    $template['image'] = '';
-                }
-
-                $this->module->settings['templates'][] = $template;
-            }
+            // Scan the custom folder for template files.
+            $this->scanFolderForTemplates(PROJECT_ROOT . '/custom/' . $this->module->type . '/*.template.json', $loadImage);
         }
 
-        return $this->module->settings['templates'];
+        return $this->moduleTemplates;
+    }
+
+    /**
+     * @param string $folder
+     * @param bool $loadImage
+     */
+    private function scanFolderForTemplates($folder, $loadImage = true)
+    {
+        foreach (glob($folder) as $template) {
+            // Read the contents, json_decode and add to the array
+            $template = json_decode(file_get_contents($template), true);
+
+            if (isset($template['image'])) {
+                $template['fileName'] = $template['image'];
+
+                if ($loadImage) {
+                    // Find the URL to the module file representing this template image
+                    $template['image'] = $this->urlFor('module.getTemplateImage', [
+                        'type' => $this->module->type,
+                        'templateId' => $template['id']
+                    ]);
+                }
+            } else {
+                $template['fileName'] = '';
+                $template['image'] = '';
+            }
+
+            $this->moduleTemplates[] = $template;
+        }
     }
 
     /**
@@ -1334,7 +1334,7 @@ abstract class ModuleWidget implements ModuleInterface
      * Download an image for this template
      * @param string $templateId
      * @return ResponseInterface
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws NotFoundException
      */
     public function getTemplateImage(string $templateId): ResponseInterface
     {
@@ -1393,6 +1393,8 @@ abstract class ModuleWidget implements ModuleInterface
 
     /**
      * Set Default Widget Options
+     * @throws InvalidArgumentException
+     * @throws ValueTooLargeException
      */
     public function setDefaultWidgetOptions()
     {
@@ -1437,7 +1439,7 @@ abstract class ModuleWidget implements ModuleInterface
     public function getModifiedDate($displayId)
     {
         // Default behaviour is to assume we use the widget modified date
-        return $this->getDate()->parse($this->widget->modifiedDt, 'U');
+        return Carbon::createFromTimestamp($this->widget->modifiedDt);
     }
 
     /** @inheritdoc */
@@ -1448,19 +1450,19 @@ abstract class ModuleWidget implements ModuleInterface
 
         // If not cached set it to have cached a long time in the past
         if ($date === null)
-            return $this->getDate()->parse()->subYear();
+            return Carbon::now()->subYear();
 
         // Parse the date
-        return $this->getDate()->parse($date, 'Y-m-d H:i:s');
+        return Carbon::createFromFormat( DateFormatHelper::getSystemFormat(), $date);
     }
 
     /** @inheritdoc */
     public final function setCacheDate($displayId)
     {
-        $now = $this->getDate()->parse();
+        $now = Carbon::now();
         $item = $this->getPool()->getItem($this->makeCacheKey('html/' . $this->getCacheKey($displayId)));
 
-        $item->set($now->format('Y-m-d H:i:s'));
+        $item->set($now->format(DateFormatHelper::getSystemFormat()));
         $item->expiresAt($now->addYear());
 
         $this->getPool()->save($item);
@@ -1475,7 +1477,7 @@ abstract class ModuleWidget implements ModuleInterface
         $resource = null;
 
         // Have we changed since we last cached this widget
-        $now = $this->getDate()->parse();
+        $now = Carbon::now();
         $modifiedDt = $this->getModifiedDate($displayId);
         $cachedDt = $this->getCacheDate($displayId);
         $cacheDuration = $this->getCacheDuration();
@@ -1494,8 +1496,8 @@ abstract class ModuleWidget implements ModuleInterface
         // location wouldn't though, which is why we base this on the width/height.
         $cacheFile = $cacheKey . '_' . $this->region->width . '_' . $this->region->height;
 
-        $this->getLog()->debug('Cache details - modifiedDt: ' . $modifiedDt->format('Y-m-d H:i:s')
-            . ', cacheDt: ' . $cachedDt->format('Y-m-d H:i:s')
+        $this->getLog()->debug('Cache details - modifiedDt: ' . $modifiedDt->format(DateFormatHelper::getSystemFormat())
+            . ', cacheDt: ' . $cachedDt->format(DateFormatHelper::getSystemFormat())
             . ', cacheDuration: ' . $cacheDuration
             . ', cacheKey: ' . $cacheKey
             . ', cacheFile: ' . $cacheFile);
@@ -1535,7 +1537,7 @@ abstract class ModuleWidget implements ModuleInterface
 
                     // If the resource is false, then don't cache it for as long (most likely an error)
                     if ($resource === false)
-                        throw new XiboException('GetResource generated FALSE');
+                        throw new GeneralException('GetResource generated FALSE');
 
                     // Cache to the library
                     $hash = null;
@@ -1592,10 +1594,10 @@ abstract class ModuleWidget implements ModuleInterface
                 if ($exception instanceof ConfigurationException)
                     throw $exception;
                 else
-                    throw new XiboException($exception->getMessage(), $exception->getCode(), $exception);
+                    throw new GeneralException($exception->getMessage(), $exception->getCode(), $exception);
             }
         } else {
-            $this->getLog()->debug('No need to regenerate, cached until ' . $this->getDate()->getLocalDate($cachedDt->addSeconds($cacheDuration)));
+            $this->getLog()->debug('No need to regenerate, cached until ' . $cachedDt->addSeconds($cacheDuration)->format(DateFormatHelper::getSystemFormat()));
 
             $resource = file_get_contents($cachePath . $cacheFile);
         }
@@ -1617,7 +1619,7 @@ abstract class ModuleWidget implements ModuleInterface
      * @param int $ttl seconds
      * @param int $wait seconds
      * @param int $tries
-     * @throws XiboException
+     * @throws GeneralException
      */
     private function concurrentRequestLock($ttl = 300, $wait = 2, $tries = 5)
     {
@@ -1646,14 +1648,14 @@ abstract class ModuleWidget implements ModuleInterface
             //sleep(30);
         } else {
             // We are a hit - we must be locked
-            $this->getLog()->debug('LOCK hit for ' . $key . ' expires ' . $this->lock->getExpiration()->format('Y-m-d H:i:s') . ', created ' . $this->lock->getCreation()->format('Y-m-d H:i:s'));
+            $this->getLog()->debug('LOCK hit for ' . $key . ' expires ' . $this->lock->getExpiration()->format(DateFormatHelper::getSystemFormat()) . ', created ' . $this->lock->getCreation()->format(DateFormatHelper::getSystemFormat()));
 
             // Try again?
             $tries--;
 
             if ($tries <= 0) {
                 // We've waited long enough
-                throw new XiboException('Concurrent record locked, time out.');
+                throw new GeneralException('Concurrent record locked, time out.');
             } else {
                 $this->getLog()->debug('Unable to get a lock, trying again. Remaining retries: ' . $tries);
 
@@ -1735,7 +1737,7 @@ abstract class ModuleWidget implements ModuleInterface
      * Finalise getResource
      * @param string $templateName an optional template name
      * @return string the rendered template
-     * @throws \Xibo\Exception\ConfigurationException
+     * @throws ConfigurationException
      */
     protected function finaliseGetResource($templateName = 'get-resource')
     {

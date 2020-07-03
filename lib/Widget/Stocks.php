@@ -21,12 +21,14 @@
  */
 namespace Xibo\Widget;
 
+use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Xibo\Helper\DateFormatHelper;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Stocks
@@ -71,7 +73,7 @@ class Stocks extends AlphaVantageBase
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-finance-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
@@ -101,7 +103,7 @@ class Stocks extends AlphaVantageBase
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $apiKey = $sanitizedParams->getString('apiKey');
-        $cachePeriod = $sanitizedParams->getInt('cachePeriod', 14400);
+        $cachePeriod = $sanitizedParams->getInt('cachePeriod', ['default' => 14400]);
 
         if ($this->module->enabled != 0) {
             if ($apiKey == '')
@@ -288,7 +290,7 @@ class Stocks extends AlphaVantageBase
         $this->setOption('speed', $sanitizedParams->getInt('speed'));
         $this->setOption('backgroundColor', $sanitizedParams->getString('backgroundColor'));
         $this->setOption('noRecordsMessage', $sanitizedParams->getString('noRecordsMessage'));
-        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat'));
+        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat', ['defaultOnEmptyString' => true]));
         $this->setOption('overrideTemplate', $sanitizedParams->getCheckbox('overrideTemplate'));
         $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 60]));
         $this->setOption('templateId', $sanitizedParams->getString('templateId'));
@@ -374,7 +376,7 @@ class Stocks extends AlphaVantageBase
             }
         } catch (ConfigurationException $configurationException) {
             throw $configurationException;
-        } catch (XiboException $requestException) {
+        } catch (GeneralException $requestException) {
             $this->getLog()->error('Problem getting stock information. E = ' . $requestException->getMessage());
             $this->getLog()->debug($requestException->getTraceAsString());
 
@@ -414,7 +416,7 @@ class Stocks extends AlphaVantageBase
                 if (stripos($replace, 'time|') > -1) {
                     $timeSplit = explode('|', $replace);
 
-                    $time = $this->getDate()->parse($data['time'], 'Y-m-d H:i:s')->format($timeSplit[1]);
+                    $time = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $data['time'])->format($timeSplit[1]);
 
                     $replacement = $time;
 
@@ -524,6 +526,13 @@ class Stocks extends AlphaVantageBase
     {        
         $data = [];
 
+        $mainTemplate = null;
+        $itemTemplate = null;
+        $styleSheet = null;
+        $widgetOriginalWidth = null;
+        $widgetOriginalHeight = null;
+        $maxItemsPerPage = null;
+
         // Replace the View Port Width?
         $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
 
@@ -624,7 +633,7 @@ class Stocks extends AlphaVantageBase
         $data['head'] = $headContent;
 
         // Add some scripts to the JavaScript Content
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
 

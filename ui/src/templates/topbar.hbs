@@ -15,21 +15,21 @@
             <span class="layout-info-name" 
                 data-toggle="tooltip" 
                 data-placement="bottom" 
-                title="{{trans.nameDetail}}">
+                data-title="{{trans.nameDetail}}">
                 <span class="layout-info-label">{{trans.name}}:</span>"{{mainObject.name}}"
             </span>
 
             <span class="layout-info-duration"
                 data-toggle="tooltip" 
                 data-placement="bottom" 
-                title="{{trans.durationDetail}}">
+                data-title="{{trans.durationDetail}}">
                 <i class="fa fa-clock-o layout-info-icon"></i><span class="layout-info-label">{{trans.duration}}:</span>{{mainObject.duration}}s
             </span>
 
             <span class="layout-info-dimensions"
                 data-toggle="tooltip" 
                 data-placement="bottom" 
-                title="{{trans.dimensionsDetail}}">
+                data-title="{{trans.dimensionsDetail}}">
                 <i class="fa fa-arrows layout-info-icon"></i><span class="layout-info-label">{{trans.dimensions}}:</span>{{mainObject.width}}x{{mainObject.height}}
             </span>
         </div>
@@ -39,14 +39,14 @@
 
             {{!-- Layout select dropdown --}}
             <li>
-                <div id="layoutJumpListContainer" data-toggle="tooltip" data-placement="bottom" title="{{trans.changeLayout}}"
+                <div id="layoutJumpListContainer" data-toggle="tooltip" data-placement="bottom" data-title="{{trans.changeLayout}}"
                     class="navbar-btn" hidden>
                 </div>
             </li>
 
             {{!-- Buttons --}}
             {{#if customDropdownOptions}}
-                <li id="actionsSubmenu" class="dropdown navbar-submenu">
+                <li id="actionsSubmenu" class="dropdown navbar-submenu hide-on-lock">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
                         aria-expanded="false">{{trans.actions}}<span class="caret"></span></a>
 
@@ -67,8 +67,8 @@
 
             {{!-- Options menu --}}
             {{#if showOptions}}
-                <li class="dropdown navbar-submenu navbar-submenu-options" data-toggle="tooltip" data-placement="top"
-                    title="{{trans.options}}">
+                <li class="dropdown navbar-submenu navbar-submenu-options hide-on-lock" data-toggle="tooltip" data-placement="top"
+                    data-title="{{trans.options}}">
                     <a id="optionsContainer" href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
                         aria-haspopup="true" aria-expanded="false">
                         <i class="fa fa-cog"></i>
@@ -77,7 +77,7 @@
                     <ul class="dropdown-menu navbar-submenu-container navbar-submenu-options-container">
                         <li>
                             <label class="navbar-submenu-item navbar-submenu-item-options displayTooltips-container tooltip-always-on"
-                                for="displayTooltips" data-toggle="tooltip" data-placement="left" title="{{trans.displayTooltipsTitle}}"
+                                for="displayTooltips" data-toggle="tooltip" data-placement="left" data-title="{{trans.displayTooltipsTitle}}"
                                 accesskey="">
                                 <input type="checkbox" id="displayTooltips" name="displayTooltips"
                                     {{#if displayTooltips}}checked{{/if}}>
@@ -86,7 +86,7 @@
                         </li>
                         <li>
                             <div id="resetTour" class="navbar-submenu-item navbar-submenu-item-options tooltip-always-on hidden"
-                                data-toggle="tooltip" data-placement="bottom" title="{{trans.resetTourTitle}}" href="#">
+                                data-toggle="tooltip" data-placement="bottom" data-title="{{trans.resetTourTitle}}" href="#">
                                 <i class="fa fa-repeat"></i>
                                 <span>{{trans.resetTour}}</span>
                             </div>

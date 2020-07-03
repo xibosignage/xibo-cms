@@ -2,14 +2,14 @@
 
 namespace Xibo\Report;
 
+use Carbon\Carbon;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Exception\InvalidArgumentException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 trait ReportTrait
@@ -41,12 +41,7 @@ trait ReportTrait
     private $configService;
 
     /**
-     * @var DateServiceInterface
-     */
-    private $dateService;
-
-    /**
-     * @var SanitizerInterface
+     * @var SanitizerService
      */
     private $sanitizerService;
 
@@ -64,18 +59,16 @@ trait ReportTrait
      * @param TimeSeriesStoreInterface $timeSeriesStore
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
-     * @param DateServiceInterface $date
-     * @param SanitizerServiceInterface $sanitizer
+     * @param SanitizerService $sanitizer
      * @return $this
      */
-    public function setCommonDependencies($state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer)
+    public function setCommonDependencies($state, $store, $timeSeriesStore, $log, $config, $sanitizer)
     {
         $this->state = $state;
         $this->store = $store;
         $this->timeSeriesStore = $timeSeriesStore;
         $this->logService = $log;
         $this->configService = $config;
-        $this->dateService = $date;
         $this->sanitizerService = $sanitizer;
         return $this;
     }
@@ -126,17 +119,8 @@ trait ReportTrait
     }
 
     /**
-     * Get Date
-     * @return DateServiceInterface
-     */
-    protected function getDate()
-    {
-        return $this->dateService;
-    }
-
-    /**
      * @param $array
-     * @return \Xibo\Support\Sanitizer\SanitizerInterface
+     * @return SanitizerInterface
      */
     protected function getSanitizer($array)
     {
@@ -181,7 +165,7 @@ trait ReportTrait
                 $periodData[$range]['end'] = $filterRangeEnd;
             }
 
-            $hourofday = $this->dateService->parse($periodData[$range]['start'], 'U')->hour;
+            $hourofday = Carbon::createFromTimestamp($periodData[$range]['start'])->hour;
 
             // groupbycol =  hour
             $periodData[$range]['groupbycol'] = $hourofday;
@@ -217,9 +201,9 @@ trait ReportTrait
             }
 
             if ($groupByFilter == 'bydayofweek') {
-                $groupbycol = $this->dateService->parse($periodData[$range]['start'], 'U')->dayOfWeekIso;
+                $groupbycol = Carbon::createFromTimestamp($periodData[$range]['start'])->dayOfWeekIso;
             } else {
-                $groupbycol = $this->dateService->parse($periodData[$range]['start'], 'U')->day;
+                $groupbycol =  Carbon::createFromTimestamp($periodData[$range]['start'])->day;
             }
 
             // groupbycol =  dayofweek
@@ -232,11 +216,11 @@ trait ReportTrait
 
     /**
      * Get a temporary table representing the periods covered
-     * @param \Jenssegers\Date\Date $fromDt
-     * @param \Jenssegers\Date\Date $toDt
+     * @param Carbon $fromDt
+     * @param Carbon $toDt
      * @param string $groupByFilter
      * @return string
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
     public function getTemporaryPeriodsTable($fromDt, $toDt, $groupByFilter)
     {
@@ -331,7 +315,7 @@ trait ReportTrait
                 ]);
             } else {
                 $this->getLog()->error('Unknown Grouping Selected ' . $groupByFilter);
-                throw new InvalidArgumentException('Unknown Grouping ' . $groupByFilter, 'groupByFilter');
+                throw new InvalidArgumentException(__('Unknown Grouping ') . $groupByFilter, 'groupByFilter');
             }
         }
 

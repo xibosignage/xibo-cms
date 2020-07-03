@@ -27,8 +27,8 @@ use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Exception\InvalidArgumentException;
 use Xibo\Helper\HttpCacheProvider;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Image
@@ -70,15 +70,17 @@ class Image extends ModuleWidget
     /**
      * Edit an Image Widget
      * @SWG\Put(
-     *  path="/playlist/widget/image/{playlistId}",
+     *  path="/playlist/widget/{widgetId}?image",
      *  operationId="WidgetImageEdit",
      *  tags={"widget"},
      *  summary="Parameters for editing existing image on a layout",
-     *  description="Parameters for editing existing image on a layout, for adding new images, please refer to POST /library documentation. This call will replace existing Widget object, all not supplied parameters will be set to default.",
+     *  description="For uploading new image files, please refer to POST /library documentation.
+     *               For assigning existing image file to a Playlist please see POST /playlist/library/assign/{playlistId} documentation.
+     *               This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
-     *      name="playlistId",
+     *      name="widgetId",
      *      in="path",
-     *      description="The Playlist ID",
+     *      description="The WidgetId ID",
      *      type="integer",
      *      required=true
      *  ),
@@ -197,7 +199,15 @@ class Image extends ModuleWidget
         $cache = $sanitizedParams->getInt('cache', ['default' => 0]) == 1;
         $width = intval($sanitizedParams->getDouble('width'));
         $height = intval($sanitizedParams->getDouble('height'));
-        $extension = explode('.', $media->storedAs)[1];
+
+        // Get the extension if we can (module files do not have an extension stored with them)
+        if (stripos($media->storedAs, '.') > -1) {
+            $extension = explode('.', $media->storedAs)[1];
+        } else if (stripos($media->fileName, '.')) {
+            $extension = explode('.', $media->fileName)[1];
+        } else {
+            $extension = null;
+        }
 
         // Preview or download?
         if ($preview) {
@@ -286,8 +296,9 @@ class Image extends ModuleWidget
             $this->statusMessage = __('%s is pending conversion', $this->getMedia()->name);
             return self::$STATUS_PLAYER;
         } elseif ($this->getMedia()->released == 2) {
-            $this->statusMessage = __('%s is too large, please replace it', $this->getMedia()->name);
-            throw new InvalidArgumentException(__('%s is too large, please replace it', $this->getMedia()->name), 'name');
+            $resizeLimit = $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT');
+            $this->statusMessage = __('%s is too large. Please ensure that none of the images in your layout are larger than %s pixels on their longest edge. Please check the allowed Resize Limit in Administration -> Settings', $this->getMedia()->name, $resizeLimit);
+            throw new InvalidArgumentException(__('%s is too large. Please ensure that none of the images in your layout are larger than %s pixels on their longest edge. Please check the allowed Resize Limit in Administration -> Settings', $this->getMedia()->name, $resizeLimit), 'name');
         }
 
         if (!v::intType()->min(1, true)->validate($this->getDuration())) {

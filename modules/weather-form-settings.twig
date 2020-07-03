@@ -1,0 +1,51 @@
+{#
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+{% extends "module-form-settings.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block moduleFormFields %}
+
+    {% set title %}{% trans "Open Weather Map API Key" %}{% endset %}
+    {% set helpText %}{% trans "Enter your API Key from Open Weather Map." %}{% endset %}
+    {{ forms.input("owmApiKey", title, module.getSetting("owmApiKey"), helpText) }}
+
+    {% set title %}{% trans "Paid plan?" %}{% endset %}
+    {% set helpText %}{% trans "Is the above key on an Open Weather Map paid plan?" %}{% endset %}
+    {{ forms.checkbox("owmIsPaidPlan", title, module.getSetting("owmIsPaidPlan"), helpText) }}
+
+    <div class="row">
+        <div class="col-sm-10 col-sm-offset-2">
+            <p>Weather data provided by <a href="https://openweathermap.org/" target="_blank">OpenWeather</a> is provided under
+                <a href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">CC-BY-SA 4.0</a>
+                and <a href="http://opendatacommons.org/licenses/odbl/" target="_blank">ODbl</a>.</p>
+        </div>
+    </div>
+
+    {% set title %}{% trans "DarkSky API Key" %}{% endset %}
+    {% set helpText %}{% trans "Enter your API Key from DarkSky." %}{% endset %}
+    {{ forms.input("apiKey", title, module.getSetting("apiKey"), helpText) }}
+
+    {% set title %}{% trans "Cache Period" %}{% endset %}
+    {% set helpText %}{% trans "Enter the number of seconds you would like to cache long/lat requests for. DarkSky offers 1000 requests a day." %}{% endset %}
+    {{ forms.input("cachePeriod", title, module.getSetting("cachePeriod", 300), helpText) }}
+{% endblock %}

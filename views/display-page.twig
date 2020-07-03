@@ -23,6 +23,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{{ "Displays"|trans }} | {% endblock %}
+
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a Display via user_code displayed on the Player screen" %}" href="{{ url_for("display.addViaCode.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Display (Code)" %}</a></li>
@@ -47,8 +49,17 @@
                                     {% set title %}{% trans "ID" %}{% endset %}
                                     {{ inline.number("displayId", title) }}
 
-                                    {% set title %}{% trans "Name" %}{% endset %}
-                                    {{ inline.input("display", title) }}
+                                    <div class="form-group ">
+                                        <label class="control-label" title="" for="display" accesskey="">{% trans "Name" %}</label>
+                                        <div>
+                                            <div class="input-group">
+                                                <input class="form-control" name="display" type="text" id="display" value="">
+                                                <span class="input-group-addon">
+                                                    <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     {% set title %}{% trans "Status" %}{% endset %}
                                     {% set check %}{% trans "Up to date" %}{% endset %}
@@ -83,11 +94,9 @@
                                     {{ inline.dropdown("authorised", "single", title, "", options, "optionid", "option") }}
 
                                     {% set title %}{% trans "Tags" %}{% endset %}
+                                    {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
                                     {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                                    {{ inline.inputWithTags("tags", title, null, helpText) }}
-
-                                    {% set title %}{% trans "Exact match?" %}{% endset %}
-                                    {{ inline.checkbox("exactTags", title) }}
+                                    {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
 
                                     {% set title %}{% trans "Display Group" %}{% endset %}
                                     {{ inline.dropdown("displayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup") }}
@@ -200,6 +209,7 @@
                                 <th>{% trans "Last Command" %}</th>
                                 <th>{% trans "XMR Registered" %}</th>
                                 <th>{% trans "Commercial Licence" %}</th>
+                                <th>{% trans "Remote" %}</th>
                                 <th>{% trans "Row Menu" %}</th>
                             </tr>
                         </thead>
@@ -289,21 +299,7 @@
                 },
                 "columns": [
                     {"data": "displayId"},
-                    {
-                        "name": "display",
-                        "data": function (data, type) {
-                            if (type != "display")
-                                return data.display;
-
-                            if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" != "" && data.clientAddress != null && data.clientAddress != "") {
-                                var link = "{{ settings.SHOW_DISPLAY_AS_VNCLINK }}".replace('%s', data.clientAddress);
-                                return '<a href="' + link + '" title="{% trans "VNC to this Display" %}" target="{{ settings.SHOW_DISPLAY_AS_VNC_TGT }}">' + data.display + '</a>';
-                            }
-                            else {
-                                return data.display;
-                            }
-                        }
-                    },
+                    {"data": "display"},
                     {
                         "data": "mediaInventoryStatus",
                         "render": function (data, type, row) {
@@ -318,7 +314,7 @@
                             else
                                 icon = "fa-cloud-download";
 
-                            return "<span class='fa " + icon + "' title='" + (row.statusDescription) + "'></span>";
+                            return '<span class="fa ' + icon + '" title="' + (row.statusDescription) + '"></span>';
                         }
                     },
                     {"data": "licensed", "render": dataTableTickCrossColumn},
@@ -368,6 +364,10 @@
                     {
                         "name": "clientSort",
                         "data": function (data) {
+                            if (data.clientType === 'lg') {
+                                data.clientType = 'webOS'
+                            }
+
                             return data.clientType + ' ' + data.clientVersion + '-' + data.clientCode;
                         },
                         "visible": false
@@ -441,6 +441,7 @@
                     },
                     {
                         "data": "commercialLicence",
+                        "name": "commercialLicence",
                         "render": function (data, type, row) {
                             if (type != "display")
                                 return data;
@@ -457,10 +458,38 @@
                                     icon = "fa-clock-o";
                                 }
 
-                                return "<span class='fa " + icon + "' title='" + (row.commercialLicenceDescription) + "'></span>";
+                                return '<span class="fa ' + icon + '" title="' + (row.commercialLicenceDescription) + '"></span>';
                             }
                         },
                         "visible": false
+                    },
+                    {
+                        "name": "remote",
+                        "render": function (data, type, row) {
+                            if (type !== "display")
+                                return "";
+
+                            var html = "<div class='remote-icons'>";
+                            if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" !== "" && row.clientAddress != null && row.clientAddress !== "") {
+                                var link = "{{ settings.SHOW_DISPLAY_AS_VNCLINK }}".replace('%s', row.clientAddress);
+                                html += '<a href="' + link + '" title="{% trans "VNC to this Display" %}" target="{{ settings.SHOW_DISPLAY_AS_VNC_TGT }}">'
+                                    + '<i class="fa fa-eye"></i></a>';
+                            }
+
+                            if (row.teamViewerLink !== "") {
+                                html += '<a href="' + row.teamViewerLink + '" title="{% trans "TeamViewer to this Display" %}" target="_blank">'
+                                    + '<img src="{{ theme.rootUri() }}theme/default/img/remote_icons/teamviewer.png" alt="TeamViewer Icon"></a>';
+                            }
+
+                            if (row.webkeyLink !== "") {
+                                html += '<a href="' + row.webkeyLink + '" title="{% trans "Webkey to this Display" %}" target="_blank">'
+                                    + '<img src="{{ theme.rootUri() }}theme/default/img/remote_icons/webkey.png" alt="Webkey Icon"></a>';
+                            }
+
+                            return html + "</div>";
+                        },
+                        "visible": true,
+                        "orderable": false
                     },
                     {
                         "orderable": false,
@@ -520,6 +549,14 @@
             $(dialog).find('.modal-body').append($select);
 
             makePagedSelect($select, dialog);
+        }
+
+        function displayFormLicenceCheckSubmit(form) {
+            // Display commercial licence table column 
+            $('table#displays').DataTable().column('commercialLicence:name').visible(true);
+
+            // Submit form
+            form.submit();
         }
 
         function setMoveCmsMultiSelectFormOpen(dialog) {
@@ -616,8 +653,11 @@
 
             // Method to create a new input field based on the hidden form
             const createInputField = function(target, inputName, newValue = null) {
-                
                 let select2FixFlag = false;
+                let timepickerFixFlag = false;
+                let timepickerOptionsFixFlag = false;
+                let sliderFixFlag = false;
+                let sliderFixOptions = {};
 
                 // Grab input field from hidden table
                 let $inputFields = $settings.find('#' + inputName);
@@ -627,10 +667,28 @@
                     if( $settings.find('.multiSelect').length > 0) {
                         // Copy special fields ( timers, pictureOptions ) by selected option
                         $inputFields = $settings.find('.multiSelect option:selected[value="' + inputName + '"]').parents('.form-group:first').find('.multiSelect, .multiSelectInputs');
+                        
+                        $inputFields.each((key, el) => {
+                            if($(el).find('.timePickerDisplayEditForm').length > 0) {
+                                timepickerOptionsFixFlag = true;
+
+                                $(el).find('.input-group.timerInit').removeClass('timerInit');
+
+                                destroyDatePicker($(el).find('.timePickerDisplayEditForm:not(.datePickerHelper)'));
+                            } else if($(el).find('.pictureControlsSlider').length > 0) {
+                                sliderFixFlag = true;
+                                sliderFixOptions = $(el).find('.pictureControlsSlider').bootstrapSlider('getAttribute');
+                                $(el).find('.pictureControlsSlider').bootstrapSlider('destroy');
+                            }
+                        });
                     } 
-                } else if($inputFields.length == 1 && $inputFields.attr('type') == 'hidden') {
+                } else if($inputFields.length == 1 && $inputFields.hasClass('timePicker')) {
+                    timepickerFixFlag  = true;
+
+                    destroyDatePicker($inputFields);
+
                     // Time inputs
-                    $inputFields = $inputFields.parent().find('input');
+                    $inputFields = $inputFields.parent();
                 } else if($inputFields.length == 1 && $inputFields.hasClass('select2-hidden-accessible')) {
                     select2FixFlag = true;
                     // Destroy select2 before copying
@@ -650,13 +708,24 @@
                 // Add input field to the target
                 $(target).html($inputFields);
 
+                if(timepickerFixFlag) {
+                    XiboInitialise('#' + $inputFieldsOld.parents('form').attr('id'));
+                    XiboInitialise('#' + $(target).parents('form').attr('id'));
+                }
+
+                if(timepickerOptionsFixFlag) {
+                    timersFormInit($inputFieldsOld);
+                    timersFormInit($(target));
+                }
+
+                if(sliderFixFlag) {
+                    $inputFieldsOld.find('.pictureControlsSlider').bootstrapSlider(sliderFixOptions);
+                    $inputFields.find('.pictureControlsSlider').bootstrapSlider(sliderFixOptions);
+                }
+                
                 // Set value if defined
                 if(newValue != null) {
-                    if($(target).find('.multiSelectInputs .timePickerDisplayEditForm').length > 0) {
-                        // MULTI TIMERS
-                        $(target).find('#' + $(target).find('.timersOn').attr('id') + 'Link').timepicker('setTime', newValue.on);
-                        $(target).find('#' + $(target).find('.timersOff').attr('id') + 'Link').timepicker('setTime', newValue.off);
-                    } else if($(target).find('.multiSelectInputs .pictureControlsSlider').length > 0) {
+                    if($(target).find('.multiSelectInputs .pictureControlsSlider').length > 0) {
                         // SLIDER
                         if(!$.isNumeric(newValue)) { // If value is a label, get index
                             $(target).find('.multiSelectInputs .slider-tick-label').each(function(idx, el) {
@@ -668,7 +737,7 @@
                         }
                         
                         // Set value
-                        $(target).find('.pictureControlsSlider').slider('setAttribute', 'value', newValue);
+                        $(target).find('.pictureControlsSlider').bootstrapSlider('setValue', newValue);
                     } else if($inputFields.attr('type') == 'checkbox') {
                         // CHECKBOX
                         $($inputFields).prop('checked', newValue);
@@ -704,7 +773,7 @@
 
                 // Fixes for slider
                 $(target).find('.slider').addClass('scaled-slider');
-                $(target).find('.pictureControlsSlider').slider('refresh', { useCurrentValue: true });
+                $(target).find('.pictureControlsSlider').bootstrapSlider('refresh', { useCurrentValue: true });
 
                 let $newButton = $('<button class="btn btn-danger btn-xs pull-right button-close-override" type="button"><i class="fa fa-times"></i></button>').click(function (e) {
                     e.stopPropagation();
@@ -761,7 +830,7 @@
                     });
 
                     // Get value
-                    value = $(element).find('.multiSelectInputs .pictureControlsSlider').slider('getValue');
+                    value = $(element).find('.multiSelectInputs .pictureControlsSlider').bootstrapSlider('getValue');
 
                     // If specific value has a label, use it as value
                     if(labels[value] != undefined) {
@@ -807,7 +876,7 @@
 
             // Refresh on tab switch to fix broken labels
             $('a[data-toggle="tab"]').on('shown.bs.tab', () =>  {
-                $('.pictureControlsSlider').slider('refresh', { useCurrentValue: true });
+                $('.pictureControlsSlider').bootstrapSlider('refresh', { useCurrentValue: true });
             });
 
             // Call XiboInitialise on table

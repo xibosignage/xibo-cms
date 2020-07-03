@@ -26,6 +26,7 @@ use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Widget\ModuleWidget;
 
@@ -37,16 +38,14 @@ interface ModuleServiceInterface
 {
     /**
      * ModuleServiceInterface constructor.
-     * @param App $app
      * @param StorageServiceInterface $store
      * @param PoolInterface $pool
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
-     * @param DateServiceInterface $date
-     * @param SanitizerServiceInterface $sanitizer
+     * @param SanitizerService $sanitizer
      * @param EventDispatcherInterface $dispatcher
      */
-    public function __construct($store, $pool, $log, $config, $date, $sanitizer, $dispatcher);
+    public function __construct($store, $pool, $log, $config, $sanitizer, $dispatcher);
 
     /**
      * @param Module $module

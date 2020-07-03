@@ -1,14 +1,15 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2015 Daniel Garner
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (Config.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,10 +21,11 @@
  */
 namespace Xibo\Service;
 
+use Carbon\Carbon;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Exception\ConfigurationException;
 use Xibo\Helper\Environment;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\ConfigurationException;
 
 /**
  * Class ConfigService
@@ -77,13 +79,14 @@ class ConfigService implements ConfigServiceInterface
     public $cacheDrivers = null;
     public $timeSeriesStore = null;
     public $cacheNamespace = 'Xibo';
-    public $apiKeyPaths = null;
+    private $apiKeyPaths = null;
 
     /**
      * Theme Specific Config
      * @var array
      */
     public $themeConfig = [];
+
     /** @var bool Has a theme been loaded? */
     private $themeLoaded = false;
 
@@ -273,7 +276,7 @@ class ConfigService implements ConfigServiceInterface
      * Get Theme Specific Settings
      * @param null $settingName
      * @param null $default
-     * @return null
+     * @return mixed|array|string
      */
     public function getThemeConfig($settingName = null, $default = null)
     {
@@ -372,7 +375,7 @@ class ConfigService implements ConfigServiceInterface
             // See about caching these settings - dependent on whether we're logging or not
             $cacheExpiry = 60 * 5;
             foreach ($this->settings as $setting) {
-                if ($setting['setting'] == 'ELEVATE_LOG_UNTIL' && intval($setting['value']) > time()) {
+                if ($setting['setting'] == 'ELEVATE_LOG_UNTIL' && intval($setting['value']) > Carbon::now()->format('U')) {
                     $cacheExpiry = intval($setting['value']);
                     break;
                 }
@@ -545,6 +548,26 @@ class ConfigService implements ConfigServiceInterface
         }
 
         return $httpOptions;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getApiKeyDetails()
+    {
+        if ($this->apiKeyPaths == null) {
+            // We load the defaults
+            $libraryLocation = $this->getSetting('LIBRARY_LOCATION');
+
+            // We use the defaults
+            $this->apiKeyPaths = [
+                'publicKeyPath' => $libraryLocation . '/certs/public.key',
+                'privateKeyPath' => $libraryLocation . '/certs/private.key',
+                'encryptionKey' => file_get_contents($libraryLocation . '/certs/encryption.key')
+            ];
+        }
+
+        return $this->apiKeyPaths;
     }
 
     private function testItem(&$results, $item, $result, $advice, $fault = true)

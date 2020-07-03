@@ -23,6 +23,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{{ "Resolutions"|trans }} | {% endblock %}
+
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new resolution for use on layouts" %}" href="{{ url_for("resolution.add.form") }}"><span class="glyphicon glyphicon-plus-sign"></span> {% trans "Add Resolution" %}</a></li>

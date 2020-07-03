@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (Permission.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -126,11 +127,11 @@ class Permission implements \JsonSerializable
         if ($this->permissionId == 0) {
             // Check there is something to add
             if ($this->view != 0 || $this->edit != 0 || $this->delete != 0) {
-                $this->getLog()->debug('Adding Permission for %s, %d. GroupId: %d - View = %d, Edit = %d, Delete = %d', $this->entity, $this->objectId, $this->groupId, $this->view, $this->edit, $this->delete);
+                $this->getLog()->debug(sprintf('Adding Permission for %s, %d. GroupId: %d - View = %d, Edit = %d, Delete = %d', $this->entity, $this->objectId, $this->groupId, $this->view, $this->edit, $this->delete));
                 $this->add();
             }
         } else {
-            $this->getLog()->debug('Editing Permission for %s, %d. GroupId: %d - View = %d, Edit = %d, Delete = %d', $this->entity, $this->objectId, $this->groupId, $this->view, $this->edit, $this->delete);
+            $this->getLog()->debug(sprintf('Editing Permission for %s, %d. GroupId: %d - View = %d, Edit = %d, Delete = %d', $this->entity, $this->objectId, $this->groupId, $this->view, $this->edit, $this->delete));
             // Are we all 0 permissions
             if ($this->view == 0 && $this->edit == 0 && $this->delete == 0)
                 $this->delete();
@@ -165,7 +166,7 @@ class Permission implements \JsonSerializable
 
     public function delete()
     {
-        $this->getLog()->debug('Deleting Permission for %s, %d', $this->entity, $this->objectId);
+        $this->getLog()->debug(sprintf('Deleting Permission for %s, %d', $this->entity, $this->objectId));
         $this->getStore()->update('DELETE FROM `permission` WHERE entityId = :entityId AND objectId = :objectId AND groupId = :groupId', array(
             'entityId' => $this->entityId,
             'objectId' => $this->objectId,

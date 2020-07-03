@@ -23,6 +23,7 @@ namespace Xibo\Widget;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Video
@@ -51,7 +52,7 @@ class Video extends ModuleWidget
         $this->module->settings['defaultMute'] = $this->getSanitizer($request->getParams())->getCheckbox('defaultMute');
 
         if ($this->getModule()->defaultDuration !== 0) {
-            throw new \InvalidArgumentException(__('The Video Module must have a default duration of 0 to detect the end of videos.'));
+            throw new InvalidArgumentException(__('The Video Module must have a default duration of 0 to detect the end of videos.'));
         }
 
         // Return an array of the processed settings.
@@ -61,16 +62,17 @@ class Video extends ModuleWidget
     /**
      * Edit a Video Widget
      * @SWG\Put(
-     *  path="/playlist/widget/video/{playlistId}",
+     *  path="/playlist/widget/{widgetId}?video",
      *  operationId="WidgetVideoEdit",
      *  tags={"widget"},
      *  summary="Parameters for editing existing video on a layout",
-     *  description="Parameters for editing existing video on a layout, for adding new videos, please refer to POST /library documentation.
-                    This call will replace existing Widget object, all not supplied parameters will be set to default.",
+     *  description="For uploading new video files, please refer to POST /library documentation.
+     *               For assigning existing video file to a Playlist please see POST /playlist/library/assign/{playlistId} documentation.
+     *               This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
-     *      name="playlistId",
+     *      name="widgetId",
      *      in="path",
-     *      description="The Playlist ID",
+     *      description="The Widget ID",
      *      type="integer",
      *      required=true
      *  ),

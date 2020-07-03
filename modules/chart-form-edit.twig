@@ -221,6 +221,7 @@
                         {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60." %}{% endset %}
                         {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
                     </div>
+
                 </div>
 
                 <input type="hidden" name="step" value="2" />

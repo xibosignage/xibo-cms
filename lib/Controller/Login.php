@@ -20,17 +20,14 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
+use Psr\Container\ContainerInterface;
+use RobThree\Auth\TwoFactorAuth;
+use Slim\Flash\Messages;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Flash\Messages;
-use Slim\Views\Twig;
 use Slim\Routing\RouteContext;
+use Slim\Views\Twig;
 use Xibo\Entity\User;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\Environment;
 use Xibo\Helper\HttpsDetect;
@@ -38,10 +35,14 @@ use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-use RobThree\Auth\TwoFactorAuth;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\ExpiredException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 
 /**
@@ -50,27 +51,20 @@ use RobThree\Auth\TwoFactorAuth;
  */
 class Login extends Base
 {
-    /**
-     * @var Session
-     */
+    /** @var Session */
     private $session;
 
     /** @var StorageServiceInterface  */
     private $store;
 
-    /**
-     * @var UserFactory
-     */
+    /** @var UserFactory */
     private $userFactory;
 
     /** @var \Stash\Interfaces\PoolInterface */
     private $pool;
 
-    /** @var Messages */
-    private $flash;
-
-    /** @var Twig */
-    private $view;
+    /** @var ContainerInterface */
+    private $container;
 
     /**
      * Set common dependencies.
@@ -79,25 +73,33 @@ class Login extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param Session $session
      * @param UserFactory $userFactory
      * @param \Stash\Interfaces\PoolInterface $pool
      * @param StorageServiceInterface $store
      * @param Twig $view
-     * @param Messages $flash
+     * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $session, $userFactory, $pool, $store, $view, $flash)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $session, $userFactory, $pool, $store, $view, ContainerInterface $container)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->session = $session;
         $this->userFactory = $userFactory;
         $this->pool = $pool;
         $this->store = $store;
-        $this->flash = $flash;
-        $this->view  = $view;
+        $this->container = $container;
+    }
+
+    /**
+     * Get Flash Message
+     *
+     * @return Messages
+     */
+    protected function getFlash()
+    {
+        return $this->container->get('flash');
     }
 
     /**
@@ -105,11 +107,8 @@ class Login extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function loginForm(Request $request, Response $response)
     {
@@ -130,10 +129,10 @@ class Login extends Base
 
             if ($cache->isMiss()) {
                 $this->getLog()->error('Expired nonce used.');
-                $this->flash->addMessageNow('login_message', __('This link has expired.'));
+                $this->getFlash()->addMessageNow('login_message', __('This link has expired.'));
             } else if (!password_verify($nonce[1], $validated['hash'])) {
                 $this->getLog()->error('Invalid nonce used.');
-                $this->flash->addMessageNow('login_message', __('This link has expired.'));
+                $this->getFlash()->addMessageNow('login_message', __('This link has expired.'));
             } else {
                 // We're valid.
                 $this->pool->deleteItem('/nonce/' . $nonce[0]);
@@ -144,7 +143,7 @@ class Login extends Base
                     // Dooh user
                     if ($user->userTypeId === 4) {
                         $this->getLog()->error('Cannot log in as this User type');
-                        $this->flash->addMessageNow('login_message', __('Invalid User Type'));
+                        $this->getFlash()->addMessageNow('login_message', __('Invalid User Type'));
                     }
 
                     // Log in this user
@@ -176,7 +175,7 @@ class Login extends Base
                     return $response->withRedirect($this->urlFor($request, 'home'));
                 } catch (NotFoundException $notFoundException) {
                     $this->getLog()->error('Valid nonce for non-existing user');
-                    $this->flash->addMessageNow('login_message', __('This link has expired.'));
+                    $this->getFlash()->addMessageNow('login_message', __('This link has expired.'));
                 }
             }
         }
@@ -201,6 +200,8 @@ class Login extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function login(Request $request, Response $response)
     {
@@ -221,12 +222,11 @@ class Login extends Base
 
             // Get our user
             try {
-                /* @var User $user */
                 $user = $this->userFactory->getByName($username);
 
                 // DOOH user
                 if ($user->userTypeId === 4) {
-                    throw new AccessDeniedException('Sorry this account does not exist or does not have permission to access the web portal.');
+                    throw new AccessDeniedException(__('Sorry this account does not exist or does not have permission to access the web portal.'));
                 }
 
                 // Check password
@@ -235,7 +235,7 @@ class Login extends Base
                 // check if 2FA is enabled
                 if ($user->twoFactorTypeId != 0) {
                     $_SESSION['tfaUsername'] = $user->userName;
-                    $this->flash->addMessage('priorRoute', $priorRoute);
+                    $this->getFlash()->addMessage('priorRoute', $priorRoute);
                     return $response->withRedirect($routeParser->urlFor('tfa'));
                 }
 
@@ -243,7 +243,7 @@ class Login extends Base
                 $this->completeLoginFlow($user, $request);
             }
             catch (NotFoundException $e) {
-                throw new AccessDeniedException('User not found');
+                throw new AccessDeniedException(__('User not found'));
             }
 
             $redirect = ($priorRoute == '' || $priorRoute == '/' || stripos($priorRoute, $routeParser->urlFor('login'))) ? $routeParser->urlFor('home') : $priorRoute;
@@ -253,14 +253,14 @@ class Login extends Base
             // Modify our return message depending on whether we're a DOOH user or not
             // we do this because a DOOH user is not allowed to log into the web UI directly and is API only.
             if ($user === null || $user->userTypeId != 4) {
-               $this->flash->addMessage('login_message', __('Username or Password incorrect'));
+               $this->getFlash()->addMessage('login_message', __('Username or Password incorrect'));
             } else {
-                $this->flash->addMessage('login_message', __($e->getMessage()));
+                $this->getFlash()->addMessage('login_message', __($e->getMessage()));
             }
-            $this->flash->addMessage('priorRoute', $priorRoute);
+            $this->getFlash()->addMessage('priorRoute', $priorRoute);
         }
-        catch (\Xibo\Exception\FormExpiredException $e) {
-            $this->flash->addMessage('priorRoute', $priorRoute);
+        catch (ExpiredException $e) {
+            $this->getFlash()->addMessage('priorRoute', $priorRoute);
         }
         $this->setNoOutput(true);
         $this->getLog()->debug('Redirect to ' . $redirect);
@@ -273,8 +273,10 @@ class Login extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException
-     * @throws \Xibo\Exception\XiboException
      * @throws \PHPMailer\PHPMailer\Exception
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      */
     public function forgottenPassword(Request $request, Response $response)
     {
@@ -303,7 +305,7 @@ class Login extends Base
 
             // Does this user have an email address associated to their user record?
             if ($user->email == '') {
-                throw new NotFoundException('No email');
+                throw new NotFoundException(__('No email'));
             }
 
             // Nonce parts (nonce isn't ever stored, only the hash of it is stored, it only exists in the email)
@@ -349,7 +351,7 @@ class Login extends Base
             if (!$mail->send()) {
                 throw new ConfigurationException('Unable to send password reminder to ' . $user->email);
             } else {
-                $this->flash->addMessage('login_message', __('Reminder email has been sent to your email address'));
+                $this->getFlash()->addMessage('login_message', __('Reminder email has been sent to your email address'));
             }
 
             // Audit Log
@@ -358,9 +360,9 @@ class Login extends Base
                 'UserAgent' => $request->getHeader('User-Agent')
             ]);
 
-        } catch (XiboException $xiboException) {
+        } catch (GeneralException $xiboException) {
             $this->getLog()->debug($xiboException->getMessage());
-            $this->flash->addMessage('login_message', __('User not found'));
+            $this->getFlash()->addMessage('login_message', __('User not found'));
         }
 
         $this->setNoOutput(true);
@@ -404,11 +406,8 @@ class Login extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function PingPong(Request $request, Response $response)
     {
@@ -443,11 +442,8 @@ class Login extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     function about(Request $request, Response $response)
     {
@@ -470,21 +466,16 @@ class Login extends Base
      * @param $subject
      * @param $body
      * @return string
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
      */
     private function generateEmailBody($subject, $body)
     {
-        // Generate Body
-        // Start an object buffer
-        ob_start();
-
-        // Render the template
-        echo $this->view->fetch('email-template.twig', ['config' => $this->getConfig(), 'subject' => $subject, 'body' => $body]);
-
-        $body = ob_get_contents();
-
-        ob_end_clean();
-
-        return $body;
+        return $this->renderTemplateToString('email-template.twig', [
+            'config' => $this->getConfig(),
+            'subject' => $subject, 'body' => $body
+        ]);
     }
 
     /**
@@ -492,7 +483,7 @@ class Login extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      * @throws \PHPMailer\PHPMailer\Exception
@@ -500,12 +491,12 @@ class Login extends Base
      * @throws \Twig\Error\LoaderError
      * @throws \Twig\Error\RuntimeError
      * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function twoFactorAuthForm(Request $request, Response $response)
     {
         if (!isset($_SESSION['tfaUsername'])) {
-            $this->flash->addMessage('login_message', __('Session has expired, please log in again'));
+            $this->getFlash()->addMessage('login_message', __('Session has expired, please log in again'));
             return $response->withRedirect($this->urlFor($request, 'login'));
         }
 
@@ -516,7 +507,7 @@ class Login extends Base
         if ($user->twoFactorTypeId === 1) {
 
             if ($user->email == '') {
-                throw new NotFoundException('No email');
+                throw new NotFoundException(__('No email'));
             }
 
             $mailFrom = $this->getConfig()->getSetting('mail_from');
@@ -600,8 +591,8 @@ class Login extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws NotFoundException
      * @throws \RobThree\Auth\TwoFactorAuthException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function twoFactorAuthValidate(Request $request, Response $response)
     {
@@ -663,7 +654,7 @@ class Login extends Base
             return $response->withRedirect($redirect);
         } else {
             $this->getLog()->error('Authentication code incorrect, redirecting to login page');
-            $this->flash->addMessage('login_message', __('Authentication code incorrect'));
+            $this->getFlash()->addMessage('login_message', __('Authentication code incorrect'));
             return $response->withRedirect($this->urlFor($request, 'login'));
         }
     }

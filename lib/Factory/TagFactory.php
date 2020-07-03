@@ -25,10 +25,10 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Tag;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class TagFactory
@@ -40,7 +40,7 @@ class TagFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      */
     public function __construct($store, $log, $sanitizerService)
     {
@@ -366,7 +366,7 @@ class TagFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('tag') != null) {
             $terms = explode(',', $sanitizedFilter->getString('tag'));
-            $this->nameFilter('tag', 'tag', $terms, $body, $params);
+            $this->nameFilter('tag', 'tag', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         if ($sanitizedFilter->getString('tagExact') != null) {

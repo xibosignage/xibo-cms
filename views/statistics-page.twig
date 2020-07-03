@@ -106,11 +106,9 @@
                             {{ inline.dropdown("displayGroupId", "single", title, "", null, "displayGroupId", "displayGroup", "", "pagedSelect", "", "d", "", attributes) }}
 
                             {% set title %}{% trans "Tags" %}{% endset %}
+                            {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
                             {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
-                            {{ inline.inputWithTags("tags", title, null, helpText) }}
-
-                            {% set title %}{% trans "Should Tags filter by exact match?" %}{% endset %}
-                            {{ inline.checkbox("exactTags", title) }}
+                            {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
 
                             {% set title %}{% trans "Only show currently logged in?" %}{% endset %}
                             {{ inline.checkbox("onlyLoggedIn", title) }}
@@ -224,7 +222,7 @@
                 searchDelay: 3000,
                 "order": [[0, "asc"]],
                 ajax: {
-                    "url": "{{ url_for("stats.timeDisconnected.search") }}",
+                    "url": "{{ url_for("stats.timeDisconnected.data") }}",
                     "data": function (d) {
                         $.extend(d, $("#stats").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }

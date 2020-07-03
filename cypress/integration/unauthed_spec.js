@@ -5,7 +5,7 @@ describe('Unauthenticated CMS access', function () {
 
             cy.url().should('include', '/login');
 
-            cy.contains('Version 2.');
+            cy.contains('Version 3.');
         });
     });
 

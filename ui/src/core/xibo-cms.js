@@ -37,6 +37,11 @@ if (!String.prototype.endsWith) {
     };
 }
 
+// Configure a global error handler for data tables
+$.fn.dataTable.ext.errMode = function (settings, helpPage, message) {
+    console.log(message);
+};
+
 // Set up the light boxes
 $(document).delegate('*[data-toggle="lightbox"]', 'click', function(event) {
     event.preventDefault();
@@ -274,129 +279,146 @@ function XiboInitialise(scope) {
     });
 
     // Date time controls
-    $(scope + ' .dateTimePicker').each(function(){
-
-        // Get the linked field and use it to set the time
-        var preset = $("#" + $(this).data().linkCombined).val();
-
-        // Bind to our 2 input fields using their classes
-        $(this).find(".dateTimePickerDate").datetimepicker({
-            format: bootstrapDateFormatDateOnly,
-            autoclose: true,
-            language: language,
-            minView: 2,
-            calendarType: calendarType
-        }).change(function() {
-            var preset = $("#" + $(this).data().linkCombined);
-            var value = $(this).val();
-
-            // The user has wiped the value (it is empty, so we should set the hidden field to empty)
-            if (value === "") {
-                preset.val("");
-            } else {
-                // Parse the value into a moment
-                value = moment(value, jsDateFormat.replace(jsTimeFormat, "").replace(" ", ""));
-
-                // Get the current master data (if empty, then assume now)
-                var updatedMaster = (preset.val() === "") ? moment() : moment(preset.val(), systemDateFormat);
-
-                if (!updatedMaster.isValid())
-                    updatedMaster = moment();
-
-                updatedMaster.year(value.year());
-                updatedMaster.month(value.month());
-                updatedMaster.date(value.date());
-
-                preset.val(updatedMaster.format(systemDateFormat));
-            }
-        });
-
-        if (preset !== undefined && preset !== "")
-            $(this).find(".dateTimePickerDate").datetimepicker('update', moment(preset, systemDateFormat).format(systemDateFormat));
-            
-        // Time control
-        $(this).find(".dateTimePickerTime").timepicker({
-            'timeFormat': timeFormat,
-            'step': 15
-        }).change(function() {
-            var value = $(this).val();
-            var preset = $("#" + $(this).data().linkCombined);
-
-            if (value === "") {
-                preset.val("");
-            } else {
-                value = moment($(this).val(), jsTimeFormat);
-
-                // Get the current master data
-                var updatedMaster = (preset.val() === "") ? moment() : moment(preset.val(), systemDateFormat);
-                if (!updatedMaster.isValid())
-                    updatedMaster = moment();
-
-                updatedMaster.hour(value.hour());
-                updatedMaster.minute(value.minute());
-                updatedMaster.second(value.second());
-
-                preset.val(updatedMaster.format(systemDateFormat));
-            }
-        });
-        
-        if (preset !== undefined && preset !== "")
-            $(this).find(".dateTimePickerTime").timepicker('setTime', moment(preset, systemDateFormat).toDate());
+    $(scope + ' .datePicker:not(.datePickerHelper)').each(function() {
+        if(calendarType == 'Jalali') {
+            initDatePicker(
+                $(this),
+                systemDateFormat,
+                jsDateOnlyFormat,
+                {
+                    altFieldFormatter: function(unixTime) {
+                        let newDate = moment.unix(unixTime / 1000);
+                        newDate.set('hour', 0);
+                        newDate.set('minute', 0);
+                        newDate.set('second', 0);
+                        return newDate.format(systemDateFormat);
+                    }
+                }
+            );
+        } else {
+            initDatePicker(
+                $(this),
+                systemDateFormat,
+                jsDateOnlyFormat
+            );
+        }
     });
 
-    $(scope + ' .datePicker').each(function() {
+    $(scope + ' .dateTimePicker:not(.datePickerHelper)').each(function() {
+        const enableSeconds = dateFormat.includes('s');
 
-        $(this).datetimepicker({
-            format: bootstrapDateFormatDateOnly,
-            autoclose: true,
-            language: language,
-            calendarType: calendarType,
-            minView: 2,
-            todayHighlight: true
-        });
-
-        // Get the linked field and use it to set the time
-        var preset = $(this).closest("form").find("#" + $(this).data().linkField).val();
-
-        if (preset != undefined && preset != "")
-            $(this).datetimepicker('update', preset);
-    });
-    
-    $(scope + ' .dateMonthPicker').each(function() {
-
-        $(this).datetimepicker({
-            format: 'MM yyyy',
-            autoclose: true,
-            language: language,
-            calendarType: calendarType,
-            startView: 3,
-            minView: 3
-        });
-
-        // Get the linked field and use it to set the time
-        var preset = $(this).closest("form").find("#" + $(this).data().linkField).val();
-
-        if (preset != undefined && preset != "")
-            $(this).datetimepicker('update', preset);
+        if(calendarType == 'Jalali') {
+            initDatePicker(
+                $(this),
+                systemDateFormat, 
+                jsDateFormat, 
+                {
+                    timePicker: {
+                        enabled: true,
+                        second: {
+                            enabled: enableSeconds
+                        }
+                    }
+                }
+            );
+        } else {
+            initDatePicker(
+                $(this),
+                systemDateFormat,
+                jsDateFormat,
+                {
+                    enableTime: true,
+                    enableSeconds: enableSeconds,
+                    altFormat: jsDateFormat
+                }
+            );
+        }
     });
 
-    $(scope + ' .timePicker').each(function() {
+    $(scope + ' .dateMonthPicker:not(.datePickerHelper)').each(function() {
+        if(calendarType == 'Jalali') {
+            const linkedFormat = $(this).data().linkFormat;
+            initDatePicker(
+                $(this),
+                systemDateFormat,
+                jsDateFormat,
+                {
+                    format: "MMMM YYYY",
+                    viewMode: 'month',
+                    dayPicker: {
+                        enabled: false
+                    },
+                    altFieldFormatter: function(unixTime) {
+                        let newDate = moment.unix(unixTime / 1000);
+                        newDate.set('date', 1);
+                        newDate.set('hour', 0);
+                        newDate.set('minute', 0);
+                        newDate.set('second', 0);
 
-        $(this).timepicker({
-            'timeFormat': timeFormat,
-            'step': 15
-        }).change(function() {
-            var value = moment($(this).val(), jsTimeFormat);
-            
-            $(this).closest("form").find("#" + $(this).data().linkField).val(value.format(systemTimeFormat));
-        });
+                        return newDate.format(systemDateFormat);
+                    }
+                }
+            );
+        } else {
+            initDatePicker(
+                $(this),
+                systemDateFormat,
+                jsDateFormat,
+                {
+                    plugins: [new flatpickrMonthSelectPlugin({
+                        shorthand: false,
+                        dateFormat: systemDateFormat,
+                        altFormat: 'MMMM Y',
+                        parseDate: (datestr, format) => {
+                            return moment(datestr, format, true).toDate();
+                        },
+                        formatDate: (date, format, locale) => {
+                            return moment(date).format(format);
+                        }
+                    })]
+                }
+            );
+        }
+    });
 
-        // Get the linked field and use it to set the time
-        var preset = $(this).closest("form").find("#" + $(this).data().linkField).val();
+    $(scope + ' .timePicker:not(.datePickerHelper)').each(function() {
+        const enableSeconds = dateFormat.includes('s');
 
-        if (preset != undefined && preset != "")
-            $(this).timepicker('setTime', preset);
-    
+        if(calendarType == 'Jalali') {
+            initDatePicker(
+                $(this),
+                systemTimeFormat,
+                jsTimeFormat,
+                {
+                    onlyTimePicker: true,
+                    format: jsTimeFormat,
+                    timePicker: {
+                        second: {
+                            enabled: enableSeconds
+                        }
+                    },
+                    altFieldFormatter: function(unixTime) {
+                        let newDate = moment.unix(unixTime / 1000);
+                        newDate.set('second', 0);
+
+                        return newDate.format(systemTimeFormat);
+                    }
+                }
+            );
+        } else {
+            initDatePicker(
+                $(this),
+                systemTimeFormat,
+                jsTimeFormat,
+                {
+                    enableTime: true,
+                    noCalendar: true,
+                    enableSeconds: enableSeconds,
+                    time_24hr: true,
+                    altFormat: jsTimeFormat
+                }
+            );
+        }
     });
 
     $(scope + " .selectPicker select.form-control").select2({
@@ -450,21 +472,6 @@ function XiboInitialise(scope) {
     $(scope + " .tags-with-value").each(function() {
         tagsWithValues($(this).closest("form").attr('id'));
     });
-
-    // If it's a modal, clear some created field on close
-    if($(scope).hasClass('modal')) {
-        $(scope).on("hide.bs.modal", function(e) {
-            if(e.namespace === 'bs.modal') {
-                // Remove datetimepickers
-                $(scope).find('.dateTimePicker .dateTimePickerDate, .dateTimePicker, .dateMonthPicker').datetimepicker('remove');
-
-                // Remove timepickers ( one by one )
-                $.each($(scope).find('.dateTimePicker .dateTimePickerTime, .timePicker'), function(idx, el) {
-                    $(el).timepicker('remove');
-                });
-            }
-        });
-    }
 }
 
 /**
@@ -612,6 +619,25 @@ function dataTableDateFromUnix(data, type, row) {
         return "";
 
     return moment(data, "X").tz ? moment(data, "X").tz(timezone).format(jsDateFormat) : moment(data, "X").format(jsDateFormat);
+}
+
+function dataTableTimeFromSeconds(data, type, row) {
+    if(type !== "display" && type !== "export")
+        return data;
+
+    if(data == null || data == 0)
+        return "";
+
+    // Get duration 
+    var duration = moment.duration(data * 1000);
+
+    // Get the number of hours
+    var hours = Math.floor(duration.asHours());
+
+    // Format string with leading zero
+    var hoursString = (hours < 10) ? '0' + hours : hours;
+
+    return hoursString + moment.utc(duration.asMilliseconds()).format(":mm:ss");
 }
 
 function dataTableSpacingPreformatted(data, type, row) {
@@ -907,11 +933,18 @@ function XiboFormRender(sourceObj, data) {
                             extrabutton.click(function(e) {
                                 e.preventDefault();
 
-                                if ($(this).hasClass("save-button")) {
-                                    $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
-                                    // Disable the button
-                                    // https://github.com/xibosignage/xibo/issues/1467
-                                    $(this).addClass("disabled");
+                                let $button = $(this);
+
+                                if ($button.hasClass("save-button")) {
+                                    if ($button.hasClass("disabled")) {
+                                        return false;
+                                    } else {
+                                        $button.append(' <span class="saving fa fa-cog fa-spin"></span>');
+
+                                        // Disable the button
+                                        // https://github.com/xibosignage/xibo/issues/1467
+                                        $button.addClass("disabled");
+                                    }
                                 }
 
                                 if (value.indexOf("DialogClose") > -1 && (lastForm.indexOf("playlist/widget/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1) && timelineForm != null) {
@@ -930,7 +963,7 @@ function XiboFormRender(sourceObj, data) {
                 }
 
                 // Focus in the first input
-                $('input[type=text]', dialog).eq(0).focus();
+                $('input[type=text]', dialog).not(".dateControl").eq(0).focus();
 
                 $('input[type=text]', dialog).each(function(index, el) {
                     formRenderDetectSpacingIssues(el);
@@ -1492,8 +1525,11 @@ function XiboSubmitResponse(response, form) {
 
         if (!apply) {
             // Next form URL is provided
-            if ($(form).data("nextFormUrl") != undefined) {
-                XiboFormRender($(form).data().nextFormUrl.replace(":id", response.id));
+            if ($(form).data("nextFormUrl") !== undefined) {
+                let responseId = ($(form).data("nextFormIdProperty") === undefined)
+                    ? response.id
+                    : response.data[$(form).data("nextFormIdProperty")];
+                XiboFormRender($(form).data().nextFormUrl.replace(":id", responseId));
             }
             // Back to the timeline form
             else if ((lastForm != undefined && (lastForm.indexOf("playlist/widget/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1)) && timelineForm != null) {
@@ -1832,10 +1868,38 @@ function makePagedSelect(element, parent) {
                     pagination: {
                         more: (page * 10 < data.recordsTotal)
                     }
-                }
+                };
             }
         }
     });
+
+    // Set initial value if exists
+    if(element.data("initialValue") != undefined && element.data("initialKey") != undefined) {
+
+        const initialValue = element.data("initialValue");
+        const initialKey = element.data("initialKey");
+
+        let dataObj = {};
+        dataObj[initialKey] = initialValue;
+
+        $.ajax({
+            url: element.data("searchUrl"),
+            type: 'GET',
+            data: dataObj
+        }).then(function(data) {
+            // create the option and append to Select2
+            var option = new Option(data.data[0][element.data("textProperty")], data.data[0][element.data("idProperty")], true, true);
+            element.append(option).trigger('change');
+
+            // manually trigger the `select2:select` event
+            element.trigger({
+                type: 'select2:select',
+                params: {
+                    data: data
+                }
+            });
+        });
+    }
 }
 
 /**
@@ -1844,10 +1908,19 @@ function makePagedSelect(element, parent) {
  * @param parent
  */
 function makeLocalSelect(element, parent) {
-    
     element.select2({
         dropdownParent: ((parent == null) ? $("body") : $(parent)),
         matcher: function(params, data) {
+            // If filterClass is defined, try to filter the elements by it
+            const mainFilterClass = $(data.element.parentElement).data().filterClass;
+
+            // Get element class array ( one or more elements split by comma)
+            const elementClassArray = ($(data.element).data().filterClass != undefined ) ? $(data.element).data().filterClass.replace(' ', '').split(',') : [];
+
+            // If filter exists and it's not in one of the element filters, return empty data
+            if(mainFilterClass != undefined && mainFilterClass != '' && !elementClassArray.includes(mainFilterClass)) {
+                return null;
+            }
 
             // If there are no search terms, return all of the data
             if($.trim(params.term) === '') {
@@ -1889,6 +1962,19 @@ function makeLocalSelect(element, parent) {
 
             // Return `null` if the term should not be displayed
             return null;
+        },
+        templateResult: function(state) {
+            if(!state.id) {
+                return state.text;
+            }
+
+            var $el = $(state.element);
+
+            if($el.data().content !== undefined) {
+                return $($el.data().content);
+            }
+
+            return state.text;
         }
     });
 }
@@ -1913,4 +1999,136 @@ function userPreferencesFormSubmit() {
         $(this).attr('disabled', true);
     });
     $form.submit();
+}
+
+// Initialise date time picker
+function initDatePicker($element, baseFormat, displayFormat, options = {}, onChangeCallback = null, clearButtonActive = true, onClearCallback = null) {
+    // Check for date format
+    if(baseFormat == undefined || displayFormat == undefined) {
+        console.error('baseFormat and displayFormat needs to be defined!');
+        return false;
+    }
+
+    let $inputElement = $element;
+    const initialValue = $element.val();
+
+    if(calendarType == 'Jalali') {
+
+        if(options.altField != undefined) {
+            $inputElement = $(options.altField);
+        } else {
+            $inputElement = $('<input type="text" class="form-control" id="' + $element.attr('id') + 'Link">');
+            $element.after($inputElement).hide();
+        }
+        
+        $inputElement.persianDatepicker(Object.assign({
+            initialValue: ((initialValue != undefined) ? initialValue : false),
+            altField: '#' + $element.attr('id'),
+            altFieldFormatter: function(unixTime) {
+                return (moment.unix(unixTime / 1000).format(baseFormat));
+            },
+            onSelect: function() {
+                // Trigger change after close
+                $element.trigger('change');
+                $inputElement.trigger('change');
+            }
+        }, options));
+
+        // Add the readonly property
+        $inputElement.attr('readonly', 'readonly');
+    } else if(calendarType == 'Gregorian') {
+        // Remove tabindex from modal to fix flatpickr bug
+        $element.parents('.bootbox.modal').removeAttr('tabindex');
+
+        // Create flatpickr
+        flatpickr($element, Object.assign({
+            altInput: true,
+            allowInput: false,
+            defaultDate: ((initialValue != undefined) ? initialValue : null),
+            altInputClass: 'datePickerHelper ' + $element.attr('class'),
+            altFormat: displayFormat,
+            dateFormat: baseFormat,
+            locale: language,
+            parseDate: (datestr, format) => {
+                return moment(datestr, format, true).toDate();
+            },
+            formatDate: (date, format, locale) => {
+                return moment(date).format(format);
+            }
+        }, options));
+    }
+
+    // Callback for on change event
+    $inputElement.change(()=> {
+        // Callback if exists
+        if(onChangeCallback != null && typeof onChangeCallback == 'function') {
+            onChangeCallback();
+        }
+    });
+
+    // Clear button
+    if(clearButtonActive) {
+        $inputElement.parent().find('.date-clear-button').removeClass('hidden').click(function() {
+            updateDatePicker($inputElement, '');
+
+            // Clear callback if defined
+            if(onClearCallback != null && typeof onClearCallback == 'function') {
+                onClearCallback();
+            }
+        });
+    }
+
+    // Toggle button
+    $inputElement.parent().find('.date-open-button').click(function() {
+        if(calendarType == 'Gregorian') {
+            if($inputElement[0]._flatpickr != undefined) {
+                $inputElement[0]._flatpickr.open();
+            }
+        } else if(calendarType == 'Jalali') {
+            $inputElement.data().datepicker.show();
+        }
+    });
+}
+
+// Update date picker/pickers
+function updateDatePicker($element, date, format, triggerChange = false) {
+    if(calendarType == 'Gregorian') {
+        // Update gregorian calendar
+        if($element[0]._flatpickr != undefined) {
+            if(date == '') {
+                $element.val('').trigger('change');
+                $element[0]._flatpickr.setDate('');
+            } else if(format != undefined) {
+                $element[0]._flatpickr.setDate(date, triggerChange, format);
+            } else {
+                $element[0]._flatpickr.setDate(date);
+            }
+        }
+    } else if(calendarType == 'Jalali'){
+        if(date == '') {
+            $element.val('').trigger('change');
+            $('#' + $element.attr('id') + 'Link').val('').trigger('change');
+        } else {
+            // Update jalali calendar
+            $('#' + $element.attr('id') + 'Link').data().datepicker.setDate(moment(date, format).unix() * 1000);
+        }
+    }
+}
+
+// Destroy date picker
+function destroyDatePicker($element) {
+    if(calendarType == 'Gregorian') {
+        // Destroy gregorian calendar
+        if($element[0]._flatpickr != undefined) {
+            $element[0]._flatpickr.destroy();
+        }
+
+        // Set value to text field if exists
+        if($element.attr('value') != undefined) {
+            $element.val($element.attr('value'));
+        }
+    } else if(calendarType == 'Jalali') {
+        // Destroy jalali calendar
+        $('#' + $element.attr('id') + 'Link').data().datepicker.destroy();
+    }
 }

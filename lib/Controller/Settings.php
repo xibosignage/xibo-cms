@@ -22,20 +22,22 @@
 
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
+use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Respect\Validation\Validator as v;
 use Slim\Views\Twig;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TransitionFactory;
+use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Settings
@@ -52,6 +54,9 @@ class Settings extends Base
     /** @var TransitionFactory */
     private $transitionfactory;
 
+    /** @var UserFactory */
+    private $userFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -59,20 +64,21 @@ class Settings extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param LayoutFactory $layoutFactory
      * @param UserGroupFactory $userGroupFactory
      * @param TransitionFactory $transitionfactory
+     * @param UserFactory $userFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $layoutFactory, $userGroupFactory, $transitionfactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $layoutFactory, $userGroupFactory, $transitionfactory, $userFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->layoutFactory = $layoutFactory;
         $this->userGroupFactory = $userGroupFactory;
         $this->transitionfactory = $transitionfactory;
+        $this->userFactory = $userFactory;
 
         // Initialise extra validation rules
         v::with('Xibo\\Validation\\Rules\\');
@@ -83,11 +89,8 @@ class Settings extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function displayPage(Request $request, Response $response)
     {
@@ -123,7 +126,7 @@ class Settings extends Base
 
         // A list of timezones
         $timeZones = [];
-        foreach ($this->getDate()->timezoneList() as $key => $value) {
+        foreach (DateFormatHelper::timezoneList() as $key => $value) {
             $timeZones[] = ['id' => $key, 'value' => $value];
         }
 
@@ -142,6 +145,13 @@ class Settings extends Base
             $defaultLayout = $this->layoutFactory->getById($this->getConfig()->getSetting('DEFAULT_LAYOUT'));
         } catch (NotFoundException $notFoundException) {
             $defaultLayout = null;
+        }
+
+        // The system User
+        try {
+            $systemUser = $this->userFactory->getById($this->getConfig()->getSetting('SYSTEM_USER'));
+        } catch (NotFoundException $notFoundException) {
+            $systemUser = null;
         }
 
         // The default user group
@@ -171,10 +181,10 @@ class Settings extends Base
         if ($elevateLogUntil != null) {
             $elevateLogUntil = intval($elevateLogUntil);
 
-            if ($elevateLogUntil <= time()) {
+            if ($elevateLogUntil <= Carbon::now()->format('U')) {
                 $elevateLogUntil = null;
             } else {
-                $elevateLogUntil = $this->getDate()->getLocalDate($elevateLogUntil);
+                $elevateLogUntil = Carbon::createFromTimestamp($elevateLogUntil)->format(DateFormatHelper::getSystemFormat());
             }
         }
 
@@ -189,7 +199,8 @@ class Settings extends Base
             'defaultUserGroup' => $defaultUserGroup,
             'elevateLogUntil' => $elevateLogUntil,
             'defaultTransitionIn' => $defaultTransitionIn,
-            'defaultTransitionOut' => $defaultTransitionOut
+            'defaultTransitionOut' => $defaultTransitionOut,
+            'systemUser' => $systemUser
         ]);
 
         return $this->render($request, $response);
@@ -200,12 +211,10 @@ class Settings extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws InvalidArgumentException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function update(Request $request, Response $response)
     {
@@ -289,6 +298,10 @@ class Settings extends Base
 
         if ($this->getConfig()->isSettingEditable('DEFAULT_RESIZE_LIMIT')) {
             $this->getConfig()->changeSetting('DEFAULT_RESIZE_LIMIT', $sanitizedParams->getInt('DEFAULT_RESIZE_LIMIT'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DATASET_HARD_ROW_LIMIT')) {
+            $this->getConfig()->changeSetting('DATASET_HARD_ROW_LIMIT', $sanitizedParams->getInt('DATASET_HARD_ROW_LIMIT'));
         }
 
         if ($this->getConfig()->isSettingEditable('DEFAULT_LAYOUT')) {
@@ -607,11 +620,15 @@ class Settings extends Base
         // Have we changed log level? If so, were we also provided the elevate until setting?
         if ($newElevateUntil === null && $currentLogLevel != $newLogLevel) {
             // We haven't provided an elevate until (meaning it is not visible)
-            $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', $this->getDate()->parse()->addHour(1)->format('U'));
+            $this->getConfig()->changeSetting('ELEVATE_LOG_UNTIL', Carbon::now()->addHour()->format('U'));
         }
 
         if ($this->getConfig()->isSettingEditable('SERVER_MODE')) {
             $this->getConfig()->changeSetting('SERVER_MODE', $sanitizedParams->getString('SERVER_MODE'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('SYSTEM_USER')) {
+            $this->getConfig()->changeSetting('SYSTEM_USER', $sanitizedParams->getInt('SYSTEM_USER'));
         }
 
         if ($this->getConfig()->isSettingEditable('DEFAULT_USERGROUP')) {

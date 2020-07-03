@@ -22,6 +22,8 @@
 
 namespace Xibo\Storage;
 
+use Carbon\Carbon;
+
 /**
  * Class TimeSeriesMongoDbResults
  * @package Xibo\Storage
@@ -56,39 +58,42 @@ class TimeSeriesMongoDbResults implements TimeSeriesResultsInterface
     /** @inheritdoc */
     public function getArray()
     {
-        $result = $this->object->toArray();
-
-        $rows = [];
-
-        foreach ($result as $row) {
-
-            $entry = [];
-
-            $entry['id'] = $row['id'];
-            $entry['type'] = $row['type'];
-            $entry['start'] = $row['start']->toDateTime()->format('U');
-            $entry['end'] = $row['end']->toDateTime()->format('U');
-            $entry['display'] = isset($row['display']) ? $row['display']: 'No display';
-            $entry['layout'] = isset($row['layout']) ? $row['layout']: 'No layout';
-            $entry['media'] = isset($row['media']) ? $row['media'] : 'No media' ;
-            $entry['tag'] = $row['tag'];
-            $entry['duration'] = $row['duration'];
-            $entry['count'] = $row['count'];
-            $entry['displayId'] = isset($row['displayId']) ? $row['displayId']: 0;
-            $entry['layoutId'] = isset($row['layoutId']) ? $row['layoutId']: 0;
-            $entry['widgetId'] = isset($row['widgetId']) ? $row['widgetId']: 0;
-            $entry['mediaId'] = isset($row['mediaId']) ? $row['mediaId']: 0;
-            $entry['statDate'] = isset($row['statDate']) ? $row['statDate']->toDateTime()->format('U') : null;
-            $entry['engagements'] = isset($row['engagements']) ? $row['engagements'] : [];
-
-            $rows[] = $entry;
-        }
-
-        return ['statData'=> $rows];
-
+        return $this->object->toArray();
     }
 
-    public function getIterator()
+    /** @inheritDoc */
+    public function getIdFromRow($row)
+    {
+        return $row['id'];
+    }
+
+    /** @inheritDoc */
+    public function getDateFromValue($value)
+    {
+        return Carbon::instance($value->toDateTime());
+    }
+
+    /** @inheritDoc */
+    public function getEngagementsFromRow($row)
+    {
+        return isset($row['engagements']) ? $row['engagements'] : [];
+    }
+
+    /** @inheritDoc */
+    public function getTagFilterFromRow($row)
+    {
+        return isset($row['tagFilter']) ? $row['tagFilter'] : [
+            'dg' => [],
+            'layout' => [],
+            'media' => []
+        ];
+    }
+
+    /**
+     * Gets an iterator for this result set
+     * @return \IteratorIterator
+     */
+    private function getIterator()
     {
         if ($this->iterator == null) {
             $this->iterator = new \IteratorIterator($this->object);

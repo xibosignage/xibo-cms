@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (AboutTest.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 namespace Xibo\Tests\Integration;
@@ -14,22 +29,24 @@ use League\OAuth2\Client\Token\AccessToken;
  */
 class AboutTest extends \Xibo\Tests\LocalWebTestCase
 {
-	/**
+    /**
      * Shows CMS version
+     * @throws \Exception
      */
     public function testVersion()
     {
-        $response = $this->client->get('/about');
+        $response = $this->sendRequest('GET', '/about');
 
-        $this->assertSame(200, $this->client->response->status());
+        $this->assertSame(200, $response->getStatusCode());
         $this->assertNotEmpty($response);
 
-        $response = json_decode($this->client->response->body());
+        $body = json_decode($response->getBody());
 
-        $this->assertSame(200, $response->status);
-        $this->assertSame(false, $response->grid);
-        $this->assertNotEmpty($response->data, 'Empty Data');
-        $this->assertNotEmpty($response->data->version, 'Empty Version');
+        $this->assertSame(200, $body->status);
+        $this->assertSame(true, $body->success);
+        $this->assertSame(false, $body->grid);
+        $this->assertNotEmpty($body->data, 'Empty Data');
+        $this->assertNotEmpty($body->data->version, 'Empty Version');
     }
 
     /**

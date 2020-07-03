@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -94,8 +94,8 @@ class HlsWidgetTest extends LocalWebTestCase
         return [
             'HLS stream' => [200, 'HLS stream', 1, 20, 'http://ceu.xibo.co.uk/hls/big_buck_bunny_adaptive_master.m3u8', 0, 0],
             'HLS stream 512' => [200, 'HLS stream with transparency', 1, 20, 'http://ceu.xibo.co.uk/hls/big_buck_bunny_adaptive_512.m3u8', 0, 1],
-            'No url provided' => [500, 'no uri', 1, 10, '', 0, 0],
-            'No duration provided' => [500, 'no duration with useDuration 1', 1, 0, 'http://ceu.xibo.co.uk/hls/big_buck_bunny_adaptive_512.m3u8', 0, 0],
+            'No url provided' => [422, 'no uri', 1, 10, '', 0, 0],
+            'No duration provided' => [422, 'no duration with useDuration 1', 1, 0, 'http://ceu.xibo.co.uk/hls/big_buck_bunny_adaptive_512.m3u8', 0, 0],
         ];
     }
 
@@ -105,7 +105,7 @@ class HlsWidgetTest extends LocalWebTestCase
     */
     public function testEdit($statusCode, $name, $useDuration, $duration, $uri, $mute, $transparency)
     {
-        $response = $this->client->put('/playlist/widget/' . $this->widgetId, [
+        $response = $this->sendRequest('PUT','/playlist/widget/' . $this->widgetId, [
             'name' => $name,
             'useDuration' => $useDuration,
             'duration' => $duration,
@@ -114,14 +114,14 @@ class HlsWidgetTest extends LocalWebTestCase
             'transparency' => $transparency,
             ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-        $this->assertSame($statusCode, $this->client->response->status());
+        $this->assertSame($statusCode, $response->getStatusCode());
 
-        if ($statusCode == 500)
+        if ($statusCode == 422)
             return;
 
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
 
         /** @var XiboHls $checkWidget */
         $response = $this->getEntityProvider()->get('/playlist/widget', ['widgetId' => $this->widgetId]);

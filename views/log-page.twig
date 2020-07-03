@@ -23,6 +23,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{{ "Logs"|trans }} | {% endblock %}
+
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-warning btn-xs"><a class="XiboFormButton btns" title="{% trans "Truncate the Log" %}" href="{{ url_for("log.truncate.form") }}"> <i class="fa fa-scissors" aria-hidden="true"></i> {% trans "Truncate" %}</a></li>
@@ -121,9 +123,17 @@
                                     ] %}
                                     {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
 
-
-                                    {% set title %}{% trans "Display Name" %}{% endset %}
-                                    {{ inline.input("display", title) }}
+                                    <div class="form-group ">
+                                        <label class="control-label" title="" for="display" accesskey="">{% trans "Display Name" %}</label>
+                                        <div>
+                                            <div class="input-group">
+                                                <input class="form-control" name="display" type="text" id="display" value="">
+                                                <span class="input-group-addon">
+                                                    <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     {% set title %}{% trans "Display Group" %}{% endset %}
                                     {% set attributes = [

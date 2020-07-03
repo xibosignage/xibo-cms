@@ -21,8 +21,10 @@
  */
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Psr7\Stream;
 use Mimey\MimeTypes;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
@@ -34,12 +36,6 @@ use Stash\Invalidation;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\Widget;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\LibraryFullException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
@@ -57,14 +53,21 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
 use Xibo\Helper\HttpCacheProvider;
+use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\XiboUploadHandler;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\LibraryFullException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Library
@@ -159,7 +162,6 @@ class Library extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param PoolInterface $pool
@@ -183,9 +185,9 @@ class Library extends Base
      * @param Twig $view
      * @param HttpCacheProvider $cacheProvider
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $dispatcher, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory, $view, HttpCacheProvider $cacheProvider)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $pool, $dispatcher, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory, $view, HttpCacheProvider $cacheProvider)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->store = $store;
         $this->moduleFactory = $moduleFactory;
@@ -345,11 +347,8 @@ class Library extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     function displayPage(Request $request, Response $response)
     {
@@ -371,15 +370,13 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @SWG\Put(
      *  path="/library/setenablestat/{mediaId}",
      *  operationId="mediaSetEnableStat",
@@ -405,7 +402,6 @@ class Library extends Base
      *      description="successful operation"
      *  )
      * )
-     *
      */
     public function setEnableStat(Request $request, Response $response, $id)
     {
@@ -437,12 +433,10 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function setEnableStatForm(Request $request, Response $response, $id)
     {
@@ -556,11 +550,9 @@ class Library extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     function grid(Request $request, Response $response)
     {
@@ -572,13 +564,14 @@ class Library extends Base
         $mediaList = $this->mediaFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
             'mediaId' => $parsedQueryParams->getInt('mediaId'),
             'name' => $parsedQueryParams->getString('media'),
+            'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'nameExact' => $parsedQueryParams->getString('nameExact'),
             'type' => $parsedQueryParams->getString('type'),
             'tags' => $parsedQueryParams->getString('tags'),
             'exactTags' => $parsedQueryParams->getCheckbox('exactTags'),
             'ownerId' => $parsedQueryParams->getInt('ownerId'),
             'retired' => $parsedQueryParams->getInt('retired'),
-            'duration' => $parsedQueryParams->getString('duration'),
+            'duration' => $parsedQueryParams->getInt('duration'),
             'fileSize' => $parsedQueryParams->getString('fileSize'),
             'ownerUserGroupId' => $parsedQueryParams->getInt('ownerUserGroupId'),
             'assignable' => $parsedQueryParams->getInt('assignable'),
@@ -614,7 +607,7 @@ class Library extends Base
                 $media->excludeProperty('mediaExpiresIn');
                 $media->excludeProperty('mediaExpiryFailed');
                 $media->excludeProperty('mediaNoExpiryDate');
-                $media->expires = ($media->expires == 0) ? 0 : $this->getDate()->getLocalDate($media->expires);
+                $media->expires = ($media->expires == 0) ? 0 : Carbon::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat());
                 continue;
             }
 
@@ -740,13 +733,10 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function deleteForm(Request $request, Response $response, $id)
     {
@@ -774,13 +764,13 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws ConfigurationException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @SWG\Delete(
      *  path="/library/{mediaId}",
      *  operationId="libraryDelete",
@@ -820,7 +810,7 @@ class Library extends Base
         $media->load(['deleting' => true]);
 
         if ($media->isUsed() && $this->getSanitizer($request->getParams())->getCheckbox('forceDelete') == 0) {
-            throw new \InvalidArgumentException(__('This library item is in use.'));
+            throw new InvalidArgumentException(__('This library item is in use.'));
         }
 
         // Delete
@@ -847,12 +837,10 @@ class Library extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/library",
      *  operationId="libraryAdd",
@@ -913,7 +901,6 @@ class Library extends Base
      *      description="successful operation"
      *  )
      * )
-     *
      */
     public function add(Request $request, Response $response)
     {
@@ -931,7 +918,7 @@ class Library extends Base
 
         if ($parsedBody->getDate('expires') != null ) {
 
-            if ($parsedBody->getDate('expires')->format('U') > time()) {
+            if ($parsedBody->getDate('expires')->format('U') > Carbon::now()->format('U')) {
                 $expires = $parsedBody->getDate('expires')->format('U');
             } else {
                 throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');
@@ -993,12 +980,10 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function editForm(Request $request, Response $response, $id)
     {
@@ -1030,7 +1015,7 @@ class Library extends Base
             'validExtensions' => implode('|', $this->moduleFactory->getValidExtensions(['type' => $media->mediaType])),
             'help' => $this->getHelp()->link('Library', 'Edit'),
             'tags' => $tags,
-            'expiryDate' => ($media->expires == 0 ) ? null : date('Y-m-d H:i:s', $media->expires)
+            'expiryDate' => ($media->expires == 0 ) ? null : Carbon::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat(), $media->expires)
         ]);
 
         return $this->render($request, $response);
@@ -1105,15 +1090,13 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -1125,7 +1108,7 @@ class Library extends Base
         }
 
         if ($media->mediaType == 'font') {
-            throw new \InvalidArgumentException(__('Sorry, Fonts do not have any editable properties.'));
+            throw new InvalidArgumentException(__('Sorry, Fonts do not have any editable properties.'));
         }
 
         $media->name = $sanitizedParams->getString('name');
@@ -1136,7 +1119,7 @@ class Library extends Base
 
         if ($sanitizedParams->getDate('expires') != null ) {
 
-            if ($sanitizedParams->getDate('expires')->format('U') > time()) {
+            if ($sanitizedParams->getDate('expires')->format('U') > Carbon::now()->format('U')) {
                 $media->expires = $sanitizedParams->getDate('expires')->format('U');
             } else {
                 throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');
@@ -1178,10 +1161,9 @@ class Library extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function tidyForm(Request $request, Response $response)
     {
@@ -1245,12 +1227,9 @@ class Library extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function tidy(Request $request, Response $response)
     {
@@ -1379,12 +1358,10 @@ class Library extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function download(Request $request, Response $response)
     {
@@ -1435,7 +1412,7 @@ class Library extends Base
         }
 
         if ($widget->getModule()->regionSpecific == 1) {
-            throw new NotFoundException('Cannot download region specific module');
+            throw new NotFoundException(__('Cannot download region specific module'));
         }
 
         $this->getLog()->debug('About to call download for Widget: ' . $widget->getModuleType());
@@ -1451,7 +1428,12 @@ class Library extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface
-     * @throws XiboException
+     * @throws ConfigurationException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function fontCss(Request $request, Response $response)
     {
@@ -1463,14 +1445,16 @@ class Library extends Base
         $httpCache = $this->cacheProvider;
         // Issue some headers
         $response = $httpCache->withEtag($response, md5($css['css']));
-        $response = $response->withHeader('Content-Type', 'text/css');
-
+        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/fontcss_' . Random::generateString();
         // Return the CSS to the browser as a file
-        $out = fopen('php://output', 'w');
+        $out = fopen($tempFileName, 'w');
         fputs($out, $css['css']);
         fclose($out);
 
         $this->setNoOutput(true);
+
+        $response = $response->withHeader('Content-Type', 'text/css')
+                             ->withBody(new Stream(fopen($tempFileName, 'r')));
 
         return $this->render($request, $response);
     }
@@ -1481,13 +1465,11 @@ class Library extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function fontList(Request $request, Response $response)
     {
@@ -1506,7 +1488,11 @@ class Library extends Base
      * Get font CKEditor config
      * @param Request|null $request
      * @return string
-     * @throws XiboException
+     * @throws ConfigurationException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function fontCKEditorConfig(Request $request = null)
     {
@@ -1522,9 +1508,10 @@ class Library extends Base
      * @param Request|null $request
      * @return array
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws XiboException
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function installFonts($options = [], Request $request = null)
     {
@@ -1663,6 +1650,8 @@ class Library extends Base
 
     /**
      * Installs all files related to the enabled modules
+     * @throws NotFoundException
+     * @throws GeneralException
      */
     public function installAllModuleFiles()
     {
@@ -1700,7 +1689,7 @@ class Library extends Base
                 continue;
 
             // Has this file been written to recently?
-            if (filemtime($libraryTemp . DIRECTORY_SEPARATOR . $item) > (time() - 86400)) {
+            if (filemtime($libraryTemp . DIRECTORY_SEPARATOR . $item) > Carbon::now()->subSeconds(86400)->format('U')) {
                 $this->getLog()->debug('Skipping active file: ' . $item);
                 continue;
             }
@@ -1713,11 +1702,13 @@ class Library extends Base
 
     /**
      * Removes all expired media files
+     * @throws NotFoundException
+     * @throws GeneralException
      */
     public function removeExpiredFiles()
     {
         // Get a list of all expired files and delete them
-        foreach ($this->mediaFactory->query(null, array('expires' => time(), 'allModules' => 1, 'length' => 100)) as $entry) {
+        foreach ($this->mediaFactory->query(null, array('expires' => Carbon::now()->format('U'), 'allModules' => 1, 'length' => 100)) as $entry) {
             /* @var \Xibo\Entity\Media $entry */
             // If the media type is a module, then pretend its a generic file
             $this->getLog()->info('Removing Expired File %s', $entry->name);
@@ -1727,8 +1718,15 @@ class Library extends Base
     }
 
     /**
-     * @param $mediaId
-     * @throws LibraryFullException
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @throws AccessDeniedException
+     * @throws ConfigurationException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function mcaas(Request $request, Response $response, $id)
     {
@@ -1788,15 +1786,13 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function tag(Request $request, Response $response, $id)
     {
@@ -1812,7 +1808,7 @@ class Library extends Base
         $tags = $this->getSanitizer($request->getParams())->getArray('tag');
 
         if (count($tags) <= 0) {
-            throw new \InvalidArgumentException(__('No tags to assign'));
+            throw new InvalidArgumentException(__('No tags to assign'));
         }
 
         foreach ($tags as $tag) {
@@ -1864,15 +1860,13 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function untag(Request $request, Response $response, $id)
     {
@@ -1913,12 +1907,10 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function usageForm(Request $request, Response $response, $id)
     {
@@ -1964,16 +1956,15 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function usage(Request $request, Response $response, $id)
     {
         $media = $this->mediaFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if (!$this->getUser()->checkViewable($media)) {
             throw new AccessDeniedException();
@@ -1983,23 +1974,24 @@ class Library extends Base
         $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter(['mediaId' => $id], $request));
 
         // have we been provided with a date/time to restrict the scheduled events to?
-        $mediaDate = $this->getSanitizer($request->getParams())->getDate('mediaEventDate');
+        $mediaFromDate = $sanitizedParams->getDate('mediaEventFromDate');
+        $mediaToDate = $sanitizedParams->getDate('mediaEventToDate');
 
-        if ($mediaDate !== null) {
-            // Get a list of scheduled events that this mediaId is used on, based on the date provided
-            $toDate = $mediaDate->copy()->addDay();
+        // Media query array
+        $mediaQuery = [
+            'mediaId' => $id
+        ];
 
-            $events = $this->scheduleFactory->query(null, [
-                'futureSchedulesFrom' => $mediaDate->format('U'),
-                'futureSchedulesTo' => $toDate->format('U'),
-                'mediaId' => $id
-            ]);
-        } else {
-            // All scheduled events for this mediaId
-            $events = $this->scheduleFactory->query(null, [
-                'mediaId' => $id
-            ]);
+        if ($mediaFromDate !== null) {
+            $mediaQuery['futureSchedulesFrom'] = $mediaFromDate->format('U');
         }
+
+        if ($mediaToDate !== null) {
+            $mediaQuery['futureSchedulesTo'] = $mediaToDate->format('U');
+        }
+
+        // Query for events
+        $events = $this->scheduleFactory->query(null, $mediaQuery);
 
         // Total records returned from the schedules query
         $totalRecords = $this->scheduleFactory->countLast();
@@ -2009,10 +2001,10 @@ class Library extends Base
 
             // Generate this event
             // Assess the date?
-            if ($mediaDate !== null) {
+            if ($mediaFromDate !== null && $mediaToDate !== null) {
                 try {
-                    $scheduleEvents = $row->getEvents($mediaDate, $toDate);
-                } catch (XiboException $e) {
+                    $scheduleEvents = $row->getEvents($mediaFromDate, $mediaToDate);
+                } catch (GeneralException $e) {
                     $this->getLog()->error('Unable to getEvents for ' . $row->eventId);
                     continue;
                 }
@@ -2081,12 +2073,10 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function usageLayouts(Request $request, Response $response, $id)
     {
@@ -2143,12 +2133,10 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function copyForm(Request $request, Response $response, $id)
     {
@@ -2230,15 +2218,13 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function copy(Request $request, Response $response, $id)
     {
@@ -2305,12 +2291,10 @@ class Library extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function isUsed(Request $request, Response $response, $id)
     {
@@ -2339,11 +2323,8 @@ class Library extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function uploadFromUrlForm(Request $request, Response $response)
     {
@@ -2423,13 +2404,12 @@ class Library extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws LibraryFullException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function uploadFromUrl(Request $request, Response $response)
     {
@@ -2443,11 +2423,11 @@ class Library extends Base
         $type = $sanitizedParams->getString('type');
         $optionalName = $sanitizedParams->getString('optionalName');
         $extension = $sanitizedParams->getString('extension');
-        $enableStat = $sanitizedParams->getString('enableStat', $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT'));
+        $enableStat = $sanitizedParams->getString('enableStat', ['default' => $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT')]);
         
         if ($sanitizedParams->getDate('expires') != null ) {
 
-            if ($sanitizedParams->getDate('expires')->format('U') > time()) {
+            if ($sanitizedParams->getDate('expires')->format('U') > Carbon::now()->format('U')) {
                 $expires = $sanitizedParams->getDate('expires')->format('U');
             } else {
                 throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');
@@ -2493,7 +2473,7 @@ class Library extends Base
         }
 
         // if we were provided with optional Media name set it here, otherwise get it from pathinfo
-        if (isset($optionalName)) {
+        if (!empty($optionalName)) {
             $name = $optionalName;
         } else {
             // get the media name from pathinfo

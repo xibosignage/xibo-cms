@@ -24,11 +24,11 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\SavedReport;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class SavedReportFactory
@@ -50,7 +50,7 @@ class SavedReportFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
@@ -117,6 +117,7 @@ class SavedReportFactory extends BaseFactory
      * @param null $sortOrder
      * @param array $filterBy
      * @return SavedReport[]
+     * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
     {
@@ -161,7 +162,7 @@ class SavedReportFactory extends BaseFactory
         // Like
         if ($sanitizedFilter->getString('saveAs') != '') {
             $terms = explode(',', $sanitizedFilter->getString('saveAs'));
-            $this->nameFilter('saved_report', 'saveAs', $terms, $body, $params);
+            $this->nameFilter('saved_report', 'saveAs', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         if ($sanitizedFilter->getInt('savedReportId', ['default' => -1]) != -1) {

@@ -64,13 +64,11 @@
                                 <div class="XiboFilter">
                                     <div class="FilterDiv" id="Filter">
                                         <form class="form-inline" id="usageReportForm">
-                                            {% set title %}{% trans "Date" %}{% endset %}
-                                            <input type="hidden" name="mediaEventDate" id="mediaEventDate" />
-                                            <div class="input-group">
-                                                <span class="input-group-addon">{{ title }}</span>
-                                                <input class="form-control" name="mediaEventDateLink" type="text" id="mediaEventDateLink" data-link-field="mediaEventDate" data-link-format="yyyy-mm-dd hh:ii:ss" readonly/>
-                                                <span id="dateClearButton" class="input-group-addon" role="button">X</span>
-                                            </div>
+                                            {% set title %}{% trans "From Date" %}{% endset %}
+                                            {{ inline.dateTime("mediaEventFromDate", title, "", helpText, "", "") }}
+
+                                            {% set title %}{% trans "To Date" %}{% endset %}
+                                            {{ inline.dateTime("mediaEventToDate", title, "", helpText, "", "") }}
                                         </form>
                                     </div>
                                 </div>

@@ -26,7 +26,6 @@ use Slim\Views\Twig;
 use Xibo\Entity\Page;
 use Xibo\Entity\Permission;
 use Xibo\Entity\User;
-use Xibo\Exception\AccessDeniedException;
 use Xibo\Factory\PageFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\UserFactory;
@@ -34,8 +33,9 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class UserGroup
@@ -70,7 +70,6 @@ class UserGroup extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param UserGroupFactory $userGroupFactory
      * @param PageFactory $pageFactory
@@ -78,9 +77,9 @@ class UserGroup extends Base
      * @param UserFactory $userFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $userGroupFactory, $pageFactory, $permissionFactory, $userFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $userGroupFactory, $pageFactory, $permissionFactory, $userFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->userGroupFactory = $userGroupFactory;
         $this->pageFactory = $pageFactory;
@@ -93,11 +92,8 @@ class UserGroup extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     function displayPage(Request $request, Response $response)
     {
@@ -140,11 +136,8 @@ class UserGroup extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     function grid(Request $request, Response $response)
     {
@@ -156,7 +149,6 @@ class UserGroup extends Base
         ];
 
         $groups = $this->userGroupFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filterBy, $request));
-        $this->getLog()->debug('GROUP GRID RESULTS ' . json_encode($groups));
         foreach ($groups as $group) {
             /* @var \Xibo\Entity\UserGroup $group */
 
@@ -166,7 +158,7 @@ class UserGroup extends Base
                 continue;
 
             // we only want to show certain buttons, depending on the user logged in
-            if ($this->isEditable($group, $request)) {
+            if ($this->isEditable($group)) {
                 // Edit
                 $group->buttons[] = array(
                     'id' => 'usergroup_button_edit',
@@ -206,7 +198,8 @@ class UserGroup extends Base
                     $group->buttons[] = array(
                         'id' => 'usergroup_button_page_security',
                         'url' => $this->urlFor($request,'group.acl.form', ['id' => $group->groupId]),
-                        'text' => __('Page Security')
+                        'text' => __('Features'),
+                        'title' => __('Turn Features on/off for this User')
                     );
                 }
             }
@@ -224,11 +217,8 @@ class UserGroup extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     function addForm(Request $request, Response $response)
     {
@@ -248,18 +238,16 @@ class UserGroup extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function editForm(Request $request, Response $response, $id)
     {
         $group = $this->userGroupFactory->getById($id);
 
-        if (!$this->isEditable($group, $request)) {
+        if (!$this->isEditable($group)) {
             throw new AccessDeniedException();
         }
 
@@ -280,18 +268,16 @@ class UserGroup extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function deleteForm(Request $request, Response $response, $id)
     {
         $group = $this->userGroupFactory->getById($id);
 
-        if (!$this->isEditable($group, $request)) {
+        if (!$this->isEditable($group)) {
             throw new AccessDeniedException();
         }
 
@@ -354,11 +340,11 @@ class UserGroup extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     function add(Request $request, Response $response)
     {
@@ -448,12 +434,12 @@ class UserGroup extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function edit(Request $request, Response $response, $id)
     {
@@ -499,12 +485,10 @@ class UserGroup extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      * @SWG\Delete(
      *  path="/group/{userGroupId}",
      *  operationId="userGroupDelete",
@@ -553,15 +537,15 @@ class UserGroup extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
+     * @param int|null $userId
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function aclForm(Request $request, Response $response, $id)
+    public function aclForm(Request $request, Response $response, $id, $userId = null)
     {
         // Check permissions to this function
         if (!$this->getUser()->isSuperAdmin()) {
@@ -570,17 +554,23 @@ class UserGroup extends Base
 
         // Use the factory to get all the entities
         $entities = $this->pageFactory->query();
+        $groupPermissions = [];
 
         // Load the Group we are working on
         // Get the object
         if ($id == 0) {
-            throw new \InvalidArgumentException(__('ACL form requested without a User Group'));
+            throw new InvalidArgumentException(__('ACL form requested without a User Group'));
         }
 
         $group = $this->userGroupFactory->getById($id);
 
         // Get all permissions for this user and this object
         $permissions = $this->permissionFactory->getByGroupId('Page', $id);
+
+        // Get all Page permissions for groups our User is assigned to
+        if ($userId !== null) {
+            $groupPermissions = $this->permissionFactory->getByUserId('Xibo\Entity\Page', $userId);
+        }
 
         $checkboxes = [];
 
@@ -589,6 +579,7 @@ class UserGroup extends Base
             // Check to see if this entity is set or not
             $entityId = $entity->getId();
             $viewChecked = 0;
+            $groupViewChecked = 0;
 
             foreach ($permissions as $permission) {
                 /* @var Permission $permission */
@@ -598,22 +589,31 @@ class UserGroup extends Base
                 }
             }
 
+            foreach ($groupPermissions as $groupPermission) {
+                /* @var Permission $permission */
+                if ($groupPermission->objectId == $entityId && $groupPermission->view == 1) {
+                    $groupViewChecked = 1;
+                    break;
+                }
+            }
+
             // Store this checkbox
             $checkbox = [
                 'id' => $entityId,
                 'name' => $entity->title,
                 'value_view' => $entityId . '_view',
-                'value_view_checked' => (($viewChecked == 1) ? 'checked' : '')
+                'value_view_checked' => (($viewChecked == 1) ? 'checked' : ''),
+                'value_view_group_checked' => (($groupViewChecked == 1) ? 'checked' : '')
             ];
 
             $checkboxes[] = $checkbox;
         }
 
         $data = [
-            'title' => sprintf(__('ACL for %s'), $group->group),
             'groupId' => $id,
             'group' => $group->group,
             'permissions' => $checkboxes,
+            'isUserSpecific' => $group->isUserSpecific,
             'help' => $this->getHelp()->link('User', 'Acl')
         ];
 
@@ -629,12 +629,10 @@ class UserGroup extends Base
      * @param Response $response
      * @param int $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function acl(Request $request, Response $response, $id)
     {
@@ -646,7 +644,7 @@ class UserGroup extends Base
         // Load the Group we are working on
         // Get the object
         if ($id == 0) {
-            throw new \InvalidArgumentException(__('ACL form requested without a User Group'));
+            throw new InvalidArgumentException(__('ACL form requested without a User Group'));
         }
 
         $group = $this->userGroupFactory->getById($id);
@@ -721,18 +719,16 @@ class UserGroup extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function membersForm(Request $request, Response $response, $id)
     {
         $group = $this->userGroupFactory->getById($id);
 
-        if (!$this->isEditable($group, $request)) {
+        if (!$this->isEditable($group)) {
             throw new AccessDeniedException();
         }
 
@@ -813,12 +809,12 @@ class UserGroup extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function assignUser(Request $request, Response $response, $id)
     {
@@ -828,11 +824,11 @@ class UserGroup extends Base
         $group = $this->userGroupFactory->getById($id);
         $group->load();
 
-        if (!$this->isEditable($group, $request)) {
+        if (!$this->isEditable($group)) {
             throw new AccessDeniedException();
         }
 
-        $users = $sanitizedPaarams->getIntArray('userId');
+        $users = $sanitizedPaarams->getIntArray('userId', ['default' => []]);
 
         foreach ($users as $userId) {
 
@@ -849,7 +845,7 @@ class UserGroup extends Base
         }
 
         // Check to see if unassign has been provided.
-        $users = $sanitizedPaarams->getIntArray('unassignUserId');
+        $users = $sanitizedPaarams->getIntArray('unassignUserId', ['default' => []]);
 
         foreach ($users as $userId) {
 
@@ -911,19 +907,19 @@ class UserGroup extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function unassignUser(Request $request, Response $response, $id)
     {
         $group = $this->userGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->isEditable($group, $request)) {
+        if (!$this->isEditable($group)) {
             throw new AccessDeniedException();
         }
 
@@ -950,18 +946,16 @@ class UserGroup extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function copyForm(Request $request, Response $response, $id)
     {
         $group = $this->userGroupFactory->getById($id);
 
-        if (!$this->isEditable($group, $request)) {
+        if (!$this->isEditable($group)) {
             throw new AccessDeniedException();
         }
 
@@ -1017,12 +1011,12 @@ class UserGroup extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function copy(Request $request, Response $response, $id)
     {
@@ -1030,7 +1024,7 @@ class UserGroup extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check we have permission to view this group
-        if (!$this->isEditable($group, $request)) {
+        if (!$this->isEditable($group)) {
             throw new AccessDeniedException();
         }
 
@@ -1062,7 +1056,6 @@ class UserGroup extends Base
 
     /**
      * @param \Xibo\Entity\UserGroup $group
-     * @param Request $request
      * @return bool
      */
     private function isEditable($group)

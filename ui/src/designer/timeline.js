@@ -483,6 +483,7 @@ Timeline.prototype.render = function(layout) {
 
     const app = this.parent;
     const self = this;
+    const readOnlyModeOn = (app.readOnlyMode != undefined && app.readOnlyMode === true);
 
     // If starting zoom is not defined, calculate its value based on minimum widget duration
     if(this.properties.zoom === -1) {
@@ -511,6 +512,7 @@ Timeline.prototype.render = function(layout) {
     const html = timelineTemplate({
         layout: layout, 
         properties: this.properties,
+        readOnlyModeOn: readOnlyModeOn,
         trans: timelineTrans,
         timeruler: this.timeruler
     });
@@ -640,10 +642,18 @@ Timeline.prototype.render = function(layout) {
     this.DOMObject.find('.designer-widget.editable .editProperty').click(function(e) {
         e.stopPropagation();
 
-        const parent = $(this).parents('.designer-widget.editable:first');
-        const widget = lD.getElementByTypeAndId(parent.data('type'), parent.attr('id'), parent.data('widgetRegion'));
+        const $element = $(this);
+        const $parent = $element.parents('.designer-widget.editable:first');
+        const widget = lD.getElementByTypeAndId($parent.data('type'), $parent.attr('id'), $parent.data('widgetRegion'));
+        const property = $element.data('property');
+        const propertyType = $(this).data('propertyType');
 
-        widget.editPropertyForm($(this).data('property'), $(this).data('propertyType'));
+        if(property == 'Action') {
+            lD.propertiesPanel.openTabOnRender = 'a[href="#actionTab"]';
+            lD.selectObject($parent, true);
+        } else {
+            widget.editPropertyForm(property, propertyType);
+        }
     });
     
     
@@ -755,9 +765,6 @@ Timeline.prototype.render = function(layout) {
     if(!$.isEmptyObject(this.scrollOnLoad)) {
         this.scrollToWidget(this.scrollOnLoad);
     }
-
-    // Initialize tooltips
-    app.common.reloadTooltips(this.DOMObject);
 };
 
 /**

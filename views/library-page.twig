@@ -23,6 +23,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{{ "Library"|trans }} | {% endblock %}
+
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="btns" href="#" id="libraryUploadForm" title="{% trans "Add a new media item to the library" %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Media" %}</a></li>
@@ -46,15 +48,22 @@
                             {% set title %}{% trans "ID" %}{% endset %}
                             {{ inline.number("mediaId", title) }}
 
-                            {% set title %}{% trans "Name" %}{% endset %}
-                            {{ inline.input("media", title) }}
+                            <div class="form-group ">
+                                <label class="control-label" title="" for="media" accesskey="">{% trans "Name" %}</label>
+                                <div>
+                                    <div class="input-group">
+                                        <input class="form-control" name="media" type="text" id="media" value="">
+                                        <span class="input-group-addon">
+                                            <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
 
                             {% set title %}{% trans "Tags" %}{% endset %}
+                            {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
                             {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                            {{ inline.inputWithTags("tags", title, null, helpText) }}
-
-                            {% set title %}{% trans "Exact match?" %}{% endset %}
-                            {{ inline.checkbox("exactTags", title) }}
+                            {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
 
                             {% set attributes = [
                                 { name: "data-allow-clear", value: "true" },
@@ -181,7 +190,7 @@
                             if (type != "display")
                                 return data.duration;
 
-                            return moment().startOf("day").seconds(data.duration).format("H:mm:ss");
+                            return dataTableTimeFromSeconds(data.duration, type);
                         }
                     },
                     {"data": "duration", "visible": false},
@@ -212,7 +221,7 @@
                                 icon = "fa-times";
 
 
-                            return "<span class='fa " + icon + "' title='" + (data.releasedDescription) + "'></span>";
+                            return '<span class="fa ' + icon + '" title="' + (data.releasedDescription) + '"></span>';
                         },
                         "visible": false
                     },
@@ -229,7 +238,7 @@
                             else
                                 icon = "fa-level-down";
 
-                            return "<span class='fa " + icon + "' title='" + (data.enableStatDescription) + "'></span>";
+                            return '<span class="fa ' + icon + '" title="' + (data.enableStatDescription) + '"></span>';
                         }
                     },
                     {
@@ -481,22 +490,6 @@
             usageTable.on('draw', dataTableDraw);
             usageTable.on('processing.dt', dataTableProcessing);
 
-            $("#mediaEventDateLink").datetimepicker({
-                format: bootstrapDateFormatDateOnly,
-                autoclose: true,
-                language: language,
-                calendarType: calendarType,
-                minView: 2,
-                todayHighlight: true
-            });
-
-            $("#dateClearButton").on("click", function () {
-                $("#mediaEventDateLink").val("")
-                $("#mediaEventDate").val("");
-                $("#mediaEventDateLink").datetimepicker("update");
-                usageTable.ajax.reload();
-            });
-
             // Layouts tab
             var usageTableLayouts = $("#usageReportLayoutsTable").DataTable({
                 "language": dataTablesLanguage,
@@ -521,16 +514,6 @@
 
             usageTableLayouts.on('draw', dataTableDraw);
             usageTableLayouts.on('processing.dt', dataTableProcessing);
-
-            // Tidy up timepickers on modal close
-            if(dialog.hasClass('modal')) {
-                dialog.on("hide.bs.modal", function(e) {
-                    if(e.namespace === 'bs.modal') {
-                            // Remove colour pickers
-                            dialog.find("#mediaEventDateLink").datetimepicker('remove');
-                    }
-                });
-            }
         }
 
         function setDefaultMultiSelectFormOpen(dialog) {

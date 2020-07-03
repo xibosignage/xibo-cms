@@ -11,7 +11,7 @@
     {{else}}
         {{!-- Draw widgets --}}
         {{#each widgets}}
-            {{> timeline-widget}}
+            {{> timeline-widget trans=../trans}}
         {{/each}}
         
         {{#if loop}}
@@ -34,8 +34,8 @@
         {{#each widgets}}
             <div class="designer-region-overlay-step"
                 data-position="{{@index}}"
-                data-toggle="tooltip" data-container="body"
-                title="{{../trans.addToThisPosition}}"></div>
+                data-toggle="tooltip" data-container="#layout-editor"
+                data-title="{{../trans.addToThisPosition}}"></div>
             <div class="designer-region-overlay-dummy"
                 style="width: calc({{ durationPercentage }}% - 14px);">
             </div>

@@ -7,73 +7,90 @@
 
 
 namespace Xibo\Tests\Middleware;
-
-use Slim\Middleware;
-use Xibo\Exception\XiboException;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Server\MiddlewareInterface as Middleware;
+use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Slim\App;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Service\DisplayNotifyService;
+use Xibo\Service\PlayerActionService;
 use Xibo\Tests\Helper\MockPlayerActionService;
 
 /**
  * Class TestXmr
  * @package Xibo\Tests\Middleware
  */
-class TestXmr extends Middleware
+class TestXmr implements Middleware
 {
+    /* @var App $app */
+    private $app;
+
     /**
-     * Call
+     * Xmr constructor.
+     * @param $app
      */
-    public function call()
+    public function __construct($app)
     {
-        $app = $this->getApplication();
+        $this->app = $app;
+    }
 
-        $app->hook('slim.before', function() {
+    /**
+     * Process
+     * @param Request $request
+     * @param RequestHandler $handler
+     * @return Response
+     */
+    public function process(Request $request, RequestHandler $handler): Response
+    {
+        $app = $this->app;
 
-            $app = $this->app;
+        self::setXmr($app);
 
-            self::setXmr($app);
-        });
-
-        $this->next->call();
+        // Pass along the request
+        $response = $handler->handle($request);
 
         // Handle display notifications
-        if ($app->displayNotifyService != null) {
+        if ($app->getContainer()->get('displayNotifyService') != null) {
             try {
-                $app->displayNotifyService->processQueue();
-            } catch (XiboException $e) {
-                $app->logService->error('Unable to Process Queue of Display Notifications due to %s', $e->getMessage());
+                $app->getContainer()->get('displayNotifyService')->processQueue();
+            } catch (GeneralException $e) {
+                $app->getContainer()->get('logger')->error('Unable to Process Queue of Display Notifications due to %s', $e->getMessage());
             }
         }
 
         // Re-terminate any DB connections
-        $app->store->close();
+        $app->getContainer()->get('store')->close();
+
+        return $response;
     }
 
     /**
      * Set XMR
-     * @param \Slim\Slim $app
+     * @param \Slim\App $app
      * @param bool $triggerPlayerActions
      */
     public static function setXmr($app, $triggerPlayerActions = true)
     {
         // Player Action Helper
-        $app->container->singleton('playerActionService', function() use ($app, $triggerPlayerActions) {
+        $app->getContainer()->set('playerActionService', function() use ($app, $triggerPlayerActions) {
             return new MockPlayerActionService(
-                $app->configService,
-                $app->logService,
-                false);
+                $app->getContainer()->get('configService'),
+                $app->getContainer()->get('logService'),
+                false
+            );
         });
 
         // Register the display notify service
-        $app->container->singleton('displayNotifyService', function () use ($app) {
+        $app->getContainer()->set('displayNotifyService', function () use ($app) {
             return new DisplayNotifyService(
-                $app->configService,
-                $app->logService,
-                $app->store,
-                $app->pool,
-                $app->playerActionService,
-                $app->dateService,
-                $app->scheduleFactory,
-                $app->dayPartFactory
+                $app->getContainer()->get('configService'),
+                $app->getContainer()->get('logService'),
+                $app->getContainer()->get('store'),
+                $app->getContainer()->get('pool'),
+                $app->getContainer()->get('playerActionService'),
+                $app->getContainer()->get('scheduleFactory'),
+                $app->getContainer()->get('dayPartFactory')
             );
         });
     }

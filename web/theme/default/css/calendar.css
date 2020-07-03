@@ -19,28 +19,46 @@
  */
 
  .xibo-calendar-controls {
- 	margin-left: 10px;
+     margin-left: 10px;
+     line-height: 0;
  }
  
  
  .xibo-calendar-controls #dateInput {
- 	background: white;
     border: none;
     padding: 0;
     margin: 0;
+    height: 34px;
  }
  
  .xibo-calendar-controls #dateInput .input-group-addon {
- 	color: #428bca;
- 	width: 0px;
- 	font-size: 14px;
+    color: #428bca;
+    background-color: white;
+    width: 0px;
+    font-size: 14px;
     font-weight: 400;
     line-height: 1.42857143;
-    background: none;
- 	border-radius: 4px;
+    border-radius: 4px;
     border: 1px solid #ccc;
  }
+
+ .xibo-calendar-controls #dateInput input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    padding: 0;
+    border: none;
+ }
  
+ .xibo-calendar-controls.dropdown {
+     min-width: 120px;
+ }
+
+ @media (max-width: 1400px) {
+    .xibo-calendar-controls.dropdown {
+        max-width: 360px;
+    }
+ }
 
  #cal-week-box {
  	z-index: 1000;
@@ -82,6 +100,7 @@
 
 .agenda-panel .panel-body {
     background-color: #f5f5f5;
+    padding: 10px 0 0 0;
 }
 
 .agenda-panel .panel-heading {
@@ -124,6 +143,55 @@
     cursor: default;
 }
 
+.agenda-panel .dataTables_wrapper {
+    padding-top: 10px;
+    float: left;
+    width: 100%;
+}
+
+.agenda-panel .dataTables_wrapper:not(:last-child) {
+    border-bottom: 2px solid #e3e3e3;
+}
+
+@media (min-width: 1200px) {
+    .agenda-panel .agenda-col {
+        padding: 0 5px;
+    }
+
+    .agenda-panel .agenda-col.col-lg-3 {
+        margin-top: 41px;
+    }
+
+    .agenda-panel .dataTables_wrapper .col-sm-12 {
+        padding: 0;
+    }
+
+    .agenda-panel .table>tbody>tr>td, .agenda-panel .table>tbody>tr>th, .agenda-panel .table>tfoot>tr>td, .agenda-panel .table>tfoot>tr>th, .agenda-panel .table>thead>tr>td, .agenda-panel .table>thead>tr>th {
+        padding: 4px;
+    }
+
+    .agenda-panel table.dataTable thead > tr > th.sorting_asc, .agenda-panel table.dataTable thead > tr > th.sorting_desc, .agenda-panel table.dataTable thead > tr > th.sorting, .agenda-panel table.dataTable thead > tr > td.sorting_asc, .agenda-panel table.dataTable thead > tr > td.sorting_desc, .agenda-panel table.dataTable thead > tr > td.sorting {
+        padding-right: 25px;
+    }
+
+    .agenda-panel table.dataTable thead .sorting:after, .agenda-panel table.dataTable thead .sorting_asc:after, .agenda-panel table.dataTable thead .sorting_desc:after, .agenda-panel table.dataTable thead .sorting_asc_disabled:after, .agenda-panel table.dataTable thead .sorting_desc_disabled:after {
+        bottom: 6px;
+        right: 6px;
+    }
+
+    .cal-context .tab-pane {
+        padding: 25px 5px 5px 5px !important;
+    }
+
+    .agenda-panel .dataTables_wrapper:first-child {
+        padding-top: 0;
+    }
+
+    .agenda-panel .dataTables_wrapper > .row:first-of-type > div {
+        margin: 0;
+    }
+}
+
 .cal-event-time-bar .slider.slider-horizontal {
     float: left;
     width: calc(100% - 68px);
@@ -146,12 +214,26 @@
     font-size: 14px;
 }
 
-.cal-event-time-bar {
+.cal-event-agenda-filter {
     margin-top: 30px;
 }
 
+.cal-event-location {
+    display: table;
+    width: inherit;
+    margin: 6px 0;
+}
+
+.cal-event-location > button, .cal-event-location > div {
+    margin: 0 2px;
+}
+
+.cal-event-location > button {
+    width: 40px;
+}
+
 .cal-context .tab-pane {
-    padding-top: 35px;
+    padding-top: 25px;
 }
 
 .cal-event-breadcrumb-trail #content {

@@ -1,16 +1,31 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (Help.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
 namespace Xibo\Entity;
 use Respect\Validation\Validator as v;
-use Xibo\Exception\InvalidArgumentException;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Help
@@ -66,6 +81,9 @@ class Help
         return 1;
     }
 
+    /**
+     * @throws InvalidArgumentException
+     */
     public function validate()
     {
         if (!v::stringType()->notEmpty()->length(1, 254)->validate($this->topic))
@@ -78,6 +96,10 @@ class Help
             throw new InvalidArgumentException(__('Link is a required field. It must be between 1 and 254 characters.'), 'link');
     }
 
+    /**
+     * @param bool $validate
+     * @throws InvalidArgumentException
+     */
     public function save($validate = true)
     {
         if ($validate)
@@ -91,7 +113,7 @@ class Help
 
     public function delete()
     {
-        $this->getStore()->update('DELETE FROM `help` WHERE HelpID = :helpid', [
+        $this->getStore()->update('DELETE FROM `help` WHERE HelpID = :helpId', [
             'helpId' => $this->helpId
         ]);
     }
@@ -107,7 +129,7 @@ class Help
 
     private function edit()
     {
-        $this->getStore()->update('UPDATE `help` SET Topic = :topic, Category = :category, Link = :link WHERE HelpID = :helpid', [
+        $this->getStore()->update('UPDATE `help` SET Topic = :topic, Category = :category, Link = :link WHERE HelpID = :helpId', [
             'helpId' => $this->helpId,
             'topic' => $this->topic,
             'category' => $this->category,

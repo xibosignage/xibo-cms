@@ -36,7 +36,7 @@ namespace Xibo\Widget;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class Countdown
@@ -93,7 +93,7 @@ class Countdown extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-countdown-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
@@ -271,6 +271,12 @@ class Countdown extends ModuleWidget
     {
         $data = [];
 
+        // Set the null values for template variables.
+        $mainTemplate = null;
+        $styleSheet = null;
+        $widgetOriginalWidth = null;
+        $widgetOriginalHeight = null;
+
         // Replace the View Port Width?
         $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
 
@@ -280,7 +286,7 @@ class Countdown extends ModuleWidget
         if($this->getOption('overrideTemplate') == 0) {
             
             $template = $this->getTemplateById($this->getOption('templateId'));
-            
+
             if (isset($template)) {
                 $mainTemplate = $template['template'];
                 $styleSheet = $template['css'];
@@ -298,7 +304,7 @@ class Countdown extends ModuleWidget
         // Run through each item and substitute with the template
         $mainTemplate = $this->parseLibraryReferences($this->isPreview(), $mainTemplate);
 
-        // Make subsitutions
+        // Make substitutions
         $mainTemplate = $this->makeSubstitutions($mainTemplate);
 
         // Parse translations
@@ -322,8 +328,7 @@ class Countdown extends ModuleWidget
         $headContent = '';
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . ($this->isPreview() ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
-        <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . ($this->isPreview() ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
         
         // Add the CSS if it isn't empty, and replace the wallpaper
         if ($styleSheet != '') {
@@ -335,7 +340,7 @@ class Countdown extends ModuleWidget
         $data['head'] = $headContent;
 
         // Add some scripts to the JavaScript Content
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-countdown-render.js') . '"></script>';

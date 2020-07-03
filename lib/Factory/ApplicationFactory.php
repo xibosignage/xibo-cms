@@ -1,27 +1,40 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (ApplicationFactory.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 namespace Xibo\Factory;
 
-
-use League\OAuth2\Server\Util\SecureKey;
+use League\OAuth2\Server\Repositories\ClientRepositoryInterface;
 use Xibo\Entity\Application;
 use Xibo\Entity\User;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class ApplicationFactory
  * @package Xibo\Factory
  */
-class ApplicationFactory extends BaseFactory
+class ApplicationFactory extends BaseFactory implements ClientRepositoryInterface
 {
     /**
      * @var ApplicationRedirectUriFactory
@@ -35,9 +48,10 @@ class ApplicationFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param ApplicationRedirectUriFactory $applicationRedirectUriFactory
+     * @param $applicationScopeFactory
      */
     public function __construct($store, $log, $sanitizerService, $user, $applicationRedirectUriFactory, $applicationScopeFactory)
     {
@@ -56,13 +70,7 @@ class ApplicationFactory extends BaseFactory
      */
     public function create()
     {
-        $stripped = '';
         $application = $this->createEmpty();
-        // Make and ID/Secret
-        $bytes = openssl_random_pseudo_bytes(254, $strong);
-        $stripped .= str_replace(['/', '+', '='], '', base64_encode($bytes));
-        $application->secret = substr($stripped, 0, 254);
-        // Assign this user
         $application->userId = $this->getUser()->userId;
         return $application;
     }
@@ -123,6 +131,11 @@ class ApplicationFactory extends BaseFactory
         return $this->query(null, ['userId' => $userId]);
     }
 
+    /**
+     * @param null $sortOrder
+     * @param array $filterBy
+     * @return array
+     */
     public function query($sortOrder = null, $filterBy = [])
     {
         $sanitizedFilter = $this->getSanitizer($filterBy);
@@ -143,7 +156,7 @@ class ApplicationFactory extends BaseFactory
               FROM `oauth_clients`
         ';
         
-        $body .= " INNER JOIN `user` ON `user`.userId = `oauth_clients`.userId ";
+        $body .= ' INNER JOIN `user` ON `user`.userId = `oauth_clients`.userId ';
 
         if ($sanitizedFilter->getInt('userId') !== null) {
 
@@ -190,7 +203,9 @@ class ApplicationFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row);
+            $entries[] = $this->createEmpty()->hydrate($row, [
+                'intProperties' => ['isConfidential']
+            ]);
         }
 
         // Paging
@@ -200,5 +215,70 @@ class ApplicationFactory extends BaseFactory
         }
 
         return $entries;
+    }
+
+    /**
+     * @inheritDoc
+     * @return Application
+     */
+    public function getClientEntity($clientIdentifier)
+    {
+        $this->getLog()->debug('getClientEntity for clientId: ' . $clientIdentifier);
+
+        try {
+            return $this->getById($clientIdentifier)->load();
+        } catch (NotFoundException $e) {
+            $this->getLog()->debug('getClientEntity: Unable to find ' . $clientIdentifier);
+            return null;
+        }
+    }
+
+    /** @inheritDoc */
+    public function validateClient($clientIdentifier, $clientSecret, $grantType)
+    {
+        $this->getLog()->debug('validateClient for clientId: ' . $clientIdentifier . ' grant is ' . $grantType);
+
+        $client = $this->getClientEntity($clientIdentifier);
+
+        if ($client === null) {
+            $this->getLog()->debug('Client does not exist');
+            return false;
+        }
+
+        if (
+            $client->isConfidential() === true
+            && password_verify($clientSecret, $client->getHash()) === false
+        ) {
+            $this->getLog()->debug('Client secret does not match');
+            return false;
+        }
+
+        $this->getLog()->debug('Grant Type '. $grantType . ' being tested. Client is condifential = ' . $client->isConfidential());
+
+        // Check to see if this grant_type is allowed for this client
+        switch ($grantType) {
+
+            case 'authorization_code':
+                if ($client->authCode != 1) {
+                    return false;
+                }
+
+                break;
+
+            case 'client_credentials':
+            case 'mcaas':
+                if ($client->clientCredentials != 1) {
+                    return false;
+                }
+
+                break;
+
+            default:
+                return false;
+        }
+
+        $this->getLog()->debug('Grant Type is allowed.');
+
+        return true;
     }
 }

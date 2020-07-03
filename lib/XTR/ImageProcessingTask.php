@@ -21,11 +21,8 @@
  */
 
 namespace Xibo\XTR;
-use Xibo\Entity\DisplayGroup;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
-use Xibo\Factory\ScheduleFactory;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\ImageProcessingServiceInterface;
 
 /**
@@ -35,9 +32,6 @@ use Xibo\Service\ImageProcessingServiceInterface;
 class ImageProcessingTask implements TaskInterface
 {
     use TaskTrait;
-
-    /** @var DateServiceInterface */
-    private $date;
 
     /** @var ImageProcessingServiceInterface */
     private $imageProcessingService;
@@ -51,7 +45,6 @@ class ImageProcessingTask implements TaskInterface
     /** @inheritdoc */
     public function setFactories($container)
     {
-        $this->date = $container->get('dateService');
         $this->mediaFactory = $container->get('mediaFactory');
         $this->displayFactory = $container->get('displayFactory');
         $this->imageProcessingService = $container->get('imageProcessingService');

@@ -1,31 +1,44 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (DataSet.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
 namespace Xibo\Entity;
 
+use Carbon\Carbon;
+use Carbon\Factory;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\DuplicateEntityException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\Support\Sanitizer\SanitizerInterface;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\DuplicateEntityException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class DataSet
@@ -199,6 +212,18 @@ class DataSet implements \JsonSerializable
      */
     public $ignoreFirstRow;
 
+    /**
+     * @SWG\Property(description="Soft limit on number of rows per DataSet, if left empty the global DataSet row limit will be used.")
+     * @var integer
+     */
+    public $rowLimit = null;
+
+    /**
+     * @SWG\Property(description="Type of action that should be taken on next remote DataSet sync - stop, fifo or truncate")
+     * @var string
+     */
+    public $limitPolicy;
+
     /** @var array Permissions */
     private $permissions = [];
 
@@ -212,8 +237,8 @@ class DataSet implements \JsonSerializable
     /** @var array Blacklist for SQL */
     private $blackList = array(';', 'INSERT', 'UPDATE', 'SELECT', 'DELETE', 'TRUNCATE', 'TABLE', 'FROM', 'WHERE');
 
-    /** @var  SanitizerService */
-    private $sanitizer;
+    /** @var  \Xibo\Helper\SanitizerService */
+    private $sanitizerService;
 
     /** @var  ConfigServiceInterface */
     private $config;
@@ -233,33 +258,37 @@ class DataSet implements \JsonSerializable
     /** @var  DisplayFactory */
     private $displayFactory;
 
-    /** @var DateServiceInterface */
-    private $date;
-
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerInterface $sanitizer
+     * @param $sanitizerService
      * @param ConfigServiceInterface $config
      * @param PoolInterface $pool
      * @param DataSetFactory $dataSetFactory
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param PermissionFactory $permissionFactory
      * @param DisplayFactory $displayFactory
-     * @param DateServiceInterface $date
      */
-    public function __construct($store, $log, $sanitizer, $config, $pool, $dataSetFactory, $dataSetColumnFactory, $permissionFactory, $displayFactory, $date)
+    public function __construct($store, $log, $sanitizerService, $config, $pool, $dataSetFactory, $dataSetColumnFactory, $permissionFactory, $displayFactory)
     {
         $this->setCommonDependencies($store, $log);
-        $this->sanitizer = $sanitizer;
+        $this->sanitizerService = $sanitizerService;
         $this->config = $config;
         $this->pool = $pool;
         $this->dataSetFactory = $dataSetFactory;
         $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->permissionFactory = $permissionFactory;
         $this->displayFactory = $displayFactory;
-        $this->date = $date;
+    }
+
+    /**
+     * @param $array
+     * @return \Xibo\Support\Sanitizer\SanitizerInterface
+     */
+    protected function getSanitizer($array)
+    {
+        return $this->sanitizerService->getSanitizer($array);
     }
 
     /**
@@ -353,6 +382,7 @@ class DataSet implements \JsonSerializable
     /**
      * @param string[] $columns Column Names to select
      * @return array
+     * @throws InvalidArgumentException
      */
     public function getUniqueColumnValues($columns)
     {
@@ -376,8 +406,9 @@ class DataSet implements \JsonSerializable
                 }
             }
 
-            if (!$found)
-                throw new \InvalidArgumentException(__('Unknown Column ' . $heading));
+            if (!$found) {
+                throw new InvalidArgumentException(__('Unknown Column ' . $heading));
+            }
         }
         $select = rtrim($select, ',');
         // $select is safe
@@ -394,11 +425,14 @@ class DataSet implements \JsonSerializable
      */
     public function getData($filterBy = [], $options = [])
     {
-        $start = $this->sanitizer->getInt('start', ['default' => 0]);
-        $size = $this->sanitizer->getInt('size', ['default' => 0]);
-        $filter = $this->sanitizer->getString('filter');
-        $ordering = $this->sanitizer->getString('order');
-        $displayId = $this->sanitizer->getInt('displayId', ['default' => 0]);
+
+        $sanitizer = $this->getSanitizer($filterBy);
+
+        $start = $sanitizer->getInt('start', ['default' => 0]);
+        $size = $sanitizer->getInt('size', ['default' => 0]);
+        $filter = $sanitizer->getString('filter');
+        $ordering = $sanitizer->getString('order');
+        $displayId = $sanitizer->getInt('displayId', ['default' => 0]);
 
         $options = array_merge([
             'includeFormulaColumns' => true,
@@ -472,9 +506,9 @@ class DataSet implements \JsonSerializable
 
         // Filter by ID
         if (
-            $this->sanitizer->getInt('id', $filterBy) !== null) {
+            $sanitizer->getInt('id') !== null) {
             $body .= ' AND id = :id ';
-            $params['id'] = $this->sanitizer->getInt('id', $filterBy);
+            $params['id'] = $sanitizer->getInt('id');
         }
 
         // Ordering
@@ -516,6 +550,13 @@ class DataSet implements \JsonSerializable
         $limit = '';
         if ($start != 0 || $size != 0) {
             // Substitute in
+
+            // handle case where lower limit is set to > 0 and upper limit to 0 https://github.com/xibosignage/xibo/issues/2187
+            // it is with <= 0 because in some Widgets we calculate the size as upper - lower, https://github.com/xibosignage/xibo/issues/2263.
+            if ($start != 0 && $size <= 0) {
+                $size = PHP_INT_MAX;
+            }
+
             $limit = sprintf(' LIMIT %d, %d ', $start, $size);
         }
 
@@ -547,8 +588,8 @@ class DataSet implements \JsonSerializable
                                 $language = $this->config->getSetting('DEFAULT_LANGUAGE', 'en_GB');
                             }
 
-                            $this->date->setLocale($language);
-                            $value = $this->date->parse($item[$details[0]])->format($details[1]);
+                            $carbonFactory = new Factory(['locale' => $language], Carbon::class);
+                            $value = $carbonFactory->parse($item[$details[0]])->translatedFormat($details[1]);
                         }
                     } catch (\Exception $e) {
                         $this->getLog()->error('DataSet client side formula error in dataSetId ' . $this->dataSetId . ' with column formula ' . $column->formula);
@@ -658,23 +699,31 @@ class DataSet implements \JsonSerializable
      */
     public function validate()
     {
-        if (!v::stringType()->notEmpty()->length(null, 50)->validate($this->dataSet))
+        if (!v::stringType()->notEmpty()->length(null, 50)->validate($this->dataSet)) {
             throw new InvalidArgumentException(__('Name must be between 1 and 50 characters'), 'dataSet');
+        }
 
-        if ($this->description != null && !v::stringType()->length(null, 254)->validate($this->description))
+        if ($this->description != null && !v::stringType()->length(null, 254)->validate($this->description)) {
             throw new InvalidArgumentException(__('Description can not be longer than 254 characters'), 'description');
+        }
 
         // If we are a remote dataset do some additional checks
         if ($this->isRemote === 1) {
-            if (!v::stringType()->notEmpty()->validate($this->uri))
+            if (!v::stringType()->notEmpty()->validate($this->uri)) {
                 throw new InvalidArgumentException(__('A remote DataSet must have a URI.'), 'uri');
+            }
+
+            if ($this->rowLimit > $this->config->getSetting('DATASET_HARD_ROW_LIMIT')) {
+                throw new InvalidArgumentException(__('DataSet row limit cannot be larger than the CMS dataSet row limit'));
+            }
         }
 
         try {
             $existing = $this->dataSetFactory->getByName($this->dataSet, $this->userId);
 
-            if ($this->dataSetId == 0 || $this->dataSetId != $existing->dataSetId)
+            if ($this->dataSetId == 0 || $this->dataSetId != $existing->dataSetId) {
                 throw new DuplicateEntityException(sprintf(__('There is already dataSet called %s. Please choose another name.'), $this->dataSet));
+            }
         }
         catch (NotFoundException $e) {
             // This is good
@@ -708,13 +757,15 @@ class DataSet implements \JsonSerializable
     {
         $options = array_merge(['validate' => true, 'saveColumns' => true], $options);
 
-        if ($options['validate'])
+        if ($options['validate']) {
             $this->validate();
+        }
 
-        if ($this->dataSetId == 0)
+        if ($this->dataSetId == 0) {
             $this->add();
-        else
+        } else {
             $this->edit();
+        }
 
         // Columns
         if ($options['saveColumns']) {
@@ -798,10 +849,19 @@ class DataSet implements \JsonSerializable
     {
         $this->load();
 
-        if ($this->isLookup)
+        if ($this->isLookup) {
             throw new ConfigurationException(__('Lookup Tables cannot be deleted'));
+        }
 
-        // TODO: Make sure we're not used as a dependent DataSet
+        // check if any other DataSet depends on this DataSet
+        if ($this->getStore()->exists(
+            'SELECT dataSetId FROM dataset WHERE runsAfter = :runsAfter AND dataSetId <> :dataSetId',
+            [
+                'runsAfter' => $this->dataSetId,
+                'dataSetId' => $this->dataSetId
+            ])) {
+            throw new InvalidArgumentException(__('Cannot delete because this DataSet is set as dependent DataSet for another DataSet'), 'dataSetId');
+        }
 
         // Make sure we're able to delete
         if ($this->getStore()->exists('
@@ -811,7 +871,7 @@ class DataSet implements \JsonSerializable
                 AND `widgetoption`.option = \'dataSetId\'
                 AND `widgetoption`.value = :dataSetId
         ', ['dataSetId' => $this->dataSetId])) {
-            throw new InvalidArgumentException('Cannot delete because DataSet is in use on one or more Layouts.', 'dataSetId');
+            throw new InvalidArgumentException(__('Cannot delete because DataSet is in use on one or more Layouts.'), 'dataSetId');
         }
 
         // Delete Permissions
@@ -867,8 +927,8 @@ class DataSet implements \JsonSerializable
 
         // Insert the extra columns we expect for a remote DataSet
         if ($this->isRemote === 1) {
-            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `customHeaders`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`, `summarize`, `summarizeField`, `sourceId`, `ignoreFirstRow`';
-            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :customHeaders, :refreshRate, :clearRate, :runsAfter, :dataRoot, :lastSync, :summarize, :summarizeField, :sourceId, :ignoreFirstRow';
+            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `customHeaders`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`, `summarize`, `summarizeField`, `sourceId`, `ignoreFirstRow`, `rowLimit`, `limitPolicy`';
+            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :customHeaders, :refreshRate, :clearRate, :runsAfter, :dataRoot, :lastSync, :summarize, :summarizeField, :sourceId, :ignoreFirstRow, :rowLimit, :limitPolicy';
 
             $params['method'] = $this->method;
             $params['uri'] = $this->uri;
@@ -886,6 +946,8 @@ class DataSet implements \JsonSerializable
             $params['sourceId'] = $this->sourceId;
             $params['ignoreFirstRow'] = $this->ignoreFirstRow;
             $params['lastSync'] = 0;
+            $params['rowLimit'] = $this->rowLimit;
+            $params['limitPolicy'] = $this->limitPolicy;
         }
 
         // Do the insert
@@ -913,7 +975,7 @@ class DataSet implements \JsonSerializable
         ];
 
         if ($this->isRemote) {
-            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, `customHeaders` = :customHeaders, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField, `sourceId` = :sourceId, `ignoreFirstRow` = :ignoreFirstRow ';
+            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, `customHeaders` = :customHeaders, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField, `sourceId` = :sourceId, `ignoreFirstRow` = :ignoreFirstRow , `rowLimit` = :rowLimit, `limitPolicy` = :limitPolicy ';
 
             $params['method'] = $this->method;
             $params['uri'] = $this->uri;
@@ -930,6 +992,8 @@ class DataSet implements \JsonSerializable
             $params['summarizeField'] = $this->summarizeField;
             $params['sourceId'] = $this->sourceId;
             $params['ignoreFirstRow'] = $this->ignoreFirstRow;
+            $params['rowLimit'] = $this->rowLimit;
+            $params['limitPolicy'] = $this->limitPolicy;
         }
 
         $this->getStore()->update('UPDATE dataset SET ' . $sql . '  WHERE DataSetID = :dataSetId', $params);
@@ -956,7 +1020,7 @@ class DataSet implements \JsonSerializable
 
     /**
      * Rebuild the dataSet table
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function rebuild()
     {
@@ -995,7 +1059,7 @@ class DataSet implements \JsonSerializable
         $this->getLog()->debug('Adding row ' . var_export($row, true));
 
         // Update the last edit date on this dataSet
-        $this->lastDataEdit = time();
+        $this->lastDataEdit = Carbon::now()->format('U');
 
         // Build a query to insert
         $keys = array_keys($row);
@@ -1016,10 +1080,10 @@ class DataSet implements \JsonSerializable
      */
     public function editRow($rowId, $row)
     {
-        $this->getLog()->debug('Editing row %s', var_export($row, true));
+        $this->getLog()->debug(sprintf('Editing row %s', var_export($row, true)));
 
         // Update the last edit date on this dataSet
-        $this->lastDataEdit = time();
+        $this->lastDataEdit = Carbon::now()->format('U');
 
         // Params
         $params = ['id' => $rowId];
@@ -1049,7 +1113,7 @@ class DataSet implements \JsonSerializable
      */
     public function deleteRow($rowId)
     {
-        $this->lastDataEdit = time();
+        $this->lastDataEdit = Carbon::now()->format('U');
 
         $this->getStore()->update('DELETE FROM `dataset_' . $this->dataSetId . '` WHERE id = :id', [
             'id' => $rowId

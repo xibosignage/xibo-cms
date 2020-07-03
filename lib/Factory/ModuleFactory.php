@@ -24,6 +24,7 @@
 namespace Xibo\Factory;
 
 
+use Illuminate\Support\Str;
 use Psr\Container\ContainerInterface;
 use Slim\Views\Twig;
 use Xibo\Entity\Media;
@@ -31,12 +32,12 @@ use Xibo\Entity\Module;
 use Xibo\Entity\Region;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ModuleServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\ModuleWidget;
 
 /**
@@ -114,7 +115,7 @@ class ModuleFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param ModuleServiceInterface $moduleService
@@ -166,7 +167,7 @@ class ModuleFactory extends BaseFactory
     /**
      * Create a Module
      * @param string $type
-     * @return \Xibo\Widget\ModuleWidget
+     * @return ModuleWidget
      * @throws NotFoundException
      */
     public function create($type)
@@ -200,7 +201,7 @@ class ModuleFactory extends BaseFactory
     /**
      * Create a Module
      * @param string $class
-     * @return \Xibo\Widget\ModuleWidget
+     * @return ModuleWidget
      * @throws NotFoundException
      */
     public function createByClass($class)
@@ -234,7 +235,7 @@ class ModuleFactory extends BaseFactory
     /**
      * Create a Module
      * @param string $className
-     * @return \Xibo\Widget\ModuleWidget
+     * @return ModuleWidget
      */
     public function createForInstall($className)
     {
@@ -260,7 +261,7 @@ class ModuleFactory extends BaseFactory
     /**
      * Create a Module
      * @param string $moduleId
-     * @return \Xibo\Widget\ModuleWidget
+     * @return ModuleWidget
      * @throws NotFoundException
      */
     public function createById($moduleId)
@@ -286,7 +287,7 @@ class ModuleFactory extends BaseFactory
     /**
      * Create a Module with a Media Record
      * @param Media $media
-     * @return \Xibo\Widget\ModuleWidget
+     * @return ModuleWidget
      * @throws NotFoundException
      */
     public function createWithMedia($media)
@@ -301,7 +302,7 @@ class ModuleFactory extends BaseFactory
         $widget->assignMedia($media->mediaId);
 
         // Create a module
-        /* @var \Xibo\Widget\ModuleWidget $object */
+        /* @var ModuleWidget $object */
         $module = $modules[0];
         $object = $this->moduleService->get(
             $module,
@@ -331,9 +332,9 @@ class ModuleFactory extends BaseFactory
      * @param int $ownerId
      * @param int $playlistId
      * @param int $regionId
-     * @return \Xibo\Widget\ModuleWidget
-     * @throws \Xibo\Exception\NotFoundException
-     * @throws \Xibo\Exception\InvalidArgumentException
+     * @return ModuleWidget
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
      */
     public function createForWidget($type, $widgetId = 0, $ownerId = 0, $playlistId = null, $regionId = 0)
     {
@@ -369,7 +370,7 @@ class ModuleFactory extends BaseFactory
      * Create a Module using a Widget
      * @param Widget $widget
      * @param Region|null $region
-     * @return \Xibo\Widget\ModuleWidget
+     * @return ModuleWidget
      * @throws NotFoundException
      */
     public function createWithWidget($widget, $region = null)
@@ -449,7 +450,7 @@ class ModuleFactory extends BaseFactory
     /**
      * Get module by name
      * @param string $name
-     * @return ModuleWidget
+     * @return Module
      * @throws NotFoundException
      */
     public function getByType($name)
@@ -518,7 +519,7 @@ class ModuleFactory extends BaseFactory
         $modules = $this->query();
         $paths = array_map(function ($module) {
             /* @var Module $module */
-            return str_replace_first('..', PROJECT_ROOT, $module->viewPath);
+            return Str::replaceFirst('..', PROJECT_ROOT, $module->viewPath);
         }, $modules);
 
         $paths = array_unique($paths);
@@ -657,10 +658,10 @@ class ModuleFactory extends BaseFactory
             // Identification
             $module->type = strtolower($row['Module']);
 
-            $module->class = $row['class'];
-            $module->viewPath = $row['viewPath'];
-            $module->defaultDuration = $row['defaultDuration'];
-            $module->installName = $row['installName'];
+            $module->class = $parsedRow->getString('class');
+            $module->viewPath = $parsedRow->getString('viewPath');
+            $module->defaultDuration = $parsedRow->getInt('defaultDuration');
+            $module->installName = $parsedRow->getString('installName');
 
             $settings = $row['settings'];
             $module->settings = ($settings == '') ? array() : json_decode($settings, true);

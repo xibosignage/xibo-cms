@@ -23,6 +23,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{{ "User Groups"|trans }} | {% endblock %}
+
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
         {% if currentUser.isSuperAdmin() %}
@@ -40,8 +42,18 @@
                 <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-                            {% set title %}{% trans "Name" %}{% endset %}
-                            {{ inline.input("userGroup", title) }}
+
+                            <div class="form-group ">
+                                <label class="control-label" title="" for="userGroup" accesskey="">{% trans "Name" %}</label>
+                                <div>
+                                    <div class="input-group">
+                                        <input class="form-control" name="userGroup" type="text" id="userGroup" value="">
+                                        <span class="input-group-addon">
+                                            <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
                         </form>
                     </div>
                 </div>

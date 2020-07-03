@@ -25,10 +25,10 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\User;
 use Xibo\Entity\UserGroup;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class UserGroupFactory
@@ -40,7 +40,7 @@ class UserGroupFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      */
@@ -151,7 +151,6 @@ class UserGroupFactory extends BaseFactory
      * Get by User Id
      * @param int $userId
      * @return array[UserGroup]
-     * @throws NotFoundException
      */
     public function getByUserId($userId)
     {
@@ -235,7 +234,7 @@ class UserGroupFactory extends BaseFactory
         // Filter by Group Name
         if ($parsedFilter->getString('group') != null) {
             $terms = explode(',', $parsedFilter->getString('group'));
-            $this->nameFilter('group', 'group', $terms, $body, $params);
+            $this->nameFilter('group', 'group', $terms, $body, $params, ($parsedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         if ($parsedFilter->getString('exactGroup') != null) {
@@ -249,9 +248,9 @@ class UserGroupFactory extends BaseFactory
             $params['userId'] = $parsedFilter->getInt('userId');
         }
 
-        if ($parsedFilter->getInt('isUserSpecific', ['default' => -1]) != -1) {
+        if ($parsedFilter->getInt('isUserSpecific', ['default' => 0]) != -1) {
             $body .= ' AND isUserSpecific = :isUserSpecific ';
-            $params['isUserSpecific'] = $parsedFilter->getInt('isUserSpecific');
+            $params['isUserSpecific'] = $parsedFilter->getInt('isUserSpecific', ['default' => 0]);
         }
 
         if ($parsedFilter->getInt('isEveryone', ['default' => -1]) != -1) {

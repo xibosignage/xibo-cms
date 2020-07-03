@@ -2,23 +2,24 @@
 
 namespace Xibo\Report;
 
-use Slim\Http\ServerRequest as Request;
+use Carbon\Carbon;
 use MongoDB\BSON\UTCDateTime;
 use Psr\Container\ContainerInterface;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\ReportSchedule;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\SavedReportFactory;
+use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ReportServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class SummaryReport
@@ -65,12 +66,11 @@ class SummaryReport implements ReportInterface
      * @param TimeSeriesStoreInterface $timeSeriesStore
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
-     * @param DateServiceInterface $date
-     * @param SanitizerServiceInterface $sanitizer
+     * @param SanitizerService $sanitizer
      */
-    public function __construct($state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer)
+    public function __construct($state, $store, $timeSeriesStore, $log, $config, $sanitizer)
     {
-        $this->setCommonDependencies($state, $store, $timeSeriesStore, $log, $config, $date, $sanitizer);
+        $this->setCommonDependencies($state, $store, $timeSeriesStore, $log, $config, $sanitizer);
     }
 
     /** @inheritDoc */
@@ -137,9 +137,9 @@ class SummaryReport implements ReportInterface
         return [
             'template' => 'summary-report-form',
             'data' =>  [
-                'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
-                'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
-                'toDate' => $this->getDate()->getLocalDate(),
+                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
+                'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
+                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
                 'availableReports' => $this->reportService->listReports()
 
             ]
@@ -196,7 +196,8 @@ class SummaryReport implements ReportInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $filter = $sanitizedParams->getString('filter');
-        $hiddenFields = json_decode($request->getParam('hiddenFields', null), true);
+
+        $hiddenFields = json_decode($sanitizedParams->getString('hiddenFields'), true);
 
         $type = $hiddenFields['type'];
         $selectedId = $hiddenFields['selectedId'];
@@ -288,7 +289,7 @@ class SummaryReport implements ReportInterface
             'template' => 'summary-report-preview',
             'chartData' => [
                 'savedReport' => $savedReport,
-                'generatedOn' => $this->dateService->parse($savedReport->generatedOn, 'U')->format('Y-m-d H:i:s'),
+                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat()),
                 'periodStart' => isset($json['periodStart']) ? $json['periodStart'] : '',
                 'periodEnd' => isset($json['periodEnd']) ? $json['periodEnd'] : '',
                 'labels' => json_encode($json['labels']),
@@ -330,7 +331,7 @@ class SummaryReport implements ReportInterface
         $reportFilter = $sanitizedParams->getString('reportFilter');
 
         // Use the current date as a helper
-        $now = $this->getDate()->parse();
+        $now = Carbon::now();
 
         switch ($reportFilter) {
 
@@ -393,10 +394,10 @@ class SummaryReport implements ReportInterface
             case '':
             default:
                 // Expect dates to be provided.
-                $fromDt = $sanitizedParams->getDate('statsFromDt', ['default' => $this->getDate()->parse()->subDay()]);
+                $fromDt = $sanitizedParams->getDate('statsFromDt', ['default' => Carbon::now()->subDay()]);
                 $fromDt->startOfDay();
 
-                $toDt = $sanitizedParams->getDate('statsToDt', ['default' =>  $this->getDate()->parse()]);
+                $toDt = $sanitizedParams->getDate('statsToDt', ['default' =>  Carbon::now()]);
                 $toDt->addDay()->startOfDay();
 
                 // What if the fromdt and todt are exactly the same?
@@ -451,8 +452,8 @@ class SummaryReport implements ReportInterface
 
         // Return data to build chart
         return [
-            'periodStart' => $this->getDate()->getLocalDate($fromDt),
-            'periodEnd' => $this->getDate()->getLocalDate($toDt),
+            'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
             'labels' => $labels,
             'countData' => $countData,
             'durationData' => $durationData,
@@ -464,8 +465,8 @@ class SummaryReport implements ReportInterface
 
     /**
      * MySQL summary report
-     * @param \Jenssegers\Date\Date $fromDt The filter range from date
-     * @param \Jenssegers\Date\Date $toDt The filter range to date
+     * @param Carbon $fromDt The filter range from date
+     * @param Carbon $toDt The filter range to date
      * @param string $groupByFilter Grouping, byhour, byday, byweek, bymonth
      * @param $displayIds
      * @param $type
@@ -583,8 +584,8 @@ class SummaryReport implements ReportInterface
 
             return [
                 'result' => $this->getStore()->select($select, $params),
-                'periodStart' => $fromDt->format('Y-m-d H:i:s'),
-                'periodEnd' => $toDt->format('Y-m-d H:i:s')
+                'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
+                'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat())
             ];
 
         } else {
@@ -594,8 +595,8 @@ class SummaryReport implements ReportInterface
 
     /**
      * MongoDB summary report
-     * @param \Jenssegers\Date\Date $fromDt The filter range from date
-     * @param \Jenssegers\Date\Date $toDt The filter range to date
+     * @param Carbon $fromDt The filter range from date
+     * @param Carbon $toDt The filter range to date
      * @param string $groupByFilter Grouping, byhour, byday, byweek, bymonth
      * @param $displayIds
      * @param $type
@@ -604,6 +605,9 @@ class SummaryReport implements ReportInterface
      * @param $eventTag
      * @param $reportFilter
      * @return array
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     private function getSummaryReportMongoDb($fromDt, $toDt, $groupByFilter, $displayIds, $type, $layoutId, $mediaId, $eventTag, $reportFilter)
     {
@@ -627,7 +631,7 @@ class SummaryReport implements ReportInterface
                 $input = range(0, ceil($diffInDays / 30));
             } else {
                 $this->getLog()->error('Unknown Grouping Selected ' . $groupByFilter);
-                throw new InvalidArgumentException('Unknown Grouping ' . $groupByFilter, 'groupByFilter');
+                throw new InvalidArgumentException(__('Unknown Grouping ') . $groupByFilter, 'groupByFilter');
             }
 
             $filterRangeStart = new UTCDateTime($fromDt->format('U') * 1000);
@@ -685,7 +689,7 @@ class SummaryReport implements ReportInterface
                 }
             }
 
-            $this->getLog()->debug('Period start: '.$filterRangeStart->toDateTime()->format('Y-m-d H:i:s'). ' Period end: '. $filterRangeEnd->toDateTime()->format('Y-m-d H:i:s'));
+            $this->getLog()->debug('Period start: '.$filterRangeStart->toDateTime()->format(DateFormatHelper::getSystemFormat()). ' Period end: '. $filterRangeEnd->toDateTime()->format(DateFormatHelper::getSystemFormat()));
 
             // Type filter
             if (($type == 'layout') && ($layoutId != '')) {
@@ -1017,8 +1021,8 @@ class SummaryReport implements ReportInterface
                 $period_end_u = $period['end']->toDateTime()->format('U');
 
                 // CMS date
-                $period_start = $this->getDate()->parse($period_start_u, 'U');
-                $period_end = $this->getDate()->parse($period_end_u, 'U');
+                $period_start = Carbon::createFromTimestamp($period_start_u);
+                $period_end = Carbon::createFromTimestamp($period_end_u);
 
                 if ($groupByFilter == 'byhour'){
                     $label = $period_start->format('g:i A');
@@ -1073,8 +1077,8 @@ class SummaryReport implements ReportInterface
 
             return [
                 'result' => $resultArray,
-                'periodStart' => $fromDt->format('Y-m-d H:i:s'),
-                'periodEnd' => $toDt->format('Y-m-d H:i:s')
+                'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
+                'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat())
             ];
 
         } else {

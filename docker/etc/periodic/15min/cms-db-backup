@@ -33,19 +33,38 @@ then
     echo "Existing backup is $age seconds old"
 fi
 
-# If the backup is older than 1 day, take a new one
-if [ $age -gt 86400 ]
+# Check if mysqldump is running already
+# pgrep exits with 0 if a proces is found and 1 otherwise
+pgrep mysqldump > /dev/null 2>&1
+mysqldump_running=$?
+
+# If the backup is older than 1 day, and mysqldump isn't running,
+# then take a new one
+if [ $age -gt 86400 ] && [ $mysqldump_running -ne 0 ]
 then
     echo "Creating new backup"
-    /usr/bin/mysqldump --single-transaction -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" -h $MYSQL_HOST -P $MYSQL_PORT $MYSQL_DATABASE > /var/www/backup/db/latest.sql
+    
+    # Tell bash to consider all exit values when evaluating the
+    # exit code of a pipe rather than just the right-most one
+    # That way we can detect if mysqldump errors or is killed etc
+    set -o pipefail
+    
+    /usr/bin/mysqldump --single-transaction -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" -h $MYSQL_HOST -P $MYSQL_PORT $MYSQL_DATABASE | gzip > /var/www/backup/db/backup.sql.gz
     RESULT=$?
     
-    if [ $RESULT -eq 0 ]
+    if [ $RESULT -eq 0 ] && [ -e /var/www/backup/db/backup.sql.gz ]
     then
         echo "Rotating backups"
         mv /var/www/backup/db/latest.sql.gz /var/www/backup/db/previous.sql.gz
-        
-        echo "Compressing new backup"
-        cd /var/www/backup/db && gzip latest.sql
+        mv /var/www/backup/db/backup.sql.gz /var/www/backup/db/latest.sql.gz
+        exit 0
+    else
+        echo "BACKUP FAILED"
+        echo "Not rotating backups"
+        exit 1
     fi
+elif [ $mysqldump_running -eq 0 ]
+then
+    echo "Backup already in progress. Exiting"
+    exit 0
 fi

@@ -22,6 +22,9 @@
 #}
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
+{% set dataSetName = dataSet.dataSet %}
+
+{% block title %}{% trans %}Data Entry for {{ dataSetName }}{% endtrans %} | {% endblock %}
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
@@ -32,7 +35,6 @@
 
 
 {% block pageContent %}
-    {% set dataSetName = dataSet.dataSet %}
     {% set widgetTitle %}{% trans %}Data Entry for {{ dataSetName }}{% endtrans %}{% endset %}
     <div class="widget">
         <div class="widget-title">{{ widgetTitle }}</div>
@@ -50,7 +52,7 @@
                     </div>
                 </div>
                 <div class="XiboData">
-                    <table id="datasets" class="table table-striped" data-image-url="{{ url_for("library.download") }}?preview=1&width=150&height=150">
+                    <table id="datasets" class="table table-striped" data-image-url="{{ url_for("library.download", {"id":":id"}) }}?preview=1&width=150&height=150">
                         <thead>
                         <tr>
                             <th>{% trans "ID" %}</th>
@@ -110,7 +112,7 @@
                 if (type != "display")
                     return "";
 
-                var url = "{{ url_for("dataSet.data.delete.form", {"id": dataSet.dataSetId, rowId:':id'}) }}".replace(":rowId", data.id);
+                var url = "{{ url_for("dataSet.data.delete.form", {"id": dataSet.dataSetId, "rowId":':rowId'}) }}".replace(":rowId", data.id);
 
                 return "<a href=\"" + url + "\" class=\"XiboFormButton\"><span class=\"fa fa-times\"></span></a>";
             }
@@ -162,7 +164,7 @@
             var data = table.row($(this)).data();
 
             // Load the edit form.
-            var editUrl = "{{ url_for("dataSet.data.edit.form", {"id": dataSet.dataSetId, rowId:':id'}) }}".replace(":rowId", data.id);
+            var editUrl = "{{ url_for("dataSet.data.edit.form", {"id": dataSet.dataSetId, "rowId":':rowId'}) }}".replace(":rowId", data.id);
             XiboFormRender(editUrl);
         }, 500, true);
 
@@ -219,7 +221,7 @@
 
             rowIds.forEach(function(id) {
                 $.ajax({
-                    url: "{{ url_for("dataSet.data.delete", {"id": dataSet.dataSetId, rowId:'rowId'}) }}".replace(":rowId", id),
+                    url: "{{ url_for("dataSet.data.delete", {"id": dataSet.dataSetId, "rowId":':rowId'}) }}".replace(":rowId", id),
                     type: "DELETE",
                     success: function (data) {
                         processedRows++;

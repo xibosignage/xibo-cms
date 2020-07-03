@@ -109,20 +109,34 @@
                         {# Campaign / Layout list. We want to build two arrays for us to use. #}
                         {% set attributes = [
                             { name: "data-search-url", value:  url_for("schedule.campaign.search") },
+                            { name: "data-search-is-layout-specific", value: -1 },
+                            { name: "data-trans-layout", value: "Layout"|trans },
+                            { name: "data-trans-layout-help-text", value: "Please select a Layout for this Event to show"|trans },
+                            { name: "data-trans-layout", value: "Campaign"|trans },
+                            { name: "data-trans-layout-help-text", value: "Please select a Campaign for this Event to show"|trans },
                         ] %}
 
                         {% set title %}{% trans "Layout" %}{% endset %}
                         {% set helpText %}{% trans "Please select a Layout for this Event to show" %}{% endset %}
                         {{ forms.dropdown("campaignId", "single", title, event.campaignId, [campaign], "campaignId", "campaign", helpText, "layout-control", "", "", "", attributes) }}
 
-                        {% set title %}{% trans "Share of Voice" %}{% endset %}
-                        {% set helpText %}{% trans "The percentage of time this Layout should be shown." %}{% endset %}
-                        {{ forms.number("shareOfVoice", title, event.shareOfVoice, helpText, "interrupt-control") }}
-
                         <div class="form-group preview-button-container">
                             <div class="col-md-offset-2 col-md-10">
                                 <a id="previewButton" class="btn btn-success" target="_blank" data-url="{{ url_for("campaign.preview", {id: ':id'}) }}">{% trans "Preview" %} <span class="fa fa-tablet"></span></a>
                                 <span class="help-block">{% trans "Preview your selection in a new tab" %}</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group interrupt-control" style="display: block;">
+                            <label class="col-sm-2 control-label" for="shareOfVoice" accesskey="">{% trans "Share of Voice" %}</label>
+                            <div class="col-sm-5">
+                                <input class="form-control" name="shareOfVoice" type="number" id="shareOfVoice" value="{{ event.shareOfVoice }}">
+                                <span class="help-block">{% trans "The amount of time this Layout should be shown, in seconds per hour." %}</span>
+                            </div>
+
+                            <div class="col-sm-5">
+                                <input class="form-control" name="shareOfVoicePercentage" type="number" id="shareOfVoicePercentage" value="">
+                                <span class="help-block">{% trans "As a percentage" %}</span>
                             </div>
                         </div>
 
@@ -150,14 +164,16 @@
 
                         {% if recurringEvent %}
                             <div class="well text-info text-center form-error">
-                                <p>This is an instance of a scheduled recurring event: <span class="fa fa-info-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom"
-                                                                                             data-content="{% trans "Editing the Start and or End date/time will create a new Recurring Event across the Schedule. Any previously deleted instances of this event will be recreated with edits made here." %}"></span></p>
+                                <p>This is an instance of a scheduled recurring event:
+                                    <span class="fa fa-info-circle"
+                                          data-toggle="popover"
+                                          data-trigger="hover"
+                                          data-placement="bottom"
+                                          data-content="{% trans "Editing the Start and or End date/time will create a new Recurring Event across the Schedule. Any previously deleted instances of this event will be recreated with edits made here." %}"></span></p>
                                 <p>
-                                    Starting from <span class="text-warning"><b>{{ eventStart|date(jsDateFormat) }} </b></span>to<span class="text-warning"><b> {{ eventEnd|date(jsDateFormat) }}</b></span>
+                                    Starting from <span class="text-warning"><b id="instanceStartDate">-</b></span> to <span class="text-warning"><b id="instanceEndDate">-</b></span>
                                 </p>
                                 <div id="recurringInfo"></div>
-
-
                             </div>
                         {% endif %}
 

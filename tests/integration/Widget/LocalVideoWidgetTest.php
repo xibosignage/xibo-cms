@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -94,7 +94,7 @@ class LocalVideoWidgetTest extends LocalWebTestCase
      */
     public function testEdit($uri, $duration, $useDuration, $scaleTypeId, $mute)
     {
-        $response = $this->client->put('/playlist/widget/' . $this->widgetId, [
+        $response = $this->sendRequest('PUT','/playlist/widget/' . $this->widgetId, [
             'uri' => $uri,
             'duration' => $duration,
             'useDuration' => $useDuration,
@@ -102,10 +102,10 @@ class LocalVideoWidgetTest extends LocalWebTestCase
             'mute' => $mute,
             ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
 
         /** @var XiboLocalVideo $checkWidget */
         $response = $this->getEntityProvider()->get('/playlist/widget', ['widgetId' => $this->widgetId]);

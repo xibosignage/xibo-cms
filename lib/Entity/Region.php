@@ -1,9 +1,10 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (Region.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -22,16 +23,18 @@
 namespace Xibo\Entity;
 
 
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
+use Carbon\Carbon;
+use Xibo\Factory\ActionFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\RegionOptionFactory;
-use Xibo\Service\DateServiceInterface;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Region
@@ -118,6 +121,15 @@ class Region implements \JsonSerializable
     public $duration;
 
     /**
+     * @SWG\Property(description="Flag, whether this region is used as an interactive drawer attached to a layout.")
+     * @var int
+     */
+    public $isDrawer = 0;
+
+    /** @var Action[] */
+    public $actions = [];
+
+    /**
      * Temporary Id used during import/upgrade
      * @var string read only string
      */
@@ -132,8 +144,6 @@ class Region implements \JsonSerializable
     public $regionPlaylist = null;
 
     //<editor-fold desc="Factories and Dependencies">
-    /**  @var DateServiceInterface */
-    private $dateService;
 
     /**
      * @var RegionFactory
@@ -154,26 +164,29 @@ class Region implements \JsonSerializable
      * @var PlaylistFactory
      */
     private $playlistFactory;
+
+    /** @var ActionFactory */
+    private $actionFactory;
     //</editor-fold>
 
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param DateServiceInterface $date
      * @param RegionFactory $regionFactory
      * @param PermissionFactory $permissionFactory
      * @param RegionOptionFactory $regionOptionFactory
      * @param PlaylistFactory $playlistFactory
+     * @param ActionFactory $actionFactory
      */
-    public function __construct($store, $log, $date, $regionFactory, $permissionFactory, $regionOptionFactory, $playlistFactory)
+    public function __construct($store, $log, $regionFactory, $permissionFactory, $regionOptionFactory, $playlistFactory, $actionFactory)
     {
         $this->setCommonDependencies($store, $log);
-        $this->dateService = $date;
         $this->regionFactory = $regionFactory;
         $this->permissionFactory = $permissionFactory;
         $this->regionOptionFactory = $regionOptionFactory;
         $this->playlistFactory = $playlistFactory;
+        $this->actionFactory = $actionFactory;
     }
 
     /**
@@ -189,6 +202,8 @@ class Region implements \JsonSerializable
         $this->regionPlaylist = clone $this->regionPlaylist;
 
         $this->regionOptions = array_map(function ($object) { return clone $object; }, $this->regionOptions);
+        // Clone actions
+        $this->actions = array_map(function ($object) { return clone $object; }, $this->actions);
     }
 
     /**
@@ -204,7 +219,7 @@ class Region implements \JsonSerializable
      */
     private function hash()
     {
-        return md5($this->name . $this->ownerId . $this->width . $this->height . $this->top . $this->left . $this->regionId . $this->zIndex . $this->duration);
+        return md5($this->name . $this->ownerId . $this->width . $this->height . $this->top . $this->left . $this->regionId . $this->zIndex . $this->duration . json_encode($this->actions));
     }
 
     /**
@@ -229,7 +244,7 @@ class Region implements \JsonSerializable
      * Sets the Owner
      * @param int $ownerId
      * @param bool $cascade Cascade ownership change down to Playlist records
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function setOwner($ownerId, $cascade = false)
     {
@@ -247,7 +262,7 @@ class Region implements \JsonSerializable
      * Get Option
      * @param string $option
      * @return RegionOption
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function getOption($option)
     {
@@ -261,7 +276,7 @@ class Region implements \JsonSerializable
 
         $this->getLog()->debug('RegionOption ' . $option . ' not found');
 
-        throw new NotFoundException('Region Option not found');
+        throw new NotFoundException(__('Region Option not found'));
     }
 
     /**
@@ -269,7 +284,7 @@ class Region implements \JsonSerializable
      * @param string $option
      * @param mixed $default
      * @return mixed
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function getOptionValue($option, $default = null)
     {
@@ -288,7 +303,7 @@ class Region implements \JsonSerializable
      * Set Region Option Value
      * @param string $option
      * @param mixed $value
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function setOptionValue($option, $value)
     {
@@ -303,7 +318,7 @@ class Region implements \JsonSerializable
     /**
      * @param array $options
      * @return Playlist
-     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function getPlaylist($options = [])
     {
@@ -317,15 +332,17 @@ class Region implements \JsonSerializable
     /**
      * Load
      * @param array $options
-     * @throws XiboException
+     * @throws NotFoundException
      */
     public function load($options = [])
     {
-        if ($this->loaded || $this->regionId == 0)
+        if ($this->loaded || $this->regionId == 0) {
             return;
+        }
 
         $options = array_merge([
-            'loadPlaylists' => false
+            'loadPlaylists' => false,
+            'loadActions' => true
         ], $options);
 
         $this->getLog()->debug('Load Region with ' . json_encode($options));
@@ -335,6 +352,11 @@ class Region implements \JsonSerializable
 
         // Get region options
         $this->regionOptions = $this->regionOptionFactory->getByRegionId($this->regionId);
+
+        // Get Region Actions?
+        if ($options['loadActions']) {
+            $this->actions = $this->actionFactory->getBySourceAndSourceId('region', $this->regionId);
+        }
 
         // Load the Playlist?
         if ($options['loadPlaylists']) {
@@ -351,18 +373,20 @@ class Region implements \JsonSerializable
      */
     public function validate()
     {
-        if ($this->width <= 0 || $this->height <= 0)
+        if ($this->width <= 0 || $this->height <= 0) {
             throw new InvalidArgumentException(__('The Region dimensions cannot be empty or negative'), 'width/height');
+        }
 
         // Check zindex is positive
-        if ($this->zIndex < 0)
+        if ($this->zIndex < 0) {
             throw new InvalidArgumentException(__('Layer must be 0 or a positive number'), 'zIndex');
+        }
     }
 
     /**
      * Save
      * @param array $options
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function save($options = [])
     {
@@ -375,8 +399,9 @@ class Region implements \JsonSerializable
 
         $this->getLog()->debug('Saving ' . $this . '. Options = ' . json_encode($options, JSON_PRETTY_PRINT));
 
-        if ($options['validate'])
+        if ($options['validate']) {
             $this->validate();
+        }
 
         if ($options['audit']) {
             // get the layout specific campaignId
@@ -446,7 +471,7 @@ class Region implements \JsonSerializable
     /**
      * Delete Region
      * @param array $options
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function delete($options = [])
     {
@@ -455,8 +480,9 @@ class Region implements \JsonSerializable
         ], $options);
 
         // We must ensure everything is loaded before we delete
-        if ($this->hash == null)
+        if ($this->hash == null) {
             $this->load();
+        }
 
         $this->getLog()->debug('Deleting ' . $this);
 
@@ -471,6 +497,13 @@ class Region implements \JsonSerializable
             /* @var RegionOption $regionOption */
             $regionOption->delete();
         }
+
+        foreach ($this->actions as $action) {
+            $action->delete();
+        }
+
+        // Delete any actions that had this Region id as targetId, to avoid orphaned records in action table.
+        $this->getStore()->update('DELETE FROM `action` WHERE targetId = :targetId', ['targetId' => $this->regionId]);
 
         // Delete the region specific playlist
         $this->getPlaylist()->delete(['regionDelete' => true]);
@@ -493,8 +526,8 @@ class Region implements \JsonSerializable
         $this->getLog()->debug('Adding region to LayoutId ' . $this->layoutId);
 
         $sql = '
-            INSERT INTO `region` (`layoutId`, `ownerId`, `name`, `width`, `height`, `top`, `left`, `zIndex`) 
-              VALUES (:layoutId, :ownerId, :name, :width, :height, :top, :left, :zIndex)
+            INSERT INTO `region` (`layoutId`, `ownerId`, `name`, `width`, `height`, `top`, `left`, `zIndex`, `isDrawer`) 
+              VALUES (:layoutId, :ownerId, :name, :width, :height, :top, :left, :zIndex, :isDrawer)
         ';
 
         $this->regionId = $this->getStore()->insert($sql, array(
@@ -505,7 +538,8 @@ class Region implements \JsonSerializable
             'height' => $this->height,
             'top' => $this->top,
             'left' => $this->left,
-            'zIndex' => $this->zIndex
+            'zIndex' => $this->zIndex,
+            'isDrawer' => $this->isDrawer
         ));
     }
 
@@ -525,7 +559,8 @@ class Region implements \JsonSerializable
             `top` = :top,
             `left` = :left,
             `zIndex` = :zIndex,
-            `duration` = :duration
+            `duration` = :duration,
+            `isDrawer` = :isDrawer
            WHERE `regionId` = :regionId
         ';
 
@@ -538,6 +573,7 @@ class Region implements \JsonSerializable
             'left' => $this->left,
             'zIndex' => $this->zIndex,
             'duration' => $this->duration,
+            'isDrawer' => $this->isDrawer,
             'regionId' => $this->regionId
         ));
     }
@@ -551,7 +587,7 @@ class Region implements \JsonSerializable
             UPDATE `layout` SET `status` = 3, `modifiedDT` = :modifiedDt WHERE layoutId = :layoutId
         ', [
             'layoutId' => $this->layoutId,
-            'modifiedDt' => $this->dateService->getLocalDate()
+            'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
         ]);
     }
 }

@@ -26,9 +26,9 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
-use Xibo\Exception\XiboException;
 use Xibo\Service\DisplayNotifyService;
 use Xibo\Service\PlayerActionService;
+use Xibo\Support\Exception\GeneralException;
 
 /**
  * Class Xmr
@@ -81,23 +81,27 @@ class Xmr implements Middleware
     public static function finish($app)
     {
         $container = $app->getContainer();
+
         // Handle display notifications
-        if ($container->get('displayNotifyService') != null) {
+        if ($container->has('displayNotifyService')) {
             try {
                 $container->get('displayNotifyService')->processQueue();
-            } catch (XiboException $e) {
+            } catch (GeneralException $e) {
                 $container->get('logService')->error('Unable to Process Queue of Display Notifications due to %s', $e->getMessage());
             }
         }
 
         // Handle player actions
-        if ($container->get('playerActionService') != null) {
+        if ($container->has('playerActionService')) {
             try {
                 $container->get('playerActionService')->processQueue();
             } catch (\Exception $e) {
                 $container->get('logService')->error('Unable to Process Queue of Player actions due to %s', $e->getMessage());
             }
         }
+
+        // Re-terminate any DB connections
+        $app->getContainer()->get('store')->close();
     }
 
     /**
@@ -124,7 +128,6 @@ class Xmr implements Middleware
                 $app->getContainer()->get('store'),
                 $app->getContainer()->get('pool'),
                 $app->getContainer()->get('playerActionService'),
-                $app->getContainer()->get('dateService'),
                 $app->getContainer()->get('scheduleFactory'),
                 $app->getContainer()->get('dayPartFactory')
             );

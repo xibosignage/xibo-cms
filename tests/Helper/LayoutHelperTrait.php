@@ -58,7 +58,7 @@ trait LayoutHelperTrait
         $layout->status = $status;
         $this->getStore()->update('UPDATE `layout` SET `status` = :status WHERE layoutId = :layoutId', ['layoutId' => $layout->layoutId, 'status' => $status]);
         $this->getStore()->commitIfNecessary();
-
+        $this->getStore()->close();
         return $this;
     }
 

@@ -21,7 +21,6 @@
  */
 namespace Xibo\Middleware;
 
-use League\OAuth2\Server\CryptKey;
 use League\OAuth2\Server\Grant\AuthCodeGrant;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -29,12 +28,11 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Storage\AuthCodeRepository;
-use Xibo\Storage\RefreshTokenRepository;
+use Xibo\Support\Exception\ConfigurationException;
 
 /**
  * Class ApiAuthorizationOAuth
+ * This middleware protects the AUTH entry point
  * @package Xibo\Middleware
  */
 class ApiAuthorizationOAuth implements Middleware
@@ -67,17 +65,16 @@ class ApiAuthorizationOAuth implements Middleware
             $logger = $container->get('logService');
 
             // API Keys
-            $apiKeyPaths = $container->get('configService')->apiKeyPaths;
-            // TODO this is temporary solution to remove the notice from API responses - ultimately we should have them with correct permissions (600, 660) and we should check it here.
-            $privateKey = new CryptKey($apiKeyPaths['privateKeyPath'], null, false);
+            $apiKeyPaths = $container->get('configService')->getApiKeyDetails();
+            $privateKey = $apiKeyPaths['privateKeyPath'];
             $encryptionKey = $apiKeyPaths['encryptionKey'];
 
             try {
 
                 $server = new \League\OAuth2\Server\AuthorizationServer(
-                    new \Xibo\Storage\ApiClientStorage($container->get('store'), $logger),
-                    new \Xibo\Storage\AccessTokenRepository($logger),
-                    new \Xibo\Storage\ScopeRepository(),
+                    $container->get('applicationFactory'),
+                    new \Xibo\OAuth\AccessTokenRepository($logger),
+                    $container->get('applicationScopeFactory'),
                     $privateKey,
                     $encryptionKey
                 );
@@ -89,8 +86,8 @@ class ApiAuthorizationOAuth implements Middleware
 
                 $server->enableGrantType(
                     new AuthCodeGrant(
-                        new AuthCodeRepository(),
-                        new RefreshTokenRepository(),
+                        new \Xibo\OAuth\AuthCodeRepository(),
+                        new \Xibo\OAuth\RefreshTokenRepository(),
                         new \DateInterval('PT10M')
                     ),
                     new \DateInterval('PT1H')

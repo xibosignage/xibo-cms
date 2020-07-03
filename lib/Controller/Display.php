@@ -21,9 +21,9 @@
  */
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Intervention\Image\ImageManagerStatic as Img;
-use Jenssegers\Date\Date;
 use Respect\Validation\Validator as v;
 use RobThree\Auth\TwoFactorAuth;
 use Slim\Http\Response as Response;
@@ -31,11 +31,6 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\RequiredFile;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayEventFactory;
 use Xibo\Factory\DisplayFactory;
@@ -51,15 +46,21 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Environment;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\WakeOnLan;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\PlayerActionServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\XMR\LicenceCheckAction;
 use Xibo\XMR\RekeyAction;
 use Xibo\XMR\ScreenShotAction;
@@ -152,7 +153,6 @@ class Display extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param PoolInterface $pool
@@ -171,10 +171,11 @@ class Display extends Base
      * @param UserGroupFactory $userGroupFactory
      * @param PlayerVersionFactory $playerVersionFactory
      * @param DayPartFactory $dayPartFactory
+     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory, $dayPartFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory, $dayPartFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->store = $store;
         $this->pool = $pool;
@@ -200,12 +201,9 @@ class Display extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     function displayPage(Request $request, Response $response)
     {
@@ -229,12 +227,10 @@ class Display extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     function displayManage(Request $request, Response $response, $id)
     {
@@ -361,12 +357,12 @@ class Display extends Base
         $this->getState()->setData([
             'requiredFiles' => [],
             'display' => $display,
-            'timeAgo' => $this->getDate()->parse($display->lastAccessed, 'U')->diffForHumans(),
+            'timeAgo' => Carbon::createFromTimestamp($display->lastAccessed)->diffForHumans(),
             'errorSearch' => http_build_query([
                 'displayId' => $display->displayId,
                 'type' => 'ERROR',
-                'fromDt' => $this->getDate()->getLocalDate($this->getDate()->parse()->subHours(12)),
-                'toDt' => $this->getDate()->getLocalDate()
+                'fromDt' => Carbon::now()->subHours(12)->format(DateFormatHelper::getSystemFormat()),
+                'toDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
             ]),
             'inventory' => [
                 'layouts' => $layouts,
@@ -381,9 +377,9 @@ class Display extends Base
                 'sizeRemaining' => round((double)($totalSize - $completeSize) / (pow(1024, $base)), 2),
             ],
             'defaults' => [
-                'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
-                'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
-                'toDate' => $this->getDate()->getLocalDate()
+                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
+                'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
+                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
             ]
         ]);
 
@@ -511,12 +507,9 @@ class Display extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     function grid(Request $request, Response $response)
     {
@@ -527,6 +520,7 @@ class Display extends Base
         $filter = [
             'displayId' => $parsedQueryParams->getInt('displayId'),
             'display' => $parsedQueryParams->getString('display'),
+            'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'macAddress' => $parsedQueryParams->getString('macAddress'),
             'license' => $parsedQueryParams->getString('hardwareKey'),
             'displayGroupId' => $parsedQueryParams->getInt('displayGroupId'),
@@ -579,8 +573,8 @@ class Display extends Base
             $display->getCurrentLayoutId($this->pool);
 
             if ($this->isApi($request)) {
-                $display->lastAccessed = $this->getDate()->getLocalDate($display->lastAccessed);
-                $display->auditingUntil = ($display->auditingUntil == 0) ? 0 : $this->getDate()->getLocalDate($display->auditingUntil);
+                $display->lastAccessed = Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat());
+                $display->auditingUntil = ($display->auditingUntil == 0) ? 0 :  Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
                 $display->storageAvailableSpace = ByteFormatter::format($display->storageAvailableSpace);
                 $display->storageTotalSpace = ByteFormatter::format($display->storageTotalSpace);
                 continue;
@@ -644,6 +638,9 @@ class Display extends Base
                 $display->thumbnail = $this->urlFor($request,'display.screenShot', ['id' => $display->displayId]) . '?' . Random::generateString();
             }
 
+            $display->teamViewerLink = (!empty($display->teamViewerSerial)) ? 'https://start.teamviewer.com/' . $display->teamViewerSerial : '';
+            $display->webkeyLink = (!empty($display->webkeySerial)) ? 'https://webkeyapp.com/mgm?publicid=' . $display->webkeySerial : '';
+
             // Edit and Delete buttons first
             if ($this->getUser()->checkEditable($display)) {
 
@@ -667,19 +664,24 @@ class Display extends Base
 
             // Delete
             if ($this->getUser()->checkDeleteable($display)) {
-                $display->buttons[] = array(
+                $deleteButton = [
                     'id' => 'display_button_delete',
                     'url' => $this->urlFor($request,'display.delete.form', ['id' => $display->displayId]),
-                    'text' => __('Delete'),
-                    /*'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor('display.delete', ['id' => $display->displayId])),
-                        array('name' => 'commit-method', 'value' => 'delete'),
-                        array('name' => 'id', 'value' => 'display_button_delete'),
-                        array('name' => 'text', 'value' => __('Delete')),
-                        array('name' => 'rowtitle', 'value' => $display->display)
-                    )*/
-                );
+                    'text' => __('Delete')
+                ];
+
+                if (Environment::isDevMode()) {
+                    $deleteButton['multi-select'] = true;
+                    $deleteButton['dataAttributes'] = [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'display.delete', ['id' => $display->displayId])],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'display_button_delete'],
+                        ['name' => 'text', 'value' => __('Delete')],
+                        ['name' => 'rowtitle', 'value' => $display->display]
+                    ];
+                }
+
+                $display->buttons[] = $deleteButton;
             }
 
             if ($this->getUser()->checkEditable($display) || $this->getUser()->checkDeleteable($display)) {
@@ -864,13 +866,10 @@ class Display extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     function editForm(Request $request, Response $response, $id)
     {
@@ -898,14 +897,14 @@ class Display extends Base
         }
 
         // Dates
-        $display->auditingUntilIso = $this->getDate()->getLocalDate($display->auditingUntil);
+        $display->auditingUntilIso =  Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
 
         // Get the settings from the profile
         $profile = $display->getSettings();
 
         // Get a list of timezones
         $timeZones = [];
-        foreach ($this->getDate()->timezoneList() as $key => $value) {
+        foreach (DateFormatHelper::timezoneList()as $key => $value) {
             $timeZones[] = ['id' => $key, 'value' => $value];
         }
 
@@ -984,12 +983,10 @@ class Display extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     function deleteForm(Request $request, Response $response, $id)
     {
@@ -1013,14 +1010,11 @@ class Display extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/display/{displayId}",
      *  operationId="displayEdit",
@@ -1182,13 +1176,26 @@ class Display extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="teamViewerSerial",
+     *      in="formData",
+     *      description="The TeamViewer serial number for this Display, if applicable",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="webkeySerial",
+     *      in="formData",
+     *      description="The Webkey serial number for this Display, if applicable",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
      *      @SWG\Schema(ref="#/definitions/Display")
      *  )
      * )
-     *
      */
     function edit(Request $request, Response $response, $id)
     {
@@ -1223,7 +1230,8 @@ class Display extends Base
         $display->timeZone = $sanitizedParams->getString('timeZone');
         $display->displayProfileId = $sanitizedParams->getInt('displayProfileId');
         $display->bandwidthLimit = $sanitizedParams->getInt('bandwidthLimit');
-
+        $display->teamViewerSerial = $sanitizedParams->getString('teamViewerSerial');
+        $display->webkeySerial = $sanitizedParams->getString('webkeySerial');
 
         // Get the display profile and use that to pull in any overrides
         // start with an empty config
@@ -1232,8 +1240,9 @@ class Display extends Base
         // Tags are stored on the displaygroup, we're just passing through here
         $display->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
 
-        if ($display->auditingUntil !== null)
+        if ($display->auditingUntil !== null) {
             $display->auditingUntil = $display->auditingUntil->format('U');
+        }
 
         // Should we invalidate this display?
         if ($display->hasPropertyChanged('defaultLayoutId')) {
@@ -1257,8 +1266,8 @@ class Display extends Base
         $display->save();
 
         if ($this->isApi($request)) {
-            $display->lastAccessed = $this->getDate()->getLocalDate($display->lastAccessed);
-            $display->auditingUntil = ($display->auditingUntil == 0) ? 0 : $this->getDate()->getLocalDate($display->auditingUntil);
+            $display->lastAccessed = Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat());
+            $display->auditingUntil = ($display->auditingUntil == 0) ? 0 : Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
         }
 
         // Return
@@ -1277,13 +1286,10 @@ class Display extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Delete(
      *  path="/display/{displayId}",
      *  operationId="displayDelete",
@@ -1331,12 +1337,10 @@ class Display extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function membershipForm(Request $request, Response $response, $id)
     {
@@ -1393,13 +1397,10 @@ class Display extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function assignDisplayGroup(Request $request, Response $response, $id)
     {
@@ -1451,7 +1452,11 @@ class Display extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function screenShot(Request $request, Response $response, $id)
     {
@@ -1508,12 +1513,10 @@ class Display extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function requestScreenShotForm(Request $request, Response $response, $id)
     {
@@ -1528,7 +1531,7 @@ class Display extends Base
             $nextCollect = __('once it has connected for the first time');
         } else {
             $collectionInterval = $display->getSetting('collectionInterval', 5);
-            $nextCollect = $this->getDate()->parse($display->lastAccessed, 'U')->addMinutes($collectionInterval)->diffForHumans();
+            $nextCollect = Carbon::createFromTimestamp($display->lastAccessed)->addMinutes($collectionInterval)->diffForHumans();
         }
 
         $this->getState()->template = 'display-form-request-screenshot';
@@ -1547,13 +1550,10 @@ class Display extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException if XMR cannot be contacted
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/display/requestscreenshot/{displayId}",
      *  operationId="displayRequestScreenshot",
@@ -1604,12 +1604,10 @@ class Display extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function wakeOnLanForm(Request $request, Response $response, $id)
     {
@@ -1620,7 +1618,7 @@ class Display extends Base
         }
 
         if ($display->macAddress == '') {
-            throw new \InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'));
+            throw new InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'), 'macAddress');
         }
 
         $this->getState()->template = 'display-form-wakeonlan';
@@ -1638,13 +1636,10 @@ class Display extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Post(
      *  path="/display/wol/{displayId}",
      *  operationId="displayWakeOnLan",
@@ -1673,14 +1668,14 @@ class Display extends Base
         }
 
         if ($display->macAddress == '' || $display->broadCastAddress == '') {
-            throw new \InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'));
+            throw new InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'));
         }
 
         $this->getLog()->notice('About to send WOL packet to ' . $display->broadCastAddress . ' with Mac Address ' . $display->macAddress);
 
         WakeOnLan::TransmitWakeOnLan($display->macAddress, $display->secureOn, $display->broadCastAddress, $display->cidr, '9', $this->getLog());
 
-        $display->lastWakeOnLanCommandSent = time();
+        $display->lastWakeOnLanCommandSent = Carbon::now()->format('U');
         $display->save(['validate' => false]);
 
         // Return
@@ -1695,7 +1690,8 @@ class Display extends Base
     /**
      * Validate the display list
      * @param array[Display] $displays
-     * @throws XiboException
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function validateDisplays($displays)
     {
@@ -1719,7 +1715,7 @@ class Display extends Base
             $timeOut = $display->lastAccessed + $timeoutToTestAgainst;
 
             // If the last time we accessed is less than now minus the time out
-            if ($timeOut < time()) {
+            if ($timeOut < Carbon::now()->format('U')) {
                 $this->getLog()->debug('Timed out display. Last Accessed: ' . date('Y-m-d h:i:s', $display->lastAccessed) . '. Time out: ' . date('Y-m-d h:i:s', $timeOut));
 
                 // Is this the first time this display has gone "off-line"
@@ -1746,24 +1742,24 @@ class Display extends Base
                         $dayPart = $this->dayPartFactory->getById($dayPartId);
 
                         $startTimeArray = explode(':', $dayPart->startTime);
-                        $startTime = Date::now()->setTime(intval($startTimeArray[0]), intval($startTimeArray[1]));
+                        $startTime = Carbon::now()->setTime(intval($startTimeArray[0]), intval($startTimeArray[1]));
 
                         $endTimeArray = explode(':', $dayPart->endTime);
-                        $endTime = Date::now()->setTime(intval($endTimeArray[0]), intval($endTimeArray[1]));
+                        $endTime = Carbon::now()->setTime(intval($endTimeArray[0]), intval($endTimeArray[1]));
 
-                        $now = Date::now();
+                        $now = Carbon::now();
 
                         // exceptions
                         foreach ($dayPart->exceptions as $exception) {
 
                             // check if we are on exception day and if so override the start and endtime accordingly
-                            if ($exception['day'] == Date::now()->format('D')) {
+                            if ($exception['day'] == Carbon::now()->format('D')) {
 
                                 $exceptionsStartTime = explode(':', $exception['start']);
-                                $startTime = Date::now()->setTime(intval($exceptionsStartTime[0]), intval($exceptionsStartTime[1]));
+                                $startTime = Carbon::now()->setTime(intval($exceptionsStartTime[0]), intval($exceptionsStartTime[1]));
 
                                 $exceptionsEndTime = explode(':', $exception['end']);
-                                $endTime = Date::now()->setTime(intval($exceptionsEndTime[0]), intval($exceptionsEndTime[1]));
+                                $endTime = Carbon::now()->setTime(intval($exceptionsEndTime[0]), intval($exceptionsEndTime[1]));
                             }
                         }
 
@@ -1789,10 +1785,10 @@ class Display extends Base
                     if ($operatingHours) {
                         $subject = sprintf(__("Alert for Display %s"), $display->display);
                         $body = sprintf(__("Display ID %d is offline since %s."), $display->displayId,
-                            $this->getDate()->getLocalDate($display->lastAccessed));
+                            Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat()));
 
                         // Add to system
-                        $notification = $this->notificationFactory->createSystemNotification($subject, $body, $this->getDate()->parse());
+                        $notification = $this->notificationFactory->createSystemNotification($subject, $body, Carbon::now());
 
                         // Add in any displayNotificationGroups, with permissions
                         foreach ($this->userGroupFactory->getDisplayNotificationGroups($display->displayGroupId) as $group) {
@@ -1817,12 +1813,10 @@ class Display extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function authoriseForm(Request $request, Response $response, $id)
     {
@@ -1846,13 +1840,10 @@ class Display extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/display/authorise/{displayId}",
      *  operationId="displayToggleAuthorise",
@@ -1897,12 +1888,10 @@ class Display extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function defaultLayoutForm(Request $request, Response $response, $id)
     {
@@ -1934,13 +1923,10 @@ class Display extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws XiboException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @SWG\Put(
      *  path="/display/defaultlayout/{displayId}",
      *  operationId="displayDefaultLayout",
@@ -2000,12 +1986,10 @@ class Display extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function moveCmsForm(Request $request, Response $response, $id)
     {
@@ -2035,15 +2019,12 @@ class Display extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws XiboException
      * @throws \RobThree\Auth\TwoFactorAuthException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function moveCms(Request $request, Response $response, $id)
     {
@@ -2100,6 +2081,13 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
     public function addViaCodeForm(Request $request, Response $response)
     {
         $this->getState()->template = 'display-form-addViaCode';
@@ -2111,12 +2099,9 @@ class Display extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function addViaCode(Request $request, Response $response)
     {
@@ -2127,7 +2112,7 @@ class Display extends Base
         $cmsKey = $this->getConfig()->getSetting('SERVER_KEY');
 
         if ($user_code == '') {
-            throw new InvalidArgumentException('Code cannot be empty', 'code');
+            throw new InvalidArgumentException(__('Code cannot be empty'), 'code');
         }
 
         $guzzle = new Client();
@@ -2152,7 +2137,7 @@ class Display extends Base
             ]);
         } catch (\Exception $e) {
             $this->getLog()->debug($e->getMessage());
-            throw new InvalidArgumentException('Provided user_code does not exist', 'user_code');
+            throw new InvalidArgumentException(__('Provided user_code does not exist'), 'user_code');
         }
 
         return $this->render($request, $response);
@@ -2165,12 +2150,10 @@ class Display extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function checkLicenceForm(Request $request, Response $response, $id)
     {
@@ -2214,13 +2197,11 @@ class Display extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException if XMR cannot be contacted
+     * @throws AccessDeniedException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
     public function checkLicence(Request $request, Response $response, $id)
     {
@@ -2231,7 +2212,7 @@ class Display extends Base
         }
 
         if (empty($display->xmrChannel)) {
-            throw new InvalidArgumentException('XMR is not configured for this Display', 'xmrChannel');
+            throw new InvalidArgumentException(__('XMR is not configured for this Display'), 'xmrChannel');
         }
 
         $this->playerAction->sendAction($display, new LicenceCheckAction());

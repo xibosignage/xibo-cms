@@ -1,19 +1,38 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (Soap5.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
 namespace Xibo\Xmds;
 
 
+use Carbon\Carbon;
+use Illuminate\Support\Str;
 use Stash\Invalidation;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\NotFoundException;
 
 class Soap5 extends Soap4
 {
@@ -30,8 +49,9 @@ class Soap5 extends Soap4
      * @param string $xmrChannel
      * @param string $xmrPubKey
      * @return string
+     * @throws NotFoundException
      * @throws \SoapFault
-     * @throws \Xibo\Exception\XiboException
+     * @throws GeneralException
      */
     public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress, $xmrChannel = null, $xmrPubKey = null)
     {
@@ -62,7 +82,7 @@ class Soap5 extends Soap4
         $xmrChannel = $sanitized->getString('xmrChannel');
         $xmrPubKey = trim($sanitized->getString('xmrPubKey'));
 
-        if ($xmrPubKey != '' && !str_contains($xmrPubKey, 'BEGIN PUBLIC KEY')) {
+        if ($xmrPubKey != '' && !Str::contains($xmrPubKey, 'BEGIN PUBLIC KEY')) {
             $xmrPubKey = "-----BEGIN PUBLIC KEY-----\n" . $xmrPubKey . "\n-----END PUBLIC KEY-----\n";
         }
 
@@ -95,15 +115,15 @@ class Soap5 extends Soap4
             $this->getLog()->debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);
 
             // Now
-            $dateNow = $this->getDate()->parse();
+            $dateNow = Carbon::now();
 
             // Append the time
-            $displayElement->setAttribute('date', $this->getDate()->getLocalDate($dateNow));
+            $displayElement->setAttribute('date', $dateNow->format(DateFormatHelper::getSystemFormat()));
             $displayElement->setAttribute('timezone', $this->getConfig()->getSetting('defaultTimezone'));
 
             // Determine if we are licensed or not
             if ($display->licensed == 0) {
-                // It is not licensed
+                // It is not authorised
                 $displayElement->setAttribute('status', 2);
                 $displayElement->setAttribute('code', 'WAITING');
                 $displayElement->setAttribute('message', 'Display is Registered and awaiting Authorisation from an Administrator in the CMS');
@@ -246,7 +266,7 @@ class Soap5 extends Soap4
 
                     // Append Local Time
                     $displayElement->setAttribute('localTimezone', $display->timeZone);
-                    $displayElement->setAttribute('localDate', $this->getDate()->getLocalDate($dateNow));
+                    $displayElement->setAttribute('localDate', $dateNow->format(DateFormatHelper::getSystemFormat()));
                 }
 
                 // Commands
@@ -260,10 +280,13 @@ class Soap5 extends Soap4
                     // Append each individual command
                     foreach ($display->getCommands() as $command) {
                         try {
-                            /* @var \Xibo\Entity\Command $command */
+                            if (!$command->isReady()) {
+                                continue;
+                            }
+
                             $node = $return->createElement($command->code);
-                            $commandString = $return->createElement('commandString', $command->commandString);
-                            $validationString = $return->createElement('validationString', $command->validationString);
+                            $commandString = $return->createElement('commandString', $command->getCommandString());
+                            $validationString = $return->createElement('validationString', $command->getValidationString());
 
                             $node->appendChild($commandString);
                             $node->appendChild($validationString);
@@ -322,7 +345,7 @@ class Soap5 extends Soap4
         // Send Notification if required
         $this->alertDisplayUp();
 
-        $display->lastAccessed = time();
+        $display->lastAccessed = Carbon::now()->format('U');
         $display->loggedIn = 1;
         $display->clientAddress = $clientAddress;
         $display->macAddress = $macAddress;
@@ -353,9 +376,10 @@ class Soap5 extends Soap4
 
     /**
      * Returns the schedule for the hardware key specified
-     * @return string
      * @param string $serverKey
      * @param string $hardwareKey
+     * @return string
+     * @throws NotFoundException
      * @throws \SoapFault
      */
     function Schedule($serverKey, $hardwareKey)

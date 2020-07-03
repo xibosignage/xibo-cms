@@ -23,22 +23,24 @@
 
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Entity\UserGroup;
-use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\ConfigurationException;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\AttachmentUploadHandler;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
+use Xibo\Helper\SendFile;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\DisplayNotifyService;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ConfigurationException;
 
 /**
  * Class Notification
@@ -68,7 +70,6 @@ class Notification extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param NotificationFactory $notificationFactory
      * @param UserNotificationFactory $userNotificationFactory
@@ -77,9 +78,9 @@ class Notification extends Base
      * @param DisplayNotifyService $displayNotifyService
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $notificationFactory, $userNotificationFactory, $displayGroupFactory, $userGroupFactory, $displayNotifyService, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $notificationFactory, $userNotificationFactory, $displayGroupFactory, $userGroupFactory, $displayNotifyService, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->notificationFactory = $notificationFactory;
         $this->userNotificationFactory = $userNotificationFactory;
@@ -92,11 +93,8 @@ class Notification extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function displayPage(Request $request, Response $response)
     {
@@ -112,18 +110,16 @@ class Notification extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function interrupt(Request $request, Response $response, $id)
     {
         $notification = $this->userNotificationFactory->getByNotificationId($id);
 
         // Mark it as read
-        $notification->setRead($this->getDate()->getLocalDate(null, 'U'));
+        $notification->setRead(Carbon::now()->format('U'));
         $notification->save();
 
         $this->getState()->template = 'notification-interrupt';
@@ -138,18 +134,16 @@ class Notification extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function show(Request $request, Response $response, $id)
     {
         $notification = $this->userNotificationFactory->getByNotificationId($id);
 
         // Mark it as read
-        $notification->setRead($this->getDate()->getLocalDate(null, 'U'));
+        $notification->setRead(Carbon::now()->format('U'));
         $notification->save();
 
         $this->getState()->template = 'notification-form-show';
@@ -198,11 +192,9 @@ class Notification extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     function grid(Request $request, Response $response)
     {
@@ -266,11 +258,9 @@ class Notification extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function addForm(Request $request, Response $response)
     {
@@ -316,12 +306,10 @@ class Notification extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function editForm(Request $request, Response $response, $id)
     {
@@ -329,8 +317,8 @@ class Notification extends Base
         $notification->load();
 
         // Adjust the dates
-        $notification->createdDt = $this->getDate()->getLocalDate($notification->createdDt);
-        $notification->releaseDt = $this->getDate()->getLocalDate($notification->releaseDt);
+        $notification->createdDt = Carbon::createFromTimestamp($notification->createdDt)->format(DateFormatHelper::getSystemFormat());
+        $notification->releaseDt = Carbon::createFromTimestamp($notification->releaseDt)->format(DateFormatHelper::getSystemFormat());
 
         if (!$this->getUser()->checkEditable($notification)) {
             throw new AccessDeniedException();
@@ -385,12 +373,10 @@ class Notification extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function deleteForm(Request $request, Response $response, $id)
     {
@@ -410,6 +396,10 @@ class Notification extends Base
 
     /**
      * Add attachment
+     * @param Request $request
+     * @param Response $response
+     * @return AttachmentUploadHandler
+     * @throws ConfigurationException
      */
     public function addAttachment(Request $request, Response $response)
     {
@@ -514,11 +504,9 @@ class Notification extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function add(Request $request, Response $response)
     {
@@ -527,7 +515,7 @@ class Notification extends Base
         $notification = $this->notificationFactory->createEmpty();
         $notification->subject = $sanitizedParams->getString('subject');
         $notification->body = $request->getParam('body', '');
-        $notification->createdDt = $this->getDate()->getLocalDate(null, 'U');
+        $notification->createdDt = Carbon::now()->format('U');
         $notification->releaseDt = $sanitizedParams->getDate('releaseDt');
 
         if ($notification->releaseDt !== null) {
@@ -608,12 +596,10 @@ class Notification extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      * @SWG\Put(
      *  path="/notification/{notificationId}",
      *  operationId="notificationEdit",
@@ -684,7 +670,6 @@ class Notification extends Base
      *      @SWG\Schema(ref="#/definitions/Notification")
      *  )
      * )
-     *
      */
     public function edit(Request $request, Response $response, $id)
     {
@@ -699,7 +684,7 @@ class Notification extends Base
 
         $notification->subject = $sanitizedParams->getString('subject');
         $notification->body = $request->getParam('body', '');
-        $notification->createdDt = $this->getDate()->getLocalDate(null, 'U');
+        $notification->createdDt = Carbon::now()->format('U');
         $notification->releaseDt = $sanitizedParams->getDate('releaseDt')->format('U');
         $notification->isEmail = $sanitizedParams->getCheckbox('isEmail');
         $notification->isInterrupt = $sanitizedParams->getCheckbox('isInterrupt');
@@ -741,12 +726,10 @@ class Notification extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ControllerNotImplemented
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws AccessDeniedException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      * @SWG\Delete(
      *  path="/notification/{notificationId}",
      *  operationId="notificationDelete",
@@ -765,7 +748,6 @@ class Notification extends Base
      *      description="successful operation"
      *  )
      * )
-     *
      */
     public function delete(Request $request, Response $response, $id)
     {
@@ -795,22 +777,28 @@ class Notification extends Base
         return $this->render($request, $response);
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
     public function exportAttachment(Request $request, Response $response, $id)
     {
         $notification = $this->notificationFactory->getById($id);
 
-        $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION'). 'attachment/'.$notification->filename;
+        $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'attachment/' . $notification->filename;
 
         // Return the file with PHP
         $this->setNoOutput(true);
-        header('Content-Type: application/octet-stream');
-        header("Content-Transfer-Encoding: Binary");
-        header("Content-disposition: attachment; filename=\"" . basename($fileName) . "\"");
-        header('Content-Length: ' . filesize($fileName));
 
-        // Disable any buffering to prevent OOM errors.
-        ob_end_flush();
-        readfile($fileName);
-        exit;
+        return $this->render($request, SendFile::decorateResponse(
+            $response,
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $fileName
+        ));
     }
 }

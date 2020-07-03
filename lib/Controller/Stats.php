@@ -21,10 +21,10 @@
  */
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
-use Xibo\Exception\InvalidArgumentException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -32,13 +32,17 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
+use Xibo\Helper\SendFile;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ReportServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Stats
@@ -92,7 +96,6 @@ class Stats extends Base
      * @param \Xibo\Helper\ApplicationState $state
      * @param \Xibo\Entity\User $user
      * @param \Xibo\Service\HelpServiceInterface $help
-     * @param DateServiceInterface $date
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param TimeSeriesStoreInterface $timeSeriesStore
@@ -103,10 +106,11 @@ class Stats extends Base
      * @param UserFactory $userFactory
      * @param UserGroupFactory $userGroupFactory
      * @param DisplayGroupFactory $displayGroupFactory
+     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $store, $timeSeriesStore, $reportService, $displayFactory, $layoutFactory, $mediaFactory, $userFactory, $userGroupFactory, $displayGroupFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $timeSeriesStore, $reportService, $displayFactory, $layoutFactory, $mediaFactory, $userFactory, $userGroupFactory, $displayGroupFactory, Twig $view)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->store = $store;
         $this->timeSeriesStore = $timeSeriesStore;
@@ -124,20 +128,17 @@ class Stats extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     function displayPage(Request $request, Response $response)
     {
         $data = [
             // List of Displays this user has permission for
             'defaults' => [
-                'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
-                'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
-                'toDate' => $this->getDate()->getLocalDate()
+                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
+                'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
+                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
             ]
         ];
 
@@ -152,20 +153,17 @@ class Stats extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     function displayProofOfPlayPage(Request $request, Response $response)
     {
         $data = [
             // List of Displays this user has permission for
             'defaults' => [
-                'fromDate' => $this->getDate()->getLocalDate(time() - (86400 * 35)),
-                'fromDateOneDay' => $this->getDate()->getLocalDate(time() - 86400),
-                'toDate' => $this->getDate()->getLocalDate(),
+                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
+                'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
+                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
                 'availableReports' => $this->reportService->listReports()
             ]
         ];
@@ -212,20 +210,16 @@ class Stats extends Base
      *      type="integer"
      *  ),
      *  @SWG\Property(
+     *      property="scheduleId",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
      *      property="numberPlays",
      *      type="integer"
      *  ),
      *  @SWG\Property(
      *      property="duration",
      *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="minStart",
-     *      type="string"
-     *  ),
-     *  @SWG\Property(
-     *      property="maxEnd",
-     *      type="string"
      *  ),
      *  @SWG\Property(
      *      property="start",
@@ -255,7 +249,7 @@ class Stats extends Base
      *  @SWG\Parameter(
      *      name="type",
      *      in="query",
-     *      description="The type of stat to return. Layout|Media|Widget or All",
+     *      description="The type of stat to return. Layout|Media|Widget",
      *      type="string",
      *      required=false
      *   ),
@@ -295,6 +289,16 @@ class Stats extends Base
      *      required=false
      *   ),
      *   @SWG\Parameter(
+     *      name="displayIds",
+     *      description="An optional array of display Id to filter",
+     *      in="query",
+     *      required=false,
+     *      type="array",
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *   @SWG\Parameter(
      *      name="layoutId",
      *      description="An optional array of layout Id to filter",
      *      in="query",
@@ -321,6 +325,27 @@ class Stats extends Base
      *      type="integer",
      *      required=false
      *  ),
+     *   @SWG\Parameter(
+     *      name="returnDisplayLocalTime",
+     *      in="query",
+     *      description="true/1/On if the results should be in display local time, otherwise CMS time",
+     *      type="boolean",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="returnDateFormat",
+     *      in="query",
+     *      description="A PHP formatted date format for how the dates in this call should be returned.",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="embed",
+     *      in="query",
+     *      description="Should the return embed additional data, options are layoutTags,displayTags and mediaTags",
+     *      type="string",
+     *      required=false
+     *  ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -336,73 +361,59 @@ class Stats extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws InvalidArgumentException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function grid(Request $request, Response $response)
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
 
-        $fromDt = $sanitizedQueryParams->getDate('fromDt', ['default' => $sanitizedQueryParams->getDate('statsFromDt', ['default' => $this->getDate()->parse()->subDay()])]);
-        $toDt = $sanitizedQueryParams->getDate('toDt', ['default' => $sanitizedQueryParams->getDate('statsToDt', ['default' => $this->getDate()->parse()])]);
+        $fromDt = $sanitizedQueryParams->getDate('fromDt', ['default' => Carbon::now()->subDay()]);
+        $toDt = $sanitizedQueryParams->getDate('toDt', ['default' => Carbon::now()]);
         $type = strtolower($sanitizedQueryParams->getString('type'));
 
         $displayId = $sanitizedQueryParams->getInt('displayId');
-        $layoutIds = $sanitizedQueryParams->getIntArray('layoutId');
-        $mediaIds = $sanitizedQueryParams->getIntArray('mediaId');
+        $displays = $sanitizedQueryParams->getIntArray('displayIds', ['default' => []]);
+        $layoutIds = $sanitizedQueryParams->getIntArray('layoutId', ['default' => []]);
+        $mediaIds = $sanitizedQueryParams->getIntArray('mediaId', ['default' => []]);
         $statDate = $sanitizedQueryParams->getDate('statDate');
         $statId = $sanitizedQueryParams->getString('statId');
         $campaignId = $sanitizedQueryParams->getInt('campaignId');
+        $eventTag = $sanitizedQueryParams->getString('eventTag');
 
-        $start = $sanitizedQueryParams->getInt('start', 0);
-        $length = $sanitizedQueryParams->getInt('length', 10);
+        // Return formatting
+        $returnDisplayLocalTime = $sanitizedQueryParams->getCheckbox('returnDisplayLocalTime');
+        $returnDateFormat = $sanitizedQueryParams->getString('returnDateFormat', ['default' => DateFormatHelper::getSystemFormat()]);
 
-        if ($fromDt != null) {
-            $fromDt->startOfDay();
-        }
+        // Embed Tags
+        $embed = explode(',', $sanitizedQueryParams->getString('embed', ['default' => '']));
 
-        if ($toDt != null) {
-            $toDt->addDay()->startOfDay();
-        }
+        // CMS timezone
+        $defaultTimezone = $this->getConfig()->getSetting('defaultTimezone');
+
+        // Paging
+        $start = $sanitizedQueryParams->getInt('start', ['default' => 0]);
+        $length = $sanitizedQueryParams->getInt('length', ['default' => 10]);
 
         // What if the fromdt and todt are exactly the same?
-        // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
-        if ($fromDt != null && $toDt != null && $fromDt == $toDt) {
+        // in this case assume an entire day from midnight on the fromdt to midnight on
+        // the todt (i.e. add a day to the todt)
+        if ($fromDt == $toDt) {
             $toDt->addDay();
+        }
+
+        // Merge displayId and displayIds
+        if ($displayId != 0) {
+            $displays = array_unique(array_merge($displays, [$displayId]));
         }
 
         // Do not filter by display if super admin and no display is selected
         // Super admin will be able to see stat records of deleted display, we will not filter by display later
-        $displayIds = [];
-        if (!$this->getUser()->isSuperAdmin()) {
-            // Get an array of display id this user has access to.
-            foreach ($this->displayFactory->query() as $display) {
-                $displayIds[] = $display->displayId;
-            }
-
-            if (count($displayIds) <= 0) {
-                throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
-            }
-
-            // Set displayIds as [-1] if the user selected a display for which they don't have permission
-            if ($displayId != 0) {
-                if (!in_array($displayId, $displayIds)) {
-                    $displayIds = [-1];
-                } else {
-                    $displayIds = [$displayId];
-                }
-            }
-        } else {
-            if ($displayId != 0) {
-                $displayIds = [$displayId];
-            }
-        }
+        $timeZoneCache = [];
+        $displayIds = $this->authoriseDisplayIds($displays, $timeZoneCache);
 
         // Call the time series interface getStats
-        $resultSet =  $this->timeSeriesStore->getStats(
+        $resultSet = $this->timeSeriesStore->getStats(
             [
                 'fromDt'=> $fromDt,
                 'toDt'=> $toDt,
@@ -413,42 +424,84 @@ class Stats extends Base
                 'statDate' => $statDate,
                 'statId' => $statId,
                 'campaignId' => $campaignId,
+                'eventTag' => $eventTag,
+                'displayTags' => in_array('displayTags', $embed),
+                'layoutTags' => in_array('layoutTags', $embed),
+                'mediaTags' => in_array('mediaTags', $embed),
                 'start' => $start,
                 'length' => $length,
             ]);
 
-        // Get results as array
-        $result = $resultSet->getArray();
-
         $rows = [];
-        foreach ($result['statData'] as $row) {
+        foreach ($resultSet->getArray() as $row) {
             $entry = [];
+
+            // Load my row into the sanitizer
             $sanitizedRow = $this->getSanitizer($row);
 
-            $widgetId = $sanitizedRow->getInt('widgetId');
+            // Core details
+            $entry['id'] = $resultSet->getIdFromRow($row);
+            $entry['type'] = $sanitizedRow->getString('type');
+            $entry['displayId'] = $sanitizedRow->getInt(('displayId'));
+
+            // Get the start/end date
+            $start = $resultSet->getDateFromValue($row['start']);
+            $end = $resultSet->getDateFromValue($row['end']);
+
+            if ($returnDisplayLocalTime) {
+                // Convert the dates to the display timezone.
+                if (!array_key_exists($entry['displayId'], $timeZoneCache)) {
+                    try {
+                        $display = $this->displayFactory->getById($entry['displayId']);
+                        $timeZoneCache[$entry['displayId']] = (empty($display->timeZone)) ? $defaultTimezone : $display->timeZone;
+                    } catch (\Xibo\Support\Exception\NotFoundException $e) {
+                        $timeZoneCache[$entry['displayId']] = $defaultTimezone;
+                    }
+                }
+                $start = $start->tz($timeZoneCache[$entry['displayId']]);
+                $end = $end->tz($timeZoneCache[$entry['displayId']]);
+            }
+
+            $widgetId = $sanitizedRow->getInt('widgetId', ['default' => 0]);
             $widgetName = $sanitizedRow->getString('media');
             $widgetName = ($widgetName == '' &&  $widgetId != 0) ? __('Deleted from Layout') : $widgetName;
 
             $displayName = isset($row['display']) ? $sanitizedRow->getString('display') : '';
             $layoutName = isset($row['layout']) ? $sanitizedRow->getString('layout') : '';
-            $entry['id'] = $sanitizedRow->getString('id');
-            $entry['type'] = $sanitizedRow->getString('type');
-            $entry['displayId'] = $sanitizedRow->getInt(('displayId'));
+
             $entry['display'] = ($displayName != '') ? $displayName : __('Not Found');
             $entry['layout'] = ($layoutName != '') ? $layoutName :  __('Not Found');
             $entry['media'] = $widgetName;
             $entry['numberPlays'] = $sanitizedRow->getInt('count');
             $entry['duration'] = $sanitizedRow->getInt('duration');
-            $entry['minStart'] = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
-            $entry['maxEnd'] = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
-            $entry['start'] = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
-            $entry['end'] = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
-            $entry['layoutId'] = $sanitizedRow->getInt('layoutId');
-            $entry['widgetId'] = $sanitizedRow->getInt('widgetId');
-            $entry['mediaId'] = $sanitizedRow->getInt('mediaId');
+            $entry['start'] = $start->format($returnDateFormat);
+            $entry['end'] = $end->format($returnDateFormat);
+            $entry['layoutId'] = $sanitizedRow->getInt('layoutId', ['default' => 0]);
+            $entry['campaignId'] = $sanitizedRow->getInt('campaignId', ['default' => 0]);
+            $entry['widgetId'] = $widgetId;
+            $entry['mediaId'] = $sanitizedRow->getInt('mediaId', ['default' => 0]);
+            $entry['scheduleId'] = $sanitizedRow->getInt('scheduleId', ['default' => 0]);
             $entry['tag'] = $sanitizedRow->getString('tag');
-            $entry['statDate'] = isset($row['statDate']) ? $this->getDate()->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : '';
-            $entry['engagements'] = $row['engagements'];
+            $entry['statDate'] = isset($row['statDate']) ? $resultSet->getDateFromValue($row['statDate'])->format(DateFormatHelper::getSystemFormat()) : '';
+            $entry['engagements'] = $resultSet->getEngagementsFromRow($row);
+
+            // Tags
+            // ----
+            // Display tags
+            $tagFilter = $resultSet->getTagFilterFromRow($row);
+            if (in_array('displayTags', $embed)) {
+                $entry['displayTags'] = $tagFilter['dg'] ?? [];
+            }
+
+            // Layout tags
+            if (in_array('layoutTags', $embed)) {
+                $entry['layoutTags'] = $tagFilter['layout'] ?? [];
+            }
+
+            // Media tags
+            if (in_array('mediaTags', $embed)) {
+                $entry['mediaTags'] = $tagFilter['media'] ?? [];
+            }
 
             $rows[] = $entry;
         }
@@ -467,11 +520,9 @@ class Stats extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws InvalidArgumentException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function bandwidthData(Request $request, Response $response)
     {
@@ -482,7 +533,7 @@ class Stats extends Base
         // Get an array of display id this user has access to.
         $displayIds = [];
 
-        foreach ($this->displayFactory->query(null, [], $request) as $display) {
+        foreach ($this->displayFactory->query(null, []) as $display) {
             $displayIds[] = $display->displayId;
         }
 
@@ -495,8 +546,8 @@ class Stats extends Base
 
         $displayId = $sanitizedParams->getInt('displayId');
         $params = array(
-            'month' => $this->getDate()->getLocalDate($fromDt->setDateTime($fromDt->year, $fromDt->month, 1, 0, 0), 'U'),
-            'month2' => $this->getDate()->getLocalDate($toDt->addMonth()->setDateTime($toDt->year, $toDt->month, 1, 0, 0), 'U')
+            'month' => $fromDt->setDateTime($fromDt->year, $fromDt->month, 1, 0, 0)->format('U'),
+            'month2' => $toDt->addMonth()->setDateTime($toDt->year, $toDt->month, 1, 0, 0)->format('U')
         );
 
         $SQL = 'SELECT display.display, IFNULL(SUM(Size), 0) AS size ';
@@ -578,11 +629,8 @@ class Stats extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function exportForm(Request $request, Response $response)
     {
@@ -592,16 +640,122 @@ class Stats extends Base
     }
 
     /**
+     * Total count of stats
+     *
+     * @SWG\Get(
+     *  path="/stats/getExportStatsCount",
+     *  operationId="getExportStatsCount",
+     *  tags={"statistics"},
+     *  @SWG\Parameter(
+     *      name="fromDt",
+     *      in="query",
+     *      description="The start date for the filter. Default = 24 hours ago",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="toDt",
+     *      in="query",
+     *      description="The end date for the filter. Default = now.",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      in="query",
+     *      description="An optional display Id to filter",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation"
+     *  )
+     * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getExportStatsCount(Request $request, Response $response)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        // We are expecting some parameters
+        $fromDt = $sanitizedParams->getDate('fromDt');
+        $toDt = $sanitizedParams->getDate('toDt');
+        $displayId = $sanitizedParams->getInt('displayId');
+
+        if ($fromDt != null) {
+            $fromDt->startOfDay();
+        }
+
+        if ($toDt != null) {
+            $toDt->addDay()->startOfDay();
+        }
+
+        // What if the fromdt and todt are exactly the same?
+        // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
+        if ($fromDt != null && $toDt != null && $fromDt == $toDt) {
+            $toDt->addDay();
+        }
+
+        // Do not filter by display if super admin and no display is selected
+        // Super admin will be able to see stat records of deleted display, we will not filter by display later
+        $displayIds = [];
+        if (!$this->getUser()->isSuperAdmin()) {
+            // Get an array of display id this user has access to.
+            foreach ($this->displayFactory->query() as $display) {
+                $displayIds[] = $display->displayId;
+            }
+
+            if (count($displayIds) <= 0)
+                throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
+
+            // Set displayIds as [-1] if the user selected a display for which they don't have permission
+            if ($displayId != 0) {
+                if (!in_array($displayId, $displayIds)) {
+                    $displayIds = [-1];
+                } else {
+                    $displayIds = [$displayId];
+                }
+            }
+        } else {
+            if ($displayId != 0) {
+                $displayIds = [$displayId];
+            }
+        }
+
+        // Call the time series interface getStats
+        $resultSet =  $this->timeSeriesStore->getExportStatsCount(
+            [
+                'fromDt'=> $fromDt,
+                'toDt'=> $toDt,
+                'displayIds' => $displayIds
+            ]);
+
+        $data = [
+            'total' => $resultSet
+        ];
+
+        $this->getState()->template = 'statistics-form-export';
+        $this->getState()->recordsTotal = $resultSet;
+        $this->getState()->setData($data);
+
+        return $this->render($request, $response);
+
+    }
+
+    /**
      * Outputs a CSV of stats
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws InvalidArgumentException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function export(Request $request, Response $response)
     {
@@ -610,6 +764,7 @@ class Stats extends Base
         $fromDt = $sanitizedParams->getDate('fromDt');
         $toDt = $sanitizedParams->getDate('toDt');
         $displayId = $sanitizedParams->getInt('displayId');
+        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/stats_' . Random::generateString();
 
         // Do not filter by display if super admin and no display is selected
         // Super admin will be able to see stat records of deleted display, we will not filter by display later
@@ -658,7 +813,7 @@ class Stats extends Base
             'displayIds' => $displayIds,
         ]);
 
-        $out = fopen('php://output', 'w');
+        $out = fopen($tempFileName, 'w');
         fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'Engagements']);
 
         while ($row = $resultSet->getNextRow() ) {
@@ -671,15 +826,15 @@ class Stats extends Base
             $type = $sanitizedRow->getString('type');
             if ($this->timeSeriesStore->getEngine() == 'mongodb') {
 
-                $statDate = isset($row['statDate']) ? $this->getDate()->parse($row['statDate']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s') : null;
-                $fromDt = $this->getDate()->parse($row['start']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
-                $toDt = $this->getDate()->parse($row['end']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
+                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate']->toDateTime())->format(DateFormatHelper::getSystemFormat()) : null;
+                $fromDt = Carbon::createFromTimestamp($row['start']->toDateTime())->format(DateFormatHelper::getSystemFormat());
+                $toDt = Carbon::createFromTimestamp($row['end']->toDateTime())->format(DateFormatHelper::getSystemFormat());
                 $engagements = isset($row['engagements']) ? json_encode($row['engagements']): '[]';
             } else {
 
-                $statDate = isset($row['statDate']) ?$this->getDate()->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : null;
-                $fromDt = $this->getDate()->parse($row['start'], 'U')->format('Y-m-d H:i:s');
-                $toDt = $this->getDate()->parse($row['end'], 'U')->format('Y-m-d H:i:s');
+                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate'])->format(DateFormatHelper::getSystemFormat()) : null;
+                $fromDt = Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat());
+                $toDt = Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat());
                 $engagements = isset($row['engagements']) ? $row['engagements']: '[]';
             }
 
@@ -697,15 +852,14 @@ class Stats extends Base
 
         fclose($out);
 
-        // We want to output a load of stuff to the browser as a text file.
-        $response
-            ->withHeader('Content-Type', 'text/csv')
-            ->withHeader('Content-Disposition', 'attachment; filename="stats.csv"')
-            ->withHeader('Content-Transfer-Encoding', 'binary"')
-            ->withHeader('Accept-Ranges', 'bytes');
         $this->setNoOutput(true);
 
-        return $this->render($request, $response);
+        return $this->render($request, SendFile::decorateResponse(
+            $response,
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $tempFileName,
+            'stats.csv'
+        )->withHeader('Content-Type', 'text/csv'));
     }
 
     /**
@@ -713,11 +867,8 @@ class Stats extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     function displayLibraryPage(Request $request, Response $response)
     {
@@ -807,11 +958,8 @@ class Stats extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function libraryUsageGrid(Request $request, Response $response)
     {
@@ -921,13 +1069,11 @@ class Stats extends Base
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws InvalidArgumentException
-     * @throws \Twig\Error\LoaderError
-     * @throws \Twig\Error\RuntimeError
-     * @throws \Twig\Error\SyntaxError
-     * @throws \Xibo\Exception\ConfigurationException
-     * @throws \Xibo\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function timeDisconnectedGrid(Request $request, Response $response)
+    public function timeDisconnectedData(Request $request, Response $response)
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
         $fromDt = $sanitizedQueryParams->getDate('fromDt', ['default' => $sanitizedQueryParams->getDate('availabilityFromDt')]);
@@ -938,16 +1084,16 @@ class Stats extends Base
         $tags = $sanitizedQueryParams->getString('tags');
         $onlyLoggedIn = $sanitizedQueryParams->getCheckbox('onlyLoggedIn') == 1;
 
-        $currentDate = $this->getDate()->parse()->startOfDay()->format('Y-m-d');
+        $currentDate = Carbon::now()->startOfDay()->format('Y-m-d');
 
         // fromDt is always start of selected day
-        $fromDt = $this->getDate()->parse($fromDt)->startOfDay();
+        $fromDt = $fromDt->startOfDay();
 
         // If toDt is current date then make it current datetime
-        if ($this->getDate()->parse($toDt)->startOfDay()->format('Y-m-d') == $currentDate) {
-            $toDt = $this->getDate()->parse();
+        if ($toDt->startOfDay()->format('Y-m-d') == $currentDate) {
+            $toDt = Carbon::now();
         } else {
-            $toDt = $this->getDate()->parse()->startOfDay();
+            $toDt =  Carbon::now()->startOfDay();
         }
 
         // Get an array of display id this user has access to.
@@ -1081,10 +1227,11 @@ class Stats extends Base
         $limit = '';
 
         // Paging
-        if ($filterBy !== null && $sanitizedQueryParams->getInt('start') !== null && $sanitizedQueryParams->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedQueryParams->getInt('start'), 0) . ', ' . $sanitizedQueryParams->getInt('length', ['default' => 10]);
+        $filterBy = $this->getSanitizer($filterBy);
+        if ($filterBy !== null && $filterBy->hasParam('start') && $filterBy->hasParam('length')) {
+            $limit = ' LIMIT ' . intval($filterBy->getInt('start', ['default' => 0])) . ', '
+                . $filterBy->getInt('length', ['default' => 10]);
         }
-
 
         $sql = $select . $body . $order . $limit;
         $maxDuration = 0;
@@ -1109,7 +1256,7 @@ class Stats extends Base
 
         foreach ($this->store->select($sql, $params) as $row) {
             $sanitizedRow = $this->getSanitizer($row);
-            $this->getLog()->debug('STATS TIMEDISC ROW IS ' . json_encode($row));
+
             $entry = [];
             $entry['displayId'] = $sanitizedRow->getInt(('displayId'));
             $entry['display'] = $sanitizedRow->getString(('display'));
@@ -1130,5 +1277,260 @@ class Stats extends Base
         $this->getState()->setData($rows);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * @SWG\Definition(
+     *  definition="TimeDisconnectedData",
+     *  @SWG\Property(
+     *      property="display",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="displayId",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
+     *      property="duration",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
+     *      property="start",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="end",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="isFinished",
+     *      type="boolean"
+     *  )
+     * )
+     *
+     * @SWG\Get(
+     *  path="/stats/timeDisconnected",
+     *  operationId="timeDisconnectedSearch",
+     *  tags={"statistics"},
+     *  @SWG\Parameter(
+     *      name="fromDt",
+     *      in="query",
+     *      description="The start date for the filter.",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="toDt",
+     *      in="query",
+     *      description="The end date for the filter.",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      in="query",
+     *      description="An optional display Id to filter",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="displayIds",
+     *      description="An optional array of display Id to filter",
+     *      in="query",
+     *      required=false,
+     *      type="array",
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *   @SWG\Parameter(
+     *      name="returnDisplayLocalTime",
+     *      in="query",
+     *      description="true/1/On if the results should be in display local time, otherwise CMS time",
+     *      type="boolean",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="returnDateFormat",
+     *      in="query",
+     *      description="A PHP formatted date format for how the dates in this call should be returned.",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(
+     *              ref="#/definitions/TimeDisconnectedData"
+     *          )
+     *      )
+     *  )
+     * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function gridTimeDisconnected(Request $request, Response $response): Response
+    {
+        // CMS timezone
+        $defaultTimezone = $this->getConfig()->getSetting('defaultTimezone');
+
+        $params = $this->getSanitizer($request->getParams());
+        $fromDt = $params->getDate('fromDt');
+        $toDt = $params->getDate('toDt');
+        $displayId = $params->getInt('displayId');
+        $displays = $params->getIntArray('displayIds');
+        $returnDisplayLocalTime = $params->getCheckbox('returnDisplayLocalTime');
+        $returnDateFormat = $params->getString('returnDateFormat', 'Y-m-d H:i:s');
+
+        // Merge displayId and displayIds
+        if ($displayId != 0) {
+            $displays = array_unique(array_merge($displays, [$displayId]));
+        }
+
+        $timeZoneCache = [];
+        $displayIds = $this->authoriseDisplayIds($displays, $timeZoneCache);
+
+        $params = [];
+        $select = '
+            SELECT displayevent.eventDate, 
+                    display.displayId, 
+                    display.display, 
+                    displayevent.start, 
+                    displayevent.end
+        ';
+        $body = '
+              FROM displayevent
+                INNER JOIN display 
+                ON displayevent.displayId = display.displayId
+             WHERE 1 = 1 
+        ';
+
+        if (count($displays) > 0) {
+            $body .= ' AND display.displayId IN (' . implode(',', $displayIds) . ') ';
+        }
+
+        if ($fromDt != null) {
+            $body .= ' AND displayevent.start >= :start ';
+            $params['start'] = $fromDt->format('U');
+        }
+
+        if ($toDt != null) {
+            $body .= ' AND displayevent.end < :end ';
+            $params['end'] = $toDt->format('U');
+        }
+
+        // Sorting?
+        $filterBy = $this->gridRenderFilter([], $request);
+        $sortOrder = $this->gridRenderSort($request);
+
+        $order = '';
+        if (is_array($sortOrder))
+            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        $limit = '';
+
+        // Paging
+        $filterBy = $this->getSanitizer($filterBy);
+        if ($filterBy !== null && $filterBy->hasParam('start') && $filterBy->hasParam('length')) {
+            $limit = ' LIMIT ' . intval($filterBy->getInt('start', ['default' => 0])) . ', '
+                . $filterBy->getInt('length', ['default' => 10]);
+        }
+
+        $sql = $select . $body . $order . $limit;
+
+        // Run the main query
+        $rows = [];
+        foreach ($this->store->select($sql, $params) as $row) {
+            // Load my row into the sanitizer
+            $sanitizedRow = $this->getSanitizer($row);
+
+            $entry = [];
+            $entry['displayId'] = $sanitizedRow->getInt('displayId');
+            $entry['display'] = $sanitizedRow->getString('display');
+            $entry['isFinished'] = $row['end'] !== null;
+
+            // Get the start/end date
+            $start = Carbon::createFromTimestamp($row['start']);
+            $end = Carbon::createFromTimestamp($row['end']);
+
+            if ($returnDisplayLocalTime) {
+                // Convert the dates to the display timezone.
+                if (!array_key_exists($entry['displayId'], $timeZoneCache)) {
+                    try {
+                        $display = $this->displayFactory->getById($entry['displayId']);
+                        $timeZoneCache[$entry['displayId']] = (empty($display->timeZone)) ? $defaultTimezone : $display->timeZone;
+                    } catch (NotFoundException $e) {
+                        $timeZoneCache[$entry['displayId']] = $defaultTimezone;
+                    }
+                }
+                $start = $start->tz($timeZoneCache[$entry['displayId']]);
+                $end = $end->tz($timeZoneCache[$entry['displayId']]);
+            }
+            $entry['start'] = $start->format($returnDateFormat);
+            $entry['end'] = $end->format($returnDateFormat);
+            $entry['duration'] = $end->diffInSeconds($start);
+            $rows[] = $entry;
+        }
+
+        // Paging
+        if ($limit != '' && count($rows) > 0) {
+            $results = $this->store->select($select . $body, $params);
+            $this->getState()->recordsTotal = count($results);
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($rows);
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @param $displays
+     * @param $timeZoneCache
+     * @return array|int[]
+     * @throws \Xibo\Support\Exception\InvalidArgumentException|\Xibo\Support\Exception\NotFoundException
+     */
+    private function authoriseDisplayIds($displays, &$timeZoneCache)
+    {
+        $displayIds = [];
+        $displaysAccessible = [];
+
+        if (!$this->getUser()->isSuperAdmin()) {
+            // Get an array of display id this user has access to.
+            foreach ($this->displayFactory->query() as $display) {
+                $displaysAccessible[] = $display->displayId;
+
+                // Cache the display timezone.
+                $timeZoneCache[$display->displayId] = $display->timeZone;
+            }
+
+            if (count($displaysAccessible) <= 0)
+                throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
+
+            // Set displayIds as [-1] if the user selected a display for which they don't have permission
+            if (count($displays) <= 0) {
+                $displayIds = $displaysAccessible;
+            } else {
+                foreach ($displays as $key => $id) {
+                    if (!in_array($id, $displaysAccessible)) {
+                        unset($displays[$key]);
+                    } else {
+                        $displayIds[] = $id;
+                    }
+                }
+
+                if (count($displays) <= 0 ) {
+                    $displayIds = [-1];
+                }
+            }
+        } else {
+            $displayIds = $displays;
+        }
+
+        return $displayIds;
     }
 }

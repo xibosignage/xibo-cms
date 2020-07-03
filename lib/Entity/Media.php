@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -21,12 +21,8 @@
  */
 namespace Xibo\Entity;
 
+use Carbon\Carbon;
 use Respect\Validation\Validator as v;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\DuplicateEntityException;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
-use Xibo\Exception\XiboException;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -37,9 +33,15 @@ use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\DuplicateEntityException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Media
@@ -316,7 +318,7 @@ class Media implements \JsonSerializable
         $this->permissions = [];
 
         // We need to do something with the name
-        $this->name = sprintf(__('Copy of %s on %s'), $this->name, date('Y-m-d H:i:s'));
+        $this->name = sprintf(__('Copy of %s on %s'), $this->name, Carbon::now()->format(DateFormatHelper::getSystemFormat()));
 
         // Set so that when we add, we copy the existing file in the library
         $this->fileName = $this->storedAs;
@@ -353,6 +355,7 @@ class Media implements \JsonSerializable
 
     /**
      * @return int
+     * @throws GeneralException
      */
     private function countUsages()
     {
@@ -365,6 +368,7 @@ class Media implements \JsonSerializable
      * Is this media used
      * @param int $usages threshold
      * @return bool
+     * @throws GeneralException
      */
     public function isUsed($usages = 0)
     {
@@ -375,7 +379,7 @@ class Media implements \JsonSerializable
      * Assign Tag
      * @param Tag $tag
      * @return $this
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function assignTag($tag)
     {
@@ -397,7 +401,7 @@ class Media implements \JsonSerializable
      * Unassign tag
      * @param Tag $tag
      * @return $this
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function unassignTag($tag)
     {
@@ -445,7 +449,7 @@ class Media implements \JsonSerializable
     /**
      * Validate
      * @param array $options
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function validate($options)
     {
@@ -479,7 +483,7 @@ class Media implements \JsonSerializable
     /**
      * Load
      * @param array $options
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function load($options = [])
     {
@@ -525,7 +529,7 @@ class Media implements \JsonSerializable
      * @throws ConfigurationException
      * @throws DuplicateEntityException
      * @throws InvalidArgumentException
-     * @throws XiboException
+     * @throws GeneralException
      */
     public function save($options = [])
     {
@@ -553,7 +557,7 @@ class Media implements \JsonSerializable
 
             // If the media file is invalid, then force an update (only applies to module files)
             $expires = $this->getOriginalValue('expires');
-            $this->isSaveRequired = ($this->isSaveRequired || $this->valid == 0 || ($expires > 0 && $expires < time()));
+            $this->isSaveRequired = ($this->isSaveRequired || $this->valid == 0 || ($expires > 0 && $expires < Carbon::now()->format('U')));
         }
 
         if ($options['deferred']) {
@@ -591,6 +595,10 @@ class Media implements \JsonSerializable
      * Save Async
      * @param array $options
      * @return $this
+     * @throws ConfigurationException
+     * @throws DuplicateEntityException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
      */
     public function saveAsync($options = [])
     {
@@ -607,7 +615,7 @@ class Media implements \JsonSerializable
     /**
      * Delete
      * @param array $options
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws GeneralException
      */
     public function delete($options = [])
     {
@@ -713,7 +721,6 @@ class Media implements \JsonSerializable
 
     /**
      * Add
-     * @throws ConfigurationException
      */
     private function add()
     {
@@ -731,8 +738,8 @@ class Media implements \JsonSerializable
             'released' => $this->released,
             'apiRef' => $this->apiRef,
             'valid' => 0,
-            'createdDt' => date('Y-m-d H:i:s'),
-            'modifiedDt' => date('Y-m-d H:i:s'),
+            'createdDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+            'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'enableStat' => $this->enableStat
         ]);
 
@@ -771,7 +778,7 @@ class Media implements \JsonSerializable
             'released' => $this->released,
             'apiRef' => $this->apiRef,
             'mediaId' => $this->mediaId,
-            'modifiedDt' => date('Y-m-d H:i:s'),
+            'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'enableStat' => $this->enableStat,
             'expires' => $this->expires
         ];
@@ -944,7 +951,7 @@ class Media implements \JsonSerializable
             'md5' => $md5,
             'released' => 1,
             'mediaId' => $this->mediaId,
-            'modifiedDt' => date('Y-m-d H:i:s')
+            'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
         ]);
         $this->getLog()->debug('Updating image md5 and fileSize. MediaId '. $this->mediaId);
 

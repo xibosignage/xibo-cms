@@ -46,6 +46,24 @@ then
   /bin/sed -i "s/define('SECRET_KEY','');/define('SECRET_KEY','$SECRET_KEY');/" /var/www/cms/web/settings.php
 fi
 
+# Check to see if we have a public/private key pair and encryption key
+if [ ! -f "/var/www/cms/library/certs/private.key" ]
+then
+  # Make the dir
+  mkdir -p /var/www/cms/library/certs
+
+  # Create the Keys
+  openssl genrsa -out /var/www/cms/library/certs/private.key 2048
+  openssl rsa -in /var/www/cms/library/certs/private.key -pubout -out /var/www/cms/library/certs/public.key
+
+  php -r 'echo base64_encode(random_bytes(32)), PHP_EOL;' >> /var/www/cms/library/certs/encryption.key
+fi
+
+# Set the correct permissions on the public/private key
+chmod 600 /var/www/cms/library/certs/private.key
+chmod 660 /var/www/cms/library/certs/public.key
+chown -R apache.apache /var/www/cms/library/certs
+
 # Check if there's a database file to import
 if [ -f "/var/www/backup/import.sql" ] && [ "$CMS_DEV_MODE" == "false" ]
 then
@@ -270,9 +288,18 @@ sed -i "s/post_max_size = .*$/post_max_size = $CMS_PHP_POST_MAX_SIZE/" /etc/php7
 sed -i "s/upload_max_filesize = .*$/upload_max_filesize = $CMS_PHP_UPLOAD_MAX_FILESIZE/" /etc/php7/php.ini
 sed -i "s/max_execution_time = .*$/max_execution_time = $CMS_PHP_MAX_EXECUTION_TIME/" /etc/php7/php.ini
 sed -i "s/memory_limit = .*$/memory_limit = $CMS_PHP_MEMORY_LIMIT/" /etc/php7/php.ini
+sed -i "s/session.cookie_httponly =.*$/session.cookie_httponly = $CMS_PHP_COOKIE_HTTP_ONLY/" /etc/php7/php.ini
+sed -i "s/session.cookie_samesite =.*$/session.cookie_samesite = $CMS_PHP_COOKIE_SAMESITE/" /etc/php7/php.ini
+sed -i "s/;session.cookie_secure =.*$/session.cookie_secure = $CMS_PHP_COOKIE_SECURE/" /etc/php7/php.ini
 
 # Configure Apache TimeOut
 sed -i "s/\bTimeout\b .*$/Timeout $CMS_APACHE_TIMEOUT/" /etc/apache2/conf.d/default.conf
+
+# Configure Indexes
+if [ "$CMS_APACHE_OPTIONS_INDEXES" == "true" ]
+then
+  sed -i "s/\-Indexes/\+Indexes/" /etc/apache2/conf.d/cms.conf
+fi
 
 # Run CRON in Production mode
 if [ "$CMS_DEV_MODE" == "false" ]

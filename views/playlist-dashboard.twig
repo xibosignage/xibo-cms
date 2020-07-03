@@ -58,6 +58,7 @@
 
                 <p>{{ libraryUpload.maxSizeMessage }}</p>
             </div>
+            {% include "theme-dashboard-message.twig" ignore missing %}
         </div>
     </div>
 
@@ -66,7 +67,7 @@
 {% block javaScript %}
     {# Add common file #}
     {% include "common.twig" %}
-    <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js"></script>
+    <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
     <script type="text/javascript">
         // Define some global variables to keep hold of
         let template;

@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -20,6 +21,7 @@
  */
 
 namespace Xibo\Tests\Integration;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboCampaign;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
@@ -126,29 +128,33 @@ class CampaignTest extends LocalWebTestCase
     public function testListAll()
     {
         # Get list of all campaigns
-        $this->client->get('/campaign');
+        $response = $this->sendRequest('GET', '/campaign');
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response);
+
+        $object = json_decode($response->getBody());
+
         # Check if call was successful
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object);
+        $this->assertNotEmpty($object->data);
     }
 
     /**
      * Add Campaign
-     * @return mixed
      */
     public function testAdd()
     {
         # Generate random name
         $name = Random::generateString(8, 'phpunit');
         # Add campaign
-        $this->client->post('/campaign', [
-            'name' => $name
-        ]);
+        $response = $this->sendRequest('POST', '/campaign', ['name' => $name]);
+
         # Check if call was successful
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+
+        $object = json_decode($response->getBody());
+
         $this->assertObjectHasAttribute('data', $object);
         $this->assertObjectHasAttribute('id', $object);
         # Check if campaign has he name we want it to have
@@ -166,12 +172,11 @@ class CampaignTest extends LocalWebTestCase
         # Generate new random name
         $newName = Random::generateString(8, 'phpunit');
         # Edit the campaign we added and change the name
-        $this->client->put('/campaign/' . $campaign->campaignId, [
-            'name' => $newName
-        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+        $response = $this->sendRequest('PUT', '/campaign/' . $campaign->campaignId, ['name' => $newName]);
+
         # check if cal was successful
-        $this->assertSame(200, $this->client->response->status());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
         # Check if campaign has the new name now
         $this->assertSame($newName, $object->data->campaign);
@@ -189,10 +194,12 @@ class CampaignTest extends LocalWebTestCase
         $camp1 = (new XiboCampaign($this->getEntityProvider()))->create($name1);
         $camp2 = (new XiboCampaign($this->getEntityProvider()))->create($name2);
         # Delete the one we created last
-        $this->client->delete('/campaign/' . $camp2->campaignId);
+        $response = $this->sendRequest('DELETE', '/campaign/' . $camp2->campaignId);
         # This should return 204 for success
-        $response = json_decode($this->client->response->body());
-        $this->assertSame(204, $response->status, $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertSame(204, $object->status, $response->getBody());
+
         # Check only one remains
         $campaigns = (new XiboCampaign($this->getEntityProvider()))->get();
         $this->assertEquals(count($this->startCampaigns) + 1, count($campaigns));
@@ -210,7 +217,7 @@ class CampaignTest extends LocalWebTestCase
 
     /**
      * Assign Layout
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function testAssignLayout()
     {
@@ -229,7 +236,7 @@ class CampaignTest extends LocalWebTestCase
         );
 
         // Call assign on the default layout
-        $this->client->post('/campaign/layout/assign/' . $campaign->campaignId, [
+        $response = $this->sendRequest('POST', '/campaign/layout/assign/' . $campaign->campaignId, [
             'layoutId' => [
                 [
                     'layoutId' => $layout->layoutId,
@@ -238,18 +245,18 @@ class CampaignTest extends LocalWebTestCase
             ]
         ]);
 
-        $this->assertSame(200, $this->client->response->status(), '/campaign/layout/assign/' . $campaign->campaignId . '. Body: ' . $this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), '/campaign/layout/assign/' . $campaign->campaignId . '. Body: ' . $response->getBody());
         # Get this campaign and check it has 1 layout assigned
         $campaignCheck = (new XiboCampaign($this->getEntityProvider()))->getById($campaign->campaignId);
-        $this->assertSame($campaign->campaignId, $campaignCheck->campaignId, $this->client->response->body());
-        $this->assertSame(1, $campaignCheck->numberLayouts, $this->client->response->body());
+        $this->assertSame($campaign->campaignId, $campaignCheck->campaignId, $response->getBody());
+        $this->assertSame(1, $campaignCheck->numberLayouts, $response->getBody());
         # Delete layout as we no longer need it
         $campaign->delete();
         $layout->delete();
     }
     /**
      * Unassign Layout
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function testUnassignLayout()
     {
@@ -269,12 +276,20 @@ class CampaignTest extends LocalWebTestCase
         // Assign layout to campaign
         $campaign->assignLayout([$layout->layoutId], [1]);
         # Call unassign on the created layout
-        $this->client->post('/campaign/layout/unassign/' . $campaign->campaignId, ['layoutId' => [['layoutId' => $layout->layoutId, 'displayOrder' => 1]]]);
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->body());
+        $response = $this->sendRequest('POST', '/campaign/layout/unassign/' . $campaign->campaignId, [
+            'layoutId' => [
+                [
+                    'layoutId' => $layout->layoutId,
+                    'displayOrder' => 1
+                ]
+            ]
+        ]);
+
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
         # Get this campaign and check it has 0 layouts assigned
         $campaignCheck2 = (new XiboCampaign($this->getEntityProvider()))->getById($campaign->campaignId);
-        $this->assertSame($campaign->campaignId, $campaignCheck2->campaignId, $this->client->response->body());
-        $this->assertSame(0, $campaignCheck2->numberLayouts, $this->client->response->body());
+        $this->assertSame($campaign->campaignId, $campaignCheck2->campaignId,$response->getBody());
+        $this->assertSame(0, $campaignCheck2->numberLayouts, $response->getBody());
         # Delete layout as we no longer need it
         $campaign->delete();
         $layout->delete();
@@ -282,7 +297,7 @@ class CampaignTest extends LocalWebTestCase
 
     /**
      * Assign Layout to layout specific campaignId - expect failure
-     * @throws \Xibo\Exception\NotFoundException
+     * @throws \Exception
      */
     public function testAssignLayoutFailure()
     {
@@ -295,7 +310,8 @@ class CampaignTest extends LocalWebTestCase
         );
 
         // Call assign on the layout specific campaignId
-        $this->client->post('/campaign/layout/assign/' . $layout->campaignId, [
+        $request = $this->createRequest('POST', '/campaign/layout/assign/' . $layout->campaignId);
+        $request = $request->withParsedBody([
             'layoutId' => [
                 [
                     'layoutId' => $layout->layoutId,
@@ -304,7 +320,13 @@ class CampaignTest extends LocalWebTestCase
             ]
         ]);
 
-        $this->assertSame(500, $this->client->response->status(), 'Expecting failure, received ' . $this->client->response->status());
+        try {
+            $this->app->handle($request);
+        } catch (InvalidArgumentException $exception) {
+            $this->assertSame(422, $exception->getCode(), 'Expecting failure, received ' . $exception->getMessage());
+        }
+
+
         $layout->delete();
     }
 }

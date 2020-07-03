@@ -42,15 +42,17 @@ class Audio extends ModuleWidget
     /**
      * Edit an Audio Widget
      * @SWG\Put(
-     *  path="/playlist/widget/audio/{playlistId}",
+     *  path="/playlist/widget/{widgetId}?audio",
      *  operationId="WidgetAudioEdit",
      *  tags={"widget"},
      *  summary="Parameters for editing existing audio widget on a layout",
-     *  description="Parameters for editing existing audio widget on a layout, for adding new audio, please refer to POST /library documentation",
+     *  description="For uploading new audio files, please refer to POST /library documentation.
+     *               For assigning existing audio file to a Playlist please see POST /playlist/library/assign/{playlistId} documentation.
+     *               This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
-     *      name="playlistId",
+     *      name="widgetId",
      *      in="path",
-     *      description="The Playlist ID",
+     *      description="The Widget ID",
      *      type="integer",
      *      required=true
      *  ),
@@ -129,8 +131,7 @@ class Audio extends ModuleWidget
         }
 
         $this->saveWidget();
-
-        //return $response;
+        return $response;
     }
 
     /**
@@ -163,7 +164,7 @@ class Audio extends ModuleWidget
         $file = $info->analyze($fileName);
 
         $file = $this->getSanitizer($file);
-        return intval($file->getString('playtime_seconds', ['default' => 0]));
+        return intval($file->getDouble('playtime_seconds', ['default' => 0]));
     }
 
     /** @inheritDoc */

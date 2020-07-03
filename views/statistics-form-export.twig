@@ -34,6 +34,8 @@
     {% trans "Save" %}, statsExportFormSubmit()
 {% endblock %}
 
+{% block callBack %}statsExportFormSelect{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
@@ -57,6 +59,11 @@
                     { name: "data-text-property", value: "display" }
                 ] %}
                 {{ forms.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
+
+                <div id="totalStat"></div>
+                <div class="loading-overlay" style="display: none">
+                    <i class="fa fa-spinner fa-spin loading-icon"></i>
+                </div>
             </form>
         </div>
     </div>

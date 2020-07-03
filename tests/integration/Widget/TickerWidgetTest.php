@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -21,7 +22,9 @@
 
 namespace Xibo\Tests\Integration\Widget;
 
+use Carbon\Carbon;
 use Xibo\Entity\Display;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboSchedule;
 use Xibo\OAuth2\Client\Entity\XiboTicker;
@@ -93,8 +96,8 @@ class TickerWidgetTest extends LocalWebTestCase
         // Schedule the Layout "always" onto our display
         //  deleting the layout will remove this at the end
         $event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
-            date('Y-m-d H:i:s', time()+3600),
-            date('Y-m-d H:i:s', time()+7200),
+            Carbon::now()->addSeconds(3600)->format(DateFormatHelper::getSystemFormat()),
+            Carbon::now()->addSeconds(7200)->format(DateFormatHelper::getSystemFormat()),
             $this->publishedLayout->campaignId,
             [$this->display->displayGroupId],
             0,
@@ -265,16 +268,16 @@ class TickerWidgetTest extends LocalWebTestCase
         $this->getLogger()->debug('testEditFeed - IN');
 
         // Edit ticker widget
-        $this->client->put('/playlist/widget/' . $this->widgetId, $newWidgetOptions, ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+        $response = $this->sendRequest('PUT','/playlist/widget/' . $this->widgetId, $newWidgetOptions, ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
         $this->getLogger()->debug('Check Response');
 
         // Check response
-        $this->assertSame(200, $this->client->response->status(), $this->client->response->getBody());
-        $this->assertNotEmpty($this->client->response->body());
-        $object = json_decode($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $this->assertNotEmpty($response->getBody());
+        $object = json_decode($response->getBody());
 
-        $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
 
         // Get the edited ticker back out again.
         /** @var XiboTicker $editedTicker */

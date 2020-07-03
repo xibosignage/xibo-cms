@@ -22,12 +22,13 @@
  */
 namespace Xibo\Widget;
 
+use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\DataSetColumn;
-use Xibo\Exception\InvalidArgumentException;
-use Xibo\Exception\NotFoundException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Chart
@@ -83,7 +84,7 @@ class Chart extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-1.11.1.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/Chart.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
@@ -237,7 +238,7 @@ class Chart extends ModuleWidget
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Do we have a step provided?
-        $step = $sanitizedParams->getInt('step', 2);
+        $step = $sanitizedParams->getInt('step', ['default' => 2]);
 
         if ($step == 1 || !$this->hasDataSet()) {
             return 'chart-form-edit-step1';
@@ -575,6 +576,13 @@ class Chart extends ModuleWidget
     public function getResource($displayId = 0)
     {
         $containerId = 'graph-' . $displayId;
+        $chartType = $this->getOption('graphType');
+
+        // Avoid rendering if the chart type isn't selected
+        if($chartType == null) {
+            $this->getLog()->debug('A dataset needs to be selected for widget: ' . $this->getWidgetId() . ' and displayId: ' . $displayId);
+            return '';
+        }
 
         $this->getLog()->debug('Render graph for widgetId: ' . $this->getWidgetId() . ' and displayId: ' . $displayId);
 
@@ -604,14 +612,14 @@ class Chart extends ModuleWidget
         ';
 
         // After body content - mostly XIBO-Stuff for scaling and so on
-        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-1.11.1.min.js') . '"></script>';
+        $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/Chart.min.js') . '"></script>';
 
         // Get data
         $chartData = $this->getChartData($displayId);
-        $chartData->type = $this->getOption('graphType');
+        $chartData->type = $chartType;
 
         // Do we have any chart options to take into consideration?
         $chartData->options = $this->getChartOptions();
@@ -1022,7 +1030,7 @@ class Chart extends ModuleWidget
         // Remote dataSets are kept "active" by required files
         $dataSet->setActive();
 
-        return $this->getDate()->parse($widgetModifiedDt, 'U');
+        return Carbon::createFromTimestamp($widgetModifiedDt);
     }
 }
 

@@ -22,17 +22,15 @@
 #}
 {% extends "non-authed.twig" %}
 
-{% block pageContent %}
-    <div class="widget">
-        <div class="widget-title">{% trans "Error" %}</div>
-        <div class="widget-body">
-            <div class="row">
-                <div class="col-md-12">
-                    {% if error != "" %}
-                    <div class="alert alert-danger">{{ error }}</div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
+{% block title %}{{ "Error"|trans }} | {% endblock %}
+
+{% block content %}
+    <h3>{% trans "Error" %}</h3>
+    {% if message != "" %}
+        <div class="alert alert-danger">{{ message }}</div>
+    {% else %}
+        <div class="alert alert-danger">{{ "Sorry there has been an unknown error."|trans }}</div>
+    {% endif %}
+    <p>{% trans "Please press the button below to go to your homepage or press back in your browser" %}</p>
+    <a class="btn btn-info" href="{{ homeUrl }}">{% trans "Home" %}</a>
 {% endblock %}

@@ -1,14 +1,15 @@
 <?php
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,11 +23,12 @@ namespace Xibo\Helper;
 
 use Phinx\Console\PhinxApplication;
 use Phinx\Wrapper\TextWrapper;
-use Xibo\Exception\InstallationError;
-use Xibo\Service\ConfigService;
-use Xibo\Service\SanitizerServiceInterface;
-use Xibo\Service\SanitizeService;
+use Psr\Container\ContainerInterface;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\InstallationError;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class Install
@@ -47,16 +49,29 @@ class Install
     public $existing_db_pass;
     public $existing_db_name;
 
-    /** @var SanitizerServiceInterface */
-    private $sanitizer;
+    /** @var ContainerInterface */
+    private $container;
+
+    /** @var SanitizerService */
+    private $sanitizerService;
 
     /**
      * Install constructor.
-     * @param SanitizeService $sanitizer
+     * @param ContainerInterface $container
      */
-    public function __construct($sanitizer)
+    public function __construct(ContainerInterface $container)
     {
-        $this->sanitizer = $sanitizer;
+        $this->container = $container;
+        $this->sanitizerService = $container->get('sanitizerService');
+    }
+
+    /**
+     * @param $array
+     * @return SanitizerInterface
+     */
+    protected function getSanitizer($array)
+    {
+        return $this->sanitizerService->getSanitizer($array);
     }
 
     /**
@@ -65,7 +80,7 @@ class Install
     public function Step1()
     {
         return [
-            'config' => new ConfigService()
+            'config' => $this->container->get('configService')
         ];
     }
 
@@ -78,45 +93,57 @@ class Install
     }
 
     /**
-     * @param StorageServiceInterface $store
+     * @param Request $request
+     * @param Response $response
+     * @return Response
      * @throws InstallationError
      */
-    public function Step3($store)
+    public function Step3(Request $request, Response $response) : Response
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        /** @var StorageServiceInterface $store */
+        $store = $this->container->get('store');
+
         // Have we been told to create a new database
-        $this->db_create = $this->sanitizer->getInt('db_create');
+        $this->db_create = $sanitizedParams->getInt('db_create');
 
         // Check all parameters have been specified
-        $this->db_admin_user = $this->sanitizer->getString('admin_username');
-        $this->db_admin_pass = $this->sanitizer->getString('admin_password');
+        $this->db_admin_user = $sanitizedParams->getString('admin_username');
+        $this->db_admin_pass = $sanitizedParams->getString('admin_password');
 
-        $this->new_db_host = $this->sanitizer->getString('host');
-        $this->new_db_user = $this->sanitizer->getString('db_username');
-        $this->new_db_pass = $this->sanitizer->getString('db_password');
-        $this->new_db_name = $this->sanitizer->getString('db_name');
+        $this->new_db_host = $sanitizedParams->getString('host');
+        $this->new_db_user = $sanitizedParams->getString('db_username');
+        $this->new_db_pass = $sanitizedParams->getString('db_password');
+        $this->new_db_name = $sanitizedParams->getString('db_name');
 
-        $this->existing_db_host = $this->sanitizer->getString('existing_host');
-        $this->existing_db_user = $this->sanitizer->getString('existing_db_username');
-        $this->existing_db_pass = $this->sanitizer->getString('existing_db_password');
-        $this->existing_db_name = $this->sanitizer->getString('existing_db_name');
+        $this->existing_db_host = $sanitizedParams->getString('existing_host');
+        $this->existing_db_user = $sanitizedParams->getString('existing_db_username');
+        $this->existing_db_pass = $sanitizedParams->getString('existing_db_password');
+        $this->existing_db_name = $sanitizedParams->getString('existing_db_name');
 
         // If an administrator user name / password has been specified then we should create a new DB
         if ($this->db_create == 1) {
             // Check details for a new database
-            if ($this->new_db_host == '')
+            if ($this->new_db_host == '') {
                 throw new InstallationError(__('Please provide a database host. This is usually localhost.'));
+            }
 
-            if ($this->new_db_user == '')
+            if ($this->new_db_user == '') {
                 throw new InstallationError(__('Please provide a user for the new database.'));
+            }
 
-            if ($this->new_db_pass == '')
+            if ($this->new_db_pass == '') {
                 throw new InstallationError(__('Please provide a password for the new database.'));
+            }
 
-            if ($this->new_db_name == '')
+            if ($this->new_db_name == '') {
                 throw new InstallationError(__('Please provide a name for the new database.'));
+            }
 
-            if ($this->db_admin_user == '')
+            if ($this->db_admin_user == '') {
                 throw new InstallationError(__('Please provide an admin user name.'));
+            }
 
             // Try to create the new database
             // Try and connect using these details and create the new database
@@ -175,17 +202,21 @@ class Install
 
         } else {
             // Check details for a new database
-            if ($this->existing_db_host == '')
+            if ($this->existing_db_host == '') {
                 throw new InstallationError(__('Please provide a database host. This is usually localhost.'));
+            }
 
-            if ($this->existing_db_user == '')
+            if ($this->existing_db_user == '') {
                 throw new InstallationError(__('Please provide a user for the existing database.'));
+            }
 
-            if ($this->existing_db_pass == '')
+            if ($this->existing_db_pass == '') {
                 throw new InstallationError(__('Please provide a password for the existing database.'));
+            }
 
-            if ($this->existing_db_name == '')
+            if ($this->existing_db_name == '') {
                 throw new InstallationError(__('Please provide a name for the existing database.'));
+            }
         }
 
         // Try and make a connection with this database
@@ -198,8 +229,9 @@ class Install
         // Write out a new settings.php
         $fh = fopen(PROJECT_ROOT . '/web/settings.php', 'wt');
 
-        if (!$fh)
+        if (!$fh) {
             throw new InstallationError(__('Unable to write to settings.php. We already checked this was possible earlier, so something changed.'));
+        }
 
         // Get the settings template and issue replacements
         $settings = $this->getSettingsTemplate();
@@ -211,8 +243,9 @@ class Install
         $settings = str_replace('$_SERVER[\'MYSQL_DATABASE\']', '\'' . $this->existing_db_name . '\'', $settings);
         $settings = str_replace('define(\'SECRET_KEY\',\'\')', 'define(\'SECRET_KEY\',\'' . Install::generateSecret() . '\');', $settings);
 
-        if (!fwrite($fh, $settings))
+        if (!fwrite($fh, $settings)) {
             throw new InstallationError(__('Unable to write to settings.php. We already checked this was possible earlier, so something changed.'));
+        }
 
         fclose($fh);
 
@@ -222,6 +255,7 @@ class Install
 
         // If we get here, we want to move on to the next step.
         // This is handled by the calling function (i.e. there is no output from this call, we just reload and move on)
+        return $response;
     }
 
     /**
@@ -233,20 +267,28 @@ class Install
     }
 
     /**
-     * @param StorageServiceInterface $store
+     * @param Request $request
+     * @param Response $response
+     * @return Response
      * @throws InstallationError
      */
-    public function Step5($store)
+    public function Step5(Request $request, Response $response) : Response
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        /** @var StorageServiceInterface $store */
+        $store = $this->container->get('store');
         // Configure the user account
-        $username = $this->sanitizer->getString('admin_username');
-        $password = $this->sanitizer->getString('admin_password');
+        $username = $sanitizedParams->getString('admin_username');
+        $password = $sanitizedParams->getString('admin_password');
 
-        if ($username == '')
+        if ($username == '') {
             throw new InstallationError(__('Missing the admin username.'));
+        }
 
-        if ($password == '')
+        if ($password == '') {
             throw new InstallationError(__('Missing the admin password.'));
+        }
 
         // Update user id 1 with these details.
         try {
@@ -267,6 +309,8 @@ class Install
         } catch (\PDOException $e) {
             throw new InstallationError(sprintf(__('Unable to set the user details. This is an unexpected error, please contact support. Error Message = [%s]'), $e->getMessage()));
         }
+
+        return $response;
     }
 
     /**
@@ -280,28 +324,38 @@ class Install
     }
 
     /**
-     * @param StorageServiceInterface $store
+     * @param Request $request
+     * @param Response $response
+     * @return Response
      * @throws InstallationError
      */
-    public function Step7($store)
+    public function Step7(Request $request, Response $response) : Response
     {
-        $server_key = $this->sanitizer->getString('server_key');
-        $library_location = $this->sanitizer->getString('library_location');
-        $stats = $this->sanitizer->getCheckbox('stats');
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if ($server_key == '')
+        /** @var StorageServiceInterface $store */
+        $store = $this->container->get('store');
+
+        $server_key = $sanitizedParams->getString('server_key');
+        $library_location = $sanitizedParams->getString('library_location');
+        $stats = $sanitizedParams->getCheckbox('stats');
+
+        if ($server_key == '') {
             throw new InstallationError(__('Missing the server key.'));
+        }
 
-        if ($library_location == '')
+        if ($library_location == '') {
             throw new InstallationError(__('Missing the library location.'));
+        }
 
         // Remove trailing white space from the path given.
         $library_location = trim($library_location);
 
         if (!is_dir($library_location)) {
             // Make sure they haven't given a file as the library location
-            if (is_file($library_location))
+            if (is_file($library_location)) {
                 throw new InstallationError(__('A file exists with the name you gave for the Library Location. Please choose another location'));
+            }
 
             // Directory does not exist. Attempt to make it
             // Using mkdir recursively, so it will attempt to make any
@@ -312,12 +366,14 @@ class Install
         }
 
         // Is library_location writable?
-        if (!is_writable($library_location))
+        if (!is_writable($library_location)) {
             throw new InstallationError(__('The Library Location you gave is not writable by the webserver. Please fix the permissions and try again.'));
+        }
 
         // Is library_location empty?
-        if (count(Install::ls("*", $library_location, true)) > 0)
+        if (count(Install::ls("*", $library_location, true)) > 0) {
             throw new InstallationError(__('The Library Location you gave is not empty. Please give the location of an empty folder'));
+        }
 
         // Check if the user has added a trailing slash. If not, add one.
         if (!((substr($library_location, -1) == '/') || (substr($library_location, -1) == '\\'))) {
@@ -351,8 +407,11 @@ class Install
         }
 
         // Delete install
-        if (!@unlink('index.php'))
+        if (!@unlink('index.php')) {
             throw new InstallationError(__("Unable to delete install/index.php. Please ensure the web server has permission to unlink this file and retry"));
+        }
+
+        return $response;
     }
 
     /**

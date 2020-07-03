@@ -24,10 +24,10 @@
 namespace Xibo\Factory;
 
 use Xibo\Entity\RequiredFile;
-use Xibo\Exception\NotFoundException;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Service\SanitizerServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class RequiredFileFactory
@@ -41,7 +41,7 @@ class RequiredFileFactory extends BaseFactory
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param SanitizerServiceInterface $sanitizerService
+     * @param SanitizerService $sanitizerService
      */
     public function __construct($store, $log, $sanitizerService)
     {
@@ -94,7 +94,7 @@ class RequiredFileFactory extends BaseFactory
         $result = $this->query(['displayId' => $displayId, 'type' => 'L', 'itemId' => $layoutId]);
 
         if (count($result) <= 0)
-            throw new NotFoundException('Required file not found for Display and Layout Combination');
+            throw new NotFoundException(__('Required file not found for Display and Layout Combination'));
 
         return $result[0];
     }
@@ -110,7 +110,7 @@ class RequiredFileFactory extends BaseFactory
         $result = $this->query(['displayId' => $displayId, 'type' => 'M', 'itemId' => $mediaId]);
 
         if (count($result) <= 0)
-            throw new NotFoundException('Required file not found for Display and Media Combination');
+            throw new NotFoundException(__('Required file not found for Display and Media Combination'));
 
         return $result[0];
     }
@@ -126,7 +126,7 @@ class RequiredFileFactory extends BaseFactory
         $result = $this->query(['displayId' => $displayId, 'type' => 'W', 'itemId' => $widgetId]);
 
         if (count($result) <= 0)
-            throw new NotFoundException('Required file not found for Display and Layout Widget');
+            throw new NotFoundException(__('Required file not found for Display and Layout Widget'));
 
         return $result[0];
     }

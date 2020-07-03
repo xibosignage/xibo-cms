@@ -122,24 +122,44 @@
     * Init/Update timePicker fields
     */
     function timersFormInit(container) {
+        const customTimeFormat = 'HH:mm';
+        container.find('.input-group:not(.timerInit) .timePickerDisplayEditForm').each(function() {
+            if(calendarType == 'Jalali') {
+                initDatePicker(
+                    $(this),
+                    customTimeFormat,
+                    customTimeFormat,
+                    {
+                        onlyTimePicker: true,
+                        format: customTimeFormat,
+                        timePicker: {
+                            second: {
+                                enabled: false
+                            }
+                        },
+                        altFieldFormatter: function(unixTime) {
+                            let newDate = moment.unix(unixTime / 1000);
+                            newDate.set('second', 0);
 
-        container.find('.timePickerDisplayEditForm').each(function() {
-
-            $(this).timepicker({
-                'timeFormat': timeFormat,
-                'step': 15
-            }).change(function() {
-                var value = moment($(this).val(), jsTimeFormat);
-                $(this).closest("form").find("#" + $(this).data().linkField).val(value.format('HH:mm'));
-            });
-
-            // Get the linked field and use it to set the time
-            var preset = $(this).closest("form").find("#" + $(this).data().linkField).val();
-
-            if (preset != undefined && preset != "") {
-                $(this).timepicker('setTime', preset);
+                            return newDate.format(customTimeFormat);
+                        }
+                    }
+                );
+            } else {
+                initDatePicker(
+                    $(this),
+                    customTimeFormat,
+                    customTimeFormat,
+                    {
+                        enableTime: true,
+                        noCalendar: true,
+                        time_24hr: true,
+                        altFormat: customTimeFormat
+                    }
+                );
             }
-        
+
+            $(this).parent().addClass('timerInit');
         });
     }
 
@@ -200,11 +220,11 @@
         sliderOptions.value = ((propertyValue != undefined) ? propertyValue : 0);
 
         // Init slider
-        row.find('.pictureControlsSlider').slider(sliderOptions); 
+        row.find('.pictureControlsSlider').bootstrapSlider(sliderOptions); 
 
         // Refresh on tab switch to fix broken labels
         $('a[data-toggle="tab"]').on('shown.bs.tab', () =>  {
-            row.find('.pictureControlsSlider').slider('refresh', { useCurrentValue: true });
+            row.find('.pictureControlsSlider').bootstrapSlider('refresh', { useCurrentValue: true });
         });
     }
 
@@ -242,12 +262,16 @@
                 </select>
             </div>
             <div class="col-sm-3 multiSelectInputs">
-                <input type="hidden" class="timersOn" name="timers[{{ index }}][on]" id="timersOn{{ index }}" value="{{ values.on }}" />
-                <input class="form-control timePickerDisplayEditForm" type="text" id="timersOn{{ index }}Link" data-link-field="timersOn{{ index }}" data-link-format="H:i"/>
+                <div class="input-group">
+                    <input class="form-control timePickerDisplayEditForm timersOn" type="text" name="timers[{{ index }}][on]" id="timersOn{{ index }}" value="{{ values.on }}" />
+                    <span class="input-group-addon date-clear-button hidden" role="button"><i class="fa fa-times"></i></span>
+                </div>
             </div>
             <div class="col-sm-3 multiSelectInputs">
-                <input type="hidden" class="timersOff" name="timers[{{ index }}][off]" id="timersOff{{ index }}" value="{{ values.off }}" />
-                <input class="form-control timePickerDisplayEditForm" type="text" id="timersOff{{ index }}Link" data-link-field="timersOff{{ index }}" data-link-format="H:i"/>
+                <div class="input-group">
+                    <input class="form-control timePickerDisplayEditForm timersOff" type="text" name="timers[{{ index }}][off]" id="timersOff{{ index }}" value="{{ values.off }}" />
+                    <span class="input-group-addon date-clear-button hidden" role="button"><i class="fa fa-times"></i></span>
+                </div>
             </div>
         </div>
     </script>

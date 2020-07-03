@@ -31,11 +31,28 @@ window.moment = require('moment');
 // moment-timezone
 require('moment-timezone');
 
-// moment-jalaali
 try {
     // Conditional import for the locale variable
     if( calendar_type && calendar_type == "Jalali") {
+        // moment-jalaali
         window.moment = require('moment-jalaali');
+
+        // Persian date time picker
+        window.persianDate = require('persian-date/dist/persian-date.min.js');
+        require('persian-datepicker/dist/js/persian-datepicker.min.js');
+    } else {
+        // Time/Date picker
+        window.flatpickr = require('flatpickr');
+        window.flatpickrMonthSelectPlugin = require('flatpickr/dist/plugins/monthSelect/index.js');
+
+        try {
+            // Conditional import for the locale variable
+            if(jsShortLocale && jsShortLocale != 'en-GB') {
+                require('flatpickr/dist/l10n/' + jsShortLocale + '.js');
+            }
+        } catch(e) { //Handle variable not set error
+            console.warn('[Warning] loading flatpickr: Locale not defined!');
+        }
     }
 } catch (e) { //Handle variable not set error
     console.warn('[Warning] loading moment-jalaali: Calendar Type not defined!');
@@ -83,9 +100,6 @@ require('colors.js');
 // chart.js
 require('chart.js');
 
-// timepicker
-require('timepicker');
-
 // form-serializer
 require('form-serializer');
 
@@ -101,7 +115,7 @@ var dt_extras = [
 dt_extras.forEach(function(e) {e(window, window.$);});
 
 // bootstrap-tour
-require('bootstrap-tour/build/js/bootstrap-tour.min.js');
+require('bootstrap-tourist/bootstrap-tourist.js');
 
 //--- Add Local JS files ---
 // jquery-message-queuing
@@ -112,4 +126,5 @@ require('leaflet');
 require('leaflet-draw');
 require('leaflet-search');
 window.L = require('leaflet');
+window.leafletPip = require('@mapbox/leaflet-pip');
 

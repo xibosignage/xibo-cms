@@ -75,6 +75,10 @@
                     url: "{{ url_for("layout.discard", {id: ':id'}) }}",
                     type: 'PUT'
                 },
+                unlock: {
+                    url: "{{ url_for("layout.lock.release", {id: ':id'}) }}",
+                    type: 'PUT'
+                },
                 list: {
                     url: "{{ url_for("layout.view") }}"
                 },
@@ -99,6 +103,14 @@
                 discardForm: {
                     url: "{{ url_for("layout.discard.form", {id: ':id'}) }}",
                     type: 'GET'
+                },
+                addActionForm: {
+                    url: "{{ url_for("action.add.form", {source: 'layout', id:':id'}) }}",
+                    type: 'GET'
+                },
+                addDrawer: {
+                    url: "{{ url_for("region.add.drawer", {id: ':id'}) }}",
+                    type: 'POST'
                 }
             },
             region: {
@@ -130,6 +142,10 @@
                 },
                 getPermissions:  {
                     url: "{{ url_for("user.permissions.form", {entity: 'Region', id: ':id'}) }}",
+                    type: 'GET'
+                },
+                addActionForm: {
+                    url: "{{ url_for("action.add.form", {source: 'region', id:':id'}) }}",
                     type: 'GET'
                 }
             },
@@ -176,6 +192,10 @@
                 },
                 getPermissions:  {
                     url: "{{ url_for("user.permissions.form", {entity: 'Widget', id: ':id'}) }}",
+                    type: 'GET'
+                },
+                addActionForm: {
+                    url: "{{ url_for("action.add.form", {source: 'widget', id:':id'}) }}",
                     type: 'GET'
                 }
             },
@@ -250,7 +270,10 @@
                 tooltipsDisabled: "{{ "Tooltips disabled!" |trans }}",
                 tooltipsEnabled: "{{ "Tooltips enabled!" |trans }}",
                 publish: "{{ "Publish" |trans }}",
-                discard: "{{ "Discard"|trans }}"
+                discard: "{{ "Discard"|trans }}",
+                copyToClipboard: "{{ "Copy to Clipboard"|trans }}",
+                couldNotCopy: "{{ "Could not copy"|trans }}",
+                copied: "{{ "Copied!"|trans }}"
             };
 
             var uploadTrans = {
@@ -305,7 +328,7 @@
                 search: "{{ "Search" |trans }}",
                 add: "{{ "Add" |trans }}",
                 grab: "{{ "Grab" |trans }}",
-                addAsFavourite: "{{ "Add as favourite" |trans }}",
+                addAsFavourite: "{{ "Mark as favourite" |trans }}",
                 addedToFavourites: "{{ "Module added to favourites!" |trans }}",
                 moduleNavStart: "{{ "Scroll to the start!" |trans }}",
                 moduleNavEnd: "{{ "Scroll to the end!" |trans }}",
@@ -326,7 +349,7 @@
                     name: "{{ "Name"|trans }}",
                     type: "{{ "Type"|trans }}",
                     tags: "{{ "Tags"|trans }}",
-                    thumbnail: "{{ "Thumbnail|trans"}}"
+                    thumbnail: "{{ "Thumbnail"|trans }}"
                 },
                 queue: {
                     title: "{{ "Media Add Queue"|trans }}",
@@ -334,7 +357,7 @@
                     addToRegion: "{{ "Add to Selected Region"|trans }}",
                     addToPlaylist: "{{ "Add to Playlist"|trans }}",
                     selectRegion: "{{ "Click in Region to Add"|trans }}",
-                    cancel: "{{ "Cancel|trans"}}"
+                    cancel: "{{ "Cancel"|trans }}"
                 },
                 menuItems: {
                     toolsName: "{{ "Tools" |trans }}",
@@ -442,7 +465,8 @@
                 setToStart: "{{ "Set to start" |trans }}",
                 setToExpire: "{{ "Set to expire" |trans }}",
                 expired: "{{ "Expired" |trans }}",
-                deleteOnExpire: "{{ "Delete on expire"|trans }}"
+                startTime: "{{ "Start Time"|trans }}",
+                endTime: "{{ "End Time"|trans }}"
             };
 
             var datasetQueryBuilderTranslations = {
@@ -490,6 +514,25 @@
                         value: "{{ "And"|trans }}"
                     }
                 ]
+            };
+
+            var actionsTranslations = {
+                tableHeaders: {
+                    name: "{{ "Actions" |trans }}",
+                    id: "{{ "Id"|trans }}",
+                    ownerId: "{{ "Owner Id"|trans }}",
+                    triggerType: "{{ "Trigger Type"|trans }}",
+                    triggerCode: "{{ "Trigger Code"|trans }}",
+                    actionType: "{{ "Action Type"|trans }}",
+                    target: "{{ "Target Type"|trans }}",
+                    targetId: "{{ "Target"|trans }}",
+                    widgetId: "{{ "Widget"|trans }}",
+                    layoutCode: "{{ "Layout Code"|trans }}",
+                },
+                button: {
+                    name: "{{ "Add Action" |trans }}",
+                    description: "{{ "Click to Add a new Action"|trans }}"
+                }
             };
         {% endautoescape %}
     </script>
