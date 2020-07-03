@@ -28,8 +28,11 @@
         // Set duration field, using the helper ()
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
 
+        // Use global or multiple commands checkbox
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useGlobalCommand', '.global-command-show', '.global-command-hide');
+
         // Set command code field, using the helper ()
-        formHelpers.setupObjectValueInputFields($(this).find('form'), '#commandCode', ['.non-command-fields'], ['']);
+        formHelpers.setupObjectValueInputFields($(this), '#commandType', ['.new-command-fields', '.stored-command-fields'], ['createCommand', 'storedCommand']);
     }
 
 </script>

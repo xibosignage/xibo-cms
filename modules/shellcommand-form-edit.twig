@@ -32,6 +32,7 @@
         <ul class="nav nav-tabs" role="tablist">
             <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
             <li><a href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
+            <li class="new-command-fields"><a href="#advanceTab" role="tab" data-toggle="tab"><span>{% trans "Advance" %}</span></a></li>
         </ul>
         <div class="col-md-12">
             <form id="shellCommandEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
@@ -72,29 +73,56 @@
                     </div>
 
                     <div class="tab-pane" id="configurationTab">
-                        {% set title %}{% trans "Stored Command" %}{% endset %}
-                        {% set helpText %}{% trans "Pick a command" %}{% endset %}
-                        {{ forms.dropdown("commandCode", "single", title, module.getOption("commandCode"), [{code:"", command: ""}]|merge(commands), "code", "command", helpText) }}
-                        
-                        {% set title %}{% trans "Windows Command" %}{% endset %}
-                        {% set helpText %}{% trans "Enter a Windows Command Line compatible command" %}{% endset %}
-                        {{ forms.input("windowsCommand", title, module.getOption("windowsCommand")|url_decode, helpText, "non-command-fields") }}
+                        {% set storedCommand %}{% trans "Stored Command" %}{% endset %}
+                        {% set createCommand %}{% trans "Create Command" %}{% endset %}
+                        {% set options = [
+                            { id: "storedCommand", value: storedCommand },
+                            { id: "createCommand", value: createCommand }
+                        ] %}
 
+                        {% set title %}{% trans "Command Type" %}{% endset %}
+                        {% set helpText %}{% trans "Pick a command type" %}{% endset %}
+                        {{ forms.dropdown("commandType", "single", title, module.getOption("commandType"), options, "id", "value", helpText) }}
+
+                        {% set title %}{% trans "Stored Command" %}{% endset %}
+                        {% set helpText %}{% trans "Pick a stored command" %}{% endset %}
+                        {{ forms.dropdown("commandCode", "single", title, module.getOption("commandCode"), [{code:"", command: ""}]|merge(commands), "code", "command", helpText, "stored-command-fields") }}
+
+                        <div class="new-command-fields">
+                            {% set title %}{% trans "Use global command?" %}{% endset %}
+                            {% set helpText %}{% trans "Use a global command to work with all the player types." %}{% endset %}
+                            {{ forms.checkbox("useGlobalCommand", title, module.getOption("useGlobalCommand"), helpText, "") }}
+
+                            {% set title %}{% trans "Global Command" %}{% endset %}
+                            {% set helpText %}{% trans "Enter a global (Android/Linux/Tizen/webOS/Windows) Command Line compatible command" %}{% endset %}
+                            {{ forms.input("globalCommand", title, module.getOption("globalCommand")|url_decode, helpText, "global-command-show XiboCommand") }}
+
+                            {% set title %}{% trans "Android Command" %}{% endset %}
+                            {% set helpText %}{% trans "Enter an Android Command Line compatible command" %}{% endset %}
+                            {{ forms.input("androidCommand", title, module.getOption("androidCommand")|url_decode, helpText, "global-command-hide XiboCommand") }}
+
+                            {% set title %}{% trans "Linux Command" %}{% endset %}
+                            {% set helpText %}{% trans "Enter an Linux Command Line compatible command" %}{% endset %}
+                            {{ forms.input("linuxCommand", title, module.getOption("linuxCommand")|url_decode, helpText, "global-command-hide XiboCommand") }}
+
+                            {% set title %}{% trans "Tizen Command" %}{% endset %}
+                            {% set helpText %}{% trans "Enter a Tizen Command Line compatible command." %}{% endset %}
+                            {{ forms.input("tizenCommand", title, module.getOption('tizenCommand'), helpText, "global-command-hide XiboCommand") }}
+
+                            {% set title %}{% trans "webOS Command" %}{% endset %}
+                            {% set helpText %}{% trans "Enter a webOS Command Line compatible command." %}{% endset %}
+                            {{ forms.input("webosCommand", title, module.getOption('webosCommand'), helpText, "global-command-hide XiboCommand") }}
+
+                            {% set title %}{% trans "Windows Command" %}{% endset %}
+                            {% set helpText %}{% trans "Enter a Windows Command Line compatible command" %}{% endset %}
+                            {{ forms.input("windowsCommand", title, module.getOption("windowsCommand")|url_decode, helpText, "global-command-hide XiboCommand") }}
+                        </div>
+                    </div>
+
+                    <div class="tab-pane" id="advanceTab">
                         {% set title %}{% trans "Launch the command via Windows Command Line" %}{% endset %}
                         {% set helpText %}{% trans "On Windows, should the player launch this command through the windows command line (cmd.exe)? This is useful for batch files. If you try to terminate this command only the command line will be terminated." %}{% endset %}
-                        {{ forms.checkbox("launchThroughCmd", title, module.getOption("launchThroughCmd", 1), helpText, "non-command-fields") }}
-
-                        {% set title %}{% trans "Android / Linux Command" %}{% endset %}
-                        {% set helpText %}{% trans "Enter an Android / Linux Command Line compatible command" %}{% endset %}
-                        {{ forms.input("linuxCommand", title, module.getOption("linuxCommand")|url_decode, helpText, "non-command-fields") }}
-
-                        {% set title %}{% trans "webOS Command" %}{% endset %}
-                        {% set helpText %}{% trans "Enter a webOS Command Line compatible command." %}{% endset %}
-                        {{ forms.input("webosCommand", title, module.getOption('webosCommand'), helpText, "non-command-fields") }}
-
-                        {% set title %}{% trans "Tizen Command" %}{% endset %}
-                        {% set helpText %}{% trans "Enter a Tizen Command Line compatible command." %}{% endset %}
-                        {{ forms.input("tizenCommand", title, module.getOption('tizenCommand'), helpText, "non-command-fields") }}
+                        {{ forms.checkbox("launchThroughCmd", title, module.getOption("launchThroughCmd", 1), helpText, "") }}
                     </div>
                 </div> 
             </form>

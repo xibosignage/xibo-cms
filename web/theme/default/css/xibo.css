@@ -997,3 +997,100 @@ input.datePicker[readonly], input.dateTimePicker[readonly], input.dateMonthPicke
     cursor: pointer;
     background-color: #fff;
 }
+
+/* 
+ * Commands
+ */
+.XiboCommand .command-preview {
+    display: none;
+}
+
+.XiboCommand .show-command-preview {
+    height: 20px;
+}
+
+.XiboCommand .show-command-preview-label {
+    margin: 4px;
+}
+
+.XiboCommand .command-type {
+    width: 140px;
+}
+
+.XiboCommand .command-inputs {
+    padding: 6px;
+    font-size: 14px;
+    margin: 4px 0;
+    background-color: #e5e9ec;
+}
+
+.XiboCommand .command-inputs button {
+    margin: 2px 0px;
+    width: 35px;
+}
+
+.XiboCommand .free-text {
+    width: 100%;
+}
+
+.XiboCommand .form-control-inline {
+    padding: 6px 4px;
+}
+
+/* Android intent */
+.XiboCommand .intent-extra-container {
+    margin-top: 10px;
+    font-size: 0;
+}
+
+.XiboCommand .intent-extra-element .form-control-inline {
+    width: 25%;
+}
+
+.XiboCommand .intent-extra-element .extra-value {
+    width: calc(50% - 40px);
+}
+.XiboCommand .invalid .form-control-inline, .XiboCommand .command-preview.invalid {
+    background-color: #fbe5e5;
+}
+
+.XiboCommand label.intent-extra-container-label {
+    position: relative;
+    top: 10px;
+}
+
+/* RS232 */
+.XiboCommand .command-inputs .form-group-rs232 {
+    text-align: center;
+    font-size: 0;
+}
+
+.XiboCommand .command-inputs .form-group-rs232 div {
+    padding: 0 4px;
+    text-align: left;
+    margin: 4px 0;
+}
+
+.XiboCommand .command-inputs .form-group-rs232 div label {
+    width: 30%;
+    font-size: 14px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    float: left;
+    margin-top: 6px;
+}
+
+.XiboCommand .command-inputs .form-group-rs232 .rs232-text-input {
+    width: 32%;
+    margin: 0 0.5%;
+}
+
+.XiboCommand .command-inputs .form-group-rs232 select {
+    width: 70%;
+}
+
+.XiboCommand .command-inputs .form-group-rs232.command-group {
+    width: 99%;
+    margin: 0 0.5%;
+}
