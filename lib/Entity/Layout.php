@@ -1886,12 +1886,12 @@ class Layout implements \JsonSerializable
                     throw new InvalidArgumentException(__('There is an error with this Layout: %s',
                         implode(',', $this->getStatusMessage())), 'status');
                 }
+            }
 
-                // If we have an empty region and we've not exceptioned, then we need to record that in our status
-                if ($this->hasEmptyRegion()) {
-                    $this->status = ModuleWidget::$STATUS_INVALID;
-                    $this->pushStatusMessage(__('Empty Region'));
-                }
+            // If we have an empty region and we've not exceptioned, then we need to record that in our status
+            if ($this->hasEmptyRegion()) {
+                $this->status = ModuleWidget::$STATUS_INVALID;
+                $this->pushStatusMessage(__('Empty Region'));
             }
 
             $this->save([
