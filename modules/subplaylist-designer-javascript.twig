@@ -121,7 +121,7 @@
                 subPlaylistFields.append(subPlaylistFormTemplate({
                     playlists: $form.data().extra.playlists,
                     isPlaylistEditable: true,
-                    title: subPlaylistFields.find('.form-group').length + 1,
+                    title: subPlaylistFields.find('.row-special').length + 1,
                     subPlaylistId: "",
                     subPlaylistIdSpots: "",
                     subPlaylistIdSpotLength: "",
@@ -142,7 +142,7 @@
                 subplaylist_init_row($form);
             } else {
                 // Remove this row
-                $(this).closest(".form-group").remove();
+                $(this).closest(".row-special").remove();
             }
         });
 
