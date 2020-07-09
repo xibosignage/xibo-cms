@@ -7,5 +7,7 @@
   "color":"green",
   "fa_icon": "fa-bar-chart",
   "sort_order": 3,
-  "hidden": 0
+  "hidden": 0,
+  "category": "proof of play",
+  "route": "/stats"
 }

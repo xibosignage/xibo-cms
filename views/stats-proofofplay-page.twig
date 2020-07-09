@@ -24,8 +24,6 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
-
-
 {% block pageContent %}
 
     <div class="row row-flex">
@@ -43,26 +41,34 @@
                 </div>
             </div>
         </div>
-
-         {% for report in defaults.availableReports %}
-             {% if report.hidden == 0 %}
-                <div class="report-box col-lg-3 col-md-6 col-xs-12">
-                     <div class="widget content">
-                        <div class="widget-body">
-                            <div class="widget-icon {{ report.color }} ">
-                                <i class="fa {{ report.fa_icon }}"></i>
-                            </div>
-                            <div class="widget-content">
-                                <div class="report-title">  {{ report.description }}  </div>
-                                <div class="comment"><a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.type }}</a></div>
-                            </div>
-                            <div class="clearfix"></div>
-                        </div>
-                    </div>
-                </div>
-            {% endif %}
-        {% endfor %}
     </div>
+        {% for key,reports in defaults.availableReports %}
+            <div class="row">
+                <div>
+                    <span>{{  key|capitalize }}</span>
+
+                </div>
+                {% for report in reports %}
+                    {% if report.hidden == 0 %}
+                        <div class="report-box col-lg-3 col-md-6 col-xs-12">
+                            <div class="widget content">
+                                <div class="widget-body">
+                                    <div class="widget-icon {{ report.color }} ">
+                                        <i class="fa {{ report.fa_icon }}"></i>
+                                    </div>
+                                    <div class="widget-content">
+                                        <div class="report-title">  {{ report.description }}  </div>
+                                        <div class="comment"><a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.type }}</a></div>
+                                    </div>
+                                    <div class="clearfix"></div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endfor %}
+
 
 {% endblock %}
 

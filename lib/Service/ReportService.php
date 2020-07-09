@@ -105,21 +105,33 @@ class ReportService implements ReportServiceInterface
 
             $config = json_decode(file_get_contents($file));
             $config->file = Str::replaceFirst(PROJECT_ROOT, '', $file);
+            $route = $config->route;
 
-            $reports[] = $config;
+            // Check Permissions
+            if (!$this->container->get('user')->routeViewable($route)) {
+                continue;
+            }
+
+            $reports[$config->category][] = $config;
         }
 
         $this->log->debug('Reports found in total: '.count($reports));
 
-        // Sort list of reports by their order
-        usort($reports, function ($a, $b) {
 
-            if (empty($a->sort_order) || empty($b->sort_order)) {
-                return 0;
-            }
+        foreach ($reports as $k => $report) {
 
-            return $a->sort_order - $b->sort_order;
-        });
+            usort($report, function ($a, $b) {
+
+                if (empty($a->sort_order) || empty($b->sort_order)) {
+                    return 0;
+                }
+
+                return $a->sort_order - $b->sort_order;
+            });
+
+            $reports[$k] = $report;
+
+        }
 
         return $reports;
     }
@@ -129,13 +141,14 @@ class ReportService implements ReportServiceInterface
      */
     public function getReportByName($reportName)
     {
-        foreach($this->listReports() as $report) {
+        foreach($this->listReports() as $reports) {
+            foreach($reports as $report) {
+                if($report->name == $reportName) {
 
-            if($report->name == $reportName) {
+                    $this->log->debug('Get report by name: '.json_encode($report, JSON_PRETTY_PRINT));
 
-                $this->log->debug('Get report by name: '.json_encode($report, JSON_PRETTY_PRINT));
-
-                return $report;
+                    return $report;
+                }
             }
         }
 
@@ -148,15 +161,17 @@ class ReportService implements ReportServiceInterface
      */
     public function getReportClass($reportName)
     {
-        foreach($this->listReports() as $report) {
+        foreach($this->listReports() as $reports) {
+            foreach($reports as $report) {
 
-            if($report->name == $reportName) {
-                if ($report->class == '') {
-                    throw new NotFoundException(__('Report class not found'));
+                if($report->name == $reportName) {
+                    if ($report->class == '') {
+                        throw new NotFoundException(__('Report class not found'));
+                    }
+                    $this->log->debug('Get report class: '.$report->class);
+
+                    return $report->class;
                 }
-                $this->log->debug('Get report class: '.$report->class);
-
-                return $report->class;
             }
         }
 

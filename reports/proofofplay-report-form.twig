@@ -30,27 +30,31 @@
         <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}?reportName=proofofplayReport"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
         <li class="btn btn-primary btn-xs"><a class="btns" href="{{ url_for("reportschedule.view") }}?reportName=proofofplayReport"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
     </ul>
-    <div class="proof-of-play-report-div pull-right btn-group">
-        <button class="proof-of-play-report-btn btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-            <span class="fa fa-caret-down"></span>
-            {% trans "Reports" %}
-        </button>
-        <ul class="dropdown-menu">
-            {% for report in defaults.availableReports %}
-                {% if report.hidden == 0 %}
-                    <li>
-                        <a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
-                    </li>
-                {% endif %}
-            {% endfor %}
-        </ul>
-    </div>
 {% endblock %}
 
 {% block pageContent %}
 
     <div class="widget">
-        <div class="widget-title">{% trans "Proof of Play" %}</div>
+        <div class="widget-title">
+            <ul class="nav nav-pills">
+                <li role="presentation" class=""><a href="{{ url_for("stats.proofofplay.view") }}">{% trans "All Reports" %}</a></li>
+                <li role="presentation" class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Reports <span class="caret"></span> </a>
+                    <ul class="dropdown-menu">
+                        {% for reports in defaults.availableReports %}
+                            {% for report in reports %}
+                                {% if report.hidden == 0 and report.category == 'proof of play'%}
+                                    <li>
+                                        <a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </li>
+                <li role="presentation"><a class="text-success" href="#">{% trans "Proof of Play" %}</a></li>
+            </ul>
+        </div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="statsView">
                 <div class="XiboFilterCustom well">
