@@ -484,10 +484,10 @@ function XiboInitialise(scope) {
         $input.hide();
 
         const commandTypes = {
-            'freetext': 'freeText',
-            'tpv_led': 'philips',
+            'freetext': translations.freeTextCommand,
+            'tpv_led': 'Philips Android',
             'rs232': 'RS232',
-            'intent': 'Android Intents'
+            'intent': 'Android Intent'
         };
 
         // Scope functions
@@ -587,8 +587,14 @@ function XiboInitialise(scope) {
                                 command: splitValue[2]
                             };
                             break;
-                        default:
+                        case 'tpv_led':
+                            valueObj.type = 'tpv_led';
                             valueObj.value = splitValue[1];
+                            
+                            break;
+                        default:
+                            valueObj.type = 'freetext';
+                            valueObj.value = value;
                             break;
                     }
                 }
