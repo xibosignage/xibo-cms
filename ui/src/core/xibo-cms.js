@@ -479,10 +479,10 @@ function XiboInitialise(scope) {
         $input.hide();
 
         const commandTypes = {
-            'freetext': 'Free Text',
+            'freetext': translations.freeTextCommand,
             'tpv_led': 'Philips Android',
             'rs232': 'RS232',
-            'intent': 'Android Intents'
+            'intent': 'Android Intent'
         };
 
         // Scope functions
