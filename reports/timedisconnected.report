@@ -1,0 +1,13 @@
+{
+  "name": "timedisconnectedReport",
+  "description": "Time Disconnected",
+  "class": "\\Xibo\\Report\\TimeDisconnectedReport",
+  "type": "Report",
+  "output_type": "table",
+  "color":"orange",
+  "fa_icon": "fa-tablet",
+  "sort_order": 4,
+  "hidden": 0,
+  "category": "display",
+  "route": "/user"
+}

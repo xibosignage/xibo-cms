@@ -1,0 +1,299 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="" id="reportAddBtn"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}?reportName=timedisconnectedReport"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
+        <li class="btn btn-primary btn-xs"><a class="btns" href="{{ url_for("reportschedule.view") }}?reportName=timedisconnectedReport"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
+    </ul>
+    <div class="proof-of-play-report-div pull-right btn-group">
+        <button class="proof-of-play-report-btn btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+            <span class="fa fa-caret-down"></span>
+            {% trans "Reports" %}
+        </button>
+        <ul class="dropdown-menu">
+            {% for reports in defaults.availableReports %}
+                {% for report in reports %}
+                    {% if report.hidden == 0 and report.category == 'display'%}
+                        <li>
+                            <a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        </ul>
+    </div>
+    <style>
+        table {
+            table-layout: fixed;
+            border-collapse: collapse;
+            border-spacing: 20px 0;
+            padding: 20px 0 0;
+        }
+        th {
+            text-align: center;
+        }
+        td.display-label {
+            padding-right: 10px;
+            text-align: right;
+        }
+        td.display-percent {
+            border: 1px solid #408640;
+        }
+        .note-box {
+            height: 15px;
+            width: 15px;
+            float:left;
+        }
+    </style>
+{% endblock %}
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">
+            {% trans "Time Disconnected" %}
+        </div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="pull-right">
+                    <div>
+                        <div class="note-box" style="background-color: #03a9f4;"></div>
+                        <div style="padding-left: 20px">Blue is disconnected %</div>
+                    </div>
+                    <div>
+                        <div class="note-box" style="background-color: #5cb85c;"></div>
+                        <div style="padding-left: 20px">Green is connected %</div>
+                    </div>
+                </div>
+                <div class="XiboFilterCustom">
+                    <div class="FilterDiv" id="timedisconnectedReport">
+                        <form class="form-inline">
+                            {% set title %}{% trans "Filter" %}{% endset %}
+                            {% set range %}{% trans "Select a range" %}{% endset %}
+                            {% set today %}{% trans "Today" %}{% endset %}
+                            {% set yesterday %}{% trans "Yesterday" %}{% endset %}
+                            {% set thisweek %}{% trans "This Week" %}{% endset %}
+                            {% set thismonth %}{% trans "This Month" %}{% endset %}
+                            {% set thisyear %}{% trans "This Year" %}{% endset %}
+                            {% set lastweek %}{% trans "Last Week" %}{% endset %}
+                            {% set lastmonth %}{% trans "Last Month" %}{% endset %}
+                            {% set lastyear %}{% trans "Last Year" %}{% endset %}
+                            {% set options = [
+                                { filterName: "", reportFilter: range },
+                                { filterName: "today", reportFilter: today },
+                                { filterName: "yesterday", reportFilter: yesterday },
+                                { filterName: "thisweek", reportFilter: thisweek },
+                                { filterName: "thismonth", reportFilter: thismonth },
+                                { filterName: "thisyear", reportFilter: thisyear },
+                                { filterName: "lastweek", reportFilter: lastweek },
+                                { filterName: "lastmonth", reportFilter: lastmonth },
+                                { filterName: "lastyear", reportFilter: lastyear },
+                            ] %}
+                            {{ inline.dropdown("reportFilter", "single", title, "today", options, "filterName", "reportFilter") }}
+
+                            {% set title %}{% trans "From Date" %}{% endset %}
+                            {{ inline.date("statsFromDt", title, defaults.fromDateOneDay, "", "stats-from-dt", "", "") }}
+
+                            {% set title %}{% trans "To Date" %}{% endset %}
+                            {{ inline.date("statsToDt", title, defaults.toDate, "", "stats-to-dt", "", "") }}
+
+                            {% set title %}{% trans "Group by" %}{% endset %}
+                            {% set byhour %}{% trans "Hour" %}{% endset %}
+                            {% set bydayofmonth %}{% trans "Day of month" %}{% endset %}
+                            {% set options = [
+                                { filterName: "byhour", groupByFilter: byhour },
+                                { filterName: "bydayofmonth", groupByFilter: bydayofmonth },
+                            ] %}
+                            {{ inline.dropdown("groupByFilter", "single", title, "", options, "filterName", "groupByFilter", "", "group-by-filter") }}
+
+                            {% set title %}{% trans "Display/Display Groups" %}{% endset %}
+                            {% set helpText %}{% trans "Please select one or more displays / groups for this notification to be shown on - Layouts will need the notification widget." %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "100%" }
+                            ] %}
+                            {% set transGroups %}{% trans "Groups" %}{% endset %}
+                            {% set transDisplays %}{% trans "Display" %}{% endset %}
+                            {% set optionGroups = [
+                                {id: "group", label: transGroups},
+                                {id: "display", label: transDisplays}
+                            ] %}
+                            {{ inline.dropdown("displayGroupIds[]", "dropdownmulti", title, displayGroupIds, {group: defaults.displayGroups, display: defaults.displays}, "displayGroupId", "displayGroup", helpText, "selectPicker", "", "", "", attributes, optionGroups) }}
+
+                            <p></p>
+                            <div class="row">
+                                <a id="applyBtn" class="btn btn-success">
+                                    <span>{% trans "Apply" %}</span>
+                                </a>
+                                <span id="applyWarning" class="text-warning" style="display:none; padding-left: 10px">{% trans "Warning: This may return a lot of data and may take several minutes to process." %}</span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData">
+                    <table id="records_table"></table>
+                    <img id="imageLoader" style="display: block; margin: auto;" src="{{ theme.uri("img/loader.gif") }}">
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+
+        $(function () {
+            $('[data-toggle="popover"]').popover();
+        });
+
+        var imageLoader = $("#imageLoader");
+
+        function setReport() {
+
+            imageLoader.show();
+            $("#records_table").empty();
+            $.ajax({
+                type: "get",
+                url: "{{ url_for("report.data", {name: reportName}) }}",
+                cache: false,
+                dataType: "json",
+                data: $("#timedisconnectedReport").find("form").serialize(),
+                success: function(response) {
+
+                    setTimeout(function() {
+                        $("#applyBtn").removeClass('disabled');
+                    }, 300);
+
+                    imageLoader.hide();
+
+                    $('.XiboData').find(".form-error").remove();
+                    if (response.success === false) {
+                        $('.XiboData').append('<div class="alert alert-danger form-error">'+ response.message +'</div>');
+                        return;
+                    }
+
+                    $.each(response.extra.result.timeDisconnected, function(index, displayStat) {
+
+                        let $displayHeader = $('<tr>');
+                        $.each(response.extra.result.displays[index], function(i, displayName) {
+                            $displayHeader.append($('<th colspan="2">').text(displayName));
+                            $displayHeader.appendTo('#records_table').html();
+                        });
+
+                        // Display Statistics
+                        $.each(displayStat, function(periodId, item) {
+                            let $tr = $('<tr>');
+
+                            $.each(item, function(displayId, displayData) {
+
+                                let percent= '';
+                                if (displayData.percent > 0) {
+                                    percent = displayData.percent + "%";
+                                }
+
+                                let $label = $('<td class="display-label" style="width:300px">').text(displayData.label);
+                                let $percentage = $('<td class="display-percent" style="width:300px">').css({"background-color": "#5cb85c",  "color": "white"}).append(
+                                    $('<div>').css({"background-color": "#03a9f4", "width": percent}).text(percent)
+                                );
+
+                                $tr.append($label);
+                                $tr.append($percentage);
+
+
+                            });
+
+
+                            $tr.appendTo('#records_table').html();
+                            console.log('ho')
+
+
+                        });
+
+
+                    });
+
+                }
+            });
+        }
+
+        $(document).ready(function() {
+
+            // Init
+            var applyBtn = $("#applyBtn");
+
+            // Enable/Disable Schedule Btn
+            const checkEnableSchedule = function() {
+
+                // Schedule button enable/disable - start
+                var anchorReportAddBtn = $("a#reportAddBtn");
+
+                anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?reportName=timedisconnectedReport" );
+            };
+
+
+            // Report Filter
+            var reportFilter = $("#reportFilter");
+
+            // Hide / Show FromDt and ToDt
+            function checkReportFilter(reportFilter) {
+                if (reportFilter.val() === '' || reportFilter.val() === undefined) {
+                    $(".stats-from-dt").show();
+                    $(".stats-to-dt").show();
+                } else {
+                    $(".stats-from-dt").hide();
+                    $(".stats-to-dt").hide();
+                }
+            }
+
+            const checkFilterAndApply = function() {
+                reportFilter.off('change').change( function() {
+                    var value = reportFilter.val();
+                    // Hide / Show FromDt and ToDt
+                    checkReportFilter(reportFilter);
+                });
+            };
+
+            imageLoader.hide();
+
+            checkReportFilter(reportFilter);
+            checkFilterAndApply();
+
+            checkEnableSchedule();
+
+            // Bind to form change
+            $("#timedisconnectedReport").on('change', function() {
+                checkEnableSchedule();
+            });
+
+            // Apply
+            applyBtn.click(function () {
+                checkFilterAndApply();
+                setReport();
+            });
+        });
+
+    </script>
+{% endblock %}

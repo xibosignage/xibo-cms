@@ -1,0 +1,94 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {{ formTitle }}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#reportScheduleAddForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="reportScheduleAddForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("reportschedule.add") }}">
+
+                {{ forms.hidden("hiddenFields", hiddenFields) }}
+                {{ forms.hidden("reportName", reportName) }}
+
+                {% set title %}{% trans "Filter" %}{% endset %}
+                {% set helpText %}{% trans "Select the report filter you would like to run" %}{% endset %}
+                {% set daily %}{% trans "Daily" %}{% endset %}
+                {% set weekly %}{% trans "Weekly" %}{% endset %}
+                {% set monthly %}{% trans "Monthly" %}{% endset %}
+                {% set yearly %}{% trans "Yearly" %}{% endset %}
+                {% set options = [
+                    { name: "daily", filter: daily },
+                    { name: "weekly", filter: weekly },
+                    { name: "monthly", filter: monthly },
+                    { name: "yearly", filter: yearly },
+                ] %}
+                {{ forms.dropdown("filter", "single", title, "", options, "name", "filter", helpText) }}
+
+                {% set title %}{% trans "Group by" %}{% endset %}
+                {% set byhour %}{% trans "Hour" %}{% endset %}
+                {% set bydayofmonth %}{% trans "Day of month" %}{% endset %}
+                {% set options = [
+                    { filterName: "byhour", groupByFilter: byhour },
+                    { filterName: "bydayofmonth", groupByFilter: bydayofmonth },
+                ] %}
+                {{ forms.dropdown("groupByFilter", "single", title, "", options, "filterName", "groupByFilter", "", "group-by-filter") }}
+
+                {% set title %}{% trans "Display/Display Groups" %}{% endset %}
+                {% set helpText %}{% trans "Please select one or more displays / groups for this notification to be shown on - Layouts will need the notification widget." %}{% endset %}
+                {% set attributes = [
+                    { name: "data-width", value: "100%" }
+                ] %}
+                {% set transGroups %}{% trans "Groups" %}{% endset %}
+                {% set transDisplays %}{% trans "Display" %}{% endset %}
+                {% set optionGroups = [
+                    {id: "group", label: transGroups},
+                    {id: "display", label: transDisplays}
+                ] %}
+                {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, displayGroupIds, {group: displayGroups, display: displays}, "displayGroupId", "displayGroup", helpText, "selectPicker", "", "", "", attributes, optionGroups) }}
+
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The name for this report schedule" %}{% endset %}
+                {{ forms.input("name", title, "", helpText, "", "required") }}
+
+                {% set title %}{% trans "Should an email be sent?" %}{% endset %}
+                {{ forms.checkbox("sendEmail", title, sendEmail) }}
+
+                {% set title %}{% trans "Email addresses" %}{% endset %}
+                {% set helpText %}{% trans "Additional emails separated by a comma." %}{% endset %}
+                {{ forms.inputWithTags("nonusers", title, nonusers, helpText) }}
+
+            </form>
+        </div>
+    </div>
+{% endblock %}
