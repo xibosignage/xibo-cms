@@ -1,0 +1,13 @@
+{
+  "name": "libraryusage",
+  "description": "Library Usage",
+  "class": "\\Xibo\\Report\\LibraryUsage",
+  "type": "Report",
+  "output_type": "table",
+  "color":"green",
+  "fa_icon": "fa-th",
+  "sort_order": 3,
+  "hidden": 0,
+  "category": "library",
+  "route": "/stats"
+}
