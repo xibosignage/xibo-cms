@@ -23,10 +23,10 @@ use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
- * Class TimeDisconnectedReport
+ * Class TimeDisconnected
  * @package Xibo\Report
  */
-class TimeDisconnectedReport implements ReportInterface
+class TimeDisconnected implements ReportInterface
 {
 
     use ReportTrait;
@@ -145,7 +145,7 @@ class TimeDisconnectedReport implements ReportInterface
         $data['hiddenFields'] =  json_encode([
         ]);
 
-        $data['reportName'] = 'timedisconnectedReport';
+        $data['reportName'] = 'timedisconnected';
 
         $groups = [];
         $displays = [];
@@ -360,7 +360,7 @@ class TimeDisconnectedReport implements ReportInterface
         //
         // Get Results!
         // -------------
-        $result = $this->getTimeDisconnectedReportMySql($fromDt, $toDt, $groupByFilter, $displayIds, $campaignId, $type, $layoutId, $mediaId, $eventTag);
+        $result = $this->getTimeDisconnectedMySql($fromDt, $toDt, $groupByFilter, $displayIds, $campaignId, $type, $layoutId, $mediaId, $eventTag);
 
         //
         // Output Results
@@ -422,7 +422,7 @@ class TimeDisconnectedReport implements ReportInterface
      * @param $eventTag
      * @return array
      */
-    private function getTimeDisconnectedReportMySql($fromDt, $toDt, $groupByFilter, $displayIds, $displayGroupIds, $type, $layoutId, $mediaId, $eventTag)
+    private function getTimeDisconnectedMySql($fromDt, $toDt, $groupByFilter, $displayIds, $displayGroupIds, $type, $layoutId, $mediaId, $eventTag)
     {
 
         if ($groupByFilter == 'bydayofmonth') {

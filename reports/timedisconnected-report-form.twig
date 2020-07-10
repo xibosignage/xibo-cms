@@ -25,28 +25,6 @@
 {% import "inline.twig" as inline %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="" id="reportAddBtn"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
-        <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}?reportName=timedisconnectedReport"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
-        <li class="btn btn-primary btn-xs"><a class="btns" href="{{ url_for("reportschedule.view") }}?reportName=timedisconnectedReport"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
-    </ul>
-    <div class="proof-of-play-report-div pull-right btn-group">
-        <button class="proof-of-play-report-btn btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-            <span class="fa fa-caret-down"></span>
-            {% trans "Reports" %}
-        </button>
-        <ul class="dropdown-menu">
-            {% for reports in defaults.availableReports %}
-                {% for report in reports %}
-                    {% if report.hidden == 0 and report.category == 'display'%}
-                        <li>
-                            <a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
-                        </li>
-                    {% endif %}
-                {% endfor %}
-            {% endfor %}
-        </ul>
-    </div>
     <style>
         table {
             table-layout: fixed;
@@ -70,11 +48,35 @@
             float:left;
         }
     </style>
+
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="" id="reportAddBtn"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}?reportName=timedisconnected"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
+        <li class="btn btn-primary btn-xs"><a class="btns" href="{{ url_for("reportschedule.view") }}?reportName=timedisconnected"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
+    </ul>
+
 {% endblock %}
 {% block pageContent %}
     <div class="widget">
         <div class="widget-title">
-            {% trans "Time Disconnected" %}
+            <ul class="nav nav-pills">
+                <li role="presentation" class=""><a href="{{ url_for("stats.proofofplay.view") }}">{% trans "All Reports" %}</a></li>
+                <li role="presentation" class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Reports <span class="caret"></span> </a>
+                    <ul class="dropdown-menu">
+                        {% for reports in defaults.availableReports %}
+                            {% for report in reports %}
+                                {% if report.hidden == 0 and report.category == 'display'%}
+                                    <li>
+                                        <a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </li>
+                <li role="presentation"><a class="text-success" href="#"> {% trans "Time Disconnected" %} </a></li>
+            </ul>
         </div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
@@ -89,7 +91,7 @@
                     </div>
                 </div>
                 <div class="XiboFilterCustom">
-                    <div class="FilterDiv" id="timedisconnectedReport">
+                    <div class="FilterDiv" id="timedisconnected">
                         <form class="form-inline">
                             {% set title %}{% trans "Filter" %}{% endset %}
                             {% set range %}{% trans "Select a range" %}{% endset %}
@@ -180,7 +182,7 @@
                 url: "{{ url_for("report.data", {name: reportName}) }}",
                 cache: false,
                 dataType: "json",
-                data: $("#timedisconnectedReport").find("form").serialize(),
+                data: $("#timedisconnected").find("form").serialize(),
                 success: function(response) {
 
                     setTimeout(function() {
@@ -250,7 +252,7 @@
                 // Schedule button enable/disable - start
                 var anchorReportAddBtn = $("a#reportAddBtn");
 
-                anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?reportName=timedisconnectedReport" );
+                anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?reportName=timedisconnected" );
             };
 
 
@@ -284,7 +286,7 @@
             checkEnableSchedule();
 
             // Bind to form change
-            $("#timedisconnectedReport").on('change', function() {
+            $("#timedisconnected").on('change', function() {
                 checkEnableSchedule();
             });
 
