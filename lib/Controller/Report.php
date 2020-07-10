@@ -585,11 +585,19 @@ class Report extends Base
      */
     public function displayReportSchedulePage(Request $request, Response $response)
     {
+        $reportsList = $this->reportService->listReports();
+        $availableReports = [];
+        foreach ($reportsList as $reports) {
+            foreach ($reports as $report) {
+                $availableReports[] = $report;
+            }
+        }
+
         // Call to render the template
         $this->getState()->template = 'report-schedule-page';
         $this->getState()->setData([
             'users' => $this->userFactory->query(),
-            'availableReports' => $this->reportService->listReports()
+            'availableReports' => $availableReports
         ]);
 
         return $this->render($request, $response);
@@ -871,11 +879,19 @@ class Report extends Base
      */
     public function displaySavedReportPage(Request $request, Response $response)
     {
+        $reportsList = $this->reportService->listReports();
+        $availableReports = [];
+        foreach ($reportsList as $reports) {
+            foreach ($reports as $report) {
+                $availableReports[] = $report;
+            }
+        }
+
         // Call to render the template
         $this->getState()->template = 'saved-report-page';
         $this->getState()->setData([
             'users' => $this->userFactory->query(),
-            'availableReports' => $this->reportService->listReports()
+            'availableReports' => $availableReports
         ]);
 
         return $this->render($request, $response);
