@@ -172,7 +172,11 @@ Manager.prototype.uploadChange = function(change, updateId, updateType, customRe
                     if(change.type === 'create' || change.type === 'addWidget') {
                         change.target.id = data.id;
                     } else if(change.type === 'addMedia') {
-                        change.target.id = data.data.newWidgets[0].widgetId;
+                        change.target.id = [];
+
+                        for (let index = 0; index < data.data.newWidgets.length; index++) {
+                            change.target.id.push(data.data.newWidgets[index].widgetId);
+                        }
                     }
                 }
 
@@ -268,63 +272,81 @@ Manager.prototype.revertChange = function() {
         } else { // Revert using the API
 
             const linkToAPI = urlsForApi[lastChange.target.type][inverseOperation];
-            let requestPath = linkToAPI.url;
+    
+            const revertObject = function() {
+                let requestPath = linkToAPI.url;
 
-            // replace id if necessary/exists
-            if(lastChange.target) {
-                let replaceId = lastChange.target.id;
+                // replace id if necessary/exists
+                if(lastChange.target) {
+                    let replaceId = '';
 
-                // If the replaceId is not set or the change needs the layoutId, set it to the replace var
-                if(replaceId == null || linkToAPI.useMainObjectId) {
-                    replaceId = app.mainObjectId;
-                }
-
-                requestPath = requestPath.replace(':id', replaceId);
-            }
-
-            $.ajax({
-                url: requestPath,
-                type: linkToAPI.type,
-                data: lastChange.oldState,
-            }).done(function(data) {
-                if(data.success) {
-
-                    // Remove change from history
-                    self.changeHistory.pop();
-
-                    // If the operation is a deletion, unselect object before deleting
-                    if(inverseOperation === 'delete') {
-
-                        // Unselect selected object before deleting
-                        app.selectObject();
+                    if($.isArray(lastChange.target.id)) {
+                        replaceId = lastChange.target.id[0];
+                        lastChange.target.id.shift();
+                    } else {
+                        replaceId = lastChange.target.id;
                     }
 
-                    // Resolve promise
-                    resolve(data);
+                    // If the replaceId is not set or the change needs the layoutId, set it to the replace var
+                    if(replaceId == null || linkToAPI.useMainObjectId) {
+                        replaceId = app.mainObjectId;
+                    }
 
-                } else {
-                    // Login Form needed?
-                    if(data.login) {
+                    requestPath = requestPath.replace(':id', replaceId);
+                }
 
-                        window.location.href = window.location.href;
-                        location.reload(false);
-                    } else {
-                        // Just an error we dont know about
-                        if(data.message == undefined) {
-                            reject(data);
+                $.ajax({
+                    url: requestPath,
+                    type: linkToAPI.type,
+                    data: lastChange.oldState,
+                }).done(function(data) {
+                    if(data.success) {
+                        // If the target is a int or if it's an array with no elements, resolve method
+                        if(($.isArray(lastChange.target.id) && lastChange.target.id.length == 0) || $.isNumeric(lastChange.target.id)) {
+                            // Remove change from history
+                            self.changeHistory.pop();
+
+                            // If the operation is a deletion, unselect object before deleting
+                            if(inverseOperation === 'delete') {
+                                // Unselect selected object before deleting
+                                app.selectObject();
+                            }
+                            
+                            // Resolve promise
+                            resolve(data);
                         } else {
-                            reject(data.message);
+                            // Show toast message
+                            toastr.success(data.message);
+
+                            // Revert next change
+                            revertObject();
+                        }
+                    } else {
+                        // Login Form needed?
+                        if(data.login) {
+
+                            window.location.href = window.location.href;
+                            location.reload(false);
+                        } else {
+                            // Just an error we dont know about
+                            if(data.message == undefined) {
+                                reject(data);
+                            } else {
+                                reject(data.message);
+                            }
                         }
                     }
-                }
 
-            }).fail(function(jqXHR, textStatus, errorThrown) {
-                // Output error to console
-                console.error(jqXHR, textStatus, errorThrown);
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    // Output error to console
+                    console.error(jqXHR, textStatus, errorThrown);
 
-                // Reject promise and return an object with all values
-                reject({jqXHR, textStatus, errorThrown});
-            });
+                    // Reject promise and return an object with all values
+                    reject({jqXHR, textStatus, errorThrown});
+                });
+            };
+
+            revertObject();
         }
     });
 };

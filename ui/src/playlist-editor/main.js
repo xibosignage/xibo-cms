@@ -154,11 +154,15 @@ pE.loadEditor = function() {
                 $("#layout-manager").appendTo("#playlist-editor");
 
                 // Initialize manager
-                pE.manager = new Manager(
-                    pE,
-                    $('#playlist-editor').find('#layout-manager'),
-                    false //(serverMode == 'Test') Turn of manager visibility for now
-                );
+                if(typeof lD != 'undefined') {
+                    pE.manager = lD.manager;
+                } else {
+                    pE.manager = new Manager(
+                        pE,
+                        $('#playlist-editor').find('#layout-manager'),
+                        false //(serverMode == 'Test') Turn of manager visibility for now
+                    );
+                }
 
                 // Append toolbar to the modal container
                 $("#playlist-editor-toolbar").appendTo("#playlist-editor");
@@ -848,7 +852,6 @@ pE.close = function() {
     deleteObjectProperties(this.editorContainer);
     deleteObjectProperties(this.timeline);
     deleteObjectProperties(this.propertiesPanel);
-    deleteObjectProperties(this.manager);
     deleteObjectProperties(this.selectedObject);
     deleteObjectProperties(this.toolbar);
 
