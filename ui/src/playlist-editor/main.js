@@ -551,9 +551,8 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
                         };
                     }
 
-                    // Delete element from the layout
+                    // Delete element from the playlist
                     pE.playlist.deleteElement(objectType, objectId, options).then((res) => { // Success
-
                         // Behavior if successful 
                         toastr.success(res.message)
                         

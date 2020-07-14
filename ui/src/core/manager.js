@@ -391,7 +391,6 @@ Manager.prototype.saveAllChanges = async function() {
  * @param  {string} targetId - Target object ID
 */
 Manager.prototype.removeAllChanges = function(targetType, targetId) {
-
     const self = this;
 
     return new Promise(function(resolve, reject) {
@@ -400,8 +399,11 @@ Manager.prototype.removeAllChanges = function(targetType, targetId) {
 
             const change = self.changeHistory[index];
             
-            if(change.target.type === targetType && change.target.id === targetId) {
-
+            if(change.target.type === targetType && 
+                (change.target.id === targetId || 
+                    ($.isArray(change.target.id) && change.target.id.includes(targetId))
+                )
+            ) {
                 self.changeHistory.splice(index, 1);
 
                 // When change is removed, we need to decrement the index
