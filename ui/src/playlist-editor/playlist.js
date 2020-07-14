@@ -338,11 +338,10 @@ Playlist.prototype.addMedia = function(media, addToPosition = null) {
  * @param {object =} [options] - Delete submit params/options
  */
 Playlist.prototype.deleteElement = function(elementType, elementId, options = null) {
-
     pE.common.showLoadingScreen();
-
+    
     // Remove changes from the history array
-    return pE.manager.removeAllChanges(pE.selectedObject.type, pE.selectedObject[pE.selectedObject.type + 'Id']).then((res) => {
+    return pE.manager.removeAllChanges(elementType, elementId).then((res) => {
 
         pE.common.hideLoadingScreen();
 
