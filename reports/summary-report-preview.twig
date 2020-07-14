@@ -56,56 +56,7 @@
 {% block javaScript %}
     <script type="text/javascript">
 
-        var reportChart = new Chart($("#reportChart"), {
-            type: "bar",
-            data: {
-                labels: {{ labels|raw }},
-                datasets: [{
-                    label: "{% trans "Total duration" %}",
-                    yAxisID: 'Duration',
-                    backgroundColor: {{ backgroundColor|raw }},
-                    data: {{ durationData|raw }},
-                },
-                    {
-                        label: "{% trans "Total count" %}",
-                        yAxisID: 'Count',
-                        borderColor: {{ borderColor|raw }},
-                        data: {{ countData|raw }},
-                        type: 'line',
-                        fill: false
-                    }]
-            },
-            options: {
-                scales: {
-                    yAxes: [{
-                        id: 'Duration',
-                        type: 'linear',
-                        position: 'left',
-                        display: true,
-                        scaleLabel: {
-                            display: true,
-                            labelString: 'Duration(s)'
-                        },
-                        ticks: {
-                            beginAtZero:true
-                        }
-                    }, {
-                        id: 'Count',
-                        type: 'linear',
-                        position: 'right',
-                        display: true,
-                        scaleLabel: {
-                            display: true,
-                            labelString: 'Count'
-                        },
-                        ticks: {
-                            beginAtZero:true
-                        }
-                    }]
-                },
-                maintainAspectRatio: true,
-            }
-        });
+        var reportChart = new Chart($("#reportChart"), {{ chart|json_encode|raw }});
 
     </script>
 {% endblock %}

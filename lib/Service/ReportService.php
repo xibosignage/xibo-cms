@@ -282,8 +282,7 @@ class ReportService implements ReportServiceInterface
 
         // Return data to build chart
         return [
-            'template' => $results['template'],
-            'chartData' => $results['chartData']
+            'results' => $results
         ];
 
      }

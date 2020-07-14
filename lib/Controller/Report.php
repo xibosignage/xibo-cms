@@ -980,8 +980,8 @@ class Report extends Base
         // Retrieve the saved report result in array
         $results = $this->reportService->getSavedReportResults($id, $name);
 
-        $this->getState()->template = $results['template'];
-        $this->getState()->setData($results['chartData']);
+        $this->getState()->template = $results['results']['template'];
+        $this->getState()->setData($results['results']);
 
         return $this->render($request, $response);
     }
@@ -1021,7 +1021,7 @@ class Report extends Base
 
         } else { // only for tablebased report
 
-            $result = $savedReportData['chartData']['result'];
+            $result = $savedReportData['results'];
             $tableData =json_decode($result, true);
         }
 
@@ -1037,8 +1037,8 @@ class Report extends Base
                     'header' => $report->description,
                     'logo' => $this->getConfig()->uri('img/xibologo.png', true),
                     'title' => $savedReport->saveAs,
-                    'periodStart' => $savedReportData['chartData']['periodStart'],
-                    'periodEnd' => $savedReportData['chartData']['periodEnd'],
+                    'periodStart' => $savedReportData['results']['periodStart'],
+                    'periodEnd' => $savedReportData['results']['periodEnd'],
                     'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat()),
                     'tableData' => isset($tableData) ? $tableData : null,
                     'src' => isset($src) ? $src : null,
