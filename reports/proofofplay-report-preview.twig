@@ -78,7 +78,7 @@
     <script type="text/javascript">
         $(document).ready(function() {
 
-            var outputData = {{ result|raw }}.map(Object);
+            var outputData = {{ table|json_encode|raw }};
 
             // Grid
             var table = $("#stats").DataTable({

@@ -325,7 +325,7 @@ class ProofOfPlay implements ReportInterface
 
         // Return data to build chart
         return array_merge($json, [
-            'template' => 'distribution-report-preview',
+            'template' => 'proofofplay-report-preview',
             'filterInfo' => $filterInfo,
             'savedReport' => $savedReport,
             'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat())
