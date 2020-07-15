@@ -96,13 +96,9 @@ class Bandwidth implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportChartScript($results)
-    {
-    }
-
-    /** @inheritdoc */
     public function getReportEmailTemplate()
     {
+        return 'bandwidth-email-template.twig';
     }
 
     /** @inheritdoc */
@@ -122,21 +118,75 @@ class Bandwidth implements ReportInterface
     /** @inheritdoc */
     public function getReportScheduleFormData(Request $request)
     {
+        $title = __('Add Report Schedule');
+
+        $data = [];
+
+        $data['formTitle'] = $title;
+        $data['reportName'] = 'bandwidth';
+
+        return [
+            'template' => 'bandwidth-schedule-form-add',
+            'data' => $data
+        ];
     }
 
     /** @inheritdoc */
     public function setReportScheduleFormData(Request $request)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $filter = $sanitizedParams->getString('filter');
+        $displayId = $sanitizedParams->getInt('displayId');
+
+        $filterCriteria['displayId'] = $displayId;
+        $filterCriteria['filter'] = $filter;
+
+        $schedule = '';
+        if ($filter == 'daily') {
+            $schedule = ReportSchedule::$SCHEDULE_DAILY;
+            $filterCriteria['reportFilter'] = 'yesterday';
+
+        } else if ($filter == 'monthly') {
+            $schedule = ReportSchedule::$SCHEDULE_MONTHLY;
+            $filterCriteria['reportFilter'] = 'lastmonth';
+
+        } else if ($filter == 'yearly') {
+            $schedule = ReportSchedule::$SCHEDULE_YEARLY;
+            $filterCriteria['reportFilter'] = 'lastyear';
+        }
+
+        $filterCriteria['sendEmail'] = $sanitizedParams->getCheckbox('sendEmail');
+        $filterCriteria['nonusers'] = $sanitizedParams->getString('nonusers');
+
+        // Return
+        return [
+            'filterCriteria' => json_encode($filterCriteria),
+            'schedule' => $schedule
+        ];
     }
 
     /** @inheritdoc */
     public function generateSavedReportName($filterCriteria)
     {
+        return ucfirst($filterCriteria['filter']). ' bandwidth report';
+    }
+
+    /** @inheritdoc */
+    public function getReportChartScript($results)
+    {
+        return json_encode($results['results']['chart']);
     }
 
     /** @inheritdoc */
     public function getSavedReportResults($json, $savedReport)
     {
+        // Return data to build chart
+        return array_merge($json, [
+            'template' => 'bandwidth-report-preview',
+            'savedReport' => $savedReport,
+            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat())
+        ]);
     }
 
     /** @inheritdoc */
@@ -146,8 +196,51 @@ class Bandwidth implements ReportInterface
 
         $sanitizedParams = $this->getSanitizer($filterCriteria);
 
-        $fromDt = $sanitizedParams->getDate('fromDt', ['default' => $sanitizedParams->getDate('bandwidthFromDt')]);
-        $toDt = $sanitizedParams->getDate('toDt', ['default' => $sanitizedParams->getDate('bandwidthToDt')]);
+        //
+        // From and To Date Selection
+        // --------------------------
+        // Our report has a range filter which determins whether or not the user has to enter their own from / to dates
+        // check the range filter first and set from/to dates accordingly.
+        $reportFilter = $sanitizedParams->getString('reportFilter');
+
+        // Use the current date as a helper
+        $now = Carbon::now();
+
+        switch ($reportFilter) {
+
+            // the monthly data starts from yesterday
+            case 'yesterday':
+                $fromDt = $now->copy()->startOfDay()->subDay();
+                $fromDt->startOfMonth();
+
+                $toDt = $now->copy()->startOfDay();
+
+                break;
+
+            case 'lastmonth':
+                $fromDt = $now->copy()->startOfMonth()->subMonth();
+                $toDt = $fromDt->copy()->addMonth();
+
+                break;
+
+            case 'lastyear':
+                $fromDt = $now->copy()->startOfYear()->subYear();
+                $toDt = $fromDt->copy()->addYear();
+
+                break;
+
+            case '':
+            default:
+                // Expect dates to be provided.
+                $fromDt = $sanitizedParams->getDate('fromDt', ['default' => $sanitizedParams->getDate('bandwidthFromDt')]);
+                $fromDt->startOfMonth();
+
+                $toDt = $sanitizedParams->getDate('toDt', ['default' => $sanitizedParams->getDate('bandwidthToDt')]);
+                $toDt->addMonth();
+
+                break;
+        }
+
 
         // Get an array of display id this user has access to.
         $displayIds = [];
@@ -164,10 +257,11 @@ class Bandwidth implements ReportInterface
         $dbh = $this->store->getConnection();
 
         $displayId = $sanitizedParams->getInt('displayId');
-        $params = array(
-            'month' => $fromDt->setDateTime($fromDt->year, $fromDt->month, 1, 0, 0)->format('U'),
-            'month2' => $toDt->addMonth()->setDateTime($toDt->year, $toDt->month, 1, 0, 0)->format('U')
-        );
+
+        $params = [
+            'month' => $fromDt->copy()->format('U'),
+            'month2' => $toDt->copy()->format('U')
+        ];
 
         $SQL = 'SELECT display.display, IFNULL(SUM(Size), 0) AS size ';
 
@@ -239,12 +333,39 @@ class Bandwidth implements ReportInterface
 
         // Return data to build chart
         return [
-            'periodStart' => Carbon::createFromTimestamp($fromDt->format('U')),
-            'periodEnd' => Carbon::createFromTimestamp($toDt->format('U')),
-            'labels' => $labels,
-            'data' => $data,
-            'backgroundColor' => $backgroundColor,
-            'postUnits' => (isset($suffixes[$base]) ? $suffixes[$base] : '')
+            'hasData' => count($data) > 0,
+            'chart' => [
+                'type' => 'bar',
+                'data' => [
+                    'labels' => $labels,
+                    'datasets' => [
+                        [
+                            'label' => __('Bandwidth'),
+                            'backgroundColor' => $backgroundColor,
+                            'data' => $data
+                        ]
+                    ]
+                ],
+                'options' => [
+                    'scales' => [
+                        'yAxes' => [
+                            [
+                                'scaleLabel' =>  [
+                                    'display' =>  true,
+                                    'labelString' =>  (isset($suffixes[$base]) ? $suffixes[$base] : '')
+                                ]
+                            ]
+                        ]
+                    ],
+                    'legend' =>  [
+                        'display' => false
+                    ],
+                    'maintainAspectRatio' => true
+                ]
+            ],
+            'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+
         ];
 
     }

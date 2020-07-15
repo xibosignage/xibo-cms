@@ -232,7 +232,7 @@ class ReportScheduleTask implements TaskInterface
 
         } else { // only for tablebased report
 
-            $result = $savedReportData['chartData']['result'];
+            $result = $savedReportData['results'];
             $tableData =json_decode($result, true);
         }
 
@@ -248,8 +248,8 @@ class ReportScheduleTask implements TaskInterface
                     'header' => $report->description,
                     'logo' => $this->config->uri('img/xibologo.png', true),
                     'title' => $savedReport->saveAs,
-                    'periodStart' => $savedReportData['chartData']['periodStart'],
-                    'periodEnd' => $savedReportData['chartData']['periodEnd'],
+                    'periodStart' => $savedReportData['results']['periodStart'],
+                    'periodEnd' => $savedReportData['results']['periodEnd'],
                     'generatedOn' => Carbon::createFromFormat( 'U', $savedReport->generatedOn)->format('Y-m-d H:i:s'),
                     'tableData' => isset($tableData) ? $tableData : null,
                     'src' => isset($src) ? $src : null,

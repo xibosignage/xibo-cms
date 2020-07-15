@@ -26,6 +26,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="Schedule" id="reportAddBtn" href="{{ url_for("reportschedule.add.form") }}?reportName=bandwidth"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
         <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}?reportName=bandwidth"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
         <li class="btn btn-primary btn-xs"><a class="btns" href="{{ url_for("reportschedule.view") }}?reportName=bandwidth"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
     </ul>
@@ -90,7 +91,7 @@
                     </div>
                 </div>
                 <div class="XiboData">
-                    <canvas id="bandwidthChart" style="clear:both; margin-top:25px;" height="330"></canvas>
+                    <canvas id="reportChart" style="clear:both; margin-top:25px;" height="70%"></canvas>
                     <img id="imageLoader" style="display: block; margin: auto;" src="{{ theme.uri("img/loader.gif") }}">
                 </div>
             </div>
@@ -106,7 +107,7 @@
             $('[data-toggle="popover"]').popover();
         });
 
-        var bandwidthChart = null;
+        var reportChart = null;
         var imageLoader = $("#imageLoader");
 
         function setReport() {
@@ -125,40 +126,16 @@
                     }, 300);
 
                     imageLoader.hide();
-                    if (bandwidthChart !== undefined && bandwidthChart !== null) {
-                        bandwidthChart.destroy();
+                    if (reportChart !== undefined && reportChart !== null) {
+                        reportChart.destroy();
                     }
 
-                    if (response.extra.data.length <= 0) {
+                    if (!response.extra.hasData) {
                         return;
                     }
 
                     // Create our chart
-                    bandwidthChart = new Chart($("#bandwidthChart"), {
-                        type: "bar",
-                        data: {
-                            labels: response.extra.labels,
-                            datasets: [{
-                                label: "{% trans "Bandwidth" %}",
-                                backgroundColor: response.extra.backgroundColor,
-                                data: response.extra.data
-                            }]
-                        },
-                        options: {
-                            scales: {
-                                yAxes: [{
-                                    scaleLabel: {
-                                        display: true,
-                                        labelString: response.extra.postUnits,
-                                    }
-                                }]
-                            },
-                            legend: {
-                                display: false
-                            },
-                            maintainAspectRatio: false,
-                        }
-                    });
+                    reportChart = new Chart($("#reportChart"), response.extra.chart);
                 }
             });
         }
