@@ -220,8 +220,7 @@ class ReportScheduleTask implements TaskInterface
         // Get the report config
         $report = $this->reportService->getReportByName($reportSchedule->reportName);
 
-        if ($report->output_type == 'chart') {
-
+        if ($report->output_type == 'both' || $report->output_type == 'chart') {
             $quickChartUrl = $this->config->getSetting('QUICK_CHART_URL');
             if (!empty($quickChartUrl)) {
                 $script = $this->reportService->getReportChartScript($savedReport->savedReportId, $reportSchedule->reportName);
@@ -229,9 +228,9 @@ class ReportScheduleTask implements TaskInterface
             } else {
                 $placeholder = __('Chart could not be drawn because the CMS has not been configured with a Quick Chart URL.');
             }
+        }
 
-        } else { // only for tablebased report
-
+        if ($report->output_type == 'both' || $report->output_type == 'table') {
             $tableData = $savedReportData['results']['table'];
         }
 

@@ -26,6 +26,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="Schedule" id="reportAddBtn" href="{{ url_for("reportschedule.add.form") }}?reportName=timedisconnectedsummary"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
         <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}?reportName=timedisconnectedsummary"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
         <li class="btn btn-primary btn-xs"><a class="btns" href="{{ url_for("reportschedule.view") }}?reportName=timedisconnectedsummary"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
     </ul>

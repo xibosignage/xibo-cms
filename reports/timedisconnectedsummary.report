@@ -3,7 +3,7 @@
   "description": "Time Disconnected Summary",
   "class": "\\Xibo\\Report\\TimeDisconnectedSummary",
   "type": "Report",
-  "output_type": "table",
+  "output_type": "both",
   "color":"orange",
   "fa_icon": "fa-tasks",
   "sort_order": 4,

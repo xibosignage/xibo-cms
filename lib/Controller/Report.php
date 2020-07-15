@@ -1009,8 +1009,7 @@ class Report extends Base
 
         // Get the report config
         $report = $this->reportService->getReportByName($name);
-        if ($report->output_type == 'chart') {
-
+        if ($report->output_type == 'both' || $report->output_type == 'chart') {
             $quickChartUrl = $this->getConfig()->getSetting('QUICK_CHART_URL');
             if (!empty($quickChartUrl)) {
                 $script = $this->reportService->getReportChartScript($id, $name);
@@ -1018,14 +1017,15 @@ class Report extends Base
             } else {
                 $placeholder = __('Chart could not be drawn because the CMS has not been configured with a Quick Chart URL.');
             }
+        }
 
-        } else { // only for tablebased report
-
+        if ($report->output_type == 'both' || $report->output_type == 'table') { // only for tablebased report
             $tableData = $savedReportData['results']['table'];
         }
 
         // Get report email template
         $emailTemplate = $this->reportService->getReportEmailTemplate($name);
+
         if (!empty($emailTemplate)) {
 
             // Save PDF attachment

@@ -98,11 +98,13 @@ class TimeDisconnectedSummary implements ReportInterface
     /** @inheritdoc */
     public function getReportChartScript($results)
     {
+        return json_encode($results['results']['chart']);
     }
 
     /** @inheritdoc */
     public function getReportEmailTemplate()
     {
+        return 'timedisconnectedsummary-email-template.twig';
     }
 
     /** @inheritdoc */
@@ -122,21 +124,73 @@ class TimeDisconnectedSummary implements ReportInterface
     /** @inheritdoc */
     public function getReportScheduleFormData(Request $request)
     {
+        $title = __('Add Report Schedule');
+
+        $data = [];
+
+        $data['formTitle'] = $title;
+        $data['reportName'] = 'timedisconnectedsummary';
+
+        return [
+            'template' => 'timedisconnectedsummary-schedule-form-add',
+            'data' => $data
+        ];
     }
 
     /** @inheritdoc */
     public function setReportScheduleFormData(Request $request)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $filter = $sanitizedParams->getString('filter');
+        $displayId = $sanitizedParams->getInt('displayId');
+
+        $filterCriteria['displayId'] = $displayId;
+        $filterCriteria['filter'] = $filter;
+
+        $schedule = '';
+        if ($filter == 'daily') {
+            $schedule = ReportSchedule::$SCHEDULE_DAILY;
+            $filterCriteria['reportFilter'] = 'yesterday';
+
+        } else if ($filter == 'weekly') {
+            $schedule = ReportSchedule::$SCHEDULE_WEEKLY;
+            $filterCriteria['reportFilter'] = 'lastweek';
+
+        } else if ($filter == 'monthly') {
+            $schedule = ReportSchedule::$SCHEDULE_MONTHLY;
+            $filterCriteria['reportFilter'] = 'lastmonth';
+
+        } else if ($filter == 'yearly') {
+            $schedule = ReportSchedule::$SCHEDULE_YEARLY;
+            $filterCriteria['reportFilter'] = 'lastyear';
+        }
+
+        $filterCriteria['sendEmail'] = $sanitizedParams->getCheckbox('sendEmail');
+        $filterCriteria['nonusers'] = $sanitizedParams->getString('nonusers');
+
+        // Return
+        return [
+            'filterCriteria' => json_encode($filterCriteria),
+            'schedule' => $schedule
+        ];
     }
 
     /** @inheritdoc */
     public function generateSavedReportName($filterCriteria)
     {
+        return ucfirst($filterCriteria['filter']). ' time disconnected summary report';
     }
 
     /** @inheritdoc */
     public function getSavedReportResults($json, $savedReport)
     {
+        // Return data to build chart
+        return array_merge($json, [
+            'template' => 'timedisconnectedsummary-report-preview',
+            'savedReport' => $savedReport,
+            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat())
+        ]);
     }
 
     /** @inheritdoc */
@@ -146,8 +200,6 @@ class TimeDisconnectedSummary implements ReportInterface
         $this->getLog()->debug('Filter criteria: '. json_encode($filterCriteria, JSON_PRETTY_PRINT));
 
         $sanitizedParams = $this->getSanitizer($filterCriteria);
-        $fromDt = $sanitizedParams->getDate('fromDt', ['default' => $sanitizedParams->getDate('availabilityFromDt')]);
-        $toDt = $sanitizedParams->getDate('toDt', ['default' => $sanitizedParams->getDate('availabilityToDt')]);
 
         $displayId = $sanitizedParams->getInt('displayId');
         $displayGroupId = $sanitizedParams->getInt('displayGroupId');
@@ -156,14 +208,56 @@ class TimeDisconnectedSummary implements ReportInterface
 
         $currentDate = Carbon::now()->startOfDay()->format('Y-m-d');
 
-        // fromDt is always start of selected day
-        $fromDt = $fromDt->startOfDay();
+        //
+        // From and To Date Selection
+        // --------------------------
+        // Our report has a range filter which determins whether or not the user has to enter their own from / to dates
+        // check the range filter first and set from/to dates accordingly.
+        $reportFilter = $sanitizedParams->getString('reportFilter');
 
-        // If toDt is current date then make it current datetime
-        if ($toDt->startOfDay()->format('Y-m-d') == $currentDate) {
-            $toDt = Carbon::now();
-        } else {
-            $toDt =  Carbon::now()->startOfDay();
+        // Use the current date as a helper
+        $now = Carbon::now();
+
+        switch ($reportFilter) {
+
+            // the monthly data starts from yesterday
+            case 'yesterday':
+                $fromDt = $now->copy()->startOfDay()->subDay();
+                $toDt = $now->copy()->startOfDay();
+                break;
+
+            case 'lastweek':
+                $fromDt = $now->copy()->startOfWeek()->subWeek();
+                $toDt = $fromDt->copy()->addWeek();
+                break;
+
+            case 'lastmonth':
+                $fromDt = $now->copy()->startOfMonth()->subMonth();
+                $toDt = $fromDt->copy()->addMonth();
+                break;
+
+            case 'lastyear':
+                $fromDt = $now->copy()->startOfYear()->subYear();
+                $toDt = $fromDt->copy()->addYear();
+                break;
+
+            case '':
+            default:
+                // Expect dates to be provided.
+                $fromDt = $sanitizedParams->getDate('fromDt', ['default' => $sanitizedParams->getDate('availabilityFromDt')]);
+                $toDt = $sanitizedParams->getDate('toDt', ['default' => $sanitizedParams->getDate('availabilityToDt')]);
+
+                // fromDt is always start of selected day
+                $fromDt = $fromDt->startOfDay();
+
+                // If toDt is current date then make it current datetime
+                if ($toDt->startOfDay()->format('Y-m-d') == $currentDate) {
+                    $toDt = Carbon::now();
+                } else {
+                    $toDt =  Carbon::now()->startOfDay();
+                }
+
+                break;
         }
 
         // Get an array of display id this user has access to.
@@ -349,10 +443,66 @@ class TimeDisconnectedSummary implements ReportInterface
         $this->getState()->template = 'grid';
         $this->getState()->setData($rows);
 
+        $availabilityData = [];
+        $availabilityDataConnected = [];
+        $availabilityLabels = [];
+        $postUnits = "";
+        $dataSets = [];
+
+        foreach ($rows as $row) {
+            $availabilityData[] = $row['timeDisconnected'];
+            $availabilityDataConnected[] = $row['timeConnected'];
+            $availabilityLabels[] = $row['display'];
+            $postUnits = $row['postUnits'];
+        }
+
         return [
-            'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
-            'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
-            'result' => $rows,
+
+            'table' => $rows,
+            'chart' => [
+                'type' => 'bar',
+                'data' => [
+                    'labels' => $availabilityLabels,
+                    'datasets' => [
+                        [
+                            'backgroundColor' => 'rgb(11, 98, 164)',
+                            'data' => $availabilityData,
+                            'label' => __('Downtime')
+                        ],
+                        [
+                            'backgroundColor' => 'rgb(0, 255, 0)',
+                            'data' => $availabilityDataConnected,
+                            'label' => __('Uptime')
+                        ]
+                    ]
+                ],
+                'options' => [
+
+                    'scales' => [
+                        'xAxes' => [
+                            [
+                                'stacked' => true
+                            ]
+                        ],
+                        'yAxes' => [
+                            [
+                                'stacked' =>  true,
+                                'scaleLabel' =>  [
+                                    'display' =>  true,
+                                    'labelString' =>  $postUnits
+                                ]
+                            ]
+                        ]
+                    ],
+                    'legend' =>  [
+                        'display' => false
+                    ],
+                    'maintainAspectRatio' => false
+                ]
+            ],
+            'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+
         ];
 
     }
