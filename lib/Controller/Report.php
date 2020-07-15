@@ -1014,15 +1014,14 @@ class Report extends Base
             $quickChartUrl = $this->getConfig()->getSetting('QUICK_CHART_URL');
             if (!empty($quickChartUrl)) {
                 $script = $this->reportService->getReportChartScript($id, $name);
-                $src = $quickChartUrl. "/chart?width=1000&height=300&c=".$script;
+                $src = $quickChartUrl . "/chart?width=1000&height=300&c=" . $script;
             } else {
                 $placeholder = __('Chart could not be drawn because the CMS has not been configured with a Quick Chart URL.');
             }
 
         } else { // only for tablebased report
 
-            $result = $savedReportData['results'];
-            $tableData =json_decode($result, true);
+            $tableData = $savedReportData['results']['table'];
         }
 
         // Get report email template

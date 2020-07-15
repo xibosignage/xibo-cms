@@ -232,8 +232,7 @@ class ReportScheduleTask implements TaskInterface
 
         } else { // only for tablebased report
 
-            $result = $savedReportData['results'];
-            $tableData =json_decode($result, true);
+            $tableData = $savedReportData['results']['table'];
         }
 
         // Get report email template

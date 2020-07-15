@@ -324,17 +324,12 @@ class ProofOfPlay implements ReportInterface
         }
 
         // Return data to build chart
-        return [
-            'template' => 'proofofplay-report-preview',
-            'chartData' => [
-                'savedReport' => $savedReport,
-                'filterInfo' => $filterInfo,
-                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat()),
-                'periodStart' => isset($json['periodStart']) ? $json['periodStart'] : '',
-                'periodEnd' => isset($json['periodEnd']) ? $json['periodEnd'] : '',
-                'result' => json_encode($json['result']),
-            ]
-        ];
+        return array_merge($json, [
+            'template' => 'distribution-report-preview',
+            'filterInfo' => $filterInfo,
+            'savedReport' => $savedReport,
+            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat())
+        ]);
     }
 
 
@@ -552,7 +547,7 @@ class ProofOfPlay implements ReportInterface
         return [
             'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
             'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
-            'result' => $rows,
+            'table' => $rows,
         ];
 
     }
