@@ -732,6 +732,7 @@ class Action  extends Base
             throw new InvalidArgumentException(__('Layout is not checked out'), 'statusId');
         }
 
+        $action->notifyLayout($layout->layoutId);
         $action->delete();
 
         // Return
