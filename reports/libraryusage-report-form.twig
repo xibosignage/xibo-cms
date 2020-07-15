@@ -162,7 +162,6 @@
                     console.log('Destroying Chart');
                     userChart.destroy();
                 }
-
                 // Organise our rows into datasets for the chart
                 var totalSize = 0;
                 var userData = new Array();
@@ -182,6 +181,7 @@
                     colours.push($c.rand());
                 }
 
+                // Create our chart
                 userChart = new Chart($("#userChart"), {
                     type: 'pie',
                     data: {
@@ -197,6 +197,8 @@
                 });
             }
         });
+
+
 
         // Create a lovely library pie chart
         var libraryData = {{ defaults.libraryWidgetData|raw }};

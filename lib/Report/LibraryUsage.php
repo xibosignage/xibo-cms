@@ -104,13 +104,37 @@ class LibraryUsage implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportChartScript($results)
+    public function getReportEmailTemplate()
+    {
+        return null;
+    }
+
+    /** @inheritdoc */
+    public function getReportScheduleFormData(Request $request)
     {
     }
 
     /** @inheritdoc */
-    public function getReportEmailTemplate()
+    public function setReportScheduleFormData(Request $request)
     {
+    }
+
+    /** @inheritdoc */
+    public function generateSavedReportName($filterCriteria)
+    {
+    }
+
+    /** @inheritdoc */
+    public function getReportChartScript($results)
+    {
+        return null;
+    }
+
+    /** @inheritdoc */
+    public function getSavedReportResults($json, $savedReport)
+    {
+        // Return data to build chart
+        return array_merge($json, []);
     }
 
     /** @inheritdoc */
@@ -201,28 +225,9 @@ class LibraryUsage implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportScheduleFormData(Request $request)
-    {
-    }
-
-    /** @inheritdoc */
-    public function setReportScheduleFormData(Request $request)
-    {
-    }
-
-    /** @inheritdoc */
-    public function generateSavedReportName($filterCriteria)
-    {
-    }
-
-    /** @inheritdoc */
-    public function getSavedReportResults($json, $savedReport)
-    {
-    }
-
-    /** @inheritdoc */
     public function getResults($filterCriteria)
     {
+
         $this->getLog()->debug('Filter criteria: '. json_encode($filterCriteria, JSON_PRETTY_PRINT));
 
         $params = [];
@@ -321,12 +326,5 @@ class LibraryUsage implements ReportInterface
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($rows);
-
-        return [
-//            'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
-//            'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
-            'result' => $rows,
-        ];
-
     }
 }
