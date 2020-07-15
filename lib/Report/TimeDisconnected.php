@@ -224,17 +224,12 @@ class TimeDisconnected implements ReportInterface
     public function getSavedReportResults($json, $savedReport)
     {
         // Return data to build chart
-        return [
+        return array_merge($json, [
             'template' => 'timedisconnected-report-preview',
-            'chartData' => [
-                'savedReport' => $savedReport,
-                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat()),
-                'periodStart' => isset($json['periodStart']) ? $json['periodStart'] : '',
-                'periodEnd' => isset($json['periodEnd']) ? $json['periodEnd'] : '',
-                'result' => json_encode($json['result']),
-                'resultObj' => $json['result'],
-            ]
-        ];
+            'savedReport' => $savedReport,
+            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat()),
+            'resultObj' => $json['table'],
+        ]);
     }
 
     /** @inheritdoc */
@@ -394,18 +389,20 @@ class TimeDisconnected implements ReportInterface
         }
 
         $displays = [];
-        foreach ($displayIds as $displayId) {
-            $displays[$displayId] = $this->displayFactory->getById($displayId)->display;
+        foreach ($displayIdsArrayChunk as $key => $display) {
+            foreach ($display as $displayId) {
+                $displays[$key][$displayId] = $this->displayFactory->getById($displayId)->display;
+            }
         }
 
         // Return data to build chart
         return [
-            'result' => [
+            'table' => [
                 'timeDisconnected' => $timeDisconnected,
-                'displays' => array_chunk($displays, 4)
+                'displays' => $displays
             ],
-            'periodStart' => Carbon::createFromTimestamp($fromDt->format('U')),
-            'periodEnd' => Carbon::createFromTimestamp($toDt->format('U')),
+            'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
         ];
     }
 
