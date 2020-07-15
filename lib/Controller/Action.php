@@ -429,7 +429,7 @@ class Action  extends Base
         }
 
         $action = $this->actionFactory->create($triggerType, $triggerCode, $actionType, $source, $id, $target, $targetId, $widgetId, $layoutCode);
-        $action->save();
+        $action->save(['notifyLayout' => true, 'layoutId' => $layout->layoutId]);
 
         // Return
         $this->getState()->hydrate([
@@ -627,7 +627,7 @@ class Action  extends Base
         $action->widgetId = $sanitizedParams->getInt('widgetId');
         $action->layoutCode = $sanitizedParams->getString('layoutCode');
 
-        $action->save();
+        $action->save(['notifyLayout' => true, 'layoutId' => $layout->layoutId]);
 
         // Return
         $this->getState()->hydrate([
