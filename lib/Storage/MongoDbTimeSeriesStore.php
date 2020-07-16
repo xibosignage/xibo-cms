@@ -568,30 +568,27 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         }
 
         try {
-            $query = [
-                $match,
-                [
-                    '$project' => [
-                        'id'=> '$_id',
-                        'type'=> 1,
-                        'start'=> 1,
-                        'end'=> 1,
-                        'layout'=> '$layoutName',
-                        'display'=> '$displayName',
-                        'media'=> '$mediaName',
-                        'tag'=> '$eventName',
-                        'duration'=> '$duration',
-                        'count'=> '$count',
-                        'displayId'=> 1,
-                        'layoutId'=> 1,
-                        'widgetId'=> 1,
-                        'mediaId'=> 1,
-                        'campaignId'=> 1,
-                        'statDate'=> 1,
-                        'engagements'=> 1,
-                        'tagFilter' => 1
-                    ]
-                ],
+            $project = [
+                '$project' => [
+                    'id'=> '$_id',
+                    'type'=> 1,
+                    'start'=> 1,
+                    'end'=> 1,
+                    'layout'=> '$layoutName',
+                    'display'=> '$displayName',
+                    'media'=> '$mediaName',
+                    'tag'=> '$eventName',
+                    'duration'=> '$duration',
+                    'count'=> '$count',
+                    'displayId'=> 1,
+                    'layoutId'=> 1,
+                    'widgetId'=> 1,
+                    'mediaId'=> 1,
+                    'campaignId'=> 1,
+                    'statDate'=> 1,
+                    'engagements'=> 1,
+                    'tagFilter' => 1
+                ]
             ];
 
             if (count($match) > 0) {
