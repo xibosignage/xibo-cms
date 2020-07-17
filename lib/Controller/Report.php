@@ -1014,6 +1014,13 @@ class Report extends Base
             if (!empty($quickChartUrl)) {
                 $script = $this->reportService->getReportChartScript($id, $name);
                 $src = $quickChartUrl . "/chart?width=1000&height=300&c=" . $script;
+
+                // If multiple charts needs to be displayed
+                $multipleCharts = [];
+                $chartScriptArray = json_decode($script, true);
+                foreach ($chartScriptArray as $key => $chartData) {
+                    $multipleCharts[$key] = $quickChartUrl . "/chart?width=1000&height=300&c=" .json_encode($chartData);
+                }
             } else {
                 $placeholder = __('Chart could not be drawn because the CMS has not been configured with a Quick Chart URL.');
             }
@@ -1041,6 +1048,7 @@ class Report extends Base
                     'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat()),
                     'tableData' => isset($tableData) ? $tableData : null,
                     'src' => isset($src) ? $src : null,
+                    'multipleCharts' => isset($multipleCharts) ? $multipleCharts : null,
                     'placeholder' => isset($placeholder) ? $placeholder : null
                 ]);
             $body = ob_get_contents();
