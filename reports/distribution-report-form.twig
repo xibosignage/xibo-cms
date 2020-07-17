@@ -209,65 +209,12 @@
                         reportChart.destroy();
                     }
 
-                    if (response.extra.countData.length <= 0) {
-                        return;
-                    }
-
-                    if (response.extra.durationData.length <= 0) {
+                    if (!response.extra.hasData) {
                         return;
                     }
 
                     // Create our chart
-                    reportChart = new Chart($("#reportChart"), {
-                        type: "bar",
-                        data: {
-                            labels: response.extra.labels,
-                            datasets: [{
-                                label: "{% trans "Total duration" %}",
-                                yAxisID: 'Duration',
-                                backgroundColor: response.extra.backgroundColor,
-                                data: response.extra.durationData,
-                            },
-                                {
-                                    label: "{% trans "Total count" %}",
-                                    yAxisID: 'Count',
-                                    borderColor: response.extra.borderColor,
-                                    data: response.extra.countData,
-                                    type: 'line',
-                                    fill: false
-                                }]
-                        },
-                        options: {
-                            scales: {
-                                yAxes: [{
-                                    id: 'Duration',
-                                    type: 'linear',
-                                    position: 'left',
-                                    display: true,
-                                    scaleLabel: {
-                                        display: true,
-                                        labelString: 'Duration(s)'
-                                    },
-                                    ticks: {
-                                        beginAtZero:true
-                                    }
-                                }, {
-                                    id: 'Count',
-                                    type: 'linear',
-                                    position: 'right',
-                                    display: true,
-                                    scaleLabel: {
-                                        display: true,
-                                        labelString: 'Count'
-                                    },
-                                    ticks: {
-                                        beginAtZero:true
-                                    }
-                                }]
-                            },
-                            maintainAspectRatio: true,
-                        }
-                    });
+                    reportChart = new Chart($("#reportChart"), response.extra.chart);
                 }
             });
         }
@@ -285,7 +232,6 @@
             // Calculate the difference of number of days of a selected range
             const calculateDaysShowHideWarn = function() {
 
-                console.log('m i here');
                 let fromDt = moment($("#statsFromDt").val());
                 let toDt = moment($("#statsToDt").val());
 

@@ -585,11 +585,19 @@ class Report extends Base
      */
     public function displayReportSchedulePage(Request $request, Response $response)
     {
+        $reportsList = $this->reportService->listReports();
+        $availableReports = [];
+        foreach ($reportsList as $reports) {
+            foreach ($reports as $report) {
+                $availableReports[] = $report;
+            }
+        }
+
         // Call to render the template
         $this->getState()->template = 'report-schedule-page';
         $this->getState()->setData([
             'users' => $this->userFactory->query(),
-            'availableReports' => $this->reportService->listReports()
+            'availableReports' => $availableReports
         ]);
 
         return $this->render($request, $response);
@@ -871,11 +879,19 @@ class Report extends Base
      */
     public function displaySavedReportPage(Request $request, Response $response)
     {
+        $reportsList = $this->reportService->listReports();
+        $availableReports = [];
+        foreach ($reportsList as $reports) {
+            foreach ($reports as $report) {
+                $availableReports[] = $report;
+            }
+        }
+
         // Call to render the template
         $this->getState()->template = 'saved-report-page';
         $this->getState()->setData([
             'users' => $this->userFactory->query(),
-            'availableReports' => $this->reportService->listReports()
+            'availableReports' => $availableReports
         ]);
 
         return $this->render($request, $response);
@@ -964,8 +980,8 @@ class Report extends Base
         // Retrieve the saved report result in array
         $results = $this->reportService->getSavedReportResults($id, $name);
 
-        $this->getState()->template = $results['template'];
-        $this->getState()->setData($results['chartData']);
+        $this->getState()->template = $results['results']['template'];
+        $this->getState()->setData($results['results']);
 
         return $this->render($request, $response);
     }
@@ -993,24 +1009,30 @@ class Report extends Base
 
         // Get the report config
         $report = $this->reportService->getReportByName($name);
-        if ($report->output_type == 'chart') {
-
+        if ($report->output_type == 'both' || $report->output_type == 'chart') {
             $quickChartUrl = $this->getConfig()->getSetting('QUICK_CHART_URL');
             if (!empty($quickChartUrl)) {
                 $script = $this->reportService->getReportChartScript($id, $name);
-                $src = $quickChartUrl. "/chart?width=1000&height=300&c=".$script;
+                $src = $quickChartUrl . "/chart?width=1000&height=300&c=" . $script;
+
+                // If multiple charts needs to be displayed
+                $multipleCharts = [];
+                $chartScriptArray = json_decode($script, true);
+                foreach ($chartScriptArray as $key => $chartData) {
+                    $multipleCharts[$key] = $quickChartUrl . "/chart?width=1000&height=300&c=" .json_encode($chartData);
+                }
             } else {
                 $placeholder = __('Chart could not be drawn because the CMS has not been configured with a Quick Chart URL.');
             }
+        }
 
-        } else { // only for tablebased report
-
-            $result = $savedReportData['chartData']['result'];
-            $tableData =json_decode($result, true);
+        if ($report->output_type == 'both' || $report->output_type == 'table') { // only for tablebased report
+            $tableData = $savedReportData['results']['table'];
         }
 
         // Get report email template
         $emailTemplate = $this->reportService->getReportEmailTemplate($name);
+
         if (!empty($emailTemplate)) {
 
             // Save PDF attachment
@@ -1021,11 +1043,12 @@ class Report extends Base
                     'header' => $report->description,
                     'logo' => $this->getConfig()->uri('img/xibologo.png', true),
                     'title' => $savedReport->saveAs,
-                    'periodStart' => $savedReportData['chartData']['periodStart'],
-                    'periodEnd' => $savedReportData['chartData']['periodEnd'],
+                    'periodStart' => $savedReportData['results']['periodStart'],
+                    'periodEnd' => $savedReportData['results']['periodEnd'],
                     'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat()),
                     'tableData' => isset($tableData) ? $tableData : null,
                     'src' => isset($src) ? $src : null,
+                    'multipleCharts' => isset($multipleCharts) ? $multipleCharts : null,
                     'placeholder' => isset($placeholder) ? $placeholder : null
                 ]);
             $body = ob_get_contents();

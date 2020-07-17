@@ -218,7 +218,7 @@ class ProofOfPlay implements ReportInterface
     /** @inheritdoc */
     public function generateSavedReportName($filterCriteria)
     {
-        $saveAs = ucfirst($filterCriteria['filter']). ' report for ';
+        $saveAs = sprintf(__('%s report for ', ucfirst($filterCriteria['filter'])));
 
         switch ($filterCriteria['type']) {
 
@@ -324,17 +324,12 @@ class ProofOfPlay implements ReportInterface
         }
 
         // Return data to build chart
-        return [
+        return array_merge($json, [
             'template' => 'proofofplay-report-preview',
-            'chartData' => [
-                'savedReport' => $savedReport,
-                'filterInfo' => $filterInfo,
-                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat()),
-                'periodStart' => isset($json['periodStart']) ? $json['periodStart'] : '',
-                'periodEnd' => isset($json['periodEnd']) ? $json['periodEnd'] : '',
-                'result' => json_encode($json['result']),
-            ]
-        ];
+            'filterInfo' => $filterInfo,
+            'savedReport' => $savedReport,
+            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat())
+        ]);
     }
 
 
@@ -552,7 +547,7 @@ class ProofOfPlay implements ReportInterface
         return [
             'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
             'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
-            'result' => $rows,
+            'table' => $rows,
         ];
 
     }

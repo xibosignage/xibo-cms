@@ -20,52 +20,41 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
+
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="Schedule" id="reportAddBtn" href="{{ url_for("reportschedule.add.form") }}?reportName=timedisconnectedsummary"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}?reportName=timedisconnectedsummary"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
+        <li class="btn btn-primary btn-xs"><a class="btns" href="{{ url_for("reportschedule.view") }}?reportName=timedisconnectedsummary"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
+    </ul>
+{% endblock %}
 
 {% block pageContent %}
 
     <div class="widget">
-        <div class="widget-title">{% trans "Bandwidth" %}</div>
-        <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilter">
-                    <div class="FilterDiv" id="bandwidthFilter">
-                        <form class="form-inline">
-                            {% set title %}{% trans "From Date" %}{% endset %}
-                            {{ inline.dateMonth("bandwidthFromDt", title, defaults.toDate, "", "", "", "") }}
-
-                            {% set title %}{% trans "To Date" %}{% endset %}
-                            {{ inline.dateMonth("bandwidthToDt", title, defaults.toDate, "", "", "", "") }}
-
-                            {% set title %}{% trans "Display" %}{% endset %}
-                            {% set attributes = [
-                                { name: "data-width", value: "200px" },
-                                { name: "data-allow-clear", value: "true" },
-                                { name: "data-placeholder--id", value: null },
-                                { name: "data-placeholder--value", value: "" },
-                                { name: "data-search-url", value: url_for("display.search") },
-                                { name: "data-search-term", value: "display" },
-                                { name: "data-search-term-tags", value: "tags" },
-                                { name: "data-id-property", value: "displayId" },
-                                { name: "data-text-property", value: "display" }
-                            ] %}
-                            {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
-                        </form>
-                    </div>
-                </div>
-                <div class="XiboData">
-                    <canvas id="bandwidthChart" style="clear:both; margin-top:25px;" height="330"></canvas>
-                </div>
-            </div>
+        <div class="widget-title">
+            <ul class="nav nav-pills">
+                <li role="presentation" class=""><a href="{{ url_for("stats.proofofplay.view") }}">{% trans "All Reports" %}</a></li>
+                <li role="presentation" class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Reports <span class="caret"></span> </a>
+                    <ul class="dropdown-menu">
+                        {% for reports in defaults.availableReports %}
+                            {% for report in reports %}
+                                {% if report.hidden == 0 and report.category == 'display'%}
+                                    <li>
+                                        <a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </li>
+                <li role="presentation"><a class="text-success" href="#"> {% trans "Time Disconnected Summary" %} </a></li>
+            </ul>
         </div>
-    </div>
-
-    <ul class="nav nav-pills pull-right">
-        <li class="btn btn-warning btn-xs"><a class="btns" id="refreshGrid" title="{% trans "Refresh" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></a></li>
-    </ul>
-    <div class="widget">
-        <div class="widget-title">{% trans "Time Disconnected" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
@@ -115,6 +104,7 @@
                         </form>
                     </div>
                 </div>
+                <br/>
                 <div class="XiboData">
                     <table id="stats" class="table table-striped">
                         <thead>
@@ -146,69 +136,13 @@
         </div>
     </div>
 
-
 {% endblock %}
 
 {% block javaScript %}
     <script type="text/javascript">
 
-        var bandwidthChart = null;
-
-        function setBandwidthChart() {
-            $.ajax({
-                type: "get",
-                url: "{{ url_for("stats.bandwidth.data") }}",
-                cache: false,
-                dataType: "json",
-                data: $("#bandwidthFilter").find("form").serialize(),
-                success: function(response) {
-
-                    if (bandwidthChart !== undefined && bandwidthChart !== null) {
-                        console.log('Destroying Chart');
-                        bandwidthChart.destroy();
-                    }
-
-                    if (response.extra.data.length <= 0) {
-                        return;
-                    }
-
-                    // Create our chart
-                    bandwidthChart = new Chart($("#bandwidthChart"), {
-                        type: "bar",
-                        data: {
-                            labels: response.extra.labels,
-                            datasets: [{
-                                label: "{% trans "Bandwidth" %}",
-                                backgroundColor: response.extra.backgroundColor,
-                                data: response.extra.data
-                            }]
-                        },
-                        options: {
-                            scales: {
-                                yAxes: [{
-                                    scaleLabel: {
-                                        display: true,
-                                        labelString: response.extra.postUnits,
-                                    }
-                                }]
-                            },
-                            legend: {
-                                display: false
-                            },
-                            maintainAspectRatio: false,
-                        }
-                    });
-                }
-            });
-        }
-
-        $(document).ready(function() {
-            setBandwidthChart();
-
-            // Bind to form change
-            $("#bandwidthFilter input, #bandwidthFilter select").change(function() {
-                setBandwidthChart();
-            });
+        $(function () {
+            $('[data-toggle="popover"]').popover();
         });
 
         var availabilityChart = null;
@@ -222,7 +156,7 @@
                 searchDelay: 3000,
                 "order": [[0, "asc"]],
                 ajax: {
-                    "url": "{{ url_for("stats.timeDisconnected.data") }}",
+                    "url": "{{ url_for("report.data", {name: reportName}) }}",
                     "data": function (d) {
                         $.extend(d, $("#stats").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }
@@ -306,5 +240,6 @@
                 table.ajax.reload();
             });
         });
+
     </script>
 {% endblock %}

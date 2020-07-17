@@ -107,6 +107,13 @@ class ReportService implements ReportServiceInterface
             $config->file = Str::replaceFirst(PROJECT_ROOT, '', $file);
             $route = $config->route;
 
+            // Check if only allowed for admin
+            if ($this->container->get('user')->userTypeId != 1) {
+                if (isset($config->adminOnly)) {
+                    continue;
+                }
+            }
+
             // Check Permissions
             if (!$this->container->get('user')->routeViewable($route)) {
                 continue;
@@ -282,8 +289,7 @@ class ReportService implements ReportServiceInterface
 
         // Return data to build chart
         return [
-            'template' => $results['template'],
-            'chartData' => $results['chartData']
+            'results' => $results
         ];
 
      }

@@ -111,12 +111,10 @@ class ReportScheduleTask implements TaskInterface
             $cron = \Cron\CronExpression::factory($reportSchedule->schedule);
             $nextRunDt = $cron->getNextRunDate(\DateTime::createFromFormat('U', $reportSchedule->lastRunDt))->format('U');
             $now = Carbon::now()->format('U');
-            var_dump('Report name '. $reportSchedule->name);
 
             // if report start date is greater than now
             // then dont run the report schedule
             if ($reportSchedule->fromDt > $now) {
-                var_dump('Report schedule start date is in future');
                 $this->log->debug('Report schedule start date is in future '. $reportSchedule->fromDt);
                 continue;
             }
@@ -124,7 +122,6 @@ class ReportScheduleTask implements TaskInterface
             // if report end date is less than or equal to now
             // then disable report schedule
             if ($reportSchedule->toDt != 0 && $reportSchedule->toDt <= $now) {
-                var_dump('Report schedule end date has passed');
                 $reportSchedule->message = 'Report schedule end date has passed';
                 $reportSchedule->isActive = 0;
             }
@@ -134,10 +131,8 @@ class ReportScheduleTask implements TaskInterface
                 // random run of report schedules
                 $skip = $this->skipReportRun($now, $nextRunDt);
                 if ($skip == true) {
-                    var_dump('Report skipped ');
                     continue;
                 }
-                var_dump('Report not skipped ');
 
                 // execute the report
                 $reportSchedule->previousRunDt = $reportSchedule->lastRunDt;
@@ -220,20 +215,25 @@ class ReportScheduleTask implements TaskInterface
         // Get the report config
         $report = $this->reportService->getReportByName($reportSchedule->reportName);
 
-        if ($report->output_type == 'chart') {
-
+        if ($report->output_type == 'both' || $report->output_type == 'chart') {
             $quickChartUrl = $this->config->getSetting('QUICK_CHART_URL');
             if (!empty($quickChartUrl)) {
                 $script = $this->reportService->getReportChartScript($savedReport->savedReportId, $reportSchedule->reportName);
                 $src = $quickChartUrl. "/chart?width=1000&height=300&c=".$script;
+
+                // If multiple charts needs to be displayed
+                $multipleCharts = [];
+                $chartScriptArray = json_decode($script, true);
+                foreach ($chartScriptArray as $key => $chartData) {
+                    $multipleCharts[$key] = $quickChartUrl . "/chart?width=1000&height=300&c=" .json_encode($chartData);
+                }
             } else {
                 $placeholder = __('Chart could not be drawn because the CMS has not been configured with a Quick Chart URL.');
             }
+        }
 
-        } else { // only for tablebased report
-
-            $result = $savedReportData['chartData']['result'];
-            $tableData =json_decode($result, true);
+        if ($report->output_type == 'both' || $report->output_type == 'table') {
+            $tableData = $savedReportData['results']['table'];
         }
 
         // Get report email template
@@ -248,11 +248,12 @@ class ReportScheduleTask implements TaskInterface
                     'header' => $report->description,
                     'logo' => $this->config->uri('img/xibologo.png', true),
                     'title' => $savedReport->saveAs,
-                    'periodStart' => $savedReportData['chartData']['periodStart'],
-                    'periodEnd' => $savedReportData['chartData']['periodEnd'],
+                    'periodStart' => $savedReportData['results']['periodStart'],
+                    'periodEnd' => $savedReportData['results']['periodEnd'],
                     'generatedOn' => Carbon::createFromFormat( 'U', $savedReport->generatedOn)->format('Y-m-d H:i:s'),
                     'tableData' => isset($tableData) ? $tableData : null,
                     'src' => isset($src) ? $src : null,
+                    'multipleCharts' => isset($multipleCharts) ? $multipleCharts : null,
                     'placeholder' => isset($placeholder) ? $placeholder : null
                 ]);
             $body = ob_get_contents();

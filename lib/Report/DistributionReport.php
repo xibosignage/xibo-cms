@@ -100,46 +100,6 @@ class DistributionReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportChartScript($results)
-    {
-        $labels = str_replace('"', "'", $results['chartData']['labels']);
-        $countData = str_replace('"', "'", $results['chartData']['countData']);
-        $durationData = str_replace('"', "'", $results['chartData']['durationData']);
-
-        return "{type:'bar',data:{labels:".$labels.", datasets:[{label:'Total duration',yAxisID:'Duration',data:".$durationData."},{ label: 'Total count', yAxisID:'Count',borderColor: 'rgb(240,93,41, 0.8)', data: ".$countData.", type:'line', fill: 'false'}]}, 
-        options: {
-            scales: {
-                yAxes: [{
-                    id: 'Duration',
-                    type: 'linear',
-                    position: 'left',
-                    display: true,
-                    scaleLabel: {
-                        display: true,
-                        labelString: 'Duration(s)'
-                    },
-                    ticks: {
-                        beginAtZero:true
-                    }
-                }, {
-                    id: 'Count',
-                    type: 'linear',
-                    position: 'right',
-                    display: true,
-                    scaleLabel: {
-                        display: true,
-                        labelString: 'Count'
-                    },
-                    ticks: {
-                        beginAtZero:true
-                    }
-                }]
-            },
-            maintainAspectRatio: true,
-        }}";
-    }
-
-    /** @inheritdoc */
     public function getReportEmailTemplate()
     {
         return 'distribution-email-template.twig';
@@ -274,20 +234,19 @@ class DistributionReport implements ReportInterface
 
             }
 
-            $saveAs = ucfirst($filterCriteria['filter']). ' report for Layout '. $layout->layout;
-
+            $saveAs = sprintf(__('%s report for Layout %s', ucfirst($filterCriteria['filter']), $layout->layout));
 
         } else if ($filterCriteria['type'] == 'media') {
             try {
                 $media = $this->mediaFactory->getById($filterCriteria['mediaId']);
-                $saveAs = ucfirst($filterCriteria['filter']). ' report for Media '. $media->name;
+                $saveAs = sprintf(__('%s report for Media %s', ucfirst($filterCriteria['filter']), $media->name));
 
             } catch (NotFoundException $error) {
-                $saveAs = 'Media not found';
+                $saveAs = __('Media not found');
             }
 
         } else if ($filterCriteria['type'] == 'event') {
-            $saveAs = ucfirst($filterCriteria['filter']). ' report for Event '. $filterCriteria['eventTag'];
+            $saveAs = sprintf(__('%s report for Event %s', ucfirst($filterCriteria['filter']), $filterCriteria['eventTag']));
         }
 
         if (!empty($filterCriteria['displayId'])) {
@@ -295,10 +254,10 @@ class DistributionReport implements ReportInterface
             // Get display
             try{
                 $displayName = $this->displayFactory->getById($filterCriteria['displayId'])->display;
-                $saveAs .= ' (Display: '. $displayName . ')';
+                $saveAs .= ' ('. __('Display') . ': '. $displayName . ')';
 
             } catch (NotFoundException $error){
-                $saveAs .= ' (DisplayId: Not Found )';
+                $saveAs .= ' '.__('(DisplayId: Not Found)');
             }
         }
 
@@ -306,23 +265,20 @@ class DistributionReport implements ReportInterface
     }
 
     /** @inheritdoc */
+    public function getReportChartScript($results)
+    {
+        return json_encode($results['results']['chart']);
+    }
+
+    /** @inheritdoc */
     public function getSavedReportResults($json, $savedReport)
     {
         // Return data to build chart
-        return [
+        return array_merge($json, [
             'template' => 'distribution-report-preview',
-            'chartData' => [
-                'savedReport' => $savedReport,
-                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat()),
-                'periodStart' => isset($json['periodStart']) ? $json['periodStart'] : '',
-                'periodEnd' => isset($json['periodEnd']) ? $json['periodEnd'] : '',
-                'labels' => json_encode($json['labels']),
-                'countData' => json_encode($json['countData']),
-                'durationData' => json_encode($json['durationData']),
-                'backgroundColor' => json_encode($json['backgroundColor']),
-                'borderColor' => json_encode($json['borderColor']),
-            ]
-        ];
+            'savedReport' => $savedReport,
+            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat())
+        ]);
     }
 
     /** @inheritdoc */
@@ -483,13 +439,63 @@ class DistributionReport implements ReportInterface
 
         // Return data to build chart
         return [
-            'periodStart' => Carbon::createFromTimestamp($fromDt->format('U')),
-            'periodEnd' => Carbon::createFromTimestamp($toDt->format('U')),
-            'labels' => $labels,
-            'countData' => $countData,
-            'durationData' => $durationData,
-            'backgroundColor' => $backgroundColor,
-            'borderColor' => $borderColor,
+            'hasData' => count($durationData) > 0 && count($countData) > 0,
+            'chart' => [
+                'type' => 'bar',
+                'data' => [
+                    'labels' => $labels,
+                    'datasets' => [
+                        [
+                            'label' => __('Total duration'),
+                            'yAxisID' => 'Duration',
+                            'backgroundColor' => $backgroundColor,
+                            'data' => $durationData
+                        ],
+                        [
+                            'label' => __('Total count'),
+                            'yAxisID' => 'Count',
+                            'borderColor' => $borderColor,
+                            'type' => 'line',
+                            'fill' => false,
+                            'data' =>  $countData
+                        ]
+                    ]
+                ],
+                'options' => [
+                    'scales' => [
+                        'yAxes' => [
+                            [
+                                'id' => 'Duration',
+                                'type' => 'linear',
+                                'position' =>  'left',
+                                'display' =>  true,
+                                'scaleLabel' =>  [
+                                    'display' =>  true,
+                                    'labelString' => __('Duration(s)')
+                                ],
+                                'ticks' =>  [
+                                    'beginAtZero' => true
+                                ]
+                            ], [
+                                'id' => 'Count',
+                                'type' => 'linear',
+                                'position' =>  'right',
+                                'display' =>  true,
+                                'scaleLabel' =>  [
+                                    'display' =>  true,
+                                    'labelString' => __('Count')
+                                ],
+                                'ticks' =>  [
+                                    'beginAtZero' => true
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+            'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+
         ];
 
     }

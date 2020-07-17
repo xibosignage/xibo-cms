@@ -1,7 +1,8 @@
 {#
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2019 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -17,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 #}
 
@@ -29,9 +29,29 @@
 <div>
     <span class="small">{% trans "From" %} {{ periodStart }} {% trans "To" %} {{ periodEnd }}</span>
 </div>
-<p></p>
-<span>{{ placeholder }}</span>
-<img src="{{ src }}" >
+
+<table class="saved-report-table">
+    <tr>
+        <th>{% trans "ID" %}</th>
+        <th>{% trans "User" %}</th>
+        <th>{% trans "Usage" %}</th>
+        <th>{% trans "Count Files" %}</th>
+    </tr>
+    {% for item in tableData %}
+        <tr>
+            <td>{{ item.userId }}</td>
+            <td>{{ item.userName }}</td>
+            <td>{{ item.bytesUsedFormatted }}</td>
+            <td>{{ item.numFiles }}</td>
+        </tr>
+    {% endfor %}
+</table>
+
+{% for key,item in multipleCharts %}
+    <div style="text-align: center">{{ key|replace({'_': " "}) }}</div>
+    <img src="{{ item }}" >
+    <p></p>
+{% endfor %}
 
 
 

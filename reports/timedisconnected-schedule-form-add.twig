@@ -1,7 +1,8 @@
 {#
-/*
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2019 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -17,7 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
  */
 #}
 
@@ -61,28 +61,25 @@
 
                 {% set title %}{% trans "Group by" %}{% endset %}
                 {% set byhour %}{% trans "Hour" %}{% endset %}
-                {% set bydayofweek %}{% trans "Day of week" %}{% endset %}
                 {% set bydayofmonth %}{% trans "Day of month" %}{% endset %}
                 {% set options = [
                     { filterName: "byhour", groupByFilter: byhour },
-                    { filterName: "bydayofweek", groupByFilter: bydayofweek },
                     { filterName: "bydayofmonth", groupByFilter: bydayofmonth },
                 ] %}
                 {{ forms.dropdown("groupByFilter", "single", title, "", options, "filterName", "groupByFilter", "", "group-by-filter") }}
 
-                {% set title %}{% trans "Display" %}{% endset %}
+                {% set title %}{% trans "Display/Display Groups" %}{% endset %}
+                {% set helpText %}{% trans "Please select one or more displays / groups for this notification to be shown on - Layouts will need the notification widget." %}{% endset %}
                 {% set attributes = [
-                    { name: "data-width", value: "100%" },
-                    { name: "data-allow-clear", value: "true" },
-                    { name: "data-placeholder--id", value: null },
-                    { name: "data-placeholder--value", value: "" },
-                    { name: "data-search-url", value: url_for("display.search") },
-                    { name: "data-search-term", value: "display" },
-                    { name: "data-search-term-tags", value: "tags" },
-                    { name: "data-id-property", value: "displayId" },
-                    { name: "data-text-property", value: "display" }
+                    { name: "data-width", value: "100%" }
                 ] %}
-                {{ forms.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
+                {% set transGroups %}{% trans "Groups" %}{% endset %}
+                {% set transDisplays %}{% trans "Display" %}{% endset %}
+                {% set optionGroups = [
+                    {id: "group", label: transGroups},
+                    {id: "display", label: transDisplays}
+                ] %}
+                {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, displayGroupIds, {group: displayGroups, display: displays}, "displayGroupId", "displayGroup", helpText, "selectPicker", "", "", "", attributes, optionGroups) }}
 
                 {% set title %}{% trans "Start Time" %}{% endset %}
                 {% set helpText %}{% trans "Set a future date and time to run this report. Leave blank to run from the next collection point." %}{% endset %}
