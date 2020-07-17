@@ -106,35 +106,92 @@ class LibraryUsage implements ReportInterface
     /** @inheritdoc */
     public function getReportEmailTemplate()
     {
-        return null;
+        return 'libraryusage-email-template.twig';
     }
 
     /** @inheritdoc */
     public function getReportScheduleFormData(Request $request)
     {
+        $title = __('Add Report Schedule');
+
+        $data = [];
+
+        $data['formTitle'] = $title;
+        $data['reportName'] = 'libraryusage';
+        $data['users'] = $this->userFactory->query();
+        $data['groups'] = $this->userGroupFactory->query();
+
+        return [
+            'template' => 'libraryusage-schedule-form-add',
+            'data' => $data
+        ];
     }
 
     /** @inheritdoc */
     public function setReportScheduleFormData(Request $request)
     {
+
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $filter = $sanitizedParams->getString('filter');
+
+        $userId = $sanitizedParams->getInt('userId');
+        $filterCriteria['userId'] = $userId;
+
+        $groupId = $sanitizedParams->getInt('groupId');
+        $filterCriteria['groupId'] = $groupId;
+
+        $filterCriteria['filter'] = $filter;
+
+        $schedule = '';
+        if ($filter == 'daily') {
+            $schedule = ReportSchedule::$SCHEDULE_DAILY;
+            $filterCriteria['reportFilter'] = 'yesterday';
+
+        } else if ($filter == 'weekly') {
+            $schedule = ReportSchedule::$SCHEDULE_WEEKLY;
+            $filterCriteria['reportFilter'] = 'lastweek';
+
+        } else if ($filter == 'monthly') {
+            $schedule = ReportSchedule::$SCHEDULE_MONTHLY;
+            $filterCriteria['reportFilter'] = 'lastmonth';
+
+        } else if ($filter == 'yearly') {
+            $schedule = ReportSchedule::$SCHEDULE_YEARLY;
+            $filterCriteria['reportFilter'] = 'lastyear';
+        }
+
+        $filterCriteria['sendEmail'] = $sanitizedParams->getCheckbox('sendEmail');
+        $filterCriteria['nonusers'] = $sanitizedParams->getString('nonusers');
+
+        // Return
+        return [
+            'filterCriteria' => json_encode($filterCriteria),
+            'schedule' => $schedule
+        ];
     }
 
     /** @inheritdoc */
     public function generateSavedReportName($filterCriteria)
-    {
+    {        
+        return ucfirst($filterCriteria['filter']). ' library usage report';
     }
 
     /** @inheritdoc */
     public function getReportChartScript($results)
     {
-        return null;
+        return json_encode($results['results']['chart']);
     }
 
     /** @inheritdoc */
     public function getSavedReportResults($json, $savedReport)
     {
         // Return data to build chart
-        return array_merge($json, []);
+        return array_merge($json, [
+            'template' => 'libraryusage-report-preview',
+            'savedReport' => $savedReport,
+            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat())
+        ]);
     }
 
     /** @inheritdoc */
@@ -230,6 +287,54 @@ class LibraryUsage implements ReportInterface
 
         $this->getLog()->debug('Filter criteria: '. json_encode($filterCriteria, JSON_PRETTY_PRINT));
 
+        $sanitizedParams = $this->getSanitizer($filterCriteria);
+
+        //
+        // From and To Date Selection
+        // --------------------------
+        // Our report has a range filter which determins whether or not the user has to enter their own from / to dates
+        // check the range filter first and set from/to dates accordingly.
+        $reportFilter = $sanitizedParams->getString('reportFilter');
+
+        // Use the current date as a helper
+        $now = Carbon::now();
+
+        switch ($reportFilter) {
+
+            // the monthly data starts from yesterday
+            case 'yesterday':
+                $fromDt = $now->copy()->startOfDay()->subDay();
+                $toDt = $now->copy()->startOfDay();
+
+                break;
+            case 'lastweek':
+                $fromDt = $now->copy()->startOfWeek()->subWeek();
+                $toDt = $fromDt->copy()->addWeek();
+
+                break;
+
+            case 'lastmonth':
+                $fromDt = $now->copy()->startOfMonth()->subMonth();
+                $toDt = $fromDt->copy()->addMonth();
+
+                break;
+
+            case 'lastyear':
+                $fromDt = $now->copy()->startOfYear()->subYear();
+                $toDt = $fromDt->copy()->addYear();
+
+                break;
+
+            case '':
+            default:
+                // Expect dates to be provided.
+                $fromDt= $now;
+                $toDt = $now;
+
+                break;
+        }
+
+
         $params = [];
         $select = '
             SELECT `user`.userId,
@@ -267,8 +372,6 @@ class LibraryUsage implements ReportInterface
             ';
             $params['currentUserId'] = $this->userFactory->getUser()->userId;
         }
-
-        $sanitizedParams = $this->getSanitizer($filterCriteria);
 
         // Filter by userId
         if ($sanitizedParams->getInt('userId') !== null) {
@@ -326,5 +429,138 @@ class LibraryUsage implements ReportInterface
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($rows);
+
+        // Get the Library widget labels and Widget Data
+        $libraryWidgetLabels = [];
+        $libraryWidgetData = [];
+        $suffixes = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB'];
+
+        // Widget for the library usage pie chart
+        try {
+            if ($this->userFactory->getUser()->libraryQuota != 0) {
+                $libraryLimit = $this->userFactory->getUser()->libraryQuota * 1024;
+            } else {
+                $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+            }
+
+            // Library Size in Bytes
+            $params = [];
+            $sql = 'SELECT IFNULL(SUM(FileSize), 0) AS SumSize, type FROM `media` WHERE 1 = 1 ';
+            $this->mediaFactory->viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId');
+            $sql .= ' GROUP BY type ';
+
+            $sth = $this->store->getConnection()->prepare($sql);
+            $sth->execute($params);
+
+            $results = $sth->fetchAll();
+
+            // Do we base the units on the maximum size or the library limit
+            $maxSize = 0;
+            if ($libraryLimit > 0) {
+                $maxSize = $libraryLimit;
+            } else {
+                // Find the maximum sized chunk of the items in the library
+                foreach ($results as $library) {
+                    $maxSize = ($library['SumSize'] > $maxSize) ? $library['SumSize'] : $maxSize;
+                }
+            }
+
+            // Decide what our units are going to be, based on the size
+            $base = ($maxSize == 0) ? 0 : floor(log($maxSize) / log(1024));
+
+            $libraryUsage = [];
+            $libraryLabels = [];
+            $totalSize = 0;
+            foreach ($results as $library) {
+                $libraryUsage[] = round((double)$library['SumSize'] / (pow(1024, $base)), 2);
+                $libraryLabels[] = ucfirst($library['type']) . ' ' . $suffixes[$base];
+
+                $totalSize = $totalSize + $library['SumSize'];
+            }
+
+            // Do we need to add the library remaining?
+            if ($libraryLimit > 0) {
+                $remaining = round(($libraryLimit - $totalSize) / (pow(1024, $base)), 2);
+
+                $libraryUsage[] = $remaining;
+                $libraryLabels[] = __('Free') . ' ' . $suffixes[$base];
+            }
+
+            // What if we are empty?
+            if (count($results) == 0 && $libraryLimit <= 0) {
+                $libraryUsage[] = 0;
+                $libraryLabels[] = __('Empty');
+            }
+
+            $libraryWidgetLabels = $libraryLabels;
+            $libraryWidgetData = $libraryUsage;
+
+        } catch (\Exception $exception) {
+            $this->getLog()->error('Error rendering the library stats page widget');
+        }
+
+
+        // Build the Library Usage and  User Percentage Usage chart data
+        $totalSize = 0;
+        foreach ($rows as $row) {
+            $totalSize += $row['bytesUsed'];
+        }
+
+        $userData = [];
+        $userLabels = [];
+        foreach ($rows as $row) {
+            $userData[] = ($row['bytesUsed']/$totalSize)*100;
+            $userLabels[] = $row['userName'];
+        }
+
+        $colours = [];
+        foreach ($userData as $userDatum) {
+            $colours[] = 'rgb(' . mt_rand(0, 255).','. mt_rand(0, 255).',' . mt_rand(0, 255) .')';
+        }
+
+        $libraryColours = [];
+        foreach ($libraryWidgetData as $libraryDatum) {
+            $libraryColours[] = 'rgb(' . mt_rand(0, 255).','. mt_rand(0, 255).',' . mt_rand(0, 255) .')';
+        }
+
+        return [
+            'chart' => [
+                'userChart' => [
+                    'type' => 'pie',
+                    'data' => [
+                        'labels' => $userLabels,
+                        'datasets' => [
+                            [
+                                'backgroundColor' => $colours,
+                                'data' => $userData
+                            ]
+                        ]
+                    ],
+                    'options' => [
+                        'maintainAspectRatio' => false
+                    ]
+                ],
+                'libraryChart' => [
+                    'type' => 'pie',
+                    'data' => [
+                        'labels' => $libraryWidgetLabels,
+                        'datasets' => [
+                            [
+                                'backgroundColor' => $libraryColours,
+                                'data' => $libraryWidgetData
+                            ]
+                        ]
+                    ],
+                    'options' => [
+                        'maintainAspectRatio' => false
+                    ]
+                ]
+            ],
+            'table' => $rows,
+            'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+
+        ];
+
     }
 }

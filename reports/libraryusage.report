@@ -3,7 +3,7 @@
   "description": "Library Usage",
   "class": "\\Xibo\\Report\\LibraryUsage",
   "type": "Report",
-  "output_type": "table",
+  "output_type": "both",
   "color":"green",
   "fa_icon": "fa-th",
   "sort_order": 3,
