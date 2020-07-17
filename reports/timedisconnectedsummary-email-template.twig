@@ -30,7 +30,6 @@
     <span class="small">{% trans "From" %} {{ periodStart }} {% trans "To" %} {{ periodEnd }}</span>
 </div>
 <p></p>
-<span>{{ placeholder }}</span>
 
 <table class="saved-report-table">
     <tr>
@@ -39,7 +38,6 @@
         <th>{% trans "Time Disconnected" %}</th>
         <th>{% trans "Time Connected" %}</th>
         <th>{% trans "Units" %}</th>
-
     </tr>
     {% for item in tableData %}
         <tr>
@@ -52,6 +50,7 @@
     {% endfor %}
 </table>
 <br/>
+<span>{{ placeholder }}</span>
 <img src="{{ src }}" >
 
 

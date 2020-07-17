@@ -29,7 +29,6 @@
 <div>
     <span class="small">{% trans "From" %} {{ periodStart }} {% trans "To" %} {{ periodEnd }}</span>
 </div>
-<p></p>
 
 <table class="saved-report-table">
     <tr>
@@ -48,8 +47,10 @@
     {% endfor %}
 </table>
 
-{% for item in multipleCharts %}
-    <img src="{{ item}}" >
+{% for key,item in multipleCharts %}
+    <div style="text-align: center">{{ key|replace({'_': " "}) }}</div>
+    <img src="{{ item }}" >
+    <p></p>
 {% endfor %}
 
 

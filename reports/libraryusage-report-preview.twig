@@ -122,10 +122,10 @@
         table.on('processing.dt', dataTableProcessing);
 
         // User Percentage Usage
-        var userChart = new Chart($("#userChart"), {{ chart.userChart|json_encode|raw }});
+        var userChart = new Chart($("#userChart"), {{ chart.User_Percentage_Usage|json_encode|raw }});
 
         // Library Usage
-        var libraryChart = new Chart($("#libraryChart"), {{ chart.libraryChart|json_encode|raw }});
+        var libraryChart = new Chart($("#libraryChart"), {{ chart.Library_Usage|json_encode|raw }});
 
 
     </script>

@@ -424,6 +424,7 @@ class SummaryReport implements ReportInterface
                             'yAxisID' => 'Count',
                             'borderColor' => $borderColor,
                             'type' => 'line',
+                            'fill' => false,
                             'data' =>  $countData
                         ]
                     ]
@@ -460,8 +461,8 @@ class SummaryReport implements ReportInterface
                     ]
                 ]
             ],
-            'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
-            'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat())
+            'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
         ];
     }
 

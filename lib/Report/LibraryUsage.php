@@ -525,7 +525,7 @@ class LibraryUsage implements ReportInterface
 
         return [
             'chart' => [
-                'userChart' => [
+                'User_Percentage_Usage' => [ // we will use User_Percentage_Usage as report name when we export/email pdf
                     'type' => 'pie',
                     'data' => [
                         'labels' => $userLabels,
@@ -540,7 +540,7 @@ class LibraryUsage implements ReportInterface
                         'maintainAspectRatio' => false
                     ]
                 ],
-                'libraryChart' => [
+                'Library_Usage' => [
                     'type' => 'pie',
                     'data' => [
                         'labels' => $libraryWidgetLabels,
