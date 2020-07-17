@@ -234,20 +234,19 @@ class DistributionReport implements ReportInterface
 
             }
 
-            $saveAs = ucfirst($filterCriteria['filter']). ' report for Layout '. $layout->layout;
-
+            $saveAs = sprintf(__('%s report for Layout %s', ucfirst($filterCriteria['filter']), $layout->layout));
 
         } else if ($filterCriteria['type'] == 'media') {
             try {
                 $media = $this->mediaFactory->getById($filterCriteria['mediaId']);
-                $saveAs = ucfirst($filterCriteria['filter']). ' report for Media '. $media->name;
+                $saveAs = sprintf(__('%s report for Media %s', ucfirst($filterCriteria['filter']), $media->name));
 
             } catch (NotFoundException $error) {
-                $saveAs = 'Media not found';
+                $saveAs = __('Media not found');
             }
 
         } else if ($filterCriteria['type'] == 'event') {
-            $saveAs = ucfirst($filterCriteria['filter']). ' report for Event '. $filterCriteria['eventTag'];
+            $saveAs = sprintf(__('%s report for Event %s', ucfirst($filterCriteria['filter']), $filterCriteria['eventTag']));
         }
 
         if (!empty($filterCriteria['displayId'])) {
@@ -255,10 +254,10 @@ class DistributionReport implements ReportInterface
             // Get display
             try{
                 $displayName = $this->displayFactory->getById($filterCriteria['displayId'])->display;
-                $saveAs .= ' (Display: '. $displayName . ')';
+                $saveAs .= ' ('. __('Display') . ': '. $displayName . ')';
 
             } catch (NotFoundException $error){
-                $saveAs .= ' (DisplayId: Not Found )';
+                $saveAs .= ' '.__('(DisplayId: Not Found)');
             }
         }
 
@@ -472,7 +471,7 @@ class DistributionReport implements ReportInterface
                                 'display' =>  true,
                                 'scaleLabel' =>  [
                                     'display' =>  true,
-                                    'labelString' =>  'Duration(s)'
+                                    'labelString' => __('Duration(s)')
                                 ],
                                 'ticks' =>  [
                                     'beginAtZero' => true
@@ -484,7 +483,7 @@ class DistributionReport implements ReportInterface
                                 'display' =>  true,
                                 'scaleLabel' =>  [
                                     'display' =>  true,
-                                    'labelString' =>  'Count'
+                                    'labelString' => __('Count')
                                 ],
                                 'ticks' =>  [
                                     'beginAtZero' => true

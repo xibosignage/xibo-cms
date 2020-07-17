@@ -41,6 +41,10 @@
                 {{ forms.hidden("hiddenFields", hiddenFields) }}
                 {{ forms.hidden("reportName", reportName) }}
 
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The name for this report schedule" %}{% endset %}
+                {{ forms.input("name", title, "", helpText, "", "required") }}
+
                 {% set title %}{% trans "Filter" %}{% endset %}
                 {% set helpText %}{% trans "Select the report filter you would like to run" %}{% endset %}
                 {% set daily %}{% trans "Daily" %}{% endset %}
@@ -54,14 +58,6 @@
                     { name: "yearly", filter: yearly },
                 ] %}
                 {{ forms.dropdown("filter", "single", title, "", options, "name", "filter", helpText) }}
-
-                {% set title %}{% trans "Start Time" %}{% endset %}
-                {% set helpText %}{% trans "Set a future date and time to run this report. Leave blank to run from the next collection point." %}{% endset %}
-                {{ forms.dateTime("fromDt", title, "", helpText, "starttime-control") }}
-
-                {% set title %}{% trans "End Time" %}{% endset %}
-                {% set helpText %}{% trans "Set a future date and time to end the schedule. Leave blank to run indefinitely." %}{% endset %}
-                {{ forms.dateTime("toDt", title, "", helpText, "endtime-control") }}
 
                 {% set attributes = [
                     { name: "data-allow-clear", value: "true" },
@@ -77,9 +73,13 @@
                 {% set groupFilterOptions = [{groupId: null, group: ""}]|merge(groups) %}
                 {{ forms.dropdown("groupId", "single", title, "", groupFilterOptions, "groupId", "group", "", "selectPicker", "", "g", "", attributes) }}
 
-                {% set title %}{% trans "Name" %}{% endset %}
-                {% set helpText %}{% trans "The name for this report schedule" %}{% endset %}
-                {{ forms.input("name", title, "", helpText, "", "required") }}
+                {% set title %}{% trans "Start Time" %}{% endset %}
+                {% set helpText %}{% trans "Set a future date and time to run this report. Leave blank to run from the next collection point." %}{% endset %}
+                {{ forms.dateTime("fromDt", title, "", helpText, "starttime-control") }}
+
+                {% set title %}{% trans "End Time" %}{% endset %}
+                {% set helpText %}{% trans "Set a future date and time to end the schedule. Leave blank to run indefinitely." %}{% endset %}
+                {{ forms.dateTime("toDt", title, "", helpText, "endtime-control") }}
 
                 {% set title %}{% trans "Should an email be sent?" %}{% endset %}
                 {{ forms.checkbox("sendEmail", title, sendEmail) }}

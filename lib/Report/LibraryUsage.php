@@ -174,7 +174,7 @@ class LibraryUsage implements ReportInterface
     /** @inheritdoc */
     public function generateSavedReportName($filterCriteria)
     {        
-        return ucfirst($filterCriteria['filter']). ' library usage report';
+        return sprintf(__('%s library usage report', ucfirst($filterCriteria['filter'])));
     }
 
     /** @inheritdoc */

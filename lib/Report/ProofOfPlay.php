@@ -218,7 +218,7 @@ class ProofOfPlay implements ReportInterface
     /** @inheritdoc */
     public function generateSavedReportName($filterCriteria)
     {
-        $saveAs = ucfirst($filterCriteria['filter']). ' report for ';
+        $saveAs = sprintf(__('%s report for ', ucfirst($filterCriteria['filter'])));
 
         switch ($filterCriteria['type']) {
 

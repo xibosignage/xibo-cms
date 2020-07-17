@@ -179,7 +179,7 @@ class TimeDisconnectedSummary implements ReportInterface
     /** @inheritdoc */
     public function generateSavedReportName($filterCriteria)
     {
-        return ucfirst($filterCriteria['filter']). ' time disconnected summary report';
+        return sprintf(__('%s time disconnected summary report', ucfirst($filterCriteria['filter'])));
     }
 
     /** @inheritdoc */

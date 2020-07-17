@@ -142,6 +142,7 @@ class Bandwidth implements ReportInterface
         $filterCriteria['displayId'] = $displayId;
         $filterCriteria['filter'] = $filter;
 
+        // Bandwidth report does not support weekly as bandwidth has monthly records in DB
         $schedule = '';
         if ($filter == 'daily') {
             $schedule = ReportSchedule::$SCHEDULE_DAILY;
@@ -169,7 +170,7 @@ class Bandwidth implements ReportInterface
     /** @inheritdoc */
     public function generateSavedReportName($filterCriteria)
     {
-        return ucfirst($filterCriteria['filter']). ' bandwidth report';
+        return sprintf(__('%s bandwidth report', ucfirst($filterCriteria['filter'])));
     }
 
     /** @inheritdoc */
@@ -206,9 +207,11 @@ class Bandwidth implements ReportInterface
         // Use the current date as a helper
         $now = Carbon::now();
 
+        // Bandwidth report does not support weekly as bandwidth has monthly records in DB
         switch ($reportFilter) {
 
-            // the monthly data starts from yesterday
+            // Daily report if setup which has reportfilter = yesterday will be daily progression of bandwidth usage
+            // It always starts from the start of the month so we get the month usage
             case 'yesterday':
                 $fromDt = $now->copy()->startOfDay()->subDay();
                 $fromDt->startOfMonth();

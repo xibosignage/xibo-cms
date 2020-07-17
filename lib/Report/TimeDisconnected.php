@@ -216,8 +216,7 @@ class TimeDisconnected implements ReportInterface
     /** @inheritdoc */
     public function generateSavedReportName($filterCriteria)
     {
-        $saveAs = ucfirst($filterCriteria['filter']). ' report for Display' ;
-        return $saveAs;
+        return sprintf(__('%s report for Display', ucfirst($filterCriteria['filter'])));
     }
 
     /** @inheritdoc */

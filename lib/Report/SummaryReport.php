@@ -220,21 +220,19 @@ class SummaryReport implements ReportInterface
                 $layout = $this->layoutFactory->getById($layoutId);
 
             }
-
-            $saveAs = ucfirst($filterCriteria['filter']). ' report for Layout '. $layout->layout;
-
+            $saveAs = sprintf(__('%s report for Layout %s', ucfirst($filterCriteria['filter']), $layout->layout));
 
         } else if ($filterCriteria['type'] == 'media') {
             try {
                 $media = $this->mediaFactory->getById($filterCriteria['mediaId']);
-                $saveAs = ucfirst($filterCriteria['filter']). ' report for Media '. $media->name;
+                $saveAs = sprintf(__('%s report for Media ', ucfirst($filterCriteria['filter']), $media->name));
 
             } catch (NotFoundException $error) {
-                $saveAs = 'Media not found';
+                $saveAs = __('Media not found');
             }
 
         } else if ($filterCriteria['type'] == 'event') {
-            $saveAs = ucfirst($filterCriteria['filter']). ' report for Event '. $filterCriteria['eventTag'];
+            $saveAs = sprintf(__('%s report for Event %s', ucfirst($filterCriteria['filter']), $filterCriteria['eventTag']));
         }
 
         return $saveAs;
@@ -440,7 +438,7 @@ class SummaryReport implements ReportInterface
                                 'display' =>  true,
                                 'scaleLabel' =>  [
                                     'display' =>  true,
-                                    'labelString' =>  'Duration(s)'
+                                    'labelString' => __('Duration(s)')
                                 ],
                                 'ticks' =>  [
                                     'beginAtZero' => true
@@ -452,7 +450,7 @@ class SummaryReport implements ReportInterface
                                 'display' =>  true,
                                 'scaleLabel' =>  [
                                     'display' =>  true,
-                                    'labelString' =>  'Count'
+                                    'labelString' => __('Count')
                                 ],
                                 'ticks' =>  [
                                     'beginAtZero' => true
