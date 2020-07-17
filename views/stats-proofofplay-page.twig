@@ -32,7 +32,7 @@
             </div>
             {% if key == "proof of play" %}
                 <div class="col-lg-3 col-md-6 col-xs-12">
-                    <div class="widget content">
+                    <div class="widget content" style="min-height: 210px">
                         <div class="widget-body">
                             <div class="widget-icon green">
                                 <a class="XiboFormButton btns" href="{{ url_for("stats.export.form") }}"> <i class="fa fa-external-link"></i></a>
@@ -49,7 +49,7 @@
             {% for report in reports %}
                 {% if report.hidden == 0 %}
                     <div class="report-box col-lg-3 col-md-6 col-xs-12">
-                        <div class="widget content">
+                        <div class="widget content" style="min-height: 210px">
                             <div class="widget-body">
                                 <div class="widget-icon {{ report.color }} ">
                                     <i class="fa {{ report.fa_icon }}"></i>
