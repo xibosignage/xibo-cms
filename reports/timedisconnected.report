@@ -9,5 +9,6 @@
   "sort_order": 4,
   "hidden": 0,
   "category": "display",
-  "route": "/stats"
+  "route": "/stats",
+  "adminOnly": 0
 }

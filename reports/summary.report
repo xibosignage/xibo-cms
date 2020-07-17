@@ -9,5 +9,6 @@
   "sort_order": 2,
   "hidden": 0,
   "category": "proof of play",
-  "route": "/stats"
+  "route": "/stats",
+  "adminOnly": 0
 }
