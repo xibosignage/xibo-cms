@@ -105,6 +105,12 @@ class ReportService implements ReportServiceInterface
 
             $config = json_decode(file_get_contents($file));
             $config->file = Str::replaceFirst(PROJECT_ROOT, '', $file);
+
+            // Compatibility check
+            if (!isset($config->route) || !isset($config->category)) {
+                continue;
+            }
+
             $route = $config->route;
 
             // Check if only allowed for admin
@@ -160,7 +166,7 @@ class ReportService implements ReportServiceInterface
         }
 
         //throw error
-        throw new NotFoundException(__('No file to return'));
+        throw new NotFoundException(__('Get Report By Name: No file to return'));
     }
 
     /**
@@ -182,8 +188,8 @@ class ReportService implements ReportServiceInterface
             }
         }
 
-        //throw error
-        throw new NotFoundException(__('No file to return'));
+        // throw error
+      throw new NotFoundException(__('Get report class: No file to return'));
     }
 
     /**
@@ -292,6 +298,61 @@ class ReportService implements ReportServiceInterface
             'results' => $results
         ];
 
+     }
+
+    /**
+     * @inheritdoc
+     */
+    public function convertSavedReportResults($savedreportId, $reportName)
+    {
+        throw new InvalidArgumentException(__('Can\'t create ZIP. Error Code:'));
+
+        $className = $this->getReportClass($reportName);
+
+        $object = $this->createReportObject($className);
+
+        $savedReport = $this->savedReportFactory->getById($savedreportId);
+
+        // Open a zipfile and read the json
+        $zipFile = $this->config->getSetting('LIBRARY_LOCATION') . $savedReport->storedAs;
+
+        // Do some pre-checks on the arguments we have been provided
+        if (!file_exists($zipFile)) {
+            throw new InvalidArgumentException(__('File does not exist'));
+        }
+
+        // Open the Zip file
+        $zip = new \ZipArchive();
+        if (!$zip->open($zipFile)) {
+            throw new InvalidArgumentException(__('Unable to open ZIP'));
+        }
+
+        // Get the old json (saved report)
+        $oldjson = json_decode($zip->getFromName('reportschedule.json'), true);
+
+        // Restructure the old json to new json
+        $json = $object->restructureSavedReportOldJson($oldjson);
+
+        // Format the JSON as schemaVersion 2
+        $fileName = tempnam($this->config->getSetting('LIBRARY_LOCATION') . '/temp/','reportschedule');
+        $out = fopen($fileName, 'w');
+        fwrite($out, json_encode($json));
+        fclose($out);
+
+        $zip = new \ZipArchive();
+        $result = $zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+        if ($result !== true) {
+            throw new InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
+        }
+
+        $zip->addFile($fileName, 'reportschedule.json');
+        $zip->close();
+
+        // Remove the JSON file
+        unlink($fileName);
+
+        // Return success
+        return;
      }
 
     /**

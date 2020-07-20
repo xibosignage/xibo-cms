@@ -209,13 +209,16 @@ class Report extends Base
 
                 $lastSavedReport = $this->savedReportFactory->getById($reportSchedule->getLastSavedReportId());
 
-                // Open Last Saved Report
-                $reportSchedule->buttons[] = [
-                    'id' => 'reportSchedule_lastsaved_report_button',
-                    'class' => 'XiboRedirectButton',
-                    'url' => $this->urlFor($request,'savedreport.open', ['id' => $lastSavedReport->savedReportId, 'name' => $lastSavedReport->reportName] ),
-                    'text' => __('Open last saved report')
-                ];
+				// Hide this for schema version 1
+                if ($lastSavedReport->schemaVersion != 1) {
+                    // Open Last Saved Report
+                    $reportSchedule->buttons[] = [
+                        'id' => 'reportSchedule_lastsaved_report_button',
+                        'class' => 'XiboRedirectButton',
+                        'url' => $this->urlFor($request,'savedreport.open', ['id' => $lastSavedReport->savedReportId, 'name' => $lastSavedReport->reportName] ),
+                        'text' => __('Open last saved report')
+                    ];
+                }
             }
 
             // Back to Reports
@@ -805,6 +808,19 @@ class Report extends Base
             /** @var \Xibo\Entity\SavedReport $savedReport */
 
             $savedReport->includeProperty('buttons');
+            
+            $schemaVersion = $savedReport->schemaVersion;
+
+            // Show only convert button for schema version 1
+			if ($schemaVersion == 1) {
+
+                $savedReport->buttons[] = [
+                    'id' => 'button_convert_report',
+                    'url' => $this->urlFor($request,'savedreport.convert.form', ['id' => $savedReport->savedReportId] ),
+                    'text' => __('Convert')
+                ];
+                continue;
+            }
 
             $savedReport->buttons[] = [
                 'id' => 'button_show_report.now',
@@ -1088,6 +1104,68 @@ class Report extends Base
             $this->getConfig()->getSetting('SENDFILE_MODE'),
             $fileName
         ));
+    }
+
+    /**
+     * Saved Report Convert Form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function convertSavedReportForm(Request $request, Response $response, $id)
+    {
+        $savedReport = $this->savedReportFactory->getById($id);
+
+        if (!$this->getUser()->checkDeleteable($savedReport)) {
+            throw new AccessDeniedException(__('You do not have permissions to convert this saved report'));
+        }
+
+        $data = [
+            'savedReport' => $savedReport
+        ];
+
+        $this->getState()->template = 'savedreport-form-convert';
+        $this->getState()->setData($data);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Converts a Saved Report from Schema Version 1 to 2
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @param $name
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function savedReportConvert(Request $request, Response $response, $id, $name)
+    {
+        $savedReport = $this->savedReportFactory->getById($id);
+
+        if ($savedReport->schemaVersion == 2) {
+            throw new AccessDeniedException(__('You cannot convert this saved report'));
+        }
+
+        // Convert Result to schemaVersion 2
+        $this->reportService->convertSavedReportResults($id, $name);
+
+        $savedReport->schemaVersion = 2;
+        $savedReport->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Saved Report Converted to Schema Version 2'))
+        ]);
+
+        return $this->render($request, $response);
     }
 
     //</editor-fold>

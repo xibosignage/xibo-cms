@@ -93,4 +93,11 @@ interface ReportInterface
      * @return array
      */
     public function getResults($filterCriteria);
+
+    /**
+     * Resrtucture old saved report's json file to support schema version 2
+     * @param $json
+     * @return array
+     */
+    public function restructureSavedReportOldJson($json);
 }

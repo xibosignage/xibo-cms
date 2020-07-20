@@ -135,6 +135,7 @@ class SavedReportFactory extends BaseFactory
                saved_report.savedReportId,
                saved_report.saveAs,
                saved_report.userId,
+               saved_report.schemaVersion,
                reportschedule.name AS reportScheduleName,
                reportschedule.reportName,
                saved_report.generatedOn,

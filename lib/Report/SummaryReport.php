@@ -1088,4 +1088,77 @@ class SummaryReport implements ReportInterface
             return [];
         }
     }
+
+    /** @inheritDoc */
+    public function restructureSavedReportOldJson($result)
+    {
+        $durationData = $result['durationData'];
+        $countData = $result['countData'];
+        $labels = $result['labels'];
+        $backgroundColor = $result['backgroundColor'];
+        $borderColor = $result['borderColor'];
+        $periodStart = $result['periodStart'];
+        $periodEnd = $result['periodEnd'];
+
+        // Return data to build chart
+        // this is my structure which gets saved
+        return [
+            'hasData' => count($durationData) > 0 && count($countData) > 0,
+            'chart' => [
+                'type' => 'bar',
+                'data' => [
+                    'labels' => $labels,
+                    'datasets' => [
+                        [
+                            'label' => __('Total duration'),
+                            'yAxisID' => 'Duration',
+                            'backgroundColor' => $backgroundColor,
+                            'data' => $durationData
+                        ],
+                        [
+                            'label' => __('Total count'),
+                            'yAxisID' => 'Count',
+                            'borderColor' => $borderColor,
+                            'type' => 'line',
+                            'fill' => false,
+                            'data' =>  $countData
+                        ]
+                    ]
+                ],
+                'options' => [
+                    'scales' => [
+                        'yAxes' => [
+                            [
+                                'id' => 'Duration',
+                                'type' => 'linear',
+                                'position' =>  'left',
+                                'display' =>  true,
+                                'scaleLabel' =>  [
+                                    'display' =>  true,
+                                    'labelString' => __('Duration(s)')
+                                ],
+                                'ticks' =>  [
+                                    'beginAtZero' => true
+                                ]
+                            ], [
+                                'id' => 'Count',
+                                'type' => 'linear',
+                                'position' =>  'right',
+                                'display' =>  true,
+                                'scaleLabel' =>  [
+                                    'display' =>  true,
+                                    'labelString' => __('Count')
+                                ],
+                                'ticks' =>  [
+                                    'beginAtZero' => true
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+            'periodStart' => $periodStart,
+            'periodEnd' => $periodEnd,
+        ];
+    }
 }

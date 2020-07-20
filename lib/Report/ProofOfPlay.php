@@ -1146,4 +1146,18 @@ class ProofOfPlay implements ReportInterface
             'totalStats' => $totalStats,
         ];
     }
+
+    /** @inheritdoc */
+    public function restructureSavedReportOldJson($result)
+    {
+        $periodStart = $result['periodStart'];
+        $periodEnd = $result['periodEnd'];
+        $table = $result['result'];
+
+        return [
+            'periodStart' => $periodStart,
+            'periodEnd' => $periodEnd,
+            'table' => $table,
+        ];
+    }
 }
