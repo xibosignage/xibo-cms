@@ -115,7 +115,7 @@ class ReportService implements ReportServiceInterface
 
             // Check if only allowed for admin
             if ($this->container->get('user')->userTypeId != 1) {
-                if (isset($config->adminOnly)) {
+                if (isset($config->adminOnly) && !empty($config->adminOnly)) {
                     continue;
                 }
             }
