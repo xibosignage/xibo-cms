@@ -429,6 +429,8 @@ $app->get('/report/savedreport/view', ['\Xibo\Controller\Report','displaySavedRe
 $app->get('/report/savedreport/{id}/report/{name}/open', ['\Xibo\Controller\Report','savedReportOpen'])->setName('savedreport.open');
 $app->get('/report/savedreport/{id}/report/{name}/export', ['\Xibo\Controller\Report','savedReportExport'])->setName('savedreport.export');
 $app->get('/report/savedreport/form/delete/{id}', ['\Xibo\Controller\Report','deleteSavedReportForm'])->setName('savedreport.delete.form');
+$app->get('/report/savedreport/{id}/report/{name}/convert', ['\Xibo\Controller\Report','savedReportConvert'])->setName('savedreport.convert');
+$app->get('/report/savedreport/form/convert/{id}', ['\Xibo\Controller\Report','convertSavedReportForm'])->setName('savedreport.convert.form');
 
 //
 // Ad hoc report

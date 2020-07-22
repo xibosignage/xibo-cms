@@ -135,6 +135,7 @@ class SavedReportFactory extends BaseFactory
                saved_report.savedReportId,
                saved_report.saveAs,
                saved_report.userId,
+               saved_report.schemaVersion,
                reportschedule.name AS reportScheduleName,
                reportschedule.reportName,
                saved_report.generatedOn,
@@ -231,7 +232,7 @@ class SavedReportFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $version = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'mediaId', 'reportScheduleId', 'generatedOn'
+                    'mediaId', 'reportScheduleId', 'generatedOn', 'schemaVersion'
                 ]
             ]);
         }

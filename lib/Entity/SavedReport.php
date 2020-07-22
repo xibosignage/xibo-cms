@@ -106,6 +106,12 @@ class SavedReport implements \JsonSerializable
     public $storedAs;
 
     /**
+     * @SWG\Property(description="Schema Version")
+     * @var int
+     */
+    public $schemaVersion = 2;
+
+    /**
      * @var ConfigServiceInterface
      */
     private $config;
@@ -143,14 +149,15 @@ class SavedReport implements \JsonSerializable
     private function add()
     {
         $this->savedReportId = $this->getStore()->insert('
-            INSERT INTO `saved_report` (`saveAs`, `reportScheduleId`, `mediaId`, `generatedOn`, `userId`)
-              VALUES (:saveAs, :reportScheduleId, :mediaId, :generatedOn, :userId)
+            INSERT INTO `saved_report` (`saveAs`, `reportScheduleId`, `mediaId`, `generatedOn`, `userId`, `schemaVersion`)
+              VALUES (:saveAs, :reportScheduleId, :mediaId, :generatedOn, :userId, :schemaVersion)
         ', [
             'saveAs' => $this->saveAs,
             'reportScheduleId' => $this->reportScheduleId,
             'mediaId' => $this->mediaId,
             'generatedOn' => $this->generatedOn,
-            'userId' => $this->userId
+            'userId' => $this->userId,
+            'schemaVersion' => $this->schemaVersion
         ]);
     }
 
@@ -165,7 +172,8 @@ class SavedReport implements \JsonSerializable
                 `reportScheduleId` = :reportScheduleId,
                 `mediaId` = :mediaId,
                 `generatedOn` = :generatedOn,
-                `userId` = :userId
+                `userId` = :userId,
+                `schemaVersion` = :schemaVersion
            WHERE savedReportId = :savedReportId
         ';
 
@@ -175,8 +183,8 @@ class SavedReport implements \JsonSerializable
             'mediaId' => $this->mediaId,
             'generatedOn' => $this->generatedOn,
             'userId' => $this->userId,
+            'schemaVersion' => $this->schemaVersion,
             'savedReportId' => $this->savedReportId,
-
         ];
 
         $this->getStore()->update($sql, $params);
