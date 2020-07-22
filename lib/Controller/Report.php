@@ -820,7 +820,7 @@ class Report extends Base
                 $compatible = false;
             }
 
-            if ($compatible == 1) {
+            if ($compatible) {
 
                 // Show only convert button for schema version 1
                 if ($savedReport->schemaVersion == 1) {
