@@ -808,75 +808,87 @@ class Report extends Base
             /** @var \Xibo\Entity\SavedReport $savedReport */
 
             $savedReport->includeProperty('buttons');
-            
-            $schemaVersion = $savedReport->schemaVersion;
 
-            // Show only convert button for schema version 1
-			if ($schemaVersion == 1) {
+            // If a report class doesnot comply (i.e., no category or route) we get an error when trying to get the email template
+            // Dont show any button if the report is not compatible
+            $compatible = true;
+            try {
+                // Get report email template
+                $emailTemplate = $this->reportService->getReportEmailTemplate($savedReport->reportName);
 
-                $savedReport->buttons[] = [
-                    'id' => 'button_convert_report',
-                    'url' => $this->urlFor($request,'savedreport.convert.form', ['id' => $savedReport->savedReportId] ),
-                    'text' => __('Convert')
-                ];
-                continue;
+            } catch (NotFoundException $exception) {
+                $compatible = false;
             }
 
-            $savedReport->buttons[] = [
-                'id' => 'button_show_report.now',
-                'class' => 'XiboRedirectButton',
-                'url' => $this->urlFor($request,'savedreport.open', ['id' => $savedReport->savedReportId, 'name' => $savedReport->reportName] ),
-                'text' => __('Open')
-            ];
-            $savedReport->buttons[] = ['divider' => true];
+            if ($compatible == 1) {
 
-            $savedReport->buttons[] = [
-                'id' => 'button_goto_report',
-                'class' => 'XiboRedirectButton',
-                'url' => $this->urlFor($request,'report.form', ['name' => $savedReport->reportName] ),
-                'text' => __('Back to Reports')
-            ];
+                // Show only convert button for schema version 1
+                if ($savedReport->schemaVersion == 1) {
 
-            $savedReport->buttons[] = [
-                'id' => 'button_goto_schedule',
-                'class' => 'XiboRedirectButton',
-                'url' => $this->urlFor($request,'reportschedule.view' ) . '?reportScheduleId=' . $savedReport->reportScheduleId. '&reportName='.$savedReport->reportName,
-                'text' => __('Go to schedule')
-            ];
+                    $savedReport->buttons[] = [
+                        'id' => 'button_convert_report',
+                        'url' => $this->urlFor($request,'savedreport.convert.form', ['id' => $savedReport->savedReportId] ),
+                        'text' => __('Convert')
+                    ];
+                } else {
 
-            $savedReport->buttons[] = ['divider' => true];
+                    $savedReport->buttons[] = [
+                        'id' => 'button_show_report.now',
+                        'class' => 'XiboRedirectButton',
+                        'url' => $this->urlFor($request,'savedreport.open', ['id' => $savedReport->savedReportId, 'name' => $savedReport->reportName] ),
+                        'text' => __('Open')
+                    ];
+                    $savedReport->buttons[] = ['divider' => true];
 
-            // Get report email template
-            $emailTemplate = $this->reportService->getReportEmailTemplate($savedReport->reportName);
+                    $savedReport->buttons[] = [
+                        'id' => 'button_goto_report',
+                        'class' => 'XiboRedirectButton',
+                        'url' => $this->urlFor($request,'report.form', ['name' => $savedReport->reportName] ),
+                        'text' => __('Back to Reports')
+                    ];
 
-            if (!empty($emailTemplate)) {
+                    $savedReport->buttons[] = [
+                        'id' => 'button_goto_schedule',
+                        'class' => 'XiboRedirectButton',
+                        'url' => $this->urlFor($request,'reportschedule.view' ) . '?reportScheduleId=' . $savedReport->reportScheduleId. '&reportName='.$savedReport->reportName,
+                        'text' => __('Go to schedule')
+                    ];
 
-                // Export Button
-                $savedReport->buttons[] = [
-                    'id' => 'button_export_report',
-                    'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor($request,'savedreport.export', ['id' => $savedReport->savedReportId, 'name' => $savedReport->reportName] ),
-                    'text' => __('Export as PDF')
-                ];
+                    $savedReport->buttons[] = ['divider' => true];
+
+                    if (!empty($emailTemplate)) {
+
+                        // Export Button
+                        $savedReport->buttons[] = [
+                            'id' => 'button_export_report',
+                            'linkType' => '_self', 'external' => true,
+                            'url' => $this->urlFor($request,'savedreport.export', ['id' => $savedReport->savedReportId, 'name' => $savedReport->reportName] ),
+                            'text' => __('Export as PDF')
+                        ];
+                    }
+
+                    // Delete
+                    if ($this->getUser()->checkDeleteable($savedReport)) {
+                        // Show the delete button
+                        $savedReport->buttons[] = array(
+                            'id' => 'savedreport_button_delete',
+                            'url' => $this->urlFor($request,'savedreport.delete.form', ['id' => $savedReport->savedReportId]),
+                            'text' => __('Delete'),
+                            'multi-select' => true,
+                            'dataAttributes' => array(
+                                array('name' => 'commit-url', 'value' => $this->urlFor($request,'savedreport.delete', ['id' => $savedReport->savedReportId])),
+                                array('name' => 'commit-method', 'value' => 'delete'),
+                                array('name' => 'id', 'value' => 'savedreport_button_delete'),
+                                array('name' => 'text', 'value' => __('Delete')),
+                                array('name' => 'rowtitle', 'value' => $savedReport->saveAs),
+                            )
+                        );
+                    }
+                }
+
             }
 
-            // Delete
-            if ($this->getUser()->checkDeleteable($savedReport)) {
-                // Show the delete button
-                $savedReport->buttons[] = array(
-                    'id' => 'savedreport_button_delete',
-                    'url' => $this->urlFor($request,'savedreport.delete.form', ['id' => $savedReport->savedReportId]),
-                    'text' => __('Delete'),
-                    'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'savedreport.delete', ['id' => $savedReport->savedReportId])),
-                        array('name' => 'commit-method', 'value' => 'delete'),
-                        array('name' => 'id', 'value' => 'savedreport_button_delete'),
-                        array('name' => 'text', 'value' => __('Delete')),
-                        array('name' => 'rowtitle', 'value' => $savedReport->saveAs),
-                    )
-                );
-            }
+
         }
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->savedReportFactory->countLast();
@@ -1121,10 +1133,6 @@ class Report extends Base
     {
         $savedReport = $this->savedReportFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($savedReport)) {
-            throw new AccessDeniedException(__('You do not have permissions to convert this saved report'));
-        }
-
         $data = [
             'savedReport' => $savedReport
         ];
@@ -1150,7 +1158,7 @@ class Report extends Base
         $savedReport = $this->savedReportFactory->getById($id);
 
         if ($savedReport->schemaVersion == 2) {
-            throw new AccessDeniedException(__('You cannot convert this saved report'));
+            throw new GeneralException(__('This report has already been converted to the latest version.'));
         }
 
         // Convert Result to schemaVersion 2

@@ -305,8 +305,6 @@ class ReportService implements ReportServiceInterface
      */
     public function convertSavedReportResults($savedreportId, $reportName)
     {
-        throw new InvalidArgumentException(__('Can\'t create ZIP. Error Code:'));
-
         $className = $this->getReportClass($reportName);
 
         $object = $this->createReportObject($className);
