@@ -567,6 +567,6 @@ class LibraryUsage implements ReportInterface
     /** @inheritdoc */
     public function restructureSavedReportOldJson($result)
     {
-        return [];
+        return $result;
     }
 }
