@@ -374,7 +374,7 @@ $app->get('/help/form/delete/{id}', ['\Xibo\Controller\Help','deleteForm'])->set
 // Stats
 //
 $app->get('/stats/getExportStatsCount', ['\Xibo\Controller\Stats','getExportStatsCount'])->setName('stats.getExportStatsCount');
-$app->get('/stats/proofofplay/view', ['\Xibo\Controller\Stats','displayProofOfPlayPage'])->setName('stats.proofofplay.view');
+$app->get('/report/view', ['\Xibo\Controller\Stats','displayProofOfPlayPage'])->setName('report.view');
 $app->get('/stats/form/export', ['\Xibo\Controller\Stats','exportForm'])->setName('stats.export.form');
 // For charts
 $app->get('/stats/data/bandwidth', ['\Xibo\Controller\Stats','bandwidthData'])->setName('stats.bandwidth.data');

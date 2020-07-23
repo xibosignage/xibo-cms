@@ -492,4 +492,10 @@ class TimeDisconnected implements ReportInterface
             'periodEnd' => $toDt->format('Y-m-d H:i:s')
         ];
     }
+
+    /** @inheritdoc */
+    public function restructureSavedReportOldJson($result)
+    {
+        return $result;
+    }
 }

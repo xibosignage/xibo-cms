@@ -60,7 +60,7 @@
     <div class="widget">
         <div class="widget-title">
             <ul class="nav nav-pills">
-                <li role="presentation" class=""><a href="{{ url_for("stats.proofofplay.view") }}">{% trans "All Reports" %}</a></li>
+                <li role="presentation" class=""><a href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a></li>
                 <li role="presentation" class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Reports <span class="caret"></span> </a>
                     <ul class="dropdown-menu">
@@ -197,10 +197,10 @@
                         return;
                     }
 
-                    $.each(response.extra.result.timeDisconnected, function(index, displayStat) {
+                    $.each(response.extra.table.timeDisconnected, function(index, displayStat) {
 
                         let $displayHeader = $('<tr>');
-                        $.each(response.extra.result.displays[index], function(i, displayName) {
+                        $.each(response.extra.table.displays[index], function(i, displayName) {
                             $displayHeader.append($('<th colspan="2">').text(displayName));
                             $displayHeader.appendTo('#records_table').html();
                         });

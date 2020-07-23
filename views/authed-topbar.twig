@@ -182,7 +182,7 @@
         <ul class="dropdown-menu">
 
             {% if currentUser.routeViewable("/stats") %}
-                <li><a href="{{ url_for("stats.proofofplay.view") }}">{% trans "All Reports" %}</a></li>
+                <li><a href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/report") %}
