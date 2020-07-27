@@ -848,7 +848,7 @@ abstract class ModuleWidget implements ModuleInterface
 
         $url = $this->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]);
 
-        return '<iframe scrolling="no" src="' . $url . '?raw=true&preview=true" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
+        return '<iframe scrolling="no" src="' . $url . '?preview=1" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
     }
 
     /**

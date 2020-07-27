@@ -1313,7 +1313,7 @@ class Library extends Base
     {
         $results = $this->store->select('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', array());
 
-        return $this->getSanitizer($results)->getInt([0]['SumSize']);
+        return $this->getSanitizer($results[0])->getInt('SumSize');
     }
 
     /**

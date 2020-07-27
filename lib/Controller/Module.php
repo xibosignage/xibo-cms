@@ -1327,7 +1327,7 @@ class Module extends Base
 
         if ($module->getModule()->regionSpecific == 0) {
             // Non region specific module - no caching required as this is only ever called via preview.
-            $resource = $module->getResource();
+            $resource = $module->download($request, $response);
         } else {
             // Region-specific module, need to handle caching and locking.
             $resource = $module->getResourceOrCache();
