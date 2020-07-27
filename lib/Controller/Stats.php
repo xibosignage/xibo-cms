@@ -375,21 +375,6 @@ class Stats extends Base
         // CMS timezone
         $defaultTimezone = $this->getConfig()->getSetting('defaultTimezone');
 
-        // Band the dates out
-        if ($fromDt != null) {
-            $fromDt->startOfDay();
-        }
-
-        if ($toDt != null) {
-            $toDt->addDay()->startOfDay();
-        }
-
-        // What if the fromdt and todt are exactly the same?
-        // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
-        if ($fromDt != null && $toDt != null && $fromDt == $toDt) {
-            $toDt->addDay();
-        }
-
         // Merge displayId and displayIds
         if ($displayId != 0) {
             $displays = array_unique(array_merge($displays, [$displayId]));
