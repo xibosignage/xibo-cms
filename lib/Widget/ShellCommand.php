@@ -161,18 +161,15 @@ class ShellCommand extends ModuleWidget
         if ($this->module->previewEnabled == 0)
             return parent::Preview($width, $height);
 
-        $windows = $this->getOption('windowsCommand');
-        $linux = $this->getOption('linuxCommand');
-        $webos = $this->getOption('webosCommand');
-        $tizen = $this->getOption('tizenCommand');
+        $commandCode = $this->getOption('commandCode');
 
-        if ($windows == '' && $linux == '' && $webos == '' && $tizen == '') {
-            return __('Stored Command: %s', $this->getOption('commandCode'));
+        if (!empty($commandCode)) {
+            return __('Stored Command: %s', $commandCode);
         } else {
-            $preview  = '<p>' . __('Windows Command') . ': ' . urldecode($windows) . '</p>';
-            $preview .= '<p>' . __('Android/Linux Command') . ': ' . urldecode($linux) . '</p>';
-            $preview .= '<p>' . __('webOS Command') . ': ' . urldecode($webos) . '</p>';
-            $preview .= '<p>' . __('Tizen Command') . ': ' . urldecode($tizen) . '</p>';
+            $preview  = '<p>' . __('Windows Command') . ': ' . urldecode($this->getOption('windowsCommand')) . '</p>';
+            $preview .= '<p>' . __('Android/Linux Command') . ': ' . urldecode($this->getOption('linuxCommand')) . '</p>';
+            $preview .= '<p>' . __('webOS Command') . ': ' . urldecode($this->getOption('webosCommand')) . '</p>';
+            $preview .= '<p>' . __('Tizen Command') . ': ' . urldecode($this->getOption('tizenCommand')) . '</p>';
 
             return $preview;
         }
