@@ -108,7 +108,7 @@ class TagFactory extends BaseFactory
             $tag = $this->getByTag($explode[0]);
 
             if ($tag->isRequired == 1 && !isset($explode[1])) {
-                throw new InvalidArgumentException(sprintf('Selected Tag %s requires a value, please enter the Tag in %s|Value format', $explode[0], $explode[0]), 'options');
+                throw new InvalidArgumentException(sprintf('Selected Tag %s requires a value, please enter the Tag in %s|Value format or provide Tag value in the dedicated field.', $explode[0], $explode[0]), 'options');
             }
 
             if( isset($explode[1])) {
