@@ -170,7 +170,7 @@ class ShellCommand extends ModuleWidget
             return __('Stored Command: %s', $this->getOption('commandCode'));
         } else {
             $preview  = '<p>' . __('Windows Command') . ': ' . urldecode($windows) . '</p>';
-            $preview .= '<p>' . __('Linux Command') . ': ' . urldecode($linux) . '</p>';
+            $preview .= '<p>' . __('Android/Linux Command') . ': ' . urldecode($linux) . '</p>';
             $preview .= '<p>' . __('webOS Command') . ': ' . urldecode($webos) . '</p>';
             $preview .= '<p>' . __('Tizen Command') . ': ' . urldecode($tizen) . '</p>';
 
