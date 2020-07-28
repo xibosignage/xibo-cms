@@ -267,10 +267,10 @@ trait ReportTrait
         // Drop table if exists
 
         $this->getStore()->getConnection()->exec('
-                DROP TABLE IF EXISTS ' . $table);
+                DROP TABLE IF EXISTS `' . $table . '`');
 
         $this->getStore()->getConnection()->exec('
-                CREATE TEMPORARY TABLE ' . $table . ' (
+                CREATE TEMPORARY TABLE `' . $table . '` (
                     id INT,
                     customLabel VARCHAR(20),
                     label VARCHAR(20),
@@ -281,7 +281,7 @@ trait ReportTrait
 
         // Prepare an insert statement
         $periods = $this->getStore()->getConnection()->prepare('
-                INSERT INTO ' . $table . ' (id, customLabel, label, start, end) 
+                INSERT INTO `' . $table . '` (id, customLabel, label, start, end) 
                 VALUES (:id, :customLabel, :label, :start, :end)
             ');
 
