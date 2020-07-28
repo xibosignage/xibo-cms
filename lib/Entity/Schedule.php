@@ -765,7 +765,7 @@ class Schedule implements \JsonSerializable
           WHERE eventId = :eventId
         ', [
             'eventTypeId' => $this->eventTypeId,
-            'campaignId' => $this->campaignId,
+            'campaignId' => $this->campaignId !== 0 ?: null,
             'commandId' => $this->commandId,
             'userId' => $this->userId,
             'isPriority' => $this->isPriority,
