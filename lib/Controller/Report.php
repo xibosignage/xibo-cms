@@ -209,13 +209,16 @@ class Report extends Base
 
                 $lastSavedReport = $this->savedReportFactory->getById($reportSchedule->getLastSavedReportId());
 
-                // Open Last Saved Report
-                $reportSchedule->buttons[] = [
-                    'id' => 'reportSchedule_lastsaved_report_button',
-                    'class' => 'XiboRedirectButton',
-                    'url' => $this->urlFor($request,'savedreport.open', ['id' => $lastSavedReport->savedReportId, 'name' => $lastSavedReport->reportName] ),
-                    'text' => __('Open last saved report')
-                ];
+				// Hide this for schema version 1
+                if ($lastSavedReport->schemaVersion != 1) {
+                    // Open Last Saved Report
+                    $reportSchedule->buttons[] = [
+                        'id' => 'reportSchedule_lastsaved_report_button',
+                        'class' => 'XiboRedirectButton',
+                        'url' => $this->urlFor($request,'savedreport.open', ['id' => $lastSavedReport->savedReportId, 'name' => $lastSavedReport->reportName] ),
+                        'text' => __('Open last saved report')
+                    ];
+                }
             }
 
             // Back to Reports
@@ -585,11 +588,19 @@ class Report extends Base
      */
     public function displayReportSchedulePage(Request $request, Response $response)
     {
+        $reportsList = $this->reportService->listReports();
+        $availableReports = [];
+        foreach ($reportsList as $reports) {
+            foreach ($reports as $report) {
+                $availableReports[] = $report;
+            }
+        }
+
         // Call to render the template
         $this->getState()->template = 'report-schedule-page';
         $this->getState()->setData([
             'users' => $this->userFactory->query(),
-            'availableReports' => $this->reportService->listReports()
+            'availableReports' => $availableReports
         ]);
 
         return $this->render($request, $response);
@@ -798,61 +809,86 @@ class Report extends Base
 
             $savedReport->includeProperty('buttons');
 
-            $savedReport->buttons[] = [
-                'id' => 'button_show_report.now',
-                'class' => 'XiboRedirectButton',
-                'url' => $this->urlFor($request,'savedreport.open', ['id' => $savedReport->savedReportId, 'name' => $savedReport->reportName] ),
-                'text' => __('Open')
-            ];
-            $savedReport->buttons[] = ['divider' => true];
+            // If a report class doesnot comply (i.e., no category or route) we get an error when trying to get the email template
+            // Dont show any button if the report is not compatible
+            $compatible = true;
+            try {
+                // Get report email template
+                $emailTemplate = $this->reportService->getReportEmailTemplate($savedReport->reportName);
 
-            $savedReport->buttons[] = [
-                'id' => 'button_goto_report',
-                'class' => 'XiboRedirectButton',
-                'url' => $this->urlFor($request,'report.form', ['name' => $savedReport->reportName] ),
-                'text' => __('Back to Reports')
-            ];
-
-            $savedReport->buttons[] = [
-                'id' => 'button_goto_schedule',
-                'class' => 'XiboRedirectButton',
-                'url' => $this->urlFor($request,'reportschedule.view' ) . '?reportScheduleId=' . $savedReport->reportScheduleId. '&reportName='.$savedReport->reportName,
-                'text' => __('Go to schedule')
-            ];
-
-            $savedReport->buttons[] = ['divider' => true];
-
-            // Get report email template
-            $emailTemplate = $this->reportService->getReportEmailTemplate($savedReport->reportName);
-
-            if (!empty($emailTemplate)) {
-
-                // Export Button
-                $savedReport->buttons[] = [
-                    'id' => 'button_export_report',
-                    'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor($request,'savedreport.export', ['id' => $savedReport->savedReportId, 'name' => $savedReport->reportName] ),
-                    'text' => __('Export as PDF')
-                ];
+            } catch (NotFoundException $exception) {
+                $compatible = false;
             }
 
-            // Delete
-            if ($this->getUser()->checkDeleteable($savedReport)) {
-                // Show the delete button
-                $savedReport->buttons[] = array(
-                    'id' => 'savedreport_button_delete',
-                    'url' => $this->urlFor($request,'savedreport.delete.form', ['id' => $savedReport->savedReportId]),
-                    'text' => __('Delete'),
-                    'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'savedreport.delete', ['id' => $savedReport->savedReportId])),
-                        array('name' => 'commit-method', 'value' => 'delete'),
-                        array('name' => 'id', 'value' => 'savedreport_button_delete'),
-                        array('name' => 'text', 'value' => __('Delete')),
-                        array('name' => 'rowtitle', 'value' => $savedReport->saveAs),
-                    )
-                );
+            if ($compatible) {
+
+                // Show only convert button for schema version 1
+                if ($savedReport->schemaVersion == 1) {
+
+                    $savedReport->buttons[] = [
+                        'id' => 'button_convert_report',
+                        'url' => $this->urlFor($request,'savedreport.convert.form', ['id' => $savedReport->savedReportId] ),
+                        'text' => __('Convert')
+                    ];
+                } else {
+
+                    $savedReport->buttons[] = [
+                        'id' => 'button_show_report.now',
+                        'class' => 'XiboRedirectButton',
+                        'url' => $this->urlFor($request,'savedreport.open', ['id' => $savedReport->savedReportId, 'name' => $savedReport->reportName] ),
+                        'text' => __('Open')
+                    ];
+                    $savedReport->buttons[] = ['divider' => true];
+
+                    $savedReport->buttons[] = [
+                        'id' => 'button_goto_report',
+                        'class' => 'XiboRedirectButton',
+                        'url' => $this->urlFor($request,'report.form', ['name' => $savedReport->reportName] ),
+                        'text' => __('Back to Reports')
+                    ];
+
+                    $savedReport->buttons[] = [
+                        'id' => 'button_goto_schedule',
+                        'class' => 'XiboRedirectButton',
+                        'url' => $this->urlFor($request,'reportschedule.view' ) . '?reportScheduleId=' . $savedReport->reportScheduleId. '&reportName='.$savedReport->reportName,
+                        'text' => __('Go to schedule')
+                    ];
+
+                    $savedReport->buttons[] = ['divider' => true];
+
+                    if (!empty($emailTemplate)) {
+
+                        // Export Button
+                        $savedReport->buttons[] = [
+                            'id' => 'button_export_report',
+                            'linkType' => '_self', 'external' => true,
+                            'url' => $this->urlFor($request,'savedreport.export', ['id' => $savedReport->savedReportId, 'name' => $savedReport->reportName] ),
+                            'text' => __('Export as PDF')
+                        ];
+                    }
+
+                    // Delete
+                    if ($this->getUser()->checkDeleteable($savedReport)) {
+                        // Show the delete button
+                        $savedReport->buttons[] = array(
+                            'id' => 'savedreport_button_delete',
+                            'url' => $this->urlFor($request,'savedreport.delete.form', ['id' => $savedReport->savedReportId]),
+                            'text' => __('Delete'),
+                            'multi-select' => true,
+                            'dataAttributes' => array(
+                                array('name' => 'commit-url', 'value' => $this->urlFor($request,'savedreport.delete', ['id' => $savedReport->savedReportId])),
+                                array('name' => 'commit-method', 'value' => 'delete'),
+                                array('name' => 'id', 'value' => 'savedreport_button_delete'),
+                                array('name' => 'text', 'value' => __('Delete')),
+                                array('name' => 'rowtitle', 'value' => $savedReport->saveAs),
+                            )
+                        );
+                    }
+                }
+
             }
+
+
         }
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->savedReportFactory->countLast();
@@ -871,11 +907,19 @@ class Report extends Base
      */
     public function displaySavedReportPage(Request $request, Response $response)
     {
+        $reportsList = $this->reportService->listReports();
+        $availableReports = [];
+        foreach ($reportsList as $reports) {
+            foreach ($reports as $report) {
+                $availableReports[] = $report;
+            }
+        }
+
         // Call to render the template
         $this->getState()->template = 'saved-report-page';
         $this->getState()->setData([
             'users' => $this->userFactory->query(),
-            'availableReports' => $this->reportService->listReports()
+            'availableReports' => $availableReports
         ]);
 
         return $this->render($request, $response);
@@ -964,8 +1008,8 @@ class Report extends Base
         // Retrieve the saved report result in array
         $results = $this->reportService->getSavedReportResults($id, $name);
 
-        $this->getState()->template = $results['template'];
-        $this->getState()->setData($results['chartData']);
+        $this->getState()->template = $results['results']['template'];
+        $this->getState()->setData($results['results']);
 
         return $this->render($request, $response);
     }
@@ -993,24 +1037,30 @@ class Report extends Base
 
         // Get the report config
         $report = $this->reportService->getReportByName($name);
-        if ($report->output_type == 'chart') {
-
+        if ($report->output_type == 'both' || $report->output_type == 'chart') {
             $quickChartUrl = $this->getConfig()->getSetting('QUICK_CHART_URL');
             if (!empty($quickChartUrl)) {
                 $script = $this->reportService->getReportChartScript($id, $name);
-                $src = $quickChartUrl. "/chart?width=1000&height=300&c=".$script;
+                $src = $quickChartUrl . "/chart?width=1000&height=300&c=" . $script;
+
+                // If multiple charts needs to be displayed
+                $multipleCharts = [];
+                $chartScriptArray = json_decode($script, true);
+                foreach ($chartScriptArray as $key => $chartData) {
+                    $multipleCharts[$key] = $quickChartUrl . "/chart?width=1000&height=300&c=" .json_encode($chartData);
+                }
             } else {
                 $placeholder = __('Chart could not be drawn because the CMS has not been configured with a Quick Chart URL.');
             }
+        }
 
-        } else { // only for tablebased report
-
-            $result = $savedReportData['chartData']['result'];
-            $tableData =json_decode($result, true);
+        if ($report->output_type == 'both' || $report->output_type == 'table') { // only for tablebased report
+            $tableData = $savedReportData['results']['table'];
         }
 
         // Get report email template
         $emailTemplate = $this->reportService->getReportEmailTemplate($name);
+
         if (!empty($emailTemplate)) {
 
             // Save PDF attachment
@@ -1021,11 +1071,12 @@ class Report extends Base
                     'header' => $report->description,
                     'logo' => $this->getConfig()->uri('img/xibologo.png', true),
                     'title' => $savedReport->saveAs,
-                    'periodStart' => $savedReportData['chartData']['periodStart'],
-                    'periodEnd' => $savedReportData['chartData']['periodEnd'],
+                    'periodStart' => $savedReportData['results']['periodStart'],
+                    'periodEnd' => $savedReportData['results']['periodEnd'],
                     'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat()),
                     'tableData' => isset($tableData) ? $tableData : null,
                     'src' => isset($src) ? $src : null,
+                    'multipleCharts' => isset($multipleCharts) ? $multipleCharts : null,
                     'placeholder' => isset($placeholder) ? $placeholder : null
                 ]);
             $body = ob_get_contents();
@@ -1065,6 +1116,64 @@ class Report extends Base
             $this->getConfig()->getSetting('SENDFILE_MODE'),
             $fileName
         ));
+    }
+
+    /**
+     * Saved Report Convert Form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function convertSavedReportForm(Request $request, Response $response, $id)
+    {
+        $savedReport = $this->savedReportFactory->getById($id);
+
+        $data = [
+            'savedReport' => $savedReport
+        ];
+
+        $this->getState()->template = 'savedreport-form-convert';
+        $this->getState()->setData($data);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Converts a Saved Report from Schema Version 1 to 2
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @param $name
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function savedReportConvert(Request $request, Response $response, $id, $name)
+    {
+        $savedReport = $this->savedReportFactory->getById($id);
+
+        if ($savedReport->schemaVersion == 2) {
+            throw new GeneralException(__('This report has already been converted to the latest version.'));
+        }
+
+        // Convert Result to schemaVersion 2
+        $this->reportService->convertSavedReportResults($id, $name);
+
+        $savedReport->schemaVersion = 2;
+        $savedReport->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Saved Report Converted to Schema Version 2'))
+        ]);
+
+        return $this->render($request, $response);
     }
 
     //</editor-fold>

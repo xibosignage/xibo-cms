@@ -46,7 +46,7 @@
                     {% set fieldId = "commandString_" ~ field.commandId %}
                     {% set title %}{% trans "Command" %}{% endset %}
                     {% set helpText %}{% trans "The Command String for this Command on this display" %}{% endset %}
-                    {{ forms.input(fieldId, title, field.commandStringDisplayProfile, helpText) }}
+                    {{ forms.input(fieldId, title, field.commandStringDisplayProfile, helpText, "XiboCommand") }}
 
                     {% if field.validationString != "" %}
                         {{ forms.disabled("", "", "This Command has a default Valildation String."|trans, field.validationString) }}

@@ -180,25 +180,16 @@
     <li class="dropdown">
         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Reporting" %} <span class="caret"></span></a>
         <ul class="dropdown-menu">
-            {% if currentUser.routeViewable("/stats") %}
-                <li><a href="{{ url_for("stats.view") }}">{% trans "Display Statistics" %}</a></li>
-            {% endif %}
 
             {% if currentUser.routeViewable("/stats") %}
-                <li><a href="{{ url_for("stats.proofofplay.view") }}">{% trans "Proof of Play" %}</a></li>
-            {% endif %}
-
-            {% if currentUser.routeViewable("/stats") %}
-                <li><a href="{{ url_for("stats.library.view") }}">{% trans "Library Usage" %}</a></li>
+                <li><a href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a></li>
             {% endif %}
 
             {% if currentUser.routeViewable("/report") %}
                 <li class="sidebar-list"><a href="{{ url_for("reportschedule.view") }}">{% trans "Report Schedules" %}</a></li>
-            {% endif %}
-
-            {% if currentUser.routeViewable("/report") %}
                 <li class="sidebar-list"><a href="{{ url_for("savedreport.view") }}">{% trans "Saved Reports" %}</a></li>
             {% endif %}
+
         </ul>
     </li>
     {% endif %}

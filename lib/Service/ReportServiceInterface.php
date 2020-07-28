@@ -111,6 +111,15 @@ interface ReportServiceInterface
     public function getSavedReportResults($savedreportId, $reportName);
 
     /**
+     * Convert saved report results from old schema 1 to schema version 2
+     * @param int $savedreportId
+     * @param string $reportName
+     * @throws GeneralException
+     * @return array
+     */
+    public function convertSavedReportResults($savedreportId, $reportName);
+
+    /**
      * Run the report
      * @param string $reportName
      * @param string $filterCriteria

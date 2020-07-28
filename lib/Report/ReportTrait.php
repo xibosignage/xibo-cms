@@ -219,10 +219,12 @@ trait ReportTrait
      * @param Carbon $fromDt
      * @param Carbon $toDt
      * @param string $groupByFilter
+     * @param string $table
+     * @param string $customLabel Custom Label
      * @return string
      * @throws InvalidArgumentException
      */
-    public function getTemporaryPeriodsTable($fromDt, $toDt, $groupByFilter)
+    public function getTemporaryPeriodsTable($fromDt, $toDt, $groupByFilter, $table = 'temp_periods', $customLabel = 'Y-m-d H:i:s')
     {
         // My from/to dt represent the entire range we're interested in.
         // we need to generate periods according to our grouping, within that range.
@@ -250,11 +252,12 @@ trait ReportTrait
         // Drop table if exists
 
         $this->getStore()->getConnection()->exec('
-                DROP TABLE IF EXISTS temp_periods ');
+                DROP TABLE IF EXISTS ' . $table);
 
         $this->getStore()->getConnection()->exec('
-                CREATE TEMPORARY TABLE temp_periods (
+                CREATE TEMPORARY TABLE ' . $table . ' (
                     id INT,
+                    customLabel VARCHAR(20),
                     label VARCHAR(20),
                     start INT,
                     end INT
@@ -263,9 +266,10 @@ trait ReportTrait
 
         // Prepare an insert statement
         $periods = $this->getStore()->getConnection()->prepare('
-                INSERT INTO temp_periods (id, label, start, end) 
-                VALUES (:id, :label, :start, :end)
+                INSERT INTO ' . $table . ' (id, customLabel, label, start, end) 
+                VALUES (:id, :customLabel, :label, :start, :end)
             ');
+
 
         // Loop until we've covered all periods needed
         $loopDate = $fromDt->copy();
@@ -274,6 +278,7 @@ trait ReportTrait
             if ($groupByFilter == 'byhour') {
                 $periods->execute([
                     'id' => $loopDate->hour,
+                    'customLabel' => $loopDate->format($customLabel),
                     'label' => $loopDate->format('g:i A'),
                     'start' => $loopDate->format('U'),
                     'end' => $loopDate->addHour()->format('U')
@@ -281,6 +286,7 @@ trait ReportTrait
             } else if ($groupByFilter == 'byday') {
                 $periods->execute([
                     'id' => $loopDate->year . $loopDate->month . $loopDate->day,
+                    'customLabel' => $loopDate->format($customLabel),
                     'label' => $loopDate->format('Y-m-d'),
                     'start' => $loopDate->format('U'),
                     'end' => $loopDate->addDay()->format('U')
@@ -288,6 +294,7 @@ trait ReportTrait
             } else if ($groupByFilter == 'byweek') {
                 $periods->execute([
                     'id' => $loopDate->weekOfYear . $loopDate->year,
+                    'customLabel' => $loopDate->format($customLabel),
                     'label' => $loopDate->format('Y-m-d (\wW)'),
                     'start' => $loopDate->format('U'),
                     'end' => $loopDate->addWeek()->format('U')
@@ -295,6 +302,7 @@ trait ReportTrait
             } else if ($groupByFilter == 'bymonth') {
                 $periods->execute([
                     'id' => $loopDate->year . $loopDate->month,
+                    'customLabel' => $loopDate->format($customLabel),
                     'label' => $loopDate->format('M'),
                     'start' => $loopDate->format('U'),
                     'end' => $loopDate->addMonth()->format('U')
@@ -302,6 +310,7 @@ trait ReportTrait
             } else if ($groupByFilter == 'bydayofweek') {
                 $periods->execute([
                     'id' => $loopDate->dayOfWeek,
+                    'customLabel' => $loopDate->format($customLabel),
                     'label' => $loopDate->format('D'),
                     'start' => $loopDate->format('U'),
                     'end' => $loopDate->addDay()->format('U')
@@ -309,6 +318,7 @@ trait ReportTrait
             } else if ($groupByFilter == 'bydayofmonth') {
                 $periods->execute([
                     'id' => $loopDate->day,
+                    'customLabel' => $loopDate->format($customLabel),
                     'label' => $loopDate->format('d'),
                     'start' => $loopDate->format('U'),
                     'end' => $loopDate->addDay()->format('U')
@@ -319,9 +329,9 @@ trait ReportTrait
             }
         }
 
-        $this->getLog()->debug(json_encode($this->store->select('SELECT * FROM temp_periods', []), JSON_PRETTY_PRINT));
+        $this->getLog()->debug(json_encode($this->store->select('SELECT * FROM ' . $table, []), JSON_PRETTY_PRINT));
 
-        return 'temp_periods';
+        return $table;
     }
 
     public function getUserId() {

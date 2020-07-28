@@ -24,45 +24,49 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
-
-
 {% block pageContent %}
-
-    <div class="row row-flex">
-        <div class="col-lg-3 col-md-6 col-xs-12">
-            <div class="widget content">
-                <div class="widget-body">
-                    <div class="widget-icon green">
-                        <a class="XiboFormButton btns" href="{{ url_for("stats.export.form") }}"> <i class="fa fa-external-link"></i></a>
-                    </div>
-                    <div class="widget-content">
-                        <div class="report-title">{% trans "Proof of play" %}</div>
-                        <div class="comment"><a class="XiboFormButton btns" href="{{ url_for("stats.export.form") }}">{% trans "Export" %}</a></div>
-                    </div>
-                    <div class="clearfix"></div>
-                </div>
+    {% for key,reports in defaults.availableReports %}
+        <div class="row reports-available">
+            <div class="reports-available-title">
+                <span>{{  key|capitalize }}</span>
             </div>
-        </div>
-
-         {% for report in defaults.availableReports %}
-             {% if report.hidden == 0 %}
-                <div class="report-box col-lg-3 col-md-6 col-xs-12">
-                     <div class="widget content">
+            {% if key == "proof of play" %}
+                <div class="col-lg-3 col-md-6 col-xs-12">
+                    <div class="widget content" style="min-height: 210px">
                         <div class="widget-body">
-                            <div class="widget-icon {{ report.color }} ">
-                                <i class="fa {{ report.fa_icon }}"></i>
+                            <div class="widget-icon green">
+                                <a class="XiboFormButton btns" href="{{ url_for("stats.export.form") }}"> <i class="fa fa-external-link"></i></a>
                             </div>
                             <div class="widget-content">
-                                <div class="report-title">  {{ report.description }}  </div>
-                                <div class="comment"><a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.type }}</a></div>
+                                <div class="report-title">{% trans "Proof of play" %}</div>
+                                <div class="comment"><a class="XiboFormButton btns" href="{{ url_for("stats.export.form") }}">{% trans "Export" %}</a></div>
                             </div>
                             <div class="clearfix"></div>
                         </div>
                     </div>
                 </div>
             {% endif %}
-        {% endfor %}
-    </div>
+            {% for report in reports %}
+                {% if report.hidden == 0 %}
+                    <div class="report-box col-lg-3 col-md-6 col-xs-12">
+                        <div class="widget content" style="min-height: 210px">
+                            <div class="widget-body">
+                                <div class="widget-icon {{ report.color }} ">
+                                    <i class="fa {{ report.fa_icon }}"></i>
+                                </div>
+                                <div class="widget-content">
+                                    <div class="report-title">  {{ report.description }}  </div>
+                                    <div class="comment"><a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.type }}</a></div>
+                                </div>
+                                <div class="clearfix"></div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endfor %}
+
 
 {% endblock %}
 
@@ -83,9 +87,9 @@
                 displayId =  $(dialog).find("#displayId").val();
 
                 if (!(
-                     fromDtLink === null ||  toDtLink === null  ||
-                     fromDtLink === '' ||  toDtLink === ''  ||
-                     fromDtLink === undefined || toDtLink === undefined
+                    fromDtLink === null ||  toDtLink === null  ||
+                    fromDtLink === '' ||  toDtLink === ''  ||
+                    fromDtLink === undefined || toDtLink === undefined
                 )) {
 
                     $(dialog).find(".total-stat").remove();
@@ -177,6 +181,19 @@
         .content {
             height: 100%;
             padding: 20px 20px 10px;
+        }
+
+        .reports-available {
+            background-color: #d2e0db;
+            border: 1px solid #d2e0db;
+            border-radius: 5px;
+            margin-top: 15px
+        }
+
+        .reports-available-title {
+            margin: 5px 15px 5px;
+            color: #273759;
+            font-size: 20px;
         }
 
         div.report-box {

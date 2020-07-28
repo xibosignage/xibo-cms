@@ -26,7 +26,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="btns" href="{{ url_for("stats.proofofplay.view") }}"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Back to dashboard" %}</a></li>
+        <li class="btn btn-success btn-xs"><a class="btns" href="{{ url_for("report.view") }}"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Back to dashboard" %}</a></li>
         <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
     </ul>
 {% endblock %}

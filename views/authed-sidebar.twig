@@ -110,32 +110,18 @@
         {% endif %}
 
 
-        {% if currentUser.routeViewable("/stats") %}
-
+        {% if currentUser.routeViewable("/stats") or currentUser.routeViewable("/report")  %}
             <li class="sidebar-title"><a>{% trans "Reporting" %}</a></li>
 
             {% if currentUser.routeViewable("/stats") %}
-                <li class="sidebar-list"><a href="{{ url_for("stats.view") }}">{% trans "Display Statistics" %}</a></li>
+                <li class="sidebar-list"><a href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a></li>
             {% endif %}
 
-            {% if currentUser.routeViewable("/stats") %}
-                <li class="sidebar-list"><a href="{{ url_for("stats.proofofplay.view") }}">{% trans "Proof of Play" %}</a></li>
-            {% endif %}
-
-            {% if currentUser.routeViewable("/stats") %}
-                <li class="sidebar-list"><a href="{{ url_for("stats.library.view") }}">{% trans "Library Usage" %}</a></li>
-            {% endif %}
-        {% endif %}
-
-
-        {% if currentUser.routeViewable("/report") %}
             {% if currentUser.routeViewable("/report") %}
                 <li class="sidebar-list"><a href="{{ url_for("reportschedule.view") }}">{% trans "Report Schedules" %}</a></li>
-            {% endif %}
-
-            {% if currentUser.routeViewable("/report") %}
                 <li class="sidebar-list"><a href="{{ url_for("savedreport.view") }}">{% trans "Saved Reports" %}</a></li>
             {% endif %}
+
         {% endif %}
 
         {% if currentUser.routeViewable("/log") or currentUser.routeViewable("/sessions") or currentUser.routeViewable("/auditlog") or currentUser.routeViewable("/fault") or currentUser.routeViewable("/help") %}

@@ -47,12 +47,20 @@ Drawer.prototype.toggleDrawer = function(data) {
  * Create the drawer in the layout object
  */
 Drawer.prototype.initDrawer = function(data) {
-
+    const app = this.parent;
+    const readOnlyModeOn = (app.readOnlyMode != undefined && app.readOnlyMode === true);
     const self = this;
 
     // Check if the drawer is already created/added
     if(!$.isEmptyObject(lD.layout.drawer)) {
         this.initalised = true;
+        return;
+    }
+
+    // If layout is published and the drawer doesn't exist, cancel request
+    if(readOnlyModeOn) {
+        lD.layout.drawer.isEmpty = true;
+        this.render();
         return;
     }
 
@@ -169,6 +177,12 @@ Drawer.prototype.render = function() {
     this.DOMObject.find('#actions-drawer-toggle').off().click(function() {
         self.toggleDrawer();
     });
+
+    // Enable hover and select for each widget
+    this.DOMObject.find('.selectable:not(.ui-draggable-dragging)').click(function(e) {
+        e.stopPropagation();
+        lD.selectObject($(this));
+    });
     
     if(lD.readOnlyMode === false) {
         const $searchInput = this.DOMObject.find('#inputSearch');
@@ -183,12 +197,6 @@ Drawer.prototype.render = function() {
             $searchInput[0].setSelectionRange(strLength, strLength);
             this.searchFocus = false;
         }
-
-        // Enable hover and select for each widget
-        this.DOMObject.find('.selectable:not(.ui-draggable-dragging)').click(function(e) {
-            e.stopPropagation();
-            lD.selectObject($(this));
-        });
 
         // Drawer content
         this.DOMObject.find('#actions-drawer-content').droppable({

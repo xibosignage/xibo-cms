@@ -1231,9 +1231,7 @@ class Layout implements \JsonSerializable
                 $layoutActionNode->setAttribute('actionType', $action->actionType);
                 $layoutActionNode->setAttribute('triggerType', $action->triggerType);
                 $layoutActionNode->setAttribute('id', $action->actionId);
-            }
 
-            if ($layoutActionNode != null) {
                 $layoutNode->appendChild($layoutActionNode);
             }
         }
@@ -1276,9 +1274,7 @@ class Layout implements \JsonSerializable
                 $regionActionNode->setAttribute('actionType', $action->actionType);
                 $regionActionNode->setAttribute('triggerType', $action->triggerType);
                 $regionActionNode->setAttribute('id', $action->actionId);
-            }
 
-            if ($regionActionNode != null) {
                 $regionNode->appendChild($regionActionNode);
             }
 
@@ -1396,9 +1392,7 @@ class Layout implements \JsonSerializable
                     $widgetActionNode->setAttribute('actionType', $action->actionType);
                     $widgetActionNode->setAttribute('triggerType', $action->triggerType);
                     $widgetActionNode->setAttribute('id', $action->actionId);
-                }
 
-                if ($widgetActionNode != null) {
                     $mediaNode->appendChild($widgetActionNode);
                 }
 

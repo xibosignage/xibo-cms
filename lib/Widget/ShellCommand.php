@@ -84,6 +84,20 @@ class ShellCommand extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="globalCommand",
+     *      in="formData",
+     *      description="Enter a global command line compatible with multiple devices",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="androidCommand",
+     *      in="formData",
+     *      description="Enter a Android command line compatible command",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="windowsCommand",
      *      in="formData",
      *      description="Enter a Windows command line compatible command",
@@ -93,7 +107,7 @@ class ShellCommand extends ModuleWidget
      *  @SWG\Parameter(
      *      name="linuxCommand",
      *      in="formData",
-     *      description="Enter a Android / Linux command line compatible command",
+     *      description="Enter a Linux command line compatible command",
      *      type="string",
      *      required=false
      *   ),
@@ -144,15 +158,21 @@ class ShellCommand extends ModuleWidget
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
 
         // Commands
+        $global = $sanitizedParams->getString('globalCommand');
+        $android = $sanitizedParams->getString('androidCommand');
         $windows = $sanitizedParams->getString('windowsCommand');
         $linux = $sanitizedParams->getString('linuxCommand');
         $webos = $sanitizedParams->getString('webosCommand');
         $tizen = $sanitizedParams->getString('tizenCommand');
 
+        $this->setOption('commandType', $sanitizedParams->getString('commandType'));
+        $this->setOption('useGlobalCommand', $sanitizedParams->getCheckbox('useGlobalCommand'));
         $this->setOption('launchThroughCmd', $sanitizedParams->getCheckbox('launchThroughCmd'));
         $this->setOption('terminateCommand', $sanitizedParams->getCheckbox('terminateCommand'));
         $this->setOption('useTaskkill', $sanitizedParams->getCheckbox('useTaskkill'));
         $this->setOption('commandCode', $sanitizedParams->getString('commandCode'));
+        $this->setOption('globalCommand', urlencode($global));
+        $this->setOption('androidCommand', urlencode($android));
         $this->setOption('windowsCommand', urlencode($windows));
         $this->setOption('linuxCommand', urlencode($linux));
         $this->setOption('webosCommand', urlencode($webos));
@@ -172,15 +192,26 @@ class ShellCommand extends ModuleWidget
             return parent::preview($width, $height, $scaleOverride);
         }
 
-        $commandCode = $this->getOption('commandCode');
+        $commandType = $this->getOption('commandType');
+        $useGlobalCommand = $this->getOption('useGlobalCommand');
 
-        if (!empty($commandCode)) {
-            return __('Stored Command: %s', $commandCode);
+        $global = $this->getOption('globalCommand');
+        $android = $this->getOption('androidCommand');
+        $windows = $this->getOption('windowsCommand');
+        $linux = $this->getOption('linuxCommand');
+        $webos = $this->getOption('webosCommand');
+        $tizen = $this->getOption('tizenCommand');
+
+        if ($commandType == 'storedCommand' || ($android == '' && $windows == '' && $linux == '' && $webos == '' && $tizen == '')) {
+            return __('Stored Command: %s', $this->getOption('commandCode'));
+        } else if ($useGlobalCommand == 1 && $global != '') {
+            return '<p>' . __('Global Command') . ': ' . urldecode($global) . '</p>';
         } else {
-            $preview  = '<p>' . __('Windows Command') . ': ' . urldecode($this->getOption('windowsCommand')) . '</p>';
-            $preview .= '<p>' . __('Android/Linux Command') . ': ' . urldecode($this->getOption('linuxCommand')) . '</p>';
-            $preview .= '<p>' . __('webOS Command') . ': ' . urldecode($this->getOption('webosCommand')) . '</p>';
-            $preview .= '<p>' . __('Tizen Command') . ': ' . urldecode($this->getOption('tizenCommand')) . '</p>';
+            $preview  = '<p>' . __('Android Command') . ': ' . urldecode($android) . '</p>';
+            $preview .= '<p>' . __('Windows Command') . ': ' . urldecode($windows) . '</p>';
+            $preview .= '<p>' . __('Linux Command') . ': ' . urldecode($linux) . '</p>';
+            $preview .= '<p>' . __('webOS Command') . ': ' . urldecode($webos) . '</p>';
+            $preview .= '<p>' . __('Tizen Command') . ': ' . urldecode($tizen) . '</p>';
 
             return $preview;
         }
@@ -189,7 +220,9 @@ class ShellCommand extends ModuleWidget
     /** @inheritdoc */
     public function isValid()
     {
-        if ($this->getOption('windowsCommand') == ''
+        if ($this->getOption('globalCommand') == ''
+            && $this->getOption('androidCommand') == ''
+            && $this->getOption('windowsCommand') == ''
             && $this->getOption('linuxCommand') == ''
             && $this->getOption('commandCode') == ''
             && $this->getOption('webosCommand') == ''

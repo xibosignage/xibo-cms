@@ -20,55 +20,82 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
+
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block actionMenu %}
+    <ul class="nav nav-pills pull-right">
+        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="Schedule" id="reportAddBtn" href="{{ url_for("reportschedule.add.form") }}?reportName=libraryusage"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}?reportName=libraryusage"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
+        <li class="btn btn-primary btn-xs"><a class="btns" href="{{ url_for("reportschedule.view") }}?reportName=libraryusage"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
+    </ul>
+{% endblock %}
+
 {% block pageContent %}
-    <div class="row">
-        <div class="col-md-12">
-            <div class="widget">
-                <div class="widget-title">{% trans "Library Usage" %}</div>
-                <div class="widget-body">
-                    <div class="XiboGrid" id="{{ random() }}">
-                        <div class="XiboFilter well">
-                            <div class="FilterDiv" id="Filter">
-                                <form class="form-inline">
-                                    {% set attributes = [
-                                        { name: "data-allow-clear", value: "true" },
-                                        { name: "data-placeholder--id", value: null },
-                                        { name: "data-placeholder--value", value: "" }
-                                    ] %}
 
-                                    {% set title %}{% trans "User" %}{% endset %}
-                                    {% set userFilterOptions = [{userId: null, user: ""}]|merge(users) %}
-                                    {{ inline.dropdown("userId", "single", title, "", userFilterOptions, "userId", "userName", "", "selectPicker", "", "u", "", attributes) }}
+    <div class="widget">
+        <div class="widget-title">
+            <ul class="nav nav-pills">
+                <li role="presentation" class=""><a href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a></li>
+                <li role="presentation" class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Reports <span class="caret"></span> </a>
+                    <ul class="dropdown-menu">
+                        {% for reports in defaults.availableReports %}
+                            {% for report in reports %}
+                                {% if report.hidden == 0 and report.category == 'library'%}
+                                    <li>
+                                        <a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </li>
+                <li role="presentation"><a class="text-success" href="#"> {% trans "Library Usage" %} </a></li>
+            </ul>
+        </div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter well">
+                    <div class="FilterDiv" id="Filter">
+                        <form class="form-inline">
+                            {% set attributes = [
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" }
+                            ] %}
 
-                                    {% set title %}{% trans "User Group" %}{% endset %}
-                                    {% set groupFilterOptions = [{groupId: null, group: ""}]|merge(groups) %}
-                                    {{ inline.dropdown("groupId", "single", title, "", groupFilterOptions, "groupId", "group", "", "selectPicker", "", "g", "", attributes) }}
-                                </form>
-                            </div>
-                        </div>
-                        <div class="XiboData">
-                            <table id="libraryUsage" class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>{% trans "ID" %}</th>
-                                        <th>{% trans "User" %}</th>
-                                        <th>{% trans "Usage" %}</th>
-                                        <th>{% trans "Count Files" %}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
+                            {% set title %}{% trans "User" %}{% endset %}
+                            {% set userFilterOptions = [{userId: null, user: ""}]|merge(defaults.users) %}
+                            {{ inline.dropdown("userId", "single", title, "", userFilterOptions, "userId", "userName", "", "selectPicker", "", "u", "", attributes) }}
 
-                                </tbody>
-                            </table>
-                        </div>
+                            {% set title %}{% trans "User Group" %}{% endset %}
+                            {% set groupFilterOptions = [{groupId: null, group: ""}]|merge(defaults.groups) %}
+                            {{ inline.dropdown("groupId", "single", title, "", groupFilterOptions, "groupId", "group", "", "selectPicker", "", "g", "", attributes) }}
+                        </form>
                     </div>
+                </div>
+                <div class="XiboData">
+                    <table id="libraryUsage" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{% trans "ID" %}</th>
+                            <th>{% trans "User" %}</th>
+                            <th>{% trans "Usage" %}</th>
+                            <th>{% trans "Count Files" %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
+
+
     <div class="row">
         <div class="col-md-6">
             <div class="widget">
@@ -113,7 +140,7 @@
             filter: false,
             searchDelay: 3000,
             ajax: {
-                url: "{{ url_for("stats.library.grid") }}",
+                url: "{{ url_for("report.data", {name: reportName}) }}",
                 data: function (d) {
                     $.extend(d, $("#libraryUsage").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                 }
@@ -136,7 +163,6 @@
                     console.log('Destroying Chart');
                     userChart.destroy();
                 }
-
                 // Organise our rows into datasets for the chart
                 var totalSize = 0;
                 var userData = new Array();
@@ -156,6 +182,7 @@
                     colours.push($c.rand());
                 }
 
+                // Create our chart
                 userChart = new Chart($("#userChart"), {
                     type: 'pie',
                     data: {
@@ -172,8 +199,10 @@
             }
         });
 
+
+
         // Create a lovely library pie chart
-        var libraryData = {{ libraryWidgetData|raw }};
+        var libraryData = {{ defaults.libraryWidgetData|raw }};
         var colours = new Array();
         for(var i = 0; i < libraryData.length; i++) {
             colours.push($c.rand());
@@ -185,7 +214,7 @@
                     data: libraryData,
                     backgroundColor: colours
                 }],
-                labels: {{ libraryWidgetLabels|raw }}
+                labels: {{ defaults.libraryWidgetLabels|raw }}
             },
             options: {
                 maintainAspectRatio: false

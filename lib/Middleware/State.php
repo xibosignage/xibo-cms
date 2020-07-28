@@ -213,15 +213,18 @@ class State implements Middleware
         $mode = $container->get('configService')->getSetting('SERVER_MODE');
         $container->get('logService')->setMode($mode);
 
-        if ($container->get('name') == 'web') {
 
-            $container->set('flash', function () {
-                return new \Slim\Flash\Messages();
-            });
+        if ($container->get('name') == 'web' || $container->get('name') == 'xtr') {
 
             /** @var Twig $view */
             $view = $container->get('view');
-            $view->addExtension(new TwigMessages(new \Slim\Flash\Messages()));
+
+            if ($container->get('name') == 'web') {
+                $container->set('flash', function () {
+                    return new \Slim\Flash\Messages();
+                });
+                $view->addExtension(new TwigMessages(new \Slim\Flash\Messages()));
+            }
 
             $twigEnvironment = $view->getEnvironment();
 

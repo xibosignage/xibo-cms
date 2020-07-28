@@ -30,29 +30,30 @@
         <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}?reportName=distributionReport""><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
         <li class="btn btn-primary btn-xs"><a class="btns" href="{{ url_for("reportschedule.view") }}?reportName=distributionReport"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
     </ul>
-    <div class="proof-of-play-report-div pull-right btn-group">
-        <button class="proof-of-play-report-btn btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-            <span class="fa fa-caret-down"></span>
-            {% trans "Reports" %}
-        </button>
-        <ul class="dropdown-menu">
-            {% for report in defaults.availableReports %}
-                {% if report.hidden == 0 %}
-                    <li>
-                        <a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
-                    </li>
-                {% endif %}
-            {% endfor %}
-        </ul>
-    </div>
 {% endblock %}
 
 {% block pageContent %}
 
     <div class="widget">
         <div class="widget-title">
-            {% trans "Distribution by Layout, Media or Event" %}
-            <span class="fa fa-info-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="{% trans "This chart shows an aggregate duration and number of plays for the selected Layout, Media or Event. Please select your Range and Type below. Where the Range crosses period boundaries the data is aggregated into the correct period - i.e 1 week grouped by hourly produces 24 periods." %}"></span>
+            <ul class="nav nav-pills">
+                <li role="presentation" class=""><a href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a></li>
+                <li role="presentation" class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Reports <span class="caret"></span> </a>
+                    <ul class="dropdown-menu">
+                        {% for reports in defaults.availableReports %}
+                            {% for report in reports %}
+                                {% if report.hidden == 0 and report.category == 'proof of play'%}
+                                    <li>
+                                        <a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    </ul>
+                </li>
+                <li role="presentation"><a class="text-success" href="#"> {% trans "Distribution by Layout, Media or Event" %} <span class="fa fa-info-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="{% trans "This chart shows an aggregate duration and number of plays for the selected Layout, Media or Event. Please select your Range and Type below. Where the Range crosses period boundaries the data is aggregated into the correct period - i.e 1 week grouped by hourly produces 24 periods." %}"></span></a></li>
+            </ul>
         </div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
@@ -208,65 +209,12 @@
                         reportChart.destroy();
                     }
 
-                    if (response.extra.countData.length <= 0) {
-                        return;
-                    }
-
-                    if (response.extra.durationData.length <= 0) {
+                    if (!response.extra.hasData) {
                         return;
                     }
 
                     // Create our chart
-                    reportChart = new Chart($("#reportChart"), {
-                        type: "bar",
-                        data: {
-                            labels: response.extra.labels,
-                            datasets: [{
-                                label: "{% trans "Total duration" %}",
-                                yAxisID: 'Duration',
-                                backgroundColor: response.extra.backgroundColor,
-                                data: response.extra.durationData,
-                            },
-                                {
-                                    label: "{% trans "Total count" %}",
-                                    yAxisID: 'Count',
-                                    borderColor: response.extra.borderColor,
-                                    data: response.extra.countData,
-                                    type: 'line',
-                                    fill: false
-                                }]
-                        },
-                        options: {
-                            scales: {
-                                yAxes: [{
-                                    id: 'Duration',
-                                    type: 'linear',
-                                    position: 'left',
-                                    display: true,
-                                    scaleLabel: {
-                                        display: true,
-                                        labelString: 'Duration(s)'
-                                    },
-                                    ticks: {
-                                        beginAtZero:true
-                                    }
-                                }, {
-                                    id: 'Count',
-                                    type: 'linear',
-                                    position: 'right',
-                                    display: true,
-                                    scaleLabel: {
-                                        display: true,
-                                        labelString: 'Count'
-                                    },
-                                    ticks: {
-                                        beginAtZero:true
-                                    }
-                                }]
-                            },
-                            maintainAspectRatio: true,
-                        }
-                    });
+                    reportChart = new Chart($("#reportChart"), response.extra.chart);
                 }
             });
         }
@@ -284,7 +232,6 @@
             // Calculate the difference of number of days of a selected range
             const calculateDaysShowHideWarn = function() {
 
-                console.log('m i here');
                 let fromDt = moment($("#statsFromDt").val());
                 let toDt = moment($("#statsToDt").val());
 

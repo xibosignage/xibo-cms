@@ -98,7 +98,7 @@
                         {% trans %}Bandwidth Usage ({{ bandwidthSuffix }}){% endtrans %}
                     {% endif %}
                     {% if currentUser.routeViewable("/stats") %}
-                    <a class="pull-right" href="{{ url_for("stats.view") }}">{% trans "More Statistics" %}</a>
+                    <a class="pull-right" href="/report/form/bandwidth">{% trans "More Statistics" %}</a>
                     {% endif %}
                     <div class="clearfix"></div>
                 </div>

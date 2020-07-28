@@ -174,6 +174,6 @@ class ReportScheduleDataTest extends LocalWebTestCase
         $this->assertNotEmpty($response->getBody());
         $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object, $response->getBody());
-        $this->assertSame(86400, $object->extra->durationData[0]);
+        $this->assertSame(86400, $object->extra->chart->data->datasets[0]->data[0]);
     }
 }

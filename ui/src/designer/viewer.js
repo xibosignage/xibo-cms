@@ -246,7 +246,7 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
 
                 // Show widget name
                 container.find('.preview-paging-name').html(res.extra.moduleName);
-                container.find('.preview-paging-name').attr('title', res.extra.moduleName);
+                container.find('.preview-paging-name').attr('data-title', res.extra.moduleName);
                 
                 if(res.extra.current_item > 1) {
                     container.find('.preview-paging .widget-left').show().off().on('click', function() {
@@ -315,7 +315,7 @@ Viewer.prototype.renderNavbar = function(element, data) {
 
         const currentItem = element.index;
         const parentRegion = (element.drawerWidget) ? lD.getElementByTypeAndId('drawer') : lD.getElementByTypeAndId('region', element.regionId);
-        const totalItems = parentRegion.numWidgets;
+        const totalItems = (parentRegion != undefined && parentRegion.numWidgets != undefined) ? parentRegion.numWidgets : 1;
 
         // Render widget toolbar
         this.navbarContainer.html(viewerNavbarTemplate(

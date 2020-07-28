@@ -106,20 +106,45 @@ class ReportService implements ReportServiceInterface
             $config = json_decode(file_get_contents($file));
             $config->file = Str::replaceFirst(PROJECT_ROOT, '', $file);
 
-            $reports[] = $config;
+            // Compatibility check
+            if (!isset($config->route) || !isset($config->category)) {
+                continue;
+            }
+
+            $route = $config->route;
+
+            // Check if only allowed for admin
+            if ($this->container->get('user')->userTypeId != 1) {
+                if (isset($config->adminOnly) && !empty($config->adminOnly)) {
+                    continue;
+                }
+            }
+
+            // Check Permissions
+            if (!$this->container->get('user')->routeViewable($route)) {
+                continue;
+            }
+
+            $reports[$config->category][] = $config;
         }
 
         $this->log->debug('Reports found in total: '.count($reports));
 
-        // Sort list of reports by their order
-        usort($reports, function ($a, $b) {
 
-            if (empty($a->sort_order) || empty($b->sort_order)) {
-                return 0;
-            }
+        foreach ($reports as $k => $report) {
 
-            return $a->sort_order - $b->sort_order;
-        });
+            usort($report, function ($a, $b) {
+
+                if (empty($a->sort_order) || empty($b->sort_order)) {
+                    return 0;
+                }
+
+                return $a->sort_order - $b->sort_order;
+            });
+
+            $reports[$k] = $report;
+
+        }
 
         return $reports;
     }
@@ -129,18 +154,19 @@ class ReportService implements ReportServiceInterface
      */
     public function getReportByName($reportName)
     {
-        foreach($this->listReports() as $report) {
+        foreach($this->listReports() as $reports) {
+            foreach($reports as $report) {
+                if($report->name == $reportName) {
 
-            if($report->name == $reportName) {
+                    $this->log->debug('Get report by name: '.json_encode($report, JSON_PRETTY_PRINT));
 
-                $this->log->debug('Get report by name: '.json_encode($report, JSON_PRETTY_PRINT));
-
-                return $report;
+                    return $report;
+                }
             }
         }
 
         //throw error
-        throw new NotFoundException(__('No file to return'));
+        throw new NotFoundException(__('Get Report By Name: No file to return'));
     }
 
     /**
@@ -148,20 +174,22 @@ class ReportService implements ReportServiceInterface
      */
     public function getReportClass($reportName)
     {
-        foreach($this->listReports() as $report) {
+        foreach($this->listReports() as $reports) {
+            foreach($reports as $report) {
 
-            if($report->name == $reportName) {
-                if ($report->class == '') {
-                    throw new NotFoundException(__('Report class not found'));
+                if($report->name == $reportName) {
+                    if ($report->class == '') {
+                        throw new NotFoundException(__('Report class not found'));
+                    }
+                    $this->log->debug('Get report class: '.$report->class);
+
+                    return $report->class;
                 }
-                $this->log->debug('Get report class: '.$report->class);
-
-                return $report->class;
             }
         }
 
-        //throw error
-        throw new NotFoundException(__('No file to return'));
+        // throw error
+      throw new NotFoundException(__('Get report class: No file to return'));
     }
 
     /**
@@ -267,10 +295,62 @@ class ReportService implements ReportServiceInterface
 
         // Return data to build chart
         return [
-            'template' => $results['template'],
-            'chartData' => $results['chartData']
+            'results' => $results
         ];
 
+     }
+
+    /**
+     * @inheritdoc
+     */
+    public function convertSavedReportResults($savedreportId, $reportName)
+    {
+        $className = $this->getReportClass($reportName);
+
+        $object = $this->createReportObject($className);
+
+        $savedReport = $this->savedReportFactory->getById($savedreportId);
+
+        // Open a zipfile and read the json
+        $zipFile = $this->config->getSetting('LIBRARY_LOCATION') . $savedReport->storedAs;
+
+        // Do some pre-checks on the arguments we have been provided
+        if (!file_exists($zipFile)) {
+            throw new InvalidArgumentException(__('File does not exist'));
+        }
+
+        // Open the Zip file
+        $zip = new \ZipArchive();
+        if (!$zip->open($zipFile)) {
+            throw new InvalidArgumentException(__('Unable to open ZIP'));
+        }
+
+        // Get the old json (saved report)
+        $oldjson = json_decode($zip->getFromName('reportschedule.json'), true);
+
+        // Restructure the old json to new json
+        $json = $object->restructureSavedReportOldJson($oldjson);
+
+        // Format the JSON as schemaVersion 2
+        $fileName = tempnam($this->config->getSetting('LIBRARY_LOCATION') . '/temp/','reportschedule');
+        $out = fopen($fileName, 'w');
+        fwrite($out, json_encode($json));
+        fclose($out);
+
+        $zip = new \ZipArchive();
+        $result = $zip->open($zipFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+        if ($result !== true) {
+            throw new InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
+        }
+
+        $zip->addFile($fileName, 'reportschedule.json');
+        $zip->close();
+
+        // Remove the JSON file
+        unlink($fileName);
+
+        // Return success
+        return;
      }
 
     /**

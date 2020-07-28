@@ -41,13 +41,13 @@
                 {{ forms.hidden("hiddenFields", hiddenFields) }}
                 {{ forms.hidden("reportName", reportName) }}
 
-                {% set title %}{% trans "Filter" %}{% endset %}
-                {% set helpText %}{% trans "Select the report filter you would like to run" %}{% endset %}
-                {{ forms.dropdown("filter", "single", title, "", filters, "filter", "name", helpText) }}
-
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The name for this report schedule" %}{% endset %}
                 {{ forms.input("name", title, "", helpText, "", "required") }}
+
+                {% set title %}{% trans "Filter" %}{% endset %}
+                {% set helpText %}{% trans "Select the report filter you would like to run" %}{% endset %}
+                {{ forms.dropdown("filter", "single", title, "", filters, "filter", "name", helpText) }}
 
                 {% set title %}{% trans "Start Time" %}{% endset %}
                 {% set helpText %}{% trans "Set a future date and time to run this report. Leave blank to run from the next collection point." %}{% endset %}
