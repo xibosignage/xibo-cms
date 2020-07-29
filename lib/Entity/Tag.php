@@ -767,11 +767,6 @@ class Tag implements \JsonSerializable
                     'tags');
             }
         }
-
-        if(isset($this->value) && !isset($this->options)) {
-            throw new InvalidArgumentException(sprintf(__('Provided Tag %s, does not have defined option values', $this->tag)), 'tags');
-        }
-
     }
 
     /**
