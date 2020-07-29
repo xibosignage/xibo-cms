@@ -960,16 +960,18 @@ class Stats extends Base
         $tags = $this->getSanitizer()->getString('tags');
         $onlyLoggedIn = $this->getSanitizer()->getCheckbox('onlyLoggedIn') == 1;
 
-        $currentDate = $this->getDate()->parse()->startOfDay()->format('Y-m-d');
+        $currentDate = $this->getDate()->parse();
 
         // fromDt is always start of selected day
         $fromDt = $this->getDate()->parse($fromDt)->startOfDay();
+        $toDt = $this->getDate()->parse($toDt);
 
         // If toDt is current date then make it current datetime
-        if ($this->getDate()->parse($toDt)->startOfDay()->format('Y-m-d') == $currentDate) {
+        // Else todat is next day
+        if ($toDt->format('Y-m-d') == $currentDate->format('Y-m-d')) {
             $toDt = $this->getDate()->parse();
         } else {
-            $toDt = $this->getDate()->parse()->startOfDay();
+            $toDt = $toDt->addDay()->startOfDay();
         }
 
         // Get an array of display id this user has access to.
