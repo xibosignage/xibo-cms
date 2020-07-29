@@ -142,7 +142,8 @@ class Report extends Base
             'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
             'userId' => $sanitizedQueryParams->getInt('userId'),
             'reportScheduleId' => $sanitizedQueryParams->getInt('reportScheduleId'),
-            'reportName' => $sanitizedQueryParams->getString('reportName')
+            'reportName' => $sanitizedQueryParams->getString('reportName'),
+            'onlyMySchedules' => $sanitizedQueryParams->getCheckbox('onlyMySchedules')
         ], $request));
 
         /** @var \Xibo\Entity\ReportSchedule $reportSchedule */
@@ -801,7 +802,8 @@ class Report extends Base
             'saveAs' => $sanitizedQueryParams->getString('saveAs'),
             'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
             'userId' => $sanitizedQueryParams->getInt('userId'),
-            'reportName' => $sanitizedQueryParams->getString('reportName')
+            'reportName' => $sanitizedQueryParams->getString('reportName'),
+            'onlyMyReport' => $sanitizedQueryParams->getCheckbox('onlyMyReport')
         ], $request), $request);
 
         foreach ($savedReports as $savedReport) {
