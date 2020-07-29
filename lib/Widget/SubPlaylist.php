@@ -207,6 +207,11 @@ class SubPlaylist extends ModuleWidget
         $spotLength = $this->getSanitizer()->getStringArray('subPlaylistIdSpotLength');
         $spotFill = $this->getSanitizer()->getStringArray('subPlaylistIdSpotFill');
 
+        // Check to make sure we do not have any duplicates in the playlistId array at this level
+        if (count($subPlaylistId) !== count(array_unique($subPlaylistId, SORT_NUMERIC))) {
+            throw new InvalidArgumentException(__('Please do not use the same Playlist twice'), 'playlistId');
+        }
+
         // Make up a companion setting which maps the playlistIds to the options
         $subPlaylistOptions = [];
         $i = -1;

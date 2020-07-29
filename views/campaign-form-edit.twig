@@ -39,8 +39,14 @@
                 {% set title %}{% trans "Tag value" %}{% endset %}
                 {{ forms.dropdown("tagValue", "single", title, "", options, "key", "value") }}
 
+                <div id="tagValueContainer">
+                    {% set title %}{% trans "Tag value" %}{% endset %}
+                    {% set helpText %}{% trans "Please provide the value for this Tag and confirm by pressing enter on your keyboard." %}{% endset %}
+                    {{ forms.input("tagValueInput", title, "", helpText) }}
+                </div>
+
                 <div id="tagValueRequired" class="alert alert-info">
-                    <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown." %}</p>
+                    <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown or provide Tag value in the dedicated field." %}</p>
                 </div>
 
                 <div id="assignLayouts"></div>

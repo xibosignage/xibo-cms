@@ -122,12 +122,16 @@ if (isset($_GET['file'])) {
     // Check nonce, output appropriate headers, log bandwidth and stop.
     try {
         /** @var \Xibo\Entity\RequiredFile $file */
-        if (!isset($_REQUEST['displayId']) || !isset($_REQUEST['type']) || !isset($_REQUEST['itemId']))
+        if (!isset($_REQUEST['displayId']) || !isset($_REQUEST['type']) || !isset($_REQUEST['itemId'])) {
             throw new \Xibo\Exception\NotFoundException('Missing params');
+        }
+
+        $displayId = intval($_REQUEST['displayId']);
+        $itemId = intval($_REQUEST['itemId']);
 
         // Get the player nonce from the cache
         /** @var \Stash\Item $nonce */
-        $nonce = $app->pool->getItem('/display/nonce/' . $_REQUEST['displayId']);
+        $nonce = $app->pool->getItem('/display/nonce/' . $displayId);
 
         if ($nonce->isMiss())
             throw new \Xibo\Exception\NotFoundException('No nonce cache');
@@ -138,15 +142,32 @@ if (isset($_GET['file'])) {
 
         switch ($_REQUEST['type']) {
             case 'L':
-                $file = $app->requiredFileFactory->getByDisplayAndLayout($_REQUEST['displayId'], $_REQUEST['itemId']);
+                $file = $app->requiredFileFactory->getByDisplayAndLayout($displayId, $itemId);
                 break;
 
             case 'M':
-                $file = $app->requiredFileFactory->getByDisplayAndMedia($_REQUEST['displayId'], $_REQUEST['itemId']);
+                $file = $app->requiredFileFactory->getByDisplayAndMedia($displayId, $itemId);
                 break;
 
             default:
                 throw new \Xibo\Exception\NotFoundException('Unknown type');
+        }
+
+        // Bandwidth
+        // ---------
+        // We don't check bandwidth allowances on DELETE.
+        if ($_SERVER['REQUEST_METHOD'] !== 'DELETE') {
+            // Check that we've not used all of our bandwidth already (if we have an allowance)
+            if ($app->bandwidthFactory->isBandwidthExceeded($app->configService->GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB'))) {
+                throw new \Xibo\Exception\InstanceSuspendedException('Bandwidth Exceeded');
+            }
+
+            // Check the display specific limit next.
+            $display = $app->displayFactory->getById($displayId);
+            $usage = 0;
+            if ($app->bandwidthFactory->isBandwidthExceeded($display->bandwidthLimit, $usage, $displayId)) {
+                throw new \Xibo\Exception\InstanceSuspendedException('Bandwidth Exceeded');
+            }
         }
 
         // Only log bandwidth under certain conditions
@@ -162,15 +183,10 @@ if (isset($_GET['file'])) {
             // Log bandwidth for the file being requested
             $app->logService->info('Delete request for ' . $file->path);
 
-            // Log bandwith here if we are a CDN
+            // Log bandwidth here if we are a CDN
             $logBandwidth = ($app->configService->getSetting('CDN_URL') != '');
 
         } else {
-            // Check that we've not used all of our bandwidth already (if we have an allowance)
-            if ($app->bandwidthFactory->isBandwidthExceeded($app->configService->GetSetting('MONTHLY_XMDS_TRANSFER_LIMIT_KB'))) {
-                throw new \Xibo\Exception\InstanceSuspendedException('Bandwidth Exceeded');
-            }
-
             // Log bandwidth here if we are NOT a CDN
             $logBandwidth = ($app->configService->getSetting('CDN_URL') == '');
 
@@ -203,8 +219,10 @@ if (isset($_GET['file'])) {
             $app->logService->notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404. ' . $e->getMessage());
             // 404
             header('HTTP/1.0 404 Not Found');
-        }
-        else {
+        } else if ($e instanceof \Xibo\Exception\InstanceSuspendedException) {
+            $app->logService->debug('Bandwidth exceeded');
+            header('HTTP/1.0 403 Forbidden');
+        } else {
             $app->logService->error('Unknown Error: ' . $e->getMessage());
             $app->logService->debug($e->getTraceAsString());
 

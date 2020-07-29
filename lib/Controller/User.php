@@ -996,8 +996,6 @@ class User extends Base
     public function editProfile()
     {
         $user = $this->getUser();
-        // Store current (before edit) value of twoFactorTypeId in a variable
-        $oldTwoFactorTypeId = $user->twoFactorTypeId;
 
         // get all other values from the form
         $oldPassword = $this->getSanitizer()->getString('password');
@@ -1010,6 +1008,14 @@ class User extends Base
 
         if ($recoveryCodes != null || $recoveryCodes != []) {
             $user->twoFactorRecoveryCodes = json_decode($this->getSanitizer()->getStringArray('twoFactorRecoveryCodes'));
+        }
+
+        // What situations do we need to check the old password is correct?
+        if ($user->hasPropertyChanged('twoFactorTypeId')
+            || ($user->hasPropertyChanged('email') && $user->twoFactorTypeId === 1)
+            || ($user->hasPropertyChanged('email') && $user->getOriginalValue('twoFactorTypeId') === 1)
+        ) {
+            $user->checkPassword($oldPassword);
         }
 
         // check if we have a new password provided, if so check if it was correctly entered
@@ -1045,7 +1051,9 @@ class User extends Base
 
         // if we are setting up Google auth, we are expecting a code from the form, validate the code here
         // we want to show QR code and validate the access code also with the previous auth method was set to email
-        if ($user->twoFactorTypeId === 2 && ($user->twoFactorSecret === null || $oldTwoFactorTypeId === 1)) {
+        if ($user->twoFactorTypeId === 2
+            && ($user->twoFactorSecret === null || $user->getOriginalValue('twoFactorTypeId') === 1)
+        ) {
             if (!isset($code)) {
                 throw new InvalidArgumentException(__('Access Code is empty'), 'code');
             }

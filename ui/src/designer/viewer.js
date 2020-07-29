@@ -311,7 +311,7 @@ Viewer.prototype.renderNavbar = function(element, data) {
 
         const currentItem = element.index;
         const parentRegion = lD.getElementByTypeAndId('region', element.regionId);
-        const totalItems = parentRegion.numWidgets;
+        const totalItems = (parentRegion != undefined && parentRegion.numWidgets != undefined) ? parentRegion.numWidgets : 1;
 
         // Render widget toolbar
         this.navbarContainer.html(viewerNavbarTemplate(

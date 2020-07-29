@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-06-22 09:11+0100\n"
+"POT-Creation-Date: 2020-07-28 15:16+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1002,7 +1002,6 @@ msgstr ""
 #: cache/ed/edbe12c5c71336e34e98cb48177ced7ee5ce072819f209ccd47787363fa7b5a5.php:66
 #: cache/76/761fa38adf2245d6114638b642adbba5b74499047ba19e803503ed5fbe6eb755.php:60
 #: cache/eb/eb93b74ea639c09d405e366b6def88fa4681a228fd396f85b4607b18fc84b89a.php:66
-#: cache/40/40748ae02125f2bf87b01ecb80610742386663db2fa49e78e1330f62a2d88526.php:60
 #: cache/79/7936d718dd95691b98581e4ed5b342af7b7a00d01a621bf0a193dcf213854d97.php:162
 #: cache/79/7936d718dd95691b98581e4ed5b342af7b7a00d01a621bf0a193dcf213854d97.php:187
 #: cache/bd/bd780344cda70412fd474578d177739326b9aaf96a0afe6b458feb30f8363227.php:66
@@ -1919,7 +1918,7 @@ msgstr ""
 
 #: cache/3d/3dd387b6105c512e1d7d2a0fc64b41964c38428ec8af6c2950944c85f6e13e77.php:205
 #: cache/0d/0d6e051141f48c2153387827a93bdd6e773d64372cd7a89567ed34b1d789623b.php:123
-#: lib/Controller/Stats.php:1137
+#: lib/Controller/Stats.php:1122
 msgid "Hours"
 msgstr ""
 
@@ -1929,7 +1928,7 @@ msgstr ""
 
 #: cache/3d/3dd387b6105c512e1d7d2a0fc64b41964c38428ec8af6c2950944c85f6e13e77.php:220
 #: cache/0d/0d6e051141f48c2153387827a93bdd6e773d64372cd7a89567ed34b1d789623b.php:118
-#: lib/Controller/Stats.php:1141
+#: lib/Controller/Stats.php:1126
 msgid "Minutes"
 msgstr ""
 
@@ -4129,6 +4128,7 @@ msgstr ""
 #: cache/29/2902fac09b6e25a3bcafd678dfba9732b6cf97702f4c7ff0b4d81adaf1eb162a.php:66
 #: cache/d5/d53acb81c3661eb8e2504c62f3df283b72d267e77ec5f861c9aff197f92a10a7.php:54
 #: cache/40/40748ae02125f2bf87b01ecb80610742386663db2fa49e78e1330f62a2d88526.php:48
+#: cache/40/40748ae02125f2bf87b01ecb80610742386663db2fa49e78e1330f62a2d88526.php:60
 #: lib/Controller/Template.php:198 lib/Controller/Layout.php:1373
 msgid "Export"
 msgstr ""
@@ -4831,7 +4831,7 @@ msgstr ""
 #: cache/e4/e45b0742a48d3cfcff68139992baf915c0c3497c2a4f55a09549ba61fa78d5c7.php:194
 #: cache/29/29047b1f0644c28327bd823cd997393aafcdf5b4e0ef30da417be8a65b2f3686.php:89
 #: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:223
-#: lib/Entity/Layout.php:1624 lib/Controller/Region.php:627
+#: lib/Entity/Layout.php:1625 lib/Controller/Region.php:627
 msgid "Empty Region"
 msgstr ""
 
@@ -9426,7 +9426,7 @@ msgid "Pick a command"
 msgstr ""
 
 #: cache/c0/c0b3049759bc90236c8f2158031a31be1b6b4c859254f571a8acd598575c8b01.php:205
-#: lib/Widget/ShellCommand.php:172
+#: lib/Widget/ShellCommand.php:169
 msgid "Windows Command"
 msgstr ""
 
@@ -9454,7 +9454,7 @@ msgid "Enter an Android / Linux Command Line compatible command"
 msgstr ""
 
 #: cache/c0/c0b3049759bc90236c8f2158031a31be1b6b4c859254f571a8acd598575c8b01.php:250
-#: lib/Widget/ShellCommand.php:174
+#: lib/Widget/ShellCommand.php:171
 msgid "webOS Command"
 msgstr ""
 
@@ -9463,7 +9463,7 @@ msgid "Enter a webOS Command Line compatible command."
 msgstr ""
 
 #: cache/c0/c0b3049759bc90236c8f2158031a31be1b6b4c859254f571a8acd598575c8b01.php:265
-#: lib/Widget/ShellCommand.php:175
+#: lib/Widget/ShellCommand.php:172
 msgid "Tizen Command"
 msgstr ""
 
@@ -11482,7 +11482,7 @@ msgid "Locked"
 msgstr ""
 
 #: cache/80/80068084c6267df134dc1776c89cef7cbf29c956880aad542709793e13086bad.php:307
-#: lib/Controller/StatusDashboard.php:268 lib/Controller/Stats.php:847
+#: lib/Controller/StatusDashboard.php:268 lib/Controller/Stats.php:832
 msgid "Empty"
 msgstr ""
 
@@ -11826,7 +11826,9 @@ msgid "Edit User Profile"
 msgstr ""
 
 #: cache/61/6103bbe0bfac344fd9bd69aab9a62453ceb6e33aa0f09705cef8703e7e79963e.php:114
-msgid "Please enter your current password"
+msgid ""
+"If you are changing your password or two factor settings, then please enter "
+"your current password"
 msgstr ""
 
 #: cache/61/6103bbe0bfac344fd9bd69aab9a62453ceb6e33aa0f09705cef8703e7e79963e.php:169
@@ -13438,6 +13440,14 @@ msgstr ""
 msgid "Do you want to include the DataSet data?"
 msgstr ""
 
+#: cache/40/40748ae02125f2bf87b01ecb80610742386663db2fa49e78e1330f62a2d88526.php:106
+msgid "Save as"
+msgstr ""
+
+#: cache/40/40748ae02125f2bf87b01ecb80610742386663db2fa49e78e1330f62a2d88526.php:111
+msgid "Change the name of the downloaded file if desired."
+msgstr ""
+
 #: cache/40/4098fd4c1bc08b3c8d7e9310253b2b9bc6d283ce4386bdea30228e89e4a77967.php:49
 msgid "Edit User Group"
 msgstr ""
@@ -14432,16 +14442,16 @@ msgstr ""
 msgid "Missing API Key"
 msgstr ""
 
-#: lib/Widget/ShellCommand.php:170
+#: lib/Widget/ShellCommand.php:167
 #, php-format
 msgid "Stored Command: %s"
 msgstr ""
 
-#: lib/Widget/ShellCommand.php:173
-msgid "Linux Command"
+#: lib/Widget/ShellCommand.php:170
+msgid "Android/Linux Command"
 msgstr ""
 
-#: lib/Widget/ShellCommand.php:185
+#: lib/Widget/ShellCommand.php:182
 msgid "You must enter a command"
 msgstr ""
 
@@ -14653,34 +14663,34 @@ msgstr ""
 msgid "Please select a Playlist"
 msgstr ""
 
-#: lib/Widget/SubPlaylist.php:221
+#: lib/Widget/SubPlaylist.php:226
 msgid "Number of spots must be empty, 0 or a positive number"
 msgstr ""
 
-#: lib/Widget/SubPlaylist.php:225
+#: lib/Widget/SubPlaylist.php:230
 msgid "Spot length must be empty, 0 or a positive number"
 msgstr ""
 
-#: lib/Widget/SubPlaylist.php:243
+#: lib/Widget/SubPlaylist.php:248
 msgid "Please select at least 1 Playlist to embed"
 msgstr ""
 
-#: lib/Widget/SubPlaylist.php:277 lib/Entity/Layout.php:1968
+#: lib/Widget/SubPlaylist.php:282 lib/Entity/Layout.php:1968
 msgid "Cannot add the same SubPlaylist twice."
 msgstr ""
 
-#: lib/Widget/SubPlaylist.php:301
+#: lib/Widget/SubPlaylist.php:306
 msgid ""
 "This assignment creates a loop because the Playlist being assigned contains "
 "the Playlist being worked on."
 msgstr ""
 
-#: lib/Widget/SubPlaylist.php:341
+#: lib/Widget/SubPlaylist.php:346
 #, php-format
 msgid "%d Widgets / %d seconds"
 msgstr ""
 
-#: lib/Widget/SubPlaylist.php:362
+#: lib/Widget/SubPlaylist.php:367
 #, php-format
 msgid "Sub-Playlist: %s"
 msgstr ""
@@ -15211,7 +15221,7 @@ msgstr ""
 #: lib/XTR/MaintenanceDailyTask.php:79 lib/XTR/MaintenanceDailyTask.php:98
 #: lib/XTR/MaintenanceDailyTask.php:135 lib/XTR/MaintenanceDailyTask.php:215
 #: lib/XTR/StatsMigrationTask.php:224 lib/XTR/StatsMigrationTask.php:365
-#: lib/XTR/StatsMigrationTask.php:468 lib/XTR/StatsMigrationTask.php:636
+#: lib/XTR/StatsMigrationTask.php:469 lib/XTR/StatsMigrationTask.php:639
 #: lib/XTR/ClearCachedMediaDataTask.php:84 lib/XTR/StatsArchiveTask.php:231
 msgid "Done."
 msgstr ""
@@ -15802,20 +15812,20 @@ msgstr ""
 msgid "Route is available through the API"
 msgstr ""
 
-#: lib/Controller/Library.php:1609 lib/Controller/Layout.php:1732
+#: lib/Controller/Library.php:1609 lib/Controller/Layout.php:1736
 msgid "No tags to assign"
 msgstr ""
 
-#: lib/Controller/Library.php:1619 lib/Controller/Layout.php:1742
+#: lib/Controller/Library.php:1619 lib/Controller/Layout.php:1746
 #, php-format
 msgid "Tagged %s"
 msgstr ""
 
-#: lib/Controller/Library.php:1671 lib/Controller/Layout.php:1797
+#: lib/Controller/Library.php:1671 lib/Controller/Layout.php:1801
 msgid "No tags to unassign"
 msgstr ""
 
-#: lib/Controller/Library.php:1681 lib/Controller/Layout.php:1807
+#: lib/Controller/Library.php:1681 lib/Controller/Layout.php:1811
 #, php-format
 msgid "Untagged %s"
 msgstr ""
@@ -15830,7 +15840,7 @@ msgid "Preview Layout"
 msgstr ""
 
 #: lib/Controller/Library.php:1996 lib/Controller/Playlist.php:872
-#: lib/Controller/Layout.php:1677
+#: lib/Controller/Layout.php:1681
 #, php-format
 msgid "Copied as %s"
 msgstr ""
@@ -15872,7 +15882,7 @@ msgstr ""
 msgid "Available"
 msgstr ""
 
-#: lib/Controller/StatusDashboard.php:262 lib/Controller/Stats.php:841
+#: lib/Controller/StatusDashboard.php:262 lib/Controller/Stats.php:826
 msgid "Free"
 msgstr ""
 
@@ -15925,8 +15935,8 @@ msgstr ""
 msgid "User does not have permission for this homepage"
 msgstr ""
 
-#: lib/Controller/User.php:789 lib/Controller/User.php:1017
-#: lib/Controller/User.php:1224
+#: lib/Controller/User.php:789 lib/Controller/User.php:1023
+#: lib/Controller/User.php:1232
 msgid "Passwords do not match"
 msgstr ""
 
@@ -15935,88 +15945,88 @@ msgstr ""
 msgid "This user cannot be deleted as it has %d child items"
 msgstr ""
 
-#: lib/Controller/User.php:1029
+#: lib/Controller/User.php:1035
 msgid "Please provide valid email address"
 msgstr ""
 
-#: lib/Controller/User.php:1034
+#: lib/Controller/User.php:1040
 msgid ""
 "Please provide valid sending email address in CMS Settings on Network tab"
 msgstr ""
 
-#: lib/Controller/User.php:1050
+#: lib/Controller/User.php:1058
 msgid "Access Code is empty"
 msgstr ""
 
-#: lib/Controller/User.php:1057
+#: lib/Controller/User.php:1065
 msgid "Access Code is incorrect"
 msgstr ""
 
-#: lib/Controller/User.php:1082
+#: lib/Controller/User.php:1090
 msgid "User Profile Saved"
 msgstr ""
 
-#: lib/Controller/User.php:1221
+#: lib/Controller/User.php:1229
 msgid "Please enter the password"
 msgstr ""
 
-#: lib/Controller/User.php:1236
+#: lib/Controller/User.php:1244
 msgid "Password Changed"
 msgstr ""
 
-#: lib/Controller/User.php:1286 lib/Controller/User.php:1313
-#: lib/Controller/User.php:1396
+#: lib/Controller/User.php:1294 lib/Controller/User.php:1321
+#: lib/Controller/User.php:1404
 msgid "You do not have permission to edit these permissions."
 msgstr ""
 
-#: lib/Controller/User.php:1418
+#: lib/Controller/User.php:1426
 msgid "Cannot change owner on this Object"
 msgstr ""
 
-#: lib/Controller/User.php:1491
+#: lib/Controller/User.php:1499
 msgid "Permissions Updated"
 msgstr ""
 
-#: lib/Controller/User.php:1505
+#: lib/Controller/User.php:1513
 msgid "Permissions requested without an entity"
 msgstr ""
 
-#: lib/Controller/User.php:1508
+#: lib/Controller/User.php:1516
 msgid "Permissions form requested without an object"
 msgstr ""
 
-#: lib/Controller/User.php:1515
+#: lib/Controller/User.php:1523
 msgid "Permissions form requested with an invalid entity"
 msgstr ""
 
-#: lib/Controller/User.php:1634
+#: lib/Controller/User.php:1642
 msgid "Updated Preference"
 msgstr ""
 
-#: lib/Controller/User.php:1634 lib/Controller/User.php:1817
+#: lib/Controller/User.php:1642 lib/Controller/User.php:1825
 msgid "Updated Preferences"
 msgstr ""
 
-#: lib/Controller/User.php:1702 lib/Controller/User.php:1713
+#: lib/Controller/User.php:1710 lib/Controller/User.php:1721
 msgid "Access Denied to UserGroup"
 msgstr ""
 
-#: lib/Controller/User.php:1722
+#: lib/Controller/User.php:1730
 #, php-format
 msgid "%s assigned to User Groups"
 msgstr ""
 
-#: lib/Controller/User.php:1738
+#: lib/Controller/User.php:1746
 #, php-format
 msgid "%s has started the welcome tutorial"
 msgstr ""
 
-#: lib/Controller/User.php:1753
+#: lib/Controller/User.php:1761
 #, php-format
 msgid "%s has seen the welcome tutorial"
 msgstr ""
 
-#: lib/Controller/User.php:1809
+#: lib/Controller/User.php:1817
 msgid "Option available only for Super Admins"
 msgstr ""
 
@@ -16369,7 +16379,7 @@ msgstr ""
 msgid "Please enter author name"
 msgstr ""
 
-#: lib/Controller/Layout.php:387 lib/Controller/Layout.php:2145
+#: lib/Controller/Layout.php:387 lib/Controller/Layout.php:2157
 msgid "Draft"
 msgstr ""
 
@@ -16384,9 +16394,9 @@ msgstr ""
 #: lib/Controller/Layout.php:647 lib/Controller/Layout.php:735
 #: lib/Controller/Layout.php:773 lib/Controller/Layout.php:814
 #: lib/Controller/Layout.php:873 lib/Controller/Layout.php:902
-#: lib/Controller/Layout.php:2091 lib/Controller/Layout.php:2131
-#: lib/Controller/Layout.php:2225 lib/Controller/Layout.php:2281
-#: lib/Controller/Layout.php:2327 lib/Controller/Layout.php:2369
+#: lib/Controller/Layout.php:2103 lib/Controller/Layout.php:2143
+#: lib/Controller/Layout.php:2237 lib/Controller/Layout.php:2293
+#: lib/Controller/Layout.php:2339 lib/Controller/Layout.php:2381
 msgid "You do not have permissions to edit this layout"
 msgstr ""
 
@@ -16418,19 +16428,19 @@ msgstr ""
 msgid "For Layout %s Enable Stats Collection is set to %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:1180 lib/Controller/Layout.php:1850
+#: lib/Controller/Layout.php:1180 lib/Controller/Layout.php:1854
 msgid "This Layout is ready to play"
 msgstr ""
 
-#: lib/Controller/Layout.php:1184 lib/Controller/Layout.php:1854
+#: lib/Controller/Layout.php:1184 lib/Controller/Layout.php:1858
 msgid "There are items on this Layout that can only be assessed by the Display"
 msgstr ""
 
-#: lib/Controller/Layout.php:1188 lib/Controller/Layout.php:1858
+#: lib/Controller/Layout.php:1188 lib/Controller/Layout.php:1862
 msgid "This Layout has not been built yet"
 msgstr ""
 
-#: lib/Controller/Layout.php:1192 lib/Controller/Layout.php:1862
+#: lib/Controller/Layout.php:1192 lib/Controller/Layout.php:1866
 msgid "This Layout is invalid and should not be scheduled"
 msgstr ""
 
@@ -16459,40 +16469,40 @@ msgstr ""
 msgid "Unretire"
 msgstr ""
 
-#: lib/Controller/Layout.php:2135
+#: lib/Controller/Layout.php:2147
 msgid "Layout is already checked out"
 msgstr ""
 
-#: lib/Controller/Layout.php:2208
+#: lib/Controller/Layout.php:2220
 #, php-format
 msgid "Checked out %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:2303
+#: lib/Controller/Layout.php:2315
 #, php-format
 msgid "Published %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:2310
+#: lib/Controller/Layout.php:2322
 #, php-format
 msgid "Layout will be published on %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:2373
+#: lib/Controller/Layout.php:2385
 msgid "Layout is not checked out"
 msgstr ""
 
-#: lib/Controller/Layout.php:2384
+#: lib/Controller/Layout.php:2396
 #, php-format
 msgid "Discarded %s"
 msgstr ""
 
-#: lib/Controller/Stats.php:455 lib/Report/ProofOfPlay.php:512
+#: lib/Controller/Stats.php:440 lib/Report/ProofOfPlay.php:512
 msgid "Deleted from Layout"
 msgstr ""
 
-#: lib/Controller/Stats.php:459 lib/Controller/Stats.php:460
-#: lib/Controller/Stats.php:760 lib/Controller/Stats.php:761
+#: lib/Controller/Stats.php:444 lib/Controller/Stats.php:445
+#: lib/Controller/Stats.php:745 lib/Controller/Stats.php:746
 #: lib/Report/DistributionReport.php:282 lib/Report/DistributionReport.php:300
 #: lib/Report/SummaryReport.php:269 lib/Report/ProofOfPlay.php:275
 #: lib/Report/ProofOfPlay.php:295 lib/Report/ProofOfPlay.php:518
@@ -16500,26 +16510,26 @@ msgstr ""
 msgid "Not Found"
 msgstr ""
 
-#: lib/Controller/Stats.php:522 lib/Controller/Stats.php:647
-#: lib/Controller/Stats.php:700 lib/Controller/Stats.php:998
-#: lib/Controller/Stats.php:1387 lib/Report/DistributionReport.php:358
+#: lib/Controller/Stats.php:507 lib/Controller/Stats.php:632
+#: lib/Controller/Stats.php:685 lib/Controller/Stats.php:983
+#: lib/Controller/Stats.php:1372 lib/Report/DistributionReport.php:358
 #: lib/Report/SummaryReport.php:321 lib/Report/ProofOfPlay.php:368
 msgid "No displays with View permissions"
 msgstr ""
 
-#: lib/Controller/Stats.php:588
+#: lib/Controller/Stats.php:573
 msgid "Deleted Displays"
 msgstr ""
 
-#: lib/Controller/Stats.php:717
+#: lib/Controller/Stats.php:702
 msgid "Both fromDt/toDt should be provided"
 msgstr ""
 
-#: lib/Controller/Stats.php:1008 lib/Report/DistributionReport.php:369
+#: lib/Controller/Stats.php:993 lib/Report/DistributionReport.php:369
 msgid "No display groups with View permissions"
 msgstr ""
 
-#: lib/Controller/Stats.php:1133
+#: lib/Controller/Stats.php:1118
 msgid "Days"
 msgstr ""
 
@@ -17309,17 +17319,17 @@ msgstr ""
 msgid "Invalid statId provided"
 msgstr ""
 
-#: lib/Storage/MongoDbTimeSeriesStore.php:558
-#: lib/Storage/MongoDbTimeSeriesStore.php:561
-#: lib/Storage/MongoDbTimeSeriesStore.php:608
-#: lib/Storage/MongoDbTimeSeriesStore.php:611
+#: lib/Storage/MongoDbTimeSeriesStore.php:570
+#: lib/Storage/MongoDbTimeSeriesStore.php:573
+#: lib/Storage/MongoDbTimeSeriesStore.php:631
+#: lib/Storage/MongoDbTimeSeriesStore.php:634
 msgid ""
 "Sorry we encountered an error getting Proof of Play data, please consult "
 "your administrator"
 msgstr ""
 
-#: lib/Storage/MongoDbTimeSeriesStore.php:662
-#: lib/Storage/MongoDbTimeSeriesStore.php:665
+#: lib/Storage/MongoDbTimeSeriesStore.php:685
+#: lib/Storage/MongoDbTimeSeriesStore.php:688
 msgid ""
 "Sorry we encountered an error getting total number of Proof of Play data, "
 "please consult your administrator"
@@ -17356,11 +17366,11 @@ msgstr ""
 msgid "Duration not provided"
 msgstr ""
 
-#: web/xmds.php:226
+#: web/xmds.php:244
 msgid "Your client is not the correct version to communicate with this CMS."
 msgstr ""
 
-#: web/xmds.php:282
+#: web/xmds.php:300
 msgid ""
 "There has been an unknown error with XMDS, it has been logged. Please "
 "contact your administrator."

@@ -1454,7 +1454,11 @@ class Layout extends Base
             throw new AccessDeniedException();
             
         // Edits always happen on Drafts, get the draft Layout using the Parent Layout ID
-        $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
+        if ($layout->schemaVersion < 2) {
+            $resolution = $this->resolutionFactory->getByDesignerDimensions($layout->width, $layout->height);
+        } else {
+            $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
+        }
 
         // If we have a background image, output it
         $backgroundId = $this->getSanitizer()->getInt('backgroundOverride', $layout->backgroundImageId);
@@ -1906,7 +1910,8 @@ class Layout extends Base
         // Render the form
         $this->getState()->template = 'layout-form-export';
         $this->getState()->setData([
-            'layout' => $layout
+            'layout' => $layout,
+            'saveAs' => 'export_' . preg_replace('/[^a-z0-9]+/', '-', strtolower($layout->layout))
         ]);
     }
 
@@ -1929,10 +1934,17 @@ class Layout extends Base
         if ($layout->isChild())
             throw new InvalidArgumentException('Cannot manage tags on a Draft Layout', 'layoutId');
 
-        // Make sure our file name is reasonable
-        $layoutName = preg_replace('/[^a-z0-9]+/', '-', strtolower($layout->layout));
+        // Save As?
+        $saveAs = $this->getSanitizer()->getString('saveAs');
 
-        $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/export_' . $layoutName . '.zip';
+        // Make sure our file name is reasonable
+        if (empty($saveAs)) {
+            $saveAs = 'export_' . preg_replace('/[^a-z0-9]+/', '-', strtolower($layout->layout));
+        } else {
+            $saveAs = preg_replace('/[^a-z0-9]+/', '-', strtolower($saveAs));
+        }
+
+        $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $saveAs . '.zip';
         $layout->toZip($this->dataSetFactory, $fileName, ['includeData' => ($this->getSanitizer()->getCheckbox('includeData')== 1)]);
 
         if (ini_get('zlib.output_compression')) {
