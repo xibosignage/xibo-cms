@@ -8,7 +8,7 @@
   "fa_icon": "fa-th",
   "sort_order": 4,
   "hidden": 0,
-  "category": "display",
+  "category": "Display",
   "route": "/stats",
   "adminOnly": 0
 }
