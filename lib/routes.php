@@ -356,7 +356,6 @@ $app->get('/rss/{psk}', ['\Xibo\Controller\DataSetRss','feed'])->setName('dataSe
  * )
  */
 $app->get('/stats', ['\Xibo\Controller\Stats','grid'])->setName('stats.search');
-$app->get('/stats/timeDisconnected', ['\Xibo\Controller\Stats', 'gridTimeDisconnected'])->setName('stats.timeDisconnected.search');
 $app->get('/stats/export', ['\Xibo\Controller\Stats','export'])->setName('stats.export');
 
 /**
