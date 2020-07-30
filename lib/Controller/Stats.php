@@ -370,13 +370,6 @@ class Stats extends Base
         $start = $sanitizedQueryParams->getInt('start', ['default' => 0]);
         $length = $sanitizedQueryParams->getInt('length', ['default' => 10]);
 
-        // What if the fromdt and todt are exactly the same?
-        // in this case assume an entire day from midnight on the fromdt to midnight on
-        // the todt (i.e. add a day to the todt)
-        if ($fromDt == $toDt) {
-            $toDt->addDay();
-        }
-
         // Merge displayId and displayIds
         if ($displayId != 0) {
             $displays = array_unique(array_merge($displays, [$displayId]));

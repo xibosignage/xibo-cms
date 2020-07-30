@@ -192,7 +192,6 @@ class ShellCommand extends ModuleWidget
             return parent::preview($width, $height, $scaleOverride);
         }
 
-
         $commandType = $this->getOption('commandType');
         $useGlobalCommand = $this->getOption('useGlobalCommand');
 
@@ -205,9 +204,8 @@ class ShellCommand extends ModuleWidget
 
         if ($commandType == 'storedCommand' || ($android == '' && $windows == '' && $linux == '' && $webos == '' && $tizen == '')) {
             return __('Stored Command: %s', $this->getOption('commandCode'));
-        } else if($useGlobalCommand == 1 && $global != '') {
-            $preview  = '<p>' . __('Global Command') . ': ' . urldecode($global) . '</p>';
-            return $preview;
+        } else if ($useGlobalCommand == 1 && $global != '') {
+            return '<p>' . __('Global Command') . ': ' . urldecode($global) . '</p>';
         } else {
             $preview  = '<p>' . __('Android Command') . ': ' . urldecode($android) . '</p>';
             $preview .= '<p>' . __('Windows Command') . ': ' . urldecode($windows) . '</p>';
