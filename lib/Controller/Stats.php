@@ -837,6 +837,215 @@ class Stats extends Base
     }
 
     /**
+     * @SWG\Definition(
+     *  definition="TimeDisconnectedData",
+     *  @SWG\Property(
+     *      property="display",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="displayId",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
+     *      property="duration",
+     *      type="integer"
+     *  ),
+     *  @SWG\Property(
+     *      property="start",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="end",
+     *      type="string"
+     *  ),
+     *  @SWG\Property(
+     *      property="isFinished",
+     *      type="boolean"
+     *  )
+     * )
+     *
+     * @SWG\Get(
+     *  path="/stats/timeDisconnected",
+     *  operationId="timeDisconnectedSearch",
+     *  tags={"statistics"},
+     *  @SWG\Parameter(
+     *      name="fromDt",
+     *      in="query",
+     *      description="The start date for the filter.",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="toDt",
+     *      in="query",
+     *      description="The end date for the filter.",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      in="query",
+     *      description="An optional display Id to filter",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="displayIds",
+     *      description="An optional array of display Id to filter",
+     *      in="query",
+     *      required=false,
+     *      type="array",
+     *      @SWG\Items(
+     *          type="integer"
+     *      )
+     *  ),
+     *   @SWG\Parameter(
+     *      name="returnDisplayLocalTime",
+     *      in="query",
+     *      description="true/1/On if the results should be in display local time, otherwise CMS time",
+     *      type="boolean",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="returnDateFormat",
+     *      in="query",
+     *      description="A PHP formatted date format for how the dates in this call should be returned.",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(
+     *              ref="#/definitions/TimeDisconnectedData"
+     *          )
+     *      )
+     *  )
+     * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function gridTimeDisconnected(Request $request, Response $response): Response
+    {
+        // CMS timezone
+        $defaultTimezone = $this->getConfig()->getSetting('defaultTimezone');
+
+        $params = $this->getSanitizer($request->getParams());
+        $fromDt = $params->getDate('fromDt');
+        $toDt = $params->getDate('toDt');
+        $displayId = $params->getInt('displayId');
+        $displays = $params->getIntArray('displayIds');
+        $returnDisplayLocalTime = $params->getCheckbox('returnDisplayLocalTime');
+        $returnDateFormat = $params->getString('returnDateFormat', 'Y-m-d H:i:s');
+
+        // Merge displayId and displayIds
+        if ($displayId != 0) {
+            $displays = array_unique(array_merge($displays, [$displayId]));
+        }
+
+        $timeZoneCache = [];
+        $displayIds = $this->authoriseDisplayIds($displays, $timeZoneCache);
+
+        $params = [];
+        $select = '
+            SELECT displayevent.eventDate, 
+                    display.displayId, 
+                    display.display, 
+                    displayevent.start, 
+                    displayevent.end
+        ';
+        $body = '
+              FROM displayevent
+                INNER JOIN display 
+                ON displayevent.displayId = display.displayId
+             WHERE 1 = 1 
+        ';
+
+        if (count($displays) > 0) {
+            $body .= ' AND display.displayId IN (' . implode(',', $displayIds) . ') ';
+        }
+
+        if ($fromDt != null) {
+            $body .= ' AND displayevent.start >= :start ';
+            $params['start'] = $fromDt->format('U');
+        }
+
+        if ($toDt != null) {
+            $body .= ' AND displayevent.end < :end ';
+            $params['end'] = $toDt->format('U');
+        }
+
+        // Sorting?
+        $filterBy = $this->gridRenderFilter([], $request);
+        $sortOrder = $this->gridRenderSort($request);
+
+        $order = '';
+        if (is_array($sortOrder))
+            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+
+        $limit = '';
+
+        // Paging
+        $filterBy = $this->getSanitizer($filterBy);
+        if ($filterBy !== null && $filterBy->hasParam('start') && $filterBy->hasParam('length')) {
+            $limit = ' LIMIT ' . intval($filterBy->getInt('start', ['default' => 0])) . ', '
+                . $filterBy->getInt('length', ['default' => 10]);
+        }
+
+        $sql = $select . $body . $order . $limit;
+
+        // Run the main query
+        $rows = [];
+        foreach ($this->store->select($sql, $params) as $row) {
+            // Load my row into the sanitizer
+            $sanitizedRow = $this->getSanitizer($row);
+
+            $entry = [];
+            $entry['displayId'] = $sanitizedRow->getInt('displayId');
+            $entry['display'] = $sanitizedRow->getString('display');
+            $entry['isFinished'] = $row['end'] !== null;
+
+            // Get the start/end date
+            $start = Carbon::createFromTimestamp($row['start']);
+            $end = Carbon::createFromTimestamp($row['end']);
+
+            if ($returnDisplayLocalTime) {
+                // Convert the dates to the display timezone.
+                if (!array_key_exists($entry['displayId'], $timeZoneCache)) {
+                    try {
+                        $display = $this->displayFactory->getById($entry['displayId']);
+                        $timeZoneCache[$entry['displayId']] = (empty($display->timeZone)) ? $defaultTimezone : $display->timeZone;
+                    } catch (NotFoundException $e) {
+                        $timeZoneCache[$entry['displayId']] = $defaultTimezone;
+                    }
+                }
+                $start = $start->tz($timeZoneCache[$entry['displayId']]);
+                $end = $end->tz($timeZoneCache[$entry['displayId']]);
+            }
+            $entry['start'] = $start->format($returnDateFormat);
+            $entry['end'] = $end->format($returnDateFormat);
+            $entry['duration'] = $end->diffInSeconds($start);
+            $rows[] = $entry;
+        }
+
+        // Paging
+        if ($limit != '' && count($rows) > 0) {
+            $results = $this->store->select($select . $body, $params);
+            $this->getState()->recordsTotal = count($results);
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($rows);
+        return $this->render($request, $response);
+    }
+
+    /**
      * @param $displays
      * @param $timeZoneCache
      * @return array|int[]
