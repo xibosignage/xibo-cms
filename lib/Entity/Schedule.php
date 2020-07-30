@@ -846,7 +846,7 @@ class Schedule implements \JsonSerializable
         }
 
         // Keep a cache of schedule exclusions, so we look them up by eventId only one time per event
-        $scheduleExclusions = $this->scheduleExclusionFactory->query(null, ['eventId' => $this->eventId]);;
+        $scheduleExclusions = $this->scheduleExclusionFactory->query(null, ['eventId' => $this->eventId]);
 
         // Request month cache
         while ($fromDt < $toDt) {
