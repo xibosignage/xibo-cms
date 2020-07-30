@@ -43,7 +43,7 @@
                     <ul class="dropdown-menu">
                         {% for reports in defaults.availableReports %}
                             {% for report in reports %}
-                                {% if report.hidden == 0 and report.category == 'display'%}
+                                {% if report.hidden == 0 and report.category == 'Display'%}
                                     <li>
                                         <a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
                                     </li>
@@ -52,7 +52,7 @@
                         {% endfor %}
                     </ul>
                 </li>
-                <li role="presentation"><a class="text-success" href="#"> {% trans "Bandwidth" %} <span class="fa fa-info-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="{% trans "This chart shows an aggregate duration and number of plays for the selected Layout, Media or Event. Please select your Range and Type below. Where the Range crosses period boundaries the data is aggregated into the correct period - i.e 1 week grouped by hourly produces 24 periods." %}"></span></a></li>
+                <li role="presentation"><a class="text-success" href="#"> {% trans "Bandwidth" %}</a></li>
             </ul>
         </div>
         <div class="widget-body">

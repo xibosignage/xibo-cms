@@ -373,12 +373,12 @@ $app->get('/help/form/delete/{id}', ['\Xibo\Controller\Help','deleteForm'])->set
 //
 // Stats
 //
-$app->get('/stats/getExportStatsCount', ['\Xibo\Controller\Stats','getExportStatsCount'])->setName('stats.getExportStatsCount');
-$app->get('/report/view', ['\Xibo\Controller\Stats','displayProofOfPlayPage'])->setName('report.view');
+$app->get('/report/view', ['\Xibo\Controller\Stats','displayReportPage'])->setName('report.view');
 $app->get('/stats/form/export', ['\Xibo\Controller\Stats','exportForm'])->setName('stats.export.form');
-// For charts
+$app->get('/stats/getExportStatsCount', ['\Xibo\Controller\Stats','getExportStatsCount'])->setName('stats.getExportStatsCount');
+
+// Used in Display Manage
 $app->get('/stats/data/bandwidth', ['\Xibo\Controller\Stats','bandwidthData'])->setName('stats.bandwidth.data');
-$app->get('/stats/data/timeDisconnected', ['\Xibo\Controller\Stats','timeDisconnectedData'])->setName('stats.timeDisconnected.data');
 
 //
 // Audit Log

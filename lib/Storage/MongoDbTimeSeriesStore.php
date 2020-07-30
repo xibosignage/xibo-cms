@@ -769,7 +769,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $cursor = $collection->aggregate($options['query'], $aggregateConfig);
 
             // log query
-            $this->log->debug($cursor);
+            $this->log->debug(json_encode($options['query']));
 
             $results = $cursor->toArray();
 
