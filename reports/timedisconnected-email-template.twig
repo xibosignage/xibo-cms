@@ -58,13 +58,18 @@
 
                     <td style="width:150px; text-align: right">{{ displayData.label }}</td>
                     <td style="width:200px; background-color:#5cb85c; color:white">
-                        <div style="background-color:#03a9f4; width:{{ percent }}">
-                            {% if displayData.percent > 0 %}{{ displayData.percent }}%{% endif %}
-                        </div>
+                        {% if displayData.percent > 0 %}
+                            <table style="background-color:#03a9f4; width:{{ percent }}">
+                                <tr>
+                                    <td>
+                                        {% if displayData.percent > 0 %}{{ displayData.percent }}%{% endif %}
+                                    </td>
+                                </tr>
+
+                            </table>
+                        {% endif %}
                     </td>
-
                 {% endfor %}
-
             </tr>
         {% endfor %}
     {% endfor %}
