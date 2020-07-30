@@ -2221,7 +2221,7 @@ class Layout extends Base
         }
 
         // Save As?
-        $saveAs = $this->getSanitizer()->getString('saveAs');
+        $saveAs = $sanitizedParams->getString('saveAs');
 
         // Make sure our file name is reasonable
         if (empty($saveAs)) {
