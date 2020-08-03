@@ -37,10 +37,9 @@
     <tbody>
 
     {% set displays = tableData.displays %}
-    {% set timeDisconnected = tableData.timeDisconnected %}
+    {% set timeConnected = tableData.timeConnected %}
 
-
-    {% for key,displayStat in timeDisconnected %}
+    {% for key,displayStat in timeConnected %}
 
         <tr>
             {% for option in displays[key] %}
@@ -56,18 +55,10 @@
                         {% set percent = displayData.percent~"%" %}
                     {% endif %}
 
-                    <td style="width:150px; text-align: right">{{ displayData.label }}</td>
-                    <td style="width:200px; background-color:#5cb85c; color:white">
-                        {% if displayData.percent > 0 %}
-                            <table style="background-color:#03a9f4; width:{{ percent }}">
-                                <tr>
-                                    <td>
-                                        {% if displayData.percent > 0 %}{{ displayData.percent }}%{% endif %}
-                                    </td>
-                                </tr>
+                    <td style="width:180px; text-align: right">{{ displayData.label }} - {{ displayData.percent }}%</td>
+                    <td>
+                        <progress id="file" value="{{ displayData.percent }}" max="100"> {{ displayData.percent }}% </progress>
 
-                            </table>
-                        {% endif %}
                     </td>
                 {% endfor %}
             </tr>

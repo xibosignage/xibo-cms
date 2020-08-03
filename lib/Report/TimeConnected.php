@@ -353,14 +353,29 @@ class TimeDisconnected implements ReportInterface
 
         //
         // Get Results!
+        // with keys "result", "periods", "periodStart", "periodEnd"
         // -------------
         $result = $this->getTimeDisconnectedMySql($fromDt, $toDt, $groupByFilter, $displayIds, $campaignId, $type, $layoutId, $mediaId, $eventTag);
+
+        // $result['result'] = with keys "id", "label", "customLabel", "display", "displayId", "downtime", "periodDuration", "percent"
+        //$result['periods'] = with keys "id", "label", "customLabel", "start", "end"
+
 
         //
         // Output Results
         // --------------
         $displayIdsArrayChunk = array_chunk($displayIds, 4);
-
+//        foreach ($result['result'] as $index => $item) {
+//            var_dump($index);
+//            var_dump($item['percent']);
+//            foreach ($item as $key => $value) {
+////                var_dump($value);
+//
+//            }
+//        }
+////        die();
+//        var_dump($displayIdsArrayChunk);
+//        die();
         // Fill  Period Data  with Displays
         $timeDisconnected = [];
         foreach ($result['periods'] as $resPeriods) {
@@ -369,7 +384,7 @@ class TimeDisconnected implements ReportInterface
 
                     $temp = $resPeriods['customLabel'];
                     if (empty($timeDisconnected[$temp][$displayId]['percent'])) {
-                        $timeDisconnected[$key][$temp][$displayId]['percent'] = 0;
+                        $timeDisconnected[$key][$temp][$displayId]['percent'] = 100;
                     }
                     if (empty($timeDisconnected[$temp][$displayId]['label'])) {
                         $timeDisconnected[$key][$temp][$displayId]['label'] = $resPeriods['customLabel'];
@@ -377,7 +392,7 @@ class TimeDisconnected implements ReportInterface
 
                     foreach ($result['result'] as $res) {
                         if ($res['displayId'] == $displayId && $res['customLabel'] == $resPeriods['customLabel']) {
-                            $timeDisconnected[$key][$temp][$displayId]['percent'] = round($res['percent'], 2);
+                            $timeDisconnected[$key][$temp][$displayId]['percent'] =  100 - round($res['percent'], 2);
                             $timeDisconnected[$key][$temp][$displayId]['label'] = $resPeriods['customLabel'];
                         } else {
                             continue;

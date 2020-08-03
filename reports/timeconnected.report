@@ -1,7 +1,7 @@
 {
-  "name": "timedisconnected",
-  "description": "Time Disconnected",
-  "class": "\\Xibo\\Report\\TimeDisconnected",
+  "name": "timeconnected",
+  "description": "Time Connected",
+  "class": "\\Xibo\\Report\\TimeConnected",
   "type": "Report",
   "output_type": "table",
   "color":"orange",
