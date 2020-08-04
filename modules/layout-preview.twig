@@ -41,9 +41,15 @@
         <script src="{{ theme.rootUri() }}dist/vendor/html5preloader/html5Preloader.js?v={{ version }}&rev={{revision}}"></script>
         <script src="{{ theme.rootUri() }}dist/preview/html-preview.js?v={{ version }}&rev={{revision}}"></script>
         <script type="text/javascript">
-        
-            var emptyRegionMessage = "{% trans "Empty Region" %}"; 
-        
+
+            var previewTranslations = {};
+            // Translations we want always available
+            {% autoescape "js" %}
+                previewTranslations.actionControllerTitle = "{{ "Action Controller"|trans }}";
+                previewTranslations.navigateToLayout = "{{ "Navigate to layout with code [layoutTag]?"|trans }}";
+                previewTranslations.emptyRegionMessage = "{{ "Empty Region"|trans }}"; 
+            {% endautoescape %}
+
             (function($){
               $(document).ready(function(){
                 dsInit({{ layout.layoutId }}, {{ previewOptions|json_encode()|raw }}, true)
