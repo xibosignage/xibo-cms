@@ -1,3 +1,13 @@
+/* Common styles */
+.noselect {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+}
+
 /* Make the player fill the screen */
 html, body {
     height: 100%;
@@ -102,4 +112,88 @@ span.empty-icon {
     color: rgba(255, 255, 80, 0.6);
     display:block;
     text-align: center;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+div.action-controller {
+    position: absolute;
+    z-index: 2;
+    font-family: monospace, monospace;
+    font-size: 13px;
+    max-width: 280px;
+    background-color: #337ab7;
+    border-radius: 4px;
+    opacity: 0.9;
+    filter: alpha(opacity=90); /* IE8 and lower */
+}
+
+
+div.action-controller .action-controller-title {
+    padding: 3px;
+    color: #f3f3f3;
+    font-weight: bold;
+    cursor: grab;
+}
+
+div.action-controller .action-controller-title .title {
+    margin-right: 4px;
+}
+
+div.action-controller .action-controller-title .toggle {
+    float: right;
+    color: #f3f3f3;
+    width: 24px;
+    padding: 0;
+    background-color: #2568a0;
+    border: 1px solid #3a7db5;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+div.action-controller .action-controller-title .toggle:focus {
+    outline: none;
+}
+
+div.action-controller .action-controller-title .toggle:after {
+    content: ' \002D';
+}
+
+div.action-controller.hidden .action-controller-title .toggle:after {
+    content: ' \002B';
+}
+
+div.action-controller.hidden {
+    opacity: 0.7;
+    filter: alpha(opacity=70); /* IE8 and lower */
+}
+
+div.action-controller.hidden .action {
+    display: none;
+}
+
+div.action-controller .action {
+    position: relative;
+    height: 20px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    background-color: #273759;
+    padding: 2px 4px;
+    color: #f3f3f3;
+}
+
+div.action-controller .action:not([triggerType="webhook"]) {
+    display: none;
+}
+
+div.action-controller .action .action-row-title {
+    width: 75px;
+    display: inline-block;
+}
+
+/* Iframe click fix */
+iframe {
+    pointer-events: none;
 }
