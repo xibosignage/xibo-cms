@@ -80,7 +80,7 @@
                 <div class="XiboData">
                     <table id="" class="">
                         <tbody>
-                        {% for key,displayStat in resultObj.timeDisconnected %}
+                        {% for key,displayStat in resultObj.timeConnected %}
                             <tr>
                                 {% for option in resultObj.displays[key] %}
                                     <th colspan="2">{{ option }} </th>
@@ -95,8 +95,8 @@
                                         {% endif %}
 
                                         <td class="display-label" style="width:300px">{{ displayData.label }}</td>
-                                        <td class="display-percent" style="width:300px; background-color:#5cb85c; color:white">
-                                            <div style="background-color:#03a9f4; width:{{ percent }}">
+                                        <td class="display-percent" style="width:300px; background-color:#03a9f4; color:white">
+                                            <div style="background-color:#5cb85c; width:{{ percent }}">
                                                 {% if displayData.percent > 0 %}{{ displayData.percent }}%{% endif %}
                                             </div>
                                         </td>
