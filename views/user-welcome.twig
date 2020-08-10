@@ -616,14 +616,6 @@
                 }
             ]
         });
-
-        if (hasSeenNewUserWizard === 0) {
-            restartTour(tour);
-        }
-
-        $("#reshowWelcomeMenuItem").on("click", function() {
-            restartTour(tour, true, true);
-        });
     });
 
     function tourStepBroken(tour, stepNumber) {

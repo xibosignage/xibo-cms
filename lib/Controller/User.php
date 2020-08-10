@@ -196,6 +196,56 @@ class User extends Base
     }
 
     /**
+     * Home Page
+     * this redirects to the appropriate page for this user.
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function home(Request $request, Response $response)
+    {
+        // Should we show this user the welcome page?
+        if ($this->getUser()->newUserWizard == 0) {
+            return $response->withRedirect($this->urlFor($request, 'welcome.view'));
+        }
+
+        // User wizard seen, go to home page
+        $this->getLog()->debug('Showing the homepage: ' . $this->getUser()->homePageId);
+
+        $page = $this->pageFactory->getById($this->getUser()->homePageId);
+
+        // Check to see if this user has permission for this page, and if not show a meaningful error telling them what
+        // has happened.
+        if (!$this->getUser()->checkViewable($page)) {
+            throw new \Xibo\Support\Exception\AccessDeniedException(__('You do not have permission for your homepage, please contact your administrator'));
+        }
+
+        return $response->withRedirect($this->urlFor($request, $page->getName() . '.view'));
+    }
+
+    /**
+     * Welcome Page
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function welcome(Request $request, Response $response)
+    {
+        $this->getState()->template = 'welcome-page';
+
+        // Mark the page as seen
+        if ($this->getUser()->newUserWizard == 0) {
+            $this->getUser()->newUserWizard = 1;
+            $this->getUser()->save(['validate' => false]);
+        }
+
+        return $this->render($request, $response);
+    }
+
+    /**
      * Controls which pages are to be displayed
      * @param Request $request
      * @param Response $response
