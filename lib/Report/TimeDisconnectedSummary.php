@@ -206,7 +206,7 @@ class TimeDisconnectedSummary implements ReportInterface
         $tags = $sanitizedParams->getString('tags');
         $onlyLoggedIn = $sanitizedParams->getCheckbox('onlyLoggedIn') == 1;
 
-        $currentDate = Carbon::now()->startOfDay()->format('Y-m-d');
+        $currentDate = Carbon::now()->startOfDay();
 
         //
         // From and To Date Selection
@@ -247,14 +247,13 @@ class TimeDisconnectedSummary implements ReportInterface
                 $fromDt = $sanitizedParams->getDate('fromDt', ['default' => $sanitizedParams->getDate('availabilityFromDt')]);
                 $toDt = $sanitizedParams->getDate('toDt', ['default' => $sanitizedParams->getDate('availabilityToDt')]);
 
-                // fromDt is always start of selected day
                 $fromDt = $fromDt->startOfDay();
 
                 // If toDt is current date then make it current datetime
-                if ($toDt->startOfDay()->format('Y-m-d') == $currentDate) {
+                if ($toDt->format('Y-m-d') == $currentDate->format('Y-m-d')) {
                     $toDt = Carbon::now();
                 } else {
-                    $toDt =  Carbon::now()->startOfDay();
+                    $toDt = $toDt->addDay()->startOfDay();
                 }
 
                 break;

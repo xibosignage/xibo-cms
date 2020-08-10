@@ -43,7 +43,7 @@
                     <ul class="dropdown-menu">
                         {% for reports in defaults.availableReports %}
                             {% for report in reports %}
-                                {% if report.hidden == 0 and report.category == 'library'%}
+                                {% if report.hidden == 0 and report.category == 'Library'%}
                                     <li>
                                         <a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
                                     </li>
