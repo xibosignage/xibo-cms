@@ -18,7 +18,8 @@ describe('Dashboard', function() {
         cy.contains('Latest News');
     });
 
-    it('should show the welcome tutorial, and then disable it', function() {
+    // TODO: replace
+    /*it('should show the welcome tutorial, and then disable it', function() {
         cy.server();
         cy.route('POST', '/user/welcome').as('showTour');
         cy.route('PUT', '/user/welcome').as('disableTour');
@@ -43,5 +44,5 @@ describe('Dashboard', function() {
             cy.wait(500);
             cy.get('.popover.tour').should('not.be.visible');
         });
-    });
+    });*/
 });
