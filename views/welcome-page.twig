@@ -26,8 +26,66 @@
 {% block title %}{{ "Welcome"|trans }} | {% endblock %}
 
 {% block pageContent %}
-    <h1>WIP: Welcome</h1>
+
+    <div class="container">
+    <div class="jumbotron">
+        <h1>WIP <small>{% trans "Welcome" %}</small></h1>
+        <p>{% trans "We'd like to take you on a short tour of the CMS using the tutorials listed below to get you up and running in no time. If you already know your way around, please skip." %}</p>
+    </div>
+    </div>
+
+    <div>
+        <div class="col-xs-4">
+            <button type="button" class="btn btn-block btn-info btn-tour" data-tour-name="mainTour">Main Tour&nbsp;</button>
+        </div>
+        <div class="col-xs-4">
+            <button type="button" class="btn btn-block btn-info btn-tour" data-tour-name="authDisplayTour">Authorising Displays&nbsp;</button>
+        </div>
+        <div class="col-xs-4">
+            <button type="button" class="btn btn-block btn-info btn-tour" data-tour-name="schedulingTour">Scheduling Tour&nbsp;</button>
+        </div>
+    </div>
+    
 {% endblock %}
 
 {% block javaScript %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            console.log(localStorage);
+            $('.btn-tour').click(function() {
+                // Handle click to start tour
+                var startTourResult = startTour(cmsTours[$(this).data('tourName')]);
+
+                // Update buttons status
+                if(startTourResult) {
+                    updateButtonStatus();
+                }
+            });
+
+            // Update buttons status
+            updateButtonStatus();
+        });
+
+
+        function updateButtonStatus() {
+            $('.btn-tour').each(function() {
+                var tourName = $(this).data('tourName');
+                var tourSeen = (localStorage[tourName + '_seen'] == 1);
+                var tourPlaying = (localStorage.tour_playing == tourName);
+                console.log('Update tour btn: ' + tourName + ' - ' + tourSeen + ' - ' + tourPlaying);
+
+                // Reset to original state by removing all temporary classes/elements
+                $(this).find('.fa-check, .fa-play').remove();
+                $(this).removeClass('btn-success btn-warning').addClass('btn-info');
+
+                if(tourPlaying) {
+                    // Mark tour as playing
+                    $(this).removeClass('btn-info btn-success').addClass('btn-warning').append('<span class="fa fa-play" title="{% trans "Tour playing!" %}"></span>');
+                } else if(tourSeen) {
+                    // Mark tour as seen
+                    $(this).removeClass('btn-info btn-warning').addClass('btn-success').append('<span class="fa fa-check" title="{% trans "Tour seen!" %}"></span>');
+                }
+            });
+        }
+    </script>
 {% endblock %}
