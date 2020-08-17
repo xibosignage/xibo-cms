@@ -20,37 +20,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use Slim\Http\Response as Response;
-use Slim\Http\ServerRequest as Request;
-
 // Special "root" route
-$app->get('/', function (Request $request, Response $response) use ($app) {
-
-    // Different controller depending on the homepage of the user.
-    $app->getContainer()->get('configService')->setDependencies(
-        $app->getContainer()->get('store'),
-        $app->getContainer()->get('rootUri')
-    );
-
-    $routeParser = $app->getRouteCollector()->getRouteParser();
-
-    /* @var \Xibo\Entity\User $user */
-    $user = $app->getContainer()->get('user');
-
-    $app->getContainer()->get('logger')->debug('Showing the homepage: ' . $user->homePageId);
-
-    /** @var \Xibo\Entity\Page $page */
-    $page = $app->getContainer()->get('pageFactory')->getById($user->homePageId);
-
-    // Check to see if this user has permission for this page, and if not show a meaningful error telling them what
-    // has happened.
-    if (!$user->checkViewable($page)) {
-        throw new \Xibo\Support\Exception\AccessDeniedException(__('You do not have permission for your homepage, please contact your administrator'));
-    }
-
-    return $response->withRedirect($routeParser->urlFor($page->getName() . '.view'));
-
-})->setName('home');
+$app->get('/', ['\Xibo\Controller\User', 'home'])->setName('home');
+$app->get('/welcome', ['\Xibo\Controller\User', 'welcome'])->setName('welcome.view');
 
 // Dashboards
 $app->get('/statusdashboard', ['\Xibo\Controller\StatusDashboard','displayPage'])->setName('statusdashboard.view');

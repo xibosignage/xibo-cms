@@ -1,0 +1,91 @@
+{#
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block title %}{{ "Welcome"|trans }} | {% endblock %}
+
+{% block pageContent %}
+
+    <div class="container">
+    <div class="jumbotron">
+        <h1>WIP <small>{% trans "Welcome" %}</small></h1>
+        <p>{% trans "We'd like to take you on a short tour of the CMS using the tutorials listed below to get you up and running in no time. If you already know your way around, please skip." %}</p>
+    </div>
+    </div>
+
+    <div>
+        <div class="col-xs-4">
+            <button type="button" class="btn btn-block btn-info btn-tour" data-tour-name="mainTour">Main Tour&nbsp;</button>
+        </div>
+        <div class="col-xs-4">
+            <button type="button" class="btn btn-block btn-info btn-tour" data-tour-name="authDisplayTour">Authorising Displays&nbsp;</button>
+        </div>
+        <div class="col-xs-4">
+            <button type="button" class="btn btn-block btn-info btn-tour" data-tour-name="schedulingTour">Scheduling Tour&nbsp;</button>
+        </div>
+    </div>
+    
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            console.log(localStorage);
+            $('.btn-tour').click(function() {
+                // Handle click to start tour
+                var startTourResult = startTour(cmsTours[$(this).data('tourName')]);
+
+                // Update buttons status
+                if(startTourResult) {
+                    updateButtonStatus();
+                }
+            });
+
+            // Update buttons status
+            updateButtonStatus();
+        });
+
+
+        function updateButtonStatus() {
+            $('.btn-tour').each(function() {
+                var tourName = $(this).data('tourName');
+                var tourSeen = (localStorage[tourName + '_seen'] == 1);
+                var tourPlaying = (localStorage.tour_playing == tourName);
+                console.log('Update tour btn: ' + tourName + ' - ' + tourSeen + ' - ' + tourPlaying);
+
+                // Reset to original state by removing all temporary classes/elements
+                $(this).find('.fa-check, .fa-play').remove();
+                $(this).removeClass('btn-success btn-warning').addClass('btn-info');
+
+                if(tourPlaying) {
+                    // Mark tour as playing
+                    $(this).removeClass('btn-info btn-success').addClass('btn-warning').append('<span class="fa fa-play" title="{% trans "Tour playing!" %}"></span>');
+                } else if(tourSeen) {
+                    // Mark tour as seen
+                    $(this).removeClass('btn-info btn-warning').addClass('btn-success').append('<span class="fa fa-check" title="{% trans "Tour seen!" %}"></span>');
+                }
+            });
+        }
+    </script>
+{% endblock %}

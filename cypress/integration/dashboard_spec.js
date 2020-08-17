@@ -18,10 +18,8 @@ describe('Dashboard', function() {
         cy.contains('Latest News');
     });
 
-    it('should show the welcome tutorial, and then disable it', function() {
+    it('should go to the welcome page, show a tutorial, and then disable it', function() {
         cy.server();
-        cy.route('POST', '/user/welcome').as('showTour');
-        cy.route('PUT', '/user/welcome').as('disableTour');
 
         cy.visit('/statusdashboard');
 
@@ -31,17 +29,16 @@ describe('Dashboard', function() {
         // Click Reshow welcome
         cy.get('#reshowWelcomeMenuItem').click();
 
-        cy.wait('@showTour');
+        cy.url().should('include', 'welcome');
 
-        cy.get('.popover.tour').contains('Welcome to the Xibo CMS!');
+        cy.get('button[data-tour-name="mainTour').click();
+
+        cy.get('.popover.tour').should('to.be.visible');
 
         // Click to disable welcome tour
         cy.get('button[data-role="end"]').click();
-        cy.wait('@disableTour');
 
-        cy.visit('/statusdashboard').then(() => {
-            cy.wait(500);
-            cy.get('.popover.tour').should('not.be.visible');
-        });
+        cy.wait(500);
+        cy.get('.popover.tour').should('not.be.visible');
     });
 });

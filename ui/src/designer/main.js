@@ -1870,7 +1870,13 @@ lD.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
  * Reset tour
  */
 lD.resetTour = function() {
-    layoutDesignerTour.restart();
+    if(localStorage.tour_playing == undefined) {
+        if(cmsTours.layoutDesignerTour.ended()) {
+            cmsTours.layoutDesignerTour.restart();
+        } else {
+            cmsTours.layoutDesignerTour.start();
+        }
+    }
     toastr.info(editorsTrans.resetTourNotification);
 };
 
