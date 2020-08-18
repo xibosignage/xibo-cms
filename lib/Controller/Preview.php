@@ -74,7 +74,14 @@ class Preview extends Base
      */
     public function show(Request $request, Response $response, $id )
     {
-        $layout = $this->layoutFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $findByCode = $sanitizedParams->getInt('findByCode');
+        
+        if($findByCode == 1) {
+            $layout = $this->layoutFactory->getByCode($id);
+        } else {
+            $layout = $this->layoutFactory->getById($id);
+        }
 
         if (!$this->getUser()->checkViewable($layout)) {
             throw new AccessDeniedException();
@@ -88,7 +95,8 @@ class Preview extends Base
                 'getResourceUrl' => $this->urlFor($request,'module.getResource', ['regionId' => ':regionId', 'id' => ':id']),
                 'libraryDownloadUrl' => $this->urlFor($request,'library.download'),
                 'layoutBackgroundDownloadUrl' => $this->urlFor($request,'layout.download.background', ['id' => ':id']),
-                'loaderUrl' => $this->getConfig()->uri('img/loader.gif')
+                'loaderUrl' => $this->getConfig()->uri('img/loader.gif'),
+                'layoutPreviewUrl' => $this->urlFor($request,'layout.preview', ['id' => '[layoutCode]'])
             ]
         ]);
 

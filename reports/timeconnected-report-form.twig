@@ -51,8 +51,8 @@
 
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="" id="reportAddBtn"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
-        <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}?reportName=timedisconnected"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
-        <li class="btn btn-primary btn-xs"><a class="btns" href="{{ url_for("reportschedule.view") }}?reportName=timedisconnected"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
+        <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}?reportName=timeconnected"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
+        <li class="btn btn-primary btn-xs"><a class="btns" href="{{ url_for("reportschedule.view") }}?reportName=timeconnected"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
     </ul>
 
 {% endblock %}
@@ -75,7 +75,7 @@
                         {% endfor %}
                     </ul>
                 </li>
-                <li role="presentation"><a class="text-success" href="#"> {% trans "Time Disconnected" %} </a></li>
+                <li role="presentation"><a class="text-success" href="#"> {% trans "Time Connected" %} </a></li>
             </ul>
         </div>
         <div class="widget-body">
@@ -91,7 +91,7 @@
                     </div>
                 </div>
                 <div class="XiboFilterCustom">
-                    <div class="FilterDiv" id="timedisconnected">
+                    <div class="FilterDiv" id="timeconnected">
                         <form class="form-inline">
                             {% set title %}{% trans "Filter" %}{% endset %}
                             {% set range %}{% trans "Select a range" %}{% endset %}
@@ -182,7 +182,7 @@
                 url: "{{ url_for("report.data", {name: reportName}) }}",
                 cache: false,
                 dataType: "json",
-                data: $("#timedisconnected").find("form").serialize(),
+                data: $("#timeconnected").find("form").serialize(),
                 success: function(response) {
 
                     setTimeout(function() {
@@ -197,7 +197,7 @@
                         return;
                     }
 
-                    $.each(response.extra.table.timeDisconnected, function(index, displayStat) {
+                    $.each(response.extra.table.timeConnected, function(index, displayStat) {
 
                         let $displayHeader = $('<tr>');
                         $.each(response.extra.table.displays[index], function(i, displayName) {
@@ -217,8 +217,8 @@
                                 }
 
                                 let $label = $('<td class="display-label" style="width:300px">').text(displayData.label);
-                                let $percentage = $('<td class="display-percent" style="width:300px">').css({"background-color": "#5cb85c",  "color": "white"}).append(
-                                    $('<div>').css({"background-color": "#03a9f4", "width": percent}).text(percent)
+                                let $percentage = $('<td class="display-percent" style="width:300px">').css({"background-color": "#03a9f4",  "color": "white"}).append(
+                                    $('<div>').css({"background-color": "#5cb85c", "width": percent}).text(percent)
                                 );
 
                                 $tr.append($label);
@@ -249,7 +249,7 @@
                 // Schedule button enable/disable - start
                 var anchorReportAddBtn = $("a#reportAddBtn");
 
-                anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?reportName=timedisconnected" );
+                anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?reportName=timeconnected" );
             };
 
 
@@ -283,7 +283,7 @@
             checkEnableSchedule();
 
             // Bind to form change
-            $("#timedisconnected").on('change', function() {
+            $("#timeconnected").on('change', function() {
                 checkEnableSchedule();
             });
 

@@ -23,10 +23,10 @@ use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
- * Class TimeDisconnected
+ * Class TimeConnected
  * @package Xibo\Report
  */
-class TimeDisconnected implements ReportInterface
+class TimeConnected implements ReportInterface
 {
 
     use ReportTrait;
@@ -103,7 +103,7 @@ class TimeDisconnected implements ReportInterface
     /** @inheritdoc */
     public function getReportEmailTemplate()
     {
-        return 'timedisconnected-email-template.twig';
+        return 'timeconnected-email-template.twig';
     }
 
     /** @inheritdoc */
@@ -123,7 +123,7 @@ class TimeDisconnected implements ReportInterface
         }
 
         return [
-            'template' => 'timedisconnected-report-form',
+            'template' => 'timeconnected-report-form',
             'data' =>  [
                 'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
                 'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
@@ -145,7 +145,7 @@ class TimeDisconnected implements ReportInterface
         $data['hiddenFields'] =  json_encode([
         ]);
 
-        $data['reportName'] = 'timedisconnected';
+        $data['reportName'] = 'timeconnected';
 
         $groups = [];
         $displays = [];
@@ -162,7 +162,7 @@ class TimeDisconnected implements ReportInterface
         $data['displayGroups'] = $groups;
 
         return [
-            'template' => 'timedisconnected-schedule-form-add',
+            'template' => 'timeconnected-schedule-form-add',
             'data' => $data
         ];
     }
@@ -224,7 +224,7 @@ class TimeDisconnected implements ReportInterface
     {
         // Return data to build chart
         return array_merge($json, [
-            'template' => 'timedisconnected-report-preview',
+            'template' => 'timeconnected-report-preview',
             'savedReport' => $savedReport,
             'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat()),
             'resultObj' => $json['table'],
@@ -353,6 +353,7 @@ class TimeDisconnected implements ReportInterface
 
         //
         // Get Results!
+        // with keys "result", "periods", "periodStart", "periodEnd"
         // -------------
         $result = $this->getTimeDisconnectedMySql($fromDt, $toDt, $groupByFilter, $displayIds, $campaignId, $type, $layoutId, $mediaId, $eventTag);
 
@@ -362,23 +363,23 @@ class TimeDisconnected implements ReportInterface
         $displayIdsArrayChunk = array_chunk($displayIds, 4);
 
         // Fill  Period Data  with Displays
-        $timeDisconnected = [];
+        $timeConnected = [];
         foreach ($result['periods'] as $resPeriods) {
             foreach ($displayIdsArrayChunk as $key => $display) {
                 foreach ($display as $displayId) {
 
                     $temp = $resPeriods['customLabel'];
-                    if (empty($timeDisconnected[$temp][$displayId]['percent'])) {
-                        $timeDisconnected[$key][$temp][$displayId]['percent'] = 0;
+                    if (empty($timeConnected[$temp][$displayId]['percent'])) {
+                        $timeConnected[$key][$temp][$displayId]['percent'] = 100;
                     }
-                    if (empty($timeDisconnected[$temp][$displayId]['label'])) {
-                        $timeDisconnected[$key][$temp][$displayId]['label'] = $resPeriods['customLabel'];
+                    if (empty($timeConnected[$temp][$displayId]['label'])) {
+                        $timeConnected[$key][$temp][$displayId]['label'] = $resPeriods['customLabel'];
                     }
 
                     foreach ($result['result'] as $res) {
                         if ($res['displayId'] == $displayId && $res['customLabel'] == $resPeriods['customLabel']) {
-                            $timeDisconnected[$key][$temp][$displayId]['percent'] = round($res['percent'], 2);
-                            $timeDisconnected[$key][$temp][$displayId]['label'] = $resPeriods['customLabel'];
+                            $timeConnected[$key][$temp][$displayId]['percent'] =  100 - round($res['percent'], 2);
+                            $timeConnected[$key][$temp][$displayId]['label'] = $resPeriods['customLabel'];
                         } else {
                             continue;
                         }
@@ -397,7 +398,7 @@ class TimeDisconnected implements ReportInterface
         // Return data to build chart
         return [
             'table' => [
-                'timeDisconnected' => $timeDisconnected,
+                'timeConnected' => $timeConnected,
                 'displays' => $displays
             ],
             'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
