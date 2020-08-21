@@ -11,7 +11,7 @@
         let libraryUpload = {{ libraryUpload|json_encode|raw }};
         var librarySearchUrl = "{{ url_for("library.search") }}";
         var libraryAddUrl = "{{ url_for("library.add") }}";
-        var imageDownloadUrl = "{{ url_for("library.download") }}?preview=1";
+        var imageDownloadUrl = "{{ url_for("library.download", {id: ':id'}) }}?preview=1";
         var uploadFormUpdateAllDefault = {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %};
         var uploadFormDeleteOldDefault = {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %};
         var tooltipDelay = {'show': 250, 'hide': 0};
