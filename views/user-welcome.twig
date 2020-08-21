@@ -32,7 +32,7 @@
         no_nav_template = "<div class='popover popover-normal-width tour'><div class='arrow'></div><button type='button' data-role='end' class='close padminus'>&times;</button><h3 class='popover-title'></h3><div class='popover-content popover-content-large'></div>";
         start_template = "<div class='popover popover-double-width tour'><div class='arrow'></div><h3 class='popover-title'></h3><div class='popover-content popover-content-large'></div><div class='popover-navigation'><button class='btn btn-default btn-success' data-role='next'>{% trans "Get started with the basics" %}</button><button class='btn btn-default' data-role='end'>{% trans "Skip this tutorial" %}</button>";
 
-        var cmsTours = window.cmsTours = {
+        window.cmsTours = {
             mainTour: mainTour,
             authDisplayTour: authDisplayTour,
             schedulingTour: schedulingTour,
@@ -82,7 +82,8 @@
         // Create tour
         cmsTours.mainTour = new Tour({
             name: 'mainTour',
-            debug: true,
+            debug: false,
+            keyboard: false,
             framework: "bootstrap3", 
             showProgressBar: false,     // don't show the progress bar on this step only
             showProgressText: false,    // don't show the progress text on this step only
@@ -519,7 +520,8 @@
 
         // Layout Designer tour
         cmsTours.layoutDesignerTour = new Tour({
-            debug: true,
+            debug: false,
+            keyboard: false,
             name: 'layoutDesignerTour',
             framework: "bootstrap3", 
             showProgressBar: false,     // don't show the progress bar on this step only
@@ -669,6 +671,7 @@
         cmsTours.schedulingTour = new Tour({
             name: 'schedulingTour',
             debug: false,
+            keyboard: false,
             framework: "bootstrap3", 
             showProgressBar: false,     // don't show the progress bar on this step only
             showProgressText: false,    // don't show the progress text on this step only
@@ -778,7 +781,7 @@
                     placement: "top",
                     reflex: 'focusout',
                     template: no_nav_template,
-                    onElementUnavailableStep: 5
+                    onElementUnavailableStep: 10
                 },
                 { // 10
                     title: "",
@@ -814,7 +817,7 @@
                     placement: "top",
                     reflex: 'focusout',
                     template: no_nav_template,
-                    onElementUnavailableStep: 5
+                    onElementUnavailableStep: 14
                 },
                 { // 14
                     title: "",
@@ -895,6 +898,7 @@
         cmsTours.authDisplayTour = new Tour({
             name: 'authDisplayTour',
             debug: false,
+            keyboard: false,
             framework: "bootstrap3", 
             showProgressBar: false,     // don't show the progress bar on this step only
             showProgressText: false,    // don't show the progress text on this step only
@@ -969,14 +973,14 @@
                     template: next_template
                 },
                 { 
-                    element: '#displays tbody tr td button.dropdown-toggle',
+                    element: '#displays tbody tr:first td button.dropdown-toggle',
                     content: "{% trans "Use the row menu for the Display!" %}",
                     reflex: true,
                     placement: "left",
                     template: no_nav_template
                 },
                 { // 8
-                    element: '#displays tbody tr td ul.dropdown-menu .display_button_authorise',
+                    element: '#displays tbody tr:first td ul.dropdown-menu .display_button_authorise',
                     content: "{% trans "Now select Authorise!" %}",
                     reflex: true,
                     placement: "left",
@@ -991,7 +995,7 @@
                     template: no_nav_template
                 },
                 { // 10
-                    element: '#displays tbody tr td button.dropdown-toggle',
+                    element: '#displays tbody tr:first td button.dropdown-toggle',
                     content: "{% trans "You may also need to select a Default Layout for your new Player to run, so that in the event you have no scheduled content, the Player will always have a Layout to show." %}",
                     placement: "left",
                     template: next_template,
@@ -1001,7 +1005,7 @@
                     }
                 },
                 { 
-                    element: '#displays tbody tr td button.dropdown-toggle',
+                    element: '#displays tbody tr:first td button.dropdown-toggle',
                     content: "{% trans "Set this by using the row menu and selecting Default Layout, use the drop down to select the Layout to use." %}",
                     placement: "bottom",
                     template: next_template
@@ -1099,8 +1103,8 @@
         localStorage.removeItem('tour_playing');
 
         // if we're in welcome page, call update status for the buttons status
-        if(typeof updateButtonStatus == "function") {
-            updateButtonStatus();
+        if(typeof updateTourCardStatus == "function") {
+            updateTourCardStatus();
         }
     }
 
