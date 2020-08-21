@@ -132,8 +132,10 @@
 
     <div class="container-fluid welcome-container">
         <div class="col-xs-12">
-            <h2>{{ "Welcome to the [[PRODUCTNAME]] CMS"|trans|replace({'[[PRODUCTNAME]]': theme.getThemeConfig('theme_title') }) }}</h2>
-            <p>{{ "The [[PRODUCTNAME]] system comprises a central content management system (the CMS you are currently logged into) and Player software to download content from the CMS and play on screens."|trans|replace({'[[PRODUCTNAME]]': theme.getThemeConfig('theme_title') }) }}</p>
+
+            {% set productName = theme.getThemeConfig('theme_title') %}
+            <h2>{% trans %}Welcome to the {{productName}} CMS{% endtrans %}</h2>
+            <p>{% trans %}The {{productName}} system comprises a central content management system (the CMS you are currently logged into) and Player software to download content from the CMS and play on screens.{% endtrans %}</p>
         </div>
 
         <div class="col-xs-12">
@@ -151,21 +153,21 @@
         <div class="tour-cards-section">
             <div class="col-xs-12 col-sm-6 col-md-4 tour-card-container">
                 <div class="tour-card tour-link" data-tour-name="authDisplayTour">
-                    <img class="tour-image" src="{{ theme.rootUri() }}theme/default/img/tours/authDisplayTour.png">
+                    <img class="tour-image" src="{{ theme.uri("img/tours/authDisplayTour.png") }}">
                     <div class="tour-title">{% trans "Authorise Displays..." %}</div>
                     <div class="tour-text">{% trans "Once you have chosen your Player and installed the software, this tour will take you through the steps needed to connect and authorise Displays with your CMS." %}</div>
                 </div>
             </div>
             <div class="col-xs-12 col-sm-6 col-md-4 tour-card-container">
                 <div class="tour-card tour-link" data-tour-name="mainTour">
-                    <img class="tour-image" src="{{ theme.rootUri() }}theme/default/img/tours/mainTour.png">
+                    <img class="tour-image" src="{{ theme.uri("img/tours/mainTour.png") }}">
                     <div class="tour-title">{% trans "Create Content..." %}</div>
                     <div class="tour-text">{% trans "Do you want to see how easy it is to create a basic Layout using the Layout designer? This tutorial will take you through the basics, step by step so you can start creating your own content with ease." %}</div>
                 </div>
             </div>
             <div class="col-xs-12 col-sm-6 col-md-4 tour-card-container">
                 <div class="tour-card tour-link" data-tour-name="schedulingTour">
-                    <img class="tour-image" src="{{ theme.rootUri() }}theme/default/img/tours/schedulingTour.png">
+                    <img class="tour-image" src="{{ theme.uri("img/tours/schedulingTour.png") }}">
                     <div class="tour-title">{% trans "Get Scheduling..." %}</div>
                     <div class="tour-text">{% trans "Get your content seen at the right time in the right place using flexible scheduling capabilities. This tutorial will take you through each stage needed to create scheduled events with confidence." %}</div>
                 </div>
