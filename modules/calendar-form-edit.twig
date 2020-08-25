@@ -243,7 +243,7 @@
                                             data-width="100%"
                                             data-linked-to="template"
                                             data-search-url="{{ url_for("library.search") }}"
-                                            data-image-url="{{ url_for("library.download") }}?preview=1">
+                                            data-image-url="{{ url_for("library.download", {id: ':id'}) }}?preview=1">
                                     </select>
                                 </div>
                             </div>
@@ -312,7 +312,7 @@
                                                 data-width="100%"
                                                 data-linked-to="currentEventTemplate"
                                                 data-search-url="{{ url_for("library.search") }}"
-                                                data-image-url="{{ url_for("library.download") }}?preview=1">
+                                                data-image-url="{{ url_for("library.download", {id: ':id'}) }}?preview=1">
                                         </select>
                                     </div>
                                 </div>

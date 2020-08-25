@@ -53,7 +53,7 @@
         {% if exactTag %}
             <div>
                 <div class="input-group">
-                    <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputInline" {{ validation }} />
+                    <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputInline" data-auto-complete-url="{{ url_for('tag.search') }}" {{ validation }} />
                     <span class="input-group-addon">
                         <input title="{{ exactTagTitle }}" type="checkbox" id="{{ exactTag }}" name="{{ exactTag }}">
                     </span>

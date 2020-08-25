@@ -128,3 +128,7 @@ require('leaflet-search');
 window.L = require('leaflet');
 window.leafletPip = require('@mapbox/leaflet-pip');
 
+// typeahead
+window.Bloodhound = require('corejs-typeahead/dist/bloodhound.min.js');
+require('corejs-typeahead/dist/typeahead.jquery.min.js');
+

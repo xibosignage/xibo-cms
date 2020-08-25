@@ -917,7 +917,27 @@ ul li.active.tab-design:hover a {
     background-color: #5bc0de;
     border-color: #46b8da;
     font-weight: 700;
-    border-radius: 10px;
+    border-radius: 8px;
+}
+
+/*
+ * Tag auto-complete
+ */
+ .tt-menu {
+    padding: 4px 6px;
+    border: 1px solid #afafaf;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    background-color: #f9f9f9d6;
+}
+
+.tt-menu .tt-selectable {
+    cursor: pointer;
+    color: #555;
+}
+
+.tt-menu .tt-selectable:hover {
+    color: #000;
 }
 
 /*
