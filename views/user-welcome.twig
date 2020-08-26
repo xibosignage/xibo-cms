@@ -11,9 +11,6 @@
     .padminus {
         padding-right: 5px !important;
     }
-    .popover-content-large{
-        font-size: large !important;
-    }
     .tour .popover-title{
         background-color: #b2bfdc;
     }
@@ -25,12 +22,13 @@
     {% set horizontalNav = currentUser.getOptionValue("navigationMenuPosition", theme.getSetting("NAVIGATION_MENU_POSITION", "vertical")) == "horizontal" %}
 
     $(document).ready(function () {
-        var layoutDesignerTour, mainTour, authDisplayTour, schedulingTour, no_nav_template, start_template, next_template, final_template;
-        final_template = "<div class='popover popover-double-width tour'><div class='arrow'></div><button type='button' data-role='end' class='close padminus'>&times;</button><h3 class='popover-title'></h3><div class='popover-content popover-content-large'></div><div class='popover-navigation'><button class='btn btn-primary' data-role='backToWelcome'>{% trans "Go back to Welcome Page!" %}</button><button class='btn btn-default' data-role='end'>{% trans "Close" %}</button>";
-        final_template_2 = "<div class='popover popover-double-width tour'><div class='arrow'></div><button type='button' data-role='end' class='close padminus'>&times;</button><h3 class='popover-title'></h3><div class='popover-content popover-content-large'></div><div class='popover-navigation'><button class='btn btn-primary' <button class='btn btn-default' data-role='end'>{% trans "Close" %}</button>";
-        next_template = "<div class='popover popover-normal-width tour'><div class='arrow'></div><button type='button' data-role='end' class='close padminus'>&times;</button><h3 class='popover-title'></h3><div class='popover-content popover-content-large'></div><div class='popover-navigation'><button class='btn btn-default btn-success pull-right' data-role='next'>{% trans "Next" %}</button>";
-        no_nav_template = "<div class='popover popover-normal-width tour'><div class='arrow'></div><button type='button' data-role='end' class='close padminus'>&times;</button><h3 class='popover-title'></h3><div class='popover-content popover-content-large'></div>";
-        start_template = "<div class='popover popover-double-width tour'><div class='arrow'></div><h3 class='popover-title'></h3><div class='popover-content popover-content-large'></div><div class='popover-navigation'><button class='btn btn-default btn-success' data-role='next'>{% trans "Get started with the basics" %}</button><button class='btn btn-default' data-role='end'>{% trans "Skip this tutorial" %}</button>";
+        var layoutDesignerTour, mainTour, authDisplayTour, schedulingTour, no_nav_template, start_template, next_template, final_template, end_tour_message;
+        final_template = "<div class='popover popover-double-width tour'><div class='arrow'></div><h3 class='popover-title'></h3><div class='popover-content'></div><div class='popover-navigation'><button class='btn btn-sm btn-primary pull-right' data-role='backToWelcome'>{% trans "Go back to Welcome Page!" %}</button><button class='btn btn-sm btn-default pull-left' data-role='end'>{% trans "Close" %}</button></div></div>";
+        final_template_2 = "<div class='popover popover-double-width tour'><div class='arrow'></div><h3 class='popover-title'></h3><div class='popover-content'></div><div class='popover-navigation'><button class='btn btn-sm btn-default' data-role='end'>{% trans "End Tour" %}</button></div></div>";
+        next_template = "<div class='popover popover-normal-width tour'><div class='arrow'></div><h3 class='popover-title'></h3><div class='popover-content'></div><div class='popover-navigation'><button class='btn btn-sm btn-default pull-left' data-role='end'>{% trans "End Tour" %}</button><button class='btn btn-sm btn-primary pull-right' data-role='next'>{% trans "Next" %}</button></div></div>";
+        no_nav_template = "<div class='popover popover-normal-width tour'><div class='arrow'></div><button type='button' data-role='end' class='close padminus'>&times;</button><h3 class='popover-title'></h3><div class='popover-content'></div></div>";
+        start_template = "<div class='popover popover-double-width tour'><div class='arrow'></div><h3 class='popover-title'></h3><div class='popover-content popover-content-large'></div><div class='popover-navigation'><button class='btn btn-sm btn-primary' data-role='next'>{% trans "Get started with the basics" %}</button><button class='btn btn-sm btn-default' data-role='end'>{% trans "Skip this tutorial" %}</button></div></div>";
+        end_tour_message = '{% trans "End Tour!" %}';
 
         window.cmsTours = {
             mainTour: mainTour,
@@ -126,7 +124,7 @@
                     container: '.bootbox',
                     title: "",
                     content: "{% trans "Name your layout so you can easily identify it for scheduling." %}",
-                    reflex: "blur",
+                    reflex: "click change",
                     template: no_nav_template,
                     onElementUnavailableStep: 3
                 },
@@ -218,7 +216,7 @@
                 {
                     title: "",
                     content: "{% trans "The Toolbar includes buttons for you to add media items straight from your Library, apply actions using the Tools menu and assign Widgets to your Layouts." %}",
-                    element: "#layout-editor-toolbar nav",
+                    element: "#layout-editor-toolbar nav .toolbar-menu-left",
                     placement: "top",
                     template: next_template
                 },
@@ -236,6 +234,7 @@
                     element: '#layout-navigator div[data-type="region"]',
                     smartPlacement: true,
                     reflex: true,
+                    delay: 400,
                     template: no_nav_template
                 },
                 {
@@ -243,14 +242,16 @@
                     content: "{% trans "Grab the Region handle, and drag to resize." %}",
                     element: '#layout-navigator div[data-type="region"] .ui-resizable-se',
                     placement: "bottom",
-                    reflex: "mouseup",
+                    reflex: "mouseover",
+                    delay: 400,
                     template: no_nav_template
                 },
                 { // 19
                     title: "",
                     content: "{% trans "Once positioned, click outside of the Region so that it's deselected or click the blue Save button on the Edit Layout form." %}",
                     element: "#properties-panel button[data-action='save']",
-                    placement: "left",
+                    placement: "bottom",
+                    delay: 400,
                     reflex: true,
                     template: no_nav_template
                 },
@@ -259,6 +260,7 @@
                     content: "{% trans "Click on the back arrow to exit the edit mode and return to the Layout View." %}",
                     element: "#layout-navigator #close-btn",
                     placement: "right",
+                    delay: 500,
                     reflex: true,
                     template: no_nav_template
                 },
@@ -294,7 +296,7 @@
                     element: '#properties-panel input#backgroundColor',
                     placement: "left",
                     template: no_nav_template,
-                    reflex: 'focusout'
+                    reflex: 'click change'
                 },
                 {
                     title: "",
@@ -414,7 +416,7 @@
                     element: '#properties-panel input#name',
                     placement: "left",
                     template: no_nav_template,
-                    reflex: 'focusin',
+                    reflex: 'click change',
                 },
                 { // 33
                     title: "",
@@ -431,7 +433,7 @@
                     element: '#properties-panel input#duration',
                     placement: "left",
                     template: no_nav_template,
-                    reflex: 'focusin',
+                    reflex: 'click change',
                     delay: 500
                 },
                 { // 35
@@ -471,8 +473,8 @@
                 {
                     title: "",
                     content: "{% trans "Do this by clicking on the Actions menu on the top toolbar." %}",
-                    element: '#layout-editor-topbar #actionsSubmenu a',
-                    placement: "bottom",
+                    element: '#layout-editor-topbar #actionsSubmenu',
+                    placement: "left",
                     reflex: true,
                     template: no_nav_template
                 },
@@ -480,7 +482,7 @@
                     title: "",
                     content: "{% trans "Select Publish!" %}",
                     element: '#layout-editor-topbar #publishLayout',
-                    placement: "bottom",
+                    placement: "left",
                     reflex: true,
                     delayOnElement: {
                         delayElement: "element",
@@ -732,7 +734,7 @@
                     content: "{% trans "Select the Display / Display Group from the list you want to schedule to." %}",
                     element: ".xibo-calendar-controls #DisplayList + span",
                     placement: "right",
-                    reflex: 'focusout',
+                    reflex: 'click change',
                     template: no_nav_template
                 },
                 { // 4
@@ -755,8 +757,7 @@
                     element: ".bootbox #scheduleAddForm #eventTypeId",
                     container: '.bootbox',
                     placement: "top",
-                    reflex: 'focusout',
-                    template: no_nav_template,
+                    template: next_template,
                     onElementUnavailableStep: 5
                 },
                 {
@@ -779,8 +780,7 @@
                     element: ".bootbox #scheduleAddForm #dayPartId",
                     container: '.bootbox',
                     placement: "top",
-                    reflex: 'focusout',
-                    template: no_nav_template,
+                    template: next_template,
                     onElementUnavailableStep: 10
                 },
                 { // 10
@@ -815,8 +815,7 @@
                     element: ".bootbox #scheduleAddForm .layout-control .select2-container",
                     container: '.bootbox',
                     placement: "top",
-                    reflex: 'focusout',
-                    template: no_nav_template,
+                    template: next_template,
                     onElementUnavailableStep: 14
                 },
                 { // 14
@@ -915,7 +914,7 @@
                 },
                 {
                     title: "",
-                    content: "{% trans "Once the Player software has been installed, licensed (if applicable) and registered with the CMS." %}",
+                    content: "{% trans "Once the Player software has been installed, licensed (if applicable) and registered with the CMS" %}",
                     orphan: true,
                     template: next_template
                 },
@@ -1037,6 +1036,11 @@
             var tourPlaying = localStorage.getItem('tour_playing');
             cmsTours[tourPlaying].end();
             window.location.href = '{{ url_for("welcome.view") }}';
+        });
+
+        // Fix for close button title
+        $('body').on('mouseenter', '.tour .close', function() {
+            $(this).attr('title', end_tour_message);
         });
 
         // Check if a tour was playing already and reload it
