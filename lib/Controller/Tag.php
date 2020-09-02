@@ -208,7 +208,12 @@ class Tag extends Base
             /* @var \Xibo\Entity\Tag $tag */
 
             if ($this->isApi()) {
-                break;
+                $tag->excludeProperty('layouts');
+                $tag->excludeProperty('playlists');
+                $tag->excludeProperty('campaigns');
+                $tag->excludeProperty('medias');
+                $tag->excludeProperty('displayGroups');
+                continue;
             }
 
             $tag->includeProperty('buttons');
