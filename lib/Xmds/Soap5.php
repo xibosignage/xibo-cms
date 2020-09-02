@@ -34,6 +34,10 @@ use Xibo\Helper\Random;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
 
+/**
+ * Class Soap5
+ * @package Xibo\Xmds
+ */
 class Soap5 extends Soap4
 {
     /**

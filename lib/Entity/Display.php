@@ -1109,4 +1109,38 @@ class Display implements \JsonSerializable
 
         return $this;
     }
+
+    /**
+     * @param PoolInterface $pool
+     * @return array
+     */
+    public function getStatusWindow($pool)
+    {
+        $item = $pool->getItem('/statusWindow/' . $this->displayId);
+
+        if ($item->isMiss()) {
+            return [];
+        } else {
+            return $item->get();
+        }
+    }
+
+    /**
+     * @param PoolInterface $pool
+     * @param array $status
+     * @return $this
+     */
+    public function setStatusWindow($pool, $status)
+    {
+        // Cache it
+        $this->getLog()->debug('Caching statusWindow with Pool');
+
+        $item = $pool->getItem('/statusWindow/' . $this->displayId);
+        $item->set($status);
+        $item->expiresAfter(new \DateInterval('P1D'));
+
+        $pool->saveDeferred($item);
+
+        return $this;
+    }
 }

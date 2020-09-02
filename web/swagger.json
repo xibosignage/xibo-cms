@@ -21,6 +21,205 @@
         "application/json"
     ],
     "paths": {
+        "/action": {
+            "get": {
+                "tags": [
+                    "action"
+                ],
+                "summary": "Search Actions",
+                "description": "Search all Actions this user has access to",
+                "operationId": "actionSearch",
+                "parameters": [
+                    {
+                        "name": "actionId",
+                        "in": "query",
+                        "description": "Filter by Action Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "ownerId",
+                        "in": "query",
+                        "description": "Filter by Owner Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "triggerType",
+                        "in": "query",
+                        "description": "Filter by Action trigger type",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "triggerCode",
+                        "in": "query",
+                        "description": "Filter by Action trigger code",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "actionType",
+                        "in": "query",
+                        "description": "Filter by Action type",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "source",
+                        "in": "query",
+                        "description": "Filter by Action source",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "sourceId",
+                        "in": "query",
+                        "description": "Filter by Action source Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "target",
+                        "in": "query",
+                        "description": "Filter by Action target",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "targetId",
+                        "in": "query",
+                        "description": "Filter by Action target Id",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Action"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/action/{source}/{sourceId}": {
+            "post": {
+                "tags": [
+                    "action"
+                ],
+                "summary": "Add Action",
+                "description": "Add a new Action",
+                "operationId": "actionAdd",
+                "parameters": [
+                    {
+                        "name": "source",
+                        "in": "path",
+                        "description": "Source for this action layout, region or widget",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "sourceId",
+                        "in": "path",
+                        "description": "The id of the source object, layoutId, regionId or widgetId",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "triggerType",
+                        "in": "formData",
+                        "description": "Action trigger type, touch or webhook",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "triggerCode",
+                        "in": "formData",
+                        "description": "Action trigger code",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "actionType",
+                        "in": "formData",
+                        "description": "Action type, next, previous, navLayout, navWidget",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "target",
+                        "in": "formData",
+                        "description": "Target for this action, screen or region",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "targetId",
+                        "in": "formData",
+                        "description": "The id of the target for this action - regionId if the target is set to region",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "widgetId",
+                        "in": "formData",
+                        "description": "For navWidget actionType, the WidgetId to navigate to",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "layoutCode",
+                        "in": "formData",
+                        "description": "For navLayout, the Layout Code identifier to navigate to",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Action"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/action/{actionId}": {
+            "delete": {
+                "tags": [
+                    "action"
+                ],
+                "summary": "Delete Action",
+                "description": "Delete an existing Action",
+                "operationId": "actionDelete",
+                "parameters": [
+                    {
+                        "name": "actionId",
+                        "in": "path",
+                        "description": "The Action ID to Delete",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/campaign": {
             "get": {
                 "tags": [
@@ -324,6 +523,27 @@
                         "description": "A unique code for this command",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "name": "commandString",
+                        "in": "formData",
+                        "description": "The Command String for this Command. Can be overridden on Display Settings.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "validationString",
+                        "in": "formData",
+                        "description": "The Validation String for this Command. Can be overridden on Display Settings.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "availableOn",
+                        "in": "formData",
+                        "description": "An array of Player types this Command is available on, empty for all.",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -369,6 +589,27 @@
                         "name": "description",
                         "in": "formData",
                         "description": "A description for the command",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "commandString",
+                        "in": "formData",
+                        "description": "The Command String for this Command. Can be overridden on Display Settings.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "validationString",
+                        "in": "formData",
+                        "description": "The Validation String for this Command. Can be overridden on Display Settings.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "availableOn",
+                        "in": "formData",
+                        "description": "An array of Player types this Command is available on, empty for all.",
                         "required": false,
                         "type": "string"
                     }
@@ -581,6 +822,34 @@
                         "description": "Which field should be used to summarize",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "sourceId",
+                        "in": "formData",
+                        "description": "For remote DataSet, what type data is it? 1 - json, 2 - csv",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "ignoreFirstRow",
+                        "in": "formData",
+                        "description": "For remote DataSet with sourceId 2 (CSV), should we ignore first row?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "rowLimit",
+                        "in": "formData",
+                        "description": "For remote DataSet, maximum number of rows this DataSet can hold, if left empty the CMS Setting for DataSet row limit will be used.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "limitPolicy",
+                        "in": "formData",
+                        "description": "For remote DataSet, what should happen when the DataSet row limit is reached? stop, fifo or truncate",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -731,6 +1000,34 @@
                         "name": "summarizeField",
                         "in": "formData",
                         "description": "Which field should be used to summarize",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "sourceId",
+                        "in": "formData",
+                        "description": "For remote DataSet, what type data is it? 1 - json, 2 - csv",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "ignoreFirstRow",
+                        "in": "formData",
+                        "description": "For remote DataSet with sourceId 2 (CSV), should we ignore first row?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "rowLimit",
+                        "in": "formData",
+                        "description": "For remote DataSet, maximum number of rows this DataSet can hold, if left empty the CMS Setting for DataSet row limit will be used.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "limitPolicy",
+                        "in": "formData",
+                        "description": "For remote DataSet, what should happen when the DataSet row limit is reached? stop, fifo or truncate",
                         "required": false,
                         "type": "string"
                     }
@@ -2011,6 +2308,20 @@
                         "description": "Clear the cached XMR configuration and send a rekey",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "teamViewerSerial",
+                        "in": "formData",
+                        "description": "The TeamViewer serial number for this Display, if applicable",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "webkeySerial",
+                        "in": "formData",
+                        "description": "The Webkey serial number for this Display, if applicable",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -2171,6 +2482,36 @@
                 "responses": {
                     "204": {
                         "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/display/status/{id}": {
+            "get": {
+                "tags": [
+                    "display"
+                ],
+                "summary": "Display Status",
+                "description": "Get the display status window for this Display.",
+                "operationId": "displayStatus",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Display Id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
                     }
                 }
             }
@@ -3333,6 +3674,20 @@
                         "description": "If a Template is not provided, provide the resolutionId for this Layout.",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "returnDraft",
+                        "in": "formData",
+                        "description": "Should we return the Draft Layout or the Published Layout on Success?",
+                        "required": false,
+                        "type": "boolean"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "Code identifier for this Layout",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -3400,6 +3755,13 @@
                         "description": "Flag indicating whether the Layout stat is enabled",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "Code identifier for this Layout",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -5671,6 +6033,39 @@
                 }
             }
         },
+        "/region/drawer/{id}": {
+            "post": {
+                "tags": [
+                    "layout"
+                ],
+                "summary": "Add drawer Region",
+                "description": "Add a drawer Region to a Layout",
+                "operationId": "regionDrawerAdd",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The Layout ID to add the Region to",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Region"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/resolution": {
             "get": {
                 "tags": [
@@ -6302,7 +6697,7 @@
                     {
                         "name": "type",
                         "in": "query",
-                        "description": "The type of stat to return. Layout|Media|Widget or All",
+                        "description": "The type of stat to return. Layout|Media|Widget",
                         "required": false,
                         "type": "string"
                     },
@@ -6342,6 +6737,16 @@
                         "type": "integer"
                     },
                     {
+                        "name": "displayIds",
+                        "in": "query",
+                        "description": "An optional array of display Id to filter",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    {
                         "name": "layoutId",
                         "in": "query",
                         "description": "An optional array of layout Id to filter",
@@ -6367,6 +6772,27 @@
                         "description": "An optional Campaign Id to filter",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "returnDisplayLocalTime",
+                        "in": "query",
+                        "description": "true/1/On if the results should be in display local time, otherwise CMS time",
+                        "required": false,
+                        "type": "boolean"
+                    },
+                    {
+                        "name": "returnDateFormat",
+                        "in": "query",
+                        "description": "A PHP formatted date format for how the dates in this call should be returned.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "embed",
+                        "in": "query",
+                        "description": "Should the return embed additional data, options are layoutTags,displayTags and mediaTags",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -6378,6 +6804,43 @@
                                 "$ref": "#/definitions/StatisticsData"
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/stats/getExportStatsCount": {
+            "get": {
+                "tags": [
+                    "statistics"
+                ],
+                "summary": "Total count of stats",
+                "operationId": "getExportStatsCount",
+                "parameters": [
+                    {
+                        "name": "fromDt",
+                        "in": "query",
+                        "description": "The start date for the filter. Default = 24 hours ago",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "toDt",
+                        "in": "query",
+                        "description": "The end date for the filter. Default = now.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "displayId",
+                        "in": "query",
+                        "description": "An optional display Id to filter",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
                     }
                 }
             }
@@ -9354,7 +9817,7 @@
                     {
                         "name": "widgetId",
                         "in": "path",
-                        "description": "The Widget ID",
+                        "description": "The WidgetId ID",
                         "required": true,
                         "type": "integer"
                     },
@@ -9695,6 +10158,20 @@
                         "type": "string"
                     },
                     {
+                        "name": "globalCommand",
+                        "in": "formData",
+                        "description": "Enter a global command line compatible with multiple devices",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "androidCommand",
+                        "in": "formData",
+                        "description": "Enter a Android command line compatible command",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "windowsCommand",
                         "in": "formData",
                         "description": "Enter a Windows command line compatible command",
@@ -9704,7 +10181,7 @@
                     {
                         "name": "linuxCommand",
                         "in": "formData",
-                        "description": "Enter a Android / Linux command line compatible command",
+                        "description": "Enter a Linux command line compatible command",
                         "required": false,
                         "type": "string"
                     },
@@ -11172,17 +11649,14 @@
                 "widgetId": {
                     "type": "integer"
                 },
+                "scheduleId": {
+                    "type": "integer"
+                },
                 "numberPlays": {
                     "type": "integer"
                 },
                 "duration": {
                     "type": "integer"
-                },
-                "minStart": {
-                    "type": "string"
-                },
-                "maxEnd": {
-                    "type": "string"
                 },
                 "start": {
                     "type": "string"
@@ -11220,6 +11694,54 @@
                 }
             }
         },
+        "Action": {
+            "properties": {
+                "actionId": {
+                    "description": "The Action Id",
+                    "type": "integer"
+                },
+                "ownerId": {
+                    "description": "The Owner Id",
+                    "type": "integer"
+                },
+                "triggerType": {
+                    "description": "The Action trigger type",
+                    "type": "string"
+                },
+                "triggerCode": {
+                    "description": "The Action trigger code",
+                    "type": "string"
+                },
+                "actionType": {
+                    "description": "The Action type",
+                    "type": "string"
+                },
+                "source": {
+                    "description": "The Action source (layout, region or widget)",
+                    "type": "string"
+                },
+                "sourceId": {
+                    "description": "The Action source Id (layoutId, regionId or widgetId)",
+                    "type": "integer"
+                },
+                "target": {
+                    "description": "The Action target (region)",
+                    "type": "string"
+                },
+                "targetId": {
+                    "description": "The Action target Id (regionId)",
+                    "type": "integer"
+                },
+                "widgetId": {
+                    "description": "Widget ID that will be loaded as a result of navigate to Widget Action type",
+                    "type": "integer"
+                },
+                "layoutCode": {
+                    "description": "Layout Code identifier",
+                    "type": "string"
+                }
+            }
+        },
         "Application": {
             "properties": {
                 "key": {
@@ -11252,6 +11774,10 @@
                 },
                 "clientCredentials": {
                     "description": "Flag indicating whether to allow the clientCredentials Grant Type",
+                    "type": "integer"
+                },
+                "isConfidential": {
+                    "description": "Flag indicating whether this Application will be confidential or not (can it keep a secret?)",
                     "type": "integer"
                 }
             }
@@ -11343,11 +11869,27 @@
                     "type": "integer"
                 },
                 "commandString": {
-                    "description": "Command String - when child of a Display Profile",
+                    "description": "Command String",
                     "type": "string"
                 },
                 "validationString": {
-                    "description": "Validation String - when child of a Display Profile",
+                    "description": "Validation String",
+                    "type": "string"
+                },
+                "displayProfileId": {
+                    "description": "DisplayProfileId if specific to a Display Profile",
+                    "type": "integer"
+                },
+                "commandStringDisplayProfile": {
+                    "description": "Command String specific to the provided DisplayProfile",
+                    "type": "string"
+                },
+                "validationStringDisplayProfile": {
+                    "description": "Validation String specific to the provided DisplayProfile",
+                    "type": "string"
+                },
+                "availableOn": {
+                    "description": "A comma separated list of player types this command is available on",
                     "type": "string"
                 },
                 "groupsWithPermissions": {
@@ -11465,6 +12007,14 @@
                 "ignoreFirstRow": {
                     "description": "A flag whether to ignore the first row, for CSV source remote dataSet",
                     "type": "integer"
+                },
+                "rowLimit": {
+                    "description": "Soft limit on number of rows per DataSet, if left empty the global DataSet row limit will be used.",
+                    "type": "integer"
+                },
+                "limitPolicy": {
+                    "description": "Type of action that should be taken on next remote DataSet sync - stop, fifo or truncate",
+                    "type": "string"
                 }
             }
         },
@@ -11773,6 +12323,14 @@
                 "commercialLicence": {
                     "description": "Status of the commercial licence for this Display. 0 - Not licensed, 1 - licensed, 2 - trial licence, 3 - not applicable",
                     "type": "integer"
+                },
+                "teamViewerSerial": {
+                    "description": "The TeamViewer serial number for this Display",
+                    "type": "string"
+                },
+                "webkeySerial": {
+                    "description": "The Webkey serial number for this Display",
+                    "type": "string"
                 }
             }
         },
@@ -11981,6 +12539,10 @@
                     "description": "Flag indicating whether the default transitions should be applied to this Layout",
                     "type": "integer"
                 },
+                "code": {
+                    "description": "Code identifier for this Layout",
+                    "type": "string"
+                },
                 "regions": {
                     "description": "An array of Regions belonging to this Layout",
                     "type": "array",
@@ -12188,10 +12750,7 @@
                 },
                 "settings": {
                     "description": "An array of additional module specific settings",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                    "type": "array"
                 },
                 "schemaVersion": {
                     "description": "The schema version of the module",
@@ -12522,6 +13081,10 @@
                     "description": "A read-only estimate of this Regions's total duration in seconds. This is valid when the parent layout status is 1 or 2.",
                     "type": "integer"
                 },
+                "isDrawer": {
+                    "description": "Flag, whether this region is used as an interactive drawer attached to a layout.",
+                    "type": "integer"
+                },
                 "regionPlaylist": {
                     "description": "This Regions Playlist - null if getPlaylist() has not been called.",
                     "$ref": "#/definitions/Playlist"
@@ -12645,6 +13208,10 @@
                 "storedAs": {
                     "description": "Stored As",
                     "type": "string"
+                },
+                "schemaVersion": {
+                    "description": "Schema Version",
+                    "type": "integer"
                 }
             }
         },
@@ -12760,7 +13327,7 @@
                     "type": "integer"
                 },
                 "shareOfVoice": {
-                    "description": "Percentage (0-100) of each full hour that is scheduled that this Layout should occupy",
+                    "description": "Seconds (0-3600) of each full hour that is scheduled that this Layout should occupy",
                     "type": "integer"
                 },
                 "isGeoAware": {
@@ -13333,7 +13900,77 @@
             }
         }
     },
+    "parameters": {
+        "actionId": {
+            "name": "actionId",
+            "in": "path",
+            "description": "Action ID to edit",
+            "required": true,
+            "type": "integer"
+        },
+        "triggerType": {
+            "name": "triggerType",
+            "in": "formData",
+            "description": "Action trigger type, touch, webhook",
+            "required": true,
+            "type": "string"
+        },
+        "triggerCode": {
+            "name": "triggerCode",
+            "in": "formData",
+            "description": "Action trigger code",
+            "required": false,
+            "type": "string"
+        },
+        "actionType": {
+            "name": "actionType",
+            "in": "formData",
+            "description": "Action type, next, previous, navLayout, navWidget",
+            "required": true,
+            "type": "string"
+        },
+        "target": {
+            "name": "target",
+            "in": "formData",
+            "description": "Target for this action, screen or region",
+            "required": true,
+            "type": "string"
+        },
+        "targetId": {
+            "name": "targetId",
+            "in": "formData",
+            "description": "The id of the target for this action, regionId if target set to region",
+            "required": false,
+            "type": "integer"
+        },
+        "widgetId": {
+            "name": "widgetId",
+            "in": "formData",
+            "description": "For navWidget actionType, the WidgetId to navigate to",
+            "required": false,
+            "type": "integer"
+        },
+        "layoutCode": {
+            "name": "layoutCode",
+            "in": "formData",
+            "description": "For navLayout, the Layout Code identifier to navigate to",
+            "required": false,
+            "type": "string"
+        }
+    },
     "responses": {
+        "201": {
+            "description": "successful operation",
+            "schema": {
+                "$ref": "#/definitions/Action"
+            },
+            "headers": {
+                "Location": {
+                    "description": "Location of the new record",
+                    "type": "string"
+                }
+            }
+        },
         "200": {
             "description": "successful operation"
         }
@@ -13457,6 +14094,10 @@
         {
             "name": "tags",
             "description": "Tags"
+        },
+        {
+            "name": "actions",
+            "description": "Actions"
         }
     ],
     "externalDocs": {

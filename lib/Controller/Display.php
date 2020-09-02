@@ -2225,4 +2225,47 @@ class Display extends Base
 
         return $this->render($request, $response);
     }
+
+    /**
+     * @SWG\Get(
+     *  path="/display/status/{id}",
+     *  operationId="displayStatus",
+     *  tags={"display"},
+     *  summary="Display Status",
+     *  description="Get the display status window for this Display.",
+     *  @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      description="Display Id",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(type="string")
+     *      )
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param int $id displayId
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\AccessDeniedException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function statusWindow(Request $request, Response $response, $id)
+    {
+        $display = $this->displayFactory->getById($id);
+
+        if (!$this->getUser()->checkViewable($display)) {
+            throw new AccessDeniedException();
+        }
+
+        return $response->withJson($display->getStatusWindow($this->pool));
+    }
 }
