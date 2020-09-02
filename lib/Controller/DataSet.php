@@ -1289,8 +1289,14 @@ class DataSet extends Base
         // Set this DataSet as active.
         $dataSet->setActive();
 
+        // Getting the dependant DataSet to process the current DataSet on
+        $dependant = null;
+        if ($dataSet->runsAfter != null && $dataSet->runsAfter != $dataSet->dataSetId) {
+            $dependant = $this->dataSetFactory->getById($dataSet->runsAfter);
+        }
+
         // Call the remote service requested
-        $data = $this->dataSetFactory->callRemoteService($dataSet, null, false);
+        $data = $this->dataSetFactory->callRemoteService($dataSet, $dependant, false);
 
         if ($data->number > 0) {
             // Process the results, but don't record them
