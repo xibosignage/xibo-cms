@@ -46,13 +46,22 @@ interface TimeSeriesStoreInterface
     /**
      * Set Time series Dependencies
      * @param LogServiceInterface $logger
+     * @param LayoutFactory $layoutFactory
+     * @param CampaignFactory $campaignFactory
      * @param MediaFactory $mediaFactory
      * @param WidgetFactory $widgetFactory
-     * @param LayoutFactory $layoutFactory
      * @param DisplayFactory $displayFactory
-     * @param CampaignFactory $campaignFactory
+     * @param \Xibo\Entity\DisplayGroup $displayGroupFactory
      */
-    public function setDependencies($logger, $layoutFactory = null, $campaignFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null);
+    public function setDependencies(
+        $logger,
+        $layoutFactory,
+        $campaignFactory,
+        $mediaFactory,
+        $widgetFactory,
+        $displayFactory,
+        $displayGroupFactory
+    );
 
     /**
      * Process and add a single statdata to array

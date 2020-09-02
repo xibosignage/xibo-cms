@@ -88,40 +88,60 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
      */
     public function __construct($config = null)
     {
-
         $this->config = $config;
     }
 
     /**
      * @inheritdoc
      */
-    public function setDependencies($log, $layoutFactory = null, $campaignFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null, $displayGroupFactory = null)
+    public function setDependencies($log, $layoutFactory, $campaignFactory, $mediaFactory, $widgetFactory, $displayFactory, $displayGroupFactory)
     {
         $this->log = $log;
+        $this->layoutFactory = $layoutFactory;
+        $this->campaignFactory = $campaignFactory;
         $this->mediaFactory = $mediaFactory;
         $this->widgetFactory = $widgetFactory;
-        $this->layoutFactory = $layoutFactory;
         $this->displayFactory = $displayFactory;
         $this->displayGroupFactory = $displayGroupFactory;
-        $this->campaignFactory = $campaignFactory;
+        return $this;
+    }
 
-        try {
-            $uri = isset($this->config['uri']) ? $this->config['uri'] : 'mongodb://' . $this->config['host'] . ':' . $this->config['port'];
-            $this->client = new Client($uri, [
-                'username' => $this->config['username'],
-                'password' => $this->config['password']
-            ], (array_key_exists('driverOptions', $this->config) ? $this->config['driverOptions'] : []));
-        } catch (\MongoDB\Exception\RuntimeException $e) {
-            $this->log->critical($e->getMessage());
+    /**
+     * Set Client in the event you want to completely replace the configuration options and roll your own client.
+     * @param \MongoDB\Client $client
+     */
+    public function setClient($client)
+    {
+        $this->client = $client;
+    }
+
+    /**
+     * Get a MongoDB client to use.
+     * @return \MongoDB\Client
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    private function getClient()
+    {
+        if ($this->client === null) {
+            try {
+                $uri = isset($this->config['uri']) ? $this->config['uri'] : 'mongodb://' . $this->config['host'] . ':' . $this->config['port'];
+                $this->client = new Client($uri, [
+                    'username' => $this->config['username'],
+                    'password' => $this->config['password']
+                ], (array_key_exists('driverOptions', $this->config) ? $this->config['driverOptions'] : []));
+            } catch (\MongoDB\Exception\RuntimeException $e) {
+                $this->log->error('Unable to connect to MongoDB: ' . $e->getMessage());
+                $this->log->debug($e->getTraceAsString());
+                throw new GeneralException('Connection to Time Series Database failed, please try again.');
+            }
         }
 
-        return $this;
+        return $this->client;
     }
 
     /** @inheritdoc */
     public function addStat($statData)
     {
-
         // We need to transform string date to UTC date
         $statData['statDate'] = new UTCDateTime($statData['statDate']->format('U') * 1000);
 
@@ -358,12 +378,14 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
     }
 
-    /** @inheritdoc */
+    /** @inheritdoc
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
     public function addStatFinalize()
     {
         // Insert statistics
         if (count($this->stats) > 0) {
-            $collection = $this->client->selectCollection($this->config['database'], $this->table);
+            $collection = $this->getClient()->selectCollection($this->config['database'], $this->table);
 
             try {
                 $collection->insertMany($this->stats);
@@ -375,7 +397,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         }
 
         // Create a period collection if it doesnot exist
-        $collectionPeriod = $this->client->selectCollection($this->config['database'], $this->periodTable);
+        $collectionPeriod = $this->getClient()->selectCollection($this->config['database'], $this->periodTable);
 
         try {
             $cursor = $collectionPeriod->findOne(['name' => 'period']);
@@ -397,7 +419,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function getEarliestDate()
     {
-        $collection = $this->client->selectCollection($this->config['database'], $this->table);
+        $collection = $this->getClient()->selectCollection($this->config['database'], $this->table);
         try {
             $earliestDate = $collection->aggregate([
                 [
@@ -521,7 +543,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                     $campaignIds[] = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
                 } catch (NotFoundException $notFoundException) {
                     // Ignore the missing one
-                    $this->getLog()->debug('Filter for Layout without Layout History Record, layoutId is ' . $layoutId);
+                    $this->log->debug('Filter for Layout without Layout History Record, layoutId is ' . $layoutId);
                 }
             }
             $match['$match']['campaignId'] = [ '$in' => $campaignIds ];
@@ -532,7 +554,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $match['$match']['mediaId'] = [ '$in' => $mediaIds ];
         }
 
-        $collection = $this->client->selectCollection($this->config['database'], $this->table);
+        $collection = $this->getClient()->selectCollection($this->config['database'], $this->table);
 
         $group = [
             '$group' => [
@@ -559,9 +581,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $totalCount = $totalCursor->toArray();
             $total = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
 
-        } catch (\MongoDB\Exception\RuntimeException $e) {
-            $this->log->error('Error: Total Count. '. $e->getMessage());
-            throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
         } catch (\Exception $e) {
             $this->log->error('Error: Total Count. '. $e->getMessage());
             throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
@@ -619,9 +638,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             // Total
             $result->totalCount = $total;
 
-        } catch (\MongoDB\Exception\RuntimeException $e) {
-            $this->log->error('Error: Get total. '. $e->getMessage());
-            throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
         } catch (\Exception $e) {
             $this->log->error('Error: Get total. '. $e->getMessage());
             throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
@@ -655,7 +671,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $match['$match']['displayId'] = [ '$in' => $displayIds ];
         }
 
-        $collection = $this->client->selectCollection($this->config['database'], $this->table);
+        $collection = $this->getClient()->selectCollection($this->config['database'], $this->table);
 
         // Get total
         try {
@@ -673,9 +689,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $totalCount = $totalCursor->toArray();
             $total = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
 
-        } catch (\MongoDB\Exception\RuntimeException $e) {
-            $this->log->error($e->getMessage());
-            throw new GeneralException(__('Sorry we encountered an error getting total number of Proof of Play data, please consult your administrator'));
         } catch (\Exception $e) {
             $this->log->error($e->getMessage());
             throw new GeneralException(__('Sorry we encountered an error getting total number of Proof of Play data, please consult your administrator'));
@@ -699,7 +712,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
         $toDt = new UTCDateTime($maxage->format('U')*1000);
 
-        $collection = $this->client->selectCollection($this->config['database'], $this->table);
+        $collection = $this->getClient()->selectCollection($this->config['database'], $this->table);
 
         $rows = 1;
         $count = 0;
@@ -764,7 +777,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $aggregateConfig['maxTimeMS']= $options['maxTimeMS'];
         }
 
-        $collection = $this->client->selectCollection($this->config['database'], $options['collection']);
+        $collection = $this->getClient()->selectCollection($this->config['database'], $options['collection']);
         try {
             $cursor = $collection->aggregate($options['query'], $aggregateConfig);
 
@@ -775,10 +788,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
         } catch (\MongoDB\Driver\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
+            $this->log->debug($e->getTraceAsString());
             throw new GeneralException($e->getMessage());
         }
 
         return $results;
-
     }
 }

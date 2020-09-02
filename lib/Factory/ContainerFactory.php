@@ -122,16 +122,14 @@ class ContainerFactory
             },
             'timeSeriesStore' => function(ContainerInterface $c) {
                 if ($c->get('configService')->timeSeriesStore == null) {
-                    return (new MySqlTimeSeriesStore())
-                        ->setDependencies($c->get('logService'),
-                            $c->get('layoutFactory'),
-                            $c->get('campaignFactory'))
-                        ->setStore($c->get('store'));
+                    $timeSeriesStore = new MySqlTimeSeriesStore();
                 } else {
                     $timeSeriesStore = $c->get('configService')->timeSeriesStore;
                     $timeSeriesStore = $timeSeriesStore();
+                }
 
-                    return $timeSeriesStore->setDependencies(
+                return $timeSeriesStore
+                    ->setDependencies(
                         $c->get('logService'),
                         $c->get('layoutFactory'),
                         $c->get('campaignFactory'),
@@ -139,8 +137,8 @@ class ContainerFactory
                         $c->get('widgetFactory'),
                         $c->get('displayFactory'),
                         $c->get('displayGroupFactory')
-                    );
-                }
+                    )
+                    ->setStore($c->get('store'));
             },
             'state' => function() {
                 return new ApplicationState();

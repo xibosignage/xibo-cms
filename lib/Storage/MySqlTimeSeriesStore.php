@@ -62,7 +62,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /**
      * @inheritdoc
      */
-    public function setDependencies($log, $layoutFactory = null, $campaignFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null)
+    public function setDependencies($log, $layoutFactory, $campaignFactory, $mediaFactory, $widgetFactory, $displayFactory, $displayGroupFactory)
     {
         $this->log = $log;
         $this->layoutFactory = $layoutFactory;
@@ -424,9 +424,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $resTotal = $this->store->select($sql, $params);
 
         // Total
-        $totalCount = isset($resTotal[0]['total']) ? $resTotal[0]['total'] : 0;
-
-        return $totalCount;
+        return isset($resTotal[0]['total']) ? $resTotal[0]['total'] : 0;
     }
 
     /** @inheritdoc */
