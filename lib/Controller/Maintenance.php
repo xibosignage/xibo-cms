@@ -1,8 +1,23 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (Maintenance.php)
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
@@ -11,8 +26,6 @@ namespace Xibo\Controller;
 
 use Xibo\Entity\Task;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\ConfigurationException;
-use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -355,106 +368,5 @@ class Maintenance extends Base
                 'tidied' => $i
             ]
         ]);
-    }
-
-    /**
-     * Export Form
-     */
-    public function exportForm()
-    {
-        if ($this->getUser()->userTypeId != 1)
-            throw new AccessDeniedException();
-
-        $this->getState()->template = 'maintenance-form-export';
-    }
-
-    /**
-     * Backup the Database
-     * @throws ConfigurationException
-     * @throws ControllerNotImplemented
-     */
-    public function export()
-    {
-        // Check we can run mysql
-        if (!function_exists('exec'))
-            throw new ControllerNotImplemented(__('Exec is not available.'));
-
-        // Global database variables to seed into exec
-        global $dbhost;
-        global $dbuser;
-        global $dbpass;
-        global $dbname;
-
-        // split the dbhost for database host name and port
-        if (strstr($dbhost, ':')) {
-            $hostParts = explode(':', $dbhost);
-            $dbhostName = $hostParts[0];
-            $dbhostPort = $hostParts[1];
-        }
-
-        // get temporary file
-        $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/';
-        $fileNameStructure = $libraryLocation . 'structure.dump';
-        $fileNameData = $libraryLocation . 'data.dump';
-        $zipFile = $libraryLocation . 'database.tar.gz';
-
-        // Run mysqldump structure to a temporary file
-        $command = 'mysqldump --opt --host=' . $dbhostName . ' --port=' . $dbhostPort . ' --user=' . $dbuser . ' --password=' . addslashes($dbpass) . ' ' . $dbname . ' --no-data > ' . escapeshellarg($fileNameStructure) . ' ';
-        exec($command);
-
-        // Run mysqldump data to a temporary file
-        $command = 'mysqldump --opt --host=' . $dbhostName . ' --port=' . $dbhostPort . ' --user=' . $dbuser . ' --password=' . addslashes($dbpass) . ' ' . $dbname . ' --ignore-table=' . $dbname . '.log --ignore-table=' . $dbname . '.oauth_log  > ' . escapeshellarg($fileNameData) . ' ';
-        exec($command);
-
-        // Check it worked
-        if (filesize($fileNameStructure) <= 0 || filesize($fileNameData) <= 0 )
-            throw new ConfigurationException(__('Database dump failed.'));
-
-        // Zippy
-        $this->getLog()->debug($zipFile);
-        $zip = new \ZipArchive();
-        $zip->open($zipFile, \ZipArchive::CREATE|\ZipArchive::OVERWRITE);
-        $zip->addFile($fileNameStructure, 'structure.dump');
-        $zip->addFile($fileNameData, 'data.dump');
-        $zip->close();
-
-        // Remove the dump file
-        unlink($fileNameStructure);
-        unlink($fileNameData);
-
-        // Uncomment only if you are having permission issues
-        // chmod($zipFile, 0777);
-
-        // Push file back to browser
-        if (ini_get('zlib.output_compression')) {
-            ini_set('zlib.output_compression', 'Off');
-        }
-
-        $size = filesize($zipFile);
-
-        header('Content-Type: application/octet-stream');
-        header("Content-Transfer-Encoding: Binary");
-        header("Content-disposition: attachment; filename=\"" . basename($zipFile) . "\"");
-        header('Content-Length: ' . $size);
-
-        // Send via Apache X-Sendfile header?
-        if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Apache') {
-            header("X-Sendfile: $zipFile");
-            $this->getApp()->halt(200);
-        }
-        // Send via Nginx X-Accel-Redirect?
-        if ($this->getConfig()->getSetting('SENDFILE_MODE') == 'Nginx') {
-            header("X-Accel-Redirect: /download/temp/" . basename($zipFile));
-            $this->getApp()->halt(200);
-        }
-
-        // Return the file with PHP
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-        readfile($zipFile);
-
-        $this->setNoOutput(true);
-        exit;
     }
 }
