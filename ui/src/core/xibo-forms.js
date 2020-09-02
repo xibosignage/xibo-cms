@@ -1403,12 +1403,22 @@ function tagsWithValues(formId) {
 
                                 $('#tagValue').focus();
                             } else {
+                                // existing Tag without specified options (values)
                                 $('#tagValueContainer').show();
+
+                                // if the isRequired flag is set to 0 change the helpText to be more user friendly.
+                                if (tagIsRequired === 0) {
+                                    $('#tagValueInput').parent().find('span.help-block').text('Provide an optional Value for this Tag. If no Value is required, this field can be left blank')
+                                }
                                 $('#tagValueInput').focus();
                             }
                         } else {
+                            // new Tag
                             $('#tagValueContainer').show();
                             $('#tagValueInput').focus();
+
+                            // isRequired flag is set to 0 (new Tag) change the helpText to be more user friendly.
+                            $('#tagValueInput').parent().find('span.help-block').text('Provide an optional Value for this Tag. If no Value is required, this field can be left blank')
                         }
                     }
                 },
@@ -1477,11 +1487,16 @@ function tagsWithValues(formId) {
 
         if ( (event.keyCode === 13 || event.type === 'focusout') && tagN != '') {
             event.preventDefault();
-            tagWithOption = tagN + '|' + $(this).val();
+            let tagInputValue = $(this).val();
+            tagWithOption = (tagInputValue !== '') ? tagN + '|' + tagInputValue : tagN;
 
-            if (tagIsRequired === 0 || (tagIsRequired === 1 && $(this).val() !== '')) {
+            if (tagIsRequired === 0 || (tagIsRequired === 1 && tagInputValue !== '')) {
                 $(formSelector).tagsinput('add', tagWithOption);
-                $(formSelector).tagsinput('remove', tagN);
+                // remove only if we have value (otherwise it would be left empty)
+                if (tagInputValue !== '') {
+                    $(formSelector).tagsinput('remove', tagN);
+                }
+
                 $('#tagValueInput').val('');
                 $('#tagValueContainer').hide();
                 $('#tagValueRequired').addClass('hidden');
