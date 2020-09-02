@@ -105,7 +105,7 @@ class Module implements \JsonSerializable
     public $defaultDuration;
 
     /**
-     * @SWG\Property(description="An array of additional module specific settings")
+     * @SWG\Property(description="An array of additional module specific settings", type="array", @SWG\Items(type="string"))
      * @var array
      */
     public $settings = [];

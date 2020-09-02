@@ -244,11 +244,11 @@ class Weather extends ModuleWidget
      * Edit Widget
      *
      * @SWG\Put(
-     *  path="/playlist/widget/{widgetId}?weather",
-     *  operationId="WidgetWeatherEdit",
+     *  path="/playlist/widget/{widgetId}?weatherTiles",
+     *  operationId="WidgetWeatherTilesEdit",
      *  tags={"widget"},
-     *  summary="Edit Weather Widget",
-     *  description="Edit Weather Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
+     *  summary="Edit Weather Tiles Widget",
+     *  description="Edit Weather Tiles Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",
