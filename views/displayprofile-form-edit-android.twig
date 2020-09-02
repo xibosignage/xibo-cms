@@ -287,6 +287,9 @@
                     ] %}
                     {{ forms.dropdown("useMultipleVideoDecoders", "single", title, displayProfile.getSetting("useMultipleVideoDecoders"), options, "id", "value", helpText) }}
 
+                    {% set title = "Maximum Region Count"|trans %}
+                    {% set helpText = "This setting is a memory limit protection setting which will stop rendering regions beyond the limit set. Leave at 0 for no limit."|trans %}
+                    {{ forms.number("maxRegionCount", title, displayProfile.getSetting("maxRegionCount"), helpText) }}
                 </div>
 
                 {% if commands|length > 0 %}
