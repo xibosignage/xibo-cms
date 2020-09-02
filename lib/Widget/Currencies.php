@@ -382,7 +382,7 @@ class Currencies extends AlphaVantageBase
         }
 
         // Parse items out into an array
-        $items = explode(',', $items);
+        $items = array_map('trim', explode(',', $items));
         
         // Get current item template
         $itemTemplate = null;
