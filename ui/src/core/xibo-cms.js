@@ -466,7 +466,68 @@ function XiboInitialise(scope) {
     });
     
     // Initialize tags input form
-    $(scope + " input[data-role=tagsInputInline], " + scope + " input[data-role=tagsInputForm], " + scope + " select[multiple][data-role=tagsInputForm]").tagsinput();
+    $(scope + " input[data-role=tagsInputInline], " + scope + " input[data-role=tagsInputForm], " + scope + " select[multiple][data-role=tagsInputForm]").each(function() {
+        var self = this;
+        var autoCompleteUrl = $(self).data('autoCompleteUrl');
+
+        if(autoCompleteUrl != undefined && autoCompleteUrl != '') {
+            // Tags input with autocomplete
+            var tags = new Bloodhound({
+                datumTokenizer: Bloodhound.tokenizers.whitespace,
+                queryTokenizer: Bloodhound.tokenizers.whitespace,
+                initialize: false,
+                remote: {
+                    url: autoCompleteUrl,
+                    prepare: function(query, settings) {
+                        settings.data = { tag: query };
+                        return settings;
+                    },
+                    filter: function(list) {
+                        return $.map(list.data, function(tagObj) {
+                            return {
+                                tag: tagObj.tag
+                            };
+                        });
+                    }
+                },
+                sorter: function(a, b) {
+                    var nameA = a.tag.toUpperCase();
+                    var nameB = b.tag.toUpperCase();
+                    if (nameA < nameB) {
+                        return -1;
+                    }
+                    if (nameA > nameB) {
+                        return 1;
+                    }
+
+                    // Names must be the same 
+                    return 0;
+                }
+            });
+
+            var promise = tags.initialize();
+
+            promise
+            .done(function() {
+                // Initialise tagsinput with autocomplete
+                $(self).tagsinput({
+                    typeaheadjs: {
+                        name: 'tags',
+                        displayKey: 'tag',
+                        valueKey: 'tag',
+                        source: tags.ttAdapter()
+                    }
+                });
+            })
+            .fail(function() { 
+                console.info('Auto-complete for tag failed! Using default...');
+                $(self).tagsinput();
+            });
+        } else {
+            // Normal tags input
+            $(self).tagsinput();
+        }
+    });
 
     // Initialize tag with values function from xibo-forms.js
     $(scope + " .tags-with-value").each(function() {

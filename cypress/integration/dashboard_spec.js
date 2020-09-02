@@ -31,7 +31,7 @@ describe('Dashboard', function() {
 
         cy.url().should('include', 'welcome');
 
-        cy.get('button[data-tour-name="mainTour').click();
+        cy.get('div[data-tour-name="mainTour').click();
 
         cy.get('.popover.tour').should('to.be.visible');
 

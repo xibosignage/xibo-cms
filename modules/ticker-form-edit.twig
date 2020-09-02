@@ -294,7 +294,7 @@
                                                 class="ckeditor_library_select form-control"
                                                 data-linked-to="ta_text"
                                                 data-search-url="{{ url_for("library.search") }}"
-                                                data-image-url="{{ url_for("library.download") }}?preview=1">
+                                                data-image-url="{{ url_for("library.download", {id: ':id'}) }}?preview=1">
                                         </select>
                                     </div>
                                 </div>
