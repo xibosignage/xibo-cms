@@ -888,18 +888,20 @@ class Campaign extends Base
         $duration = 0 ;
         $extendedLayouts = [];
 
-        foreach($layouts as $layout)
+        foreach ($layouts as $layout)
         {
             $duration += $layout->duration;
-            $extendedLayouts[] = ['layout' => $layout,
-                                  'duration' => $layout->duration,
-                                  'previewOptions' => [
-                                      'getXlfUrl' => $this->urlFor($request,'layout.getXlf', ['id' => $layout->layoutId]),
-                                      'getResourceUrl' => $this->urlFor($request,'module.getResource', ['regionId' => ':regionId', 'id' => ':id']),
-                                      'libraryDownloadUrl' => $this->urlFor($request,'library.download'),
-                                      'layoutBackgroundDownloadUrl' => $this->urlFor($request,'layout.download.background', ['id' => ':id']),
-                                      'loaderUrl' => $this->getConfig()->uri('img/loader.gif')]
-                                 ];
+            $extendedLayouts[] = [
+                'layout' => $layout,
+                'duration' => $layout->duration,
+                'previewOptions' => [
+                    'getXlfUrl' => $this->urlFor($request,'layout.getXlf', ['id' => $layout->layoutId]),
+                    'getResourceUrl' => $this->urlFor($request,'module.getResource', ['regionId' => ':regionId', 'id' => ':id']),
+                    'libraryDownloadUrl' => $this->urlFor($request,'library.download'),
+                    'layoutBackgroundDownloadUrl' => $this->urlFor($request,'layout.download.background', ['id' => ':id']),
+                    'loaderUrl' => $this->getConfig()->uri('img/loader.gif')
+                ]
+            ];
         }
         $this->getState()->template = 'campaign-preview';
         $this->getState()->setData([

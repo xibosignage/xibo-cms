@@ -36,7 +36,6 @@ $twig = new Twig\Environment(new \Twig\Loader\FilesystemLoader([PROJECT_ROOT . '
 $twig->addExtension(new \Slim\Views\TwigExtension());
 $twig->addExtension(new \Xibo\Twig\TransExtension());
 $twig->addExtension(new \Xibo\Twig\ByteFormatterTwigExtension());
-$twig->addExtension(new \Xibo\Twig\UrlDecodeTwigExtension());
 $twig->addExtension(new \Xibo\Twig\DateFormatTwigExtension());
 
 

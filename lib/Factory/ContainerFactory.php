@@ -109,7 +109,6 @@ class ContainerFactory
                 ]);
                 $view->addExtension(new TransExtension());
                 $view->addExtension(new ByteFormatterTwigExtension());
-                $view->addExtension(new UrlDecodeTwigExtension());
                 $view->addExtension(new DateFormatTwigExtension());
 
                 return $view;
