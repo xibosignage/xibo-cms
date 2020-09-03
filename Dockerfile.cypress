@@ -1,4 +1,4 @@
-FROM cypress/base:8
+FROM cypress/base:12
 
 WORKDIR /app
 
