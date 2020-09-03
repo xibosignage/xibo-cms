@@ -107,6 +107,15 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     }
 
     /**
+     * @param \Xibo\Storage\StorageServiceInterface $store
+     * @return $this|\Xibo\Storage\MongoDbTimeSeriesStore
+     */
+    public function setStore($store)
+    {
+        return $this;
+    }
+
+    /**
      * Set Client in the event you want to completely replace the configuration options and roll your own client.
      * @param \MongoDB\Client $client
      */

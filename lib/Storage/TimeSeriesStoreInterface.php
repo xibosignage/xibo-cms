@@ -64,6 +64,12 @@ interface TimeSeriesStoreInterface
     );
 
     /**
+     * @param \Xibo\Storage\StorageServiceInterface $store
+     * @return $this
+     */
+    public function setStore($store);
+
+    /**
      * Process and add a single statdata to array
      * @param $statData array
      */
