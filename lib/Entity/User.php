@@ -1202,9 +1202,10 @@ class User implements \JsonSerializable, UserEntityInterface
         if ($this->isSuperAdmin())
             return true;
 
-        // All users have access to the logout page
-        if ($route === '/logout')
+        // All users have access to the logout page and welcome page
+        if ($route === '/logout' || $route === '/welcome') {
             return true;
+        }
 
         try {
             if ($this->pagePermissionCache == null) {

@@ -591,7 +591,15 @@ class Soap4 extends Soap
         $statusDialog = $sanitizedStatus->getString('statusDialog', ['default' => null]);
 
         if ($statusDialog !== null) {
+            // Log in as an alert
             $this->getLog()->alert($statusDialog);
+
+            // Cache on the display as transient data
+            try {
+                $this->display->setStatusWindow($this->getPool(), json_decode($statusDialog, true));
+            } catch (\Exception $exception) {
+                $this->getLog()->error('Unable to cache display status. e = ' . $exception->getMessage());
+            }
         }
 
         // Resolution
