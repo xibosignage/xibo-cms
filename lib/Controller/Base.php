@@ -379,21 +379,28 @@ class Base
     /**
      * Set the sort order
      * @return array
+     * @throws \Xibo\Exception\ConfigurationException
      */
     protected function gridRenderSort()
     {
         $app = $this->getApp();
 
         $columns = $app->request()->get('columns');
-
-        if ($columns == null || !is_array($columns))
+        if ($columns === null || !is_array($columns) || count($columns) <= 0) {
             return null;
+        }
 
-        $order = array_map(function ($element) use ($columns) {
-            return ((isset($columns[$element['column']]['name']) && $columns[$element['column']]['name'] != '') ? '`' . $columns[$element['column']]['name'] . '`' : '`' . $columns[$element['column']]['data'] . '`') . (($element['dir'] == 'desc') ? ' DESC' : '');
-        }, $app->request()->get('order', array()));
+        $order = $app->request()->get('order');
+        if ($order === null || !is_array($order) || count($order) <= 0) {
+            return null;
+        }
 
-        return $order;
+        return array_map(function ($element) use ($columns) {
+            return ((isset($columns[$element['column']]['name']) && $columns[$element['column']]['name'] != '')
+                    ? '`' . $columns[$element['column']]['name'] . '`'
+                    : '`' . $columns[$element['column']]['data'] . '`')
+                . (($element['dir'] == 'desc') ? ' DESC' : '');
+        }, $order);
     }
 
     /**
