@@ -299,7 +299,7 @@ class DataSet extends Base
     {
         $this->getState()->template = 'dataset-form-add';
         $this->getState()->setData([
-            'dataSets' => $this->dataSetFactory->query(null, [], $request),
+            'dataSets' => $this->dataSetFactory->query(),
             'help' => $this->getHelp()->link('DataSet', 'Add')
         ]);
 
