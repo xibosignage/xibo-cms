@@ -897,6 +897,24 @@ ul li.active.tab-design:hover a {
 .bootstrap-tagsinput {
     min-width: 196px;
     height: auto;
+    line-height: 24px;
+}
+
+.tags-input-wide .bootstrap-tagsinput {
+    width: 100%;
+}
+
+.XiboFilter .form-inline .bootstrap-tagsinput {
+    width: 100%;
+}
+
+.XiboFilter .form-inline .input-group-tags-exact .bootstrap-tagsinput {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.bootstrap-tagsinput + [data-role="tagsInputInline"] + .input-group-addon {
+    position: relative;
 }
 
 .btn-tag {

@@ -820,7 +820,12 @@ function dataTableDraw(e, settings) {
 
     // Check to see if we have any buttons that are multi-select
     var enabledButtons = target.find("ul.dropdown-menu li[data-commit-url]");
-    if (enabledButtons.length > 0) {
+    
+    // Check to see if we have tag filter for the current table
+    var $tagsElement = target.closest(".XiboGrid").find('.FilterDiv #tags');
+    
+    if (enabledButtons.length > 0 || $tagsElement.length > 0) {
+
         var searchByKey = function(array, item, key) {
             // return Object from array where array[object].item matches key
             for (var i in array) {
@@ -849,12 +854,25 @@ function dataTableDraw(e, settings) {
                 buttons.push({id: $(this).data("id"), gridId: e.target.id, text: $(this).data("text")})
         });
 
+        // Add tag button if exist in the filter ( and user has permissions)
+        if($tagsElement.length > 0 && userRoutePermissions.tags == 1) {
+            buttons.push({id: $tagsElement.attr("id"), gridId: e.target.id, text: translations.editTags, contentType: target.data('contentType'), contentIdName: target.data('contentIdName'), customHandler: "XiboMultiSelectTagFormRender"});
+        }
+
         var output = template({selectAll: translations.selectAll, withSelected: translations.withselected, buttons: buttons});
         target.closest(".dataTables_wrapper").find(".dataTables_info").prepend(output);
 
         // Bind to our output
         target.closest(".dataTables_wrapper").find(".dataTables_info li.XiboMultiSelectFormButton").click(function(){
-            XiboMultiSelectFormRender(this);
+            if($(this).data('customHandler') != undefined && typeof window[$(this).data('customHandler')] == 'function') {
+                window[$(this).data('customHandler')](this);
+            } else {
+                XiboMultiSelectFormRender(this);
+            }
+        });
+
+        target.closest(".dataTables_wrapper").find(".dataTables_info li.XiboMultiSelectFormCustomButton").click(function(){
+            window[$(this).data('customHandler')](this);
         });
         
         // Bind click to select all button
@@ -1693,6 +1711,181 @@ function XiboMultiSelectFormRender(button) {
 
     footer.append(extrabutton);
 
+}
+
+function XiboMultiSelectTagFormRender(button) {
+    var elementType = $(button).data('contentType');
+    var elementIdName = $(button).data('contentIdName');
+    var matches = [];
+    var $targetTable = $(button).parents('.XiboGrid').find('.dataTable');
+    var targetDataTable = $targetTable.DataTable();
+    var dialogContent = '';
+    var dialogId = "multiselectTagEditForm";
+    var matchIds = [];
+    var existingTags = [];
+
+    // Get matches from the selected elements
+    $targetTable.find('tr.selected').each(function(){
+        matches.push($(this));
+    });
+
+    // If there are no matches, show form with no element selected message
+    if(matches.length == 0) {
+        dialogContent = translations.multiselectNoItemsMessage;
+    } else {
+        // Create the data for the request
+        matches.forEach(function(row) {
+            // Get data
+            var rowData = targetDataTable.row(row).data();
+
+            // Add match id to the array
+            matchIds.push(rowData[elementIdName]);
+
+            // Add existing tags to the array
+            if(['', null].indexOf(rowData.tags) == -1) {
+                rowData.tags.split(',').forEach(function(tag) {
+                    if(existingTags.indexOf(tag) === -1) {
+                        existingTags.push(tag);
+                    }
+                });
+            }
+        });
+        
+        dialogContent = Handlebars.compile($('#multiselect-tag-edit-form-template').html());
+    }
+
+    // Create dialog
+    var dialog = bootbox.dialog({
+        message: dialogContent,
+        title: translations.multiselect,
+        animate: false
+    });
+
+    // Append a footer to the dialog
+    var dialogBody = dialog.find(".modal-body");
+    var footer = $("<div>").addClass("modal-footer");
+    dialog.find(".modal-content").append(footer);
+    dialog.attr("id", dialogId);
+
+    // Add some buttons
+    var extrabutton;
+
+    if (matches.length > 0) {
+        // Save button
+        extrabutton = $('<button class="btn">').html(translations.save).addClass('btn-primary save-button');
+
+        extrabutton.click(function() {
+            var newTagsToRemove = dialogBody.find('#tagsToRemove').val().split(',');
+            var requestURL = dialogBody.find('#requestURL').val();
+
+            var tagsToBeRemoved = function() {
+                var tags = [];
+                existingTags.forEach(function(oldTag) {
+                    if(newTagsToRemove.indexOf(oldTag) == -1) {
+                        tags.push(oldTag);
+                    }
+                });
+
+                return tags;
+            };
+
+            var requestData = {
+                targetIds: matchIds.toString(),
+                targetType: elementType,
+                addTags: dialogBody.find('#tagsToAdd').val(),
+                removeTags: tagsToBeRemoved().toString()
+            };
+
+            // Add loading icon to the button
+            $(this).append('<span class="saving fa fa-cog fa-spin"></span>');
+
+            // Make an AJAX call
+            $.ajax({
+                type: 'PUT',
+                url: requestURL,
+                cache: false,
+                dataType: "json",
+                data: requestData,
+                success: function(response, textStatus, error) {
+
+                    if (response.success) {
+                        toastr.success(response.message);
+
+                        // Hide modal
+                        dialog.modal('hide');
+                    }
+                    else {
+                        // Why did we fail?
+                        if (response.login) {
+                            // We were logged out
+                            LoginBox(response.message);
+                        }
+                        else {
+                            // Likely just an error that we want to report on
+                            footer.find(".saving").remove();
+                            SystemMessageInline(response.message, footer.closest(".modal"));
+                        }
+
+
+                        // Remove loading icon
+                        $(this).find('.saving').remove();
+                    }
+                },
+                error: function(responseText) {
+                    SystemMessage(responseText, false);
+
+                    // Remove loading icon
+                    $(this).find('.saving').remove();
+                }
+            });
+
+            // Keep the modal open
+            return false;
+        });
+
+        footer.append(extrabutton);
+
+        // Initialise existing tags ( and save a backup )
+        if(existingTags.length > 0) {
+            var tagsString = existingTags.toString();
+            dialogBody.find('#tagsToRemove').val(tagsString);
+        } else {
+            dialogBody.find('#tagsToRemoveContainer').hide();
+        }
+
+        // Add element type to the request hidden input
+        dialogBody.find('#requestURL').val(dialogBody.find('#requestURL').val().replace('[type]', elementType));
+
+        // Prevent tag add
+        dialogBody.find('#tagsToRemove').on('beforeItemAdd', function(event) {
+            // Cancel event if the tag doesn't belong in the starting tags
+            event.cancel = (existingTags.indexOf(event.item) == -1);
+        });
+    }
+
+    // Close button
+    extrabutton = $('<button class="btn">').html(translations.close).addClass('btn-default');
+    extrabutton.click(function() {
+
+        $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
+
+        // Do our thing
+        dialog.modal('hide');
+
+        // Bring other modals back to focus
+        if ($('.modal').hasClass('in')) {
+            $('body').addClass('modal-open');
+        }
+
+        // Keep the modal window open!
+        return false;
+    });
+    
+    // Append button
+    footer.append(extrabutton);
+
+    // Initialise controls
+    XiboInitialise('#' + dialogId);
 }
 
 function XiboHelpRender(url) {
