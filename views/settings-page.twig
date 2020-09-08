@@ -25,8 +25,6 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-info btn-xs" ><a class="XiboFormButton btns" title="{% trans "Export database" %}" href="{{ urlFor("maintenance.export.form") }}"> <i class="fa fa-cloud-upload" aria-hidden="true"></i> {% trans "Export" %}</a></li>
-
         {% if settings.SETTING_LIBRARY_TIDY_ENABLED %}
             <li class="btn btn-danger btn-xs"><a class="XiboFormButton btns" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ urlFor("maintenance.libraryTidy.form") }}"> <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Tidy Library" %}</a></li>
         {% endif %}
@@ -1183,14 +1181,4 @@
             </div>
         </div>
     </div>
-{% endblock %}
-
-{% block javaScript %}
-    <script type="text/javascript">
-
-        function dbExportFormSubmit() {
-            $("#exportForm").submit();
-            XiboDialogClose();
-        }
-    </script>
 {% endblock %}
