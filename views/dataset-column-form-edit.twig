@@ -109,6 +109,9 @@
                 {% set title %}{% trans "Sort?" %}{% endset %}
                 {% set helpText %}{% trans "Enable sorting on the Data Entry Page? We recommend that the number of sortable columns is kept to a minimum." %}{% endset %}
                 {{ forms.checkbox("showSort", title, dataSetColumn.showSort, helpText) }}
+
+                {% set message %}{% trans "Two substitutions are available for formulas: [DisplayId] and [DisplayGeoLocation]. They will be substituted at run time with the Display ID / Display Geo Location (MySQL GEOMETRY)." %}{% endset %}
+                {{ forms.message(message, "alert alert-info formula") }}
             </form>
         </div>
     </div>

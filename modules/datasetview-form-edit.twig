@@ -234,6 +234,9 @@
                         {% set message %}{% trans "The DataSet results can be filtered by any column and set below. New fields can be added by selecting the plus icon at the end of the current row. Should a more complicated filter be required the advanced checkbox can be selected to provide custom SQL syntax." %}{% endset %}
                         {{ forms.message(message) }}
 
+                        {% set message %}{% trans "The substitution [DisplayId] can be used in filter clauses and will be substituted at run time with the Display ID. When shown in the CMS it will be substituted with 0." %}{% endset %}
+                        {{ forms.message(message) }}
+
                         <div id="filterClause">
 
                         </div>
