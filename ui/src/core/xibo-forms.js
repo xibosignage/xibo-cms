@@ -1408,8 +1408,11 @@ function tagsWithValues(formId) {
 
                                 // if the isRequired flag is set to 0 change the helpText to be more user friendly.
                                 if (tagIsRequired === 0) {
-                                    $('#tagValueInput').parent().find('span.help-block').text('Provide an optional Value for this Tag. If no Value is required, this field can be left blank')
+                                    $('#tagValueInput').parent().find('span.help-block').text(translations.tagInputValueHelpText)
+                                } else {
+                                    $('#tagValueInput').parent().find('span.help-block').text(translations.tagInputValueRequiredHelpText)
                                 }
+
                                 $('#tagValueInput').focus();
                             }
                         } else {
@@ -1418,7 +1421,7 @@ function tagsWithValues(formId) {
                             $('#tagValueInput').focus();
 
                             // isRequired flag is set to 0 (new Tag) change the helpText to be more user friendly.
-                            $('#tagValueInput').parent().find('span.help-block').text('Provide an optional Value for this Tag. If no Value is required, this field can be left blank')
+                            $('#tagValueInput').parent().find('span.help-block').text(translations.tagInputValueHelpText)
                         }
                     }
                 },
