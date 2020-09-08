@@ -169,27 +169,25 @@ Cypress.Commands.add('addMediaToLibrary', function(fileName) {
     cy.fixture(fileName, 'binary').then((zipBin) => {
 
         // File in binary format gets converted to blob so it can be sent as Form data
-        return Cypress.Blob.binaryStringToBlob(zipBin, fileType).then((blob) => {
+        var blob = Cypress.Blob.binaryStringToBlob(zipBin, fileType);
+        
+        // Build up the form
+        const formData = new FormData();
 
-            // Build up the form
-            const formData = new FormData();
+        formData.set('files[]', blob, fileName); //adding a file to the form
+        
+        // Perform the request
+        return cy.formRequest(method, url, formData).then((res) => {
 
-            formData.set('files[]', blob, fileName); //adding a file to the form
-            
-            // Perform the request
-            cy.formRequest(method, url, formData).then((res) => {
+            const parsedJSON = JSON.parse(res);
 
-                const parsedJSON = JSON.parse(res);
-
-                // Return id
-                return parsedJSON.files[0].name;
-            });
+            // Return id
+            return parsedJSON.files[0].name;
         });
     });
 });
 
 Cypress.Commands.add('importLayout', function(fileName) {
-
     //Declarations
     const method = 'POST';
     const url = '/api/layout/import';
@@ -197,25 +195,24 @@ Cypress.Commands.add('importLayout', function(fileName) {
 
     // Get file from fixtures as binary
     cy.fixture(fileName, 'binary').then((zipBin) => {
-
         // File in binary format gets converted to blob so it can be sent as Form data
-        return Cypress.Blob.binaryStringToBlob(zipBin, fileType).then((blob) => {
+        var blob = Cypress.Blob.binaryStringToBlob(zipBin, fileType);
 
-            // Build up the form
-            const formData = new FormData();
+        // Build up the form
+        const formData = new FormData();
 
-            // Create random name
-            const uuid = Cypress._.random(0, 1e6);
+        // Create random name
+        const uuid = Cypress._.random(0, 1e6);
 
-            formData.set('files[]', blob, fileName); //adding a file to the form
-            formData.set('name[]', uuid); //adding a name to the form
+        formData.set('files[]', blob, fileName); //adding a file to the form
+        formData.set('name[]', uuid); //adding a name to the form
 
-            // Perform the request
-            cy.formRequest(method, url, formData).then((res) => {
-                const parsedJSON = JSON.parse(res);
-                // Return id
-                return parsedJSON.files[0].id;
-            });
+        // Perform the request
+        return cy.formRequest(method, url, formData).then((res) => {
+
+            const parsedJSON = JSON.parse(res);
+            // Return id
+            return parsedJSON.files[0].id;
         });
     });
 });

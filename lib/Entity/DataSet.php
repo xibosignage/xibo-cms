@@ -816,7 +816,7 @@ class DataSet implements \JsonSerializable
                 AND `widgetoption`.option = \'dataSetId\'
                 AND `widgetoption`.value = :dataSetId
         ', ['dataSetId' => $this->dataSetId])) {
-            throw new InvalidArgumentException('Cannot delete because DataSet is in use on one or more Layouts.', 'dataSetId');
+            throw new InvalidArgumentException(__('Cannot delete because DataSet is in use on one or more Layouts.'), 'dataSetId');
         }
 
         // Delete Permissions

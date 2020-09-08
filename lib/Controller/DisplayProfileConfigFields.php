@@ -192,6 +192,10 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('useMultipleVideoDecoders', $this->getSanitizer()->getString('useMultipleVideoDecoders'), $ownConfig, $config);
                 }
 
+                if ($this->getSanitizer()->hasParam('maxRegionCount')) {
+                    $displayProfile->setSetting('maxRegionCount', $this->getSanitizer()->getInt('maxRegionCount'), $ownConfig, $config);
+                }
+
                 break;
 
             case 'windows':
