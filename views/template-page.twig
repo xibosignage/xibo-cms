@@ -37,15 +37,14 @@
                             {{ inline.input("template", title) }}
 
                             {% set title %}{% trans "Tags" %}{% endset %}
-                            {{ inline.input("tags", title) }}
-
-                            {% set title %}{% trans "Exact match?" %}{% endset %}
-                            {{ inline.checkbox("exactTags", title) }}
+                            {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                            {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
+                            {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
                         </form>
                     </div>
                 </div>
                 <div class="XiboData">
-                    <table id="templates" class="table table-striped">
+                    <table id="templates" class="table table-striped" data-content-type="layout" data-content-id-name="layoutId">
                         <thead>
                             <tr>
                                 <th>{% trans "Name" %}</th>

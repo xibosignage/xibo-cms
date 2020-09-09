@@ -52,7 +52,7 @@
         <label class="control-label" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         {% if exactTag %}
             <div>
-                <div class="input-group">
+                <div class="input-group input-group-tags-exact">
                     <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputInline" data-auto-complete-url="{{ url_for('tag.search') }}" {{ validation }} />
                     <span class="input-group-addon">
                         <input title="{{ exactTagTitle }}" type="checkbox" id="{{ exactTag }}" name="{{ exactTag }}">
@@ -61,7 +61,7 @@
             </div>
         {% else %}
             <div>
-                <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputInline" {{ validation }} />
+                <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputInline" data-auto-complete-url="{{ url_for('tag.search') }}" {{ validation }} />
             </div>
         {% endif %}
     </div>

@@ -669,4 +669,35 @@ class Tag extends Base
 
         return $this->render($request, $response);
     }
+
+    public function editMultiple(Request $request, Response $response)
+    {
+        // Handle permissions
+        if (!$this->getUser()->routeViewable('/tag')) {
+            throw new AccessDeniedException();
+        }
+
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $targetType = $this->getSanitizer($request->getParams())->getString('targetType');
+        $targetIds = $this->getSanitizer($request->getParams())->getString('targetIds');
+        $tagsToAdd = $this->getSanitizer($request->getParams())->getString('addTags');
+        $tagsToRemove = $this->getSanitizer($request->getParams())->getString('removeTags');
+
+        $this->getLog()->debug('Edit multiple tags!');
+        $this->getLog()->debug('Target type: ' . $targetType);
+        $this->getLog()->debug('Target ids: ' . $targetIds);
+        $this->getLog()->debug('Tags to be added: ' . $tagsToAdd);
+        $this->getLog()->debug('Tags to be removed: ' . $tagsToRemove);
+
+        // TODO: Functionality needs to be implemented
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Tags Edited'))
+        ]);
+
+        return $this->render($request, $response);
+    }
 }

@@ -569,6 +569,7 @@ $app->post('/tag', ['\Xibo\Controller\Tag','add'])->setName('tag.add');
 $app->put('/tag/{id}', ['\Xibo\Controller\Tag','edit'])->setName('tag.edit');
 $app->delete('/tag/{id}', ['\Xibo\Controller\Tag','delete'])->setName('tag.delete');
 $app->get('/tag/name', ['\Xibo\Controller\Tag','loadTagOptions'])->setName('tag.getByName');
+$app->put('/tag/{type}/multi', ['\Xibo\Controller\Tag','editMultiple'])->setName('tag.editMultiple');
 
 
 /**
