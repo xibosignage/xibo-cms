@@ -1,9 +1,10 @@
 <?php
 /*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (Base.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,7 +20,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Controller;
 use Slim\Slim;
 use Slim\Views\Twig;
@@ -28,7 +28,6 @@ use Xibo\Exception\ConfigurationException;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
-use Xibo\Service\FactoryServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\SanitizerServiceInterface;
 
@@ -379,21 +378,28 @@ class Base
     /**
      * Set the sort order
      * @return array
+     * @throws \Xibo\Exception\ConfigurationException
      */
     protected function gridRenderSort()
     {
         $app = $this->getApp();
 
         $columns = $app->request()->get('columns');
-
-        if ($columns == null || !is_array($columns))
+        if ($columns === null || !is_array($columns) || count($columns) <= 0) {
             return null;
+        }
 
-        $order = array_map(function ($element) use ($columns) {
-            return ((isset($columns[$element['column']]['name']) && $columns[$element['column']]['name'] != '') ? '`' . $columns[$element['column']]['name'] . '`' : '`' . $columns[$element['column']]['data'] . '`') . (($element['dir'] == 'desc') ? ' DESC' : '');
-        }, $app->request()->get('order', array()));
+        $order = $app->request()->get('order');
+        if ($order === null || !is_array($order) || count($order) <= 0) {
+            return null;
+        }
 
-        return $order;
+        return array_map(function ($element) use ($columns) {
+            return ((isset($columns[$element['column']]['name']) && $columns[$element['column']]['name'] != '')
+                    ? '`' . $columns[$element['column']]['name'] . '`'
+                    : '`' . $columns[$element['column']]['data'] . '`')
+                . (($element['dir'] == 'desc') ? ' DESC' : '');
+        }, $order);
     }
 
     /**

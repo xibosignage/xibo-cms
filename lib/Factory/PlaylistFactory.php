@@ -113,8 +113,10 @@ class PlaylistFactory extends BaseFactory
     {
         $playlists = $this->query(null, array('disableUserCheck' => 1, 'regionId' => $regionId));
 
-        if (count($playlists) <= 0)
-            throw new NotFoundException(__('Cannot find playlist'));
+        if (count($playlists) <= 0) {
+            $this->getLog()->error('Region ' . $regionId . ' does not have a Playlist associated, please try to set a new owner in Permissions.');
+            throw new NotFoundException(__('One of the Regions on this Layout does not have a Playlist, please contact your administrator.'));
+        }
 
         return $playlists[0];
     }
@@ -224,7 +226,7 @@ class PlaylistFactory extends BaseFactory
 
         $body = '  
               FROM `playlist` 
-                INNER JOIN `user` 
+                LEFT OUTER JOIN `user` 
                 ON `user`.userId = `playlist`.ownerId
              WHERE 1 = 1 
         ';

@@ -102,7 +102,7 @@ class DisplayGroupFactory extends BaseFactory
 
     /**
      * @param int $displayId
-     * @return array[DisplayGroup]
+     * @return DisplayGroup[]
      */
     public function getByDisplayId($displayId)
     {
@@ -112,7 +112,7 @@ class DisplayGroupFactory extends BaseFactory
     /**
      * Get Display Groups by MediaId
      * @param int $mediaId
-     * @return array[DisplayGroup]
+     * @return DisplayGroup[]
      */
     public function getByMediaId($mediaId)
     {
@@ -122,7 +122,7 @@ class DisplayGroupFactory extends BaseFactory
     /**
      * Get Display Groups by eventId
      * @param int $eventId
-     * @return array[DisplayGroup]
+     * @return DisplayGroup[]
      */
     public function getByEventId($eventId)
     {
@@ -132,7 +132,7 @@ class DisplayGroupFactory extends BaseFactory
     /**
      * Get Display Groups by isDynamic
      * @param int $isDynamic
-     * @return array[DisplayGroup]
+     * @return DisplayGroup[]
      */
     public function getByIsDynamic($isDynamic)
     {
@@ -142,7 +142,7 @@ class DisplayGroupFactory extends BaseFactory
     /**
      * Get Display Groups by their ParentId
      * @param int $parentId
-     * @return array[DisplayGroup]
+     * @return DisplayGroup[]
      */
     public function getByParentId($parentId)
     {

@@ -845,6 +845,9 @@ class Schedule implements \JsonSerializable
             $this->getLog()->debug('The main event has a start and end date within the month, no need to pull it in from the prior month. [eventId:' . $this->eventId . ']');
         }
 
+        // Keep a cache of schedule exclusions, so we look them up by eventId only one time per event
+        $scheduleExclusions = $this->scheduleExclusionFactory->query(null, ['eventId' => $this->eventId]);
+
         // Request month cache
         while ($fromDt < $toDt) {
 
@@ -860,8 +863,6 @@ class Schedule implements \JsonSerializable
             foreach ($this->scheduleEvents as $scheduleEvent) {
 
                 // Find the excluded recurring events
-                $scheduleExclusions = $this->scheduleExclusionFactory->query(null, ['eventId' => $this->eventId]);
-
                 $exclude = false;
                 foreach ($scheduleExclusions as $exclusion) {
                     if ($scheduleEvent->fromDt == $exclusion->fromDt &&
@@ -893,6 +894,9 @@ class Schedule implements \JsonSerializable
             // Move the month forwards
             $fromDt->addMonth();
         }
+
+        // Clear our cache of schedule exclusions
+        $scheduleExclusions = null;
 
         $this->getLog()->debug('Filtered ' . count($this->scheduleEvents) . ' to ' . count($events) . ', events: ' . json_encode($events, JSON_PRETTY_PRINT));
 

@@ -59,6 +59,15 @@
  	list-style: none;
  }
 
+ #cal-day-box {
+    overflow-x: auto;
+ }
+ 
+ #cal-day-box #cal-day-panel {
+    width: max-content;
+    min-width: 100%;
+ }
+
  .day-highlight {
  	overflow: hidden;
  }

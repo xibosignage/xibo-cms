@@ -24,8 +24,7 @@
                 <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline" onsubmit="return false">
-
-                            <div class="form-group ">
+                            <div class="form-group">
                                 <label class="control-label" title="" for="dataSet" accesskey="">{% trans "Name" %}</label>
                                 <div>
                                     <div class="input-group">
@@ -37,6 +36,15 @@
                                     </div>
                                 </div>
                             </div>
+
+                            {% set title %}{% trans "Code" %}{% endset %}
+                            {% set helpText %}{% trans "Show items which match the provided code" %}{% endset %}
+                            {{ inline.input("code", title, "", helpText) }}
+
+                            {% set title %}{% trans "Owner" %}{% endset %}
+                            {% set helpText %}{% trans "Show items owned by the selected User." %}{% endset %}
+                            {{ inline.dropdown("userId", "single", title, "", [{userId:null, userName:""}]|merge(users), "userId", "userName", helpText, "selectPicker", "", "", "", attributes) }}
+
                         </form>
                     </div>
                 </div>
