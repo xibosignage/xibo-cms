@@ -92,7 +92,19 @@
                         {# What range are we looking to return #}
                         {% set title %}{% trans "Interval" %}{% endset %}
                         {% set helpText %}{% trans "Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week." %}{% endset %}
-                        {{ forms.input("customInterval", title, module.getOption("customInterval"), helpText)}}
+                        {{ forms.input("customInterval", title, module.getOption("customInterval"), helpText, "interval")}}
+
+                        {% set title %}{% trans "Select a Date range to return events instead?" %}{% endset %}
+                        {% set helpText %}{% trans "Use the checkbox to return events within defined start and end dates" %}{% endset %}
+                        {{ forms.checkbox("useDateRange", title, module.getOption("useDateRange", 0), helpText) }}
+
+                        <div class="date-range" style="display: none">
+                            {% set title %}{% trans "Start Date" %}{% endset %}
+                            {{ forms.dateTime("rangeStart", title, module.getOption("rangeStart", null), "", "date-range") }}
+
+                            {% set title %}{% trans "End Date" %}{% endset %}
+                            {{ forms.dateTime("rangeEnd", title, module.getOption("rangeEnd", null, "", "date-range")) }}
+                        </div>
 
                         {% set title %}{% trans "Number of Items" %}{% endset %}
                         {% set helpText %}{% trans "The Number of items you want to display" %}{% endset %}

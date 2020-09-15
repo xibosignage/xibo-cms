@@ -286,6 +286,27 @@ class Calendar extends ModuleWidget
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="useDateRange",
+     *      in="formData",
+     *      description="Should we look for events with provided date range?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="rangeStart",
+     *      in="formData",
+     *      description="Date in Y-m-d H:i:s",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="rangeEnd",
+     *      in="formData",
+     *      description="Date in Y-m-d H:i:s",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -333,6 +354,10 @@ class Calendar extends ModuleWidget
         $this->setOption('useCalendarTimezone', $sanitizedParams->getCheckbox('useCalendarTimezone'));
         $this->setOption('windowsFormatCalendar', $sanitizedParams->getCheckbox('windowsFormatCalendar'));
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
+
+        $this->setOption('useDateRange', $sanitizedParams->getCheckbox('useDateRange'));
+        $this->setOption('rangeStart', $sanitizedParams->getDate('rangeStart'));
+        $this->setOption('rangeEnd', $sanitizedParams->getDate('rangeEnd'));
 
         $this->isValid();
         $this->saveWidget();
@@ -391,8 +416,9 @@ class Calendar extends ModuleWidget
 
         // Work out how many pages we will be showing.
         $pages = $numItems;
-        if ($numItems > count($items) || $numItems == 0)
+        if ($numItems > count($items) || $numItems == 0) {
             $pages = count($items);
+        }
 
         $pages = ($itemsPerPage > 0) ? ceil($pages / $itemsPerPage) : $pages;
         $totalDuration = ($durationIsPerItem == 0) ? $duration : ($duration * $pages);
@@ -472,12 +498,14 @@ class Calendar extends ModuleWidget
             ->appendItems($items);
 
         // Need the marquee plugin?
-        if (stripos($effect, 'marquee') !== false)
+        if (stripos($effect, 'marquee') !== false) {
             $this->appendJavaScriptFile('vendor/jquery.marquee.min.js');
+        }
 
         // Need the cycle plugin?
-        if ($effect != 'none')
+        if ($effect != 'none') {
             $this->appendJavaScriptFile('vendor/jquery-cycle-2.1.6.min.js');
+        }
 
         return $this->finaliseGetResource();
     }
@@ -595,8 +623,17 @@ class Calendar extends ModuleWidget
         // Force timezone of each event?
         $useEventTimezone = $this->getOption('useEventTimezone', 1);
 
+        // do we use interval or provided date range?
+        if ($this->getOption('useDateRange')) {
+            $rangeStart = $this->getOption('rangeStart');
+            $rangeEnd = $this->getOption('rangeEnd');
+            $events = $iCal->eventsFromRange($rangeStart, $rangeEnd);
+        } else {
+            $events = $iCal->eventsFromInterval($this->getOption('customInterval', '1 week'));
+        }
+
         // Go through each event returned
-        foreach ($iCal->eventsFromInterval($this->getOption('customInterval', '1 week')) as $event) {
+        foreach ($events as $event) {
             try {
                 /** @var \ICal\Event $event */
                 $startDt = Carbon::instance($iCal->iCalDateToDateTime($event->dtstart));
