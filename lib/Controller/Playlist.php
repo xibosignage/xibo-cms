@@ -630,19 +630,6 @@ class Playlist extends Base
     public function editForm(Request $request, Response $response, $id)
     {
         $playlist = $this->playlistFactory->getById($id);
-        $tags = '';
-
-        $arrayOfTags = array_filter(explode(',', $playlist->tags));
-        $arrayOfTagValues = array_filter(explode(',', $playlist->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
-        }
 
         if (!$this->getUser()->checkEditable($playlist)) {
             throw new AccessDeniedException();
@@ -651,7 +638,7 @@ class Playlist extends Base
         $this->getState()->template = 'playlist-form-edit';
         $this->getState()->setData([
             'playlist' => $playlist,
-            'tags' => $tags
+            'tags' => $this->tagFactory->getTagsWithValues($playlist)
         ]);
 
         return $this->render($request, $response);
@@ -938,19 +925,7 @@ class Playlist extends Base
         }
 
         // Handle tags
-        $tags = '';
-
-        $arrayOfTags = array_filter(explode(',', $playlist->tags));
-        $arrayOfTagValues = array_filter(explode(',', $playlist->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
-        }
+        $tags = $this->tagFactory->getTagsWithValues($playlist);
 
         $playlist->replaceTags($this->tagFactory->tagsFromString($tags));
 

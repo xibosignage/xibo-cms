@@ -1359,7 +1359,7 @@ function tagsWithValues(formId) {
     let tagOptions = [];
     let tagIsRequired = 0;
 
-    let formSelector = '#' + formId + ' input#tags';
+    let formSelector = '#' + formId + ' input#tags' + ', #' + formId + ' input#tagsToAdd';
 
     $(formSelector).on('beforeItemAdd', function(event) {
         $('#tagValue').html('');
@@ -1372,7 +1372,7 @@ function tagsWithValues(formId) {
 
         if ($(formSelector).val().indexOf(tagN) === -1 && tagV === undefined) {
             $.ajax({
-                url: $('#'+formId).data().gettag,
+                url: $('form#'+formId).data().gettag,
                 type: "GET",
                 data: {
                     name: tagN,
@@ -1389,16 +1389,20 @@ function tagsWithValues(formId) {
                             if (tagOptions != null && tagOptions != []) {
                                 $('#tagValue, label[for="tagValue"]').removeClass("hidden");
 
-                                $('#tagValue')
-                                    .append($("<option></option>")
-                                        .attr("value", '')
-                                        .text(''));
-
-                                $.each(tagOptions, function (key, value) {
+                                if ($('#tagValue option[value=""]').length <= 0) {
                                     $('#tagValue')
                                         .append($("<option></option>")
-                                            .attr("value", value)
-                                            .text(value));
+                                            .attr("value", '')
+                                            .text(''));
+                                }
+
+                                $.each(tagOptions, function (key, value) {
+                                    if ($('#tagValue option[value='+value+']').length <= 0) {
+                                        $('#tagValue')
+                                            .append($("<option></option>")
+                                                .attr("value", value)
+                                                .text(value));
+                                    }
                                 });
 
                                 $('#tagValue').focus();
@@ -1463,15 +1467,18 @@ function tagsWithValues(formId) {
         e.preventDefault();
         tagWithOption = tagN + '|' + $(this).val();
 
-        if (tagIsRequired === 0 || (tagIsRequired === 1 && $(this).val() !== '')) {
-            $(formSelector).tagsinput('add', tagWithOption);
-            $(formSelector).tagsinput('remove', tagN);
-            $('#tagValue').html('').addClass("hidden");
-            $('#tagValueRequired, label[for="tagValue"]').addClass('hidden');
-            $('.save-button').prop('disabled', false);
-        } else {
-            $('#tagValueRequired').removeClass('hidden');
-            $('#tagValue').focus();
+        // additional check, helpful for multi tagging.
+        if (tagN != '') {
+            if (tagIsRequired === 0 || (tagIsRequired === 1 && $(this).val() !== '')) {
+                $(formSelector).tagsinput('add', tagWithOption);
+                $(formSelector).tagsinput('remove', tagN);
+                $('#tagValue').html('').addClass("hidden");
+                $('#tagValueRequired, label[for="tagValue"]').addClass('hidden');
+                $('.save-button').prop('disabled', false);
+            } else {
+                $('#tagValueRequired').removeClass('hidden');
+                $('#tagValue').focus();
+            }
         }
     });
 

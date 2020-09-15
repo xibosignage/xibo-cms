@@ -1741,11 +1741,20 @@ function XiboMultiSelectTagFormRender(button) {
             // Add match id to the array
             matchIds.push(rowData[elementIdName]);
 
+            let arrayOfValues = [];
+            if(typeof rowData.tagValues != undefined && rowData.tagValues != null) {
+                arrayOfValues = rowData.tagValues.split(',');
+            }
+
             // Add existing tags to the array
-            if(['', null].indexOf(rowData.tags) == -1) {
-                rowData.tags.split(',').forEach(function(tag) {
-                    if(existingTags.indexOf(tag) === -1) {
+            if(['', null].indexOf(rowData.tags) === -1) {
+                let arrayOfTags = rowData.tags.split(',');
+
+                arrayOfTags.forEach(function(tag, index) {
+                    if(existingTags.indexOf(tag) === -1 && (arrayOfValues[index] == undefined || arrayOfValues[index] == 'NULL')) {
                         existingTags.push(tag);
+                    } else if (existingTags.indexOf(tag) === -1 && (arrayOfValues[index] != '' || arrayOfValues[index] != 'NULL')) {
+                        existingTags.push(arrayOfTags[index] + '|' + arrayOfValues[index]);
                     }
                 });
             }
@@ -1813,6 +1822,7 @@ function XiboMultiSelectTagFormRender(button) {
 
                         // Hide modal
                         dialog.modal('hide');
+                        targetDataTable.ajax.reload(null, false);
                     }
                     else {
                         // Why did we fail?

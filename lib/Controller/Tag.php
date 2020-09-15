@@ -226,7 +226,12 @@ class Tag extends Base
             /* @var \Xibo\Entity\Tag $tag */
 
             if ($this->isApi($request)) {
-                break;
+                $tag->excludeProperty('layouts');
+                $tag->excludeProperty('playlists');
+                $tag->excludeProperty('campaigns');
+                $tag->excludeProperty('medias');
+                $tag->excludeProperty('displayGroups');
+                continue;
             }
 
             $tag->includeProperty('buttons');
@@ -670,6 +675,18 @@ class Tag extends Base
         return $this->render($request, $response);
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     */
     public function editMultiple(Request $request, Response $response)
     {
         // Handle permissions
@@ -679,18 +696,72 @@ class Tag extends Base
 
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $targetType = $this->getSanitizer($request->getParams())->getString('targetType');
-        $targetIds = $this->getSanitizer($request->getParams())->getString('targetIds');
-        $tagsToAdd = $this->getSanitizer($request->getParams())->getString('addTags');
-        $tagsToRemove = $this->getSanitizer($request->getParams())->getString('removeTags');
+        $targetType = $sanitizedParams->getString('targetType');
+        $targetIds = $sanitizedParams->getString('targetIds');
+        $tagsToAdd = $sanitizedParams->getString('addTags');
+        $tagsToRemove = $sanitizedParams->getString('removeTags');
 
-        $this->getLog()->debug('Edit multiple tags!');
-        $this->getLog()->debug('Target type: ' . $targetType);
-        $this->getLog()->debug('Target ids: ' . $targetIds);
-        $this->getLog()->debug('Tags to be added: ' . $tagsToAdd);
-        $this->getLog()->debug('Tags to be removed: ' . $tagsToRemove);
+        // check if we need to do anything first
+        if ($tagsToAdd != '' || $tagsToRemove != '') {
 
-        // TODO: Functionality needs to be implemented
+            // covert comma separated string of ids into array
+            $targetIdsArray = explode(',', $targetIds);
+
+            // get tags to assign and unassign
+            $tags = $this->tagFactory->tagsFromString($tagsToAdd);
+            $untags = $this->tagFactory->tagsFromString($tagsToRemove);
+
+            // depending on the type we need different factory
+            switch ($targetType){
+                case 'layout':
+                    $entityFactory = $this->layoutFactory;
+                    break;
+                case 'playlist':
+                    $entityFactory = $this->playlistFactory;
+                    break;
+                case 'media':
+                    $entityFactory = $this->mediaFactory;
+                    break;
+                case 'campaign':
+                    $entityFactory = $this->campaignFactory;
+                    break;
+                case 'display':
+                    $entityFactory = $this->displayGroupFactory;
+                    break;
+                case 'displayGroup':
+                    $entityFactory = $this->displayGroupFactory;
+                    break;
+            }
+
+            foreach ($targetIdsArray as $id) {
+                // get the entity by provided id, for display we need different function
+                if ($targetType === 'display') {
+                    $entity = $entityFactory->getByDisplayId($id)[0];
+                } else {
+                    $entity = $entityFactory->getById($id);
+                }
+
+                // for DG and campaign we need to setChildObjectDependencies otherwise it won't load.
+                if ($targetType === 'displayGroup' || $targetType === 'display') {
+                    $entity->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+                } else if ($targetType === 'campaign') {
+                    $entity->setChildObjectDependencies($this->layoutFactory);
+                }
+
+                foreach ($untags as $untag) {
+                    $entity->unassignTag($untag);
+                }
+
+                // go through tags and adjust assignments.
+                foreach ($tags as $tag) {
+                    $entity->assignTag($tag);
+                }
+
+                $entity->save();
+            }
+        } else {
+            $this->getLog()->debug('Tags were not changed');
+        }
 
         // Return
         $this->getState()->hydrate([

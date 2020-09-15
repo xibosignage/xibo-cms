@@ -239,20 +239,6 @@ class Template extends Base
         // Get the layout
         $layout = $this->layoutFactory->getById($id);
 
-        $tags = '';
-
-        $arrayOfTags = array_filter(explode(',', $layout->tags));
-        $arrayOfTagValues = array_filter(explode(',', $layout->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL')) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
-        }
-
         // Check Permissions
         if (!$this->getUser()->checkViewable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to view this layout'));
@@ -261,7 +247,7 @@ class Template extends Base
         $this->getState()->template = 'template-form-add-from-layout';
         $this->getState()->setData([
             'layout' => $layout,
-            'tags' => $tags,
+            'tags' => $this->tagFactory->getTagsWithValues($layout),
             'help' => $this->getHelp()->link('Template', 'Add')
         ]);
 
