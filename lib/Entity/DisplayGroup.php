@@ -520,6 +520,12 @@ class DisplayGroup implements \JsonSerializable
 
             if (!in_array($tag, $this->tags)) {
                 $this->tags[] = $tag;
+            } else {
+                foreach ($this->tags as $currentTag) {
+                    if ($currentTag === $tag->tagId && $currentTag->value !== $tag->value) {
+                        $this->tags[] = $tag;
+                    }
+                }
             }
         } else {
             $this->getLog()->debug('No Tags to assign');
@@ -537,13 +543,13 @@ class DisplayGroup implements \JsonSerializable
     public function unassignTag($tag)
     {
         $this->load();
-        $this->tags = array_udiff($this->tags, [$tag], function($a, $b) {
-            /* @var Tag $a */
-            /* @var Tag $b */
-            return $a->tagId - $b->tagId;
-        });
 
-        $this->unassignTags[] = $tag;
+        foreach ($this->tags as $key => $currentTag) {
+            if ($currentTag->tagId === $tag->tagId && $currentTag->value === $tag->value) {
+                $this->unassignTags[] = $tag;
+                array_splice($this->tags, $key, 1);
+            }
+        }
 
         $this->getLog()->debug('Tags after removal %s', json_encode($this->tags));
 
@@ -677,18 +683,6 @@ class DisplayGroup implements \JsonSerializable
         }
 
         if ($options['saveTags']) {
-            // Tags
-            if (is_array($this->tags)) {
-                foreach ($this->tags as $tag) {
-                    /* @var Tag $tag */
-
-                    $this->getLog()->debug('Assigning tag ' . $tag->tag);
-
-                    $tag->assignDisplayGroup($this->displayGroupId);
-                    $tag->save();
-                }
-            }
-
             // Remove unwanted ones
             if (is_array($this->unassignTags)) {
                 foreach ($this->unassignTags as $tag) {
@@ -696,6 +690,18 @@ class DisplayGroup implements \JsonSerializable
                     $this->getLog()->debug('Unassigning tag ' . $tag->tag);
 
                     $tag->unassignDisplayGroup($this->displayGroupId);
+                    $tag->save();
+                }
+            }
+
+            // Save Tags
+            if (is_array($this->tags)) {
+                foreach ($this->tags as $tag) {
+                    /* @var Tag $tag */
+
+                    $this->getLog()->debug('Assigning tag ' . $tag->tag);
+
+                    $tag->assignDisplayGroup($this->displayGroupId);
                     $tag->save();
                 }
             }

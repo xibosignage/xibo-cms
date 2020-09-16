@@ -425,4 +425,22 @@ class TagFactory extends BaseFactory
         }
         return $entries;
     }
+
+    public function getTagsWithValues($entity)
+    {
+        $tags = '';
+        $arrayOfTags = array_filter(explode(',', $entity->tags));
+        $arrayOfTagValues = array_filter(explode(',', $entity->tagValues));
+
+        for ($i=0; $i<count($arrayOfTags); $i++) {
+            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
+                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
+                $tags .= ',';
+            } else {
+                $tags .= $arrayOfTags[$i] . ',';
+            }
+        }
+
+        return $tags;
+    }
 }

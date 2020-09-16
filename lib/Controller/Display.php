@@ -882,20 +882,6 @@ class Display extends Base
         // We have permission - load
         $display->load();
 
-        $tags = '';
-
-        $arrayOfTags = array_filter(explode(',', $display->tags));
-        $arrayOfTagValues = array_filter(explode(',', $display->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
-        }
-
         // Dates
         $display->auditingUntilIso =  Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
 
@@ -970,7 +956,7 @@ class Display extends Base
             'displayLockName' => ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
             'help' => $this->getHelp()->link('Display', 'Edit'),
             'versions' => $playerVersions,
-            'tags' => $tags,
+            'tags' => $this->tagFactory->getTagsWithValues($display),
             'dayParts' => $dayparts
         ]);
 
