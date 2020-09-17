@@ -98,8 +98,8 @@
                         {% set helpText %}{% trans "Choose the resolution this Layout should be designed for." %}{% endset %}
                         {{ forms.dropdown("resolutionId", "single", title, "", resolutions, "resolutionId", "resolution", helpText, "resolution-group") }}
 
-                        {% set title %}{% trans "Code" %}{% endset %}
-                        {% set helpText %}{% trans "The Code identifier for this Layout - used in Interactive Actions" %}{% endset %}
+                        {% set title %}{% trans "Code Identifier" %}{% endset %}
+                        {% set helpText %}{% trans "Enter a string to be used as the Code to identify this Layout when used with Interactive Actions." %}{% endset %}
                         {{ forms.input("code", title, "", helpText) }}
 
                         {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}

@@ -35,6 +35,11 @@
         $(dialog).find("#actionType").on('change', function () {
             onActionTypeChange(dialog);
         });
+
+        onTriggerChange(dialog);
+        $(dialog).find("#triggerType").on('change', function() {
+            onTriggerChange(dialog);
+        })
     }
 
     function onTargetChange(dialog) {
@@ -77,6 +82,18 @@
             target.removeClass("hidden");
             $('#widgetId').val('');
             $('#layoutCode').val('');
+        }
+    }
+
+    function onTriggerChange(dialog) {
+        let triggerType = $(dialog).find("#triggerType").val();
+        let triggerCode = $(dialog).find(".trigger-code-control");
+
+        if (triggerType === 'webhook') {
+            triggerCode.removeClass('hidden');
+        } else {
+            triggerCode.addClass('hidden');
+            $('#triggerCode').val('');
         }
     }
 

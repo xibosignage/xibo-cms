@@ -114,6 +114,11 @@
         var userPreferences = {{ userPreferences|json_encode|raw }};
         var userPreferencesUrl = "{{ url_for("user.pref") }}";
 
+        // TODO: Change this to a call to all route permissions ( something like currentUser.getRoutePermissions() )
+        var userRoutePermissions = {
+            tags: "{{ currentUser.routeViewable('/tag') }}"
+        };
+
         // Equals helper for the templates below
         Handlebars.registerHelper('eq', function(v1, v2, opts) {
             if (v1 === v2) {
@@ -163,7 +168,7 @@
             </button>
             <ul class="dropdown-menu">
                 {{#each buttons}}
-                <li class="XiboMultiSelectFormButton" data-button-id="{{ id }}" data-grid-id="{{ gridId }}"><a tabindex="-1" href="#">{{ text }}</a></li>
+                    <li class="XiboMultiSelectFormButton" data-custom-handler="{{ customHandler }}" data-button-id="{{ id }}" data-grid-id="{{ gridId }}" data-content-type="{{ contentType }}" data-content-id-name="{{ contentIdName }}"><a tabindex="-1" href="#">{{ text }}</a></li>
                 {{/each}}
             </ul>
         </div>
@@ -530,6 +535,50 @@
                         <!-- Processing info container -->
                         <div class="progress-end" style="display:none;">{% trans "Processing..." %}</div>
                     </div>
+                </div>
+            </div>
+        </form>
+    </script>
+
+    <script type="text/x-handlebars-template" id="multiselect-tag-edit-form-template">
+        <form id="multiselectTagEditForm" data-gettag="{{ url_for("tag.getByName") }}">
+            <input type="hidden" id="requestURL" name="requestURL" value="{{ url_for('tag.editMultiple', {type: '[type]'}) }}">
+            <div class="form-group tags-with-value tags-input-wide row">
+                <label class="col-sm-2 control-label" for="tagsToAdd">{% trans "Add new tags" %}</label>
+                <div class="col-sm-10">
+                    <input class="form-control" name="tagsToAdd" type="email" id="tagsToAdd" data-role="tagsInputForm" data-auto-complete-url="{{ url_for('tag.search') }}" />
+                    <span class="help-block">{% trans "A comma separated list of tags to add to the selected elements." %}</span>
+                </div>
+            </div>
+
+            <p id="loadingValues" style="margin-left: 17%"></p>
+
+            <div class="form-group row">
+                <label class="col-sm-2 control-label" for="tagValue" title="" accesskey="">{% trans "Tag value" %}</label>
+                <div class="col-sm-10">
+                    <select class="form-control" name="tagValue" id="tagValue"></select>
+                </div>
+            </div>
+
+            <div id="tagValueContainer" style="display: none;">
+                <div class="form-group row">
+                    <label class="col-sm-2 control-label" for="tagValueInput" accesskey="">{% trans "Tag value" %}</label>
+                    <div class="col-sm-10">
+                        <input class="form-control" name="tagValueInput" type="text" id="tagValueInput" value="">
+                        <span class="help-block">{% trans "Provide an optional Value for this Tag. If no Value is required, this field can be left blank." %}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tagValueRequired" class="alert alert-info hidden">
+                <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown or provide Tag value in the dedicated field." %}</p>
+            </div>
+
+            <div id="tagsToRemoveContainer" class="form-group tags-with-value tags-input-wide row">
+                <label class="col-sm-2 control-label" for="tagsToRemove">{% trans "Remove existing tags" %}</label>
+                <div class="col-sm-10">
+                    <input class="form-control" name="tagsToRemove" type="email" id="tagsToRemove" data-role="tagsInputForm" data-auto-complete-url="{{ url_for('tag.search') }}" />
+                    <span class="help-block">{% trans "Remove tags from the list to remove them from elements that contain them." %}</span>
                 </div>
             </div>
         </form>

@@ -47,16 +47,21 @@
                 ] %}
                 {{ forms.dropdown("triggerType", "single", title, action.triggerType, options, "typeid", "type", helpText) }}
 
-                {% if source == 'layout' %}
-                    {% set title %}{% trans "Trigger Code" %}{% endset %}
-                    {% set helpText %}{% trans "If this Action is triggered by a Web Hook then this Trigger Code must be present in the URL `trigger=` parameter." %}{% endset %}
-                    {{ forms.input("triggerCode", title, action.triggerCode, helpText) }}
-                {% endif %}
+                {% set title %}{% trans "Trigger Code" %}{% endset %}
+                {% set helpText %}{% trans "If this Action is triggered by a Web Hook then this Trigger Code must be present in the URL `trigger=` parameter." %}{% endset %}
+                {{ forms.input("triggerCode", title, action.triggerCode, helpText, 'trigger-code-control') }}
 
                 {% set title %}{% trans "Action Type" %}{% endset %}
                 {% set helpText %}{% trans "Please select action Type" %}{% endset %}
-                {% set next %}{% trans "Next" %}{% endset %}
-                {% set previous %}{% trans "Previous" %}{% endset %}
+
+                {% if source == 'layout' %}
+                    {% set next %}{% trans "Next item in the Schedule" %}{% endset %}
+                    {% set previous %}{% trans "Previous item in the Schedule" %}{% endset %}
+                {% else %}
+                    {% set next %}{% trans "Next Widget in the Region Timeline" %}{% endset %}
+                    {% set previous %}{% trans "Previous Widget in the Region Timeline" %}{% endset %}
+                {% endif %}
+
                 {% set navLayout %}{% trans "Navigate to Layout" %}{% endset %}
                 {% set navWidget %}{% trans "Navigate to Widget" %}{% endset %}
                 {% set options = [
@@ -72,7 +77,7 @@
                 {{ forms.dropdown("widgetId", "single", title, action.widgetId, [{widgetId:null, name:""}]|merge(widgets), "widgetId", "name", helpText, "nav-control-widget") }}
 
                 {% set title %}{% trans "Layout Code" %}{% endset %}
-                {% set helpText %}{% trans "Please enter code identifier for the Layout. A Layout can be assigned a Code using Layout Edit." %}{% endset %}
+                {% set helpText %}{% trans "Please enter the Code identifier for the Layout as assigned in the Add / Edit Layout form." %}{% endset %}
 
                 {% set attributes = [
                     { name: "data-width", value: "100%" },
@@ -84,7 +89,7 @@
                 {{ forms.dropdown("layoutCode", "single", title, action.layoutCode, layout, "code", "code", helpText, "pagedSelect nav-control-layout", "", "", "", attributes) }}
 
                 {% set title %}{% trans "Target" %}{% endset %}
-                {% set helpText %}{% trans "Where will the Widget be loaded? Usually this will be a Region on this Layout. However if your Widget is a Shell Command you can target the Screen to have the command run without effecting any Regions." %}{% endset %}
+                {% set helpText %}{% trans "If your Widget is a Shell Command you can select to target 'Screen' to run the command without affecting any Regions. For all other Widgets select 'Region' as target." %}{% endset %}
                 {% set screen %}{% trans "Screen" %}{% endset %}
                 {% set region %}{% trans "Region" %}{% endset %}
                 {% set options = [
@@ -93,8 +98,9 @@
                 ] %}
                 {{ forms.dropdown("target", "single", title,action.target, options, "typeid","type", helpText, "target-control") }}
 
+                {% set title %}{% trans "Target Region" %}{% endset %}
                 {% set helpText %}{% trans "Select the Region this Widget will be loaded into." %}{% endset %}
-                {{ forms.dropdown("targetId", "single", "", action.targetId, [{regionId:null, name:""}]|merge(regions), "regionId", "name", helpText, "targetid-control") }}
+                {{ forms.dropdown("targetId", "single", title, action.targetId, [{regionId:null, name:""}]|merge(regions), "regionId", "name", helpText, "targetid-control") }}
             </form>
         </div>
     </div>

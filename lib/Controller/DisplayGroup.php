@@ -400,28 +400,15 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
-
-        $tags = '';
-
-        $arrayOfTags = array_filter(explode(',', $displayGroup->tags));
-        $arrayOfTagValues = array_filter(explode(',', $displayGroup->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
         }
 
         $this->getState()->template = 'displaygroup-form-edit';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
             'help' => $this->getHelp()->link('DisplayGroup', 'Edit'),
-            'tags' => $tags
+            'tags' => $this->tagFactory->getTagsWithValues($displayGroup)
         ]);
 
         return $this->render($request, $response);
@@ -2279,19 +2266,7 @@ class DisplayGroup extends Base
 
         // handle tags
         if ($copyTags) {
-            $tags = '';
-
-            $arrayOfTags = array_filter(explode(',', $displayGroup->tags));
-            $arrayOfTagValues = array_filter(explode(',', $displayGroup->tagValues));
-
-            for ($i=0; $i<count($arrayOfTags); $i++) {
-                if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
-                    $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                    $tags .= ',';
-                } else {
-                    $tags .= $arrayOfTags[$i] . ',';
-                }
-            }
+            $tags = $this->tagFactory->getTagsWithValues($displayGroup);
             $new->replaceTags($this->tagFactory->tagsFromString($tags));
         }
 

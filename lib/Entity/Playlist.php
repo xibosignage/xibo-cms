@@ -482,6 +482,34 @@ class Playlist implements \JsonSerializable
     }
 
     /**
+     * Assign Tag
+     * @param Tag $tag
+     * @return $this
+     * @throws NotFoundException
+     */
+    public function assignTag($tag)
+    {
+        $this->load();
+
+        if ($this->tags != [$tag]) {
+
+            if (!in_array($tag, $this->tags)) {
+                $this->tags[] = $tag;
+            } else {
+                foreach ($this->tags as $currentTag) {
+                    if ($currentTag === $tag->tagId && $currentTag->value !== $tag->value) {
+                        $this->tags[] = $tag;
+                    }
+                }
+            }
+        } else {
+            $this->getLog()->debug('No Tags to assign');
+        }
+
+        return $this;
+    }
+
+    /**
      * Unassign tag
      * @param Tag $tag
      * @return $this
@@ -491,13 +519,12 @@ class Playlist implements \JsonSerializable
     {
         $this->load();
 
-        $this->tags = array_udiff($this->tags, [$tag], function($a, $b) {
-            /* @var Tag $a */
-            /* @var Tag $b */
-            return $a->tagId - $b->tagId;
-        });
-
-        $this->unassignTags[] = $tag;
+        foreach ($this->tags as $key => $currentTag) {
+            if ($currentTag->tagId === $tag->tagId && $currentTag->value === $tag->value) {
+                $this->unassignTags[] = $tag;
+                array_splice($this->tags, $key, 1);
+            }
+        }
 
         $this->getLog()->debug('Tags after removal %s', json_encode($this->tags));
 
@@ -626,6 +653,17 @@ class Playlist implements \JsonSerializable
         if ($options['saveTags']) {
             $this->getLog()->debug('Saving tags on ' . $this);
 
+            // Remove unwanted ones
+            if (is_array($this->unassignTags)) {
+                foreach ($this->unassignTags as $tag) {
+                    /* @var Tag $tag */
+                    $this->getLog()->debug('Unassigning tag ' . $tag->tag);
+
+                    $tag->unassignPlaylist($this->playlistId);
+                    $tag->save();
+                }
+            }
+
             // Save the tags
             if (is_array($this->tags)) {
                 foreach ($this->tags as $tag) {
@@ -634,17 +672,6 @@ class Playlist implements \JsonSerializable
                     $this->getLog()->debug('Assigning tag ' . $tag->tag);
 
                     $tag->assignPlaylist($this->playlistId);
-                    $tag->save();
-                }
-            }
-
-            // Remove unwanted ones
-            if (is_array($this->unassignTags)) {
-                foreach ($this->unassignTags as $tag) {
-                    /* @var Tag $tag */
-                    $this->getLog()->debug('Unassigning tag ' . $tag->tag);
-
-                    $tag->unassignPlaylist($this->playlistId);
                     $tag->save();
                 }
             }

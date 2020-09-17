@@ -1607,20 +1607,6 @@ class Layout extends Base
         // Get the layout
         $layout = $this->layoutFactory->getById($id);
 
-        $tags = '';
-
-        $arrayOfTags = array_filter(explode(',', $layout->tags));
-        $arrayOfTagValues = array_filter(explode(',', $layout->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL')) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
-        }
-
         // Check Permissions
         if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException();
@@ -1629,7 +1615,7 @@ class Layout extends Base
         $this->getState()->template = 'layout-form-edit';
         $this->getState()->setData([
             'layout' => $layout,
-            'tags' => $tags,
+            'tags' => $this->tagFactory->getTagsWithValues($layout),
             'help' => $this->getHelp()->link('Layout', 'Edit')
         ]);
 
@@ -1791,19 +1777,7 @@ class Layout extends Base
 
         // Clone
         $layout = clone $layout;
-        $tags = '';
-
-        $arrayOfTags = array_filter(explode(',', $layout->tags));
-        $arrayOfTagValues = array_filter(explode(',', $layout->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
-        }
+        $tags = $this->tagFactory->getTagsWithValues($layout);
 
         $layout->layout = $sanitizedParams->getString('name');
         $layout->description = $sanitizedParams->getString('description');

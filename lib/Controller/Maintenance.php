@@ -37,12 +37,10 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TaskFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\SanitizerService;
-use Xibo\Helper\SendFile;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
 
@@ -410,95 +408,5 @@ class Maintenance extends Base
         ]);
 
         return $this->render($request, $response);
-    }
-
-    /**
-     * Export Form
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     */
-    public function exportForm(Request $request, Response $response)
-    {
-        if ($this->getUser()->userTypeId != 1) {
-            throw new AccessDeniedException();
-        }
-
-        $this->getState()->template = 'maintenance-form-export';
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Backup the Database
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws ConfigurationException
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     */
-    public function export(Request $request, Response $response)
-    {
-        // Check we can run mysql
-        if (!function_exists('exec')) {
-            throw new ControllerNotImplemented(__('Exec is not available.'));
-        }
-
-        // Global database variables to seed into exec
-        global $dbhost;
-        global $dbuser;
-        global $dbpass;
-        global $dbname;
-
-        // split the dbhost for database host name and port
-        if (strstr($dbhost, ':')) {
-            $hostParts = explode(':', $dbhost);
-            $dbhostName = $hostParts[0];
-            $dbhostPort = $hostParts[1];
-        }
-
-        // get temporary file
-        $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/';
-        $fileNameStructure = $libraryLocation . 'structure.dump';
-        $fileNameData = $libraryLocation . 'data.dump';
-        $zipFile = $libraryLocation . 'database.tar.gz';
-
-        // Run mysqldump structure to a temporary file
-        $command = 'mysqldump --opt --host=' . $dbhostName . ' --port=' . $dbhostPort . ' --user=' . $dbuser . ' --password=' . addslashes($dbpass) . ' ' . $dbname . ' --no-data > ' . escapeshellarg($fileNameStructure) . ' ';
-        exec($command);
-
-        // Run mysqldump data to a temporary file
-        $command = 'mysqldump --opt --host=' . $dbhostName . ' --port=' . $dbhostPort . ' --user=' . $dbuser . ' --password=' . addslashes($dbpass) . ' ' . $dbname . ' --ignore-table=' . $dbname . '.log --ignore-table=' . $dbname . '.oauth_log  > ' . escapeshellarg($fileNameData) . ' ';
-        exec($command);
-
-        // Check it worked
-        if (filesize($fileNameStructure) <= 0 || filesize($fileNameData) <= 0 )
-            throw new ConfigurationException(__('Database dump failed.'));
-
-        // Zippy
-        $this->getLog()->debug($zipFile);
-        $zip = new \ZipArchive();
-        $zip->open($zipFile, \ZipArchive::CREATE|\ZipArchive::OVERWRITE);
-        $zip->addFile($fileNameStructure, 'structure.dump');
-        $zip->addFile($fileNameData, 'data.dump');
-        $zip->close();
-
-        // Remove the dump file
-        unlink($fileNameStructure);
-        unlink($fileNameData);
-
-        // Uncomment only if you are having permission issues
-        // chmod($zipFile, 0777);
-        $this->setNoOutput(true);
-
-        return $this->render($request, SendFile::decorateResponse(
-            $response,
-            $this->getConfig()->getSetting('SENDFILE_MODE'),
-            $zipFile
-        ));
     }
 }
