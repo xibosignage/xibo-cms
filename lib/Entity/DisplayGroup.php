@@ -528,6 +528,8 @@ class DisplayGroup implements \JsonSerializable
      */
     public function assignTag($tag)
     {
+        $this->getLog()->debug('Assigning tag: ' . $tag->tag);
+
         $this->load();
 
         if ($this->tags != [$tag]) {
@@ -556,6 +558,8 @@ class DisplayGroup implements \JsonSerializable
      */
     public function unassignTag($tag)
     {
+        $this->getLog()->debug('Unassigning tag: ' . $tag->tag);
+
         $this->load();
 
         foreach ($this->tags as $key => $currentTag) {
@@ -722,10 +726,9 @@ class DisplayGroup implements \JsonSerializable
         }
 
         if ($this->loaded) {
+            $this->getLog()->debug('Manage links');
 
             if ($options['manageLinks']) {
-                $this->getLog()->debug('Manage links to Display Group');
-
                 // Handle any changes in the media linked
                 $this->linkMedia();
                 $this->unlinkMedia();
@@ -743,7 +746,7 @@ class DisplayGroup implements \JsonSerializable
                 $this->manageDisplayGroupLinks();
             }
 
-        } else if ($this->isDynamic && $options['manageDynamicDisplayLinks']) {
+        } else if ($this->isDynamic == 1 && $options['manageDynamicDisplayLinks']) {
             $this->manageDisplayLinks(true);
         }
 
@@ -875,19 +878,25 @@ class DisplayGroup implements \JsonSerializable
      */
     private function manageDisplayLinks($manageDynamic = true)
     {
+        $this->getLog()->debug('Manage display links. Manage Dynamic = ' . $manageDynamic . ', Dynamic = ' . $this->isDynamic);
         $difference = [];
 
-        if ($this->isDynamic && $manageDynamic) {
+        if ($this->isDynamic == 1 && $manageDynamic) {
 
-            $this->getLog()->info('Managing Display Links for Dynamic Display Group %s', $this->displayGroup);
+            $this->getLog()->info('Managing Display Links for Dynamic Display Group ' . $this->displayGroup);
 
             $originalDisplays = ($this->loaded) ? $this->displays : $this->displayFactory->getByDisplayGroupId($this->displayGroupId);
 
             // Update the linked displays based on the filter criteria
             // these displays must be permission checked based on the owner of the group NOT the logged in user
-            $this->displays = $this->displayFactory->query(null, ['display' => $this->dynamicCriteria, 'tags' => $this->dynamicCriteriaTags, 'userCheckUserId' => $this->getOwnerId(), 'useRegexForName' => true]);
+            $this->displays = $this->displayFactory->query(null, [
+                'display' => $this->dynamicCriteria,
+                'tags' => $this->dynamicCriteriaTags,
+                'userCheckUserId' => $this->getOwnerId(),
+                'useRegexForName' => true
+            ]);
 
-            $this->getLog()->debug('There are %d original displays and %d displays that match the filter criteria now.', count($originalDisplays), count($this->displays));
+            $this->getLog()->debug(sprintf('There are %d original displays and %d displays that match the filter criteria now.', count($originalDisplays), count($this->displays)));
 
             // Map our arrays to simple displayId lists
             $displayIds = array_map(function ($element) { return $element->displayId; }, $this->displays);

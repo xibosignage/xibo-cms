@@ -759,6 +759,14 @@ class Tag extends Base
 
                 $entity->save();
             }
+
+            // Once we're done, and if we're a Display entity, we need to calculate the dynamic display groups
+            if ($targetType === 'display') {
+                foreach ($this->displayGroupFactory->getByIsDynamic(1) as $group) {
+                    $group->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+                    $group->save(['validate' => false, 'saveGroup' => false, 'manageDisplayLinks' => true, 'allowNotify' => true]);
+                }
+            }
         } else {
             $this->getLog()->debug('Tags were not changed');
         }
