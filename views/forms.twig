@@ -127,7 +127,7 @@
     <div class="form-group {{ groupClass }}">
         <div class="col-sm-offset-2 col-sm-10">
             <div class="checkbox">
-                <label for="{{ name }}" title="{{ helpText }}" accesskey="{{ accessKey }}">
+                <label for="{{ name }}" accesskey="{{ accessKey }}">
                     <input type="checkbox" id="{{ name }}" name="{{ name }}" {% if value == 1 %}checked{% endif %} {% if disabled == 1 %}disabled{% endif %}>
                     {{ title }}
                 </label>
@@ -141,7 +141,7 @@
     <div class="form-group {{ groupClass }}">
         <div class="col-sm-offset-2 col-sm-10">
             <div class="radio">
-                <label for="{{ name }}" title="{{ helpText }}" accesskey="{{ accessKey }}">
+                <label for="{{ name }}" accesskey="{{ accessKey }}">
                     <input type="radio" id="{{ id }}" name="{{ name }}" value="{{ setValue }}" {% if value == setValue %}checked{% endif %}>
                     {{ title }}
                 </label>
@@ -153,7 +153,7 @@
 
 {% macro dropdown(name, type, title, value, options, optionId, optionValue, helpText, groupClass, validation, accessKey, callBack, dataAttributes, optionGroups, optionImageValue, optionFilter) %}
     <div class="form-group {{ groupClass }}">
-        <label class="col-sm-2 control-label" for="{{ name }}" title="{{ helpText }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="col-sm-10">
             <select class="form-control" {% if type == "dropdownmulti" %}multiple{% endif %} name="{{ name }}" id="{{ name }}" {{ callBack }}
                 {% if dataAttributes|length > 0 %}
@@ -295,4 +295,16 @@
             <span class="help-block">{{ helpText }}</span>
         </div>
     </div>
+{% endmacro %}
+
+{% macro playerCompat(android, linux, tizen, webos, windows) %}
+    <span class="fa fa-info-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-html="true"
+          data-content='<ul class="player-compatibility">
+                {% if android %}<li><span class="fa fa-android"></span> {{ android }}</li>{% endif %}
+                {% if linux %}<li><span class="fa fa-linux"></span> {{ linux }}</li>{% endif %}
+                {% if tizen %}<li>Tizen: {{ tizen }}</li>{% endif %}
+                {% if webos %}<li>webOS: {{ webos }}</li>{% endif %}
+                {% if windows %}<li><span class="fa fa-windows"></span> {{ windows }}</li>{% endif %}
+            </ul>'>
+    </span>
 {% endmacro %}

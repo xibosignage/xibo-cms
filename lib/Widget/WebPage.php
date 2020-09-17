@@ -172,6 +172,7 @@ class WebPage extends ModuleWidget
         $this->setOption('pageWidth', $sanitizedParams->getInt('pageWidth'));
         $this->setOption('pageHeight', $sanitizedParams->getInt('pageHeight'));
         $this->setOption('modeid', $sanitizedParams->getInt('modeId'));
+        $this->setOption('isPreNavigate', $sanitizedParams->getCheckbox('isPreNavigate'));
 
         // Save the widget
         $this->isValid();
