@@ -24,6 +24,7 @@
 namespace Xibo\Entity;
 
 
+use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -32,6 +33,7 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\DuplicateEntityException;
@@ -125,6 +127,18 @@ class DisplayGroup implements \JsonSerializable
      * @var int
      */
     public $bandwidthLimit;
+
+    /**
+     * @SWG\Property(description="The datetime this entity was created")
+     * @var string
+     */
+    public $createdDt;
+
+    /**
+     * @SWG\Property(description="The datetime this entity was last modified")
+     * @var string
+     */
+    public $modifiedDt;
 
     /**
      * Minimum save options
@@ -514,6 +528,8 @@ class DisplayGroup implements \JsonSerializable
      */
     public function assignTag($tag)
     {
+        $this->getLog()->debug('Assigning tag: ' . $tag->tag);
+
         $this->load();
 
         if ($this->tags != [$tag]) {
@@ -542,6 +558,8 @@ class DisplayGroup implements \JsonSerializable
      */
     public function unassignTag($tag)
     {
+        $this->getLog()->debug('Unassigning tag: ' . $tag->tag);
+
         $this->load();
 
         foreach ($this->tags as $key => $currentTag) {
@@ -708,10 +726,9 @@ class DisplayGroup implements \JsonSerializable
         }
 
         if ($this->loaded) {
+            $this->getLog()->debug('Manage links');
 
             if ($options['manageLinks']) {
-                $this->getLog()->debug('Manage links to Display Group');
-
                 // Handle any changes in the media linked
                 $this->linkMedia();
                 $this->unlinkMedia();
@@ -729,7 +746,7 @@ class DisplayGroup implements \JsonSerializable
                 $this->manageDisplayGroupLinks();
             }
 
-        } else if ($this->isDynamic && $options['manageDynamicDisplayLinks']) {
+        } else if ($this->isDynamic == 1 && $options['manageDynamicDisplayLinks']) {
             $this->manageDisplayLinks(true);
         }
 
@@ -802,9 +819,11 @@ class DisplayGroup implements \JsonSerializable
 
     private function add()
     {
+        $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
+
         $this->displayGroupId = $this->getStore()->insert('
-          INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`, `dynamicCriteriaTags`, `userId`)
-            VALUES (:displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria, :dynamicCriteriaTags, :userId)
+          INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`, `dynamicCriteriaTags`, `userId`, `createdDt`, `modifiedDt`)
+            VALUES (:displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria, :dynamicCriteriaTags, :userId, :createdDt, :modifiedDt)
         ', [
             'displayGroup' => $this->displayGroup,
             'isDisplaySpecific' => $this->isDisplaySpecific,
@@ -812,7 +831,9 @@ class DisplayGroup implements \JsonSerializable
             'isDynamic' => $this->isDynamic,
             'dynamicCriteria' => $this->dynamicCriteria,
             'dynamicCriteriaTags' => $this->dynamicCriteriaTags,
-            'userId' => $this->userId
+            'userId' => $this->userId,
+            'createdDt' => $time,
+            'modifiedDt' => $time
         ]);
 
         // Insert my self link
@@ -824,7 +845,7 @@ class DisplayGroup implements \JsonSerializable
 
     private function edit()
     {
-        $this->getLog()->debug('Updating Display Group. %s, %d', $this->displayGroup, $this->displayGroupId);
+        $this->getLog()->debug(sprintf('Updating Display Group. %s, %d', $this->displayGroup, $this->displayGroupId));
 
         $this->getStore()->update('
           UPDATE displaygroup
@@ -834,7 +855,8 @@ class DisplayGroup implements \JsonSerializable
               `dynamicCriteria` = :dynamicCriteria,
               `dynamicCriteriaTags` = :dynamicCriteriaTags,
               `bandwidthLimit` = :bandwidthLimit,
-              `userId` = :userId
+              `userId` = :userId,
+              `modifiedDt` = :modifiedDt
            WHERE DisplayGroupID = :displayGroupId
           ', [
             'displayGroup' => $this->displayGroup,
@@ -844,7 +866,8 @@ class DisplayGroup implements \JsonSerializable
             'dynamicCriteria' => $this->dynamicCriteria,
             'dynamicCriteriaTags' => $this->dynamicCriteriaTags,
             'bandwidthLimit' => $this->bandwidthLimit,
-            'userId' => $this->userId
+            'userId' => $this->userId,
+            'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
         ]);
     }
 
@@ -855,19 +878,25 @@ class DisplayGroup implements \JsonSerializable
      */
     private function manageDisplayLinks($manageDynamic = true)
     {
+        $this->getLog()->debug('Manage display links. Manage Dynamic = ' . $manageDynamic . ', Dynamic = ' . $this->isDynamic);
         $difference = [];
 
-        if ($this->isDynamic && $manageDynamic) {
+        if ($this->isDynamic == 1 && $manageDynamic) {
 
-            $this->getLog()->info('Managing Display Links for Dynamic Display Group %s', $this->displayGroup);
+            $this->getLog()->info('Managing Display Links for Dynamic Display Group ' . $this->displayGroup);
 
             $originalDisplays = ($this->loaded) ? $this->displays : $this->displayFactory->getByDisplayGroupId($this->displayGroupId);
 
             // Update the linked displays based on the filter criteria
             // these displays must be permission checked based on the owner of the group NOT the logged in user
-            $this->displays = $this->displayFactory->query(null, ['display' => $this->dynamicCriteria, 'tags' => $this->dynamicCriteriaTags, 'userCheckUserId' => $this->getOwnerId(), 'useRegexForName' => true]);
+            $this->displays = $this->displayFactory->query(null, [
+                'display' => $this->dynamicCriteria,
+                'tags' => $this->dynamicCriteriaTags,
+                'userCheckUserId' => $this->getOwnerId(),
+                'useRegexForName' => true
+            ]);
 
-            $this->getLog()->debug('There are %d original displays and %d displays that match the filter criteria now.', count($originalDisplays), count($this->displays));
+            $this->getLog()->debug(sprintf('There are %d original displays and %d displays that match the filter criteria now.', count($originalDisplays), count($this->displays)));
 
             // Map our arrays to simple displayId lists
             $displayIds = array_map(function ($element) { return $element->displayId; }, $this->displays);

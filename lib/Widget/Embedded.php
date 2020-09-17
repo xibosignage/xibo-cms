@@ -153,6 +153,7 @@ class Embedded extends ModuleWidget
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
         $this->setOption('transparency', $sanitizedParams->getCheckbox('transparency'));
         $this->setOption('scaleContent', $sanitizedParams->getCheckbox('scaleContent'));
+        $this->setOption('isPreNavigate', $sanitizedParams->getCheckbox('isPreNavigate'));
         $this->setRawNode('embedHtml', $request->getParam('embedHtml', null));
         $this->setOption('embedHtml_advanced', $sanitizedParams->getCheckbox('embedHtml_advanced'));
         $this->setRawNode('embedScript', $request->getParam('embedScript', null));

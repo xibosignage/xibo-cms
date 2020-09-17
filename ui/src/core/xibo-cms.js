@@ -1,6 +1,6 @@
 /**
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2018 Spring Signage Ltd
+ * Copyright (C) 2006-2020 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -254,21 +254,6 @@ function XiboInitialise(scope) {
         window.open(formUrl);
 
         return false;
-    });
-
-    // Search for any charts
-    // TODO: remove in 1.9
-    $(scope + " div.morrisChart").each(function() {
-
-        // Look for a variable with the same ID as this element
-        var data = eval($(this).attr("id"));
-
-        if (data.type == "line")
-            new Morris.Line(data.data);
-        else if (data.type == "donut")
-            new Morris.Donut(data.data);
-        else if (data.type == "bar")
-            new Morris.Bar(data.data);
     });
 
     // Special drop down forms (to act as a menu instead of a usual dropdown)

@@ -1352,6 +1352,9 @@ let formHelpers = function() {
             window[widgetType + '_form_edit_open'].bind(container)();
         }
 
+        // Handle any popovers.
+        container.find('[data-toggle="popover"]').popover();
+
         // Create copy buttons for text areas
         container.find('textarea').each((key, el) => {
             let $newButton = $('<button/>', {

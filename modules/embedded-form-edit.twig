@@ -75,13 +75,17 @@
                     </div>
 
                     <div class="tab-pane" id="configurationTab">
-                        {% set title %}{% trans "Background transparent?" %}{% endset %}
-                        {% set helpText %}{% trans "Should the HTML be shown with a transparent background. Not current available on the Windows Display Client." %}{% endset %}
+                        {% set title %}{% trans "Background transparent?" %} {{ forms.playerCompat("", "", "", "", "v2 R253+") }}{% endset %}
+                        {% set helpText %}{% trans "Should the Widget be shown with a transparent background? Also requires the embedded content to have a transparent background." %}{% endset %}
                         {{ forms.checkbox("transparency", title, module.getOption("transparency"), helpText) }}
 
                         {% set title %}{% trans "Scale Content?" %}{% endset %}
                         {% set helpText %}{% trans "Should the embedded content be scaled along with the layout?" %}{% endset %}
                         {{ forms.checkbox("scaleContent", title, module.getOption("scaleContent"), helpText) }}
+
+                        {% set title %}{% trans "Preload?" %} {{ forms.playerCompat("v2 R207+") }}{% endset %}
+                        {% set helpText %}{% trans "Should this Widget be loaded entirely off screen so that it is ready when shown? Dynamic content will start running off screen." %}{% endset %}
+                        {{ forms.checkbox("isPreNavigate", title, module.getOption("isPreNavigate"), helpText) }}
                     </div>
 
                     <div class="tab-pane" id="htmlTab">

@@ -47,6 +47,8 @@ use Xibo\Support\Exception\GeneralException;
  */
 class Base
 {
+    use DataTablesDotNetTrait;
+
     /**
      * @var App
      */
@@ -316,54 +318,6 @@ class Base
         }
         $this->rendered = true;
         return $response;
-    }
-
-    /**
-     * Set the filter
-     * @param array[Optional] $extraFilter
-     * @param Request $request
-     * @return array
-     */
-    protected function gridRenderFilter($extraFilter = [], Request $request)
-    {
-        $parsedFilter = $this->getSanitizer($request->getParams());
-        // Handle filtering
-        $filter = [
-            'start' => $parsedFilter->getInt('start', ['default' => 0]),
-            'length' => $parsedFilter->getInt('length', ['default' => 10])
-        ];
-
-        $search = $request->getParam('search', array());
-        if (is_array($search) && isset($search['value'])) {
-            $filter['search'] = $search['value'];
-        }
-        else if ($search != '') {
-            $filter['search'] = $search;
-        }
-
-        // Merge with any extra filter items that have been provided
-        $filter = array_merge($extraFilter, $filter);
-
-        return $filter;
-    }
-
-    /**
-     * Set the sort order
-     * @param Request $request
-     * @return array
-     */
-    protected function gridRenderSort(Request $request)
-    {
-        $columns = $request->getParam('columns');
-
-        if ($columns == null || !is_array($columns))
-            return null;
-
-        $order = array_map(function ($element) use ($columns) {
-            return ((isset($columns[$element['column']]['name']) && $columns[$element['column']]['name'] != '') ? '`' . $columns[$element['column']]['name'] . '`' : '`' . $columns[$element['column']]['data'] . '`') . (($element['dir'] == 'desc') ? ' DESC' : '');
-        },  $request->getParam('order', array()));
-
-        return $order;
     }
 
     /**
