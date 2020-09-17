@@ -94,6 +94,8 @@
                                 <th>{% trans "Criteria" %}</th>
                                 <th>{% trans "Criteria Tags" %}</th>
                                 <th>{% trans "Tags" %}</th>
+                                <th>{% trans "Created Date" %}</th>
+                                <th>{% trans "Modified Date" %}</th>
                                 <th>{% trans "Row Menu" %}</th>
                             </tr>
                         </thead>
@@ -157,12 +159,14 @@
                 { "data": "description" },
                 { "data": "isDynamic", "render": dataTableTickCrossColumn },
                 { "data": "dynamicCriteria" },
-                { "data": "dynamicCriteriaTags"},
+                { "data": "dynamicCriteriaTags" },
                 {
                     "name": "tags",
                     "sortable": false,
                     "data": dataTableCreateTags
                 },
+                { "data": "createdDt", "visible": false },
+                { "data": "modifiedDt", "visible": false },
                 {
                     "orderable": false,
                     "data": dataTableButtonsColumn

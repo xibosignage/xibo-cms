@@ -31,6 +31,7 @@ use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -366,6 +367,18 @@ class Display implements \JsonSerializable
      * @var string
      */
     public $webkeySerial;
+
+    /**
+     * @SWG\Property(description="The datetime this entity was created")
+     * @var string
+     */
+    public $createdDt;
+
+    /**
+     * @SWG\Property(description="The datetime this entity was last modified")
+     * @var string
+     */
+    public $modifiedDt;
 
     /** @var array The configuration from the Display Profile  */
     private $profileConfig;
@@ -889,6 +902,11 @@ class Display implements \JsonSerializable
             $displayGroup->replaceTags($this->tags);
             $displayGroup->bandwidthLimit = $this->bandwidthLimit;
             $displayGroup->save(DisplayGroup::$saveOptionsMinimum);
+        } else {
+            $this->store->update('UPDATE displaygroup SET `modifiedDt` = :modifiedDt WHERE displayGroupId = :displayGroupId', [
+                'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+                'displayGroupId' => $this->displayGroupId
+            ]);
         }
     }
 

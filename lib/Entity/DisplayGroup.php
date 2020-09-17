@@ -24,6 +24,7 @@
 namespace Xibo\Entity;
 
 
+use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -32,6 +33,7 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\DuplicateEntityException;
@@ -125,6 +127,18 @@ class DisplayGroup implements \JsonSerializable
      * @var int
      */
     public $bandwidthLimit;
+
+    /**
+     * @SWG\Property(description="The datetime this entity was created")
+     * @var string
+     */
+    public $createdDt;
+
+    /**
+     * @SWG\Property(description="The datetime this entity was last modified")
+     * @var string
+     */
+    public $modifiedDt;
 
     /**
      * Minimum save options
@@ -796,9 +810,11 @@ class DisplayGroup implements \JsonSerializable
 
     private function add()
     {
+        $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
+
         $this->displayGroupId = $this->getStore()->insert('
-          INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`, `dynamicCriteriaTags`, `userId`)
-            VALUES (:displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria, :dynamicCriteriaTags, :userId)
+          INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`, `dynamicCriteriaTags`, `userId`, `createdDt`, `modifiedDt`)
+            VALUES (:displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria, :dynamicCriteriaTags, :userId, :createdDt, :modifiedDt)
         ', [
             'displayGroup' => $this->displayGroup,
             'isDisplaySpecific' => $this->isDisplaySpecific,
@@ -806,7 +822,9 @@ class DisplayGroup implements \JsonSerializable
             'isDynamic' => $this->isDynamic,
             'dynamicCriteria' => $this->dynamicCriteria,
             'dynamicCriteriaTags' => $this->dynamicCriteriaTags,
-            'userId' => $this->userId
+            'userId' => $this->userId,
+            'createdDt' => $time,
+            'modifiedDt' => $time
         ]);
 
         // Insert my self link
@@ -818,7 +836,7 @@ class DisplayGroup implements \JsonSerializable
 
     private function edit()
     {
-        $this->getLog()->debug('Updating Display Group. %s, %d', $this->displayGroup, $this->displayGroupId);
+        $this->getLog()->debug(sprintf('Updating Display Group. %s, %d', $this->displayGroup, $this->displayGroupId));
 
         $this->getStore()->update('
           UPDATE displaygroup
@@ -828,7 +846,8 @@ class DisplayGroup implements \JsonSerializable
               `dynamicCriteria` = :dynamicCriteria,
               `dynamicCriteriaTags` = :dynamicCriteriaTags,
               `bandwidthLimit` = :bandwidthLimit,
-              `userId` = :userId
+              `userId` = :userId,
+              `modifiedDt` = :modifiedDt
            WHERE DisplayGroupID = :displayGroupId
           ', [
             'displayGroup' => $this->displayGroup,
@@ -838,7 +857,8 @@ class DisplayGroup implements \JsonSerializable
             'dynamicCriteria' => $this->dynamicCriteria,
             'dynamicCriteriaTags' => $this->dynamicCriteriaTags,
             'bandwidthLimit' => $this->bandwidthLimit,
-            'userId' => $this->userId
+            'userId' => $this->userId,
+            'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
         ]);
     }
 

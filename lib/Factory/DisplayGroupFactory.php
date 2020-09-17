@@ -258,6 +258,8 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.dynamicCriteria,
                 `displaygroup`.dynamicCriteriaTags,
                 `displaygroup`.bandwidthLimit,
+                `displaygroup`.createdDt,
+                `displaygroup`.modifiedDt,
                 `displaygroup`.userId,
                 (
                   SELECT GROUP_CONCAT(DISTINCT tag) 

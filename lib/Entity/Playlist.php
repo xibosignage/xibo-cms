@@ -93,7 +93,7 @@ class Playlist implements \JsonSerializable
     /**
      * @var string
      * @SWG\Property(
-     *  description="The datetime the Layout was created"
+     *  description="The datetime this entity was created"
      * )
      */
     public $createdDt;
@@ -101,7 +101,7 @@ class Playlist implements \JsonSerializable
     /**
      * @var string
      * @SWG\Property(
-     *  description="The datetime the Layout was last modified"
+     *  description="The datetime this entity was last modified"
      * )
      */
     public $modifiedDt;

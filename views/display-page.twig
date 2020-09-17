@@ -210,6 +210,8 @@
                                 <th>{% trans "XMR Registered" %}</th>
                                 <th>{% trans "Commercial Licence" %}</th>
                                 <th>{% trans "Remote" %}</th>
+                                <th>{% trans "Created Date" %}</th>
+                                <th>{% trans "Modified Date" %}</th>
                                 <th>{% trans "Row Menu" %}</th>
                             </tr>
                         </thead>
@@ -491,6 +493,8 @@
                         "visible": true,
                         "orderable": false
                     },
+                    {"data": "createdDt", "visible": false},
+                    {"data": "modifiedDt", "visible": false},
                     {
                         "orderable": false,
                         "data": dataTableButtonsColumn
