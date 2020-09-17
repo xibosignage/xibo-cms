@@ -35,11 +35,15 @@ trait DataTablesDotNetTrait
     /**
      * Set the filter
      * @param array $extraFilter
-     * @param Request $request
+     * @param \Slim\Http\ServerRequest|null $request
      * @return array
      */
-    protected function gridRenderFilter(array $extraFilter, Request $request)
+    protected function gridRenderFilter(array $extraFilter, Request $request = null)
     {
+        if ($request === null) {
+            return $extraFilter;
+        }
+
         $parsedFilter = $this->getSanitizer($request->getParams());
         // Handle filtering
         $filter = [
@@ -50,8 +54,7 @@ trait DataTablesDotNetTrait
         $search = $request->getParam('search', array());
         if (is_array($search) && isset($search['value'])) {
             $filter['search'] = $search['value'];
-        }
-        else if ($search != '') {
+        } else if ($search != '') {
             $filter['search'] = $search;
         }
 
@@ -63,18 +66,26 @@ trait DataTablesDotNetTrait
 
     /**
      * Set the sort order
-     * @param Request $request
+     * @param Request|array $request
      * @return array
      */
-    protected function gridRenderSort(Request $request)
+    protected function gridRenderSort($request)
     {
-        $columns = $request->getParam('columns');
-        if ($columns === null || !is_array($columns) || count($columns) <= 0) {
-            return null;
+        if ($request instanceof Request) {
+            $columns = $request->getParam('columns');
+            $order = $request->getParam('order');
+        } else {
+            $columns = $request['columns'] ?? null;
+            $order = $request['order'] ?? null;
         }
 
-        $order = $request->getParam('order');
-        if ($order === null || !is_array($order) || count($order) <= 0) {
+        if ($columns === null
+            || !is_array($columns)
+            || count($columns) <= 0
+            || $order === null
+            || !is_array($order)
+            || count($order) <= 0
+        ) {
             return null;
         }
 
