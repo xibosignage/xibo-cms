@@ -108,6 +108,13 @@ class Embedded extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="isPreNavigate",
+     *      in="formData",
+     *      description="Flag (0,1) - Should this Widget be loaded off screen so that it is made ready in the background? Dynamic content will run.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="embedHtml",
      *      in="formData",
      *      description="HTML to embed",
