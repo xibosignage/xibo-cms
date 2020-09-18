@@ -572,8 +572,7 @@ class DataSetView extends ModuleWidget
                         // Set up an interval to check whether or not we have exceeded our freshness
                         var timer = setInterval(function() {
                             if (moment(options.generatedOn).add(options.freshnessTimeout, \'minutes\').isBefore(moment())) {
-                                $("#DataSetTableContainer").remove();
-                                $("#content").append(options.noDataMessage);
+                                $("#content").empty().append(options.noDataMessage);
                                 clearInterval(timer);
                             }
                         }, 10000);

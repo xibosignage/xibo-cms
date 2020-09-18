@@ -934,6 +934,7 @@ abstract class ModuleWidget implements ModuleInterface
         try {
             return $this->view->fetch($template . '.twig', $data);
         } catch (Error $exception) {
+            $this->getLog()->error($exception->getMessage());
             throw new ConfigurationException(__('Problem with template'));
         }
     }
