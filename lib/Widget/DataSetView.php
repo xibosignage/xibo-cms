@@ -42,6 +42,7 @@ class DataSetView extends ModuleWidget
     {
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-dataset-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
@@ -247,6 +248,13 @@ class DataSetView extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="freshnessTimeout",
+     *      in="formData",
+     *      description="How long should a Player in minutes show content before switching to the No Data Template?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="rowsPerPage",
      *      in="formData",
      *      description="Number of rows per page, 0 for no pages",
@@ -384,6 +392,7 @@ class DataSetView extends ModuleWidget
             $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
             $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
             $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 120]));
+            $this->setOption('freshnessTimeout', $sanitizedParams->getInt('freshnessTimeout', ['default' => 0]));
             $this->setOption('rowsPerPage', $sanitizedParams->getInt('rowsPerPage'));
             $this->setOption('durationIsPerPage', $sanitizedParams->getCheckbox('durationIsPerPage'));
             $this->setOption('showHeadings', $sanitizedParams->getCheckbox('showHeadings'));
@@ -469,11 +478,19 @@ class DataSetView extends ModuleWidget
      */
     public function getResource($displayId = 0)
     {
-        // Load in the template
-        $data = [];
-
-        // Replace the View Port Width?
-        $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
+        // Build the response
+        $this
+            ->initialiseGetResource()
+            ->appendViewPortWidth($this->region->width)
+            ->appendJavaScriptFile('vendor/jquery.min.js')
+            ->appendJavaScriptFile('vendor/jquery-cycle-2.1.6.min.js')
+            ->appendJavaScriptFile('vendor/moment.js')
+            ->appendJavaScriptFile('xibo-layout-scaler.js')
+            ->appendJavaScriptFile('xibo-dataset-render.js')
+            ->appendJavaScriptFile('xibo-image-render.js')
+            ->appendFontCss()
+            ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
+        ;
     
         // Get CSS from the original template or from the input field
         $styleSheet = '';
@@ -481,9 +498,9 @@ class DataSetView extends ModuleWidget
             
             $template = $this->getTemplateById($this->getOption('templateId'));
             
-            if (isset($template))
+            if (isset($template)) {
                 $styleSheet = $template['css'];
-                    
+            }
         } else {
             $styleSheet = $this->getRawNode('styleSheet', '');
         }
@@ -511,21 +528,15 @@ class DataSetView extends ModuleWidget
         // Table display CSS fix
         $styleSheet .= 'table.DataSetTable.cycle-slide { display: table !important; }';
 
-        // Get the JavaScript node
-        $javaScript = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', ''));
-
+        // Calculate duration
         $duration = $this->getCalculatedDurationForGetResource();
         $durationIsPerItem = $this->getOption('durationIsPerPage', 1);
         $rowsPerPage = $this->getOption('rowsPerPage', 0);
 
-        $options = array(
-            'type' => $this->getModuleType(),
-            'duration' => $duration,
-            'originalWidth' => $this->region->width,
-            'originalHeight' => $this->region->height,
-            'rowsPerPage' => $rowsPerPage,
-            'durationIsPerItem' => (($durationIsPerItem == 0) ? false : true)
-        );
+        // If we are going to cycle between pages, make sure we hide all of the tables initially.
+        if ($rowsPerPage > 0) {
+            $styleSheet .= 'table.DataSetTable {visibility:hidden;}';
+        }
 
         // Generate the table
         $table = $this->dataSetTableHtml($displayId);
@@ -535,41 +546,44 @@ class DataSetView extends ModuleWidget
         $totalDuration = ($durationIsPerItem == 0) ? $duration : ($duration * $pages);
 
         // Replace and Control Meta options
-        $data['controlMeta'] = '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $totalDuration . ' -->';
+        $this
+            ->appendControlMeta('NUMITEMS', $pages)
+            ->appendControlMeta('DURATION', $totalDuration)
+            ->appendCss($styleSheet)
+            ->appendOptions([
+                'type' => $this->getModuleType(),
+                'duration' => $duration,
+                'originalWidth' => $this->region->width,
+                'originalHeight' => $this->region->height,
+                'rowsPerPage' => $rowsPerPage,
+                'durationIsPerItem' => (($durationIsPerItem == 0) ? false : true),
+                'generatedOn' => Carbon::now()->format('c'),
+                'freshnessTimeout' => $this->getOption('freshnessTimeout', 0),
+                'noDataMessage' => $this->noDataMessageOrDefault('')['html']
+            ])
+            ->appendJavaScript('
+                $(document).ready(function() {
+                    $("#DataSetTableContainer").dataSetRender(options); 
+                    $("body").xiboLayoutScaler(options); 
+                    $("#DataSetTableContainer").find("img").xiboImageRender(options);
+                    
+                    // Do we have a freshnessTimeout?
+                    if (options.freshnessTimeout > 0) {
+                        // Set up an interval to check whether or not we have exceeded our freshness
+                        var timer = setInterval(function() {
+                            if (moment(options.generatedOn).add(options.freshnessTimeout, \'minutes\').isBefore(moment())) {
+                                $("#DataSetTableContainer").remove();
+                                $("#content").append(options.noDataMessage);
+                                clearInterval(timer);
+                            }
+                        }, 10000);
+                    }
+                });
+            ')
+            ->appendJavaScript($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', '')))
+            ->appendBody($table['html']);
 
-        // Add our fonts.css file
-        $headContent = '<link href="' . (($this->isPreview()) ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
-        $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
-        $headContent .= '<style type="text/css">' . $styleSheet . '</style>';
-
-        // If we are going to cycle between pages, make sure we hide all of the tables initially.
-        if ($rowsPerPage > 0) {
-            $headContent .= '<style type="text/css">table.DataSetTable {visibility:hidden;}</style>';
-        }
-
-        $data['head'] = $headContent;
-        $data['body'] = $table['html'];
-
-        // Build some JS nodes
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
-
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-dataset-render.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
-
-        $javaScriptContent .= '<script type="text/javascript">';
-        $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
-        $javaScriptContent .= '   $(document).ready(function() { ';
-        $javaScriptContent .= '       $("#DataSetTableContainer").dataSetRender(options); $("body").xiboLayoutScaler(options); $("#DataSetTableContainer").find("img").xiboImageRender(options); ';
-        $javaScriptContent .= '   }); ';
-        $javaScriptContent .= $javaScript;
-        $javaScriptContent .= '</script>';
-
-        // Replace the Head Content with our generated javascript
-        $data['javaScript'] = $javaScriptContent;
-
-        return $this->renderTemplate($data);
+        return $this->finaliseGetResource();
     }
 
     /**
@@ -591,8 +605,9 @@ class DataSetView extends ModuleWidget
         $showHeadings = $this->getOption('showHeadings');
         $rowsPerPage = $this->getOption('rowsPerPage');
 
-        if ($columnIds == '')
-            return __('No columns');
+        if ($columnIds == '') {
+            return $this->noDataMessageOrDefault(__('No columns'));
+        }
 
         // Ordering
         $ordering = '';
@@ -729,14 +744,7 @@ class DataSetView extends ModuleWidget
             $dataSetResults = $dataSet->getData($filter);
 
             if (count($dataSetResults) <= 0) {
-                if ($this->getRawNode('noDataMessage') == '') {
-                    throw new NotFoundException(__('Empty Result Set with filter criteria.'));
-                } else {
-                    return [
-                        'html' => $this->getRawNode('noDataMessage'),
-                        'countPages' => 1
-                    ];
-                }
+                return $this->noDataMessageOrDefault();
             }
 
             $rowCount = 1;
@@ -769,8 +777,9 @@ class DataSetView extends ModuleWidget
                         $table .= '<thead>';
                         $table .= ' <tr class="HeaderRow">';
 
-                        foreach ($mappings as $mapping)
+                        foreach ($mappings as $mapping) {
                             $table .= '<th class="DataSetColumnHeaderCell">' . $mapping['heading'] . '</th>';
+                        }
 
                         $table .= ' </tr>';
                         $table .= '</thead>';
@@ -853,9 +862,32 @@ class DataSetView extends ModuleWidget
             ];
         }
         catch (NotFoundException $e) {
-            $this->getLog()->info('Request failed for dataSet id=%d. Widget=%d. Due to %s', $dataSetId, $this->getWidgetId(), $e->getMessage());
+            $this->getLog()->info(sprintf('Request failed for dataSet id=%d. Widget=%d. Due to %s', $dataSetId, $this->getWidgetId(), $e->getMessage()));
             $this->getLog()->debug($e->getTraceAsString());
-            return '';
+
+            return $this->noDataMessageOrDefault();
+        }
+    }
+
+    /**
+     * @param string|null $default
+     * @return array
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    private function noDataMessageOrDefault($default = null)
+    {
+        if ($default === null) {
+            $default = __('Empty Result Set with filter criteria.');
+        }
+
+        if ($this->getRawNode('noDataMessage') == '') {
+            throw new NotFoundException($default);
+        } else {
+            return [
+                'html' => $this->getRawNode('noDataMessage'),
+                'countPages' => 1,
+                'countRows' => 1
+            ];
         }
     }
 
