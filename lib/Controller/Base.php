@@ -343,17 +343,19 @@ class Base
         }
 
         $view = $view->getBody();
+
         // Log Rendered View
-        //$this->getLog()->debug(sprintf('%s View: %s', $state->template, $view));
+        $this->getLog()->debug(sprintf('%s View: %s', $state->template, $view));
 
         if (!$view = json_decode($view, true)) {
-            $this->getLog()->error(sprintf('Problem with Template: View = %s ', $state->template));
+            $this->getLog()->error(sprintf('Problem with Template: View = %s, Error = %s ', $state->template, json_last_error_msg()));
             throw new ControllerNotImplemented(__('Problem with Form Template'));
         }
 
         $state->html = $view['html'];
         $state->dialogTitle = trim($view['title']);
         $state->callBack = $view['callBack'];
+        $state->autoSubmit = $view['autoSubmit'];
         $state->extra = $view['extra'];
 
         // Process the buttons

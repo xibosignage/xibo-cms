@@ -697,6 +697,7 @@ class Display extends Base
                     'text' => __('Authorise'),
                     'multi-select' => true,
                     'dataAttributes' => array(
+                        ['name' => 'auto-submit', 'value' => true],
                         array('name' => 'commit-url', 'value' => $this->urlFor($request,'display.authorise', ['id' => $display->displayId])),
                         array('name' => 'commit-method', 'value' => 'put'),
                         array('name' => 'id', 'value' => 'display_button_authorise'),

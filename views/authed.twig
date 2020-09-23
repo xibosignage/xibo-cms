@@ -583,4 +583,13 @@
             </div>
         </form>
     </script>
+
+    <script type="text/x-handlebars-template" id="auto-submit-field-template">
+        <div class="checkbox">
+            <label for="autoSubmit" accesskey="a" title="{% trans "When enabled, this form will automatically submit in future. Reset this in your User Profile." %}">
+                <input type="checkbox" id="autoSubmit" name="autoSubmit">
+                {% trans "Automatically submit this form?" %}
+            </label>
+        </div>
+    </script>
 {% endblock %}

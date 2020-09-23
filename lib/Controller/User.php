@@ -2154,6 +2154,11 @@ class User extends Base
             throw new InvalidArgumentException(__('Option available only for Super Admins'), 'showContentFrom');
         }
 
+        // Clear auto submits?
+        if ($parsedParams->getCheckbox('autoSubmitClearAll', ['checkboxReturnInteger' => false])) {
+            $this->getUser()->removeOptionByPrefix('autoSubmit.');
+        }
+
         $this->getUser()->save();
 
         // Return

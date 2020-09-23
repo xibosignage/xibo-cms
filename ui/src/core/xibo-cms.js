@@ -21,6 +21,7 @@ var timelineForm;
 var lastForm;
 var gridTimeouts = [];
 var buttonsTemplate;
+var autoSubmitTemplate = null;
 
 // Fix startsWith string prototype for IE
 if (!String.prototype.startsWith) {
@@ -1212,6 +1213,35 @@ function XiboFormRender(sourceObj, data) {
             // Was the Call successful
             if (response.success) {
 
+                // Handle auto-submit
+                if (response.autoSubmit) {
+                    // grab the auto submit URL and submit it immediately
+                    $.ajax({
+                        type: sourceObj.data().commitMethod,
+                        url: sourceObj.data().commitUrl,
+                        cache: false,
+                        dataType: "json",
+                        success: function(autoSubmitResponse) {
+                            if (autoSubmitResponse.success) {
+                                // Success - what do we do now?
+                                if (autoSubmitResponse.message !== '') {
+                                    SystemMessage(autoSubmitResponse.message, true);
+                                }
+                                XiboRefreshAllGrids();
+                            } else if (autoSubmitResponse.login) {
+                                // We were logged out
+                                LoginBox(autoSubmitResponse.message);
+                            } else {
+                                SystemMessage(autoSubmitResponse.message, false);
+                            }
+                        },
+                        error: function(xhr) {
+                            SystemMessage(xhr.responseText, false);
+                        }
+                    });
+                    return false;
+                }
+
                 // Set the dialog HTML to be the response HTML
                 var dialogTitle = "";
 
@@ -1285,6 +1315,15 @@ function XiboFormRender(sourceObj, data) {
 
                             footer.append(extrabutton);
                         });
+
+                    // Check to see if we ought to render out a checkbox for autosubmit
+                    if (sourceObj.data().autoSubmit) {
+                        if (autoSubmitTemplate === null) {
+                            autoSubmitTemplate = Handlebars.compile($('#auto-submit-field-template').html());
+                        }
+
+                        footer.prepend(autoSubmitTemplate());
+                    }
                 }
 
                 // Focus in the first input
@@ -1948,7 +1987,8 @@ function XiboClockUpdate(time)
 function XiboFormSubmit(form, e, callBack) {
 
     // Get the URL from the action part of the form)
-    var url = $(form).attr("action");
+    var $form = $(form);
+    var url = $form.attr("action");
 
     // Pull any text editor instances we have
     for (var editor in CKEDITOR.instances) {
@@ -1971,11 +2011,11 @@ function XiboFormSubmit(form, e, callBack) {
     }
 
     $.ajax({
-        type:$(form).attr("method"),
+        type:$form.attr("method"),
         url:url,
         cache:false,
         dataType:"json",
-        data:$(form).serialize(),
+        data:$form.serialize(),
         success: function(xhr, textStatus, error) {
             
             XiboSubmitResponse(xhr, form);
@@ -1987,6 +2027,15 @@ function XiboFormSubmit(form, e, callBack) {
             SystemMessage(xhr.responseText, false);
         }
     });
+
+    // Check to see if we need to call any auto-submit preferences
+    // get the formid
+    if ($form.closest('.modal-dialog').find('input[name=autoSubmit]').is(':checked')) {
+        updateUserPref([{
+            option: "autoSubmit." + $form.attr("id"),
+            value: true
+        }]);
+    }
 
     return false;
 }

@@ -528,6 +528,7 @@ class User implements \JsonSerializable, UserEntityInterface
             $userOption = $this->getOption($option);
             return $userOption->value;
         } catch (NotFoundException $e) {
+            $this->getLog()->debug('Returning the default value: ' . var_export($default, true));
             return $default;
         }
     }
@@ -550,6 +551,24 @@ class User implements \JsonSerializable, UserEntityInterface
         } catch (NotFoundException $e) {
             $this->userOptions[] = $this->userOptionFactory->create($this->userId, $option, $value);
         }
+    }
+
+    /**
+     * Remove all user options by a prefix
+     * @param string $optionPrefix The option prefix
+     * @return $this
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function removeOptionByPrefix(string $optionPrefix)
+    {
+        $this->load();
+
+        foreach ($this->userOptions as $userOption) {
+            if (str_starts_with($userOption->option, $optionPrefix)) {
+                $this->removeOption($userOption);
+            }
+        }
+        return $this;
     }
 
     /**

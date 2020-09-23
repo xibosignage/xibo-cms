@@ -33,6 +33,8 @@
     {% trans "Yes" %}, $("#displayAuthoriseForm").submit()
 {% endblock %}
 
+{% block autoSubmit %}{{ currentUser.getOptionValue("autoSubmit.displayAuthoriseForm", "false") }}{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">

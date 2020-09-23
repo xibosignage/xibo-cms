@@ -1,6 +1,6 @@
 {#
 /*
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -68,6 +68,10 @@
                 {% set title %}{% trans "Auto show thumbnail column?" %}{% endset %}
                 {% set helpText %}{% trans "When requesting a screenshot from a display should the Thumbnail column be automatically shown if it's not visible?" %}{% endset %}
                 {{ forms.checkbox("showThumbnailColumn", title, currentUser.getOptionValue("showThumbnailColumn", 1), helpText) }}
+
+                {% set title %}{% trans "Clear all auto submit form choices?" %}{% endset %}
+                {% set helpText %}{% trans "If you have selected to automatically submit any forms, tick here to reset." %}{% endset %}
+                {{ forms.checkbox("autoSubmitClearAll", title, 0, helpText) }}
             </form>
         </div>
     </div>
