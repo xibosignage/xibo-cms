@@ -4,6 +4,5 @@
     "buttons": {% apply json_encode|raw %}{% block formButtons %}{% endblock %}{% endapply %},
     "fieldActions": {% apply json_encode|raw %}{% block formFieldActions %}{% endblock %}{% endapply %},
     "callBack": {% apply json_encode|raw %}{% block callBack %}{% endblock %}{% endapply %},
-    "extra": {% block extra %}[]{% endblock %},
-    "autoSubmit": {% block autoSubmit %}false{% endblock %}
+    "extra": {% block extra %}[]{% endblock %}
 }

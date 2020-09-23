@@ -355,7 +355,6 @@ class Base
         $state->html = $view['html'];
         $state->dialogTitle = trim($view['title']);
         $state->callBack = $view['callBack'];
-        $state->autoSubmit = $view['autoSubmit'];
         $state->extra = $view['extra'];
 
         // Process the buttons
@@ -492,5 +491,15 @@ class Base
 
         return $response->withJson($data);
 
+    }
+
+    /**
+     * @param string $form The form name
+     * @return bool
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getAutoSubmit(string $form)
+    {
+        return $this->getUser()->getOptionValue('autoSubmit.' . $form, 'false') === 'true';
     }
 }

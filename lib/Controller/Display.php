@@ -1814,6 +1814,7 @@ class Display extends Base
         }
 
         $this->getState()->template = 'display-form-authorise';
+        $this->getState()->autoSubmit = $this->getAutoSubmit('displayAuthoriseForm');
         $this->getState()->setData([
             'display' => $display
         ]);
