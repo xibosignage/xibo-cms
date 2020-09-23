@@ -239,7 +239,12 @@ class Module extends Base
                 $module->buttons[] = array(
                     'id' => 'module_button_clear_cache',
                     'url' => $this->urlFor($request,'module.clear.cache.form', ['id' => $module->moduleId]),
-                    'text' => __('Clear Cache')
+                    'text' => __('Clear Cache'),
+                    'dataAttributes' => [
+                        ['name' => 'auto-submit', 'value' => true],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'module.clear.cache', ['id' => $module->moduleId])],
+                        ['name' => 'commit-method', 'value' => 'PUT']
+                    ]
                 );
             }
 
@@ -1460,6 +1465,7 @@ class Module extends Base
         $module = $this->moduleFactory->getById($id);
 
         $this->getState()->template = 'module-form-clear-cache';
+        $this->getState()->autoSubmit = $this->getAutoSubmit('clearCache');
         $this->getState()->setData([
             'module' => $module,
             'help' => $this->getHelp()->link('Module', 'General')

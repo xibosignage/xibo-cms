@@ -729,6 +729,7 @@ class Display extends Base
                         'text' => __('Check Licence'),
                         'multi-select' => true,
                         'dataAttributes' => array(
+                            ['name' => 'auto-submit', 'value' => true],
                             array('name' => 'commit-url', 'value' => $this->urlFor($request,'display.licencecheck', ['id' => $display->displayId])),
                             array('name' => 'commit-method', 'value' => 'put'),
                             array('name' => 'id', 'value' => 'display_button_checkLicence'),
@@ -773,6 +774,7 @@ class Display extends Base
                     'text' => __('Request Screen Shot'),
                     'multi-select' => true,
                     'dataAttributes' => array(
+                        ['name' => 'auto-submit', 'value' => true],
                         array('name' => 'commit-url', 'value' => $this->urlFor($request,'display.requestscreenshot', ['id' => $display->displayId])),
                         array('name' => 'commit-method', 'value' => 'put'),
                         array('name' => 'id', 'value' => 'display_button_requestScreenShot'),
@@ -788,6 +790,7 @@ class Display extends Base
                     'text' => __('Collect Now'),
                     'multi-select' => true,
                     'dataAttributes' => array(
+                        ['name' => 'auto-submit', 'value' => true],
                         array('name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.action.collectNow', ['id' => $display->displayGroupId])),
                         array('name' => 'commit-method', 'value' => 'post'),
                         array('name' => 'id', 'value' => 'display_button_collectNow'),
@@ -1522,6 +1525,7 @@ class Display extends Base
         }
 
         $this->getState()->template = 'display-form-request-screenshot';
+        $this->getState()->autoSubmit = $this->getAutoSubmit('displayRequestScreenshotForm');
         $this->getState()->setData([
             'display' => $display,
             'nextCollect' => $nextCollect,
@@ -2152,6 +2156,7 @@ class Display extends Base
         }
 
         $this->getState()->template = 'display-form-licence-check';
+        $this->getState()->autoSubmit = $this->getAutoSubmit('displayLicenceCheckForm');
         $this->getState()->setData([
             'display' => $display
         ]);

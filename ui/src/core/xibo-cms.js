@@ -1256,13 +1256,14 @@ function XiboFormRender(sourceObj, data) {
                 
             // Was the Call successful
             if (response.success) {
+                var commitUrl = sourceObj.data().commitUrl;
 
                 // Handle auto-submit
-                if (response.autoSubmit) {
+                if (response.autoSubmit && commitUrl !== undefined) {
                     // grab the auto submit URL and submit it immediately
                     $.ajax({
-                        type: sourceObj.data().commitMethod,
-                        url: sourceObj.data().commitUrl,
+                        type: sourceObj.data().commitMethod || "POST",
+                        url: commitUrl,
                         cache: false,
                         dataType: "json",
                         success: function(autoSubmitResponse) {
@@ -1276,11 +1277,11 @@ function XiboFormRender(sourceObj, data) {
                                 // We were logged out
                                 LoginBox(autoSubmitResponse.message);
                             } else {
-                                SystemMessage(autoSubmitResponse.message, false);
+                                SystemMessageInline(autoSubmitResponse.message);
                             }
                         },
                         error: function(xhr) {
-                            SystemMessage(xhr.responseText, false);
+                            SystemMessageInline(xhr.responseText);
                         }
                     });
                     return false;

@@ -159,6 +159,7 @@ class Logging extends Base
         }
 
         $this->getState()->template = 'log-form-truncate';
+        $this->getState()->autoSubmit = $this->getAutoSubmit('truncateForm');
         $this->getState()->setData([
             'help' => $this->getHelp()->link('Log', 'Truncate')
         ]);
