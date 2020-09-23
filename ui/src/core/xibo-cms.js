@@ -1164,6 +1164,50 @@ function dataTableAddButtons(table, filter, allButtons) {
 }
 
 /**
+ * State Load Callback
+ * @param settings
+ * @param callback
+ * @return {{}}
+ */
+function dataTableStateLoadCallback(settings, callback) {
+    var statePreferenceName = $("#"+settings.sTableId).data().statePreferenceName;
+    var option = (statePreferenceName !== undefined) ? statePreferenceName : settings.sTableId + "Grid";
+    var data = {};
+    $.ajax({
+        type: "GET",
+        async: false,
+        url: userPreferencesUrl + "?preference=" + option,
+        dataType: "json",
+        success: function (json) {
+            try {
+                if (json.success) {
+                    data = JSON.parse(json.data.value);
+                }
+            } catch (e) {
+                // Do nothing
+            }
+        }
+    });
+    return data;
+}
+
+/**
+ * Save State Callback
+ * @param settings
+ * @param data
+ */
+function dataTableStateSaveCallback(settings, data) {
+    var statePreferenceName = $("#"+settings.sTableId).data().statePreferenceName;
+    var option = (statePreferenceName !== undefined) ? statePreferenceName : settings.sTableId + "Grid";
+    updateUserPref([{
+        option: option,
+        value: JSON.stringify(data)
+    }], function() {
+        // ignore
+    });
+}
+
+/**
  * Renders the formid provided
  * @param {Object} sourceObj
  * @param {Object} data
@@ -2244,35 +2288,35 @@ function LoginBox(message) {
     location.reload(false);
 }
 
-function updateUserPref(prefs) {
+/**
+ * Update User preferences
+ * @param prefs
+ * @param success
+ */
+function updateUserPref(prefs, success) {
+    // If we do not have a success function provided, then set one.
+    if (success === undefined || success === null) {
+        success = function(response) {
+            if (response.success) {
+                SystemMessage(response.message, true);
+            } else if (response.login) {
+                LoginBox(response.message);
+            } else {
+                SystemMessage(response.message, response.success);
+            }
+            return false;
+        }
+    }
 
-    // Call with AJAX
     $.ajax({
         type: "post",
         url: userPreferencesUrl,
         cache: false,
         dataType: "json",
-        data: {preference: prefs},
-        success: function(response){
-
-            // Was the Call successful
-            if (response.success) {
-                SystemMessage(response.message, true);
-            }
-            else {
-                // Login Form needed?
-                if (response.login) {
-
-                    LoginBox(response.message);
-
-                    return false;
-                } else {
-                    SystemMessage(response.message, response.success);
-                }
-            }
-
-            return false;
-        }
+        data: {
+            preference: prefs
+        },
+        success: success
     });
 }
 

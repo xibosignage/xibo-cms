@@ -110,7 +110,7 @@
     {% verbatim %}
     <script type="text/x-handlebars-template" id="table-array-viewer">
         <a class="arrayViewerToggle" href="#"><span class="fa fa-search"></span></a>
-        <table class="arrayViewer table table-bordered">
+        <table class="arrayViewer table table-bordered" data-state-preferene-name="auditlogGrid">
             <thead>
                 <tr>
                     <th>{{ col1 }}</th>
@@ -135,38 +135,11 @@
 
             var table = $("#logs").DataTable({
                 "language": dataTablesLanguage,
-                serverSide: true, stateSave: true, stateDuration: 0,
-                stateLoadCallback: function (settings, callback) {
-                    var data = {};
-                    $.ajax({
-                        type: "GET",
-                        async: false,
-                        url: "{{ url_for("user.pref") }}?preference=auditlogGrid",
-                        dataType: 'json',
-                        success: function (json) {
-                            try {
-                                if (json.success) {
-                                    data = JSON.parse(json.data.value);
-                                }
-                            } catch (e) {
-                                // Do nothing
-                            }
-                        }
-                    });
-                    return data;
-                },
-                stateSaveCallback: function (settings, data) {
-                    $.ajax({
-                        type: "POST",
-                        url: "{{ url_for("user.pref") }}",
-                        data: {
-                            preference: [{
-                                option: "auditlogGrid",
-                                value: JSON.stringify(data)
-                            }]
-                        }
-                    });
-                },
+                serverSide: true,
+                stateSave: true,
+                stateDuration: 0,
+                stateLoadCallback: dataTableStateLoadCallback,
+                stateSaveCallback: dataTableStateSaveCallback,
                 filter: false,
                 searchDelay: 3000,
                 "order": [[0, "desc"]],

@@ -85,34 +85,13 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        let table = $("#tags").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true, stateDuration: 0,
-            stateLoadCallback: function (settings, callback) {
-                let data = {};
-                $.ajax({
-                    type: "GET",
-                    async: false,
-                    url: "{{ url_for("user.pref") }}?preference=tagsGrid",
-                    dataType: 'json',
-                    success: function (json) {
-                        if (json.success)
-                            data = JSON.parse(json.data.value);
-                    }
-                });
-                return data;
-            },
-            stateSaveCallback: function (settings, data) {
-                $.ajax({
-                    type: "POST",
-                    url: "{{ url_for("user.pref") }}",
-                    data: {
-                        preference: [{
-                            option: "tagsGrid",
-                            value: JSON.stringify(data)
-                        }]
-                    }
-                });
-            },
+        let table = $("#tags").DataTable({
+            "language": dataTablesLanguage,
+            serverSide: true,
+            stateSave: true,
+            stateDuration: 0,
+            stateLoadCallback: dataTableStateLoadCallback,
+            stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
             searchDelay: 3000,
             "order": [[ 1, "desc"]],

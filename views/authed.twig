@@ -110,8 +110,6 @@
 {% block javaScriptTemplates %}
 
     <script type="text/javascript">
-        {% set userPreferences = currentUser.getUserOptions() %}
-        var userPreferences = {{ userPreferences|json_encode|raw }};
         var userPreferencesUrl = "{{ url_for("user.pref") }}";
 
         // TODO: Change this to a call to all route permissions ( something like currentUser.getRoutePermissions() )

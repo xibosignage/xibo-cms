@@ -1584,9 +1584,9 @@ class User implements \JsonSerializable, UserEntityInterface
     public function getUserOptions()
     {
         // Don't return anything with Grid in it (these have to be specifically requested).
-        return array_filter($this->userOptions, function($element) {
+        return array_values(array_filter($this->userOptions, function($element) {
             return !(stripos($element->option, 'Grid'));
-        });
+        }));
     }
 
     /**
