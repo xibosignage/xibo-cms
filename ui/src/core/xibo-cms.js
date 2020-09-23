@@ -21,6 +21,7 @@ var timelineForm;
 var lastForm;
 var gridTimeouts = [];
 var buttonsTemplate;
+var autoSubmitTemplate = null;
 
 // Fix startsWith string prototype for IE
 if (!String.prototype.startsWith) {
@@ -1163,6 +1164,50 @@ function dataTableAddButtons(table, filter, allButtons) {
 }
 
 /**
+ * State Load Callback
+ * @param settings
+ * @param callback
+ * @return {{}}
+ */
+function dataTableStateLoadCallback(settings, callback) {
+    var statePreferenceName = $("#"+settings.sTableId).data().statePreferenceName;
+    var option = (statePreferenceName !== undefined) ? statePreferenceName : settings.sTableId + "Grid";
+    var data = {};
+    $.ajax({
+        type: "GET",
+        async: false,
+        url: userPreferencesUrl + "?preference=" + option,
+        dataType: "json",
+        success: function (json) {
+            try {
+                if (json.success) {
+                    data = JSON.parse(json.data.value);
+                }
+            } catch (e) {
+                // Do nothing
+            }
+        }
+    });
+    return data;
+}
+
+/**
+ * Save State Callback
+ * @param settings
+ * @param data
+ */
+function dataTableStateSaveCallback(settings, data) {
+    var statePreferenceName = $("#"+settings.sTableId).data().statePreferenceName;
+    var option = (statePreferenceName !== undefined) ? statePreferenceName : settings.sTableId + "Grid";
+    updateUserPref([{
+        option: option,
+        value: JSON.stringify(data)
+    }], function() {
+        // ignore
+    });
+}
+
+/**
  * Renders the formid provided
  * @param {Object} sourceObj
  * @param {Object} data
@@ -1211,6 +1256,36 @@ function XiboFormRender(sourceObj, data) {
                 
             // Was the Call successful
             if (response.success) {
+                var commitUrl = sourceObj.data().commitUrl;
+
+                // Handle auto-submit
+                if (response.autoSubmit && commitUrl !== undefined) {
+                    // grab the auto submit URL and submit it immediately
+                    $.ajax({
+                        type: sourceObj.data().commitMethod || "POST",
+                        url: commitUrl,
+                        cache: false,
+                        dataType: "json",
+                        success: function(autoSubmitResponse) {
+                            if (autoSubmitResponse.success) {
+                                // Success - what do we do now?
+                                if (autoSubmitResponse.message !== '') {
+                                    SystemMessage(autoSubmitResponse.message, true);
+                                }
+                                XiboRefreshAllGrids();
+                            } else if (autoSubmitResponse.login) {
+                                // We were logged out
+                                LoginBox(autoSubmitResponse.message);
+                            } else {
+                                SystemMessageInline(autoSubmitResponse.message);
+                            }
+                        },
+                        error: function(xhr) {
+                            SystemMessageInline(xhr.responseText);
+                        }
+                    });
+                    return false;
+                }
 
                 // Set the dialog HTML to be the response HTML
                 var dialogTitle = "";
@@ -1285,6 +1360,15 @@ function XiboFormRender(sourceObj, data) {
 
                             footer.append(extrabutton);
                         });
+
+                    // Check to see if we ought to render out a checkbox for autosubmit
+                    if (sourceObj.data().autoSubmit) {
+                        if (autoSubmitTemplate === null) {
+                            autoSubmitTemplate = Handlebars.compile($('#auto-submit-field-template').html());
+                        }
+
+                        footer.prepend(autoSubmitTemplate());
+                    }
                 }
 
                 // Focus in the first input
@@ -1948,7 +2032,8 @@ function XiboClockUpdate(time)
 function XiboFormSubmit(form, e, callBack) {
 
     // Get the URL from the action part of the form)
-    var url = $(form).attr("action");
+    var $form = $(form);
+    var url = $form.attr("action");
 
     // Pull any text editor instances we have
     for (var editor in CKEDITOR.instances) {
@@ -1971,11 +2056,11 @@ function XiboFormSubmit(form, e, callBack) {
     }
 
     $.ajax({
-        type:$(form).attr("method"),
+        type:$form.attr("method"),
         url:url,
         cache:false,
         dataType:"json",
-        data:$(form).serialize(),
+        data:$form.serialize(),
         success: function(xhr, textStatus, error) {
             
             XiboSubmitResponse(xhr, form);
@@ -1987,6 +2072,15 @@ function XiboFormSubmit(form, e, callBack) {
             SystemMessage(xhr.responseText, false);
         }
     });
+
+    // Check to see if we need to call any auto-submit preferences
+    // get the formid
+    if ($form.closest('.modal-dialog').find('input[name=autoSubmit]').is(':checked')) {
+        updateUserPref([{
+            option: "autoSubmit." + $form.attr("id"),
+            value: true
+        }]);
+    }
 
     return false;
 }
@@ -2195,35 +2289,35 @@ function LoginBox(message) {
     location.reload(false);
 }
 
-function updateUserPref(prefs) {
+/**
+ * Update User preferences
+ * @param prefs
+ * @param success
+ */
+function updateUserPref(prefs, success) {
+    // If we do not have a success function provided, then set one.
+    if (success === undefined || success === null) {
+        success = function(response) {
+            if (response.success) {
+                SystemMessage(response.message, true);
+            } else if (response.login) {
+                LoginBox(response.message);
+            } else {
+                SystemMessage(response.message, response.success);
+            }
+            return false;
+        }
+    }
 
-    // Call with AJAX
     $.ajax({
         type: "post",
         url: userPreferencesUrl,
         cache: false,
         dataType: "json",
-        data: {preference: prefs},
-        success: function(response){
-
-            // Was the Call successful
-            if (response.success) {
-                SystemMessage(response.message, true);
-            }
-            else {
-                // Login Form needed?
-                if (response.login) {
-
-                    LoginBox(response.message);
-
-                    return false;
-                } else {
-                    SystemMessage(response.message, response.success);
-                }
-            }
-
-            return false;
-        }
+        data: {
+            preference: prefs
+        },
+        success: success
     });
 }
 

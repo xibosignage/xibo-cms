@@ -68,7 +68,7 @@
                     </div>
                 </div>
                 <div class="XiboData">
-                    <table id="savedreports" class="table table-striped">
+                    <table id="savedreports" class="table table-striped" data-state-preference-name="savedreportGrid">
                         <thead>
                         <tr>
                             <th>{% trans "Report Schedule" %}</th>
@@ -102,39 +102,13 @@
                 $('#reportName').val(reportName).trigger('change');
             }
 
-            table = $("#savedreports").DataTable({ "language": dataTablesLanguage,
-                serverSide: true, stateSave: true, stateDuration: 0,
-                stateLoadCallback: function (settings, callback) {
-                    var data = {};
-                    $.ajax({
-                        type: "GET",
-                        async: false,
-                        url: "{{ url_for("user.pref") }}?preference=savedreportGrid",
-                        dataType: 'json',
-                        success: function (json) {
-                            try {
-                                if (json.success) {
-                                    data = JSON.parse(json.data.value);
-                                }
-                            } catch (e) {
-                                // Do nothing
-                            }
-                        }
-                    });
-                    return data;
-                },
-                stateSaveCallback: function (settings, data) {
-                    $.ajax({
-                        type: "POST",
-                        url: "{{ url_for("user.pref") }}",
-                        data: {
-                            preference: [{
-                                option: "savedreportGrid",
-                                value: JSON.stringify(data)
-                            }]
-                        }
-                    });
-                },
+            table = $("#savedreports").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true,
+                stateSave: true,
+                stateDuration: 0,
+                stateLoadCallback: dataTableStateLoadCallback,
+                stateSaveCallback: dataTableStateSaveCallback,
                 filter: false,
                 searchDelay: 3000,
                 "order": [[ 1, "asc"]],

@@ -46,7 +46,7 @@
                     </div>
                 </div>
                 <div class="XiboData">
-                    <table id="datasets" class="table table-striped">
+                    <table id="datasets" class="table table-striped" data-state-preference-name="dataSetRssGrid">
                         <thead>
                             <tr>
                                 <th>{% trans "ID" %}</th>
@@ -73,37 +73,8 @@
             serverSide: true,
             stateSave: true,
             stateDuration: 0,
-            stateLoadCallback: function (settings, callback) {
-                var data = {};
-                $.ajax({
-                    type: "GET",
-                    async: false,
-                    url: "{{ url_for("user.pref") }}?preference=dataSetRssGrid",
-                    dataType: 'json',
-                    success: function (json) {
-                        try {
-                            if (json.success) {
-                                data = JSON.parse(json.data.value);
-                            }
-                        } catch (e) {
-                            // Do nothing
-                        }
-                    }
-                });
-                return data;
-            },
-            stateSaveCallback: function (settings, data) {
-                $.ajax({
-                    type: "POST",
-                    url: "{{ url_for("user.pref") }}",
-                    data: {
-                        preference: [{
-                            option: "dataSetColumnGrid",
-                            value: JSON.stringify(data)
-                        }]
-                    }
-                });
-            },
+            stateLoadCallback: dataTableStateLoadCallback,
+            stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
             searchDelay: 3000,
             "order": [[ 0, "asc"]],

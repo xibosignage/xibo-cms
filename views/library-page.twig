@@ -89,7 +89,7 @@
                     </div>
                 </div>
                 <div class="XiboData">
-                    <table id="libraryItems" class="table table-striped" data-content-type="media" data-content-id-name="mediaId">
+                    <table id="libraryItems" class="table table-striped" data-content-type="media" data-content-id-name="mediaId" data-state-preference-name="libraryGrid">
                         <thead>
                             <tr>
                                 <th>{% trans "ID" %}</th>
@@ -129,38 +129,11 @@
         $(document).ready(function() {
             table = $("#libraryItems").DataTable({
                 "language": dataTablesLanguage,
-                serverSide: true, stateSave: true, stateDuration: 0,
-                stateLoadCallback: function (settings, callback) {
-                    var data = {};
-                    $.ajax({
-                        type: "GET",
-                        async: false,
-                        url: "{{ url_for("user.pref") }}?preference=libraryGrid",
-                        dataType: 'json',
-                        success: function (json) {
-                            try {
-                                if (json.success) {
-                                    data = JSON.parse(json.data.value);
-                                }
-                            } catch (e) {
-                                // Do nothing
-                            }
-                        }
-                    });
-                    return data;
-                },
-                stateSaveCallback: function (settings, data) {
-                    $.ajax({
-                        type: "POST",
-                        url: "{{ url_for("user.pref") }}",
-                        data: {
-                            preference: [{
-                                option: "libraryGrid",
-                                value: JSON.stringify(data)
-                            }]
-                        }
-                    });
-                },
+                serverSide: true,
+                stateSave: true,
+                stateDuration: 0,
+                stateLoadCallback: dataTableStateLoadCallback,
+                stateSaveCallback: dataTableStateSaveCallback,
                 filter: false,
                 searchDelay: 3000,
                 "order": [[1, "asc"]],

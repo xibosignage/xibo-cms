@@ -207,6 +207,13 @@ class DataSetTicker extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="freshnessTimeout",
+     *      in="formData",
+     *      description="How long should a Player in minutes show content before switching to the No Data Template?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="effect",
      *      in="formData",
      *      description="Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind, marqueeUp, marqueeDown, marqueeRight, marqueeLeft",
@@ -380,6 +387,7 @@ class DataSetTicker extends ModuleWidget
             $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
             $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
             $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 120]));
+            $this->setOption('freshnessTimeout', $sanitizedParams->getInt('freshnessTimeout', ['default' => 0]));
             $this->setOption('speed', $sanitizedParams->getInt('speed', ['default' => 2]));
             $this->setOption('name', $sanitizedParams->getString('name'));
             $this->setOption('effect', $sanitizedParams->getString('effect'));
@@ -460,11 +468,19 @@ class DataSetTicker extends ModuleWidget
     /** @inheritdoc */
     public function getResource($displayId = 0)
     {
-        // Load in the template
-        $data = [];
-
-        // Replace the View Port Width?
-        $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
+        // Build the response
+        $this
+            ->initialiseGetResource()
+            ->appendViewPortWidth($this->region->width)
+            ->appendJavaScriptFile('vendor/jquery.min.js')
+            ->appendJavaScriptFile('vendor/jquery-cycle-2.1.6.min.js')
+            ->appendJavaScriptFile('vendor/moment.js')
+            ->appendJavaScriptFile('xibo-layout-scaler.js')
+            ->appendJavaScriptFile('xibo-text-render.js')
+            ->appendJavaScriptFile('xibo-image-render.js')
+            ->appendFontCss()
+            ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
+        ;
 
         // Information from the Module
         $itemsSideBySide = $this->getOption('itemsSideBySide', 0);
@@ -475,17 +491,8 @@ class DataSetTicker extends ModuleWidget
 
         // Text/CSS subsitution variables.
         // DataSet tickers or feed tickers without overrides.
-        $text = $this->getRawNode('template', '');
-        $css = $this->getRawNode('css', '');
-        
-        // Parse library references on the template
-        $text = $this->parseLibraryReferences($this->isPreview(), $text);
-
-        // Parse library references on the CSS Node
-        $css = $this->parseLibraryReferences($this->isPreview(), $css);
-
-        // Get the JavaScript node
-        $javaScript = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', ''));
+        $text = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('template', ''));
+        $css = $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('css', ''));
 
         // Handle older layouts that have a direction node but no effect node
         $oldDirection = $this->getOption('direction', 'none');
@@ -498,18 +505,15 @@ class DataSetTicker extends ModuleWidget
 
         $effect = $this->getOption('effect', $oldDirection);
 
-        $options = array(
-            'type' => $this->getModuleType(),
-            'fx' => $effect,
-            'duration' => $duration,
-            'durationIsPerItem' => (($durationIsPerItem == 0) ? false : true),
-            'takeItemsFrom' => $takeItemsFrom,
-            'itemsPerPage' => $itemsPerPage,
-            'randomiseItems' => $this->getOption('randomiseItems', 0),
-            'speed' => $this->getOption('speed', 1000),
-            'originalWidth' => $this->region->width,
-            'originalHeight' => $this->region->height
-        );
+        // Need the marquee plugin?
+        if (stripos($effect, 'marquee') !== false) {
+            $this->appendJavaScriptFile('vendor/jquery.marquee.min.js');
+        }
+
+        // Need the cycle plugin?
+        if ($effect != 'none') {
+            $this->appendJavaScriptFile('vendor/jquery-cycle-2.1.6.min.js');
+        }
 
         // Generate a JSON string of substituted items.
         $items = $this->getDataSetItems($displayId, $text);
@@ -529,31 +533,22 @@ class DataSetTicker extends ModuleWidget
 
         // Work out how many pages we will be showing.
         $pages = count($items);
-
         $pages = ($itemsPerPage > 0) ? ceil($pages / $itemsPerPage) : $pages;
         $totalDuration = ($durationIsPerItem == 0) ? $duration : ($duration * $pages);
 
-        // Replace and Control Meta options
-        $data['controlMeta'] = '<!-- NUMITEMS=' . $pages . ' -->' . PHP_EOL . '<!-- DURATION=' . $totalDuration . ' -->';   
         // Replace the head content
         $headContent = '';
         
         if ($itemsSideBySide == 1) {
-            $headContent .= '<style type="text/css">';
             $headContent .= ' .item, .page { float: left; }';
-            $headContent .= '</style>';
         }
 
         if ($this->getOption('textDirection') == 'rtl') {
-            $headContent .= '<style type="text/css">';
             $headContent .= ' #content { direction: rtl; }';
-            $headContent .= '</style>';
         }
 
         if ($this->getOption('backgroundColor') != '') {
-            $headContent .= '<style type="text/css">';
             $headContent .= ' body { background-color: ' . $this->getOption('backgroundColor') . '; }';
-            $headContent .= '</style>';
         }
 
         // Add the CSS if it isn't empty
@@ -561,41 +556,47 @@ class DataSetTicker extends ModuleWidget
             $headContent .= '<style type="text/css">' . $css . '</style>';
         }
 
-        // Add our fonts.css file
-        $headContent .= '<link href="' . (($this->isPreview()) ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
-        $headContent .= '<style type="text/css">' . file_get_contents($this->getConfig()->uri('css/client.css', true)) . '</style>';
+        $this
+            ->appendControlMeta('NUMITEMS', $pages)
+            ->appendControlMeta('DURATION', $totalDuration)
+            ->appendCss($headContent)
+            ->appendOptions([
+                'type' => $this->getModuleType(),
+                'fx' => $effect,
+                'duration' => $duration,
+                'durationIsPerItem' => (($durationIsPerItem == 0) ? false : true),
+                'takeItemsFrom' => $takeItemsFrom,
+                'itemsPerPage' => $itemsPerPage,
+                'randomiseItems' => $this->getOption('randomiseItems', 0),
+                'speed' => $this->getOption('speed', 1000),
+                'originalWidth' => $this->region->width,
+                'originalHeight' => $this->region->height,
+                'generatedOn' => Carbon::now()->format('c'),
+                'freshnessTimeout' => $this->getOption('freshnessTimeout', 0),
+                'noDataMessage' => $this->getRawNode('noDataMessage', '')
+            ])
+            ->appendItems($items)
+            ->appendJavaScript('
+                $(document).ready(function() {
+                    $("body").xiboLayoutScaler(options); 
+                    $("#content").xiboTextRender(options, items); 
+                    $("#content").find("img").xiboImageRender(options);
+                    
+                    // Do we have a freshnessTimeout?
+                    if (options.freshnessTimeout > 0) {
+                        // Set up an interval to check whether or not we have exceeded our freshness
+                        var timer = setInterval(function() {
+                            if (moment(options.generatedOn).add(options.freshnessTimeout, \'minutes\').isBefore(moment())) {
+                                $("#content").empty().append(options.noDataMessage);
+                                clearInterval(timer);
+                            }
+                        }, 10000);
+                    }
+                });
+            ')
+            ->appendJavaScript($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', '')));
 
-        // Replace the Head Content with our generated javascript
-        $data['head'] = $headContent;
-
-        // Add some scripts to the JavaScript Content
-        $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
-
-        // Need the marquee plugin?
-        if (stripos($effect, 'marquee') !== false)
-            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.marquee.min.js') . '"></script>';
-
-        // Need the cycle plugin?
-        if ($effect != 'none')
-            $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery-cycle-2.1.6.min.js') . '"></script>';
-
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
-
-        $javaScriptContent .= '<script type="text/javascript">';
-        $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
-        $javaScriptContent .= '   var items = ' . json_encode($items) . ';';
-        $javaScriptContent .= '   $(document).ready(function() { ';
-        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items); $("#content").find("img").xiboImageRender(options); ';
-        $javaScriptContent .= '   }); ';
-        $javaScriptContent .= $javaScript;
-        $javaScriptContent .= '</script>';
-
-        // Replace the Head Content with our generated javascript
-        $data['javaScript'] = $javaScriptContent;
-
-        return $this->renderTemplate($data);
+        return $this->finaliseGetResource();
     }
 
     /**

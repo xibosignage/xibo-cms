@@ -355,7 +355,11 @@ class DisplayGroup extends Base
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_collectNow',
                     'url' => $this->urlFor($request,'displayGroup.collectNow.form', ['id' => $group->displayGroupId]),
-                    'text' => __('Collect Now')
+                    'text' => __('Collect Now'),
+                    'dataAttributes' => [
+                        ['name' => 'auto-submit', 'value' => true],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.action.collectNow', ['id' => $group->displayGroupId])],
+                    ]
                 );
             }
         }
@@ -1556,6 +1560,7 @@ class DisplayGroup extends Base
         }
 
         $this->getState()->template = 'displaygroup-form-collect-now';
+        $this->getState()->autoSubmit = $this->getAutoSubmit('displayGroupCollectNow');
         $this->getState()->setData([
             'displayGroup' => $displayGroup
         ]);

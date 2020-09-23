@@ -1422,7 +1422,12 @@ class Layout extends Base
                     $layout->buttons[] = array(
                         'id' => 'layout_button_checkout',
                         'url' => $this->urlFor($request,'layout.checkout.form', ['id' => $layout->layoutId]),
-                        'text' => __('Checkout')
+                        'text' => __('Checkout'),
+                        'dataAttributes' => [
+                            ['name' => 'auto-submit', 'value' => true],
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'layout.checkout', ['id' => $layout->layoutId])],
+                            ['name' => 'commit-method', 'value' => 'PUT']
+                        ]
                     );
 
                     $layout->buttons[] = ['divider' => true];
@@ -2374,6 +2379,7 @@ class Layout extends Base
         $data = ['layout' => $layout];
 
         $this->getState()->template = 'layout-form-checkout';
+        $this->getState()->autoSubmit = $this->getAutoSubmit('layoutCheckoutForm');
         $this->getState()->setData($data);
 
         return $this->render($request, $response);

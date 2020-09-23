@@ -343,11 +343,12 @@ class Base
         }
 
         $view = $view->getBody();
+
         // Log Rendered View
-        //$this->getLog()->debug(sprintf('%s View: %s', $state->template, $view));
+        $this->getLog()->debug(sprintf('%s View: %s', $state->template, $view));
 
         if (!$view = json_decode($view, true)) {
-            $this->getLog()->error(sprintf('Problem with Template: View = %s ', $state->template));
+            $this->getLog()->error(sprintf('Problem with Template: View = %s, Error = %s ', $state->template, json_last_error_msg()));
             throw new ControllerNotImplemented(__('Problem with Form Template'));
         }
 
@@ -490,5 +491,15 @@ class Base
 
         return $response->withJson($data);
 
+    }
+
+    /**
+     * @param string $form The form name
+     * @return bool
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getAutoSubmit(string $form)
+    {
+        return $this->getUser()->getOptionValue('autoSubmit.' . $form, 'false') === 'true';
     }
 }

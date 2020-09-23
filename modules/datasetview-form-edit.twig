@@ -254,6 +254,10 @@
                         {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60." %}{% endset %}
                         {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
+
+                        {% set title %}{% trans "Freshness (mins)" %}{% endset %}
+                        {% set helpText %}{% trans "If the Player is offline it will switch to the No Data Template after this freshness time. Set this to 0 to never switch." %}{% endset %}
+                        {{ forms.number("freshnessTimeout", title, module.getOption("freshnessTimeout", 0), helpText) }}
                     </div>
 
                 </div>

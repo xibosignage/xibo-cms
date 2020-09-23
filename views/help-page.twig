@@ -45,7 +45,7 @@
                     </div>
                 </div>
                 <div class="XiboData">
-                    <table id="helpLinks" class="table table-striped">
+                    <table id="helpLinks" class="table table-striped" data-state-preference-name="helpGrid">
                         <thead>
                             <tr>
                                 <th>{% trans "Topic" %}</th>
@@ -66,39 +66,13 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#helpLinks").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true, stateDuration: 0,
-            stateLoadCallback: function (settings, callback) {
-                var data = {};
-                $.ajax({
-                    type: "GET",
-                    async: false,
-                    url: "{{ url_for("user.pref") }}?preference=helpGrid",
-                    dataType: 'json',
-                    success: function (json) {
-                        try {
-                            if (json.success) {
-                                data = JSON.parse(json.data.value);
-                            }
-                        } catch (e) {
-                            // Do nothing
-                        }
-                    }
-                });
-                return data;
-            },
-            stateSaveCallback: function (settings, data) {
-                $.ajax({
-                    type: "POST",
-                    url: "{{ url_for("user.pref") }}",
-                    data: {
-                        preference: [{
-                            option: "helpGrid",
-                            value: JSON.stringify(data)
-                        }]
-                    }
-                });
-            },
+        var table = $("#helpLinks").DataTable({
+            "language": dataTablesLanguage,
+            serverSide: true,
+            stateSave: true,
+            stateDuration: 0,
+            stateLoadCallback: dataTableStateLoadCallback,
+            stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],

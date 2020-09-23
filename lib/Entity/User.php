@@ -528,6 +528,7 @@ class User implements \JsonSerializable, UserEntityInterface
             $userOption = $this->getOption($option);
             return $userOption->value;
         } catch (NotFoundException $e) {
+            $this->getLog()->debug('Returning the default value: ' . var_export($default, true));
             return $default;
         }
     }
@@ -550,6 +551,24 @@ class User implements \JsonSerializable, UserEntityInterface
         } catch (NotFoundException $e) {
             $this->userOptions[] = $this->userOptionFactory->create($this->userId, $option, $value);
         }
+    }
+
+    /**
+     * Remove all user options by a prefix
+     * @param string $optionPrefix The option prefix
+     * @return $this
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function removeOptionByPrefix(string $optionPrefix)
+    {
+        $this->load();
+
+        foreach ($this->userOptions as $userOption) {
+            if (str_starts_with($userOption->option, $optionPrefix)) {
+                $this->removeOption($userOption);
+            }
+        }
+        return $this;
     }
 
     /**
@@ -1565,9 +1584,9 @@ class User implements \JsonSerializable, UserEntityInterface
     public function getUserOptions()
     {
         // Don't return anything with Grid in it (these have to be specifically requested).
-        return array_filter($this->userOptions, function($element) {
+        return array_values(array_filter($this->userOptions, function($element) {
             return !(stripos($element->option, 'Grid'));
-        });
+        }));
     }
 
     /**

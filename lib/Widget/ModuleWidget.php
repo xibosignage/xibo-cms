@@ -934,6 +934,7 @@ abstract class ModuleWidget implements ModuleInterface
         try {
             return $this->view->fetch($template . '.twig', $data);
         } catch (Error $exception) {
+            $this->getLog()->error($exception->getMessage());
             throw new ConfigurationException(__('Problem with template'));
         }
     }
@@ -1701,7 +1702,7 @@ abstract class ModuleWidget implements ModuleInterface
         $this->data['styleSheet'] = '';
         $this->data['head'] = '';
         $this->data['body'] = '';
-        $this->data['controlMeta'] = '';
+        $this->data['controlMeta'] = [];
         $this->data['options'] = '{}';
         $this->data['items'] = '{}';
         return $this;
@@ -1743,6 +1744,13 @@ abstract class ModuleWidget implements ModuleInterface
     {
         $this->data['javaScript'] = '<script type="text/javascript">var options = ' . $this->data['options'] . '; var items = ' . $this->data['items'] . ';</script>' . PHP_EOL . $this->data['javaScript'];
 
+        // Parse control meta out into HTML comments
+        $controlMeta = '';
+        foreach ($this->data['controlMeta'] as $meta => $value) {
+            $controlMeta .= '<!-- ' . $meta . '=' . $value . ' -->' . PHP_EOL;
+        }
+        $this->data['controlMeta'] = $controlMeta;
+
         try {
             return $this->renderTemplate($this->data, $templateName);
         } catch (Error $e) {
@@ -1758,6 +1766,17 @@ abstract class ModuleWidget implements ModuleInterface
     protected function appendViewPortWidth($width)
     {
         $this->data['viewPortWidth'] = ($this->data['isPreview']) ? $width : '[[ViewPortWidth]]';
+        return $this;
+    }
+
+    /**
+     * @param $meta
+     * @param $value
+     * @return $this
+     */
+    protected function appendControlMeta($meta, $value)
+    {
+        $this->data['controlMeta'][$meta] = $value;
         return $this;
     }
 

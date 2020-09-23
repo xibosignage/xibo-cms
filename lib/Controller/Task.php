@@ -167,7 +167,12 @@ class Task extends Base
             $task->buttons[] = array(
                 'id' => 'task_button_run.now',
                 'url' => $this->urlFor($request,'task.runNow.form', ['id' => $task->taskId]),
-                'text' => __('Run Now')
+                'text' => __('Run Now'),
+                'dataAttributes' => [
+                    ['name' => 'auto-submit', 'value' => true],
+                    ['name' => 'commit-url', 'value' => $this->urlFor($request,'task.runNow', ['id' => $task->taskId])],
+                    ['name' => 'commit-method', 'value' => 'POST']
+                ]
             );
 
             // Don't show any edit buttons if the config is locked.
@@ -394,6 +399,7 @@ class Task extends Base
         $task = $this->taskFactory->getById($id);
 
         $this->getState()->template = 'task-form-run-now';
+        $this->getState()->autoSubmit = $this->getAutoSubmit('taskRunNowForm');
         $this->getState()->setData([
             'task' => $task
         ]);
