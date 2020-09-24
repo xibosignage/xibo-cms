@@ -978,11 +978,22 @@ class Media implements \JsonSerializable
 
         // 3 things to check for..
         // the actual file, the thumbnail, the background
-        if (file_exists($libraryLocation . $this->storedAs))
+        // video cover image and its thumbnail
+        if (file_exists($libraryLocation . $this->storedAs)) {
             unlink($libraryLocation . $this->storedAs);
+        }
 
-        if (file_exists($libraryLocation . 'tn_' . $this->storedAs))
+        if (file_exists($libraryLocation . 'tn_' . $this->storedAs)) {
             unlink($libraryLocation . 'tn_' . $this->storedAs);
+        }
+
+        if (file_exists($libraryLocation . 'tn_' . $this->mediaId . '_videocover.png')) {
+            unlink($libraryLocation . 'tn_' . $this->mediaId . '_videocover.png');
+        }
+
+        if (file_exists($libraryLocation . $this->mediaId . '_videocover.png')) {
+            unlink($libraryLocation . $this->mediaId . '_videocover.png');
+        }
     }
 
     /**

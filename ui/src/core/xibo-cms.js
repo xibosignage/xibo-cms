@@ -21,6 +21,7 @@ var timelineForm;
 var lastForm;
 var gridTimeouts = [];
 var buttonsTemplate;
+let videoImageCovers = {};
 
 // Fix startsWith string prototype for IE
 if (!String.prototype.startsWith) {
@@ -45,7 +46,12 @@ $.fn.dataTable.ext.errMode = function (settings, helpPage, message) {
 // Set up the light boxes
 $(document).delegate('*[data-toggle="lightbox"]', 'click', function(event) {
     event.preventDefault();
-    $(this).ekkoLightbox();
+    $(this).ekkoLightbox({
+        onContentLoaded: function() {
+            let container = $('.ekko-lightbox-container');
+            container.css({'max-height': container.height(), "height": ""});
+        }
+    });
 });
 
 $(document).ready(function() {
@@ -2655,5 +2661,91 @@ function destroyDatePicker($element) {
     } else if(calendarType == 'Jalali') {
         // Destroy jalali calendar
         $('#' + $element.attr('id') + 'Link').data().datepicker.destroy();
+    }
+}
+
+function handleVideoCoverImage(e, data) {
+    // handle click and drag&drop ways
+    let files = data === undefined ? this.files : data.files;
+    let video = null;
+
+    // wait a little bit for the preview to be in the form
+    let checkExist = setInterval(function() {
+        if ($('.preview').find('video').length) {
+
+            // iterate through our files, check if we have videos
+            // if we do, then set params on video object, convert 2nd second of the video to an image
+            // and register onseeked and onpause events
+            Array.from(files).forEach(function(file, index) {
+                if (file.type.includes('video')) {
+                    video = file.preview;
+                    video.name = file.name;
+                    video.setAttribute('id', file.name);
+                    video.preload = 'metadata';
+
+                    getVideoImage(video, 2);
+                    video.addEventListener('seeked, pause', seekImage);
+                }
+            });
+
+            clearInterval(checkExist);
+        }
+    }, 100);
+}
+
+function getVideoImage(video, secs) {
+
+    // both onseeked and onpause call the same function
+    // onseeked will be called with secs = 2 at the start
+    video.onloadedmetadata = function() {
+        this.currentTime = secs
+    };
+    video.onseeked = createImage;
+    video.onpause = createImage;
+}
+function seekImage() {
+    // if we paused the video and seeked specific point in the video, generate new image
+    getVideoImage(this, this.currentTime);
+}
+
+function createImage() {
+    // this will actually create the image and save it to an object with file name as a key
+    let canvas = document.createElement('canvas');
+    canvas.height = this.videoHeight;
+    canvas.width = this.videoWidth;
+    let ctx = canvas.getContext('2d');
+    ctx.drawImage(this, 0, 0, canvas.width, canvas.height);
+
+    let videoImageCover = new Image();
+    videoImageCover.src = canvas.toDataURL();
+
+    videoImageCovers[this.name] = videoImageCover.src;
+}
+
+function saveVideoCoverImage(data)
+{
+    // this is called when fileUpload is finished
+    // reason being that we need mediaId to save videoCover image correctly.
+    let results = data.result.files[0];
+    let thumbnailData = {};
+
+    // we only want to call this for videos (it would not do anything for other types).
+    if (results.mediaType === 'video') {
+        // get mediaId from results (finished upload)
+        thumbnailData['mediaId'] = results.mediaId;
+
+        // get the base64 image we captured and stored for this file name
+        thumbnailData['image'] = videoImageCovers[results.fileName];
+
+        // remove this key from our object
+        delete videoImageCovers[results.name];
+
+        // this calls function in library controller that decodes the image and
+        // saves it to library as  "/{$mediaId}_videocover.{$type}".
+        $.ajax({
+            url: "/library/video/thumbnail",
+            type: "POST",
+            data: thumbnailData
+        });
     }
 }

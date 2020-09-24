@@ -327,6 +327,11 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $file->enableStat = $media->enableStat;
             $file->mediaType = $module->getModuleType();
 
+            // we need original fileName returned for video thumbnails logic.
+            if ($media->mediaType == 'video') {
+                $file->fileName = $fileName;
+            }
+
             // Test to ensure the final file size is the same as the file size we're expecting
             if ($file->fileSize != $file->size)
                 throw new InvalidArgumentException(__('Sorry this is a corrupted upload, the file size doesn\'t match what we\'re expecting.'), 'size');
@@ -392,8 +397,6 @@ class XiboUploadHandler extends BlueImpUploadHandler
             @unlink($filePath);
 
             $file->error = $e->getMessage();
-
-            //$controller->getApp()->commit = false;
         }
     }
 }

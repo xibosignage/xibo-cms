@@ -372,9 +372,6 @@
                 // Configure the upload form
                 var url = "{{ url_for("library.add") }}";
                 var form = $(this).find("form");
-                console.log("UPLOAD FORM ! ");
-                console.log(url);
-                console.log(templateOptions);
                 var options = {
                     url: url,
                     disableImageResize: true,
@@ -383,6 +380,8 @@
                     previewCrop: true
                 };
                 var refreshSessionInterval;
+
+                $('#files').on('change', handleVideoCoverImage);
 
                 // Initialize the jQuery File Upload widget:
                 if(templateOptions.oldMediaId === undefined || templateOptions.oldMediaId === null) {
@@ -435,6 +434,8 @@
 
                     return true;
                 }).bind('fileuploaddone', function (e, data) {
+                    saveVideoCoverImage(data);
+
                     if (refreshSessionInterval != null && form.fileupload("active") <= 0)
                         clearInterval(refreshSessionInterval);
                     if (templateOptions.oldMediaId !== undefined && templateOptions.oldMediaId !== null) {
@@ -454,13 +455,15 @@
 
                     if(filesToUploadCount == 0) {
                         $button.removeAttr('disabled');
+                        videoImageCovers = {};
                     } else {
                         $button.attr('disabled', 'disabled');
                     }
-                });
+                }).bind('fileuploaddrop', handleVideoCoverImage);
+            }).on('hidden.bs.modal', function () {
+                    videoImageCovers = {};
             });
         }
-
         ///
         /// Library Usage Form
         ///

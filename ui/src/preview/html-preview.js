@@ -672,7 +672,7 @@ function media(parent, id, xml, options, preload) {
         media.css("z-index", self.region.layout.regionMaxZIndex + 1);
     }
 
-    var tmpUrl = options.getResourceUrl.replace(":regionId", self.region.id).replace(":id", self.id) + '?preview=1&scale_override=' + self.region.layout.scaleFactor;
+    var tmpUrl = options.getResourceUrl.replace(":regionId", self.region.id).replace(":id", self.id) + '?preview=1&layoutPreview=1&scale_override=' + self.region.layout.scaleFactor;
     
     if (self.render == "html" || self.mediaType == "ticker") {
         self.iframe = $('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
