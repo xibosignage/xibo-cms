@@ -58,7 +58,7 @@
                     </div>
                 </div>
                 <div class="XiboData">
-                    <table id="userGroups" class="table table-striped">
+                    <table id="userGroups" class="table table-striped" data-state-preference-name="userGroupGrid">
                         <thead>
                             <tr>
                                 <th>{% trans "User Group" %}</th>
@@ -83,38 +83,11 @@
         $(document).ready(function() {
             var table = $("#userGroups").DataTable({
                 "language": dataTablesLanguage,
-                serverSide: true, stateSave: true, stateDuration: 0,
-                stateLoadCallback: function (settings, callback) {
-                    var data = {};
-                    $.ajax({
-                        type: "GET",
-                        async: false,
-                        url: "{{ url_for("user.pref") }}?preference=userGroupGrid",
-                        dataType: 'json',
-                        success: function (json) {
-                            try {
-                                if (json.success) {
-                                    data = JSON.parse(json.data.value);
-                                }
-                            } catch (e) {
-                                // Do nothing
-                            }
-                        }
-                    });
-                    return data;
-                },
-                stateSaveCallback: function (settings, data) {
-                    $.ajax({
-                        type: "POST",
-                        url: "{{ url_for("user.pref") }}",
-                        data: {
-                            preference: [{
-                                option: "userGroupGrid",
-                                value: JSON.stringify(data)
-                            }]
-                        }
-                    });
-                },
+                serverSide: true,
+                stateSave: true,
+                stateDuration: 0,
+                stateLoadCallback: dataTableStateLoadCallback,
+                stateSaveCallback: dataTableStateSaveCallback,
                 searchDelay: 3000,
                 filter: false,
                 "order": [[0, "asc"]],

@@ -215,6 +215,8 @@ class DisplayFactory extends BaseFactory
                   displaygroup.displayGroupId,
                   displaygroup.description,
                   displaygroup.bandwidthLimit,
+                  displaygroup.createdDt,
+                  displaygroup.modifiedDt,
                   `display`.xmrChannel,
                   `display`.xmrPubKey,
                   `display`.lastCommandSuccess, 

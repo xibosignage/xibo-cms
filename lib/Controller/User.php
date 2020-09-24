@@ -1854,10 +1854,9 @@ class User extends Base
     {
         $requestedPreference =  $request->getQueryParam('preference');
 
-        if ($requestedPreference != '') {
+        if (!empty($requestedPreference)) {
             $this->getState()->setData($this->getUser()->getOption($requestedPreference));
-        }
-        else {
+        } else {
             $this->getState()->setData($this->getUser()->getUserOptions());
         }
 
@@ -2152,6 +2151,11 @@ class User extends Base
 
         if (!$this->getUser()->isSuperAdmin() && $parsedParams->getInt('showContentFrom') == 2) {
             throw new InvalidArgumentException(__('Option available only for Super Admins'), 'showContentFrom');
+        }
+
+        // Clear auto submits?
+        if ($parsedParams->getCheckbox('autoSubmitClearAll', ['checkboxReturnInteger' => false])) {
+            $this->getUser()->removeOptionByPrefix('autoSubmit.');
         }
 
         $this->getUser()->save();

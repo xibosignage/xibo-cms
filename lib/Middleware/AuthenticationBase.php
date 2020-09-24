@@ -80,7 +80,7 @@ abstract class AuthenticationBase implements Middleware, AuthenticationInterface
             } else {
                 // Session has expired or the user is already logged out.
                 // in either case, capture the route
-                $this->rememberRoute($resource);
+                $this->rememberRoute($request->getUri()->getPath());
 
                 $this->getLog()->debug('not in public routes, expired, should redirect to login');
 

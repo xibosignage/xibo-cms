@@ -108,6 +108,13 @@ class Embedded extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="isPreNavigate",
+     *      in="formData",
+     *      description="Flag (0,1) - Should this Widget be loaded off screen so that it is made ready in the background? Dynamic content will run.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="embedHtml",
      *      in="formData",
      *      description="HTML to embed",
@@ -153,6 +160,7 @@ class Embedded extends ModuleWidget
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
         $this->setOption('transparency', $sanitizedParams->getCheckbox('transparency'));
         $this->setOption('scaleContent', $sanitizedParams->getCheckbox('scaleContent'));
+        $this->setOption('isPreNavigate', $sanitizedParams->getCheckbox('isPreNavigate'));
         $this->setRawNode('embedHtml', $request->getParam('embedHtml', null));
         $this->setOption('embedHtml_advanced', $sanitizedParams->getCheckbox('embedHtml_advanced'));
         $this->setRawNode('embedScript', $request->getParam('embedScript', null));

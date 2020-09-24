@@ -402,7 +402,8 @@ class State implements Middleware
                     $c->get('configService'),
                     $c->get('dataSetFactory'),
                     $c->get('dataSetColumnFactory'),
-                    $c->get('view')
+                    $c->get('view'),
+                    $c->get('userFactory')
                 );
             },
             '\Xibo\Controller\DataSetColumn' => function(ContainerInterface $c) {

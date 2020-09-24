@@ -49,6 +49,9 @@ class DataSet extends Base
     /** @var  DataSetColumnFactory */
     private $dataSetColumnFactory;
 
+    /** @var \Xibo\Factory\UserFactory */
+    private $userFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -60,13 +63,15 @@ class DataSet extends Base
      * @param DataSetFactory $dataSetFactory
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param Twig $view
+     * @param \Xibo\Factory\UserFactory $userFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $dataSetFactory, $dataSetColumnFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $dataSetFactory, $dataSetColumnFactory, Twig $view, $userFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->dataSetFactory = $dataSetFactory;
         $this->dataSetColumnFactory = $dataSetColumnFactory;
+        $this->userFactory = $userFactory;
     }
 
     /**
@@ -88,6 +93,9 @@ class DataSet extends Base
     public function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'dataset-page';
+        $this->getState()->setData([
+            'users' => $this->userFactory->query(),
+        ]);
 
         return $this->render($request, $response);
     }
@@ -128,6 +136,13 @@ class DataSet extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="userId",
+     *      in="query",
+     *      description="Filter by user Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="embed",
      *      in="query",
      *      description="Embed related data such as columns",
@@ -148,7 +163,7 @@ class DataSet extends Base
     {
         $user = $this->getUser();
         $sanitizedParams = $this->getSanitizer($request->getQueryParams());
-        
+
         // Embed?
         $embed = ($sanitizedParams->getString('embed') != null) ? explode(',', $sanitizedParams->getString('embed')) : [];
         
@@ -157,6 +172,7 @@ class DataSet extends Base
             'dataSet' => $sanitizedParams->getString('dataSet'),
             'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
             'code' => $sanitizedParams->getString('code'),
+            'userId' => $sanitizedParams->getInt('userId'),
         ];
 
         $dataSets = $this->dataSetFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
@@ -266,7 +282,7 @@ class DataSet extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->dataSetFactory->countLast();
         $this->getState()->setData($dataSets);
-        
+
         return $this->render($request, $response);
     }
 
@@ -283,10 +299,10 @@ class DataSet extends Base
     {
         $this->getState()->template = 'dataset-form-add';
         $this->getState()->setData([
-            'dataSets' => $this->dataSetFactory->query(null, [], $request),
+            'dataSets' => $this->dataSetFactory->query(),
             'help' => $this->getHelp()->link('DataSet', 'Add')
         ]);
-        
+
         return $this->render($request, $response);
     }
 
@@ -469,7 +485,7 @@ class DataSet extends Base
     public function add(Request $request, Response $response)
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
-        
+
         $dataSet = $this->dataSetFactory->createEmpty();
         $dataSet->dataSet = $sanitizedParams->getString('dataSet');
         $dataSet->description = $sanitizedParams->getString('description');

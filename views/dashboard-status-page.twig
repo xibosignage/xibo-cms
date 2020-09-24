@@ -245,7 +245,7 @@
                     </div>
                 </div>
                 <div class="XiboData">
-                    <table id="displaysGrid" class="table table-striped" style="width: 100%;">
+                    <table id="displaysGrid" class="table table-striped" data-state-preference-name="statusDashboardDisplays" style="width: 100%;">
                         <thead>
                         <tr>
                             <th>{% trans "ID" %}</th>
@@ -354,37 +354,8 @@
             serverSide: true,
             stateSave: true,
             stateDuration: 0,
-            stateLoadCallback: function (settings, callback) {
-                var data = {};
-                $.ajax({
-                    type: "GET",
-                    async: false,
-                    url: "{{ url_for("user.pref") }}?preference=statusDashboardDisplays",
-                    dataType: 'json',
-                    success: function (json) {
-                        try {
-                            if (json.success) {
-                                data = JSON.parse(json.data.value);
-                            }
-                        } catch (e) {
-                            // Do nothing
-                        }
-                    }
-                });
-                return data;
-            },
-            stateSaveCallback: function (settings, data) {
-                $.ajax({
-                    type: "POST",
-                    url: "{{ url_for("user.pref") }}",
-                    data: {
-                        preference: [{
-                            option: "statusDashboardDisplays",
-                            value: JSON.stringify(data)
-                        }]
-                    }
-                });
-            },
+            stateLoadCallback: dataTableStateLoadCallback,
+            stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
             searchDelay: 3000,
             order: [[0, "asc"]],
@@ -642,38 +613,10 @@
         let table2 = $("#displaysGrid").DataTable({
             "language": dataTablesLanguage,
             serverSide: true,
-            stateSave: true, stateDuration: 0,
-            stateLoadCallback: function (settings, callback) {
-                var data = {};
-                $.ajax({
-                    type: "GET",
-                    async: false,
-                    url: "{{ url_for("user.pref") }}?preference=displaysGrid",
-                    dataType: 'json',
-                    success: function (json) {
-                        try {
-                            if (json.success) {
-                                data = JSON.parse(json.data.value);
-                            }
-                        } catch (e) {
-                            // Do nothing
-                        }
-                    }
-                });
-                return data;
-            },
-            stateSaveCallback: function (settings, data) {
-                $.ajax({
-                    type: "POST",
-                    url: "{{ url_for("user.pref") }}",
-                    data: {
-                        preference: [{
-                            option: "displaysGrid",
-                            value: JSON.stringify(data)
-                        }]
-                    }
-                });
-            },
+            stateSave: true,
+            stateDuration: 0,
+            stateLoadCallback: dataTableStateLoadCallback,
+            stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
             searchDelay: 3000,
             order: [[1, "asc"]],

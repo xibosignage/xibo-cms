@@ -1529,6 +1529,9 @@ class Layout implements \JsonSerializable
                     $mediaNode->setAttribute('fileId', $media->mediaId);
                 }
 
+                // Tracker whether or not we have an updateInterval configured.
+                $hasUpdatedInterval = false;
+
                 foreach ($widget->widgetOptions as $option) {
 
                     /* @var WidgetOption $option */
@@ -1549,6 +1552,20 @@ class Layout implements \JsonSerializable
                         $optionNode = $document->createElement($option->option, $option->value);
                         $optionsNode->appendChild($optionNode);
                     }
+
+                    if ($option->option === 'updateInterval') {
+                        $hasUpdatedInterval = true;
+                    }
+                }
+
+                // If we do not have an update interval, should we set a default one?
+                // https://github.com/xibosignage/xibo/issues/2319
+                if (!$hasUpdatedInterval && $module->getModule()->regionSpecific == 1) {
+                    // For the moment we will assume that all update intervals are the same as the cache duration
+                    // remembering that the cache duration is in seconds and the updateInterval in minutes.
+                    $optionsNode->appendChild(
+                        $document->createElement('updateInterval', $module->getCacheDuration() / 60)
+                    );
                 }
 
                 // Handle associated audio

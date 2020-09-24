@@ -89,7 +89,7 @@
                     </div>
                 </div>
                 <div class="XiboData">
-                    <table id="playlists" class="table table-striped" data-content-type="playlist" data-content-id-name="playlistId">
+                    <table id="playlists" class="table table-striped" data-content-type="playlist" data-content-id-name="playlistId" data-state-preference-name="playlistGrid">
                         <thead>
                             <tr>
                                 <th>{% trans "ID" %}</th>
@@ -148,32 +148,8 @@
                 "lengthMenu": [10, 25, 50, 100, 250, 500],
                 serverSide: true,
                 stateSave: true,
-                stateLoadCallback: function (settings, callback) {
-                    var data = {};
-                    $.ajax({
-                        type: "GET",
-                        async: false,
-                        url: "{{ url_for("user.pref") }}?preference=playlistGrid",
-                        dataType: 'json',
-                        success: function (json) {
-                            if (json.success)
-                                data = JSON.parse(json.data.value);
-                        }
-                    });
-                    return data;
-                },
-                stateSaveCallback: function (settings, data) {
-                    $.ajax({
-                        type: "POST",
-                        url: "{{ url_for("user.pref") }}",
-                        data: {
-                            preference: [{
-                                option: "playlistGrid",
-                                value: JSON.stringify(data)
-                            }]
-                        }
-                    });
-                },
+                stateLoadCallback: dataTableStateLoadCallback,
+                stateSaveCallback: dataTableStateSaveCallback,
                 filter: false,
                 searchDelay: 3000,
                 "order": [[1, "asc"]],

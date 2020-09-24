@@ -65,7 +65,7 @@
                     </div>
                 </div>
                 <div class="XiboData">
-                    <table id="campaigns" class="table table-striped" data-content-type="campaign" data-content-id-name="campaignId">
+                    <table id="campaigns" class="table table-striped" data-content-type="campaign" data-content-id-name="campaignId" data-state-preference-name="campaignGrid">
                         <thead>
                             <tr>
                                 <th>{% trans "Name" %}</th>
@@ -92,37 +92,8 @@
             serverSide: true,
             stateSave: true,
             stateDuration: 0,
-            stateLoadCallback: function (settings, callback) {
-                var data = {};
-                $.ajax({
-                    type: "GET",
-                    async: false,
-                    url: "{{ url_for("user.pref") }}?preference=campaignGrid",
-                    dataType: 'json',
-                    success: function (json) {
-                        try {
-                            if (json.success) {
-                                data = JSON.parse(json.data.value);
-                            }
-                        } catch (e) {
-                            // Do nothing
-                        }
-                    }
-                });
-                return data;
-            },
-            stateSaveCallback: function (settings, data) {
-                $.ajax({
-                    type: "POST",
-                    url: "{{ url_for("user.pref") }}",
-                    data: {
-                        preference: [{
-                            option: "campaignGrid",
-                            value: JSON.stringify(data)
-                        }]
-                    }
-                });
-            },
+            stateLoadCallback: dataTableStateLoadCallback,
+            stateSaveCallback: dataTableStateSaveCallback,
             "filter": false,
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
@@ -179,37 +150,8 @@
                 stateDuration: 0,
                 pageLength: 5,
                 lengthMenu: [5, 10, 25, 50],
-                stateLoadCallback: function (settings, callback) {
-                    var data = {};
-                    $.ajax({
-                        type: "GET",
-                        async: false,
-                        url: "{{ url_for("user.pref") }}?preference=campaignLayoutAssignGrid",
-                        dataType: 'json',
-                        success: function (json) {
-                            try {
-                                if (json.success) {
-                                    data = JSON.parse(json.data.value);
-                                }
-                            } catch (e) {
-                                // Do nothing
-                            }
-                        }
-                    });
-                    return data;
-                },
-                stateSaveCallback: function (settings, data) {
-                    $.ajax({
-                        type: "POST",
-                        url: "{{ url_for("user.pref") }}",
-                        data: {
-                            preference: [{
-                                option: "campaignLayoutAssignGrid",
-                                value: JSON.stringify(data)
-                            }]
-                        }
-                    });
-                },
+                stateLoadCallback: dataTableStateLoadCallback,
+                stateSaveCallback: dataTableStateSaveCallback,
                 searchDelay: 3000,
                 "order": [[ 0, "asc"]],
                 "filter": false,

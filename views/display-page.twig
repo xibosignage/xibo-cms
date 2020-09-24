@@ -175,7 +175,7 @@
                     </div>
                 </div>
                 <div class="XiboData">
-                    <table id="displays" class="table table-striped" data-content-type="display" data-content-id-name="displayId">>
+                    <table id="displays" class="table table-striped" data-content-type="display" data-content-id-name="displayId" data-state-preference-name="displayGrid">
                         <thead>
                             <tr>
                                 <th>{% trans "ID" %}</th>
@@ -210,6 +210,8 @@
                                 <th>{% trans "XMR Registered" %}</th>
                                 <th>{% trans "Commercial Licence" %}</th>
                                 <th>{% trans "Remote" %}</th>
+                                <th>{% trans "Created Date" %}</th>
+                                <th>{% trans "Modified Date" %}</th>
                                 <th>{% trans "Row Menu" %}</th>
                             </tr>
                         </thead>
@@ -229,38 +231,10 @@
             var table = $("#displays").DataTable({
                 "language": dataTablesLanguage,
                 serverSide: true,
-                stateSave: true, stateDuration: 0,
-                stateLoadCallback: function (settings, callback) {
-                    var data = {};
-                    $.ajax({
-                        type: "GET",
-                        async: false,
-                        url: "{{ url_for("user.pref") }}?preference=displayGrid",
-                        dataType: 'json',
-                        success: function (json) {
-                            try {
-                                if (json.success) {
-                                    data = JSON.parse(json.data.value);
-                                }
-                            } catch (e) {
-                                // Do nothing
-                            }
-                        }
-                    });
-                    return data;
-                },
-                stateSaveCallback: function (settings, data) {
-                    $.ajax({
-                        type: "POST",
-                        url: "{{ url_for("user.pref") }}",
-                        data: {
-                            preference: [{
-                                option: "displayGrid",
-                                value: JSON.stringify(data)
-                            }]
-                        }
-                    });
-                },
+                stateSave: true,
+                stateDuration: 0,
+                stateLoadCallback: dataTableStateLoadCallback,
+                stateSaveCallback: dataTableStateSaveCallback,
                 filter: false,
                 searchDelay: 3000,
                 order: [[1, "asc"]],
@@ -491,6 +465,8 @@
                         "visible": true,
                         "orderable": false
                     },
+                    {"data": "createdDt", "visible": false},
+                    {"data": "modifiedDt", "visible": false},
                     {
                         "orderable": false,
                         "data": dataTableButtonsColumn

@@ -49,7 +49,7 @@
                     </div>
                 </div>
                 <div class="XiboData">
-                    <table id="commands" class="table table-striped">
+                    <table id="commands" class="table table-striped" data-state-preference-name="commandGrid">
                         <thead>
                             <tr>
                                 <th>{% trans "Name" %}</th>
@@ -73,38 +73,11 @@
 {% block javaScript %}
     <script type="text/javascript">
         var table = $("#commands").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true, stateDuration: 0,
-            stateLoadCallback: function (settings, callback) {
-                var data = {};
-                $.ajax({
-                    type: "GET",
-                    async: false,
-                    url: "{{ url_for("user.pref") }}?preference=commandGrid",
-                    dataType: 'json',
-                    success: function (json) {
-                        try {
-                            if (json.success) {
-                                data = JSON.parse(json.data.value);
-                            }
-                        } catch (e) {
-                            // Do nothing
-                        }
-                    }
-                });
-                return data;
-            },
-            stateSaveCallback: function (settings, data) {
-                $.ajax({
-                    type: "POST",
-                    url: "{{ url_for("user.pref") }}",
-                    data: {
-                        preference: [{
-                            option: "commandGrid",
-                            value: JSON.stringify(data)
-                        }]
-                    }
-                });
-            },
+            serverSide: true,
+            stateSave: true,
+            stateDuration: 0,
+            stateLoadCallback: dataTableStateLoadCallback,
+            stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],

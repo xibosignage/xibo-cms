@@ -40,8 +40,7 @@
                 <div class="XiboFilter well">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline" onsubmit="return false">
-
-                            <div class="form-group ">
+                            <div class="form-group">
                                 <label class="control-label" title="" for="dataSet" accesskey="">{% trans "Name" %}</label>
                                 <div>
                                     <div class="input-group">
@@ -53,11 +52,20 @@
                                     </div>
                                 </div>
                             </div>
+
+                            {% set title %}{% trans "Code" %}{% endset %}
+                            {% set helpText %}{% trans "Show items which match the provided code" %}{% endset %}
+                            {{ inline.input("code", title, "", helpText) }}
+
+                            {% set title %}{% trans "Owner" %}{% endset %}
+                            {% set helpText %}{% trans "Show items owned by the selected User." %}{% endset %}
+                            {{ inline.dropdown("userId", "single", title, "", [{userId:null, userName:""}]|merge(users), "userId", "userName", helpText, "selectPicker", "", "", "", attributes) }}
+
                         </form>
                     </div>
                 </div>
                 <div class="XiboData">
-                    <table id="datasets" class="table table-striped">
+                    <table id="datasets" class="table table-striped" data-state-preference-name="dataSetGrid">
                         <thead>
                             <tr>
                                 <th>{% trans "ID" %}</th>
@@ -83,39 +91,13 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#datasets").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true, stateDuration: 0,
-            stateLoadCallback: function (settings, callback) {
-                var data = {};
-                $.ajax({
-                    type: "GET",
-                    async: false,
-                    url: "{{ url_for("user.pref") }}?preference=dataSetGrid",
-                    dataType: 'json',
-                    success: function (json) {
-                        try {
-                            if (json.success) {
-                                data = JSON.parse(json.data.value);
-                            }
-                        } catch (e) {
-                            // Do nothing
-                        }
-                    }
-                });
-                return data;
-            },
-            stateSaveCallback: function (settings, data) {
-                $.ajax({
-                    type: "POST",
-                    url: "{{ url_for("user.pref") }}",
-                    data: {
-                        preference: [{
-                            option: "dataSetGrid",
-                            value: JSON.stringify(data)
-                        }]
-                    }
-                });
-            },
+        var table = $("#datasets").DataTable({
+            "language": dataTablesLanguage,
+            serverSide: true,
+            stateSave: true,
+            stateDuration: 0,
+            stateLoadCallback: dataTableStateLoadCallback,
+            stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
             searchDelay: 3000,
             "order": [[ 0, "asc"]],

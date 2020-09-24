@@ -27,7 +27,12 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        <li class="btn btn-warning btn-xs"><a class="XiboFormButton btns" title="{% trans "Truncate the Log" %}" href="{{ url_for("log.truncate.form") }}"> <i class="fa fa-scissors" aria-hidden="true"></i> {% trans "Truncate" %}</a></li>
+        <li class="btn btn-warning btn-xs">
+            <a class="XiboFormButton btns" title="{% trans "Truncate the Log" %}" href="{{ url_for("log.truncate.form") }}"
+               data-auto-submit="true" data-commit-url="{{ url_for("log.truncate") }}" data-commit-method="DELETE">
+                <i class="fa fa-scissors" aria-hidden="true"></i> {% trans "Truncate" %}
+            </a>
+        </li>
         <li class="btn btn-success btn-xs"><a class="btns" id="refreshLog" title="{% trans "Refresh the Log" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
     </ul>
 {% endblock %}
@@ -159,7 +164,7 @@
                     </div>
                 </div>
                 <div class="XiboData">
-                    <table id="logs" class="table table-striped">
+                    <table id="logs" class="table table-striped" data-state-preference-name="logGrid">
                         <thead>
                             <tr>
                                 <th>{% trans "ID" %}</th>
@@ -188,38 +193,11 @@
         $(document).ready(function() {
             var table = $("#logs").DataTable({
                 "language": dataTablesLanguage,
-                serverSide: true, stateSave: true, stateDuration: 0,
-                stateLoadCallback: function (settings, callback) {
-                    var data = {};
-                    $.ajax({
-                        type: "GET",
-                        async: false,
-                        url: "{{ url_for("user.pref") }}?preference=logGrid",
-                        dataType: 'json',
-                        success: function (json) {
-                            try {
-                                if (json.success) {
-                                    data = JSON.parse(json.data.value);
-                                }
-                            } catch (e) {
-                                // Do nothing
-                            }
-                        }
-                    });
-                    return data;
-                },
-                stateSaveCallback: function (settings, data) {
-                    $.ajax({
-                        type: "POST",
-                        url: "{{ url_for("user.pref") }}",
-                        data: {
-                            preference: [{
-                                option: "logGrid",
-                                value: JSON.stringify(data)
-                            }]
-                        }
-                    });
-                },
+                serverSide: true,
+                stateSave: true,
+                stateDuration: 0,
+                stateLoadCallback: dataTableStateLoadCallback,
+                stateSaveCallback: dataTableStateSaveCallback,
                 filter: false,
                 searchDelay: 3000,
                 "order": [[0, "desc"]],

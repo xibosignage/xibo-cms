@@ -146,6 +146,13 @@ class WebPage extends ModuleWidget
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="isPreNavigate",
+     *      in="formData",
+     *      description="Flag (0,1) - Should this Widget be loaded off screen so that it is made ready in the background? Dynamic content will run.",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation",
@@ -172,6 +179,7 @@ class WebPage extends ModuleWidget
         $this->setOption('pageWidth', $sanitizedParams->getInt('pageWidth'));
         $this->setOption('pageHeight', $sanitizedParams->getInt('pageHeight'));
         $this->setOption('modeid', $sanitizedParams->getInt('modeId'));
+        $this->setOption('isPreNavigate', $sanitizedParams->getCheckbox('isPreNavigate'));
 
         // Save the widget
         $this->isValid();

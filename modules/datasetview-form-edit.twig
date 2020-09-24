@@ -234,6 +234,9 @@
                         {% set message %}{% trans "The DataSet results can be filtered by any column and set below. New fields can be added by selecting the plus icon at the end of the current row. Should a more complicated filter be required the advanced checkbox can be selected to provide custom SQL syntax." %}{% endset %}
                         {{ forms.message(message) }}
 
+                        {% set message %}{% trans "The substitution [DisplayId] can be used in filter clauses and will be substituted at run time with the Display ID. When shown in the CMS it will be substituted with 0." %}{% endset %}
+                        {{ forms.message(message) }}
+
                         <div id="filterClause">
 
                         </div>
@@ -251,6 +254,10 @@
                         {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60." %}{% endset %}
                         {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
+
+                        {% set title %}{% trans "Freshness (mins)" %}{% endset %}
+                        {% set helpText %}{% trans "If the Player is offline it will switch to the No Data Template after this freshness time. Set this to 0 to never switch." %}{% endset %}
+                        {{ forms.number("freshnessTimeout", title, module.getOption("freshnessTimeout", 0), helpText) }}
                     </div>
 
                 </div>
