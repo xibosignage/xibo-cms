@@ -2683,6 +2683,10 @@ function handleVideoCoverImage(e, data) {
                     video.setAttribute('id', file.name);
                     video.preload = 'metadata';
 
+                    //show help text describing this feature.
+                    let helpText = translations.videoImageCoverHelpText;
+                    $('.template-upload').find('video').closest("tr").find("td.title")[0].append(helpText);
+
                     getVideoImage(video, 2);
                     video.addEventListener('seeked, pause', seekImage);
                 }
