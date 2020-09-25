@@ -808,23 +808,23 @@ class Display extends Base
                 );
 
                 // Permissions
-                $display->buttons[] = array(
+                $display->buttons[] = [
                     'id' => 'display_button_group_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId]),
                     'text' => __('Permissions'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId])),
-                        array('name' => 'commit-method', 'value' => 'post'),
-                        array('name' => 'id', 'value' => 'display_button_group_permissions'),
-                        array('name' => 'text', 'value' => __('Permissions')),
-                        array('name' => 'rowtitle', 'value' => $display->display),
-                        array('name' => 'sort-group', 'value' => 2),
-                        array('name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'),
-                        array('name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DisplayGroup'])),
-                        array('name' => 'content-id-name', 'value' => 'displayGroupId')
-                    )
-                );
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'display_button_group_permissions'],
+                        ['name' => 'text', 'value' => __('Permissions')],
+                        ['name' => 'rowtitle', 'value' => $display->display],
+                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DisplayGroup'])],
+                        ['name' => 'content-id-name', 'value' => 'displayGroupId']
+                    ]
+                ];
             }
 
             if ($this->getUser()->checkEditable($display)) {

@@ -418,17 +418,17 @@ class Playlist extends Base
                     'id' => 'playlist_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Playlist', 'id' => $playlist->playlistId]),
                     'text' => __('Permissions'),
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Playlist', 'id' => $playlist->playlistId])),
-                        array('name' => 'commit-method', 'value' => 'post'),
-                        array('name' => 'id', 'value' => 'playlist_button_permissions'),
-                        array('name' => 'text', 'value' => __('Permissions')),
-                        array('name' => 'rowtitle', 'value' => $playlist->name),
-                        array('name' => 'sort-group', 'value' => 2),
-                        array('name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'),
-                        array('name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Playlist'])),
-                        array('name' => 'content-id-name', 'value' => 'playlistId')
-                    )
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Playlist', 'id' => $playlist->playlistId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'playlist_button_permissions'],
+                        ['name' => 'text', 'value' => __('Permissions')],
+                        ['name' => 'rowtitle', 'value' => $playlist->name],
+                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Playlist'])],
+                        ['name' => 'content-id-name', 'value' => 'playlistId']
+                    ]
                 ];
             }
 

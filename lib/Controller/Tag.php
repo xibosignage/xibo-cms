@@ -258,7 +258,7 @@ class Tag extends Base
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'tag_button_delete'],
                         ['name' => 'text', 'value' => __('Delete')],
-                        array('name' => 'sort-group', 'value' => 1),
+                        ['name' => 'sort-group', 'value' => 1],
                         ['name' => 'rowtitle', 'value' => $tag->tag]
                     ]
                 ];

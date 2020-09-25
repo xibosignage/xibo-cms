@@ -272,22 +272,22 @@ class DataSet extends Base
 
             if ($user->checkPermissionsModifyable($dataSet)) {
                 // Edit Permissions
-                $dataSet->buttons[] = array(
+                $dataSet->buttons[] = [
                     'id' => 'dataset_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId]),
                     'text' => __('Permissions'),
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId])),
-                        array('name' => 'commit-method', 'value' => 'post'),
-                        array('name' => 'id', 'value' => 'dataset_button_permissions'),
-                        array('name' => 'text', 'value' => __('Permissions')),
-                        array('name' => 'rowtitle', 'value' => $dataSet->dataSet),
-                        array('name' => 'sort-group', 'value' => 2),
-                        array('name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'),
-                        array('name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DataSet'])),
-                        array('name' => 'content-id-name', 'value' => 'dataSetId')
-                    )
-                );
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'dataset_button_permissions'],
+                        ['name' => 'text', 'value' => __('Permissions')],
+                        ['name' => 'rowtitle', 'value' => $dataSet->dataSet],
+                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DataSet'])],
+                        ['name' => 'content-id-name', 'value' => 'dataSetId']
+                    ]
+                ];
             }
         }
 

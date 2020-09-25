@@ -182,20 +182,20 @@ class DayPart extends Base
                 );
 
                 if ($this->getUser()->checkDeleteable($dayPart)) {
-                    $dayPart->buttons[] = array(
+                    $dayPart->buttons[] = [
                         'id' => 'daypart_button_delete',
                         'url' => $this->urlFor($request,'daypart.delete.form', ['id' => $dayPart->dayPartId]),
                         'text' => __('Delete'),
                         'multi-select' => true,
-                        'dataAttributes' => array(
-                            array('name' => 'commit-url', 'value' => $this->urlFor($request,'daypart.delete', ['id' => $dayPart->dayPartId])),
-                            array('name' => 'commit-method', 'value' => 'delete'),
-                            array('name' => 'id', 'value' => 'daypart_button_delete'),
-                            array('name' => 'text', 'value' => __('Delete')),
-                            array('name' => 'sort-group', 'value' => 1),
-                            array('name' => 'rowtitle', 'value' => $dayPart->name)
-                        )
-                    );
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'daypart.delete', ['id' => $dayPart->dayPartId])],
+                            ['name' => 'commit-method', 'value' => 'delete'],
+                            ['name' => 'id', 'value' => 'daypart_button_delete'],
+                            ['name' => 'text', 'value' => __('Delete')],
+                            ['name' => 'sort-group', 'value' => 1],
+                            ['name' => 'rowtitle', 'value' => $dayPart->name]
+                        ]
+                    ];
                 }
             }
 
@@ -205,22 +205,22 @@ class DayPart extends Base
                     $dayPart->buttons[] = ['divider' => true];
 
                 // Edit Permissions
-                $dayPart->buttons[] = array(
+                $dayPart->buttons[] = [
                     'id' => 'daypart_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DayPart', 'id' => $dayPart->dayPartId]),
                     'text' => __('Permissions'),
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DayPart', 'id' => $dayPart->dayPartId])),
-                        array('name' => 'commit-method', 'value' => 'post'),
-                        array('name' => 'id', 'value' => 'daypart_button_permissions'),
-                        array('name' => 'text', 'value' => __('Permissions')),
-                        array('name' => 'rowtitle', 'value' => $dayPart->name),
-                        array('name' => 'sort-group', 'value' => 2),
-                        array('name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'),
-                        array('name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DayPart'])),
-                        array('name' => 'content-id-name', 'value' => 'dayPartId')
-                    )
-                );
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DayPart', 'id' => $dayPart->dayPartId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'daypart_button_permissions'],
+                        ['name' => 'text', 'value' => __('Permissions')],
+                        ['name' => 'rowtitle', 'value' => $dayPart->name],
+                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DayPart'])],
+                        ['name' => 'content-id-name', 'value' => 'dayPartId']
+                    ]
+                ];
             }
         }
 

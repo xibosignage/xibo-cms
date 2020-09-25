@@ -191,22 +191,22 @@ class PlayerSoftware extends Base
 
             if ($user->checkPermissionsModifyable($media)) {
                 // Permissions
-                $version->buttons[] = array(
+                $version->buttons[] = [
                     'id' => 'content_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Media', 'id' => $media->mediaId]),
                     'text' => __('Permissions'),
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Media', 'id' => $media->mediaId])),
-                        array('name' => 'commit-method', 'value' => 'post'),
-                        array('name' => 'id', 'value' => 'content_button_permissions'),
-                        array('name' => 'text', 'value' => __('Permissions')),
-                        array('name' => 'rowtitle', 'value' => $media->name),
-                        array('name' => 'sort-group', 'value' => 2),
-                        array('name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'),
-                        array('name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Media'])),
-                        array('name' => 'content-id-name', 'value' => 'mediaId')
-                    )
-                );
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Media', 'id' => $media->mediaId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'content_button_permissions'],
+                        ['name' => 'text', 'value' => __('Permissions')],
+                        ['name' => 'rowtitle', 'value' => $media->name],
+                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Media'])],
+                        ['name' => 'content-id-name', 'value' => 'mediaId']
+                    ]
+                ];
             }
 
             // Download

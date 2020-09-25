@@ -1570,7 +1570,7 @@ class User extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check if the array of ids is passed
-        if($sanitizedParams->getString('ids') == "") {
+        if($sanitizedParams->getString('ids') == '') {
             throw new InvalidArgumentException(__('The array of ids is empty!'));
         }
 
@@ -1578,9 +1578,9 @@ class User extends Base
         $ids = explode(',', $sanitizedParams->getString('ids'));
 
         // Array of all the permissions
-        $permissions = array();
-        $newPermissions = array();
-        $objects = array();
+        $permissions = [];
+        $newPermissions = [];
+        $objects = [];
 
         // Load our objects
         for ($i=0; $i < count($ids); $i++) {
@@ -1706,7 +1706,7 @@ class User extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check if the array of ids is passed
-        if($sanitizedParams->getString('ids') == "") {
+        if($sanitizedParams->getString('ids') == '') {
             throw new InvalidArgumentException(__('The array of ids is empty!'));
         }
 

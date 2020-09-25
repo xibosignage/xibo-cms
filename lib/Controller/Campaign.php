@@ -274,20 +274,20 @@ class Campaign extends Base
 
             if ($this->getUser()->checkDeleteable($campaign)) {
                 // Delete Campaign
-                $campaign->buttons[] = array(
+                $campaign->buttons[] = [
                     'id' => 'campaign_button_delete',
                     'url' => $this->urlFor($request,'campaign.delete.form', ['id' => $campaign->campaignId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'campaign.delete', ['id' => $campaign->campaignId])),
-                        array('name' => 'commit-method', 'value' => 'delete'),
-                        array('name' => 'id', 'value' => 'campaign_button_delete'),
-                        array('name' => 'text', 'value' => __('Delete')),
-                        array('name' => 'sort-group', 'value' => 1),
-                        array('name' => 'rowtitle', 'value' => $campaign->campaign)
-                    )
-                );
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'campaign.delete', ['id' => $campaign->campaignId])],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'campaign_button_delete'],
+                        ['name' => 'text', 'value' => __('Delete')],
+                        ['name' => 'sort-group', 'value' => 1],
+                        ['name' => 'rowtitle', 'value' => $campaign->campaign]
+                    ]
+                ];
             }
 
             if ($this->getUser()->checkPermissionsModifyable($campaign)) {
@@ -295,23 +295,23 @@ class Campaign extends Base
                 $campaign->buttons[] = ['divider' => true];
 
                 // Permissions for Campaign
-                $campaign->buttons[] = array(
+                $campaign->buttons[] = [
                     'id' => 'campaign_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Campaign', 'id' => $campaign->campaignId]),
                     'text' => __('Permissions'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Campaign', 'id' => $campaign->campaignId])),
-                        array('name' => 'commit-method', 'value' => 'post'),
-                        array('name' => 'id', 'value' => 'campaign_button_permissions'),
-                        array('name' => 'text', 'value' => __('Permissions')),
-                        array('name' => 'rowtitle', 'value' => $campaign->campaign),
-                        array('name' => 'sort-group', 'value' => 2),
-                        array('name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'),
-                        array('name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Campaign'])),
-                        array('name' => 'content-id-name', 'value' => 'campaignId')
-                    )
-                );
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Campaign', 'id' => $campaign->campaignId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'campaign_button_permissions'],
+                        ['name' => 'text', 'value' => __('Permissions')],
+                        ['name' => 'rowtitle', 'value' => $campaign->campaign],
+                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Campaign'])],
+                        ['name' => 'content-id-name', 'value' => 'campaignId']
+                    ]
+                ];
             }
         }
 

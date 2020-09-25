@@ -250,20 +250,20 @@ class Report extends Base
             // Delete
             if ($this->getUser()->checkDeleteable($reportSchedule)) {
                 // Show the delete button
-                $reportSchedule->buttons[] = array(
+                $reportSchedule->buttons[] = [
                     'id' => 'reportschedule_button_delete',
                     'url' => $this->urlFor($request,'reportschedule.delete.form', ['id' => $reportSchedule->reportScheduleId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'reportschedule.delete', ['id' => $reportSchedule->reportScheduleId])),
-                        array('name' => 'commit-method', 'value' => 'delete'),
-                        array('name' => 'id', 'value' => 'reportschedule_button_delete'),
-                        array('name' => 'text', 'value' => __('Delete')),
-                        array('name' => 'sort-group', 'value' => 1),
-                        array('name' => 'rowtitle', 'value' => $reportSchedule->name),
-                    )
-                );
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'reportschedule.delete', ['id' => $reportSchedule->reportScheduleId])],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'reportschedule_button_delete'],
+                        ['name' => 'text', 'value' => __('Delete')],
+                        ['name' => 'sort-group', 'value' => 1],
+                        ['name' => 'rowtitle', 'value' => $reportSchedule->name]
+                    ]
+                ];
             }
 
             // Toggle active
