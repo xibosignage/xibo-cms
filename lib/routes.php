@@ -396,7 +396,9 @@ $app->delete('/user/{id}', ['\Xibo\Controller\User','delete'])->setName('user.de
 $app->post('/user/{id}/usergroup/assign', ['\Xibo\Controller\User','assignUserGroup'])->setName('user.assign.userGroup');
 // permissions
 $app->get('/user/permissions/{entity}/{id}', ['\Xibo\Controller\User','permissionsGrid'])->setName('user.permissions');
+$app->get('/user/permissions/{entity}', ['\Xibo\Controller\User','permissionsMultiGrid'])->setName('user.permissions.multi');
 $app->post('/user/permissions/{entity}/{id}', ['\Xibo\Controller\User','permissions']);
+$app->post('/user/permissions/{entity}', ['\Xibo\Controller\User','permissionsMulti']);
 
 /**
  * User Group

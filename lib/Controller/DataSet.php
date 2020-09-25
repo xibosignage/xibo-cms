@@ -261,6 +261,7 @@ class DataSet extends Base
                         ['name' => 'id', 'value' => 'dataset_button_delete'],
                         ['name' => 'text', 'value' => __('Delete')],
                         ['name' => 'rowtitle', 'value' => $dataSet->dataSet],
+                        ['name' => 'sort-group', 'value' => 1],
                         ['name' => 'form-callback', 'value' => 'deleteMultiSelectFormOpen']
                     ]
                 ];
@@ -274,7 +275,18 @@ class DataSet extends Base
                 $dataSet->buttons[] = array(
                     'id' => 'dataset_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId]),
-                    'text' => __('Permissions')
+                    'text' => __('Permissions'),
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId])),
+                        array('name' => 'commit-method', 'value' => 'post'),
+                        array('name' => 'id', 'value' => 'dataset_button_permissions'),
+                        array('name' => 'text', 'value' => __('Permissions')),
+                        array('name' => 'rowtitle', 'value' => $dataSet->dataSet),
+                        array('name' => 'sort-group', 'value' => 2),
+                        array('name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'),
+                        array('name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DataSet'])),
+                        array('name' => 'content-id-name', 'value' => 'dataSetId')
+                    )
                 );
             }
         }

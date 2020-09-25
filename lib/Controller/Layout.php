@@ -1488,6 +1488,7 @@ class Layout extends Base
                             array('name' => 'commit-method', 'value' => 'put'),
                             array('name' => 'id', 'value' => 'layout_button_retire'),
                             array('name' => 'text', 'value' => __('Retire')),
+                            array('name' => 'sort-group', 'value' => 1),
                             array('name' => 'rowtitle', 'value' => $layout->layout)
                         )
                     );
@@ -1512,6 +1513,7 @@ class Layout extends Base
                             array('name' => 'commit-method', 'value' => 'delete'),
                             array('name' => 'id', 'value' => 'layout_button_delete'),
                             array('name' => 'text', 'value' => __('Delete')),
+                            array('name' => 'sort-group', 'value' => 1),
                             array('name' => 'rowtitle', 'value' => $layout->layout)
                         )
                     );
@@ -1557,7 +1559,19 @@ class Layout extends Base
                     $layout->buttons[] = array(
                         'id' => 'layout_button_permissions',
                         'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Campaign', 'id' => $layout->campaignId]),
-                        'text' => __('Permissions')
+                        'text' => __('Permissions'),
+                        'multi-select' => true,
+                        'dataAttributes' => array(
+                            array('name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Campaign', 'id' => $layout->campaignId])),
+                            array('name' => 'commit-method', 'value' => 'post'),
+                            array('name' => 'id', 'value' => 'layout_button_permissions'),
+                            array('name' => 'text', 'value' => __('Permissions')),
+                            array('name' => 'rowtitle', 'value' => $layout->layout),
+                            array('name' => 'sort-group', 'value' => 2),
+                            array('name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'),
+                            array('name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Campaign'])),
+                            array('name' => 'content-id-name', 'value' => 'campaignId')
+                        )
                     );
                 }
             }

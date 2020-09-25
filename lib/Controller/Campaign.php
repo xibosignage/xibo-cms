@@ -284,6 +284,7 @@ class Campaign extends Base
                         array('name' => 'commit-method', 'value' => 'delete'),
                         array('name' => 'id', 'value' => 'campaign_button_delete'),
                         array('name' => 'text', 'value' => __('Delete')),
+                        array('name' => 'sort-group', 'value' => 1),
                         array('name' => 'rowtitle', 'value' => $campaign->campaign)
                     )
                 );
@@ -297,7 +298,19 @@ class Campaign extends Base
                 $campaign->buttons[] = array(
                     'id' => 'campaign_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Campaign', 'id' => $campaign->campaignId]),
-                    'text' => __('Permissions')
+                    'text' => __('Permissions'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Campaign', 'id' => $campaign->campaignId])),
+                        array('name' => 'commit-method', 'value' => 'post'),
+                        array('name' => 'id', 'value' => 'campaign_button_permissions'),
+                        array('name' => 'text', 'value' => __('Permissions')),
+                        array('name' => 'rowtitle', 'value' => $campaign->campaign),
+                        array('name' => 'sort-group', 'value' => 2),
+                        array('name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'),
+                        array('name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Campaign'])),
+                        array('name' => 'content-id-name', 'value' => 'campaignId')
+                    )
                 );
             }
         }

@@ -192,6 +192,7 @@ class DayPart extends Base
                             array('name' => 'commit-method', 'value' => 'delete'),
                             array('name' => 'id', 'value' => 'daypart_button_delete'),
                             array('name' => 'text', 'value' => __('Delete')),
+                            array('name' => 'sort-group', 'value' => 1),
                             array('name' => 'rowtitle', 'value' => $dayPart->name)
                         )
                     );
@@ -207,7 +208,18 @@ class DayPart extends Base
                 $dayPart->buttons[] = array(
                     'id' => 'daypart_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DayPart', 'id' => $dayPart->dayPartId]),
-                    'text' => __('Permissions')
+                    'text' => __('Permissions'),
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DayPart', 'id' => $dayPart->dayPartId])),
+                        array('name' => 'commit-method', 'value' => 'post'),
+                        array('name' => 'id', 'value' => 'daypart_button_permissions'),
+                        array('name' => 'text', 'value' => __('Permissions')),
+                        array('name' => 'rowtitle', 'value' => $dayPart->name),
+                        array('name' => 'sort-group', 'value' => 2),
+                        array('name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'),
+                        array('name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DayPart'])),
+                        array('name' => 'content-id-name', 'value' => 'dayPartId')
+                    )
                 );
             }
         }

@@ -172,6 +172,7 @@ class Command extends Base
                         array('name' => 'commit-method', 'value' => 'delete'),
                         array('name' => 'id', 'value' => 'command_button_delete'),
                         array('name' => 'text', 'value' => __('Delete')),
+                        array('name' => 'sort-group', 'value' => 1),
                         array('name' => 'rowtitle', 'value' => $command->command)
                     )
                 );
@@ -183,7 +184,19 @@ class Command extends Base
                 $command->buttons[] = array(
                     'id' => 'command_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Command', 'id' => $command->commandId]),
-                    'text' => __('Permissions')
+                    'text' => __('Permissions'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Command', 'id' => $command->commandId])),
+                        array('name' => 'commit-method', 'value' => 'post'),
+                        array('name' => 'id', 'value' => 'command_button_permissions'),
+                        array('name' => 'text', 'value' => __('Permissions')),
+                        array('name' => 'rowtitle', 'value' => $command->command),
+                        array('name' => 'sort-group', 'value' => 2),
+                        array('name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'),
+                        array('name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Command'])),
+                        array('name' => 'content-id-name', 'value' => 'commandId')
+                    )
                 );
             }
         }

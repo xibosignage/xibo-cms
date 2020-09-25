@@ -158,7 +158,7 @@
     </script>
 
     <script type="text/x-handlebars-template" id="multiselect-button-template">
-        <div class="btn-group">
+        <div class="btn-group dropup">
             <button class="btn select-all" data-toggle="selectAll">
                 {{ selectAll }}
             </button>
@@ -168,7 +168,11 @@
             </button>
             <ul class="dropdown-menu">
                 {{#each buttons}}
-                    <li class="XiboMultiSelectFormButton" data-custom-handler="{{ customHandler }}" data-button-id="{{ id }}" data-grid-id="{{ gridId }}" data-content-type="{{ contentType }}" data-content-id-name="{{ contentIdName }}"><a tabindex="-1" href="#">{{ text }}</a></li>
+                    {{#if divider}}
+                        <li class="divider"></li>
+                    {{else}}
+                        <li class="XiboMultiSelectFormButton" data-custom-handler="{{ customHandler }}" data-custom-handler-url="{{ customHandlerUrl }}" data-button-id="{{ id }}" data-grid-id="{{ gridId }}" data-content-type="{{ contentType }}" data-content-id-name="{{ contentIdName }}"><a tabindex="-1" href="#">{{ text }}</a></li>
+                    {{/if}}
                 {{/each}}
             </ul>
         </div>
@@ -544,7 +548,7 @@
         <form id="multiselectTagEditForm" data-gettag="{{ url_for("tag.getByName") }}">
             <input type="hidden" id="requestURL" name="requestURL" value="{{ url_for('tag.editMultiple', {type: '[type]'}) }}">
             <div class="form-group tags-with-value tags-input-wide row">
-                <label class="col-sm-2 control-label" for="tagsToAdd">{% trans "Add new tags" %}</label>
+                <label class="col-sm-2 control-label" for="tagsToAdd">{% trans "New tags" %}</label>
                 <div class="col-sm-10">
                     <input class="form-control" name="tagsToAdd" type="email" id="tagsToAdd" data-role="tagsInputForm" data-auto-complete-url="{{ url_for('tag.search') }}" />
                     <span class="help-block">{% trans "A comma separated list of tags to add to the selected elements." %}</span>
@@ -575,7 +579,7 @@
             </div>
 
             <div id="tagsToRemoveContainer" class="form-group tags-with-value tags-input-wide row">
-                <label class="col-sm-2 control-label" for="tagsToRemove">{% trans "Remove existing tags" %}</label>
+                <label class="col-sm-2 control-label" for="tagsToRemove">{% trans "Existing tags" %}</label>
                 <div class="col-sm-10">
                     <input class="form-control" name="tagsToRemove" type="email" id="tagsToRemove" data-role="tagsInputForm" data-auto-complete-url="{{ url_for('tag.search') }}" />
                     <span class="help-block">{% trans "Remove tags from the list to remove them from elements that contain them." %}</span>

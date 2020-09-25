@@ -403,6 +403,7 @@ class Playlist extends Base
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'playlist_button_delete'],
                         ['name' => 'text', 'value' => __('Delete')],
+                        ['name' => 'sort-group', 'value' => 1],
                         ['name' => 'rowtitle', 'value' => $playlist->name]
                     ]
                 ];
@@ -416,7 +417,18 @@ class Playlist extends Base
                 $playlist->buttons[] = [
                     'id' => 'playlist_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Playlist', 'id' => $playlist->playlistId]),
-                    'text' => __('Permissions')
+                    'text' => __('Permissions'),
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Playlist', 'id' => $playlist->playlistId])),
+                        array('name' => 'commit-method', 'value' => 'post'),
+                        array('name' => 'id', 'value' => 'playlist_button_permissions'),
+                        array('name' => 'text', 'value' => __('Permissions')),
+                        array('name' => 'rowtitle', 'value' => $playlist->name),
+                        array('name' => 'sort-group', 'value' => 2),
+                        array('name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'),
+                        array('name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Playlist'])),
+                        array('name' => 'content-id-name', 'value' => 'playlistId')
+                    )
                 ];
             }
 

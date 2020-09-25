@@ -260,6 +260,7 @@ class Report extends Base
                         array('name' => 'commit-method', 'value' => 'delete'),
                         array('name' => 'id', 'value' => 'reportschedule_button_delete'),
                         array('name' => 'text', 'value' => __('Delete')),
+                        array('name' => 'sort-group', 'value' => 1),
                         array('name' => 'rowtitle', 'value' => $reportSchedule->name),
                     )
                 );
@@ -882,6 +883,7 @@ class Report extends Base
                                 array('name' => 'commit-method', 'value' => 'delete'),
                                 array('name' => 'id', 'value' => 'savedreport_button_delete'),
                                 array('name' => 'text', 'value' => __('Delete')),
+                                array('name' => 'sort-group', 'value' => 1),
                                 array('name' => 'rowtitle', 'value' => $savedReport->saveAs),
                             )
                         );

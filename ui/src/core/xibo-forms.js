@@ -956,6 +956,235 @@ function permissionsFormSubmit(id) {
     });
 }
 
+function permissionsMultiFormOpen(dialog) {
+    var $permissionsTable = $(dialog).find("#permissionsMultiTable");
+    var $grid = $permissionsTable.closest(".XiboGrid");
+
+    var table = $permissionsTable.DataTable({ "language": dataTablesLanguage,
+        serverSide: true, 
+        stateSave: true,
+        "filter": false,
+        searchDelay: 3000,
+        "order": [[ 0, "asc"]],
+        ajax: {
+            url: $grid.data().url,
+            "data": function(d) {
+                $.extend(d, $grid.find(".permissionsMultiTableFilter form").serializeObject());
+
+                $.extend(d, {
+                    ids: $grid.data().targetIds
+                });
+            },
+            "dataSrc": function(json) {
+                var newData = json.data;
+
+                for (var dataKey in newData) {
+                    if (newData.hasOwnProperty(dataKey)) {
+                        var permissionGrouped = {
+                            "view": null,
+                            "edit": null,
+                            "delete": null
+                        }
+
+                        for (var key in newData[dataKey].permissions) {
+                            if (newData[dataKey].permissions.hasOwnProperty(key)) {
+                                var permission = newData[dataKey].permissions[key];
+
+                                if(permission.view != permissionGrouped.view) {
+                                    if(permissionGrouped.view != null) {
+                                        permissionGrouped.view = 2;
+                                    } else {
+                                        permissionGrouped.view = permission.view;
+                                    }
+                                }
+
+                                if(permission.edit != permissionGrouped.edit) {
+                                    if(permissionGrouped.edit != null) {
+                                        permissionGrouped.edit = 2;
+                                    } else {
+                                        permissionGrouped.edit = permission.edit;
+                                    }
+                                }
+
+                                if(permission.delete != permissionGrouped.delete) {
+                                    if(permissionGrouped.delete != null) {
+                                        permissionGrouped.delete = 2;
+                                    } else {
+                                        permissionGrouped.delete = permission.delete;
+                                    }
+                                }
+                            }
+                        }
+
+                        newData[dataKey] = Object.assign(permissionGrouped, newData[dataKey]);
+                        delete newData[dataKey].permissions;
+                    }
+                }
+
+                // initialise the permission and start permissions arrays
+                if ($grid.data().permissions == undefined) {
+                    $grid.data().permissions = newData;
+                }
+
+                if ($grid.data().startPermissions == undefined) {
+                    $grid.data().startPermissions = JSON.parse(JSON.stringify(newData));
+                }
+
+                if ($grid.data().savePermissions == undefined) {
+                    $grid.data().savePermissions = {};
+                }
+
+                // Return an array of permissions
+                return Object.values(newData);
+            }
+        },
+        "columns": [
+            {
+                "data": "group",
+                "render": function (data, type, row, meta) {
+                    if (type != "display")
+                        return data;
+
+                    if (row.isUser == 1)
+                        return data;
+                    else
+                        return '<strong>' + data + '</strong>';
+                }
+            },
+            { "data": "view", "render": function (data, type, row, meta) {
+                    if (type != "display")
+                        return data;
+
+                    var checked;
+                    if (row.groupId in $grid.data().permissions) {
+                        var cache = $grid.data().permissions[row.groupId];
+
+                        checked = (cache.view !== undefined && cache.view !== 0) ? cache.view : 0;
+                    } else {
+                        checked = data;
+                    }
+
+                    // Cached changes to this field?
+                    return "<input type=\"checkbox\" class=\"" + ((checked === 2) ? "indeterminate" : "") + "\" data-permission=\"view\" data-group-id=\"" + row.groupId + "\" " + ((checked === 1) ? "checked" : "") + " />";
+                }
+            },
+            { "data": "edit", "render": function (data, type, row, meta) {
+                    if (type != "display")
+                        return data;
+
+                    var checked;
+                    if (row.groupId in $grid.data().permissions) {
+                        var cache = $grid.data().permissions[row.groupId];
+
+                        checked = (cache.edit !== undefined && cache.edit !== 0) ? cache.edit : 0;
+                    } else {
+                        checked = data;
+                    }
+
+                    return "<input type=\"checkbox\" class=\"" + ((checked === 2) ? "indeterminate" : "") + "\" data-permission=\"edit\" data-group-id=\"" + row.groupId + "\" " + ((checked === 1) ? "checked" : "") + " />";
+                }
+            },
+            { "data": "delete", "render": function (data, type, row, meta) {
+                    if (type != "display")
+                        return data;
+
+                    var checked;
+                    if (row.groupId in $grid.data().permissions) {
+                        var cache = $grid.data().permissions[row.groupId];
+
+                        checked = (cache.delete !== undefined && cache.delete !== 0) ? cache.delete : 0;
+                    } else {
+                        checked = data;
+                    }
+
+                    return "<input type=\"checkbox\" class=\"" + ((checked === 2) ? "indeterminate" : "") + "\" data-permission=\"delete\" data-group-id=\"" + row.groupId + "\" " + ((checked === 1) ? "checked" : "") + " />";
+                }
+            }
+        ]
+    });
+
+    table.on('draw', function (e, settings) {
+        dataTableDraw(e, settings);
+
+        // Bind to the checkboxes change event
+        var target = $("#" + e.target.id);
+        target.find("input[type=checkbox]").change(function() {
+            // Update our global permissions data with this
+            var groupId = $(this).data().groupId;
+            var permission = $(this).data().permission;
+            var value = $(this).is(":checked");
+            var valueNumeric = (value) ? 1 : 0;
+
+            //console.log("Setting permissions on groupId: " + groupId + ". Permission " + permission + ". Value: " + value);
+            // Update main permission object
+            if ($grid.data().permissions[groupId] === undefined) {
+                $grid.data().permissions[groupId] = {};
+            }
+            $grid.data().permissions[groupId][permission] = valueNumeric;
+
+            // Update save permissions object
+            if($grid.data().savePermissions[groupId] === undefined) {
+                $grid.data().savePermissions[groupId] = {};
+                $grid.data().savePermissions[groupId][permission] = valueNumeric;
+            } else {
+                if($grid.data().startPermissions[groupId][permission] === valueNumeric) {
+                    // if changed value is the same as the initial permission object, remove it from the save permissions object
+                    delete $grid.data().savePermissions[groupId][permission];
+
+                    // Remove group if it's an empty object
+                    if($.isEmptyObject($grid.data().savePermissions[groupId])) {
+                        delete $grid.data().savePermissions[groupId]; 
+                    }
+                } else {
+                    // Add new change to the save permissions object
+                    $grid.data().savePermissions[groupId][permission] = valueNumeric;
+                }
+            }
+
+            // Enable save button only if we have permission changes to save
+            $(dialog).find('.save-button').toggleClass('disabled', $.isEmptyObject($grid.data().savePermissions));
+        });
+
+        // Mark indeterminate checkboxes and add title
+        target.find('input[type=checkbox].indeterminate').prop('indeterminate', true).prop('title', translations.indeterminate);
+    });
+
+    // Disable save button by default
+    $(dialog).find('.save-button').addClass('disabled');
+
+    table.on('processing.dt', dataTableProcessing);
+
+    // Bind our filter
+    $grid.find(".permissionsMultiTableFilter form input, .permissionsMultiTableFilter form select").change(function() {
+        table.ajax.reload();
+    });
+}
+
+function permissionsMultiFormSubmit(id) {
+    var form = $("#" + id);
+    var permissions = $(form).data().savePermissions;
+    var targetIds = $(form).data().targetIds;
+    
+    var data = $.param({
+        groupIds: permissions,
+        ids: targetIds
+    });
+    
+    $.ajax({
+        type: "POST",
+        url: form.data().url,
+        cache: false,
+        dataType: "json",
+        data: data,
+        success: function(xhr, textStatus, error) {
+            XiboSubmitResponse(xhr, form);
+        },
+        error: function(xhr, textStatus, errorThrown) {
+            SystemMessage(xhr.responseText, false);
+        }
+    });
+}
+
 function membersFormOpen(dialog) {
 
     // Get our table

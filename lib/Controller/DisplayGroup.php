@@ -309,9 +309,10 @@ class DisplayGroup extends Base
                         array('name' => 'commit-method', 'value' => 'delete'),
                         array('name' => 'id', 'value' => 'displaygroup_button_delete'),
                         array('name' => 'text', 'value' => __('Delete')),
+                        array('name' => 'sort-group', 'value' => 1),
                         array('name' => 'rowtitle', 'value' => $group->displayGroup),
-                        ['name' => 'form-callback', 'value' => 'setDeleteMultiSelectFormOpen'],
-                        ['name' => 'form-confirm', 'value' => true]
+                        array('name' => 'form-callback', 'value' => 'setDeleteMultiSelectFormOpen'),
+                        array('name' => 'form-confirm', 'value' => true)
                     )
                 );
             }
@@ -339,7 +340,18 @@ class DisplayGroup extends Base
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId]),
-                    'text' => __('Permissions')
+                    'text' => __('Permissions'),
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId])),
+                        array('name' => 'commit-method', 'value' => 'post'),
+                        array('name' => 'id', 'value' => 'displaygroup_button_permissions'),
+                        array('name' => 'text', 'value' => __('Permissions')),
+                        array('name' => 'rowtitle', 'value' => $group->displayGroup),
+                        array('name' => 'sort-group', 'value' => 2),
+                        array('name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'),
+                        array('name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DisplayGroup'])),
+                        array('name' => 'content-id-name', 'value' => 'displayGroupId')
+                    )
                 );
             }
 

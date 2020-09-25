@@ -672,8 +672,9 @@ class Library extends Base
                         array('name' => 'commit-method', 'value' => 'delete'),
                         array('name' => 'id', 'value' => 'content_button_delete'),
                         array('name' => 'text', 'value' => __('Delete')),
+                        array('name' => 'sort-group', 'value' => 1),
                         array('name' => 'rowtitle', 'value' => $media->name),
-                        ['name' => 'form-callback', 'value' => 'setDefaultMultiSelectFormOpen']
+                        array('name' => 'form-callback', 'value' => 'setDefaultMultiSelectFormOpen')
                     )
                 );
             }
@@ -683,7 +684,18 @@ class Library extends Base
                 $media->buttons[] = array(
                     'id' => 'content_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Media', 'id' => $media->mediaId]),
-                    'text' => __('Permissions')
+                    'text' => __('Permissions'),
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Media', 'id' => $media->mediaId])),
+                        array('name' => 'commit-method', 'value' => 'post'),
+                        array('name' => 'id', 'value' => 'content_button_permissions'),
+                        array('name' => 'text', 'value' => __('Permissions')),
+                        array('name' => 'rowtitle', 'value' => $media->name),
+                        array('name' => 'sort-group', 'value' => 2),
+                        array('name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'),
+                        array('name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Media'])),
+                        array('name' => 'content-id-name', 'value' => 'mediaId')
+                    )
                 );
             }
 
