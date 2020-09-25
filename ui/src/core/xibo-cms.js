@@ -1281,35 +1281,37 @@ function XiboFormRender(sourceObj, data) {
                 
             // Was the Call successful
             if (response.success) {
-                var commitUrl = sourceObj.data().commitUrl;
+                if(!(typeof sourceObj === "string" || sourceObj instanceof String)) {
+                    var commitUrl = sourceObj.data().commitUrl;
 
-                // Handle auto-submit
-                if (response.autoSubmit && commitUrl !== undefined) {
-                    // grab the auto submit URL and submit it immediately
-                    $.ajax({
-                        type: sourceObj.data().commitMethod || "POST",
-                        url: commitUrl,
-                        cache: false,
-                        dataType: "json",
-                        success: function(autoSubmitResponse) {
-                            if (autoSubmitResponse.success) {
-                                // Success - what do we do now?
-                                if (autoSubmitResponse.message !== '') {
-                                    SystemMessage(autoSubmitResponse.message, true);
+                    // Handle auto-submit
+                    if (response.autoSubmit && commitUrl !== undefined) {
+                        // grab the auto submit URL and submit it immediately
+                        $.ajax({
+                            type: sourceObj.data().commitMethod || "POST",
+                            url: commitUrl,
+                            cache: false,
+                            dataType: "json",
+                            success: function(autoSubmitResponse) {
+                                if (autoSubmitResponse.success) {
+                                    // Success - what do we do now?
+                                    if (autoSubmitResponse.message !== '') {
+                                        SystemMessage(autoSubmitResponse.message, true);
+                                    }
+                                    XiboRefreshAllGrids();
+                                } else if (autoSubmitResponse.login) {
+                                    // We were logged out
+                                    LoginBox(autoSubmitResponse.message);
+                                } else {
+                                    SystemMessageInline(autoSubmitResponse.message);
                                 }
-                                XiboRefreshAllGrids();
-                            } else if (autoSubmitResponse.login) {
-                                // We were logged out
-                                LoginBox(autoSubmitResponse.message);
-                            } else {
-                                SystemMessageInline(autoSubmitResponse.message);
+                            },
+                            error: function(xhr) {
+                                SystemMessageInline(xhr.responseText);
                             }
-                        },
-                        error: function(xhr) {
-                            SystemMessageInline(xhr.responseText);
-                        }
-                    });
-                    return false;
+                        });
+                        return false;
+                    }
                 }
 
                 // Set the dialog HTML to be the response HTML
@@ -1387,12 +1389,14 @@ function XiboFormRender(sourceObj, data) {
                         });
 
                     // Check to see if we ought to render out a checkbox for autosubmit
-                    if (sourceObj.data().autoSubmit) {
-                        if (autoSubmitTemplate === null) {
-                            autoSubmitTemplate = Handlebars.compile($('#auto-submit-field-template').html());
-                        }
+                    if(!(typeof sourceObj === "string" || sourceObj instanceof String)) {
+                        if (sourceObj.data().autoSubmit) {
+                            if (autoSubmitTemplate === null) {
+                                autoSubmitTemplate = Handlebars.compile($('#auto-submit-field-template').html());
+                            }
 
-                        footer.prepend(autoSubmitTemplate());
+                            footer.prepend(autoSubmitTemplate());
+                        }
                     }
                 }
 
