@@ -182,6 +182,7 @@ $app->get('/user/form/membership/{id}', ['\Xibo\Controller\User','membershipForm
 $app->get('/user/form/preferences', ['\Xibo\Controller\User', 'preferencesForm'])->setName('user.preferences.form');
 // permissions
 $app->get('/user/permissions/form/{entity}/{id}', ['\Xibo\Controller\User','permissionsForm'])->setName('user.permissions.form');
+$app->get('/user/permissions/multiple/form/{entity}', ['\Xibo\Controller\User','permissionsMultiForm'])->setName('user.permissions.multi.form');
 
 //
 // log

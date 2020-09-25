@@ -662,29 +662,41 @@ class Library extends Base
 
             if ($user->checkDeleteable($media)) {
                 // Delete Button
-                $media->buttons[] = array(
+                $media->buttons[] = [
                     'id' => 'content_button_delete',
                     'url' => $this->urlFor($request,'library.delete.form', ['id' => $media->mediaId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'library.delete', ['id' => $media->mediaId])),
-                        array('name' => 'commit-method', 'value' => 'delete'),
-                        array('name' => 'id', 'value' => 'content_button_delete'),
-                        array('name' => 'text', 'value' => __('Delete')),
-                        array('name' => 'rowtitle', 'value' => $media->name),
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'library.delete', ['id' => $media->mediaId])],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'content_button_delete'],
+                        ['name' => 'text', 'value' => __('Delete')],
+                        ['name' => 'sort-group', 'value' => 1],
+                        ['name' => 'rowtitle', 'value' => $media->name],
                         ['name' => 'form-callback', 'value' => 'setDefaultMultiSelectFormOpen']
-                    )
-                );
+                    ]
+                ];
             }
 
             if ($user->checkPermissionsModifyable($media)) {
                 // Permissions
-                $media->buttons[] = array(
+                $media->buttons[] = [
                     'id' => 'content_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Media', 'id' => $media->mediaId]),
-                    'text' => __('Permissions')
-                );
+                    'text' => __('Permissions'),
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Media', 'id' => $media->mediaId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'content_button_permissions'],
+                        ['name' => 'text', 'value' => __('Permissions')],
+                        ['name' => 'rowtitle', 'value' => $media->name],
+                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Media'])],
+                        ['name' => 'content-id-name', 'value' => 'mediaId']
+                    ]
+                ];
             }
 
             // Download

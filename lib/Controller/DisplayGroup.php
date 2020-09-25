@@ -299,21 +299,22 @@ class DisplayGroup extends Base
 
             if ($this->getUser()->checkDeleteable($group)) {
                 // Show the delete button
-                $group->buttons[] = array(
+                $group->buttons[] = [
                     'id' => 'displaygroup_button_delete',
                     'url' => $this->urlFor($request,'displayGroup.delete.form', ['id' => $group->displayGroupId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.delete', ['id' => $group->displayGroupId])),
-                        array('name' => 'commit-method', 'value' => 'delete'),
-                        array('name' => 'id', 'value' => 'displaygroup_button_delete'),
-                        array('name' => 'text', 'value' => __('Delete')),
-                        array('name' => 'rowtitle', 'value' => $group->displayGroup),
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.delete', ['id' => $group->displayGroupId])],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'displaygroup_button_delete'],
+                        ['name' => 'text', 'value' => __('Delete')],
+                        ['name' => 'sort-group', 'value' => 1],
+                        ['name' => 'rowtitle', 'value' => $group->displayGroup],
                         ['name' => 'form-callback', 'value' => 'setDeleteMultiSelectFormOpen'],
                         ['name' => 'form-confirm', 'value' => true]
-                    )
-                );
+                    ]
+                ];
             }
 
             $group->buttons[] = ['divider' => true];
@@ -336,11 +337,22 @@ class DisplayGroup extends Base
 
             if ($this->getUser()->checkPermissionsModifyable($group)) {
                 // Show the modify permissions button
-                $group->buttons[] = array(
+                $group->buttons[] = [
                     'id' => 'displaygroup_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId]),
-                    'text' => __('Permissions')
-                );
+                    'text' => __('Permissions'),
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'displaygroup_button_permissions'],
+                        ['name' => 'text', 'value' => __('Permissions')],
+                        ['name' => 'rowtitle', 'value' => $group->displayGroup],
+                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DisplayGroup'])],
+                        ['name' => 'content-id-name', 'value' => 'displayGroupId']
+                    ]
+                ];
             }
 
             if ($this->getUser()->checkEditable($group)) {

@@ -223,14 +223,14 @@ class Notification extends Base
             $notification->includeProperty('buttons');
 
             // Default Layout
-            $notification->buttons[] = array(
+            $notification->buttons[] = [
                 'id' => 'notification_button_edit',
                 'url' => $this->urlFor($request,'notification.edit.form', ['id' => $notification->notificationId]),
                 'text' => __('Edit')
-            );
+            ];
 
             if ($this->getUser()->checkDeleteable($notification)) {
-                $notification->buttons[] = array(
+                $notification->buttons[] = [
                     'id' => 'notification_button_delete',
                     'url' => $this->urlFor($request,'notification.delete.form', ['id' => $notification->notificationId]),
                     'text' => __('Delete'),
@@ -240,9 +240,10 @@ class Notification extends Base
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'notification_button_delete'],
                         ['name' => 'text', 'value' => __('Delete?')],
+                        ['name' => 'sort-group', 'value' => 1],
                         ['name' => 'rowtitle', 'value' => $notification->subject]
                     ]
-                );
+                ];
             }
         }
 

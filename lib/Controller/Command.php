@@ -162,29 +162,42 @@ class Command extends Base
 
             // Command delete
             if ($this->getUser()->checkDeleteable($command)) {
-                $command->buttons[] = array(
+                $command->buttons[] = [
                     'id' => 'command_button_delete',
                     'url' => $this->urlFor($request,'command.delete.form', ['id' => $command->commandId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'command.delete', ['id' => $command->commandId])),
-                        array('name' => 'commit-method', 'value' => 'delete'),
-                        array('name' => 'id', 'value' => 'command_button_delete'),
-                        array('name' => 'text', 'value' => __('Delete')),
-                        array('name' => 'rowtitle', 'value' => $command->command)
-                    )
-                );
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'command.delete', ['id' => $command->commandId])],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'command_button_delete'],
+                        ['name' => 'text', 'value' => __('Delete')],
+                        ['name' => 'sort-group', 'value' => 1],
+                        ['name' => 'rowtitle', 'value' => $command->command]
+                    ]
+                ];
             }
 
             // Command Permissions
             if ($this->getUser()->checkPermissionsModifyable($command)) {
                 // Permissions button
-                $command->buttons[] = array(
+                $command->buttons[] = [
                     'id' => 'command_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Command', 'id' => $command->commandId]),
-                    'text' => __('Permissions')
-                );
+                    'text' => __('Permissions'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Command', 'id' => $command->commandId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'command_button_permissions'],
+                        ['name' => 'text', 'value' => __('Permissions')],
+                        ['name' => 'rowtitle', 'value' => $command->command],
+                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Command'])],
+                        ['name' => 'content-id-name', 'value' => 'commandId']
+                    ]
+                ];
             }
         }
 

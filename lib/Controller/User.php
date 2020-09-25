@@ -1524,6 +1524,116 @@ class User extends Base
         return $this->render($request,  $response);
     }
 
+
+    /**
+     * @SWG\Get(
+     *  path="/user/permissions/{entity}",
+     *  operationId="userPermissionsMultiSearch",
+     *  tags={"user"},
+     *  summary="Permission Data",
+     *  description="Permission data for the multiple Entities and Objects Provided.",
+     *  @SWG\Parameter(
+     *      name="entity",
+     *      in="path",
+     *      description="The Entity",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ids",
+     *      in="query",
+     *      description="The IDs of the Objects to return permissions for",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/Permission")
+     *      )
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param string $entities
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function permissionsMultiGrid(Request $request, Response $response, $entity)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        // Check if the array of ids is passed
+        if($sanitizedParams->getString('ids') == '') {
+            throw new InvalidArgumentException(__('The array of ids is empty!'));
+        }
+
+        // Get array of ids
+        $ids = explode(',', $sanitizedParams->getString('ids'));
+
+        // Array of all the permissions
+        $permissions = [];
+        $newPermissions = [];
+        $objects = [];
+
+        // Load our objects
+        for ($i=0; $i < count($ids); $i++) {
+            $objectId = $ids[$i];
+
+            $entityTemp = $this->parsePermissionsEntity($entity, $objectId);
+
+            $objects[$i] = $entityTemp->getById($objectId);
+
+            // Does this user have permission to edit the permissions?!
+            if (!$this->getUser()->checkPermissionsModifyable($objects[$i])) {
+                throw new AccessDeniedException(__('You do not have permission to edit all the entities permissions.'));
+            }
+
+            // List of all Groups with a view / edit / delete check box
+            $permissions = array_merge_recursive($permissions, $this->permissionFactory->getAllByObjectId($this->getUser(), $objects[$i]->permissionsClass(), $objectId, $this->gridRenderSort($request), $this->gridRenderFilter(['name' => $sanitizedParams->getString('name')], $request)));
+        }
+
+        // Change permissions structure to be grouped by user group
+        foreach ($permissions as $permission) {
+
+            if(!array_key_exists($permission->groupId, $newPermissions)) {
+                $newPermissions[$permission->groupId] = [
+                    "groupId" => $permission->groupId,
+                    "group" => $permission->group,
+                    "isUser" => $permission->isUser,
+                    "entity" => $permission->entity,
+                    "permissions" => [
+                        $permission->objectId => [
+                            "permissionId" => $permission->permissionId,
+                            "view" => $permission->view,
+                            "edit" => $permission->edit,
+                            "delete" => $permission->delete
+                        ]
+                    ]
+                ];
+            } else {
+                $newPermissions[$permission->groupId]["permissions"][] = [
+                    "permissionId" => $permission->permissionId,
+                    "view" => $permission->view,
+                    "edit" => $permission->edit,
+                    "delete" => $permission->delete
+                ];
+            }
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($newPermissions);
+        $this->getState()->recordsTotal = $this->permissionFactory->countLast();
+
+        return $this->render($request,  $response);
+    }
+
     /**
      * Permissions to users for the provided entity
      * @param Request $request
@@ -1573,6 +1683,45 @@ class User extends Base
         ];
 
         $this->getState()->template = 'user-form-permissions';
+        $this->getState()->setData($data);
+
+        return $this->render($request, $response);
+    }
+
+
+    /**
+     * Permissions to users for the provided entity
+     * @param Request $request
+     * @param Response $response
+     * @param $entity
+     * @param $ids
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function permissionsMultiForm(Request $request, Response $response, $entity)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        // Check if the array of ids is passed
+        if($sanitizedParams->getString('ids') == '') {
+            throw new InvalidArgumentException(__('The array of ids is empty!'));
+        }
+
+        // Get array of ids
+        $ids = $sanitizedParams->getString('ids');
+
+        $data = [
+            'entity' => $entity,
+            'objectIds' => $ids,
+            'help' => [
+                'permissions' => $this->getHelp()->link('Campaign', 'Permissions')
+            ]
+        ];
+
+        $this->getState()->template = 'user-form-multiple-permissions';
         $this->getState()->setData($data);
 
         return $this->render($request, $response);
@@ -1745,6 +1894,88 @@ class User extends Base
         return $this->render($request, $response);
     }
 
+
+    /**
+     * @SWG\Post(
+     *  path="/user/permissions/{entity}/multiple",
+     *  operationId="userPermissionsMultiSet",
+     *  tags={"user"},
+     *  summary="Multiple Permission Set",
+     *  description="Set Permissions to users/groups for multiple provided entities.",
+     *  @SWG\Parameter(
+     *      name="entity",
+     *      in="path",
+     *      description="The Entity type",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ids",
+     *      in="formData",
+     *      description="Array of object IDs",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="groupIds",
+     *      in="formData",
+     *      description="Array of permissions with groupId as the key",
+     *      type="array",
+     *      required=true,
+     *      @SWG\Items(type="string")
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ownerId",
+     *      in="formData",
+     *      description="Change the owner of this item. Leave empty to keep the current owner",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param string $entity
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws ConfigurationException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function permissionsMulti(Request $request, Response $response, $entity)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        // Get array of ids
+        $ids = ($sanitizedParams->getString('ids') != '') ? explode(',', $sanitizedParams->getString('ids')) : [];
+
+        // Check if the array of ids is passed
+        if (count($ids) == 0) {
+            throw new InvalidArgumentException(__('The array of ids is empty!'));
+        }
+
+        // Set permissions for all the object ids, one by one
+        foreach ($ids as $id) {
+            $this->permissions($request, $response, $entity, $id);
+        }
+
+        // Return
+        $this->getState()->hydrate([
+            'httpCode' => 204,
+            'message' => __('Permissions Updated')
+        ]);
+
+        return $this->render($request, $response);
+    }
+
     /**
      * Parse the Permissions Entity
      * //TODO: this does some nasty service location via $app, if anyone has a better idea, please submit a PR
@@ -1792,9 +2023,18 @@ class User extends Base
             // If all permissions are 0, then the record is deleted
             if (is_array($groupIds)) {
                 if (array_key_exists($row->groupId, $groupIds)) {
-                    $row->view = (array_key_exists('view', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['view'] : 0);
-                    $row->edit = (array_key_exists('edit', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['edit'] : 0);
-                    $row->delete = (array_key_exists('delete', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['delete'] : 0);
+                    if(array_key_exists('view', $groupIds[$row->groupId])) {
+                        $row->view = $groupIds[$row->groupId]['view'];
+                    }
+
+                    if(array_key_exists('edit', $groupIds[$row->groupId])) {
+                        $row->edit = $groupIds[$row->groupId]['edit'];
+                    }
+
+                    if(array_key_exists('delete', $groupIds[$row->groupId])) {
+                        $row->delete = $groupIds[$row->groupId]['delete'];
+                    }
+
                     $row->save();
                 }
             }

@@ -837,12 +837,31 @@ function dataTableDraw(e, settings) {
         // Get every enabled button
         $(enabledButtons).each(function () {
             if (!searchByKey(buttons, "id", $(this).data("id")))
-                buttons.push({id: $(this).data("id"), gridId: e.target.id, text: $(this).data("text")})
+                buttons.push({id: $(this).data("id"), gridId: e.target.id, text: $(this).data("text"), customHandler: $(this).data("customHandler"), customHandlerUrl: $(this).data("customHandlerUrl"), contentIdName: $(this).data('contentIdName'), sortGroup: ($(this).data('sortGroup') != undefined) ? $(this).data('sortGroup') : 0})
         });
 
         // Add tag button if exist in the filter ( and user has permissions)
         if($tagsElement.length > 0 && userRoutePermissions.tags == 1) {
-            buttons.push({id: $tagsElement.attr("id"), gridId: e.target.id, text: translations.editTags, contentType: target.data('contentType'), contentIdName: target.data('contentIdName'), customHandler: "XiboMultiSelectTagFormRender"});
+            buttons.push({id: $tagsElement.attr("id"), gridId: e.target.id, text: translations.editTags, contentType: target.data('contentType'), contentIdName: target.data('contentIdName'), customHandler: "XiboMultiSelectTagFormRender", sortGroup: 0});
+        }
+
+        // Sort buttons by groups/importance
+        buttons = buttons.sort(function(a, b) {
+            return ((a.sortGroup > b.sortGroup) ? 1 : -1);
+        });
+
+        // Add separators
+        var groupAux = 0;
+        if(buttons.length > 1) {
+            for (let index = 0; index < buttons.length; index++) {
+                const btn = buttons[index];
+
+                // If there's a new group ( and it's not the first element on the list)
+                if(btn.sortGroup > groupAux && index > 0) {
+                    buttons.splice(index, 0, {divider: true});
+                    groupAux = btn.sortGroup;
+                }
+            }
         }
 
         var output = template({selectAll: translations.selectAll, withSelected: translations.withselected, buttons: buttons});
@@ -1780,6 +1799,42 @@ function XiboMultiSelectFormRender(button) {
 
     footer.append(extrabutton);
 
+}
+
+function XiboMultiSelectPermissionsFormOpen(button) {
+    var $targetTable = $(button).parents('.XiboGrid').find('.dataTable');
+    var $matches = $targetTable.find('tr.selected')
+    var targetDataTable = $targetTable.DataTable();
+    var requestUrl = $(button).data('customHandlerUrl');
+    var elementIdName = $(button).data('contentIdName');
+    var matchIds = [];
+
+    // Get matches from the selected elements
+    $matches.each(function(index, row){
+        // Get data
+        var rowData = targetDataTable.row(row).data();
+
+        // Add match id to the array
+        matchIds.push(rowData[elementIdName]);
+    });
+
+    if($matches.length == 0) {
+        // If there are no matches, show dialog with no element selected message
+        bootbox.dialog({
+            message: translations.multiselectNoItemsMessage,
+            title: translations.multiselect,
+            animate: false,
+            buttons: {
+                cancel: {
+                    label: translations.close,
+                    className: 'btn-default'  
+                }
+            }
+        });
+    } else {
+        // Render multi edit permissions form
+        XiboFormRender(requestUrl, {ids: matchIds.toString()});
+    }
 }
 
 function XiboMultiSelectTagFormRender(button) {

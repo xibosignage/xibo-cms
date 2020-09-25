@@ -1483,19 +1483,20 @@ class Layout extends Base
 
                 // Retire Button
                 if ($layout->retired == 0) {
-                    $layout->buttons[] = array(
+                    $layout->buttons[] = [
                         'id' => 'layout_button_retire',
                         'url' => $this->urlFor($request,'layout.retire.form', ['id' => $layout->layoutId]),
                         'text' => __('Retire'),
                         'multi-select' => true,
-                        'dataAttributes' => array(
-                            array('name' => 'commit-url', 'value' => $this->urlFor($request,'layout.retire', ['id' => $layout->layoutId])),
-                            array('name' => 'commit-method', 'value' => 'put'),
-                            array('name' => 'id', 'value' => 'layout_button_retire'),
-                            array('name' => 'text', 'value' => __('Retire')),
-                            array('name' => 'rowtitle', 'value' => $layout->layout)
-                        )
-                    );
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'layout.retire', ['id' => $layout->layoutId])],
+                            ['name' => 'commit-method', 'value' => 'put'],
+                            ['name' => 'id', 'value' => 'layout_button_retire'],
+                            ['name' => 'text', 'value' => __('Retire')],
+                            ['name' => 'sort-group', 'value' => 1],
+                            ['name' => 'rowtitle', 'value' => $layout->layout]
+                        ]
+                    ];
                 } else {
                     $layout->buttons[] = array(
                         'id' => 'layout_button_unretire',
@@ -1507,36 +1508,37 @@ class Layout extends Base
                 // Extra buttons if have delete permissions
                 if ($this->getUser()->checkDeleteable($layout)) {
                     // Delete Button
-                    $layout->buttons[] = array(
+                    $layout->buttons[] = [
                         'id' => 'layout_button_delete',
                         'url' => $this->urlFor($request,'layout.delete.form', ['id' => $layout->layoutId]),
                         'text' => __('Delete'),
                         'multi-select' => true,
-                        'dataAttributes' => array(
-                            array('name' => 'commit-url', 'value' => $this->urlFor($request,'layout.delete', ['id' => $layout->layoutId])),
-                            array('name' => 'commit-method', 'value' => 'delete'),
-                            array('name' => 'id', 'value' => 'layout_button_delete'),
-                            array('name' => 'text', 'value' => __('Delete')),
-                            array('name' => 'rowtitle', 'value' => $layout->layout)
-                        )
-                    );
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'layout.delete', ['id' => $layout->layoutId])],
+                            ['name' => 'commit-method', 'value' => 'delete'],
+                            ['name' => 'id', 'value' => 'layout_button_delete'],
+                            ['name' => 'text', 'value' => __('Delete')],
+                            ['name' => 'sort-group', 'value' => 1],
+                            ['name' => 'rowtitle', 'value' => $layout->layout]
+                        ]
+                    ];
                 }
 
                 // Set Enable Stat
-                $layout->buttons[] = array(
+                $layout->buttons[] = [
                     'id' => 'layout_button_setenablestat',
                     'url' => $this->urlFor($request,'layout.setenablestat.form', ['id' => $layout->layoutId]),
                     'text' => __('Enable stats collection?'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'layout.setenablestat', ['id' => $layout->layoutId])),
-                        array('name' => 'commit-method', 'value' => 'put'),
-                        array('name' => 'id', 'value' => 'layout_button_setenablestat'),
-                        array('name' => 'text', 'value' => __('Enable stats collection?')),
-                        array('name' => 'rowtitle', 'value' => $layout->layout),
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'layout.setenablestat', ['id' => $layout->layoutId])],
+                        ['name' => 'commit-method', 'value' => 'put'],
+                        ['name' => 'id', 'value' => 'layout_button_setenablestat'],
+                        ['name' => 'text', 'value' => __('Enable stats collection?')],
+                        ['name' => 'rowtitle', 'value' => $layout->layout],
                         ['name' => 'form-callback', 'value' => 'setEnableStatMultiSelectFormOpen']
-                    )
-                );
+                    ]
+                ];
 
                 $layout->buttons[] = ['divider' => true];
 
@@ -1559,11 +1561,23 @@ class Layout extends Base
                 // Extra buttons if we have modify permissions
                 if ($this->getUser()->checkPermissionsModifyable($layout)) {
                     // Permissions button
-                    $layout->buttons[] = array(
+                    $layout->buttons[] = [
                         'id' => 'layout_button_permissions',
                         'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Campaign', 'id' => $layout->campaignId]),
-                        'text' => __('Permissions')
-                    );
+                        'text' => __('Permissions'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Campaign', 'id' => $layout->campaignId])],
+                            ['name' => 'commit-method', 'value' => 'post'],
+                            ['name' => 'id', 'value' => 'layout_button_permissions'],
+                            ['name' => 'text', 'value' => __('Permissions')],
+                            ['name' => 'rowtitle', 'value' => $layout->layout],
+                            ['name' => 'sort-group', 'value' => 2],
+                            ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                            ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Campaign'])],
+                            ['name' => 'content-id-name', 'value' => 'campaignId']
+                        ]
+                    ];
                 }
             }
         }

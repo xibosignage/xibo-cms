@@ -178,19 +178,20 @@ class Template extends Base
             // Extra buttons if have delete permissions
             if ($this->getUser()->checkDeleteable($template)) {
                 // Delete Button
-                $template->buttons[] = array(
+                $template->buttons[] = [
                     'id' => 'layout_button_delete',
                     'url' => $this->urlFor($request,'layout.delete.form', ['id' => $template->layoutId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'layout.delete', ['id' => $template->layoutId])),
-                        array('name' => 'commit-method', 'value' => 'delete'),
-                        array('name' => 'id', 'value' => 'layout_button_delete'),
-                        array('name' => 'text', 'value' => __('Delete')),
-                        array('name' => 'rowtitle', 'value' => $template->layout)
-                    )
-                );
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'layout.delete', ['id' => $template->layoutId])],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'layout_button_delete'],
+                        ['name' => 'text', 'value' => __('Delete')],
+                        ['name' => 'sort-group', 'value' => 1],
+                        ['name' => 'rowtitle', 'value' => $template->layout]
+                    ]
+                ];
             }
 
             $template->buttons[] = ['divider' => true];
@@ -198,11 +199,23 @@ class Template extends Base
             // Extra buttons if we have modify permissions
             if ($this->getUser()->checkPermissionsModifyable($template)) {
                 // Permissions button
-                $template->buttons[] = array(
+                $template->buttons[] = [
                     'id' => 'layout_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Campaign', 'id' => $template->campaignId]),
-                    'text' => __('Permissions')
-                );
+                    'text' => __('Permissions'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Campaign', 'id' => $template->campaignId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'layout_button_permissions'],
+                        ['name' => 'text', 'value' => __('Permissions')],
+                        ['name' => 'rowtitle', 'value' => $template->layout],
+                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Campaign'])],
+                        ['name' => 'content-id-name', 'value' => 'campaignId']
+                    ]
+                ];
             }
 
             $template->buttons[] = ['divider' => true];
