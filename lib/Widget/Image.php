@@ -318,4 +318,9 @@ class Image extends ModuleWidget
     {
         return '';
     }
+
+    public function hasThumbnail()
+    {
+        return true;
+    }
 }

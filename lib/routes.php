@@ -252,8 +252,8 @@ $app->get('/library/{id}/isused', ['\Xibo\Controller\Library','isUsed'])->setNam
 $app->post('/library/{id}/tag', ['\Xibo\Controller\Library','tag'])->setName('library.tag');
 $app->post('/library/{id}/untag', ['\Xibo\Controller\Library','untag'])->setName('library.untag');
 
-// video thumbnail
-$app->post('/library/video/thumbnail', ['\Xibo\Controller\Library','videoThumbnail'])->setName('library.video.thumbnail.save');
+// thumbnail
+$app->post('/library/thumbnail', ['\Xibo\Controller\Library','addThumbnail'])->setName('library.thumbnail.add');
 
 /**
  * Displays

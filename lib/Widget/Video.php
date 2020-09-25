@@ -340,4 +340,16 @@ class Video extends ModuleWidget
             return parent::download($request, $response);
         }
     }
+
+    public function hasThumbnail()
+    {
+        $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+        $videoImageCoverExists = file_exists($libraryLocation . $this->getMediaId() . '_videocover.png');
+
+        if ($videoImageCoverExists) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }

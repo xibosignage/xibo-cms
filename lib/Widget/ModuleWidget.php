@@ -1927,5 +1927,10 @@ abstract class ModuleWidget implements ModuleInterface
         return $parsedContent;
     }
 
+    public function hasThumbnail()
+    {
+        return false;
+    }
+
     //</editor-fold>
 }

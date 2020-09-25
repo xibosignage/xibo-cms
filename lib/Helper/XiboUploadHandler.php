@@ -326,11 +326,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $file->md5 = $media->md5;
             $file->enableStat = $media->enableStat;
             $file->mediaType = $module->getModuleType();
-
-            // we need original fileName returned for video thumbnails logic.
-            if ($media->mediaType == 'video') {
-                $file->fileName = $fileName;
-            }
+            $file->fileName = $fileName;
 
             // Test to ensure the final file size is the same as the file size we're expecting
             if ($file->fileSize != $file->size)

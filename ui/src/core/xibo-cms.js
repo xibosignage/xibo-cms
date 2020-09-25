@@ -2826,7 +2826,7 @@ function saveVideoCoverImage(data)
         // this calls function in library controller that decodes the image and
         // saves it to library as  "/{$mediaId}_videocover.{$type}".
         $.ajax({
-            url: "/library/video/thumbnail",
+            url: "/library/thumbnail",
             type: "POST",
             data: thumbnailData
         });
