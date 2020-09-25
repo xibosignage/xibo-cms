@@ -125,6 +125,14 @@
                 return opts.inverse(this);
             }
         });
+
+        Handlebars.registerHelper('neq', function(v1, v2, opts) {
+            if (v1 !== v2) {
+                return opts.fn(this);
+            } else {
+                return opts.inverse(this);
+            }
+        });
     </script>
 
     {% verbatim %}
@@ -203,9 +211,9 @@
                         <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
                         <span>{{ trans.addFiles }}</span>
                         {{#if oldMediaId }}
-                        <input type="file" name="files[]">
+                        <input type="file" name="files[]" id="files">
                         {{else}}
-                        <input type="file" name="files[]" multiple>
+                        <input type="file" name="files[]" id="files" multiple>
                         {{/if}}
                     </span>
                     <button type="submit" class="btn btn-primary start">
@@ -301,7 +309,7 @@
             </td>
             <td class="title" title="Tags">
                 <label class="control-label" title="A comma separated list of tags to assign to this Media" for="tags">Tags</label>
-                <label for="tags[]"><input name="tags[]" type="text" id="name" value="" /></label>
+                <label for="tags[]"><input name="tags[]" type="text" id="tags" value="" /></label>
                 <div><span class="error"></span></div>
             </td>
             <td>
@@ -584,6 +592,32 @@
                 </div>
             </div>
         </form>
+    </script>
+
+    <script type="text/x-handlebars-template" id="display-status-window-template">
+        <div style="margin-top:5px; max-height: 400px; overflow-y: auto;">
+            {% verbatim %}
+            {{#if data}}
+            {% endverbatim %}
+            {% trans "Player Status Window"%}:
+            {% verbatim %}
+                {{#eq type "android"}}
+                    <div class="well">
+                          <span>{{{data}}}</span>
+                    </div>
+                {{/eq}}
+                {{#neq type "android"}}
+                    <div class="well">
+                        <ul>
+                            {{#each data as |value key|}}
+                            <li>{{key}}: {{value}}</li>
+                            {{/each}}
+                        </ul>
+                    </div>
+                {{/eq}}
+            {{/if}}
+            {% endverbatim %}
+        </div>
     </script>
 
     <script type="text/x-handlebars-template" id="auto-submit-field-template">

@@ -361,7 +361,7 @@
                                 return data.thumbnail;
 
                             if (data.thumbnail != "") {
-                                return '<a data-toggle="lightbox" data-type="image" href="' + data.thumbnail + '"><img class="display-screenshot" src="' + data.thumbnail + '" /></a>';
+                                return '<a data-toggle="lightbox" data-type="image" href="' + data.thumbnail + '"><img class="display-screenshot" src="' + data.thumbnail + '" data-display-id="'+ data.displayId +'" data-type="'+ data.clientType +'" /></a>';
                             }
                             else {
                                 return "";
@@ -911,6 +911,25 @@
             // Submit form
             $form.submit();
         }
+
+        $('body').on('click', '.display-screenshot', function(el) {
+            let displayId = el.target.dataset.displayId;
+            let displayType = el.target.dataset.type;
+
+            let statusWindowData = {};
+
+            $.ajax({
+                url: "/display/status/" + displayId,
+                method: "GET",
+                dataType: "json",
+                success: function (data) {
+                    statusWindowData['data'] = data;
+                    statusWindowData['type'] = displayType;
+                    let statusWindowTemplate = Handlebars.compile($('#display-status-window-template').html());
+                    $('.modal-body').append(statusWindowTemplate(statusWindowData));
+                }
+            });
+        });
     </script>
 
     <style>

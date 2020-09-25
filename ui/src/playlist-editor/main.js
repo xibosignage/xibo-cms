@@ -971,6 +971,8 @@ pE.openUploadFormModelShown = function(form) {
         )
     );
 
+    $('#files').on('change', handleVideoCoverImage);
+
     form.bind('fileuploadsubmit', function(e, data) {
         var inputs = data.context.find(':input');
         if(inputs.filter('[required][value=""]').first().focus().length) {
@@ -996,10 +998,13 @@ pE.openUploadFormModelShown = function(form) {
 
         if(filesToUploadCount == 0) {
             $button.removeAttr('disabled');
+            videoImageCovers = {};
         } else {
             $button.attr('disabled', 'disabled');
         }
-    });
+    }).bind('fileuploaddone', function (e, data) {
+        saveVideoCoverImage(data);
+    }).bind('fileuploaddrop', handleVideoCoverImage);
 };
 
 

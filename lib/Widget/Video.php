@@ -21,8 +21,11 @@
  */
 namespace Xibo\Widget;
 
+use Intervention\Image\Exception\NotReadableException;
+use Intervention\Image\ImageManagerStatic as Img;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Helper\HttpCacheProvider;
 use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
@@ -173,6 +176,32 @@ class Video extends ModuleWidget
     }
 
     /** @inheritdoc */
+    public function preview($width, $height, $scaleOverride = 0)
+    {
+        if ($this->module->previewEnabled == 0) {
+            return parent::preview($width, $height, $scaleOverride);
+        }
+
+        $proportional = ($this->getOption('scaleType') == 'stretch') ? 0 : 1;
+        $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+        $filePath = $libraryLocation . $this->getMediaId() . '_videocover.png';
+
+        if (!file_exists($filePath)) {
+            return $this->previewAsClient($width, $height, $scaleOverride);
+        } else {
+            $url = $this->urlFor('library.download', ['regionId' => $this->region->regionId, 'id' => $this->getMediaId()]) . '?preview=1&width=' . $width . '&height=' . $height . '&proportional=' . $proportional;
+
+            // Show the video cover image - scaled to the aspect ratio of this region (get from GET)
+            return '<div style="display:table; width:100%; height: ' . $height . 'px">
+            <div style=" display: table-cell;">
+            <div style="text-align:center;"><i alt="video thumbnail" class="fa module-preview-icon module-icon-video" style="position:fixed;"></i></div>
+                <img src="' . $url . '" />
+            </div>
+        </div>';
+        }
+    }
+
+    /** @inheritdoc */
     public function previewAsClient($width, $height, $scaleOverride = 0)
     {
         return $this->previewIcon();
@@ -208,5 +237,119 @@ class Video extends ModuleWidget
     public function isValid()
     {
         return self::$STATUS_VALID;
+    }
+
+    /** @inheritDoc */
+    public function download(Request $request, Response $response): Response
+    {
+        $sanitizedParams = $this->getSanitizer($request->getQueryParams());
+        $this->getLog()->debug('Video Module: download for ' . $this->getMediaId());
+
+        $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+        $media = $this->mediaFactory->getById($this->getMediaId());
+        $filePath = $libraryLocation . $media->mediaId . '_videocover.png';
+        $thumbnailFilePath = $libraryLocation . 'tn_' . $media->mediaId . '_videocover.png';
+
+        $this->getLog()->debug('Media Returned: ' . $filePath);
+
+        $proportional = $sanitizedParams->getInt('proportional', ['default' => 1]) == 1;
+        $preview = $sanitizedParams->getInt('preview', ['default' => 0]) == 1;
+        $layoutPreview = $sanitizedParams->getInt('layoutPreview', ['default' => 0]) == 1;
+        $cache = $sanitizedParams->getInt('cache', ['default' => 0]) == 1;
+        $width = intval($sanitizedParams->getDouble('width'));
+        $height = intval($sanitizedParams->getDouble('height'));
+
+        $this->getLog()->debug('Preview: ' . var_export($preview, true));
+        $this->getLog()->debug('Layout preview: ' . var_export($layoutPreview, true));
+
+        // Preview or download?
+        if ($preview && !$layoutPreview) {
+            // We expect the preview to load, manipulate and output a thumbnail (even on error).
+            // therefore we need to end output buffering and wipe any output so far.
+            // this means that we do not buffer the image output into memory
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
+
+            // Preview (we output the file to the browser with image headers)
+            try {
+                // should we use a cache?
+                if (!$cache || ($cache && !file_exists($thumbnailFilePath))) {
+                    // Not cached, or cache not required, lets load it again
+                    Img::configure(array('driver' => 'gd'));
+
+                    $this->getLog()->debug('Preview Requested with Width and Height '. $width . ' x ' . $height);
+                    $this->getLog()->debug('Loading ' . $filePath);
+
+                    // Load the image
+                    $img = Img::make($filePath);
+
+                    // Output a thumbnail?
+                    if ($width != 0 || $height != 0) {
+                        // Make a thumb
+                        $img->resize($width, $height, function ($constraint) use ($proportional) {
+                            if ($proportional)
+                                $constraint->aspectRatio();
+                        });
+                    }
+
+                    $this->getLog()->debug('Outputting Image Response');
+
+                    // Output Etags
+                    /** @var $httpCache HttpCacheProvider*/
+                    $httpCache = $this->container->get('httpCache');
+                    $response = $httpCache->withEtag($response, $media->md5 . $width . $height . $proportional . $preview);
+                    $response = $httpCache->withExpires($response,'+1 week');
+
+                    // Should we cache?
+                    if ($cache) {
+                        $this->getLog()->debug('Saving cached copy to tn_');
+
+                        // Save the file
+                        $img->save($thumbnailFilePath);
+                    }
+
+                    // Output the file
+                    echo $img->encode('png');
+
+                } else if ($cache) {
+                    // File exists, output it directly
+                    $img = Img::make($thumbnailFilePath);
+                    echo $img->encode('png');
+                }
+            } catch (NotReadableException $notReadableException) {
+                $this->getLog()->debug($notReadableException->getTraceAsString());
+                $this->getLog()->error('Video cover image not readable: ' . $notReadableException->getMessage());
+
+                // Output the thumbnail
+                $img = Img::make($this->getConfig()->uri('img/error.png', true));
+
+                if ($width != 0 || $height != 0) {
+                    $img->resize($width, $height, function ($constraint) use ($proportional) {
+                        if ($proportional)
+                            $constraint->aspectRatio();
+                    });
+                }
+
+                echo $img->encode();
+            }
+
+            return $response;
+        } else {
+            // Download the file
+            return parent::download($request, $response);
+        }
+    }
+
+    public function hasThumbnail()
+    {
+        $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+        $videoImageCoverExists = file_exists($libraryLocation . $this->getMediaId() . '_videocover.png');
+
+        if ($videoImageCoverExists) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

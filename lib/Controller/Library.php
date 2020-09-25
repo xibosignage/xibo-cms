@@ -559,6 +559,7 @@ class Library extends Base
         $user = $this->getUser();
 
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
+        $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
         // Construct the SQL
         $mediaList = $this->mediaFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
@@ -589,7 +590,9 @@ class Library extends Base
             $media->thumbnailUrl = '';
             $media->downloadUrl = '';
 
-            if ($media->mediaType == 'image') {
+            $module = $this->moduleFactory->createWithMedia($media);
+
+            if ($module->hasThumbnail()) {
                 $download = $this->urlFor($request,'library.download', ['id' => $media->mediaId], ['preview' => 1]);
                 $media->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56&cache=1" /></i></a>';
                 $media->thumbnailUrl = $download . '&width=100&height=56&cache=1';
@@ -2556,5 +2559,47 @@ class Library extends Base
         }
 
         return $extension;
+    }
+
+    /**
+     * This is called when video finishes uploading.
+     * Saves provided base64 image as an actual image to the library
+     *
+     * @param Request $request
+     * @param Response $response
+     *
+     * @return Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function addThumbnail($request, $response)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+
+        $image = $request->getParam('image');
+        $mediaId = $sanitizedParams->getInt('mediaId');
+        $media = $this->mediaFactory->getById($mediaId);
+
+        if (preg_match('/^data:image\/(\w+);base64,/', $image, $type)) {
+            $image = substr($image, strpos($image, ',') + 1);
+            $type = strtolower($type[1]);
+
+            if (!in_array($type, [ 'jpg', 'jpeg', 'gif', 'png' ])) {
+                throw new InvalidArgumentException(__('Provided base64 encoded image has incorrect file extension.'));
+            }
+            $image = str_replace( ' ', '+', $image );
+            $image = base64_decode($image);
+
+            if ($image === false) {
+                throw new InvalidArgumentException(__("Image decoding failed."));
+            }
+        } else {
+            throw new InvalidArgumentException(__('Incorrect image data'));
+        }
+
+        file_put_contents($libraryLocation . "{$mediaId}_{$media->mediaType}cover.{$type}", $image);
+
+        return $response->withStatus(204);
     }
 }

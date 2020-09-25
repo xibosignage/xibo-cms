@@ -1139,7 +1139,12 @@ class Display implements \JsonSerializable
         if ($item->isMiss()) {
             return [];
         } else {
-            return $item->get();
+            // special handling not Windows Display (Windows sends status as json)
+            if ($this->clientType === 'android') {
+                return nl2br($item->get());
+            } else {
+                return $item->get();
+            }
         }
     }
 
