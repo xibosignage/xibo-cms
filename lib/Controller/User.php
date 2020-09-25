@@ -1603,27 +1603,27 @@ class User extends Base
         foreach ($permissions as $permission) {
 
             if(!array_key_exists($permission->groupId, $newPermissions)) {
-                $newPermissions[$permission->groupId] = array(
+                $newPermissions[$permission->groupId] = [
                     "groupId" => $permission->groupId,
                     "group" => $permission->group,
                     "isUser" => $permission->isUser,
                     "entity" => $permission->entity,
-                    "permissions" => array(
-                        $permission->objectId => array(
+                    "permissions" => [
+                        $permission->objectId => [
                             "permissionId" => $permission->permissionId,
                             "view" => $permission->view,
                             "edit" => $permission->edit,
                             "delete" => $permission->delete
-                        )
-                    )
-                );
+                        ]
+                    ]
+                ];
             } else {
-                $newPermissions[$permission->groupId]["permissions"][] = array(
+                $newPermissions[$permission->groupId]["permissions"][] = [
                     "permissionId" => $permission->permissionId,
                     "view" => $permission->view,
                     "edit" => $permission->edit,
                     "delete" => $permission->delete
-                );
+                ];
             }
         }
 
