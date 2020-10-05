@@ -65,7 +65,7 @@
                     </div>
 
                     {% set multiplePermissionsMessage %}
-                        {% trans "Edit multiple permissions at the same time. The elements with indeterminate state result from different permissions for the selected elements. All new changes are aplied to all the elements." %}<br>
+                        {% trans "Edit multiple permissions at the same time. Elements shown with an indeterminate state [-], result from a difference in permissions already set. All changes set here will be applied to all selected elements." %}<br>
                     {% endset %}
                     {{ forms.message(multiplePermissionsMessage) }}
                     
