@@ -150,7 +150,7 @@ class UserGroupFactory extends BaseFactory
     /**
      * Get by User Id
      * @param int $userId
-     * @return array[UserGroup]
+     * @return \Xibo\Entity\UserGroup[]
      */
     public function getByUserId($userId)
     {
@@ -199,7 +199,8 @@ class UserGroupFactory extends BaseFactory
             `group`.isEveryone,
             `group`.libraryQuota,
             `group`.isSystemNotification,
-            `group`.isDisplayNotification
+            `group`.isDisplayNotification,
+            `group`.features
         ';
 
         $body = '
@@ -302,11 +303,16 @@ class UserGroupFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, [
+            $group = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
                     'isUserSpecific', 'isEveryone', 'libraryQuota', 'isSystemNotification', 'isDisplayNotification'
                 ]
             ]);
+
+            // Parse the features JSON string stored in database
+            $group->features = ($group->features === null) ? [] : json_decode($group->features, true);
+
+            $entries[] = $group;
         }
 
         // Paging
@@ -316,5 +322,37 @@ class UserGroupFactory extends BaseFactory
         }
 
         return $entries;
+    }
+
+    /**
+     * @param \Xibo\Entity\User $user The User
+     * @param bool $includeIsUser
+     * @return array
+     */
+    public function getGroupFeaturesForUser($user, $includeIsUser = true)
+    {
+        $features = [];
+
+        foreach ($this->getStore()->select('
+                SELECT `group`.groupId, `group`.features 
+                  FROM `group`
+                    INNER JOIN `lkusergroup`
+                    ON `lkusergroup`.groupId = `group`.groupId
+                 WHERE `group`.groupId = :groupId
+                    OR `group`.groupId IN (SELECT groupId FROM lkusergroup WHERE userId = :userId)
+            ', [
+                'userId' => $user->userId,
+                'groupId' => $user->groupId
+            ]) as $featureString
+        ) {
+            if (!$includeIsUser && $user->groupId == $featureString['groupId']) {
+                continue;
+            }
+
+            $feature = ($featureString['features'] == null) ? [] : json_decode($featureString['features'], true);
+            $features = array_merge($feature, $features);
+        }
+
+        return $features;
     }
 }

@@ -280,6 +280,9 @@ class User implements \JsonSerializable, UserEntityInterface
      */
     private $userOptionsRemoved = [];
 
+    /** @var array Resolved Features for the User and their Groups */
+    private $resolvedFeatures = null;
+
     /**
      * Cached Permissions
      * @var array[Permission]
@@ -1174,40 +1177,6 @@ class User implements \JsonSerializable, UserEntityInterface
     /**
      * Authenticates the route given against the user credentials held
      * @param $route string
-     * @param $method string
-     * @param $scopes array[ScopeEntity]
-     * @throws AccessDeniedException
-     * @throws ConfigurationException
-     * @throws NotFoundException
-     */
-    public function routeAuthentication($route, $method = null, $scopes = null)
-    {
-        // Scopes provided?
-        if ($scopes !== null && is_array($scopes)) {
-            //$this->getLog()->debug('Scopes: %s', json_encode($scopes));
-            foreach ($scopes as $scope) {
-                /** @var \Xibo\Storage\ScopeEntity $scope */
-
-                // Valid routes
-                if ($scope->getId() != 'all') {
-                    $this->getLog()->debug('Test authentication for route %s %s against scope %s', $method, $route, $scope->getId());
-
-                    // Check the route and request method
-                    $this->applicationScopeFactory->getById($scope->getId())->checkRoute($method, $route);
-                }
-            }
-        }
-
-        // Check route
-        if (!$this->routeViewable($route)) {
-            $this->getLog()->debug('Blocked assess to unrecognised page: ' . $route . '.');
-            throw new AccessDeniedException();
-        }
-    }
-
-    /**
-     * Authenticates the route given against the user credentials held
-     * @param $route string
      * @return bool
      * @throws ConfigurationException
      * @throws NotFoundException
@@ -1250,7 +1219,7 @@ class User implements \JsonSerializable, UserEntityInterface
                 return true;
         }
 
-        $this->getLog()->debug('Route %s not viewable', $route[0]);
+        $this->getLog()->debug(sprintf('Route %s not viewable', $route[0]));
         return false;
     }
 
@@ -1281,11 +1250,62 @@ class User implements \JsonSerializable, UserEntityInterface
     }
 
     /**
+     * Get all features allowed for this user, including ones from their group
+     * @return array
+     */
+    public function getFeatures()
+    {
+        if ($this->resolvedFeatures === null) {
+            $this->resolvedFeatures = $this->userGroupFactory->getGroupFeaturesForUser($this);
+        }
+
+        return $this->resolvedFeatures;
+    }
+
+    /**
+     * Check whether the requested feature is available.
+     * @param string $feature
+     * @return bool
+     */
+    public function featureEnabled(string $feature)
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return (in_array($feature, $this->getFeatures()));
+    }
+
+    /**
+     * Given an array of features, count the ones that are enabled
+     * @param array $routes
+     * @return int
+     */
+    public function featureEnabledCount(array $routes)
+    {
+        // Shortcut for super admins.
+        if ($this->isSuperAdmin()) {
+            return count($routes);
+        }
+
+        // Test each route
+        $count = 0;
+
+        foreach ($routes as $route) {
+            if ($this->featureEnabled($route)) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
+
+    /**
      * Load permissions for a particular entity
      * @param string $entity
-     * @return array[Permission]
+     * @return \Xibo\Entity\Permission[]
      */
-    private function loadPermissions($entity)
+    private function loadPermissions(string $entity)
     {
         // Check our cache to see if we have permissions for this entity cached already
         if (!isset($this->permissionCache[$entity])) {
@@ -1613,6 +1633,9 @@ class User implements \JsonSerializable, UserEntityInterface
         $this->getStore()->update($sql, $params);
     }
 
+    /**
+     * @param $recoveryCodes
+     */
     public function updateRecoveryCodes($recoveryCodes)
     {
         $sql = 'UPDATE `user` SET twoFactorRecoveryCodes = :twoFactorRecoveryCodes WHERE userId = :userId';

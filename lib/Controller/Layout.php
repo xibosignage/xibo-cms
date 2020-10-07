@@ -1449,7 +1449,7 @@ class Layout extends Base
             if ($this->getUser()->routeViewable('/schedulenow/form/now/:from/:id') === true) {
                 $layout->buttons[] = array(
                     'id' => 'layout_button_schedulenow',
-                    'url' => $this->urlFor($request,'schedulenow.now.form', ['id' => $layout->campaignId, 'from' => 'Campaign']),
+                    'url' => $this->urlFor($request,'schedule.now.form', ['id' => $layout->campaignId, 'from' => 'Campaign']),
                     'text' => __('Schedule Now')
                 );
             }

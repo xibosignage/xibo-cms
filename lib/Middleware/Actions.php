@@ -34,7 +34,6 @@ use Xibo\Entity\UserNotification;
 use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\Environment;
 use Xibo\Helper\Translate;
-use Xibo\Support\Exception\AccessDeniedException;
 
 /**
  * Class Actions
@@ -99,10 +98,10 @@ class Actions implements Middleware
 
         // Only process notifications if we are a full request
         if (!$this->isAjax($request)) {
-            try {
-                if ($container->get('user')->userId != null && $container->get('session')->isExpired() == 0){
-                    $container->get('user')->routeAuthentication('/drawer');
-                }
+            if ($container->get('user')->userId != null
+                && $container->get('session')->isExpired() == 0
+                && $container->get('user')->featureEnabled('drawer')
+            ) {
                 // Notifications
                 $notifications = [];
                 $extraNotifications = 0;
@@ -160,8 +159,6 @@ class Actions implements Middleware
 
                 $container->get('view')->offsetSet('notifications', $notifications);
                 $container->get('view')->offsetSet('notificationCount', $factory->countMyUnread() + $extraNotifications);
-            } catch (AccessDeniedException $e) {
-                // Drawer not available
             }
         }
 
@@ -172,10 +169,13 @@ class Actions implements Middleware
         return $handler->handle($request);
     }
 
+    /**
+     * Is the provided request from AJAX
+     * @param \Psr\Http\Message\ServerRequestInterface $request
+     * @return bool
+     */
     private function isAjax(Request $request)
     {
         return strtolower($request->getHeaderLine('X-Requested-With')) === 'xmlhttprequest';
     }
-
-
 }

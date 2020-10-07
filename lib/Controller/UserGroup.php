@@ -23,7 +23,6 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
-use Xibo\Entity\Page;
 use Xibo\Entity\Permission;
 use Xibo\Entity\User;
 use Xibo\Factory\PageFactory;
@@ -552,68 +551,18 @@ class UserGroup extends Base
             throw new AccessDeniedException();
         }
 
-        // Use the factory to get all the entities
-        $entities = $this->pageFactory->query();
-        $groupPermissions = [];
-
-        // Load the Group we are working on
-        // Get the object
-        if ($id == 0) {
-            throw new InvalidArgumentException(__('ACL form requested without a User Group'));
-        }
-
+        // Get permissions for the group provided
         $group = $this->userGroupFactory->getById($id);
-
-        // Get all permissions for this user and this object
-        $permissions = $this->permissionFactory->getByGroupId('Page', $id);
-
-        // Get all Page permissions for groups our User is assigned to
-        if ($userId !== null) {
-            $groupPermissions = $this->permissionFactory->getByUserId('Xibo\Entity\Page', $userId);
-        }
-
-        $checkboxes = [];
-
-        foreach ($entities as $entity) {
-            /* @var Page $entity */
-            // Check to see if this entity is set or not
-            $entityId = $entity->getId();
-            $viewChecked = 0;
-            $groupViewChecked = 0;
-
-            foreach ($permissions as $permission) {
-                /* @var Permission $permission */
-                if ($permission->objectId == $entityId && $permission->view == 1) {
-                    $viewChecked = 1;
-                    break;
-                }
-            }
-
-            foreach ($groupPermissions as $groupPermission) {
-                /* @var Permission $permission */
-                if ($groupPermission->objectId == $entityId && $groupPermission->view == 1) {
-                    $groupViewChecked = 1;
-                    break;
-                }
-            }
-
-            // Store this checkbox
-            $checkbox = [
-                'id' => $entityId,
-                'name' => $entity->title,
-                'value_view' => $entityId . '_view',
-                'value_view_checked' => (($viewChecked == 1) ? 'checked' : ''),
-                'value_view_group_checked' => (($groupViewChecked == 1) ? 'checked' : '')
-            ];
-
-            $checkboxes[] = $checkbox;
-        }
+        $inheritedFeatures = ($userId !== null)
+            ? $this->userGroupFactory->getGroupFeaturesForUser($this->userFactory->getById($userId), false)
+            : [];
 
         $data = [
             'groupId' => $id,
             'group' => $group->group,
-            'permissions' => $checkboxes,
             'isUserSpecific' => $group->isUserSpecific,
+            'features' => $group->features,
+            'inheritedFeatures' => $inheritedFeatures,
             'help' => $this->getHelp()->link('User', 'Acl')
         ];
 
@@ -644,65 +593,18 @@ class UserGroup extends Base
         // Load the Group we are working on
         // Get the object
         if ($id == 0) {
-            throw new InvalidArgumentException(__('ACL form requested without a User Group'));
+            throw new InvalidArgumentException(__('ACL form requested without a User Group'), 'id');
+        }
+
+        $features = $request->getParam('features', null);
+
+        if (!is_array($features)) {
+            $features = [];
         }
 
         $group = $this->userGroupFactory->getById($id);
-
-        // Use the factory to get all the entities
-        $entities = $this->pageFactory->query();
-
-        // Get all permissions for this user and this object
-        $permissions = $this->permissionFactory->getByGroupId('Page', $id);
-        $objectIds = $request->getParam('objectId', null);
-
-        if (!is_array($objectIds)) {
-            $objectIds = [];
-        }
-
-        $newAcl = [];
-        array_map(function ($string) use (&$newAcl) {
-            $array = explode('_', $string);
-            return $newAcl[$array[0]][$array[1]] = 1;
-        }, $objectIds);
-
-        $this->getLog()->debug(var_export($newAcl, true));
-
-        foreach ($entities as $page) {
-            /* @var Page $page */
-            // Check to see if this entity is set or not
-            $objectId = $page->getId();
-            $permission = null;
-            $view = (array_key_exists($objectId, $newAcl));
-
-            // Is the permission currently assigned?
-            foreach ($permissions as $row) {
-                /* @var \Xibo\Entity\Permission $row */
-                if ($row->objectId == $objectId) {
-                    $permission = $row;
-                    break;
-                }
-            }
-
-            if ($permission == null) {
-                if ($view) {
-                    // Not currently assigned and needs to be
-                    $permission = $this->permissionFactory->create($id, get_class($page), $objectId, 1, 0, 0);
-                    $permission->save();
-                }
-            }
-            else {
-                $this->getLog()->debug('Permission Exists for %s, and has been set to %d.', $page->getName(), $view);
-                // Currently assigned
-                if ($view) {
-                    $permission->view = 1;
-                    $permission->save();
-                }
-                else {
-                    $permission->delete();
-                }
-            }
-        }
+        $group->features = $features;
+        $group->saveFeatures();
 
         // Return
         $this->getState()->hydrate([

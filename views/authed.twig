@@ -50,7 +50,7 @@
 
                             <ul class="nav navbar-nav navbar-right">
                                 {% include "authed-theme-topbar.twig" ignore missing %}
-                                {% if currentUser.routeViewable("/drawer") %}
+                                {% if currentUser.featureEnabled("drawer") %}
                                     {% include "authed-notification-drawer.twig" %}
                                 {% endif %}
                                 {% include "authed-user-menu.twig" %}

@@ -23,14 +23,14 @@
 <ul class="nav navbar-nav">
     <li><a href="{{ url_for("home") }}">{% trans "Dashboard" %}</a></li>
 
-    {% set countViewable = currentUser.countViewable(["/schedule", "/daypart"]) %}
+    {% set countViewable = currentUser.featureEnabledCount(["schedule.view", "daypart.view"]) %}
     {% if countViewable > 0 %}
         {% if countViewable > 1 %}
         <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Schedule" %} <span class="caret"></span></a>
             <ul class="dropdown-menu">
         {% endif %}
-                {% if currentUser.routeViewable("/schedule") %}
+                {% if currentUser.featureEnabled("schedule.view") %}
                     <li><a href="{{ url_for("schedule.view") }}">{% if countViewable > 1 %}{% trans "Schedule" %}{% else %}{% trans "Schedule" %}{% endif %}</a></li>
                 {% endif %}
                 {% if currentUser.routeViewable("/daypart") %}

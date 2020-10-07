@@ -55,14 +55,31 @@ $app->get('/login/ping', ['\Xibo\Controller\Login','PingPong'])->setName('ping')
 //
 // schedule
 //
-$app->get('/schedule/view', ['\Xibo\Controller\Schedule','displayPage'])->setName('schedule.view');
-$app->get('/schedule/form/add', ['\Xibo\Controller\Schedule','addForm'])->setName('schedule.add.form');
-$app->get('/schedule/form/edit/{id}', ['\Xibo\Controller\Schedule','editForm'])->setName('schedule.edit.form');
-$app->get('/schedule/form/delete/{id}', ['\Xibo\Controller\Schedule','deleteForm'])->setName('schedule.delete.form');
-$app->get('/schedulerecurrence/form/delete/{id}', ['\Xibo\Controller\Schedule','deleteRecurrenceForm'])->setName('schedule.recurrence.delete.form');
-$app->get('/schedule/form/now/{from}/{id}', ['\Xibo\Controller\Schedule','scheduleNowForm'])->setName('schedule.now.form');
-$app->get('/schedulenow/form/now/{from}/{id}', ['\Xibo\Controller\Schedule','scheduleNowForm'])->setName('schedulenow.now.form');
+$app->get('/schedule/view', ['\Xibo\Controller\Schedule','displayPage'])
+    ->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['schedule.view']))
+    ->setName('schedule.view');
+
+$app->get('/schedule/form/add', ['\Xibo\Controller\Schedule','addForm'])
+    ->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['schedule.add']))
+    ->setName('schedule.add.form');
+
+$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
+    $group->get('/schedule/form/edit/{id}', ['\Xibo\Controller\Schedule', 'editForm'])
+        ->setName('schedule.edit.form');
+
+    $group->get('/schedule/form/delete/{id}', ['\Xibo\Controller\Schedule', 'deleteForm'])
+        ->setName('schedule.delete.form');
+
+    $group->get('/schedulerecurrence/form/delete/{id}', ['\Xibo\Controller\Schedule', 'deleteRecurrenceForm'])
+        ->setName('schedule.recurrence.delete.form');
+})->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['schedule.modify']));
+
+$app->get('/schedule/form/now/{from}/{id}', ['\Xibo\Controller\Schedule','scheduleNowForm'])
+    ->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['schedule.now']))
+    ->setName('schedule.now.form');
+
 // Special routes for searching inside the schedule page
+// TODO: we shoudn't need these anymore
 $app->get('/schedule/search/displaygroup', ['\Xibo\Controller\DisplayGroup','grid'])->setName('schedule.displayGroup.search');
 $app->get('/schedule/search/campaign', ['\Xibo\Controller\Campaign','grid'])->setName('schedule.campaign.search');
 

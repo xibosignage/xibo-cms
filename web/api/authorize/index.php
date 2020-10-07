@@ -66,7 +66,7 @@ $routeParser = $app->getRouteCollector()->getRouteParser();
 $container->set('name', 'auth');
 
 // Config
-$app->add(new \Xibo\Middleware\ApiAuthorizationOAuth($app));
+$app->add(new \Xibo\Middleware\ApiAuthentication($app));
 $app->add(new \Xibo\Middleware\State($app));
 $app->add(new \Xibo\Middleware\Log($app));
 $app->add(new \Xibo\Middleware\Storage($app));

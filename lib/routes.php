@@ -87,10 +87,21 @@ $app->post('/tfa', ['\Xibo\Controller\Login' , 'twoFactorAuthValidate'])->setNam
  */
 $app->get('/schedule/data/events', ['\Xibo\Controller\Schedule','eventData'])->setName('schedule.calendar.data');
 $app->get('/schedule/{id}/events', ['\Xibo\Controller\Schedule','eventList'])->setName('schedule.events');
-$app->post('/schedule', ['\Xibo\Controller\Schedule','add'])->setName('schedule.add');
-$app->put('/schedule/{id}', ['\Xibo\Controller\Schedule','edit'])->setName('schedule.edit');
-$app->delete('/schedule/{id}', ['\Xibo\Controller\Schedule','delete'])->setName('schedule.delete');
-$app->delete('/schedulerecurrence/{id}', ['\Xibo\Controller\Schedule','deleteRecurrence'])->setName('schedule.recurrence.delete');
+
+$app->post('/schedule', ['\Xibo\Controller\Schedule','add'])
+    ->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['schedule.add']))
+    ->setName('schedule.add');
+
+$app->group('', function(RouteCollectorProxy $group) {
+    $group->put('/schedule/{id}', ['\Xibo\Controller\Schedule','edit'])
+        ->setName('schedule.edit');
+
+    $group->delete('/schedule/{id}', ['\Xibo\Controller\Schedule','delete'])
+        ->setName('schedule.delete');
+
+    $group->delete('/schedulerecurrence/{id}', ['\Xibo\Controller\Schedule','deleteRecurrence'])
+        ->setName('schedule.recurrence.delete');
+})->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['schedule.modify']));
 
 /**
  * Notification

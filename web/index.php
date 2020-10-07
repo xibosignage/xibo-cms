@@ -129,5 +129,9 @@ try {
 } catch (Exception $e) {
     echo 'Fatal Error - sorry this shouldn\'t happen. ';
     echo '<br>' . $e->getMessage();
-    echo '<br><br><code>' . nl2br($e->getTraceAsString()) . '</code>';
+
+    // Only output debug trace if we're configured to display errors
+    if (ini_get('display_errors') == 1) {
+        echo '<br><br><code>' . nl2br($e->getTraceAsString()) . '</code>';
+    }
 }

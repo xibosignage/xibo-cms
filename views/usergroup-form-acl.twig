@@ -23,6 +23,7 @@
 
 {% extends "form-base.twig" %}
 {% import "forms.twig" as forms %}
+{% import _self as flow %}
 
 {% block formTitle %}
     {% trans %}Turn Features on/off for {{ group }}{% endtrans %}
@@ -34,33 +35,75 @@
     {% trans "Save" %}, $("#AclForm").submit()
 {% endblock %}
 
+{% block callBack %}featureAclFormOpen{% endblock %}
+
+{% macro hasFeature(features, feature) %}
+    {% if feature in features %}
+        checked
+    {% endif %}
+{% endmacro %}
+
+{% macro featureTitleRow(title, description) %}
+    <tr class="feature-group-row">
+        <td class="feature-group-header-cell closed">
+            <strong>{{ title }}</strong> <i class="fa fa-arrow-circle-down"></i>
+            <p class="feature-group-description">
+                {{ description }}
+            </p>
+        </td>
+        <td><input class="feature-select-all" type="checkbox" /></td>
+        <td></td>
+    </tr>
+{% endmacro %}
+
+{% macro featureRow(title, feature, features, inheritedFeatures, isUserSpecific) %}
+    <tr class="feature-row">
+        <td width="70%">{{ title }}</td>
+        <td width="15%">
+            <input type="checkbox" name="features[]" value="{{ feature }}" {{ flow.hasFeature(features, feature) }}>
+        </td>
+        {% if isUserSpecific == 1 %}
+            <td width="15%">
+                <input type="checkbox" disabled {{ flow.hasFeature(inheritedFeatures, feature) }}>
+            </td>
+        {% endif %}
+    </tr>
+{% endmacro %}
+
 {% block formHtml %}
+
     <div class="row">
         <div class="col-md-12">
             <form id="AclForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("group.acl", {id: groupId}) }}">
                 {% set helpText %}{% trans %}Check or un-check the options against each item to control whether access to a Feature is allowed or not.{% endtrans %}{% endset %}
                 {{ forms.message(helpText) }}
-                {% if isUserSpecific == 1 %}
-                    {% set helpTextUserSpecific %}{% trans %}The Features from Groups column shows Features that are enabled by User Groups that this User belongs to.{% endtrans %}{% endset %}
-                    {{ forms.message(helpTextUserSpecific) }}
-                {% endif %}
                 <table class="table table-bordered">
                     <tr>
-                        <th>{{ entity }}</th>
-                        <th>{% trans "Feature Enabled?" %}</th>
+                        <th>{{ "Feature"|trans }}</th>
+                        <th>
+                            {% trans "Enabled?" %}
+                            <i class="fa fa-info-circle" title="{{ "Check this box to give this User access to this Feature." }}"></i>
+                        </th>
                         {% if isUserSpecific == 1 %}
-                            <th>{% trans "Features from Groups" %}</th>
+                            <th>
+                                {% trans "Inherited?" %}
+                                <i class="fa fa-info-circle" title="{{ "If checked this User already has access to this Feature due to the User Groups they belong to." }}"></i>
+                            </th>
                         {% endif %}
                     </tr>
-                    {% for item in permissions %}
-                        <tr>
-                            <td width="70%">{{ item.name }}</td>
-                            <td width="15%"><input type="checkbox" name="objectId[]" value="{{ item.value_view }}" {{ item.value_view_checked }}></td>
-                            {% if isUserSpecific == 1 %}
-                                <td width="15%"><input type="checkbox" name="effectivePermissions" disabled value="{{ item.value_view }}" {{ item.value_view_group_checked }}></td>
-                            {% endif %}
-                        </tr>
-                    {% endfor %}
+
+                    <tbody class="feature-group">
+                        {{ flow.featureTitleRow("Scheduling"|trans, "Create and manage events on Displays and Display Groups."|trans) }}
+                        {{ flow.featureRow("View the Calendar and Agenda"|trans, "schedule.view", features, inheritedFeatures, isUserSpecific) }}
+                        {{ flow.featureRow("Create new Scheduled Events"|trans, "schedule.add", features, inheritedFeatures, isUserSpecific) }}
+                        {{ flow.featureRow("Edit and Delete existing Scheduled Events"|trans, "schedule.modify", features, inheritedFeatures, isUserSpecific) }}
+                        {{ flow.featureRow("Use Schedule Now to create short events which play straight away"|trans, "schedule.now", features, inheritedFeatures, isUserSpecific) }}
+                    </tbody>
+
+                    <tbody class="feature-group">
+                        {{ flow.featureTitleRow("Layout Design"|trans, "Design Layouts"|trans) }}
+                        {{ flow.featureRow("View Layouts"|trans, "layout.view", features, inheritedFeatures, isUserSpecific) }}
+                    </tbody>
                 </table>
             </form>
         </div>

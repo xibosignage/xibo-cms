@@ -69,9 +69,6 @@ abstract class AuthenticationBase implements Middleware, AuthenticationInterface
                 // Replace our user with a fully loaded one
                 $user = $this->getUser($user->userId);
 
-                // Do they have permission?
-                $user->routeAuthentication($resource);
-
                 // We are authenticated, override with the populated user object
                 $this->setUserForRequest($user);
 
