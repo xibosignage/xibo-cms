@@ -78,17 +78,16 @@ $app->get('/schedule/form/now/{from}/{id}', ['\Xibo\Controller\Schedule','schedu
     ->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['schedule.now']))
     ->setName('schedule.now.form');
 
-// Special routes for searching inside the schedule page
-// TODO: we shoudn't need these anymore
-$app->get('/schedule/search/displaygroup', ['\Xibo\Controller\DisplayGroup','grid'])->setName('schedule.displayGroup.search');
-$app->get('/schedule/search/campaign', ['\Xibo\Controller\Campaign','grid'])->setName('schedule.campaign.search');
-
 //
 // notification
 //
-$app->get('/notification/view', ['\Xibo\Controller\Notification','displayPage'])->setName('notification.view');
 $app->get('/drawer/notification/show/{id}', ['\Xibo\Controller\Notification','show'])->setName('notification.show');
 $app->get('/drawer/notification/interrupt/{id}', ['\Xibo\Controller\Notification','interrupt'])->setName('notification.interrupt');
+
+$app->get('/notification/view', ['\Xibo\Controller\Notification','displayPage'])
+    ->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['notification.centre']))
+    ->setName('notification.view');
+
 $app->get('/notification/form/add', ['\Xibo\Controller\Notification','addForm'])->setName('notification.add.form');
 $app->get('/notification/form/edit/{id}', ['\Xibo\Controller\Notification','editForm'])->setName('notification.edit.form');
 $app->get('/notification/form/delete/{id}', ['\Xibo\Controller\Notification','deleteForm'])->setName('notification.delete.form');

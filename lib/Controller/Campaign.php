@@ -235,11 +235,13 @@ class Campaign extends Base
             $campaign->buttons = [];
 
             // Schedule Now
-            $campaign->buttons[] = array(
-                'id' => 'campaign_button_schedulenow',
-                'url' => $this->urlFor($request,'schedule.now.form', ['id' => $campaign->campaignId, 'from' => 'Campaign']),
-                'text' => __('Schedule Now')
-            );
+            if ($this->getUser()->featureEnabled('schedule.now')) {
+                $campaign->buttons[] = array(
+                    'id' => 'campaign_button_schedulenow',
+                    'url' => $this->urlFor($request,'schedule.now.form', ['id' => $campaign->campaignId, 'from' => 'Campaign']),
+                    'text' => __('Schedule Now')
+                );
+            }
 
             // Preview
             $campaign->buttons[] = array(

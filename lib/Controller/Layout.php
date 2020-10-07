@@ -1446,7 +1446,7 @@ class Layout extends Base
             $layout->buttons[] = ['divider' => true];
 
             // Schedule Now
-            if ($this->getUser()->routeViewable('/schedulenow/form/now/:from/:id') === true) {
+            if ($this->getUser()->featureEnabled('schedule.now')) {
                 $layout->buttons[] = array(
                     'id' => 'layout_button_schedulenow',
                     'url' => $this->urlFor($request,'schedule.now.form', ['id' => $layout->campaignId, 'from' => 'Campaign']),

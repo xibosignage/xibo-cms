@@ -2,7 +2,7 @@
     <ul class="sidebar">
         <li class="sidebar-main"><a href="{{ url_for("home") }}">{% trans "Dashboard" %}</a></li>
 
-        {% if currentUser.routeViewable("/schedule") %}
+        {% if currentUser.featureEnabled("schedule.view") %}
             <li class="sidebar-list"><a href="{{ url_for("schedule.view") }}">{% trans "Schedule" %}</a></li>
         {% endif %}
 

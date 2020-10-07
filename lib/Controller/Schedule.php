@@ -339,7 +339,8 @@ class Schedule extends Base
             }
 
             // Event Permissions
-            $editable = $this->isEventEditable($row->displayGroups);
+            $editable = $this->getUser()->featureEnabled('schedule.modify')
+                && $this->isEventEditable($row->displayGroups);
 
             // Event Title
             if ($row->campaignId == 0) {
@@ -438,7 +439,7 @@ class Schedule extends Base
                     'editable' => $editable,
                     'event' => $row,
                     'scheduleEvent' => $scheduleEvent,
-                    'recurringEvent' => ($row->recurrenceType != '') ? true : false
+                    'recurringEvent' => $row->recurrenceType != ''
                 ];
             }
         }

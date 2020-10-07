@@ -21,7 +21,7 @@
             </li>
         {% endfor %}
 
-        {% if currentUser.routeViewable("/notification") %}
+        {% if currentUser.featureEnabled("notification.centre") %}
             <li class="divider"></li>
 
             <li><a href="{{ url_for("notification.view") }}">{% trans "Notification Centre" %}</a></li>
