@@ -1787,6 +1787,15 @@ function featureAclFormOpen(dialog) {
     $(dialog).find("input[name='features[]']").on("click", function() {
         setFeatureGroupCheckboxState($(this));
     });
+
+    // Bind to group checkboxes to check/uncheck all below.
+    $(dialog).find("input.feature-select-all").on("click", function() {
+        // Force this down to all child checkboxes
+        $(this)
+            .closest("tbody.feature-group")
+            .find("input[name='features[]']")
+            .prop("checked", $(this).is(":checked"));
+    });
 }
 
 /**
