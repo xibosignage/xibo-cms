@@ -1056,7 +1056,6 @@ class State implements Middleware
                     $c->get('helpService'),
                     $c->get('configService'),
                     $c->get('userGroupFactory'),
-                    $c->get('pageFactory'),
                     $c->get('permissionFactory'),
                     $c->get('userFactory'),
                     $c->get('view')

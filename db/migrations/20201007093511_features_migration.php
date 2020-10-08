@@ -39,5 +39,15 @@ class FeaturesMigration extends AbstractMigration
                 'limit' => \Phinx\Db\Adapter\MysqlAdapter::TEXT_MEDIUM
             ])
             ->save();
+
+        $this->table('user')
+            ->changeColumn('homePageId', 'string', [
+                'null' => true,
+                'default' => 'null',
+                'limit' => '255'
+            ])
+            ->save();
+
+        $this->execute('UPDATE `user` SET homePageId = (SELECT CONCAT(pages.name, \'.view\') FROM pages WHERE user.homePageId = pages.pageId)');
     }
 }

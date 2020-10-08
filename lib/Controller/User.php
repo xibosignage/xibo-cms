@@ -60,6 +60,7 @@ use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class User
@@ -426,7 +427,7 @@ class User extends Base
             if ($this->getUser()->isSuperAdmin()) {
                 $user->buttons[] = ['divider' => true];
 
-                // Page Security
+                // Features
                 $user->buttons[] = [
                     'id' => 'user_button_page_security',
                     'url' => $this->urlFor($request,'group.acl.form', ['id' => $user->groupId, 'userId' => $user->userId]),
@@ -654,6 +655,9 @@ class User extends Base
         // Assign the initial group
         $group->assignUser($user);
         $group->save(['validate' => false]);
+
+        // Handle enabled features for the homepage.
+        //switch ($user->hom)
 
         // Test to see if the user group selected has permissions to see the homepage selected
         // Make sure the user has permission to access this page.
@@ -1020,6 +1024,66 @@ class User extends Base
     }
 
     /**
+     * @param \Slim\Http\ServerRequest $request
+     * @param \Slim\Http\Response $response
+     * @return \Psr\Http\Message\ResponseInterface|\Slim\Http\Response
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function homepages(Request $request, Response $response)
+    {
+        // Only group admins or super admins can create Users.
+        if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin()) {
+            throw new AccessDeniedException(__('Only super and group admins can create users'));
+        }
+
+        // Get all homepages accessible for a user group
+        $params = $this->getSanitizer($request->getParams());
+        $userId = $params->getInt('userId');
+
+        if ($userId !== null) {
+            $homepages = [];
+            $user = $this->userFactory->getById($userId);
+            $userFeatures = $this->userGroupFactory->getGroupFeaturesForUser($user);
+            foreach ($this->userGroupFactory->getHomepages() as $homepage) {
+                if (in_array($homepage['feature'], $userFeatures)) {
+                    $homepages[] = $homepage;
+                }
+            }
+        } else {
+            $userTypeId = $params->getInt('userTypeId', [
+                'throw' => function () {
+                    throw new NotFoundException();
+                }
+            ]);
+
+            if ($userTypeId == 1 || $userTypeId == 4) {
+                $homepages = $this->userGroupFactory->getHomepages();
+            } else {
+                $groupId = $params->getInt('groupId', [
+                    'throw' => function () {
+                        throw new NotFoundException();
+                    }
+                ]);
+                $group = $this->userGroupFactory->getById($groupId);
+
+                $homepages = [];
+                foreach ($this->userGroupFactory->getHomepages() as $homepage) {
+                    if (in_array($homepage['feature'], $group->features)) {
+                        $homepages[] = $homepage;
+                    }
+                }
+            }
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = count($homepages);
+        $this->getState()->setData($homepages);
+
+        return $this->render($request, $response);
+    }
+
+    /**
      * User Add Form
      * @param Request $request
      * @param Response $response
@@ -1037,15 +1101,15 @@ class User extends Base
         }
 
         $defaultUserTypeId = 3;
-        foreach ($this->userTypeFactory->query(null, ['userType' => $this->getConfig()->getSetting('defaultUsertype')] ) as $defaultUserType) {
+        foreach ($this->userTypeFactory->query(null, [
+            'userType' => $this->getConfig()->getSetting('defaultUsertype')
+        ]) as $defaultUserType) {
             $defaultUserTypeId = $defaultUserType->userTypeId;
         }
 
         $this->getState()->template = 'user-form-add';
         $this->getState()->setData([
             'options' => [
-                'homepage' => $this->pageFactory->query(null, ['asHome' => 1]),
-                'groups' => $this->userGroupFactory->query(),
                 'userTypes' => ($this->getUser()->isSuperAdmin()) ? $this->userTypeFactory->getAllRoles() : $this->userTypeFactory->getNonAdminRoles(),
                 'defaultGroupId' => $this->getConfig()->getSetting('DEFAULT_USERGROUP'),
                 'defaultUserType' => $defaultUserTypeId
@@ -1078,12 +1142,19 @@ class User extends Base
             throw new AccessDeniedException();
         }
 
+        $homepage = [];
+        try {
+            $homepage = $this->userGroupFactory->getHomepageByName($user->homePageId);
+        } catch (NotFoundException $notFoundException) {
+            $this->getLog()->error(sprintf('User %d has non existing homepage %s', $user->userId, $user->homePageId));
+        }
+
         $this->getState()->template = 'user-form-edit';
         $this->getState()->setData([
             'user' => $user,
             'options' => [
-                'homepage' => $this->pageFactory->getForHomepage(),
-                'userTypes' => $this->userTypeFactory->query()
+                'homepage' => $homepage,
+                'userTypes' => ($this->getUser()->isSuperAdmin()) ? $this->userTypeFactory->getAllRoles() : $this->userTypeFactory->getNonAdminRoles()
             ],
             'help' => [
                 'edit' => $this->getHelp()->link('User', 'Edit')

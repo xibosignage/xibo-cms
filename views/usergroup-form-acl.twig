@@ -94,38 +94,37 @@
 
                     <tbody class="feature-group">
                         {{ flow.featureTitleRow("Scheduling"|trans, "Create and manage events on Displays and Display Groups."|trans) }}
-                        {{ flow.featureRow("schedule.view", "View the Calendar"|trans, features, inheritedFeatures, isUserSpecific) }}
-                        {{ flow.featureRow("schedule.agenda", "When on the Calendar show the Agenda"|trans, features, inheritedFeatures, isUserSpecific) }}
-                        {{ flow.featureRow("schedule.add", "Create new Scheduled Events"|trans, features, inheritedFeatures, isUserSpecific) }}
-                        {{ flow.featureRow("schedule.modify", "Edit and Delete existing Scheduled Events"|trans, features, inheritedFeatures, isUserSpecific) }}
-                        {{ flow.featureRow("schedule.now", "Use Schedule Now to create short events which play straight away"|trans, features, inheritedFeatures, isUserSpecific) }}
+                        {% for customFeature in userGroupFactory.getFeaturesByGroup("scheduling") %}
+                            {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                        {% endfor %}
                     </tbody>
 
                     <tbody class="feature-group">
                         {{ flow.featureTitleRow("Layout Design"|trans, "Design Layouts"|trans) }}
-                        {{ flow.featureRow("layout.view", "View Layouts"|trans, features, inheritedFeatures, isUserSpecific) }}
+                        {% for customFeature in userGroupFactory.getFeaturesByGroup("layout-design") %}
+                            {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                        {% endfor %}
                     </tbody>
 
                     <tbody class="feature-group">
                         {{ flow.featureTitleRow("User functions"|trans, "Profile, preferences and notifications for the logged in user."|trans) }}
-                        {{ flow.featureRow("user.profile", "Update their profile, including password and authentication preferences."|trans, features, inheritedFeatures, isUserSpecific) }}
-                        {{ flow.featureRow("drawer", "Get Notifications appear in the navigation bar"|trans, features, inheritedFeatures, isUserSpecific) }}
-                        {{ flow.featureRow("notification.centre", "Access the Notification Centre to read old notifications"|trans, features, inheritedFeatures, isUserSpecific) }}
+                        {% for customFeature in userGroupFactory.getFeaturesByGroup("users") %}
+                            {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                        {% endfor %}
                     </tbody>
 
                     <tbody class="feature-group">
-                    {{ flow.featureTitleRow("Dashboards"|trans, "Bring together key features onto a user's dashboard."|trans) }}
-                    {{ flow.featureRow("dashboard.status", "Status Dashboard showing key platform metrics, usually for an administrator."|trans, features, inheritedFeatures, isUserSpecific) }}
-                    {{ flow.featureRow("dashboard.icon", "Icon Dashboard showing an easy access set of feature icons the user can access."|trans, features, inheritedFeatures, isUserSpecific) }}
-                    {{ flow.featureRow("dashboard.media.manager", "Media Manager Dashboard showing all Widgets the user has access to modify."|trans, features, inheritedFeatures, isUserSpecific) }}
-                    {{ flow.featureRow("dashboard.playlist", "Playlist Dashboard showing all Playlists configured in Layouts the user has access to modify."|trans, features, inheritedFeatures, isUserSpecific) }}
+                        {{ flow.featureTitleRow("Dashboards"|trans, "Bring together key features onto a user's dashboard."|trans) }}
+                        {% for customFeature in userGroupFactory.getFeaturesByGroup("dashboards") %}
+                            {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                        {% endfor %}
                     </tbody>
 
                     <tbody class="feature-group">
-                    {{ flow.featureTitleRow("Custom"|trans, "Third party extensions to the platform."|trans) }}
-                    {% for customFeature in customFeatures %}
-                        {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
-                    {% endfor %}
+                        {{ flow.featureTitleRow("Custom"|trans, "Third party extensions to the platform."|trans) }}
+                        {% for customFeature in userGroupFactory.getFeaturesByGroup("custom") %}
+                            {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                        {% endfor %}
                     </tbody>
                 </table>
             </form>

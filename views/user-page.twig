@@ -174,7 +174,48 @@
             dataTableAddButtons(table, $('#users_wrapper').find('.col-sm-6').eq(1));
         });
 
-        function userFormOpen() {
+        function userFormOpen(dialog) {
+            // Make a select2 from the home page select
+            var $userForm = $(dialog).find("form.UserForm");
+            var $groupId = $(dialog).find("select[name=groupId]");
+            var $userTypeId = $(dialog).find("select[name=userTypeId]");
+            var $select = $(dialog).find(".homepage-select");
+            $select.select2({
+                minimumResultsForSearch: Infinity,
+                ajax: {
+                    url: $select.data("searchUrl"),
+                    dataType: "json",
+                    data: function (params) {
+                        return {
+                            q: params.term, // search term
+                            page: params.page,
+                            userId: $userForm.data().userId,
+                            groupId: $groupId.val(),
+                            userTypeId: $userTypeId.val(),
+                        };
+                    },
+                    processResults: function (data) {
+                        var results = [];
+                        $.each(data.data, function(index, el) {
+                            results.push({
+                                "id": el.homepage,
+                                "text": el.title,
+                                "content": el.description
+                            });
+                        });
+                        return {
+                            results: results
+                        };
+                    }
+                },
+                templateResult: function(state) {
+                    if (!state.content)
+                        return state.text;
+
+                    return $("<span>" + state.content + "</span>");
+                }
+            });
+
             // Bind to the add form submit
             $(".UserForm").validate({
                 submitHandler: function (form) {

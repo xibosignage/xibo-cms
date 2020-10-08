@@ -223,6 +223,7 @@ $app->get('/user/form/edit/{id}', ['\Xibo\Controller\User','editForm'])->setName
 $app->get('/user/form/delete/{id}', ['\Xibo\Controller\User','deleteForm'])->setName('user.delete.form');
 $app->get('/user/form/membership/{id}', ['\Xibo\Controller\User','membershipForm'])->setName('user.membership.form');
 $app->get('/user/form/preferences', ['\Xibo\Controller\User', 'preferencesForm'])->setName('user.preferences.form');
+$app->get('/user/form/homepages', ['\Xibo\Controller\User', 'homepages'])->setName('user.homepages.search');
 // permissions
 $app->get('/user/permissions/form/{entity}/{id}', ['\Xibo\Controller\User','permissionsForm'])->setName('user.permissions.form');
 $app->get('/user/permissions/multiple/form/{entity}', ['\Xibo\Controller\User','permissionsMultiForm'])->setName('user.permissions.multi.form');

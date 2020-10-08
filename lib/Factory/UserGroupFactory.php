@@ -37,7 +37,10 @@ use Xibo\Support\Exception\NotFoundException;
 class UserGroupFactory extends BaseFactory
 {
     /** @var array */
-    private $customFeatures = [];
+    private $features = null;
+
+    /** @var array */
+    private $homepages = null;
 
     /**
      * Construct a factory
@@ -50,7 +53,6 @@ class UserGroupFactory extends BaseFactory
     public function __construct($store, $log, $sanitizerService, $user, $userFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
-
         $this->setAclDependencies($user, $userFactory);
     }
 
@@ -252,15 +254,14 @@ class UserGroupFactory extends BaseFactory
             $params['userId'] = $parsedFilter->getInt('userId');
         }
 
-        if ($parsedFilter->getInt('isUserSpecific', ['default' => 0]) != -1) {
+        if ($parsedFilter->getInt('isUserSpecific') !== -1) {
             $body .= ' AND isUserSpecific = :isUserSpecific ';
             $params['isUserSpecific'] = $parsedFilter->getInt('isUserSpecific', ['default' => 0]);
         }
 
-        if ($parsedFilter->getInt('isEveryone', ['default' => -1]) != -1) {
-            $body .= ' AND isEveryone = :isEveryone ';
-            $params['isEveryone'] = $parsedFilter->getInt('isEveryone');
-        }
+        // Always apply isEveryone=0 unless its been provided otherwise.
+        $body .= ' AND isEveryone = :isEveryone ';
+        $params['isEveryone'] = $parsedFilter->getInt('isEveryone', ['default' => 0]);
 
         if ($parsedFilter->getInt('isSystemNotification') !== null) {
             $body .= ' AND isSystemNotification = :isSystemNotification ';
@@ -360,15 +361,164 @@ class UserGroupFactory extends BaseFactory
     }
 
     /**
+     * @param string $group
+     * @return array
+     */
+    public function getFeaturesByGroup(string $group)
+    {
+        $groupFeatures = [];
+        foreach ($this->getFeatures() as $feature) {
+            if ($feature['group'] === $group) {
+                $groupFeatures[] = $feature;
+            }
+        }
+        return $groupFeatures;
+    }
+
+    /**
+     * Populate the core system features and homepages
+     * @return array
+     */
+    public function getFeatures()
+    {
+        if ($this->features === null) {
+            $this->features = [
+                'schedule.view' => [
+                    'feature' => 'schedule.view',
+                    'group' => 'scheduling',
+                    'title' => __('View the Calendar')
+                ],
+                'schedule.agenda' => [
+                    'feature' => 'schedule.agenda',
+                    'group' => 'scheduling',
+                    'title' => __('When on the Calendar show the Agenda')
+                ],
+                'schedule.add' => [
+                    'feature' => 'schedule.add',
+                    'group' => 'scheduling',
+                    'title' => __('Create new Scheduled Events')
+                ],
+                'schedule.modify' => [
+                    'feature' => 'schedule.modify',
+                    'group' => 'scheduling',
+                    'title' => __('Edit and Delete existing Scheduled Events')
+                ],
+                'schedule.now' => [
+                    'feature' => 'schedule.now',
+                    'group' => 'scheduling',
+                    'title' => __('Use Schedule Now to create short events which play straight away')
+                ],
+                'layout.view' => [
+                    'feature' => 'layout.view',
+                    'group' => 'layout-design',
+                    'title' => __('View Layouts')
+                ],
+                'user.profile' => [
+                    'feature' => 'user.profile',
+                    'group' => 'users',
+                    'title' => __('Update their profile, including password and authentication preferences.')
+                ],
+                'drawer' => [
+                    'feature' => 'drawer',
+                    'group' => 'users',
+                    'title' => __('Get Notifications appear in the navigation bar')
+                ],
+                'notification.centre' => [
+                    'feature' => 'notification.centre',
+                    'group' => 'users',
+                    'title' => __('Access the Notification Centre to read old notifications')
+                ],
+                'dashboard.status' => [
+                    'feature' => 'dashboard.status',
+                    'group' => 'dashboards',
+                    'title' => __('Status Dashboard showing key platform metrics, usually for an administrator.')
+                ],
+                'dashboard.icon' => [
+                    'feature' => 'dashboard.icon',
+                    'group' => 'dashboards',
+                    'title' => __('Icon Dashboard showing an easy access set of feature icons the user can access.')
+                ],
+                'dashboard.media.manager' => [
+                    'feature' => 'dashboard.media.manager',
+                    'group' => 'dashboards',
+                    'title' => __('Media Manager Dashboard showing all Widgets the user has access to modify.')
+                ],
+                'dashboard.playlist' => [
+                    'feature' => 'dashboard.playlist',
+                    'group' => 'dashboards',
+                    'title' => __('Playlist Dashboard showing all Playlists configured in Layouts the user has access to modify.')
+                ],
+            ];
+        }
+        return $this->features;
+    }
+
+    /**
+     * @param string $homepage The home page id
+     * @return array|mixed
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getHomepageByName(string $homepage)
+    {
+        $homepages = $this->getHomepages();
+
+        if (!array_key_exists($homepage, $homepages)) {
+            throw new NotFoundException();
+        }
+
+        return $homepages[$homepage];
+    }
+
+    /**
+     * @return array|array[]
+     */
+    public function getHomepages()
+    {
+        if ($this->homepages === null) {
+            $this->homepages = [
+                'statusdashboard.view' => [
+                    'homepage' => 'statusdashboard.view',
+                    'feature' => 'dashboard.status',
+                    'title' => __('Status Dashboard'),
+                    'description' => __('Status Dashboard showing key platform metrics, usually for an administrator.')
+                ],
+                'icondashboard.view' => [
+                    'homepage' => 'icondashboard.view',
+                    'feature' => 'dashboard.icon',
+                    'title' => __('Icon Dashboard'),
+                    'description' => __('Icon Dashboard showing an easy access set of feature icons the user can access.')
+                ],
+                'mediamanager.view' => [
+                    'homepage' => 'mediamanager.view',
+                    'feature' => 'dashboard.media.manager',
+                    'title' => __('Media Manager Dashboard'),
+                    'description' => __('Media Manager Dashboard showing all Widgets the user has access to modify.')
+                ],
+                'playlistdashboard.view' => [
+                    'homepage' => 'playlistdashboard.view',
+                    'feature' => 'dashboard.playlist',
+                    'title' => __('Playlist Dashboard'),
+                    'description' => __('Playlist Dashboard showing all Playlists configured in Layouts the user has access to modify.')
+                ],
+            ];
+        }
+
+        return $this->homepages;
+    }
+
+    /**
      * @param string $feature
      * @param string $title
      * @return $this
      */
     public function registerCustomFeature(string $feature, string $title)
     {
-        if (!array_key_exists($feature, $this->customFeatures)) {
-            $this->customFeatures[$feature] = [
+        $this->getFeatures();
+
+        if (!array_key_exists($feature, $this->features)) {
+            $this->features[$feature] = [
                 'feature' => $feature,
+                'group' => 'custom',
                 'title' => $title
             ];
         }
@@ -376,11 +526,24 @@ class UserGroupFactory extends BaseFactory
     }
 
     /**
-     * Return a list of custom features registered with this factory
-     * @return array
+     * @param string $homepage
+     * @param string $title
+     * @param string $description
+     * @param string $feature
+     * @return $this
      */
-    public function getCustomFeatures()
+    public function registerCustomHomepage(string $homepage, string $title, string $description, string $feature)
     {
-        return array_values($this->customFeatures);
+        $this->getHomepages();
+
+        if (!array_key_exists($homepage, $this->homepages)) {
+            $this->homepages[$homepage] = [
+                'homepage' => $homepage,
+                'title' => $title,
+                'description' => $description,
+                'feature' => $feature
+            ];
+        }
+        return $this;
     }
 }

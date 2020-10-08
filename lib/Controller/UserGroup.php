@@ -71,17 +71,15 @@ class UserGroup extends Base
      * @param \Xibo\Service\HelpServiceInterface $help
      * @param ConfigServiceInterface $config
      * @param UserGroupFactory $userGroupFactory
-     * @param PageFactory $pageFactory
      * @param PermissionFactory $permissionFactory
      * @param UserFactory $userFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $userGroupFactory, $pageFactory, $permissionFactory, $userFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $userGroupFactory, $permissionFactory, $userFactory, Twig $view)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->userGroupFactory = $userGroupFactory;
-        $this->pageFactory = $pageFactory;
         $this->permissionFactory = $permissionFactory;
         $this->userFactory = $userFactory;
     }
@@ -562,7 +560,7 @@ class UserGroup extends Base
             'isUserSpecific' => $group->isUserSpecific,
             'features' => $group->features,
             'inheritedFeatures' => $inheritedFeatures,
-            'customFeatures' => $this->userGroupFactory->getCustomFeatures(),
+            'userGroupFactory' => $this->userGroupFactory,
             'help' => $this->getHelp()->link('User', 'Acl')
         ];
 
