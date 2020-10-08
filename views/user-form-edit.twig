@@ -78,7 +78,7 @@
                         <div class="form-group">
                             <label class="col-sm-2 control-label" for="homePageId">{{ title }}</label>
                             <div class="col-sm-10">
-                                <select class="form-control homepage-select" required data-search-url="{{ url_for("user.homepages.search") }}">
+                                <select name="homePageId" class="form-control homepage-select" required data-search-url="{{ url_for("user.homepages.search") }}">
                                     <option value="{{ options.homepage.homepage }}" selected>{{ options.homepage.title }}</option>
                                 </select>
                                 <span class="help-block">{{ helpText }}</span>

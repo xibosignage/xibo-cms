@@ -392,7 +392,6 @@ class User extends Base
             }
 
             $user->includeProperty('buttons');
-            $user->homePage = __($user->homePage);
 
             // Super admins have some buttons
             if ($this->getUser()->checkEditable($user)) {
@@ -614,7 +613,7 @@ class User extends Base
 
         $user->userName = $sanitizedParams->getString('userName');
         $user->email = $sanitizedParams->getString('email');
-        $user->homePageId = $sanitizedParams->getInt('homePageId');
+        $user->homePageId = $sanitizedParams->getString('homePageId');
         $user->libraryQuota = $sanitizedParams->getInt('libraryQuota', ['default' => 0]);
         $user->setNewPassword($sanitizedParams->getString('password'));
 
@@ -657,11 +656,8 @@ class User extends Base
         $group->save(['validate' => false]);
 
         // Handle enabled features for the homepage.
-        //switch ($user->hom)
-
-        // Test to see if the user group selected has permissions to see the homepage selected
-        // Make sure the user has permission to access this page.
-        if (!$user->checkViewable($this->pageFactory->getById($user->homePageId))) {
+        $homepage = $this->userGroupFactory->getHomepageByName($user->homePageId);
+        if (!empty($homepage['feature']) && !$user->featureEnabled($homepage['feature'])) {
             throw new InvalidArgumentException(__('User does not have permission for this homepage'), 'homePageId');
         }
 
@@ -855,13 +851,15 @@ class User extends Base
             throw new AccessDeniedException();
         }
 
+        $this->getLog()->debug('User Edit process started.');
+
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Build a user entity and save it
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
         $user->load();
         $user->userName = $sanitizedParams->getString('userName');
         $user->email = $sanitizedParams->getString('email');
-        $user->homePageId = $sanitizedParams->getInt('homePageId');
+        $user->homePageId = $sanitizedParams->getString('homePageId');
         $user->libraryQuota = $sanitizedParams->getInt('libraryQuota');
         $user->retired = $sanitizedParams->getCheckbox('retired');
 
@@ -885,10 +883,15 @@ class User extends Base
         $user->setOptionValue('hideNavigation', $sanitizedParams->getCheckbox('hideNavigation'));
         $user->isPasswordChangeRequired = $sanitizedParams->getCheckbox('isPasswordChangeRequired');
 
-        // Make sure the user has permission to access this page.
-        if (!$user->checkViewable($this->pageFactory->getById($user->homePageId))) {
-            throw new InvalidArgumentException(__('User does not have permission for this homepage'));
+        $this->getLog()->debug('Params read');
+
+        // Handle enabled features for the homepage.
+        $homepage = $this->userGroupFactory->getHomepageByName($user->homePageId);
+        if (!empty($homepage['feature']) && !$user->featureEnabled($homepage['feature'])) {
+            throw new InvalidArgumentException(__('User does not have permission for this homepage'), 'homePageId');
         }
+
+        $this->getLog()->debug('Homepage validated.');
 
         // If we are a super admin
         if ($this->getUser()->userTypeId == 1) {
@@ -897,6 +900,8 @@ class User extends Base
             $disableTwoFactor = $sanitizedParams->getCheckbox('disableTwoFactor');
 
             if ($newPassword != null && $newPassword != '') {
+                $this->getLog()->debug('New password provided, checking.');
+
                 // Make sure they are the same
                 if ($newPassword != $retypeNewPassword) {
                     throw new InvalidArgumentException(__('Passwords do not match'));
@@ -912,8 +917,12 @@ class User extends Base
             }
         }
 
+        $this->getLog()->debug('About to save.');
+
         // Save the user
         $user->save();
+
+        $this->getLog()->debug('User saved, about to return.');
 
         // Return
         $this->getState()->hydrate([
@@ -1043,10 +1052,11 @@ class User extends Base
 
         if ($userId !== null) {
             $homepages = [];
-            $user = $this->userFactory->getById($userId);
-            $userFeatures = $this->userGroupFactory->getGroupFeaturesForUser($user);
+            $user = $this->userFactory->getById($userId)
+                ->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
+
             foreach ($this->userGroupFactory->getHomepages() as $homepage) {
-                if (in_array($homepage['feature'], $userFeatures)) {
+                if (empty($homepage['feature']) || $user->featureEnabled($homepage['feature'])) {
                     $homepages[] = $homepage;
                 }
             }
@@ -1069,7 +1079,7 @@ class User extends Base
 
                 $homepages = [];
                 foreach ($this->userGroupFactory->getHomepages() as $homepage) {
-                    if (in_array($homepage['feature'], $group->features)) {
+                    if (empty($homepage['feature']) || in_array($homepage['feature'], $group->features)) {
                         $homepages[] = $homepage;
                     }
                 }

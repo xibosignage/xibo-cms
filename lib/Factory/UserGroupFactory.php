@@ -463,7 +463,7 @@ class UserGroupFactory extends BaseFactory
         $homepages = $this->getHomepages();
 
         if (!array_key_exists($homepage, $homepages)) {
-            throw new NotFoundException();
+            throw new NotFoundException(sprintf(__('Homepage %s not found.'), $homepage));
         }
 
         return $homepages[$homepage];
@@ -484,7 +484,7 @@ class UserGroupFactory extends BaseFactory
                 ],
                 'icondashboard.view' => [
                     'homepage' => 'icondashboard.view',
-                    'feature' => 'dashboard.icon',
+                    'feature' => '',
                     'title' => __('Icon Dashboard'),
                     'description' => __('Icon Dashboard showing an easy access set of feature icons the user can access.')
                 ],

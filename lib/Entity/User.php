@@ -228,12 +228,6 @@ class User implements \JsonSerializable, UserEntityInterface
     public $playlists = [];
 
     /**
-     * @SWG\Property(description="The name of home page")
-     * @var string
-     */
-    public $homePage;
-
-    /**
      * @SWG\Property(description="Does this Group receive system notifications.")
      * @var int
      */
@@ -868,17 +862,7 @@ class User implements \JsonSerializable, UserEntityInterface
 
             if ($this->userId == null || $this->userId != $user->userId)
                 throw new DuplicateEntityException(__('There is already a user with this name. Please choose another.'));
-        }
-        catch (NotFoundException $e) {
-
-        }
-
-        try {
-            $this->pageFactory->getById($this->homePageId);
-        }
-        catch (NotFoundException $e) {
-            throw new InvalidArgumentException(__('Selected home page does not exist'), 'homePageId');
-        }
+        } catch (NotFoundException $ignored) {}
 
         // System User
         if ($this->userId == $this->configService->getSetting('SYSTEM_USER') &&  $this->userTypeId != 1) {
