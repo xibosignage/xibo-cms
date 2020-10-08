@@ -112,6 +112,21 @@
                         {{ flow.featureRow("drawer", "Get Notifications appear in the navigation bar"|trans, features, inheritedFeatures, isUserSpecific) }}
                         {{ flow.featureRow("notification.centre", "Access the Notification Centre to read old notifications"|trans, features, inheritedFeatures, isUserSpecific) }}
                     </tbody>
+
+                    <tbody class="feature-group">
+                    {{ flow.featureTitleRow("Dashboards"|trans, "Bring together key features onto a user's dashboard."|trans) }}
+                    {{ flow.featureRow("dashboard.status", "Status Dashboard showing key platform metrics, usually for an administrator."|trans, features, inheritedFeatures, isUserSpecific) }}
+                    {{ flow.featureRow("dashboard.icon", "Icon Dashboard showing an easy access set of feature icons the user can access."|trans, features, inheritedFeatures, isUserSpecific) }}
+                    {{ flow.featureRow("dashboard.media.manager", "Media Manager Dashboard showing all Widgets the user has access to modify."|trans, features, inheritedFeatures, isUserSpecific) }}
+                    {{ flow.featureRow("dashboard.playlist", "Playlist Dashboard showing all Playlists configured in Layouts the user has access to modify."|trans, features, inheritedFeatures, isUserSpecific) }}
+                    </tbody>
+
+                    <tbody class="feature-group">
+                    {{ flow.featureTitleRow("Custom"|trans, "Third party extensions to the platform."|trans) }}
+                    {% for customFeature in customFeatures %}
+                        {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                    {% endfor %}
+                    </tbody>
                 </table>
             </form>
         </div>

@@ -539,7 +539,6 @@ class UserGroup extends Base
      * @param int|null $userId
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws AccessDeniedException
-     * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
@@ -563,6 +562,7 @@ class UserGroup extends Base
             'isUserSpecific' => $group->isUserSpecific,
             'features' => $group->features,
             'inheritedFeatures' => $inheritedFeatures,
+            'customFeatures' => $this->userGroupFactory->getCustomFeatures(),
             'help' => $this->getHelp()->link('User', 'Acl')
         ];
 

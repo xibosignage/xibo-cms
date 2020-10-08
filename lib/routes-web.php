@@ -20,23 +20,50 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+use Slim\Routing\RouteCollectorProxy;
+
 // Special "root" route
 $app->get('/', ['\Xibo\Controller\User', 'home'])->setName('home');
 $app->get('/welcome', ['\Xibo\Controller\User', 'welcome'])->setName('welcome.view');
 
+//
 // Dashboards
-$app->get('/statusdashboard', ['\Xibo\Controller\StatusDashboard','displayPage'])->setName('statusdashboard.view');
-$app->get('/statusdashboard/displays', ['\Xibo\Controller\StatusDashboard', 'displays'])->setName('statusdashboard.displays');
-$app->get('/statusdashboard/displayGroups', ['\Xibo\Controller\StatusDashboard' , 'displayGroups'])->setName('statusdashboard.displayGroups');
-$app->get('/icondashboard', ['\Xibo\Controller\IconDashboard', 'displayPage'])->setName('icondashboard.view');
-$app->get('/mediamanager', ['\Xibo\Controller\MediaManager' , 'displayPage'])->setName('mediamanager.view');
-$app->get('/mediamanager/data', ['\Xibo\Controller\MediaManager','grid'])->setName('mediamanager.search');
-$app->get('/playlistdashboard', ['\Xibo\Controller\PlaylistDashboard','displayPage'])->setName('playlistdashboard.view');
-$app->get('/playlistdashboard/data', ['\Xibo\Controller\PlaylistDashboard','grid'])->setName('playlistdashboard.search');
-$app->get('/playlistdashboard/{id}', ['\Xibo\Controller\PlaylistDashboard','show'])->setName('playlistdashboard.show');
-$app->get('/playlistdashboard/widget/form/delete/{id}', ['\Xibo\Controller\PlaylistDashboard','deletePlaylistWidgetForm'])->setName('playlist.module.widget.delete.form');
-//$app->map('/playlistdashboard/library', '\Xibo\Controller\PlaylistDashboard:upload')->via('HEAD');
-$app->post('/playlistdashboard/library', ['\Xibo\Controller\PlaylistDashboard','upload'])->setName('playlistdashboard.library.add');
+//
+$app->group('', function(RouteCollectorProxy $group) {
+    $group->get('/statusdashboard', ['\Xibo\Controller\StatusDashboard', 'displayPage'])
+        ->setName('statusdashboard.view');
+    $group->get('/statusdashboard/displays', ['\Xibo\Controller\StatusDashboard', 'displays'])
+        ->setName('statusdashboard.displays');
+    $group->get('/statusdashboard/displayGroups', ['\Xibo\Controller\StatusDashboard', 'displayGroups'])
+        ->setName('statusdashboard.displayGroups');
+})->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.status']));
+
+$app->get('/icondashboard', ['\Xibo\Controller\IconDashboard', 'displayPage'])
+    ->setName('icondashboard.view')
+    ->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.icon']));
+
+$app->group('', function(RouteCollectorProxy $group) {
+    $group->get('/mediamanager', ['\Xibo\Controller\MediaManager', 'displayPage'])
+        ->setName('mediamanager.view');
+    $group->get('/mediamanager/data', ['\Xibo\Controller\MediaManager', 'grid'])
+        ->setName('mediamanager.search');
+})->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.media.manager']));
+
+$app->group('', function(RouteCollectorProxy $group) {
+    $group->get('/playlistdashboard', ['\Xibo\Controller\PlaylistDashboard', 'displayPage'])
+        ->setName('playlistdashboard.view');
+    $group->get('/playlistdashboard/data', ['\Xibo\Controller\PlaylistDashboard', 'grid'])
+        ->setName('playlistdashboard.search');
+    $group->get('/playlistdashboard/{id}', ['\Xibo\Controller\PlaylistDashboard', 'show'])
+        ->setName('playlistdashboard.show');
+    $group->get('/playlistdashboard/widget/form/delete/{id}', ['\Xibo\Controller\PlaylistDashboard', 'deletePlaylistWidgetForm'])
+        ->setName('playlist.module.widget.delete.form');
+
+    //TODO: why is this commented out?
+    //$group->map('/playlistdashboard/library', '\Xibo\Controller\PlaylistDashboard:upload')->via('HEAD');
+    $group->post('/playlistdashboard/library', ['\Xibo\Controller\PlaylistDashboard', 'upload'])
+        ->setName('playlistdashboard.library.add');
+})->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.playlist']));
 
 // Login Form
 $app->get('/login', ['\Xibo\Controller\Login', 'loginForm'])->setName('login');

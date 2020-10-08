@@ -36,6 +36,9 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class UserGroupFactory extends BaseFactory
 {
+    /** @var array */
+    private $customFeatures = [];
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -354,5 +357,30 @@ class UserGroupFactory extends BaseFactory
         }
 
         return $features;
+    }
+
+    /**
+     * @param string $feature
+     * @param string $title
+     * @return $this
+     */
+    public function registerCustomFeature(string $feature, string $title)
+    {
+        if (!array_key_exists($feature, $this->customFeatures)) {
+            $this->customFeatures[$feature] = [
+                'feature' => $feature,
+                'title' => $title
+            ];
+        }
+        return $this;
+    }
+
+    /**
+     * Return a list of custom features registered with this factory
+     * @return array
+     */
+    public function getCustomFeatures()
+    {
+        return array_values($this->customFeatures);
     }
 }
