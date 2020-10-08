@@ -427,7 +427,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         return [];
     }
 
-    /** @inheritdoc */
+    /**
+     * @inheritdoc
+     * @throws \Xibo\Exception\GeneralException|\Xibo\Exception\InvalidArgumentException
+     */
     public function getStats($filterBy = [])
     {
         // do we consider that the fromDt and toDt will always be provided?
@@ -538,39 +541,48 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $match['$match']['mediaId'] = [ '$in' => $mediaIds ];
         }
 
+        // Select collection
         $collection = $this->client->selectCollection($this->config['database'], $this->table);
 
-        $group = [
-            '$group' => [
-                '_id'=> null,
-                'count' => ['$sum' => 1],
-            ]
-        ];
-
-        if (count($match) > 0) {
-            $totalQuery = [
-                $match,
-                $group,
+        // Paging
+        // ------
+        // Check whether or not we've requested a page, if we have then we need a count of records total for paging
+        // if we haven't then we don't bother getting a count
+        $total = 0;
+        if ($start !== null && $length !== null) {
+            // We add a group pipeline to get a total count of records
+            $group = [
+                '$group' => [
+                    '_id' => null,
+                    'count' => ['$sum' => 1],
+                ]
             ];
-        } else {
-            $totalQuery = [
-                $group,
-            ];
-        }
 
-        // Get total
-        try {
-            $totalCursor = $collection->aggregate($totalQuery, ['allowDiskUse' => true]);
+            if (count($match) > 0) {
+                $totalQuery = [
+                    $match,
+                    $group,
+                ];
+            } else {
+                $totalQuery = [
+                    $group,
+                ];
+            }
 
-            $totalCount = $totalCursor->toArray();
-            $total = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
+            // Get total
+            try {
+                $totalCursor = $collection->aggregate($totalQuery, ['allowDiskUse' => true]);
 
-        } catch (\MongoDB\Exception\RuntimeException $e) {
-            $this->log->error('Error: Total Count. '. $e->getMessage());
-            throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
-        } catch (\Exception $e) {
-            $this->log->error('Error: Total Count. '. $e->getMessage());
-            throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
+                $totalCount = $totalCursor->toArray();
+                $total = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
+
+            } catch (\MongoDB\Exception\RuntimeException $e) {
+                $this->log->error('Error: Total Count. ' . $e->getMessage());
+                throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
+            } catch (\Exception $e) {
+                $this->log->error('Error: Total Count. ' . $e->getMessage());
+                throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
+            }
         }
 
         try {
@@ -623,7 +635,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             $result = new TimeSeriesMongoDbResults($cursor);
 
-            // Total
+            // Total (we have worked this out above if we have paging enabled, otherwise its 0)
             $result->totalCount = $total;
 
         } catch (\MongoDB\Exception\RuntimeException $e) {
