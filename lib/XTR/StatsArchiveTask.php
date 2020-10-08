@@ -161,6 +161,9 @@ class StatsArchiveTask implements TaskInterface
         // Remove the CSV file
         unlink($fileName);
 
+        // This all might have taken a long time indeed, so lets see if we need to reconnect MySQL
+        $this->store->select('SELECT 1', [], null, true);
+
         // Upload to the library
         $media = $this->mediaFactory->create(
             __('Stats Export %s to %s - %s', $fromDt->format('Y-m-d'), $toDt->format('Y-m-d'), Random::generateString(5)),
