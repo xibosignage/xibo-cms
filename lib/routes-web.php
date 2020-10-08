@@ -38,9 +38,9 @@ $app->group('', function(RouteCollectorProxy $group) {
         ->setName('statusdashboard.displayGroups');
 })->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.status']));
 
+// Everyone has access to this dashboard.
 $app->get('/icondashboard', ['\Xibo\Controller\IconDashboard', 'displayPage'])
-    ->setName('icondashboard.view')
-    ->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dashboard.icon']));
+    ->setName('icondashboard.view');
 
 $app->group('', function(RouteCollectorProxy $group) {
     $group->get('/mediamanager', ['\Xibo\Controller\MediaManager', 'displayPage'])

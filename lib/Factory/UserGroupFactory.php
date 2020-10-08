@@ -433,11 +433,6 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'dashboards',
                     'title' => __('Status Dashboard showing key platform metrics, usually for an administrator.')
                 ],
-                'dashboard.icon' => [
-                    'feature' => 'dashboard.icon',
-                    'group' => 'dashboards',
-                    'title' => __('Icon Dashboard showing an easy access set of feature icons the user can access.')
-                ],
                 'dashboard.media.manager' => [
                     'feature' => 'dashboard.media.manager',
                     'group' => 'dashboards',
