@@ -214,15 +214,13 @@ class User extends Base
         // User wizard seen, go to home page
         $this->getLog()->debug('Showing the homepage: ' . $this->getUser()->homePageId);
 
-        $page = $this->pageFactory->getById($this->getUser()->homePageId);
+        $homepage = $this->userGroupFactory->getHomepageByName($this->getUser()->homePageId);
 
-        // Check to see if this user has permission for this page, and if not show a meaningful error telling them what
-        // has happened.
-        if (!$this->getUser()->checkViewable($page)) {
-            throw new \Xibo\Support\Exception\AccessDeniedException(__('You do not have permission for your homepage, please contact your administrator'));
+        if (!$this->getUser()->featureEnabled($homepage->feature)) {
+            return $response->withRedirect($this->urlFor($request, 'icondashboard.view'));
+        } else {
+            return $response->withRedirect($this->urlFor($request, $homepage->homepage));
         }
-
-        return $response->withRedirect($this->urlFor($request, $page->getName() . '.view'));
     }
 
     /**
@@ -657,7 +655,7 @@ class User extends Base
 
         // Handle enabled features for the homepage.
         $homepage = $this->userGroupFactory->getHomepageByName($user->homePageId);
-        if (!empty($homepage['feature']) && !$user->featureEnabled($homepage['feature'])) {
+        if (!empty($homepage->feature) && !$user->featureEnabled($homepage->feature)) {
             throw new InvalidArgumentException(__('User does not have permission for this homepage'), 'homePageId');
         }
 
@@ -887,7 +885,7 @@ class User extends Base
 
         // Handle enabled features for the homepage.
         $homepage = $this->userGroupFactory->getHomepageByName($user->homePageId);
-        if (!empty($homepage['feature']) && !$user->featureEnabled($homepage['feature'])) {
+        if (!empty($homepage->feature) && !$user->featureEnabled($homepage->feature)) {
             throw new InvalidArgumentException(__('User does not have permission for this homepage'), 'homePageId');
         }
 
@@ -1056,7 +1054,7 @@ class User extends Base
                 ->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
 
             foreach ($this->userGroupFactory->getHomepages() as $homepage) {
-                if (empty($homepage['feature']) || $user->featureEnabled($homepage['feature'])) {
+                if (empty($homepage->feature) || $user->featureEnabled($homepage->feature)) {
                     $homepages[] = $homepage;
                 }
             }
@@ -1079,7 +1077,7 @@ class User extends Base
 
                 $homepages = [];
                 foreach ($this->userGroupFactory->getHomepages() as $homepage) {
-                    if (empty($homepage['feature']) || in_array($homepage['feature'], $group->features)) {
+                    if (empty($homepage->feature) || in_array($homepage->feature, $group->features)) {
                         $homepages[] = $homepage;
                     }
                 }

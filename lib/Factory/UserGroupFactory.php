@@ -23,6 +23,7 @@
 
 namespace Xibo\Factory;
 
+use Xibo\Entity\Homepage;
 use Xibo\Entity\User;
 use Xibo\Entity\UserGroup;
 use Xibo\Helper\SanitizerService;
@@ -465,36 +466,36 @@ class UserGroupFactory extends BaseFactory
     }
 
     /**
-     * @return array|array[]
+     * @return \Xibo\Entity\Homepage[]
      */
     public function getHomepages()
     {
         if ($this->homepages === null) {
             $this->homepages = [
-                'statusdashboard.view' => [
-                    'homepage' => 'statusdashboard.view',
-                    'feature' => 'dashboard.status',
-                    'title' => __('Status Dashboard'),
-                    'description' => __('Status Dashboard showing key platform metrics, usually for an administrator.')
-                ],
-                'icondashboard.view' => [
-                    'homepage' => 'icondashboard.view',
-                    'feature' => '',
-                    'title' => __('Icon Dashboard'),
-                    'description' => __('Icon Dashboard showing an easy access set of feature icons the user can access.')
-                ],
-                'mediamanager.view' => [
-                    'homepage' => 'mediamanager.view',
-                    'feature' => 'dashboard.media.manager',
-                    'title' => __('Media Manager Dashboard'),
-                    'description' => __('Media Manager Dashboard showing all Widgets the user has access to modify.')
-                ],
-                'playlistdashboard.view' => [
-                    'homepage' => 'playlistdashboard.view',
-                    'feature' => 'dashboard.playlist',
-                    'title' => __('Playlist Dashboard'),
-                    'description' => __('Playlist Dashboard showing all Playlists configured in Layouts the user has access to modify.')
-                ],
+                'statusdashboard.view' => new Homepage(
+                    'statusdashboard.view',
+                    'dashboard.status',
+                    __('Status Dashboard'),
+                    __('Status Dashboard showing key platform metrics, usually for an administrator.')
+                ),
+                'icondashboard.view' => new Homepage(
+                    'icondashboard.view',
+                    '',
+                    __('Icon Dashboard'),
+                    __('Icon Dashboard showing an easy access set of feature icons the user can access.')
+                ),
+                'mediamanager.view' => new Homepage(
+                    'mediamanager.view',
+                    'dashboard.media.manager',
+                    __('Media Manager Dashboard'),
+                    __('Media Manager Dashboard showing all Widgets the user has access to modify.')
+                ),
+                'playlistdashboard.view' => new Homepage(
+                    'playlistdashboard.view',
+                    'dashboard.playlist',
+                    __('Playlist Dashboard'),
+                    __('Playlist Dashboard showing all Playlists configured in Layouts the user has access to modify.')
+                ),
             ];
         }
 
@@ -532,12 +533,12 @@ class UserGroupFactory extends BaseFactory
         $this->getHomepages();
 
         if (!array_key_exists($homepage, $this->homepages)) {
-            $this->homepages[$homepage] = [
-                'homepage' => $homepage,
-                'title' => $title,
-                'description' => $description,
-                'feature' => $feature
-            ];
+            $this->homepages[$homepage] = new Homepage(
+                $homepage,
+                $title,
+                $description,
+                $feature
+            );
         }
         return $this;
     }
