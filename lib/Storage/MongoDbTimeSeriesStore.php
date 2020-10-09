@@ -405,18 +405,15 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     {
         $collection = $this->client->selectCollection($this->config['database'], $this->table);
         try {
-            $earliestDate = $collection->aggregate([
-                [
-                    '$group' => [
-                        '_id' => [],
-                        'minDate' => ['$min' => '$statDate'],
-                    ]
-                ]
+            // _id is the same as statDate for the purposes of sorting (stat date being the date/time of stat insert)
+            $earliestDate = $collection->find([], [
+                'limit' => 1,
+                'sort' => ['_id' => 1]
             ])->toArray();
 
-            if(count($earliestDate) > 0) {
+            if (count($earliestDate) > 0) {
                 return [
-                    'minDate' => $earliestDate[0]['minDate']->toDateTime()->format('U')
+                    'minDate' => $earliestDate[0]['statDate']->toDateTime()->format('U')
                 ];
             }
 
