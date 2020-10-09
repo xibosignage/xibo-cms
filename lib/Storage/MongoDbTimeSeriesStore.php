@@ -22,6 +22,7 @@
 
 namespace Xibo\Storage;
 
+use Jenssegers\Date\Date;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
@@ -408,20 +409,18 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             // _id is the same as statDate for the purposes of sorting (stat date being the date/time of stat insert)
             $earliestDate = $collection->find([], [
                 'limit' => 1,
-                'sort' => ['_id' => 1]
+                'sort' => ['start' => 1]
             ])->toArray();
 
             if (count($earliestDate) > 0) {
-                return [
-                    'minDate' => $earliestDate[0]['statDate']->toDateTime()->format('U')
-                ];
+                return Date::instance($earliestDate[0]['start']->toDateTime());
             }
 
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
         }
 
-        return [];
+        return null;
     }
 
     /**

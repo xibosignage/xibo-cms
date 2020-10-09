@@ -22,6 +22,7 @@
 
 namespace Xibo\Storage;
 
+use Jenssegers\Date\Date;
 use Xibo\Exception\GeneralException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\XiboException;
@@ -169,11 +170,12 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function getEarliestDate()
     {
-        $earliestDate = $this->store->select('SELECT MIN(statDate) AS minDate FROM `stat`', []);
+        $result = $this->store->select('SELECT MIN(start) AS minDate FROM `stat`', []);
+        $earliestDate = $result[0]['minDate'];
 
-        return [
-            'minDate' => $earliestDate[0]['minDate']
-        ];
+        return ($earliestDate === null)
+            ? null
+            : Date::createFromFormat('U', $result[0]['minDate']);
     }
 
     /** @inheritdoc */

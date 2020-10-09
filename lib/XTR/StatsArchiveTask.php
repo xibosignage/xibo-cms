@@ -64,16 +64,15 @@ class StatsArchiveTask implements TaskInterface
             // Get the earliest
             $earliestDate = $this->timeSeriesStore->getEarliestDate();
 
-            if (count($earliestDate) <= 0) {
+            if ($earliestDate === null) {
                 $this->runMessage = __('Nothing to archive');
                 return;
             }
 
-            /** @var Date $earliestDate */
-            $earliestDate = $this->date->parse($earliestDate['minDate'], 'U')->setTime(0, 0, 0);
+            // Wind back to the start of the day
+            $earliestDate = $earliestDate->copy()->setTime(0, 0, 0);
 
             // Take the earliest date and roll forward until the current time
-            /** @var Date $now */
             $now = $this->date->parse()->subDay($periodSizeInDays * $periodsToKeep)->setTime(0, 0, 0);
             $i = 0;
 
