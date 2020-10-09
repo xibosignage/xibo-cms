@@ -77,10 +77,13 @@ class Calendar extends ModuleWidget
     /** @inheritdoc */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
+        // Extends parent's method
+        parent::installFiles();
+
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-text-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-interactive-control.js')->save();
     }
 
     /** @inheritdoc */
@@ -447,6 +450,7 @@ class Calendar extends ModuleWidget
             ->appendJavaScriptFile('xibo-layout-scaler.js')
             ->appendJavaScriptFile('xibo-image-render.js')
             ->appendJavaScriptFile('xibo-text-render.js')
+            ->appendJavaScriptFile('xibo-interactive-control.js')
             ->appendFontCss()
             ->appendCss($headContent)
             ->appendCss($styleSheet)

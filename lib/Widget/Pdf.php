@@ -47,6 +47,9 @@ class Pdf extends ModuleWidget
      */
     public function installFiles()
     {
+        // Extends parent's method
+        parent::installFiles();
+        
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/pdfjs/pdf.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/pdfjs/pdf.worker.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/pdfjs/compatibility.js')->save();
@@ -156,6 +159,7 @@ class Pdf extends ModuleWidget
         $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/pdfjs/pdf.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/pdfjs/compatibility.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '</script>';
