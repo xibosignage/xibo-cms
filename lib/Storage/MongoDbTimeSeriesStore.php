@@ -706,60 +706,30 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function deleteStats($maxage, $fromDt = null, $options = [])
     {
-        // Set default options
-        $options = array_merge([
-            'maxAttempts' => 10,
-            'statsDeleteSleep' => 3,
-            'limit' => 1000,
-        ], $options);
-
+        // Filter the records we want to delete.
         // we dont use $options['limit'] anymore.
         // we delete all the records at once based on filter criteria (no-limit approach)
+        $filter = [
+            'start' => ['$lte' => new UTCDateTime($maxage->format('U')*1000)],
+        ];
 
-        $toDt = new UTCDateTime($maxage->format('U')*1000);
-
-        $collection = $this->client->selectCollection($this->config['database'], $this->table);
-
-        $rows = 1;
-        $count = 0;
-
-        if ($fromDt != null) {
-
-            $start = new UTCDateTime($fromDt->format('U')*1000);
-            $filter =  [
-                'start' => ['$lte' => $toDt],
-                'end' => ['$gt' => $start]
-            ];
-
-        } else {
-
-            $filter =  [
-                'start' => ['$lte' => $toDt]
-            ];
+        // Do we also limit the from date?
+        if ($fromDt !== null) {
+            $filter['end'] = ['$gt' => new UTCDateTime($fromDt->format('U')*1000)];
         }
 
+        // Run the delete and return the number of records we deleted.
         try {
-            $deleteResult = $collection->deleteMany(
-                $filter
-            );
-            $rows = $deleteResult->getDeletedCount();
+            $deleteResult = $this->client
+                ->selectCollection($this->config['database'], $this->table)
+                ->deleteMany($filter);
 
+            return $deleteResult->getDeletedCount();
 
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
+            throw new GeneralException('Stats cannot be deleted.');
         }
-
-        $count += $rows;
-
-        // Give MongoDB time to recover
-        if ($rows > 0) {
-            $this->log->debug('Stats delete effected ' . $rows . ' rows, sleeping.');
-            sleep($options['statsDeleteSleep']);
-        }
-
-
-        return $count;
-
     }
 
     /** @inheritdoc */

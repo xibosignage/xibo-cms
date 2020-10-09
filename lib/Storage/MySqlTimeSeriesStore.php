@@ -22,6 +22,7 @@
 
 namespace Xibo\Storage;
 
+use Xibo\Exception\GeneralException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
@@ -501,7 +502,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         }
         catch (\PDOException $e) {
             $this->log->error($e->getMessage());
-            throw new \RuntimeException('Stats cannot be deleted.');
+            throw new GeneralException('Stats cannot be deleted.');
         }
     }
 

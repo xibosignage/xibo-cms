@@ -32,6 +32,9 @@ class StatsArchiveTask implements TaskInterface
     /** @var UserFactory */
     private $userFactory;
 
+    /** @var Date */
+    private $lastArchiveDate = null;
+
     /** @inheritdoc */
     public function setFactories($container)
     {
@@ -51,7 +54,7 @@ class StatsArchiveTask implements TaskInterface
     {
         $this->runMessage = '# ' . __('Stats Archive') . PHP_EOL . PHP_EOL;
 
-        if ($this->getOption('archiveStats', "Off") == "On") {
+        if ($this->getOption('archiveStats', 'Off') == 'On') {
             // Archive tasks by week.
             $periodSizeInDays = $this->getOption('periodSizeInDays', 7);
             $maxPeriods = $this->getOption('maxPeriods', 4);
@@ -85,6 +88,9 @@ class StatsArchiveTask implements TaskInterface
 
                 $this->exportStatsToLibrary($fromDt, $earliestDate);
                 $this->store->commitIfNecessary();
+
+                // Grab the last from date for use in tidy stats
+                $this->lastArchiveDate = $fromDt;
             }
 
             $this->runMessage .= ' - ' . __('Done') . PHP_EOL . PHP_EOL;
@@ -217,23 +223,24 @@ class StatsArchiveTask implements TaskInterface
         $this->runMessage .= '## ' . __('Tidy Stats') . PHP_EOL;
 
         if ($this->config->getSetting('MAINTENANCE_STAT_MAXAGE') != 0) {
+            // Set the max age to maxAgeDays from now, or if we've archived, from the archive date
+            $maxAge = ($this->lastArchiveDate === null)
+                ? Date::now()->subDays(intval($this->config->getSetting('MAINTENANCE_STAT_MAXAGE')))
+                : $this->lastArchiveDate;
 
-            $maxage = Date::now()->subDays(intval($this->config->getSetting('MAINTENANCE_STAT_MAXAGE')));
-            $maxAttempts = $this->getOption('statsDeleteMaxAttempts', 10);
-            $statsDeleteSleep = $this->getOption('statsDeleteSleep', 3);
-
+            // Control the flow of the deletion
             $options = [
-                'maxAttempts' => $maxAttempts,
-                'statsDeleteSleep' => $statsDeleteSleep,
+                'maxAttempts' => $this->getOption('statsDeleteMaxAttempts', 10),
+                'statsDeleteSleep' => $this->getOption('statsDeleteSleep', 3),
                 'limit' => 10000 // Note: for mongo we dont use $options['limit'] anymore
             ];
 
             try {
-                $result = $this->timeSeriesStore->deleteStats($maxage, null, $options);
-                if ($result > 0) {
-                    $this->runMessage .= ' - ' . __('Done.') . PHP_EOL . PHP_EOL;
-                }
+                $countDeleted = $this->timeSeriesStore->deleteStats($maxAge, null, $options);
+
+                $this->runMessage .= ' - ' . sprintf(__('Done - %d deleted.'), $countDeleted) . PHP_EOL . PHP_EOL;
             } catch (\Exception $exception) {
+                $this->log->error('Unexpected error running stats tidy. e = ' . $exception->getMessage());
                 $this->runMessage .= ' - ' . __('Error.') . PHP_EOL . PHP_EOL;
             }
         } else {
