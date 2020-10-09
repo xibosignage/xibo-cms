@@ -85,7 +85,8 @@ class Hls extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
+        // Extends parent's method
+        parent::installFiles();
     }
 
     /**
@@ -217,6 +218,7 @@ class Hls extends ModuleWidget
             ->appendViewPortWidth($this->region->width)
             ->appendJavaScriptFile('vendor/jquery.min.js')
             ->appendJavaScriptFile('vendor/hls/hls.min.js')
+            ->appendJavaScriptFile('xibo-interactive-control.js')
             ->appendJavaScript('
                 $(document).ready(function() {
             

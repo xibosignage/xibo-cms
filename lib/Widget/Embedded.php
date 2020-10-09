@@ -44,7 +44,9 @@ class Embedded extends ModuleWidget
      */
     public function InstallFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
+        // Extends parent's method
+        parent::installFiles();
+        
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
     }
@@ -196,6 +198,7 @@ class Embedded extends ModuleWidget
             ->appendJavaScriptFile('vendor/jquery.min.js')
             ->appendJavaScriptFile('xibo-layout-scaler.js')
             ->appendJavaScriptFile('xibo-image-render.js')
+            ->appendJavaScriptFile('xibo-interactive-control.js')
             ->appendRaw('javaScript', $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('embedScript', null)))
             ->appendCss($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('embedStyle', null)))
             ->appendFontCss()
