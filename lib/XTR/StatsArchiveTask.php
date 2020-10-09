@@ -52,9 +52,13 @@ class StatsArchiveTask implements TaskInterface
 
     public function archiveStats()
     {
+        $this->log->debug('Archive Stats');
+
         $this->runMessage = '# ' . __('Stats Archive') . PHP_EOL . PHP_EOL;
 
         if ($this->getOption('archiveStats', 'Off') == 'On') {
+            $this->log->debug('Archive Enabled');
+
             // Archive tasks by week.
             $periodSizeInDays = $this->getOption('periodSizeInDays', 7);
             $maxPeriods = $this->getOption('maxPeriods', 4);
@@ -65,6 +69,8 @@ class StatsArchiveTask implements TaskInterface
             $earliestDate = $this->timeSeriesStore->getEarliestDate();
 
             if ($earliestDate === null) {
+                $this->log->debug('Earliest date is null, nothing to archive.');
+
                 $this->runMessage = __('Nothing to archive');
                 return;
             }
@@ -79,14 +85,17 @@ class StatsArchiveTask implements TaskInterface
             while ($earliestDate < $now && $i < $maxPeriods) {
                 $i++;
 
-                $this->log->debug('Running archive number ' . $i);
-
                 // Push forward
                 $fromDt = $earliestDate->copy();
                 $earliestDate->addDays($periodSizeInDays);
 
+                $this->log->debug('Running archive number ' . $i
+                    . 'for ' . $fromDt->toAtomString() . ' - ' . $earliestDate->toAtomString());
+
                 $this->exportStatsToLibrary($fromDt, $earliestDate);
                 $this->store->commitIfNecessary();
+
+                $this->log->debug('Export success for Archive Number ' . $i);
 
                 // Grab the last from date for use in tidy stats
                 $this->lastArchiveDate = $fromDt;
@@ -94,8 +103,12 @@ class StatsArchiveTask implements TaskInterface
 
             $this->runMessage .= ' - ' . __('Done') . PHP_EOL . PHP_EOL;
         } else {
+            $this->log->debug('Archive not enabled');
             $this->runMessage .= ' - ' . __('Disabled') . PHP_EOL . PHP_EOL;
         }
+
+        $this->log->debug('Finished archive stats, last archive date is '
+            . ($this->lastArchiveDate == null ? 'null' : $this->lastArchiveDate->toAtomString()));
     }
 
     /**
@@ -105,12 +118,16 @@ class StatsArchiveTask implements TaskInterface
      */
     private function exportStatsToLibrary($fromDt, $toDt)
     {
+        $this->log->debug('Export period: ' . $fromDt->toAtomString() . ' - ' . $toDt->toAtomString());
+
         $this->runMessage .= ' - ' . $this->date->getLocalDate($fromDt) . ' / ' . $this->date->getLocalDate($toDt) . PHP_EOL;
 
         $resultSet = $this->timeSeriesStore->getStats([
             'fromDt'=> $fromDt,
             'toDt'=> $toDt,
         ]);
+
+        $this->log->debug('Stats query run, create temporary file for export');
 
         // Create a temporary file for this
         $fileName = tempnam(sys_get_temp_dir(), 'stats');
@@ -153,6 +170,8 @@ class StatsArchiveTask implements TaskInterface
 
         fclose($out);
 
+        $this->log->debug('Temporary file written, zipping');
+
         // Create a ZIP file and add our temporary file
         $zipName = $this->config->getSetting('LIBRARY_LOCATION') . 'temp/stats.csv.zip';
         $zip = new \ZipArchive();
@@ -166,8 +185,12 @@ class StatsArchiveTask implements TaskInterface
         // Remove the CSV file
         unlink($fileName);
 
+        $this->log->debug('Zipped to ' . $zipName);
+
         // This all might have taken a long time indeed, so lets see if we need to reconnect MySQL
         $this->store->select('SELECT 1', [], null, true);
+
+        $this->log->debug('MySQL connection refreshed if necessary');
 
         // Upload to the library
         $media = $this->mediaFactory->create(
@@ -178,6 +201,8 @@ class StatsArchiveTask implements TaskInterface
         );
         $media->save();
 
+        $this->log->debug('Media saved as ' . $media->name);
+
         // Set max attempts to -1 so that we continue deleting until we've removed all of the stats that we've exported
         $options = [
             'maxAttempts' => -1,
@@ -185,8 +210,12 @@ class StatsArchiveTask implements TaskInterface
             'limit' => 1000
         ];
 
+        $this->log->debug('Delete stats for period: ' . $fromDt->toAtomString() . ' - ' . $toDt->toAtomString());
+
         // Delete the stats, incrementally
         $this->timeSeriesStore->deleteStats($toDt, $fromDt, $options);
+
+        $this->log->debug('Delete stats completed, export period completed.');
     }
 
     /**
@@ -219,12 +248,18 @@ class StatsArchiveTask implements TaskInterface
      */
     private function tidyStats()
     {
+        $this->log->debug('Tidy stats');
+
         $this->runMessage .= '## ' . __('Tidy Stats') . PHP_EOL;
 
-        if ($this->config->getSetting('MAINTENANCE_STAT_MAXAGE') != 0) {
+        $maxAge = intval($this->config->getSetting('MAINTENANCE_STAT_MAXAGE'));
+
+        if ($maxAge != 0) {
+            $this->log->debug('Max Age is ' . $maxAge);
+
             // Set the max age to maxAgeDays from now, or if we've archived, from the archive date
-            $maxAge = ($this->lastArchiveDate === null)
-                ? Date::now()->subDays(intval($this->config->getSetting('MAINTENANCE_STAT_MAXAGE')))
+            $maxAgeDate = ($this->lastArchiveDate === null)
+                ? Date::now()->subDays($maxAge)
                 : $this->lastArchiveDate;
 
             // Control the flow of the deletion
@@ -235,7 +270,11 @@ class StatsArchiveTask implements TaskInterface
             ];
 
             try {
-                $countDeleted = $this->timeSeriesStore->deleteStats($maxAge, null, $options);
+                $this->log->debug('Calling delete stats with max age: ' . $maxAgeDate->toAtomString());
+
+                $countDeleted = $this->timeSeriesStore->deleteStats($maxAgeDate, null, $options);
+
+                $this->log->debug('Delete Stats complete');
 
                 $this->runMessage .= ' - ' . sprintf(__('Done - %d deleted.'), $countDeleted) . PHP_EOL . PHP_EOL;
             } catch (\Exception $exception) {
@@ -245,5 +284,7 @@ class StatsArchiveTask implements TaskInterface
         } else {
             $this->runMessage .= ' - ' . __('Disabled') . PHP_EOL . PHP_EOL;
         }
+
+        $this->log->debug('Tidy stats complete');
     }
 }
