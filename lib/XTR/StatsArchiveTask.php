@@ -98,7 +98,7 @@ class StatsArchiveTask implements TaskInterface
                     $this->log->error('Export error for Archive Number ' . $i . ', e = ' . $exception->getMessage());
 
                     // Throw out to the task handler to record the error.
-                    throw;
+                    throw $exception;
                 }
 
                 $this->store->commitIfNecessary();
