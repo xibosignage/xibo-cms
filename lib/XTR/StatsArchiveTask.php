@@ -92,7 +92,15 @@ class StatsArchiveTask implements TaskInterface
                 $this->log->debug('Running archive number ' . $i
                     . 'for ' . $fromDt->toAtomString() . ' - ' . $earliestDate->toAtomString());
 
-                $this->exportStatsToLibrary($fromDt, $earliestDate);
+                try {
+                    $this->exportStatsToLibrary($fromDt, $earliestDate);
+                } catch (\Exception $exception) {
+                    $this->log->error('Export error for Archive Number ' . $i . ', e = ' . $exception->getMessage());
+
+                    // Throw out to the task handler to record the error.
+                    throw;
+                }
+
                 $this->store->commitIfNecessary();
 
                 $this->log->debug('Export success for Archive Number ' . $i);
@@ -167,6 +175,8 @@ class StatsArchiveTask implements TaskInterface
                 isset($row['mediaId']) ? $this->sanitizer->int($row['mediaId']) :'',
             ]);
         }
+
+        $this->log->debug('All records output to CSV, closing.');
 
         fclose($out);
 
