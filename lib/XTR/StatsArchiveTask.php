@@ -176,11 +176,12 @@ class StatsArchiveTask implements TaskInterface
             ]);
         }
 
-        $this->log->debug('All records output to CSV, closing.');
-
         fclose($out);
 
-        $this->log->debug('Temporary file written, zipping');
+        // This all might have taken a long time indeed, so lets see if we need to reconnect MySQL
+        $this->store->select('SELECT 1', [], null, true);
+
+        $this->log->debug('MySQL connection refreshed if necessary, temporary file written, zipping');
 
         // Create a ZIP file and add our temporary file
         $zipName = $this->config->getSetting('LIBRARY_LOCATION') . 'temp/stats.csv.zip';
@@ -196,11 +197,6 @@ class StatsArchiveTask implements TaskInterface
         unlink($fileName);
 
         $this->log->debug('Zipped to ' . $zipName);
-
-        // This all might have taken a long time indeed, so lets see if we need to reconnect MySQL
-        $this->store->select('SELECT 1', [], null, true);
-
-        $this->log->debug('MySQL connection refreshed if necessary');
 
         // Upload to the library
         $media = $this->mediaFactory->create(
