@@ -210,6 +210,9 @@ class StatsArchiveTask implements TaskInterface
 
         $this->log->debug('Media saved as ' . $media->name);
 
+        // Commit before the delete (the delete might take a long time)
+        $this->store->commitIfNecessary();
+
         // Set max attempts to -1 so that we continue deleting until we've removed all of the stats that we've exported
         $options = [
             'maxAttempts' => -1,
@@ -221,6 +224,11 @@ class StatsArchiveTask implements TaskInterface
 
         // Delete the stats, incrementally
         $this->timeSeriesStore->deleteStats($toDt, $fromDt, $options);
+
+        // This all might have taken a long time indeed, so lets see if we need to reconnect MySQL
+        $this->store->select('SELECT 1', [], null, true);
+
+        $this->log->debug('MySQL connection refreshed if necessary');
 
         $this->log->debug('Delete stats completed, export period completed.');
     }
