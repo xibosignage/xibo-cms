@@ -81,13 +81,13 @@
             <ul class="nav nav-tabs" role="tablist">
                 <li class="active"><a href="#mediaTab" role="tab" data-toggle="tab"><span>{% trans "Content" %}</span></a></li>
                 <li><a href="#displaysTab" role="tab" data-toggle="tab"><span>{% trans "Displays" %}</span></a></li>
-                <li><a href="#homepagesTab" role="tab" data-toggle="tab"><span>{% trans "Homepages" %}</span></a></li>
+                <li><a href="#homepagesTab" role="tab" data-toggle="tab"><span>{% trans "Homepages and Reports" %}</span></a></li>
                 <li><a href="#usersTab" role="tab" data-toggle="tab"><span>{% trans "Users" %}</span></a></li>
                 <li><a href="#customTab" role="tab" data-toggle="tab"><span>{% trans "Custom" %}</span></a></li>
             </ul>
             <form id="AclForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("group.acl", {id: groupId}) }}">
                 <div class="tab-content">
-                    <div class="tab-pane active" id="homepagesTab">
+                    <div class="tab-pane" id="homepagesTab">
                         <table class="table table-bordered">
                             <thead>
                                 <tr>
@@ -111,9 +111,16 @@
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
                             </tbody>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("Reporting"|trans, "Access reporting capability."|trans) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("reporting") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
                         </table>
                     </div>
-                    <div class="tab-pane" id="mediaTab">
+                    <div class="tab-pane active" id="mediaTab">
                         <table class="table table-bordered">
                             <thead>
                                 <tr>
@@ -141,6 +148,13 @@
                             <tbody class="feature-group">
                                 {{ flow.featureTitleRow("Playlist Design"|trans, "Design Playlists which exist independently from a Layout and can be reused across multiple Layouts."|trans) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("playlist-design") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("Campaigns"|trans, "Group Layouts together into ordered lists called Campaigns."|trans) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("campaigns") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
                             </tbody>
@@ -180,7 +194,7 @@
 
                             <tbody class="feature-group">
                                 {{ flow.featureTitleRow("Display Management"|trans, "Connect and manage Displays."|trans) }}
-                                {% for customFeature in userGroupFactory.getFeaturesByGroup("tagging") %}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("displays") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
                             </tbody>
@@ -215,6 +229,20 @@
                             <tbody class="feature-group">
                                 {{ flow.featureTitleRow("Notifications"|trans, "Use the Notification system to create/modify Notifications sent to other Users."|trans) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("notifications") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("User Management"|trans, "Manage other users."|trans) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("users-management") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("System"|trans, "Access to potentially dangerous system settings."|trans) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("system") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
                             </tbody>

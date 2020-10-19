@@ -31,7 +31,6 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
-use Xibo\Factory\PageFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\PlaylistFactory;
@@ -295,11 +294,6 @@ class User implements \JsonSerializable, UserEntityInterface
     private $configService;
 
     /**
-     * @var PageFactory
-     */
-    private $pageFactory;
-
-    /**
      * @var UserFactory
      */
     private $userFactory;
@@ -392,18 +386,15 @@ class User implements \JsonSerializable, UserEntityInterface
     /**
      * Set the user group factory
      * @param UserGroupFactory $userGroupFactory
-     * @param PageFactory $pageFactory
      * @return $this
      */
-    public function setChildAclDependencies($userGroupFactory, $pageFactory)
+    public function setChildAclDependencies($userGroupFactory)
     {
         // Assert myself on these factories
         $userGroupFactory->setAclDependencies($this, $this->userFactory);
-        $pageFactory->setAclDependencies($this, $this->userFactory);
         $this->userFactory->setAclDependencies($this, $this->userFactory);
 
         $this->userGroupFactory = $userGroupFactory;
-        $this->pageFactory = $pageFactory;
         return $this;
     }
 
@@ -1156,81 +1147,6 @@ class User implements \JsonSerializable, UserEntityInterface
             'userId' => $this->userId,
             'time' => date("Y-m-d H:i:s")
         ]);
-    }
-
-    /**
-     * Authenticates the route given against the user credentials held
-     * @param $route string
-     * @return bool
-     * @throws ConfigurationException
-     * @throws NotFoundException
-     */
-    public function routeViewable($route)
-    {
-        if ($this->pageFactory == null)
-            throw new ConfigurationException('routeViewable called before user object has been initialised');
-
-        // Super-admins get all routes
-        if ($this->isSuperAdmin())
-            return true;
-
-        // All users have access to the logout page and welcome page
-        if ($route === '/logout' || $route === '/welcome') {
-            return true;
-        }
-
-        try {
-            if ($this->pagePermissionCache == null) {
-                // Load all viewable pages into the permissions cache
-                $this->pagePermissionCache = $this->pageFactory->query();
-            }
-        } catch (\PDOException $e) {
-            $this->getLog()->info('SQL Error getting permissions: ' . $e->getMessage());
-
-            return false;
-        }
-
-        // Home route
-        if ($route === '/')
-            return true;
-
-        $route = explode('/', ltrim($route, '/'));
-
-        // See if our route is in the page permission cache
-        foreach ($this->pagePermissionCache as $page) {
-            /* @var Page $page */
-            if ($page->name == $route[0])
-                return true;
-        }
-
-        $this->getLog()->debug(sprintf('Route %s not viewable', $route[0]));
-        return false;
-    }
-
-    /**
-     * Given an array of routes, count the ones that are viewable
-     * @param $routes
-     * @return int
-     * @throws ConfigurationException
-     * @throws NotFoundException
-     */
-    public function countViewable($routes)
-    {
-        // Shortcut for super admins.
-        if ($this->isSuperAdmin()) {
-            return count($routes);
-        }
-
-        // Test each route
-        $count = 0;
-
-        foreach ($routes as $route) {
-            if ($this->routeViewable($route)) {
-                $count++;
-            }
-        }
-
-        return $count;
     }
 
     /**

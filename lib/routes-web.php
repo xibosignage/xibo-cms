@@ -322,7 +322,9 @@ $app->get('/group/form/members/{id}', ['\Xibo\Controller\UserGroup','membersForm
 //
 // admin
 //
-$app->get('/admin/view', ['\Xibo\Controller\Settings','displayPage'])->setName('admin.view');
+$app->get('/admin/view', ['\Xibo\Controller\Settings','displayPage'])
+    ->addMiddleware(new \Xibo\Middleware\SuperAdminAuth($app->getContainer()))
+    ->setName('admin.view');
 
 //
 // maintenance

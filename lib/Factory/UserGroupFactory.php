@@ -409,6 +409,21 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'scheduling',
                     'title' => __('Use Schedule Now to create short events which play straight away')
                 ],
+                'daypart.view' => [
+                    'feature' => 'daypart.view',
+                    'group' => 'scheduling',
+                    'title' => __('View Day parts')
+                ],
+                'library.view' => [
+                    'feature' => 'library.view',
+                    'group' => 'library',
+                    'title' => __('View the Media Library')
+                ],
+                'dataset.view' => [
+                    'feature' => 'dataset.view',
+                    'group' => 'library',
+                    'title' => __('View DataSets')
+                ],
                 'layout.view' => [
                     'feature' => 'layout.view',
                     'group' => 'layout-design',
@@ -423,6 +438,36 @@ class UserGroupFactory extends BaseFactory
                     'feature' => 'layout.modify',
                     'group' => 'layout-design',
                     'title' => __('Modify existing Layouts')
+                ],
+                'campaign.view' => [
+                    'feature' => 'campaign.view',
+                    'group' => 'campaigns',
+                    'title' => __('View Layouts')
+                ],
+                'template.view' => [
+                    'feature' => 'template.view',
+                    'group' => 'layout-design',
+                    'title' => __('View Templates')
+                ],
+                'template.add' => [
+                    'feature' => 'template.add',
+                    'group' => 'layout-design',
+                    'title' => __('Create new Templates')
+                ],
+                'template.modify' => [
+                    'feature' => 'template.modify',
+                    'group' => 'layout-design',
+                    'title' => __('Modify existing Templates')
+                ],
+                'resolution.view' => [
+                    'feature' => 'resolution.view',
+                    'group' => 'layout-design',
+                    'title' => __('View Resolutions')
+                ],
+                'tag.view' => [
+                    'feature' => 'tag.view',
+                    'group' => 'tagging',
+                    'title' => __('Tag Management')
                 ],
                 'tag.tagging' => [
                     'feature' => 'tag.tagging',
@@ -454,6 +499,11 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'users',
                     'title' => __('Access the Notification Centre to read old notifications')
                 ],
+                'application.view' => [
+                    'feature' => 'application.view',
+                    'group' => 'users',
+                    'title' => __('Access to API applications')
+                ],
                 'notification.add' => [
                     'feature' => 'notification.add',
                     'group' => 'notifications',
@@ -463,6 +513,16 @@ class UserGroupFactory extends BaseFactory
                     'feature' => 'notification.modify',
                     'group' => 'notifications',
                     'title' => __('Edit Notifications')
+                ],
+                'users.view' => [
+                    'feature' => 'users.view',
+                    'group' => 'users-management',
+                    'title' => __('View Users')
+                ],
+                'usergroup.view' => [
+                    'feature' => 'usergroup.view',
+                    'group' => 'users-management',
+                    'title' => __('View User Groups')
                 ],
                 'dashboard.status' => [
                     'feature' => 'dashboard.status',
@@ -478,6 +538,96 @@ class UserGroupFactory extends BaseFactory
                     'feature' => 'dashboard.playlist',
                     'group' => 'dashboards',
                     'title' => __('Playlist Dashboard showing all Playlists configured in Layouts the user has access to modify.')
+                ],
+                'displays.view' => [
+                    'feature' => 'displays.view',
+                    'group' => 'displays',
+                    'title' => __('View Displays')
+                ],
+                'displaygroup.view' => [
+                    'feature' => 'displaygroup.view',
+                    'group' => 'displays',
+                    'title' => __('View Display Groups')
+                ],
+                'displayprofile.view' => [
+                    'feature' => 'displayprofile.view',
+                    'group' => 'displays',
+                    'title' => __('View Display Settings Profiles')
+                ],
+                'playersoftware.view' => [
+                    'feature' => 'playersoftware.view',
+                    'group' => 'displays',
+                    'title' => __('View Player Software Versions')
+                ],
+                'command.view' => [
+                    'feature' => 'command.view',
+                    'group' => 'displays',
+                    'title' => __('View Commands')
+                ],
+                'fault.view' => [
+                    'feature' => 'fault.view',
+                    'group' => 'troubleshooting',
+                    'title' => __('Report Fault wizard for collection a report to send to the support team for analysis. (may contain sensitive data)')
+                ],
+                'log.view' => [
+                    'feature' => 'log.view',
+                    'group' => 'troubleshooting',
+                    'title' => __('Debug and Error logging (may contain sensitive data)')
+                ],
+                'session.view' => [
+                    'feature' => 'session.view',
+                    'group' => 'troubleshooting',
+                    'title' => __('User sessions')
+                ],
+                'auditlog.view' => [
+                    'feature' => 'auditlog.view',
+                    'group' => 'troubleshooting',
+                    'title' => __('Audit trail of created/modified and removed items.')
+                ],
+                'module.view' => [
+                    'feature' => 'module.view',
+                    'group' => 'system',
+                    'title' => __('Module management')
+                ],
+                'transition.view' => [
+                    'feature' => 'transition.view',
+                    'group' => 'system',
+                    'title' => __('Transition management')
+                ],
+                'task.view' => [
+                    'feature' => 'task.view',
+                    'group' => 'system',
+                    'title' => __('Task management')
+                ],
+                'help.view' => [
+                    'feature' => 'help.view',
+                    'group' => 'system',
+                    'title' => __('Help Link Management')
+                ],
+                'report.view' => [
+                    'feature' => 'report.view',
+                    'group' => 'reporting',
+                    'title' => __('Reporting')
+                ],
+                'report.scheduling' => [
+                    'feature' => 'report.scheduling',
+                    'group' => 'reporting',
+                    'title' => __('Scheduled Reports')
+                ],
+                'report.saving' => [
+                    'feature' => 'report.saving',
+                    'group' => 'reporting',
+                    'title' => __('Saved Reports')
+                ],
+                'displays.reporting' => [
+                    'feature' => 'displays.reporting',
+                    'group' => 'reporting',
+                    'title' => __('Display Reporting which shows bandwidth usage and time connected.')
+                ],
+                'proof-of-play' => [
+                    'feature' => 'proof-of-play',
+                    'group' => 'reporting',
+                    'title' => __('Proof of Play reporting, summary and distribution')
                 ],
             ];
         }

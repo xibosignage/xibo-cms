@@ -60,7 +60,6 @@ class PlaylistDashboard extends Base
      * @param $state
      * @param $user
      * @param $help
-     * @param $date
      * @param $config
      * @param $playlistFactory
      * @param $moduleFactory
@@ -70,9 +69,9 @@ class PlaylistDashboard extends Base
      * @param Twig $view
      * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playlistFactory, $moduleFactory, $widgetFactory, $layoutFactory, $displayGroupFactory, Twig $view, ContainerInterface $container)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $playlistFactory, $moduleFactory, $widgetFactory, $layoutFactory, $displayGroupFactory, Twig $view, ContainerInterface $container)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
         $this->playlistFactory = $playlistFactory;
         $this->moduleFactory = $moduleFactory;
         $this->widgetFactory = $widgetFactory;
@@ -118,7 +117,7 @@ class PlaylistDashboard extends Base
         $playlists = $this->playlistFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
             'name' => $this->getSanitizer($request->getParams())->getString('name'),
             'regionSpecific' => 0
-        ], $request), $request);
+        ], $request));
 
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->playlistFactory->countLast();

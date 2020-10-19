@@ -33,7 +33,7 @@
                 {% if currentUser.featureEnabled("schedule.view") %}
                     <li><a href="{{ url_for("schedule.view") }}">{% if countViewable > 1 %}{% trans "Schedule" %}{% else %}{% trans "Schedule" %}{% endif %}</a></li>
                 {% endif %}
-                {% if currentUser.routeViewable("/daypart") %}
+                {% if currentUser.featureEnabled("daypart.view") %}
                     <li><a href="{{ url_for("daypart.view") }}">{% trans "Dayparting" %}</a></li>
                 {% endif %}
         {% if countViewable > 1 %}
@@ -42,26 +42,26 @@
         {% endif %}
     {% endif %}
 
-    {% set countViewable = currentUser.countViewable(["/campaign", "/layout", "/template", "/resolution"]) %}
+    {% set countViewable = currentUser.featureEnabledCount(["campaign.view", "layout.view", "template.view", "resolution.view"]) %}
     {% if countViewable > 0 %}
         {% if countViewable > 1 %}
         <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Design" %} <span class="caret"></span></a>
             <ul class="dropdown-menu">
         {% endif %}
-            {% if currentUser.routeViewable("/campaign") %}
+            {% if currentUser.featureEnabled("campaign.view") %}
                 <li><a href="{{ url_for("campaign.view") }}">{% trans "Campaigns" %}</a></li>
             {% endif %}
 
-            {% if currentUser.routeViewable("/layout") %}
+            {% if currentUser.featureEnabled("layout.view") %}
                 <li><a href="{{ url_for("layout.view") }}">{% trans "Layouts" %}</a></li>
             {% endif %}
 
-            {% if currentUser.routeViewable("/template") %}
+            {% if currentUser.featureEnabled("template.view") %}
                 <li><a href="{{ url_for("template.view") }}">{% trans "Templates" %}</a></li>
             {% endif %}
 
-            {% if currentUser.routeViewable("/resolution") %}
+            {% if currentUser.featureEnabled("resolution.view") %}
                 <li><a href="{{ url_for("resolution.view") }}">{% trans "Resolutions" %}</a></li>
             {% endif %}
         {% if countViewable > 1 %}
@@ -70,22 +70,22 @@
         {% endif %}
     {% endif %}
 
-    {% set countViewable = currentUser.countViewable(["/library", "/playlist", "/dataset"]) %}
+    {% set countViewable = currentUser.featureEnabledCount(["library.view", "playlist.view", "dataset.view"]) %}
     {% if countViewable > 0 %}
         {% if countViewable > 1 %}
         <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Library" %} <span class="caret"></span></a>
             <ul class="dropdown-menu">
         {% endif %}
-            {% if currentUser.routeViewable("/playlist") %}
+            {% if currentUser.featureEnabled("playlist.view") %}
                 <li><a href="{{ url_for("playlist.view") }}">{% trans "Playlists" %}</a></li>
             {% endif %}
 
-            {% if currentUser.routeViewable("/library") %}
+            {% if currentUser.featureEnabled("library.view") %}
                 <li><a href="{{ url_for("library.view") }}">{% trans "Media" %}</a></li>
             {% endif %}
 
-            {% if currentUser.routeViewable("/dataset") %}
+            {% if currentUser.featureEnabled("dataset.view") %}
                 <li><a href="{{ url_for("dataset.view") }}">{% trans "DataSets" %}</a></li>
             {% endif %}
         {% if countViewable > 1 %}
@@ -94,30 +94,30 @@
         {% endif %}
     {% endif %}
 
-    {% set countViewable = currentUser.countViewable(["/display", "/displaygroup", "/stats", "/displayprofile"]) %}
+    {% set countViewable = currentUser.featureEnabledCount(["displays.view", "displaygroup.view", "displayprofile.view", "playersoftware.view", "command.view"]) %}
     {% if countViewable > 0 %}
         {% if countViewable > 1 %}
         <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Displays" %} <span class="caret"></span></a>
             <ul class="dropdown-menu">
         {% endif %}
-            {% if currentUser.routeViewable("/display") %}
+            {% if currentUser.featureEnabled("displays.view") %}
                 <li><a href="{{ url_for("display.view") }}">{% trans "Displays" %}</a></li>
             {% endif %}
 
-            {% if currentUser.routeViewable("/displaygroup") %}
+            {% if currentUser.featureEnabled("displaygroup.view") %}
                 <li><a href="{{ url_for("displaygroup.view") }}">{% trans "Display Groups" %}</a></li>
             {% endif %}
 
-            {% if currentUser.routeViewable("/displayprofile") %}
+            {% if currentUser.featureEnabled("displayprofile.view") %}
                 <li><a href="{{ url_for("displayprofile.view") }}">{% trans "Display Settings" %}</a></li>
             {% endif %}
 
-            {% if currentUser.routeViewable("/playersoftware") %}
+            {% if currentUser.featureEnabled("playersoftware.view") %}
                 <li><a href="{{ url_for("playersoftware.view") }}">{% trans "Player Versions" %}</a></li>
             {% endif %}
 
-            {% if currentUser.routeViewable("/command") %}
+            {% if currentUser.featureEnabled("command.view") %}
                 <li><a href="{{ url_for("command.view") }}">{% trans "Commands" %}</a></li>
             {% endif %}
         {% if countViewable > 1 %}
@@ -126,13 +126,13 @@
         {% endif %}
     {% endif %}
 
-    {% if currentUser.routeViewable("/user") and (currentUser.isGroupAdmin() or currentUser.isSuperAdmin()) %}
+    {% if currentUser.featureEnabled("user.view") and (currentUser.isGroupAdmin() or currentUser.isSuperAdmin()) %}
         {% set userMenuViewable = true %}
     {% else %}
         {% set userMenuViewable = false %}
     {% endif %}
 
-    {% set countViewable = currentUser.countViewable(["/usergroup", "/admin", "/application", "/module", "/transition"]) %}
+    {% set countViewable = currentUser.featureEnabledCount(["usergroup.view", "application.view", "module.view", "transition.view", "task.view"]) %}
     {% if countViewable > 0 or userMenuViewable %}
         {% if countViewable > 1 or (countViewable == 1 and userMenuViewable) %}
         <li class="dropdown">
@@ -143,31 +143,31 @@
                 <li><a href="{{ url_for("user.view") }}">{% trans "Users" %}</a></li>
             {% endif %}
 
-            {% if currentUser.routeViewable("/group") %}
+            {% if currentUser.featureEnabled("usergroup.view") %}
                 <li><a href="{{ url_for("group.view") }}">{% trans "User Groups" %}</a></li>
             {% endif %}
 
-            {% if currentUser.routeViewable("/admin") %}
+            {% if currentUser.isSuperAdmin() %}
                 <li><a href="{{ url_for("admin.view") }}">{% trans "Settings" %}</a></li>
             {% endif %}
 
-            {% if currentUser.routeViewable("/application") %}
+            {% if currentUser.featureEnabled("application.view") %}
                 <li><a href="{{ url_for("application.view") }}">{% trans "Applications" %}</a></li>
             {% endif %}
 
-            {% if currentUser.routeViewable("/module") %}
+            {% if currentUser.featureEnabled("module.view") %}
                 <li><a href="{{ url_for("module.view") }}">{% trans "Modules" %}</a></li>
             {% endif %}
 
-            {% if currentUser.routeViewable("/transition") %}
+            {% if currentUser.featureEnabled("transition.view") %}
                 <li><a href="{{ url_for("transition.view") }}">{% trans "Transitions" %}</a></li>
             {% endif %}
 
-            {% if currentUser.routeViewable("/task") %}
+            {% if currentUser.featureEnabled("task.view") %}
                 <li><a href="{{ url_for("task.view") }}">{% trans "Tasks" %}</a></li>
             {% endif %}
 
-            {% if currentUser.isSuperAdmin() %}
+            {% if currentUser.featureEnabled("tag.view") %}
                 <li><a href="{{ url_for("tag.view") }}">{% trans "Tags" %}</a></li>
             {% endif %}
         {% if countViewable > 1 or (countViewable == 1 and userMenuViewable) %}
@@ -176,48 +176,56 @@
         {% endif %}
     {% endif %}
 
-    {% if currentUser.routeViewable("/stats") or currentUser.routeViewable("/report")  %}
-    <li class="dropdown">
-        <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Reporting" %} <span class="caret"></span></a>
-        <ul class="dropdown-menu">
+    {% set countViewable = currentUser.featureEnabledCount(["report.view", "report.scheduling", "report.saving"]) %}
+    {% if countViewable > 0 %}
+        {% if countViewable > 1 %}
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Reporting" %} <span class="caret"></span></a>
+            <ul class="dropdown-menu">
+        {% endif %}
 
-            {% if currentUser.routeViewable("/stats") %}
+            {% if currentUser.featureEnabled("report.view") %}
                 <li><a href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a></li>
             {% endif %}
 
-            {% if currentUser.routeViewable("/report") %}
-                <li class="sidebar-list"><a href="{{ url_for("reportschedule.view") }}">{% trans "Report Schedules" %}</a></li>
-                <li class="sidebar-list"><a href="{{ url_for("savedreport.view") }}">{% trans "Saved Reports" %}</a></li>
+            {% if currentUser.featureEnabled("report.scheduling") %}
+                <li><a href="{{ url_for("reportschedule.view") }}">{% trans "Report Schedules" %}</a></li>
             {% endif %}
 
-        </ul>
-    </li>
+            {% if currentUser.featureEnabled("report.saving") %}
+                <li><a href="{{ url_for("savedreport.view") }}">{% trans "Saved Reports" %}</a></li>
+            {% endif %}
+
+        {% if countViewable > 1 %}
+            </ul>
+        </li>
+        {% endif %}
     {% endif %}
 
-    {% set countViewable = currentUser.countViewable(["/log", "/sessions", "/auditlog", "/fault", "/help"]) %}
+    {% set countViewable = currentUser.featureEnabledCount(["log.view", "sessions.view", "auditlog.view", "fault.view", "help.view"]) %}
     {% if countViewable > 0 %}
         {% if countViewable > 1 %}
         <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Advanced" %} <span class="caret"></span></a>
             <ul class="dropdown-menu">
         {% endif %}
-            {% if currentUser.routeViewable("/log") %}
+            {% if currentUser.featureEnabled("log.view") %}
                 <li><a href="{{ url_for("log.view") }}">{% trans "Log" %}</a></li>
             {% endif %}
 
-            {% if currentUser.routeViewable("/sessions") %}
+            {% if currentUser.featureEnabled("sessions.view") %}
                 <li><a href="{{ url_for("sessions.view") }}">{% trans "Sessions" %}</a></li>
             {% endif %}
 
-            {% if currentUser.routeViewable("/auditlog") %}
+            {% if currentUser.featureEnabled("auditlog.view") %}
                 <li><a href="{{ url_for("auditlog.view") }}">{% trans "Audit Trail" %}</a></li>
             {% endif %}
 
-            {% if currentUser.routeViewable("/fault") %}
+            {% if currentUser.featureEnabled("fault.view") %}
                 <li><a href="{{ url_for("fault.view") }}">{% trans "Report Fault" %}</a></li>
             {% endif %}
 
-            {% if currentUser.routeViewable("/help") %}
+            {% if currentUser.featureEnabled("help.view") %}
                 <li><a href="{{ url_for("help.view") }}">{% trans "Help Links" %}</a></li>
             {% endif %}
         {% if countViewable > 1 %}

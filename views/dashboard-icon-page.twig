@@ -26,7 +26,7 @@
 {% block pageContent %}
     {% include "theme-dashboard-message.twig" ignore missing %}
     <div id="dashbuttons">
-        {% if currentUser.routeViewable("/schedule") %}
+        {% if currentUser.featureEnabled("schedule.view") %}
             <div class="dashicons">
                 <a href="{{ url_for("schedule.view") }}">
                     <img src="{{ theme.uri("img/dashboard/scheduleview.png") }}" class="dash_button" />
@@ -35,7 +35,7 @@
             </div>
         {% endif %}
 
-        {% if currentUser.routeViewable("/layout") %}
+        {% if currentUser.featureEnabled("layout.view") %}
             <div class="dashicons">
                 <a href="{{ url_for("layout.view") }}">
                     <img src="{{ theme.uri("img/dashboard/presentations.png") }}" class="dash_button" />
@@ -44,7 +44,7 @@
             </div>
         {% endif %}
 
-        {% if currentUser.routeViewable("/library") %}
+        {% if currentUser.featureEnabled("library.view") %}
             <div class="dashicons">
                 <a href="{{ url_for("library.view") }}">
                     <img src="{{ theme.uri("img/dashboard/content.png") }}" class="dash_button" />
@@ -53,7 +53,7 @@
             </div>
         {% endif %}
 
-        {% if currentUser.routeViewable("/template") %}
+        {% if currentUser.featureEnabled("template.view") %}
             <div class="dashicons">
                 <a href="{{ url_for("template.view") }}">
                     <img src="{{ theme.uri("img/dashboard/layouts.png") }}" class="dash_button" />
@@ -62,7 +62,7 @@
             </div>
         {% endif %}
 
-        {% if currentUser.routeViewable("/user") and (currentUser.isGroupAdmin() or currentUser.isSuperAdmin()) %}
+        {% if currentUser.featureEnabled("user.view") and (currentUser.isGroupAdmin() or currentUser.isSuperAdmin()) %}
             <div class="dashicons">
                 <a href="{{ url_for("user.view") }}">
                     <img src="{{ theme.uri("img/dashboard/users.png") }}" class="dash_button" />
@@ -71,7 +71,7 @@
             </div>
         {% endif %}
 
-        {% if currentUser.routeViewable("/admin") %}
+        {% if currentUser.isSuperUser() %}
             <div class="dashicons">
                 <a href="{{ url_for("admin.view") }}">
                     <img src="{{ theme.uri("img/dashboard/settings.png") }}" class="dash_button" />
@@ -80,16 +80,14 @@
             </div>
         {% endif %}
 
-        {% if currentUser.routeViewable("/license") %}
-            <div class="dashicons">
-                <a href="{{ url_for("license.view") }}">
-                    <img src="{{ theme.uri("img/dashboard/license.png") }}" class="dash_button" />
-                    <span class="dash_text">{% trans "About" %}</span>
-                </a>
-            </div>
-        {% endif %}
+        <div class="dashicons">
+            <a href="{{ url_for("license.view") }}">
+                <img src="{{ theme.uri("img/dashboard/license.png") }}" class="dash_button" />
+                <span class="dash_text">{% trans "About" %}</span>
+            </a>
+        </div>
 
-        {% if currentUser.routeViewable("/fault") %}
+        {% if currentUser.featureEnabled("troubleshooting.fault") %}
             <div class="dashicons">
                 <a href="{{ url_for("fault.view") }}">
                     <img src="{{ theme.uri("img/dashboard/help.png") }}" class="dash_button" />

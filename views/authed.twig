@@ -82,7 +82,7 @@
                             </button>
                             {% include "authed-user-menu.twig" %}
                         </div>
-                        {% if currentUser.routeViewable("/drawer") %}
+                        {% if currentUser.featureEnabled("drawer") %}
                         <div class="user pull-right">
                             {% include "authed-notification-drawer.twig" %}
                         </div>
@@ -114,7 +114,7 @@
 
         // TODO: Change this to a call to all route permissions ( something like currentUser.getRoutePermissions() )
         var userRoutePermissions = {
-            tags: "{{ currentUser.routeViewable('/tag') }}"
+            tags: "{{ currentUser.featureEnabled('tag.tagging') }}"
         };
 
         // Equals helper for the templates below

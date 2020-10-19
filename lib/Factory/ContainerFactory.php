@@ -42,7 +42,6 @@ use Xibo\Storage\PdoStorageService;
 use Xibo\Twig\ByteFormatterTwigExtension;
 use Xibo\Twig\DateFormatTwigExtension;
 use Xibo\Twig\TransExtension;
-use Xibo\Twig\UrlDecodeTwigExtension;
 
 if (!defined('PROJECT_ROOT')) {
     define('PROJECT_ROOT', realpath(__DIR__ . '/..'));

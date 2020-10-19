@@ -9,6 +9,6 @@
   "sort_order": 3,
   "hidden": 0,
   "category": "Library",
-  "route": "/stats",
+  "feature": "admin",
   "adminOnly": 1
 }

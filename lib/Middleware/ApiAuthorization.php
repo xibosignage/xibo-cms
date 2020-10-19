@@ -95,7 +95,7 @@ class ApiAuthorization implements Middleware
         $userId = $validatedRequest->getAttribute('oauth_user_id');
 
         $user = $userFactory->getById($userId);
-        $user->setChildAclDependencies($this->app->getContainer()->get('userGroupFactory'), $this->app->getContainer()->get('pageFactory'));
+        $user->setChildAclDependencies($this->app->getContainer()->get('userGroupFactory'));
         $user->load();
 
         // We must check whether this user has access to the route they have requested.

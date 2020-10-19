@@ -40,7 +40,6 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
-use Xibo\Factory\PageFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\PlaylistFactory;
@@ -82,11 +81,6 @@ class User extends Base
      * @var UserGroupFactory
      */
     private $userGroupFactory;
-
-    /**
-     * @var PageFactory
-     */
-    private $pageFactory;
 
     /**
      * @var PermissionFactory
@@ -153,7 +147,6 @@ class User extends Base
      * @param UserFactory $userFactory
      * @param UserTypeFactory $userTypeFactory
      * @param UserGroupFactory $userGroupFactory
-     * @param PageFactory $pageFactory
      * @param PermissionFactory $permissionFactory
      * @param LayoutFactory $layoutFactory
      * @param ApplicationFactory $applicationFactory
@@ -171,7 +164,7 @@ class User extends Base
      * @param DataSetFactory $dataSetFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $config, $userFactory,
-                                $userTypeFactory, $userGroupFactory, $pageFactory, $permissionFactory,
+                                $userTypeFactory, $userGroupFactory, $permissionFactory,
                                 $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory, Twig $view, ContainerInterface $container, $dataSetFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
@@ -179,7 +172,6 @@ class User extends Base
         $this->userFactory = $userFactory;
         $this->userTypeFactory = $userTypeFactory;
         $this->userGroupFactory = $userGroupFactory;
-        $this->pageFactory = $pageFactory;
         $this->permissionFactory = $permissionFactory;
         $this->layoutFactory = $layoutFactory;
         $this->applicationFactory = $applicationFactory;
@@ -607,7 +599,7 @@ class User extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Build a user entity and save it
         $user = $this->userFactory->create();
-        $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
+        $user->setChildAclDependencies($this->userGroupFactory);
 
         $user->userName = $sanitizedParams->getString('userName');
         $user->email = $sanitizedParams->getString('email');
@@ -853,7 +845,7 @@ class User extends Base
 
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Build a user entity and save it
-        $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
+        $user->setChildAclDependencies($this->userGroupFactory);
         $user->load();
         $user->userName = $sanitizedParams->getString('userName');
         $user->email = $sanitizedParams->getString('email');
@@ -997,7 +989,7 @@ class User extends Base
         }
 
         $sanitizedParams = $this->getSanitizer($request->getParams());
-        $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
+        $user->setChildAclDependencies($this->userGroupFactory);
         $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory, $this->playerVersionFactory, $this->playlistFactory, $this->dataSetFactory);
 
         if ($sanitizedParams->getCheckbox('deleteAllItems') != 1) {
@@ -1051,7 +1043,7 @@ class User extends Base
         if ($userId !== null) {
             $homepages = [];
             $user = $this->userFactory->getById($userId)
-                ->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
+                ->setChildAclDependencies($this->userGroupFactory);
 
             foreach ($this->userGroupFactory->getHomepages() as $homepage) {
                 if (empty($homepage->feature) || $user->featureEnabled($homepage->feature)) {
@@ -1144,7 +1136,7 @@ class User extends Base
     public function editForm(Request $request, Response $response, $id)
     {
         $user = $this->userFactory->getById($id);
-        $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
+        $user->setChildAclDependencies($this->userGroupFactory);
 
         if (!$this->getUser()->checkEditable($user)) {
             throw new AccessDeniedException();

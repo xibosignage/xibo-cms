@@ -25,7 +25,6 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Entity\Permission;
 use Xibo\Entity\User;
-use Xibo\Factory\PageFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
@@ -46,11 +45,6 @@ class UserGroup extends Base
      * @var UserGroupFactory
      */
     private $userGroupFactory;
-
-    /**
-     * @var PageFactory
-     */
-    private $pageFactory;
 
     /**
      * @var PermissionFactory

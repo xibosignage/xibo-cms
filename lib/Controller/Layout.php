@@ -1385,7 +1385,7 @@ class Layout extends Base
             $layout->publishedStatusFailed = __('Publish failed ');
 
             // Check if user has view permissions to the schedule now page - for layout designer to show/hide Schedule Now button
-            $layout->scheduleNowPermission = $this->getUser()->routeViewable('/schedulenow/form/now/:from/:id');
+            $layout->scheduleNowPermission = $this->getUser()->featureEnabled('schedule.now');
 
             // Add some buttons for this row
             if ($this->getUser()->checkEditable($layout)) {
@@ -1454,7 +1454,7 @@ class Layout extends Base
                 );
             }
             // Assign to Campaign
-            if ($this->getUser()->routeViewable('/campaign')) {
+            if ($this->getUser()->featureEnabled('campaign.modify')) {
                 $layout->buttons[] = array(
                     'id' => 'layout_button_assignTo_campaign',
                     'url' => $this->urlFor($request,'layout.assignTo.campaign.form', ['id' => $layout->layoutId]),
@@ -1542,7 +1542,7 @@ class Layout extends Base
 
                 $layout->buttons[] = ['divider' => true];
 
-                if ($this->getUser()->routeViewable('template') && !$layout->isEditable()) {
+                if ($this->getUser()->featureEnabled('template.modify') && !$layout->isEditable()) {
                     // Save template button
                     $layout->buttons[] = array(
                         'id' => 'layout_button_save_template',
