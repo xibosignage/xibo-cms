@@ -414,6 +414,31 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'layout-design',
                     'title' => __('View Layouts')
                 ],
+                'layout.add' => [
+                    'feature' => 'layout.add',
+                    'group' => 'layout-design',
+                    'title' => __('Create new Layouts')
+                ],
+                'layout.modify' => [
+                    'feature' => 'layout.modify',
+                    'group' => 'layout-design',
+                    'title' => __('Modify existing Layouts')
+                ],
+                'tag.tagging' => [
+                    'feature' => 'tag.tagging',
+                    'group' => 'tagging',
+                    'title' => __('Add/Edit tags on items')
+                ],
+                'playlist.add' => [
+                    'feature' => 'playlist.add',
+                    'group' => 'playlist-design',
+                    'title' => __('Create new Playlists independent of a Layout')
+                ],
+                'playlist.modify' => [
+                    'feature' => 'playlist.modify',
+                    'group' => 'playlist-design',
+                    'title' => __('Modify existing Playlists independent of a Layouts')
+                ],
                 'user.profile' => [
                     'feature' => 'user.profile',
                     'group' => 'users',
@@ -428,6 +453,16 @@ class UserGroupFactory extends BaseFactory
                     'feature' => 'notification.centre',
                     'group' => 'users',
                     'title' => __('Access the Notification Centre to read old notifications')
+                ],
+                'notification.add' => [
+                    'feature' => 'notification.add',
+                    'group' => 'notifications',
+                    'title' => __('Add new Notifications')
+                ],
+                'notification.modify' => [
+                    'feature' => 'notification.modify',
+                    'group' => 'notifications',
+                    'title' => __('Edit Notifications')
                 ],
                 'dashboard.status' => [
                     'feature' => 'dashboard.status',

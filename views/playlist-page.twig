@@ -24,9 +24,11 @@
 {% block title %}{{ "Playlists"|trans }} | {% endblock %}
 
 {% block actionMenu %}
+    {% if currentUser.featureEnabled("playlist.add") %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ url_for("playlist.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Playlist" %}</a></li>
     </ul>
+    {% endif %}
 {% endblock %}
 
 {% block pageContent %}

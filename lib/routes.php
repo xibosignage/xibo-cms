@@ -111,11 +111,19 @@ $app->group('', function(RouteCollectorProxy $group) {
  * )
  */
 $app->get('/notification', ['\Xibo\Controller\Notification','grid'])->setName('notification.search');
-$app->post('/notification', ['\Xibo\Controller\Notification','add'])->setName('notification.add');
-//$app->map(['HEAD'], '/notification/attachment', ['\Xibo\Controller\Notification','addAttachment']);
-$app->post('/notification/attachment', ['\Xibo\Controller\Notification','addAttachment'])->setName('notification.addattachment');
-$app->put('/notification/{id}', ['\Xibo\Controller\Notification','edit'])->setName('notification.edit');
-$app->delete('/notification/{id}', ['\Xibo\Controller\Notification','delete'])->setName('notification.delete');
+
+$app->post('/notification', ['\Xibo\Controller\Notification','add'])
+    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['notification.add']))
+    ->setName('notification.add');
+
+$app->group('', function(RouteCollectorProxy $group) {
+    //$app->map(['HEAD'], '/notification/attachment', ['\Xibo\Controller\Notification','addAttachment']);
+    $group->post('/notification/attachment', ['\Xibo\Controller\Notification', 'addAttachment'])
+        ->setName('notification.addattachment');
+
+    $group->put('/notification/{id}', ['\Xibo\Controller\Notification', 'edit'])->setName('notification.edit');
+    $group->delete('/notification/{id}', ['\Xibo\Controller\Notification', 'delete'])->setName('notification.delete');
+})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['notification.modify']));
 
 /**
  * Layouts
@@ -124,29 +132,41 @@ $app->delete('/notification/{id}', ['\Xibo\Controller\Notification','delete'])->
  *  description="Layouts"
  * )
  */
-$app->group('/layout', function (RouteCollectorProxy $group) {
-    $group->put('/{id}', ['\Xibo\Controller\Layout','edit'])->setName('layout.edit');
-    $group->delete('/{id}', ['\Xibo\Controller\Layout','delete'])->setName('layout.delete');
-    $group->put('/background/{id}', ['\Xibo\Controller\Layout','editBackground'])->setName('layout.edit.background');
-    $group->put('/publish/{id}', ['\Xibo\Controller\Layout','publish'])->setName('layout.publish');
-    $group->put('/discard/{id}', ['\Xibo\Controller\Layout','discard'])->setName('layout.discard');
-    $group->put('/retire/{id}', ['\Xibo\Controller\Layout','retire'])->setName('layout.retire');
-    $group->put('/unretire/{id}', ['\Xibo\Controller\Layout','unretire'])->setName('layout.unretire');
-})->addMiddleware(new \Xibo\Middleware\LayoutLock($app));
-$app->get('/layout/status/{id}', ['\Xibo\Controller\Layout','status'])->setName('layout.status');
-
-$app->put('/layout/checkout/{id}', ['\Xibo\Controller\Layout','checkout'])->setName('layout.checkout');
 $app->get('/layout', ['\Xibo\Controller\Layout','grid'])->setName('layout.search');
-$app->post('/layout', ['\Xibo\Controller\Layout','add'])->setName('layout.add');
-$app->post('/layout/copy/{id}', ['\Xibo\Controller\Layout','copy'])->setName('layout.copy');
-$app->put('/layout/setenablestat/{id}', ['\Xibo\Controller\Layout','setEnableStat'])->setName('layout.setenablestat');
+$app->get('/layout/status/{id}', ['\Xibo\Controller\Layout','status'])->setName('layout.status');
 $app->put('/layout/lock/release/{id}', ['\Xibo\Controller\Layout', 'releaseLock'])->setName('layout.lock.release');
-// Layout Import
-//$app->map(['HEAD'],'/layout/import', ['\Xibo\Controller\Library','add');
-$app->post('/layout/import', ['\Xibo\Controller\Layout','import'])->setName('layout.import');
+
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->post('/layout', ['\Xibo\Controller\Layout', 'add'])->setName('layout.add');
+    $group->post('/layout/copy/{id}', ['\Xibo\Controller\Layout','copy'])->setName('layout.copy');
+
+    // TODO: why commented out? Layout Import
+    //$group->map(['HEAD'],'/layout/import', ['\Xibo\Controller\Library','add');
+    $group->post('/layout/import', ['\Xibo\Controller\Layout','import'])->setName('layout.import');
+
+})->add(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['layout.add']));
+
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->put('/layout/{id}', ['\Xibo\Controller\Layout','edit'])->setName('layout.edit');
+    $group->delete('/layout/{id}', ['\Xibo\Controller\Layout','delete'])->setName('layout.delete');
+    $group->put('/layout/background/{id}', ['\Xibo\Controller\Layout','editBackground'])->setName('layout.edit.background');
+    $group->put('/layout/publish/{id}', ['\Xibo\Controller\Layout','publish'])->setName('layout.publish');
+    $group->put('/layout/discard/{id}', ['\Xibo\Controller\Layout','discard'])->setName('layout.discard');
+    $group->put('/layout/retire/{id}', ['\Xibo\Controller\Layout','retire'])->setName('layout.retire');
+    $group->put('/layout/unretire/{id}', ['\Xibo\Controller\Layout','unretire'])->setName('layout.unretire');
+})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['layout.modify']))
+    ->addMiddleware(new \Xibo\Middleware\LayoutLock($app));
+
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->put('/layout/checkout/{id}', ['\Xibo\Controller\Layout', 'checkout'])->setName('layout.checkout');
+    $group->put('/layout/setenablestat/{id}',['\Xibo\Controller\Layout', 'setEnableStat'])->setName('layout.setenablestat');
+})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['layout.modify']));
+
 // Tagging
-$app->post('/layout/{id}/tag', ['\Xibo\Controller\Layout','tag'])->setName('layout.tag');
-$app->post('/layout/{id}/untag', ['\Xibo\Controller\Layout','untag'])->setName('layout.untag');
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->post('/layout/{id}/tag', ['\Xibo\Controller\Layout', 'tag'])->setName('layout.tag');
+    $group->post('/layout/{id}/untag', ['\Xibo\Controller\Layout', 'untag'])->setName('layout.untag');
+})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['tag.tagging']));
 
 /**
  * Region
@@ -157,7 +177,9 @@ $app->group('/region', function (RouteCollectorProxy $group) {
     $group->delete('/{id}', ['\Xibo\Controller\Region','delete'])->setName('region.delete');
     $group->put('/position/all/{id}', ['\Xibo\Controller\Region','positionAll'])->setName('region.position.all');
     $group->post('/drawer/{id}', ['\Xibo\Controller\Region','addDrawer'])->setName('region.add.drawer');
-})->addMiddleware(new \Xibo\Middleware\LayoutLock($app));
+})
+    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['layout.modify']))
+    ->addMiddleware(new \Xibo\Middleware\LayoutLock($app));
 
 /**
  * playlist
@@ -167,7 +189,11 @@ $app->group('/region', function (RouteCollectorProxy $group) {
  * )
  */
 $app->get('/playlist', ['\Xibo\Controller\Playlist','grid'])->setName('playlist.search');
-$app->post('/playlist', ['\Xibo\Controller\Playlist','add'])->setName('playlist.add');
+
+$app->post('/playlist', ['\Xibo\Controller\Playlist','add'])
+    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['playlist.add']))
+    ->setName('playlist.add');
+
 $app->put('/playlist/{id}', ['\Xibo\Controller\Playlist','edit'])->setName('playlist.edit');
 $app->delete('/playlist/{id}', ['\Xibo\Controller\Playlist','delete'])->setName('playlist.delete');
 $app->post('/playlist/copy/{id}', ['\Xibo\Controller\Playlist','copy'])->setName('playlist.copy');

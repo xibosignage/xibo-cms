@@ -49,5 +49,19 @@ class FeaturesMigration extends AbstractMigration
             ->save();
 
         $this->execute('UPDATE `user` SET homePageId = (SELECT CONCAT(pages.name, \'.view\') FROM pages WHERE user.homePageId = pages.pageId)');
+
+        // Migrate Page Permissions
+        $entityId = $this->fetchRow('SELECT entityId FROM permissionentity WHERE entity LIKE \'%Page%\'')[0];
+
+        // TODO: We need to match permissions
+
+        // Delete Page Permissions
+        $this->execute('DELETE FROM permission WHERE entityId = ' . $entityId);
+
+        // Delete Page Permission Entity
+        $this->execute('DELETE FROM permissionentity WHERE entityId = ' . $entityId);
+
+        // Delete Page Table
+        $this->dropTable('pages');
     }
 }
