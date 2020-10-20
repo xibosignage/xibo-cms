@@ -263,12 +263,12 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/display/form/screenshot/{id}', ['\Xibo\Controller\Display','requestScreenShotForm'])->setName('display.screenshot.form');
     $group->get('/display/form/wol/{id}', ['\Xibo\Controller\Display','wakeOnLanForm'])->setName('display.wol.form');
     $group->get('/display/form/licenceCheck/{id}', ['\Xibo\Controller\Display','checkLicenceForm'])->setName('display.licencecheck.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['display.view']));
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['displays.view']));
 
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/display/form/addViaCode', ['\Xibo\Controller\Display','addViaCodeForm'])->setName('display.addViaCode.form');
     $group->get('/display/form/authorise/{id}', ['\Xibo\Controller\Display','authoriseForm'])->setName('display.authorise.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['display.add']));
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['displays.add']));
 
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/display/form/edit/{id}', ['\Xibo\Controller\Display', 'editForm'])->setName('display.edit.form');
@@ -276,7 +276,7 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/display/form/defaultlayout/{id}', ['\Xibo\Controller\Display','defaultLayoutForm'])->setName('display.defaultlayout.form');
     $group->get('/display/form/moveCms/{id}', ['\Xibo\Controller\Display','moveCmsForm'])->setName('display.moveCms.form');
     $group->get('/display/form/membership/{id}', ['\Xibo\Controller\Display','membershipForm'])->setName('display.membership.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['display.modify']));
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['displays.modify']));
 
 //
 // user
@@ -591,11 +591,11 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 // Daypart
 //
 $app->get('/daypart/view', ['\Xibo\Controller\DayPart','displayPage'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['datpart.view']))
+    ->addMiddleware(new FeatureAuth($app->getContainer(), ['daypart.view']))
     ->setName('daypart.view');
 
 $app->get('/daypart/form/add', ['\Xibo\Controller\DayPart','addForm'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['datpart.add']))
+    ->addMiddleware(new FeatureAuth($app->getContainer(), ['daypart.add']))
     ->setName('daypart.add.form');
 
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {

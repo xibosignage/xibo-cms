@@ -83,6 +83,7 @@
                 <li><a href="#displaysTab" role="tab" data-toggle="tab"><span>{% trans "Displays" %}</span></a></li>
                 <li><a href="#homepagesTab" role="tab" data-toggle="tab"><span>{% trans "Homepages and Reports" %}</span></a></li>
                 <li><a href="#usersTab" role="tab" data-toggle="tab"><span>{% trans "Users" %}</span></a></li>
+                <li><a href="#systemTab" role="tab" data-toggle="tab"><span>{% trans "System" %}</span></a></li>
                 <li><a href="#customTab" role="tab" data-toggle="tab"><span>{% trans "Custom" %}</span></a></li>
             </ul>
             <form id="AclForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("group.acl", {id: groupId}) }}">
@@ -240,9 +241,36 @@
                                 {% endfor %}
                             </tbody>
 
+                        </table>
+                    </div>
+                    <div class="tab-pane" id="systemTab">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>{{ "Feature"|trans }}</th>
+                                    <th>
+                                        {% trans "Enabled?" %}
+                                        <i class="fa fa-info-circle" title="{{ "Check this box to give this User access to this Feature." }}"></i>
+                                    </th>
+                                    {% if isUserSpecific == 1 %}
+                                        <th>
+                                            {% trans "Inherited?" %}
+                                            <i class="fa fa-info-circle" title="{{ "If checked this User already has access to this Feature due to the User Groups they belong to." }}"></i>
+                                        </th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+
                             <tbody class="feature-group">
-                                {{ flow.featureTitleRow("System"|trans, "Access to potentially dangerous system settings."|trans) }}
+                                {{ flow.featureTitleRow("Configuration"|trans, "Access to potentially dangerous system settings."|trans) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("system") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("Troubleshooting"|trans, "Use logging and other troubleshooting tools to diagnose problems and seek help."|trans) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("troubleshooting") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
                             </tbody>

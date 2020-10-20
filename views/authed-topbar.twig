@@ -132,7 +132,7 @@
         {% set userMenuViewable = false %}
     {% endif %}
 
-    {% set countViewable = currentUser.featureEnabledCount(["usergroup.view", "application.view", "module.view", "transition.view", "task.view"]) %}
+    {% set countViewable = currentUser.featureEnabledCount(["usergroup.view", "module.view", "transition.view", "task.view"]) %}
     {% if countViewable > 0 or userMenuViewable %}
         {% if countViewable > 1 or (countViewable == 1 and userMenuViewable) %}
         <li class="dropdown">
@@ -151,7 +151,7 @@
                 <li><a href="{{ url_for("admin.view") }}">{% trans "Settings" %}</a></li>
             {% endif %}
 
-            {% if currentUser.featureEnabled("application.view") %}
+            {% if currentUser.isSuperAdmin() %}
                 <li><a href="{{ url_for("application.view") }}">{% trans "Applications" %}</a></li>
             {% endif %}
 

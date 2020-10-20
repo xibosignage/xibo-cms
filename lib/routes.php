@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -339,12 +339,12 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/display/licenceCheck/{id}', ['\Xibo\Controller\Display','checkLicence'])->setName('display.licencecheck');
     $group->get('/display/screenshot/{id}', ['\Xibo\Controller\Display','screenShot'])->setName('display.screenShot');
     $group->get('/display/status/{id}', ['\Xibo\Controller\Display','statusWindow'])->setName('display.statusWindow');
-})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['display.view']));
+})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displays.view']));
 
 $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/display/authorise/{id}', ['\Xibo\Controller\Display','toggleAuthorise'])->setName('display.authorise');
     $group->post('/display/addViaCode', ['\Xibo\Controller\Display','addViaCode'])->setName('display.addViaCode');
-})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['display.add']));
+})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displays.add']));
 
 $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/display/{id}', ['\Xibo\Controller\Display','edit'])->setName('display.edit');
@@ -353,7 +353,7 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/display/defaultlayout/{id}', ['\Xibo\Controller\Display','setDefaultLayout'])->setName('display.defaultlayout');
     $group->post('/display/{id}/displaygroup/assign', ['\Xibo\Controller\Display','assignDisplayGroup'])->setName('display.assign.displayGroup');
     $group->put('/display/{id}/moveCms', ['\Xibo\Controller\Display','moveCms'])->setName('display.moveCms');
-})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['display.modify']));
+})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displays.modify']));
 
 /**
  * Display Groups
@@ -485,7 +485,7 @@ $app->get('/stats/export', ['\Xibo\Controller\Stats','export'])
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/log', ['\Xibo\Controller\Logging', 'grid'])->setName('log.search');
     $group->delete('/log', ['\Xibo\Controller\Logging', 'truncate'])->setName('log.truncate');
-})->addMiddleware(new SuperAdminAuth($app->getContainer()));
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['log.view']));
 
 /**
  * User

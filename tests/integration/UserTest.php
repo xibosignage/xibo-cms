@@ -71,7 +71,7 @@ class UserTest extends LocalWebTestCase
 
         $this->assertSame('newUser', $object->data->userName);
         $this->assertSame(3, $object->data->userTypeId);
-        $this->assertSame(29, $object->data->homePageId);
+        $this->assertSame('icondashboard.view', $object->data->homePageId);
 
         $userCheck = (new XiboUser($this->getEntityProvider()))->getById($object->id);
         $userCheck->delete();
