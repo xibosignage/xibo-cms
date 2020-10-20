@@ -56,7 +56,7 @@ class UserTest extends LocalWebTestCase
         $response = $this->sendRequest('POST','/user', [
             'userName' => 'newUser',
             'userTypeId' => 3,
-            'homePageId' => 29,
+            'homePageId' => 'icon-dashboard',
             'password' => 'newUserPassword',
             'groupId' => $group['groupId'],
             'libraryQuota' => 0
