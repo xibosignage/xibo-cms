@@ -89,7 +89,6 @@ class WorldClock extends ModuleWidget
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-worldclock-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment-timezone.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
     }
 
     /**
@@ -544,7 +543,11 @@ class WorldClock extends ModuleWidget
         $javaScriptContent .= '   var body = ' . json_encode($mainTemplate) . ';';
         $javaScriptContent .= '   moment.locale("' . Translate::GetJsLocale() . '");';
         $javaScriptContent .= '   $(document).ready(function() { ';
-        $javaScriptContent .= '       $("body").xiboWorldClockRender(options, body); $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options); ';
+
+        // Run based only if the element is visible or not
+        $javaScriptContent .= '       const runOnVisible = function() { $("body").xiboWorldClockRender(options, body); $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options); }; ';
+        $javaScriptContent .= '       (xiboIC.isVisible) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
+        
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= '</script>';
 

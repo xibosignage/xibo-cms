@@ -81,9 +81,7 @@ class Calendar extends ModuleWidget
         parent::installFiles();
 
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-text-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-interactive-control.js')->save();
     }
 
     /** @inheritdoc */
@@ -496,7 +494,9 @@ class Calendar extends ModuleWidget
                 
                     $("body").find("img").xiboImageRender(options);
                     $("body").xiboLayoutScaler(options);
-                    $("#content").xiboTextRender(options, parsedItems);
+
+                    const runOnVisible = function() { $("#content").xiboTextRender(options, items); };
+                    (xiboIC.isVisible) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
                 });
             ')
             ->appendItems($items);

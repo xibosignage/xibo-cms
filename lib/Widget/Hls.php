@@ -235,7 +235,9 @@ class Hls extends ModuleWidget
                         hls.loadSource("' . urldecode($this->getOption('uri')) . '");
                         hls.attachMedia(video);
                         hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                          video.play();
+                          // Play only when the visible flag is set to true
+                          const runOnVisible = function() { video.play(); };
+                          (xiboIC.isVisible) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
                         });
                         hls.on(Hls.Events.ERROR, function (event, data) {
                             if (data.fatal) {

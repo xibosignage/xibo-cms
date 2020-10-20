@@ -45,7 +45,6 @@ class DataSetView extends ModuleWidget
         
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-dataset-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
     }
@@ -566,9 +565,11 @@ class DataSetView extends ModuleWidget
             ])
             ->appendJavaScript('
                 $(document).ready(function() {
-                    $("#DataSetTableContainer").dataSetRender(options); 
                     $("body").xiboLayoutScaler(options); 
                     $("#DataSetTableContainer").find("img").xiboImageRender(options);
+
+                    const runOnVisible = function() { $("#DataSetTableContainer").dataSetRender(options);  };
+                    (xiboIC.isVisible) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
                     
                     // Do we have a freshnessTimeout?
                     if (options.freshnessTimeout > 0) {

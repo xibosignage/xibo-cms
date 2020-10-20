@@ -43,7 +43,6 @@ class NotificationView extends ModuleWidget
         // Extends parent's method
         parent::installFiles();
         
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-text-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.marquee.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
@@ -322,7 +321,14 @@ class NotificationView extends ModuleWidget
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '   var items = ' . json_encode($items) . ';';
-        $javaScriptContent .= '   $(document).ready(function() { $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items); });';
+        $javaScriptContent .= '   $(document).ready(function() { ';
+        $javaScriptContent .= '     $("body").xiboLayoutScaler(options); ';
+
+        // Run based only if the element is visible or not
+        $javaScriptContent .= '     const runOnVisible = function() { $("#content").xiboTextRender(options, items); }; ';
+        $javaScriptContent .= '     (xiboIC.isVisible) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
+        
+        $javaScriptContent .= '   });';
         $javaScriptContent .= '</script>';
 
         // Add our fonts.css file

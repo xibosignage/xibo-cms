@@ -98,7 +98,6 @@ class Countdown extends ModuleWidget
         
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-countdown-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
     }
 
     /**
@@ -353,7 +352,12 @@ class Countdown extends ModuleWidget
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '   var body = ' . json_encode($mainTemplate) . ';';
         $javaScriptContent .= '   $(document).ready(function() { ';
-        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboCountdownRender(options, body); $("#content").find("img").xiboImageRender(options); ';
+        $javaScriptContent .= '     $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options); ';
+        
+        // Run based only if the element is visible or not
+        $javaScriptContent .= '     const runOnVisible = function() { $("#content").xiboCountdownRender(options, body); }; ';
+        $javaScriptContent .= '     (xiboIC.isVisible) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
+        
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= '</script>';
 

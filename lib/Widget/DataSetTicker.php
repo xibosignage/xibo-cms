@@ -47,7 +47,6 @@ class DataSetTicker extends ModuleWidget
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.marquee.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-text-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
     }
@@ -581,9 +580,11 @@ class DataSetTicker extends ModuleWidget
             ->appendItems($items)
             ->appendJavaScript('
                 $(document).ready(function() {
-                    $("body").xiboLayoutScaler(options); 
-                    $("#content").xiboTextRender(options, items); 
+                    $("body").xiboLayoutScaler(options);
                     $("#content").find("img").xiboImageRender(options);
+
+                    const runOnVisible = function() { $("#content").xiboTextRender(options, items); };
+                    (xiboIC.isVisible) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
                     
                     // Do we have a freshnessTimeout?
                     if (options.freshnessTimeout > 0) {
