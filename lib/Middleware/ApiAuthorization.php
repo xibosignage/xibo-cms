@@ -67,6 +67,7 @@ class ApiAuthorization implements Middleware
         /* @var \Xibo\Entity\User $user */
         $user = null;
 
+        /** @var \Xibo\Service\LogServiceInterface $logger */
         $logger = $this->app->getContainer()->get('logger');
 
         // Setup the authorization server
@@ -111,21 +112,22 @@ class ApiAuthorization implements Middleware
             // Check that the Scopes granted to this token are allowed access to the route/method of this request
             $applicationScopeFactory = $this->app->getContainer()->get('applicationScopeFactory');
             $scopes = $validatedRequest->getAttribute('oauth_scopes');
-            if (count($scopes) <= 0) {
-                throw new AccessDeniedException();
-            }
 
-            foreach ($scopes as $scope) {
-                // Valid routes
-                if ($scope->getId() != 'all') {
-                    $logger->debug(sprintf('Test authentication for %s %s against scope %s',
-                        $route, $request->getMethod(), $scope->getId()));
+            // Only validate scopes if we have been provided some.
+            if (is_array($scopes) && count($scopes) > 0) {
+                foreach ($scopes as $scope) {
+                    // Valid routes
+                    if ($scope->getId() != 'all') {
+                        $logger->debug(sprintf('Test authentication for %s %s against scope %s',
+                            $route, $request->getMethod(), $scope->getId()));
 
-                    // Check the route and request method
-                    try {
-                        $applicationScopeFactory->getById($scope->getId())->checkRoute($request->getMethod(), $route);
-                    } catch (NotFoundException $notFoundException) {
-                        throw new AccessDeniedException();
+                        // Check the route and request method
+                        try {
+                            $applicationScopeFactory->getById($scope->getId())->checkRoute($request->getMethod(),
+                                $route);
+                        } catch (NotFoundException $notFoundException) {
+                            throw new AccessDeniedException();
+                        }
                     }
                 }
             }
