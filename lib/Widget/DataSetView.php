@@ -40,10 +40,11 @@ class DataSetView extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
+        // Extends parent's method
+        parent::installFiles();
+        
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-dataset-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
     }
@@ -488,6 +489,7 @@ class DataSetView extends ModuleWidget
             ->appendJavaScriptFile('xibo-layout-scaler.js')
             ->appendJavaScriptFile('xibo-dataset-render.js')
             ->appendJavaScriptFile('xibo-image-render.js')
+            ->appendJavaScriptFile('xibo-interactive-control.js')
             ->appendFontCss()
             ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
         ;
@@ -563,9 +565,11 @@ class DataSetView extends ModuleWidget
             ])
             ->appendJavaScript('
                 $(document).ready(function() {
-                    $("#DataSetTableContainer").dataSetRender(options); 
                     $("body").xiboLayoutScaler(options); 
                     $("#DataSetTableContainer").find("img").xiboImageRender(options);
+
+                    const runOnVisible = function() { $("#DataSetTableContainer").dataSetRender(options);  };
+                    (xiboIC.isVisible) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
                     
                     // Do we have a freshnessTimeout?
                     if (options.freshnessTimeout > 0) {

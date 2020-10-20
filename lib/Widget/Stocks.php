@@ -73,9 +73,10 @@ class Stocks extends AlphaVantageBase
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
+        // Extends parent's method
+        parent::installFiles();
+        
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-finance-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
     }
@@ -640,13 +641,19 @@ class Stocks extends AlphaVantageBase
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-finance-render.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '   var items = ' . json_encode($renderedItems) . ';';
         $javaScriptContent .= '   var body = ' . json_encode($mainTemplate) . ';';
         $javaScriptContent .= '   $(document).ready(function() { ';
-        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboFinanceRender(options, items, body); $("#content").find("img").xiboImageRender(options); ';
+        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options); ';
+
+        // Run based only if the element is visible or not
+        $javaScriptContent .= '       const runOnVisible = function() { $("#content").xiboFinanceRender(options, items, body); }; ';
+        $javaScriptContent .= '       (xiboIC.isVisible) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
+
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= $javaScript;
         $javaScriptContent .= '</script>';

@@ -992,7 +992,9 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function installFiles()
     {
-
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-interactive-control.js')->save();
     }
 
     /**

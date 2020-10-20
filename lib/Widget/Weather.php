@@ -198,8 +198,9 @@ class Weather extends ModuleWidget
     /** @inheritDoc */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
+        // Extends parent's method
+        parent::installFiles();
+        
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
 
         foreach ($this->mediaFactory->createModuleFileFromFolder($this->resourceFolder) as $media) {
@@ -887,6 +888,7 @@ class Weather extends ModuleWidget
         $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.js') . '"></script>';
         $javaScriptContent .= '<script>
 
             var options = ' . json_encode($options) . '

@@ -86,9 +86,10 @@ class TwitterMetro extends TwitterBase
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
+        // Extends parent's method
+        parent::installFiles();
+        
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-metro-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.png')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.css')->save();
@@ -803,13 +804,19 @@ class TwitterMetro extends TwitterBase
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-metro-render.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '   var items = ' . json_encode($items) . ';';
         $javaScriptContent .= '   var colors = ' . json_encode($colorArray) . ';';
         $javaScriptContent .= '   $(document).ready(function() { ';
-        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").xiboMetroRender(options, items, colors); $("#content").find("img").xiboImageRender(options); $("#content").find(".cell").xiboImageRender(options);';
+        $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options);';
+
+        // Run based only if the element is visible or not
+        $javaScriptContent .= '       const runOnVisible = function() { $("#content").xiboMetroRender(options, items, colors); $("#content").find(".cell").xiboImageRender(options); }; ';
+        $javaScriptContent .= '       (xiboIC.isVisible) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
+        
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= '</script>';
 
