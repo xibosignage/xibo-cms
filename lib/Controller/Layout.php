@@ -1552,11 +1552,13 @@ class Layout extends Base
                 }
 
                 // Export Button
-                $layout->buttons[] = array(
-                    'id' => 'layout_button_export',
-                    'url' => $this->urlFor($request,'layout.export.form', ['id' => $layout->layoutId]),
-                    'text' => __('Export')
-                );
+                if ($this->getUser()->featureEnabled('layout.export')) {
+                    $layout->buttons[] = array(
+                        'id' => 'layout_button_export',
+                        'url' => $this->urlFor($request, 'layout.export.form', ['id' => $layout->layoutId]),
+                        'text' => __('Export')
+                    );
+                }
 
                 // Extra buttons if we have modify permissions
                 if ($this->getUser()->checkPermissionsModifyable($layout)) {

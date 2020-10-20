@@ -726,13 +726,15 @@ class Library extends Base
                 )
             );
 
-            $media->buttons[] = ['divider' => true];
+            if ($this->getUser()->featureEnabled(['schedule.view', 'layout.view'])) {
+                $media->buttons[] = ['divider' => true];
 
-            $media->buttons[] = array(
-                'id' => 'usage_report_button',
-                'url' => $this->urlFor($request,'library.usage.form', ['id' => $media->mediaId]),
-                'text' => __('Usage Report')
-            );
+                $media->buttons[] = array(
+                    'id' => 'usage_report_button',
+                    'url' => $this->urlFor($request, 'library.usage.form', ['id' => $media->mediaId]),
+                    'text' => __('Usage Report')
+                );
+            }
         }
 
         $this->getState()->template = 'grid';

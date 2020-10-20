@@ -275,7 +275,7 @@ class Playlist extends Base
             'ownerUserGroupId' => $sanitizedParams->getInt('ownerUserGroupId'),
             'mediaLike' => $sanitizedParams->getString('mediaLike'),
             'regionSpecific' => $sanitizedParams->getInt('regionSpecific', ['default' => 0])
-        ], $request), $request);
+        ], $request));
 
         foreach ($playlists as $playlist) {
 
@@ -432,13 +432,15 @@ class Playlist extends Base
                 ];
             }
 
-            $playlist->buttons[] = ['divider' => true];
+            if ($this->getUser()->featureEnabled(['schedule.view', 'layout.view'])) {
+                $playlist->buttons[] = ['divider' => true];
 
-            $playlist->buttons[] = array(
-                'id' => 'usage_report_button',
-                'url' => $this->urlFor($request,'playlist.usage.form', ['id' => $playlist->playlistId]),
-                'text' => __('Usage Report')
-            );
+                $playlist->buttons[] = array(
+                    'id' => 'usage_report_button',
+                    'url' => $this->urlFor($request, 'playlist.usage.form', ['id' => $playlist->playlistId]),
+                    'text' => __('Usage Report')
+                );
+            }
         }
 
         $this->getState()->recordsTotal = $this->playlistFactory->countLast();

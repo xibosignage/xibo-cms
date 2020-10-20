@@ -414,6 +414,16 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'scheduling',
                     'title' => __('View Day parts')
                 ],
+                'daypart.add' => [
+                    'feature' => 'daypart.add',
+                    'group' => 'scheduling',
+                    'title' => __('Add Day parts')
+                ],
+                'daypart.modify' => [
+                    'feature' => 'daypart.modify',
+                    'group' => 'scheduling',
+                    'title' => __('Modify Day parts')
+                ],
                 'library.view' => [
                     'feature' => 'library.view',
                     'group' => 'library',
@@ -423,6 +433,21 @@ class UserGroupFactory extends BaseFactory
                     'feature' => 'dataset.view',
                     'group' => 'library',
                     'title' => __('View DataSets')
+                ],
+                'dataset.add' => [
+                    'feature' => 'dataset.add',
+                    'group' => 'library',
+                    'title' => __('Add DataSets')
+                ],
+                'dataset.modify' => [
+                    'feature' => 'dataset.modify',
+                    'group' => 'library',
+                    'title' => __('Modify DataSets')
+                ],
+                'dataset.data' => [
+                    'feature' => 'dataset.data',
+                    'group' => 'library',
+                    'title' => __('Modify data held within DataSets')
                 ],
                 'layout.view' => [
                     'feature' => 'layout.view',
@@ -439,10 +464,25 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'layout-design',
                     'title' => __('Modify existing Layouts')
                 ],
+                'layout.export' => [
+                    'feature' => 'layout.export',
+                    'group' => 'layout-design',
+                    'title' => __('Export Layouts')
+                ],
                 'campaign.view' => [
                     'feature' => 'campaign.view',
                     'group' => 'campaigns',
-                    'title' => __('View Layouts')
+                    'title' => __('View Campaigns')
+                ],
+                'campaign.add' => [
+                    'feature' => 'campaign.add',
+                    'group' => 'campaigns',
+                    'title' => __('Add Campaigns')
+                ],
+                'campaign.modify' => [
+                    'feature' => 'campaign.modify',
+                    'group' => 'campaigns',
+                    'title' => __('Modify Campaigns')
                 ],
                 'template.view' => [
                     'feature' => 'template.view',
@@ -463,6 +503,16 @@ class UserGroupFactory extends BaseFactory
                     'feature' => 'resolution.view',
                     'group' => 'layout-design',
                     'title' => __('View Resolutions')
+                ],
+                'resolution.add' => [
+                    'feature' => 'resolution.add',
+                    'group' => 'layout-design',
+                    'title' => __('Add Resolutions')
+                ],
+                'resolution.modify' => [
+                    'feature' => 'resolution.modify',
+                    'group' => 'layout-design',
+                    'title' => __('Modify Resolutions')
                 ],
                 'tag.view' => [
                     'feature' => 'tag.view',
@@ -519,10 +569,30 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'users-management',
                     'title' => __('View Users')
                 ],
+                'users.add' => [
+                    'feature' => 'users.add',
+                    'group' => 'users-management',
+                    'title' => __('Add Users')
+                ],
+                'users.modify' => [
+                    'feature' => 'users.modify',
+                    'group' => 'users-management',
+                    'title' => __('Modify Users')
+                ],
                 'usergroup.view' => [
                     'feature' => 'usergroup.view',
                     'group' => 'users-management',
                     'title' => __('View User Groups')
+                ],
+                'usergroup.add' => [
+                    'feature' => 'usergroup.add',
+                    'group' => 'users-management',
+                    'title' => __('Add User Groups')
+                ],
+                'usergroup.modify' => [
+                    'feature' => 'usergroup.modify',
+                    'group' => 'users-management',
+                    'title' => __('Modify User Groups')
                 ],
                 'dashboard.status' => [
                     'feature' => 'dashboard.status',
@@ -544,15 +614,45 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'displays',
                     'title' => __('View Displays')
                 ],
+                'displays.add' => [
+                    'feature' => 'displays.add',
+                    'group' => 'displays',
+                    'title' => __('Add Displays')
+                ],
+                'displays.modify' => [
+                    'feature' => 'displays.modify',
+                    'group' => 'displays',
+                    'title' => __('Modify Displays')
+                ],
                 'displaygroup.view' => [
                     'feature' => 'displaygroup.view',
                     'group' => 'displays',
                     'title' => __('View Display Groups')
                 ],
+                'displaygroup.add' => [
+                    'feature' => 'displaygroup.add',
+                    'group' => 'displays',
+                    'title' => __('Add Display Groups')
+                ],
+                'displaygroup.modify' => [
+                    'feature' => 'displaygroup.modify',
+                    'group' => 'displays',
+                    'title' => __('Modify Display Groups')
+                ],
                 'displayprofile.view' => [
                     'feature' => 'displayprofile.view',
                     'group' => 'displays',
                     'title' => __('View Display Settings Profiles')
+                ],
+                'displayprofile.add' => [
+                    'feature' => 'displayprofile.add',
+                    'group' => 'displays',
+                    'title' => __('Add Display Settings Profiles')
+                ],
+                'displayprofile.modify' => [
+                    'feature' => 'displayprofile.modify',
+                    'group' => 'displays',
+                    'title' => __('Modify Display Settings Profiles')
                 ],
                 'playersoftware.view' => [
                     'feature' => 'playersoftware.view',

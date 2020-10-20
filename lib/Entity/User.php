@@ -1164,16 +1164,26 @@ class User implements \JsonSerializable, UserEntityInterface
 
     /**
      * Check whether the requested feature is available.
-     * @param string $feature
+     * @param string|array $feature
      * @return bool
      */
-    public function featureEnabled(string $feature)
+    public function featureEnabled($feature)
     {
         if ($this->isSuperAdmin()) {
             return true;
         }
 
-        return (in_array($feature, $this->getFeatures()));
+        if (!is_array($feature)) {
+            $feature = [$feature];
+        }
+
+        foreach ($feature as $item) {
+            if (in_array($item, $this->getFeatures())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
