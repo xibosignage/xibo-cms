@@ -62,10 +62,11 @@
                                     {% set helpText %}{% trans "Show items owned by users in the selected User Group." %}{% endset %}
                                     {{ inline.dropdown("ownerUserGroupId", "single", title, "", [{groupId:null, group:""}]|merge(groups), "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
 
-                                    {% set title %}{% trans "Display Group" %}{% endset %}
-                                    {% set helpText %}{% trans "Show Layouts active on the selected Display / Display Group" %}{% endset %}
-                                    {{ inline.dropdown("activeDisplayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup", helpText, "selectPicker", "", "", "", attributes) }}
-
+                                    {% if currentUser.featureEnabled("displaygroup.view") %}
+                                        {% set title %}{% trans "Display Group" %}{% endset %}
+                                        {% set helpText %}{% trans "Show Layouts active on the selected Display / Display Group" %}{% endset %}
+                                        {{ inline.dropdown("activeDisplayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup", helpText, "selectPicker", "", "", "", attributes) }}
+                                    {% endif %}
                                 </div>
                                 <div class="tab-pane" id="advanced-filter">
 
@@ -89,8 +90,10 @@
                                     {% set values = [{id: 1, value: option1}, {id: 2, value: option2}, {id: 3, value: option3}] %}
                                     {{ inline.dropdown("showDescriptionId", "single", title, 2, values, "id", "value") }}
 
-                                    {% set title %}{% trans "Media" %}{% endset %}
-                                    {{ inline.input("mediaLike", title) }}
+                                    {% if currentUser.featureEnabled("library.view") %}
+                                        {% set title %}{% trans "Media" %}{% endset %}
+                                        {{ inline.input("mediaLike", title) }}
+                                    {% endif %}
                                 </div>
                             </div>
                         </form>

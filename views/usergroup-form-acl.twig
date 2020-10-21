@@ -149,7 +149,7 @@
                             </tbody>
 
                             <tbody class="feature-group">
-                                {{ flow.featureTitleRow("Layout Design"|trans, "Design Layouts to add media to display on screens"|trans, isUserSpecific) }}
+                                {{ flow.featureTitleRow("Layout Design"|trans, "Allow content creators to create Layouts - which hold the content you want to show on your Displays"|trans, isUserSpecific) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("layout-design") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}

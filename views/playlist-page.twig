@@ -85,8 +85,10 @@
                                     {% set values = [{id: 1, value: "All"}, {id: 2, value: "Only Used"}, {id: 3, value: "Only Unused"}] %}
                                     {{ inline.dropdown("playlistStatusId", "single", title, 1, values, "id", "value") }}
 
-                                    {% set title %}{% trans "Media" %}{% endset %}
-                                    {{ inline.input("mediaLike", title) }}
+                                    {% if currentUser.featureEnabled("library.view") %}
+                                        {% set title %}{% trans "Media" %}{% endset %}
+                                        {{ inline.input("mediaLike", title) }}
+                                    {% endif %}
                                 </div>
                             </div>
                         </form>

@@ -102,11 +102,15 @@
                                         {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
                                     {% endif %}
 
-                                    {% set title %}{% trans "Display Group" %}{% endset %}
-                                    {{ inline.dropdown("displayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup") }}
+                                    {% if currentUser.featureEnabled("displaygroup.view") %}
+                                        {% set title %}{% trans "Display Group" %}{% endset %}
+                                        {{ inline.dropdown("displayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup") }}
+                                    {% endif %}
 
-                                    {% set title %}{% trans "Display Profile" %}{% endset %}
-                                    {{ inline.dropdown("displayProfileId", "single", title, "", [{displayProfileId:null, name:""}]|merge(displayProfiles), "displayProfileId", "name") }}
+                                    {% if currentUser.featureEnabled("displayprofile.view") %}
+                                        {% set title %}{% trans "Display Profile" %}{% endset %}
+                                        {{ inline.dropdown("displayProfileId", "single", title, "", [{displayProfileId:null, name:""}]|merge(displayProfiles), "displayProfileId", "name") }}
+                                    {% endif %}
 
                                 </div>
 
