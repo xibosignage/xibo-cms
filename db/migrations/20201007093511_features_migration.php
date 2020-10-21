@@ -53,7 +53,54 @@ class FeaturesMigration extends AbstractMigration
         // Migrate Page Permissions
         $entityId = $this->fetchRow('SELECT entityId FROM permissionentity WHERE entity LIKE \'%Page%\'')[0];
 
-        // TODO: We need to match permissions
+        // Match old page permissions.
+        $pages = $this->query('
+            SELECT `group`.groupId, pages.name
+              FROM permission
+                INNER JOIN `group`
+                ON `group`.groupId = `permission`.groupId
+                INNER JOIN `pages`
+                ON `pages`.pageId = `permission`.objectId
+             WHERE entityId = 1
+                AND view = 1
+            ORDER BY groupId;
+        ');
+
+        $groupId = 0;
+        $features = [];
+        while ($page = $pages->fetch()) {
+            // Track the group we're on
+            if ($groupId !== $page['groupId']) {
+                if ($groupId !== 0) {
+                    // Save the group we've been working on.
+                    $this->execute('UPDATE `group` SET features = \'' . json_encode($features) . '\' WHERE groupId = ' . $groupId);
+                }
+
+                // Clear the decks
+                $groupId = $page['groupId'];
+                $features = [];
+            }
+
+            if (in_array($page['name'], ['index', 'manual', 'clock', 'home'])) {
+                // Ignore pages which we're not interested in
+                continue;
+            } else if ($page['name'] === 'schedulenow') {
+                // Schedule Now has its own feature.
+                $features[] = 'schedule.now';
+            } else {
+                // Not all features will have a .add/.modify, but this will grant the more permissive option and get
+                // reset when a user edits.
+                $features[] = $page['name'] . '.view';
+                $features[] = $page['name'] . '.add';
+                $features[] = $page['name'] . '.modify';
+            }
+        }
+
+        // Do the last one
+        if ($groupId !== 0) {
+            // Save the group we've been working on.
+            $this->execute('UPDATE `group` SET features = \'' . json_encode($features) . '\' WHERE groupId = ' . $groupId);
+        }
 
         // Delete Page Permissions
         $this->execute('DELETE FROM permission WHERE entityId = ' . $entityId);
