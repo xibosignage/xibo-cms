@@ -174,13 +174,11 @@ class DisplayProfile extends Base
             throw new NotFoundException(__('Display Profile not found'), 'DisplayProfile');
 
         foreach ($profiles as $profile) {
-            /* @var \Xibo\Entity\DisplayProfile $profile */
-
             // Load the config
             $profile->load([
                 'loadConfig' => in_array('config', $embed),
                 'loadCommands' => in_array('commands', $embed)
-            ], $request);
+            ]);
 
             if (in_array('configWithDefault', $embed)) {
                 $profile->includeProperty('configDefault');
@@ -196,25 +194,27 @@ class DisplayProfile extends Base
 
             $profile->includeProperty('buttons');
 
-            // Default Layout
-            $profile->buttons[] = array(
-                'id' => 'displayprofile_button_edit',
-                'url' => $this->urlFor($request,'displayProfile.edit.form', ['id' => $profile->displayProfileId]),
-                'text' => __('Edit')
-            );
-
-            $profile->buttons[] = array(
-                'id' => 'displayprofile_button_copy',
-                'url' => $this->urlFor($request,'displayProfile.copy.form', ['id' => $profile->displayProfileId]),
-                'text' => __('Copy')
-            );
-
-            if ($this->getUser()->checkDeleteable($profile)) {
+            if ($this->getUser()->featureEnabled('displayprofile.modify')) {
+                // Default Layout
                 $profile->buttons[] = array(
-                    'id' => 'displayprofile_button_delete',
-                    'url' => $this->urlFor($request,'displayProfile.delete.form', ['id' => $profile->displayProfileId]),
-                    'text' => __('Delete')
+                    'id' => 'displayprofile_button_edit',
+                    'url' => $this->urlFor($request,'displayProfile.edit.form', ['id' => $profile->displayProfileId]),
+                    'text' => __('Edit')
                 );
+
+                $profile->buttons[] = array(
+                    'id' => 'displayprofile_button_copy',
+                    'url' => $this->urlFor($request,'displayProfile.copy.form', ['id' => $profile->displayProfileId]),
+                    'text' => __('Copy')
+                );
+
+                if ($this->getUser()->checkDeleteable($profile)) {
+                    $profile->buttons[] = array(
+                        'id' => 'displayprofile_button_delete',
+                        'url' => $this->urlFor($request,'displayProfile.delete.form', ['id' => $profile->displayProfileId]),
+                        'text' => __('Delete')
+                    );
+                }
             }
         }
 

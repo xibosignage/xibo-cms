@@ -26,9 +26,11 @@
 {% block title %}{{ "Display Groups"|trans }} | {% endblock %}
 
 {% block actionMenu %}
+    {% if currentUser.featureEnabled("displaygroup.add") %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Display Group" %}" href="{{ url_for("displayGroup.add.form") }}"> <i class="fa fa-desktop" aria-hidden="true"></i> {% trans "Add Display Group" %}</a></li>
     </ul>
+    {% endif %}
 {% endblock %}
 
 {% block pageContent %}

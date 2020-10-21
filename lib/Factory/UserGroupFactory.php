@@ -429,6 +429,16 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'library',
                     'title' => __('View the Media Library')
                 ],
+                'library.add' => [
+                    'feature' => 'library.add',
+                    'group' => 'library',
+                    'title' => __('Add to the Media Library')
+                ],
+                'library.modify' => [
+                    'feature' => 'library.modify',
+                    'group' => 'library',
+                    'title' => __('Modify media in the Media Library')
+                ],
                 'dataset.view' => [
                     'feature' => 'dataset.view',
                     'group' => 'library',

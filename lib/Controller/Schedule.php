@@ -1761,6 +1761,10 @@ class Schedule extends Base
      */
     private function isEventEditable($displayGroups)
     {
+        if (!$this->getUser()->featureEnabled('schedule.modify')) {
+            return false;
+        }
+
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
 
         // Work out if this event is editable or not. To do this we need to compare the permissions

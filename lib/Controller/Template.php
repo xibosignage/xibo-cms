@@ -120,7 +120,7 @@ class Template extends Base
             'tags' => $sanitizedQueryParams->getString('tags'),
             'layoutId' => $sanitizedQueryParams->getInt('templateId'),
             'layout' => $sanitizedQueryParams->getString('template')
-        ], $request), $request);
+        ], $request));
 
         foreach ($templates as $template) {
             /* @var \Xibo\Entity\Layout $template */
@@ -150,8 +150,9 @@ class Template extends Base
             // Parse down for description
             $template->descriptionWithMarkup = \Parsedown::instance()->text($template->description);
 
-            if ($this->getUser()->checkEditable($template)) {
-
+            if ($this->getUser()->featureEnabled('template.modify')
+                && $this->getUser()->checkEditable($template)
+            ) {
                 // Design Button
                 $template->buttons[] = array(
                     'id' => 'layout_button_design',
@@ -176,7 +177,8 @@ class Template extends Base
             }
 
             // Extra buttons if have delete permissions
-            if ($this->getUser()->checkDeleteable($template)) {
+            if ($this->getUser()->featureEnabled('template.modify')
+                && $this->getUser()->checkDeleteable($template)) {
                 // Delete Button
                 $template->buttons[] = [
                     'id' => 'layout_button_delete',
@@ -197,7 +199,8 @@ class Template extends Base
             $template->buttons[] = ['divider' => true];
 
             // Extra buttons if we have modify permissions
-            if ($this->getUser()->checkPermissionsModifyable($template)) {
+            if ($this->getUser()->featureEnabled('template.modify')
+                && $this->getUser()->checkPermissionsModifyable($template)) {
                 // Permissions button
                 $template->buttons[] = [
                     'id' => 'layout_button_permissions',
@@ -218,15 +221,18 @@ class Template extends Base
                 ];
             }
 
-            $template->buttons[] = ['divider' => true];
+            if ($this->getUser()->featureEnabled('layout.export')) {
+                $template->buttons[] = ['divider' => true];
 
-            // Export Button
-            $template->buttons[] = array(
-                'id' => 'layout_button_export',
-                'linkType' => '_self', 'external' => true,
-                'url' => $this->urlFor($request,'layout.export', ['id' => $template->layoutId]),
-                'text' => __('Export')
-            );
+                // Export Button
+                $template->buttons[] = array(
+                    'id' => 'layout_button_export',
+                    'linkType' => '_self',
+                    'external' => true,
+                    'url' => $this->urlFor($request, 'layout.export', ['id' => $template->layoutId]),
+                    'text' => __('Export')
+                );
+            }
         }
 
         $this->getState()->template = 'grid';

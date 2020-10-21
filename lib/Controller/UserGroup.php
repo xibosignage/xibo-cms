@@ -139,7 +139,11 @@ class UserGroup extends Base
             'isUserSpecific' => 0
         ];
 
-        $groups = $this->userGroupFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filterBy, $request));
+        $groups = $this->userGroupFactory->query(
+            $this->gridRenderSort($request),
+            $this->gridRenderFilter($filterBy, $request)
+        );
+
         foreach ($groups as $group) {
             /* @var \Xibo\Entity\UserGroup $group */
 
@@ -149,7 +153,9 @@ class UserGroup extends Base
                 continue;
 
             // we only want to show certain buttons, depending on the user logged in
-            if ($this->isEditable($group)) {
+            if ($this->getUser()->featureEnabled('usergroup.modify')
+                && $this->isEditable($group)
+            ) {
                 // Edit
                 $group->buttons[] = array(
                     'id' => 'usergroup_button_edit',

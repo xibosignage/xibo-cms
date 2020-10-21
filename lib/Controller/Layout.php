@@ -1388,7 +1388,9 @@ class Layout extends Base
             $layout->scheduleNowPermission = $this->getUser()->featureEnabled('schedule.now');
 
             // Add some buttons for this row
-            if ($this->getUser()->checkEditable($layout)) {
+            if ($this->getUser()->featureEnabled('layout.modify')
+                && $this->getUser()->checkEditable($layout)
+            ) {
                 // Design Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_design',
@@ -1435,15 +1437,17 @@ class Layout extends Base
             }
 
             // Preview
-            $layout->buttons[] = array(
-                'id' => 'layout_button_preview',
-                'linkType' => '_blank',
-                'external' => true,
-                'url' => $this->urlFor($request,'layout.preview', ['id' => $layout->layoutId]),
-                'text' => __('Preview Layout')
-            );
+            if ($this->getUser()->featureEnabled('layout.view')) {
+                $layout->buttons[] = array(
+                    'id' => 'layout_button_preview',
+                    'linkType' => '_blank',
+                    'external' => true,
+                    'url' => $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]),
+                    'text' => __('Preview Layout')
+                );
 
-            $layout->buttons[] = ['divider' => true];
+                $layout->buttons[] = ['divider' => true];
+            }
 
             // Schedule Now
             if ($this->getUser()->featureEnabled('schedule.now')) {
@@ -1453,6 +1457,7 @@ class Layout extends Base
                     'text' => __('Schedule Now')
                 );
             }
+
             // Assign to Campaign
             if ($this->getUser()->featureEnabled('campaign.modify')) {
                 $layout->buttons[] = array(
@@ -1465,8 +1470,9 @@ class Layout extends Base
             $layout->buttons[] = ['divider' => true];
 
             // Only proceed if we have edit permissions
-            if ($this->getUser()->checkEditable($layout)) {
-
+            if ($this->getUser()->featureEnabled('layout.modify')
+                && $this->getUser()->checkEditable($layout)
+            ) {
                 // Edit Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_edit',

@@ -384,7 +384,9 @@ class User extends Base
             $user->includeProperty('buttons');
 
             // Super admins have some buttons
-            if ($this->getUser()->checkEditable($user)) {
+            if ($this->getUser()->featureEnabled('users.modify')
+                && $this->getUser()->checkEditable($user)
+            ) {
                 // Edit
                 $user->buttons[] = [
                     'id' => 'user_button_edit',
@@ -393,7 +395,9 @@ class User extends Base
                 ];
             }
 
-            if ($this->getUser()->isSuperAdmin() && $user->userId != $this->getConfig()->getSetting('SYSTEM_USER')) {
+            if ($this->getUser()->isSuperAdmin()
+                && $user->userId != $this->getConfig()->getSetting('SYSTEM_USER')
+            ) {
                 // Delete
                 $user->buttons[] = [
                     'id' => 'user_button_delete',
@@ -402,7 +406,9 @@ class User extends Base
                 ];
             }
 
-            if ($this->getUser()->checkPermissionsModifyable($user)) {
+            if ($this->getUser()->featureEnabled('users.modify')
+                && $this->getUser()->checkPermissionsModifyable($user)
+            ) {
                 $user->buttons[] = ['divider' => true];
 
                 // User Groups

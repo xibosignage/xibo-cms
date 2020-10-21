@@ -269,9 +269,10 @@ class DisplayGroup extends Base
 
             $group->includeProperty('buttons');
 
-            if ($this->getUser()->checkEditable($group)) {
+            if ($this->getUser()->featureEnabled('displaygroup.modify')
+                && $this->getUser()->checkEditable($group)
+            ) {
                 // Show the edit button, members button
-
                 if ($group->isDynamic == 0) {
                     // Group Members
                     $group->buttons[] = array(
@@ -297,7 +298,9 @@ class DisplayGroup extends Base
                 );
             }
 
-            if ($this->getUser()->checkDeleteable($group)) {
+            if ($this->getUser()->featureEnabled('displaygroup.modify')
+                && $this->getUser()->checkDeleteable($group)
+            ) {
                 // Show the delete button
                 $group->buttons[] = [
                     'id' => 'displaygroup_button_delete',
@@ -319,7 +322,9 @@ class DisplayGroup extends Base
 
             $group->buttons[] = ['divider' => true];
 
-            if ($this->getUser()->checkEditable($group)) {
+            if ($this->getUser()->featureEnabled('displaygroup.modify')
+                && $this->getUser()->checkEditable($group)
+            ) {
                 // File Associations
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_fileassociations',
@@ -335,7 +340,9 @@ class DisplayGroup extends Base
                 );
             }
 
-            if ($this->getUser()->checkPermissionsModifyable($group)) {
+            if ($this->getUser()->featureEnabled('displaygroup.modify')
+                && $this->getUser()->checkPermissionsModifyable($group)
+            ) {
                 // Show the modify permissions button
                 $group->buttons[] = [
                     'id' => 'displaygroup_button_permissions',
@@ -355,7 +362,9 @@ class DisplayGroup extends Base
                 ];
             }
 
-            if ($this->getUser()->checkEditable($group)) {
+            if ($this->getUser()->featureEnabled('displaygroup.modify')
+                && $this->getUser()->checkEditable($group)
+            ) {
                 $group->buttons[] = ['divider' => true];
 
                 $group->buttons[] = array(

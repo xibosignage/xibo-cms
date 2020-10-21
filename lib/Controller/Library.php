@@ -559,7 +559,6 @@ class Library extends Base
         $user = $this->getUser();
 
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
-        $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
         // Construct the SQL
         $mediaList = $this->mediaFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
@@ -644,10 +643,12 @@ class Library extends Base
                     $media->enableStatDescription = __('This Media has enable stat collection set to INHERIT');
             }
 
-            $media->buttons = array();
+            $media->buttons = [];
 
             // Buttons
-            if ($user->checkEditable($media)) {
+            if ($this->getUser()->featureEnabled('library.modify')
+                && $user->checkEditable($media)
+            ) {
                 // Edit
                 $media->buttons[] = array(
                     'id' => 'content_button_edit',
@@ -663,7 +664,9 @@ class Library extends Base
                 );
             }
 
-            if ($user->checkDeleteable($media)) {
+            if ($this->getUser()->featureEnabled('library.modify')
+                && $user->checkDeleteable($media)
+            ) {
                 // Delete Button
                 $media->buttons[] = [
                     'id' => 'content_button_delete',
@@ -682,7 +685,9 @@ class Library extends Base
                 ];
             }
 
-            if ($user->checkPermissionsModifyable($media)) {
+            if ($this->getUser()->featureEnabled('library.modify')
+                && $user->checkPermissionsModifyable($media)
+            ) {
                 // Permissions
                 $media->buttons[] = [
                     'id' => 'content_button_permissions',
@@ -703,6 +708,8 @@ class Library extends Base
             }
 
             // Download
+            // No feature permissions here, anyone can get a file based on sharing.
+            $media->buttons[] = ['divider' => true];
             $media->buttons[] = array(
                 'id' => 'content_button_download',
                 'linkType' => '_self', 'external' => true,
@@ -711,20 +718,26 @@ class Library extends Base
             );
 
             // Set Enable Stat
-            $media->buttons[] = array(
-                'id' => 'library_button_setenablestat',
-                'url' => $this->urlFor($request,'library.setenablestat.form', ['id' => $media->mediaId]),
-                'text' => __('Enable stats collection?'),
-                'multi-select' => true,
-                'dataAttributes' => array(
-                    array('name' => 'commit-url', 'value' => $this->urlFor($request,'library.setenablestat', ['id' => $media->mediaId])),
-                    array('name' => 'commit-method', 'value' => 'put'),
-                    array('name' => 'id', 'value' => 'library_button_setenablestat'),
-                    array('name' => 'text', 'value' => __('Enable stats collection?')),
-                    array('name' => 'rowtitle', 'value' => $media->name),
-                    ['name' => 'form-callback', 'value' => 'setEnableStatMultiSelectFormOpen']
-                )
-            );
+            if ($this->getUser()->featureEnabled('library.modify')
+                && $this->getUser()->checkEditable($media)
+            ) {
+                $media->buttons[] = ['divider' => true];
+
+                $media->buttons[] = array(
+                    'id' => 'library_button_setenablestat',
+                    'url' => $this->urlFor($request,'library.setenablestat.form', ['id' => $media->mediaId]),
+                    'text' => __('Enable stats collection?'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'library.setenablestat', ['id' => $media->mediaId])),
+                        array('name' => 'commit-method', 'value' => 'put'),
+                        array('name' => 'id', 'value' => 'library_button_setenablestat'),
+                        array('name' => 'text', 'value' => __('Enable stats collection?')),
+                        array('name' => 'rowtitle', 'value' => $media->name),
+                        ['name' => 'form-callback', 'value' => 'setEnableStatMultiSelectFormOpen']
+                    )
+                );
+            }
 
             if ($this->getUser()->featureEnabled(['schedule.view', 'layout.view'])) {
                 $media->buttons[] = ['divider' => true];

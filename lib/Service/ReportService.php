@@ -187,7 +187,7 @@ class ReportService implements ReportServiceInterface
         }
 
         // throw error
-      throw new NotFoundException(__('Get report class: No file to return'));
+        throw new NotFoundException(__('Get report class: No file to return'));
     }
 
     /**

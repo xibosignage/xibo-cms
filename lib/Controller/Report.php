@@ -232,11 +232,13 @@ class Report extends Base
             $reportSchedule->buttons[] = ['divider' => true];
 
             // Edit
-            $reportSchedule->buttons[] = [
-                'id' => 'reportSchedule_edit_button',
-                'url' => $this->urlFor($request,'reportschedule.edit.form', ['id' => $reportSchedule->reportScheduleId]),
-                'text' => __('Edit')
-            ];
+            if ($this->getUser()->featureEnabled('report.scheduling')) {
+                $reportSchedule->buttons[] = [
+                    'id' => 'reportSchedule_edit_button',
+                    'url' => $this->urlFor($request,'reportschedule.edit.form', ['id' => $reportSchedule->reportScheduleId]),
+                    'text' => __('Edit')
+                ];
+            }
 
             // Reset to previous run
             if ($this->getUser()->isSuperAdmin()) {
@@ -248,7 +250,8 @@ class Report extends Base
             }
 
             // Delete
-            if ($this->getUser()->checkDeleteable($reportSchedule)) {
+            if ($this->getUser()->featureEnabled('report.scheduling')
+                && $this->getUser()->checkDeleteable($reportSchedule)) {
                 // Show the delete button
                 $reportSchedule->buttons[] = [
                     'id' => 'reportschedule_button_delete',
@@ -267,15 +270,20 @@ class Report extends Base
             }
 
             // Toggle active
-            $reportSchedule->buttons[] = [
-                'id' => 'reportSchedule_toggleactive_button',
-                'url' => $this->urlFor($request,'reportschedule.toggleactive.form', ['id' => $reportSchedule->reportScheduleId]),
-                'text' => ($reportSchedule->isActive == 1) ? __('Pause') : __('Resume')
-            ];
+            if ($this->getUser()->featureEnabled('report.scheduling')) {
+                $reportSchedule->buttons[] = [
+                    'id' => 'reportSchedule_toggleactive_button',
+                    'url' => $this->urlFor($request,'reportschedule.toggleactive.form', ['id' => $reportSchedule->reportScheduleId]),
+                    'text' => ($reportSchedule->isActive == 1) ? __('Pause') : __('Resume')
+                ];
+            }
 
             // Delete all saved report
             $savedreports = $this->savedReportFactory->query(null, ['reportScheduleId'=> $reportSchedule->reportScheduleId]);
-            if ((count($savedreports) > 0)  && $this->getUser()->checkDeleteable($reportSchedule)) {
+            if ((count($savedreports) > 0)
+                && $this->getUser()->checkDeleteable($reportSchedule)
+                && $this->getUser()->featureEnabled('report.saving')
+            ) {
 
                 $reportSchedule->buttons[] = ['divider' => true];
 
@@ -805,15 +813,18 @@ class Report extends Base
             'userId' => $sanitizedQueryParams->getInt('userId'),
             'reportName' => $sanitizedQueryParams->getString('reportName'),
             'onlyMyReport' => $sanitizedQueryParams->getCheckbox('onlyMyReport')
-        ], $request), $request);
+        ], $request));
 
         foreach ($savedReports as $savedReport) {
-            /** @var \Xibo\Entity\SavedReport $savedReport */
+            if (!$this->isApi($request)) {
+                continue;
+            }
 
             $savedReport->includeProperty('buttons');
 
-            // If a report class doesnot comply (i.e., no category or route) we get an error when trying to get the email template
+            // If a report class does not comply (i.e., no category or route) we get an error when trying to get the email template
             // Dont show any button if the report is not compatible
+            // This will also check whether the report feature is enabled or not.
             $compatible = true;
             try {
                 // Get report email template

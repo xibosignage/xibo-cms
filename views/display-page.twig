@@ -27,7 +27,9 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
+        {% if currentUser.featureEnabled("display.add") %}
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a Display via user_code displayed on the Player screen" %}" href="{{ url_for("display.addViaCode.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Display (Code)" %}</a></li>
+        {% endif %}
         <li class="btn btn-success btn-xs"><a class="btns" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
     </ul>
 {% endblock %}

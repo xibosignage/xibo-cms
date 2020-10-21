@@ -343,8 +343,9 @@ class Playlist extends Base
             }
 
             // Only proceed if we have edit permissions
-            if ($this->getUser()->checkEditable($playlist)) {
-
+            if ($this->getUser()->featureEnabled('playlist.modify')
+                && $this->getUser()->checkEditable($playlist)
+            ) {
                 if ($playlist->isDynamic === 0) {
                     // Timeline edit
                     $playlist->buttons[] = [
@@ -391,7 +392,9 @@ class Playlist extends Base
             }
 
             // Extra buttons if have delete permissions
-            if ($this->getUser()->checkDeleteable($playlist)) {
+            if ($this->getUser()->featureEnabled('playlist.modify')
+                && $this->getUser()->checkDeleteable($playlist)
+            ) {
                 // Delete Button
                 $playlist->buttons[] = [
                     'id' => 'playlist_button_delete',
@@ -412,7 +415,9 @@ class Playlist extends Base
             }
 
             // Extra buttons if we have modify permissions
-            if ($this->getUser()->checkPermissionsModifyable($playlist)) {
+            if ($this->getUser()->featureEnabled('playlist.modify')
+                && $this->getUser()->checkPermissionsModifyable($playlist)
+            ) {
                 // Permissions button
                 $playlist->buttons[] = [
                     'id' => 'playlist_button_permissions',

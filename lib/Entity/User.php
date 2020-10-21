@@ -1165,9 +1165,10 @@ class User implements \JsonSerializable, UserEntityInterface
     /**
      * Check whether the requested feature is available.
      * @param string|array $feature
+     * @param bool $bothRequired
      * @return bool
      */
-    public function featureEnabled($feature)
+    public function featureEnabled($feature, $bothRequired = false)
     {
         if ($this->isSuperAdmin()) {
             return true;
@@ -1175,6 +1176,10 @@ class User implements \JsonSerializable, UserEntityInterface
 
         if (!is_array($feature)) {
             $feature = [$feature];
+        }
+
+        if ($bothRequired) {
+            return count($feature) === $this->featureEnabledCount($feature);
         }
 
         foreach ($feature as $item) {

@@ -244,17 +244,20 @@ class Campaign extends Base
             }
 
             // Preview
-            $campaign->buttons[] = array(
-                'id' => 'campaign_button_preview',
-                'linkType' => '_blank',
-                'external' => true,
-                'url' => $this->urlFor($request,'campaign.preview', ['id' => $campaign->campaignId]),
-                'text' => __('Preview Campaign')
-            );
+            if ($this->getUser()->featureEnabled(['layout.view', 'campaign.view'], true)) {
+                $campaign->buttons[] = array(
+                    'id' => 'campaign_button_preview',
+                    'linkType' => '_blank',
+                    'external' => true,
+                    'url' => $this->urlFor($request, 'campaign.preview', ['id' => $campaign->campaignId]),
+                    'text' => __('Preview Campaign')
+                );
+            }
 
             // Buttons based on permissions
-            if ($this->getUser()->checkEditable($campaign)) {
-
+            if ($this->getUser()->featureEnabled('campaign.modify')
+                && $this->getUser()->checkEditable($campaign)
+            ) {
                 $campaign->buttons[] = ['divider' => true];
 
                 // Edit the Campaign
@@ -274,7 +277,9 @@ class Campaign extends Base
                 $campaign->buttons[] = ['divider' => true];
             }
 
-            if ($this->getUser()->checkDeleteable($campaign)) {
+            if ($this->getUser()->featureEnabled('campaign.modify') &&
+                $this->getUser()->checkDeleteable($campaign)
+            ) {
                 // Delete Campaign
                 $campaign->buttons[] = [
                     'id' => 'campaign_button_delete',
@@ -292,8 +297,9 @@ class Campaign extends Base
                 ];
             }
 
-            if ($this->getUser()->checkPermissionsModifyable($campaign)) {
-
+            if ($this->getUser()->featureEnabled('campaign.modify') &&
+                $this->getUser()->checkPermissionsModifyable($campaign)
+            ) {
                 $campaign->buttons[] = ['divider' => true];
 
                 // Permissions for Campaign
