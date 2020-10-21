@@ -63,10 +63,12 @@
                                 </div>
                             </div>
 
-                            {% set title %}{% trans "Tags" %}{% endset %}
-                            {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
-                            {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                            {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                            {% if currentUser.featureEnabled("tag.tagging") %}
+                                {% set title %}{% trans "Tags" %}{% endset %}
+                                {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
+                                {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                            {% endif %}
 
                             {% set attributes = [
                                 { name: "data-allow-clear", value: "true" },
@@ -98,7 +100,7 @@
                                 <th>{% trans "ID" %}</th>
                                 <th>{% trans "Name" %}</th>
                                 <th>{% trans "Type" %}</th>
-                                <th>{% trans "Tag" %}</th>
+                                {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tag" %}</th>{% endif %}
                                 <th>{% trans "Thumbnail" %}</th>
                                 <th>{% trans "Duration" %}</th>
                                 <th>{% trans "Duration (seconds)" %}</th>
@@ -150,11 +152,11 @@
                     {"data": "mediaId"},
                     {"data": "name", "render": dataTableSpacingPreformatted },
                     {"data": "mediaType"},
-                    {
+                    {% if currentUser.featureEnabled("tag.tagging") %}{
                         "sortable": false,
                         "visible": false,
                         "data": dataTableCreateTags
-                    },
+                    },{% endif %}
                     {
                         "name": "mediaId",
                         "data": null,

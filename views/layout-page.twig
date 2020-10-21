@@ -41,10 +41,12 @@
                                         </div>
                                     </div>
 
-                                    {% set title %}{% trans "Tags" %}{% endset %}
-                                    {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
-                                    {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                                    {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                                    {% if currentUser.featureEnabled("tag.tagging") %}
+                                        {% set title %}{% trans "Tags" %}{% endset %}
+                                        {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                        {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
+                                        {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                                    {% endif %}
 
                                     {% set attributes = [
                                     { name: "data-allow-clear", value: "true" },
@@ -103,7 +105,7 @@
                                 <th>{% trans "Status" %}</th>
                                 <th>{% trans "Description" %}</th>
                                 <th>{% trans "Duration" %}</th>
-                                <th>{% trans "Tags" %}</th>
+                                {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
                                 <th>{% trans "Thumbnail" %}</th>
                                 <th>{% trans "Owner" %}</th>
                                 <th>{% trans "Permissions" %}</th>
@@ -187,11 +189,11 @@
                             return dataTableTimeFromSeconds(data.duration, type);
                         }
                     },
-                    {
+                    {% if currentUser.featureEnabled("tag.tagging") %}{
                         "sortable": false,
                         "visible": false,
                         "data": dataTableCreateTags
-                    },
+                    },{% endif %}
                     {
                         "name": "layoutId",
                         "data": null,

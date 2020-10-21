@@ -996,7 +996,7 @@ class Library extends Base
         // Output handled by UploadHandler
         $this->setNoOutput(true);
 
-        $this->getLog()->debug('Hand off to Upload Handler with options: %s', json_encode($options));
+        $this->getLog()->debug('Hand off to Upload Handler with options: ' . json_encode($options));
 
         // Hand off to the Upload Handler provided by jquery-file-upload
         new XiboUploadHandler($options);
@@ -1130,7 +1130,11 @@ class Library extends Base
         $media->name = $sanitizedParams->getString('name');
         $media->duration = $sanitizedParams->getInt('duration');
         $media->retired = $sanitizedParams->getCheckbox('retired');
-        $media->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $media->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+        }
+
         $media->enableStat = $sanitizedParams->getString('enableStat');
 
         if ($sanitizedParams->getDate('expires') != null ) {
@@ -2245,7 +2249,11 @@ class Library extends Base
 
         // Set new Name and tags
         $media->name = $sanitizedParams->getString('name');
-        $media->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $media->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+        }
+
         // Set the Owner to user making the Copy
         $media->setOwner($this->getUser()->userId);
 

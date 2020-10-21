@@ -548,11 +548,13 @@ class Playlist extends Base
         $playlist->isDynamic = $sanitizedParams->getCheckbox('isDynamic');
         $playlist->enableStat = $sanitizedParams->getString('enableStat');
 
-        $playlist->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $playlist->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+        }
 
         // Do we have a tag or name filter?
         $nameFilter = $sanitizedParams->getString('filterMediaName');
-        $tagFilter = $sanitizedParams->getString('filterMediaTag');
+        $tagFilter = $this->getUser()->featureEnabled('tag.tagging') ? null : $sanitizedParams->getString('filterMediaTag');
 
         // Capture these as dynamic filter criteria
         if ($playlist->isDynamic === 1) {
@@ -744,13 +746,18 @@ class Playlist extends Base
         $playlist->isDynamic = $sanitizedParams->getCheckbox('isDynamic');
         $playlist->enableStat = $sanitizedParams->getString('enableStat');
 
-        $playlist->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $playlist->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+        }
 
         // Do we have a tag or name filter?
         // Capture these as dynamic filter criteria
         if ($playlist->isDynamic === 1) {
             $playlist->filterMediaName = $sanitizedParams->getString('filterMediaName');
-            $playlist->filterMediaTags = $sanitizedParams->getString('filterMediaTag');
+
+            if ($this->getUser()->featureEnabled('tag.tagging')) {
+                $playlist->filterMediaTags = $sanitizedParams->getString('filterMediaTag');
+            }
         }
 
         $playlist->save();

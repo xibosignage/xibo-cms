@@ -44,25 +44,27 @@
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Campaign" %}{% endset %}
                 {{ forms.input("name", title, "", helpText) }}
-                
-                {% set title %}{% trans "Tags" %}{% endset %}
-                {% set helpText %}{% trans "Tags for this Campaign - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below." %}{% endset %}
-                {{ forms.inputWithTags("tags", title, "", helpText, 'tags-with-value') }}
 
-                <p id="loadingValues" style="margin-left: 17%"></p>
+                {% if currentUser.featureEnabled("tag.tagging") %}
+                    {% set title %}{% trans "Tags" %}{% endset %}
+                    {% set helpText %}{% trans "Tags for this Campaign - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below." %}{% endset %}
+                    {{ forms.inputWithTags("tags", title, "", helpText, 'tags-with-value') }}
 
-                {% set title %}{% trans "Tag value" %}{% endset %}
-                {{ forms.dropdown("tagValue", "single", title, "", options, "key", "value") }}
+                    <p id="loadingValues" style="margin-left: 17%"></p>
 
-                <div id="tagValueContainer">
                     {% set title %}{% trans "Tag value" %}{% endset %}
-                    {% set helpText %}{% trans "Please provide the value for this Tag and confirm by pressing enter on your keyboard." %}{% endset %}
-                    {{ forms.input("tagValueInput", title, "", helpText) }}
-                </div>
+                    {{ forms.dropdown("tagValue", "single", title, "", options, "key", "value") }}
 
-                <div id="tagValueRequired" class="alert alert-info">
-                    <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown or provide Tag value in the dedicated field." %}</p>
-                </div>
+                    <div id="tagValueContainer">
+                        {% set title %}{% trans "Tag value" %}{% endset %}
+                        {% set helpText %}{% trans "Please provide the value for this Tag and confirm by pressing enter on your keyboard." %}{% endset %}
+                        {{ forms.input("tagValueInput", title, "", helpText) }}
+                    </div>
+
+                    <div id="tagValueRequired" class="alert alert-info">
+                        <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown or provide Tag value in the dedicated field." %}</p>
+                    </div>
+                {% endif %}
 
                 <div id="assignLayouts"></div>
                 <div id="unassignLayouts"></div>
@@ -88,8 +90,10 @@
                     {% set title %}{% trans "Name" %}{% endset %}
                     {{ inline.input("layout", title) }}
 
-                    {% set title %}{% trans "Tags" %}{% endset %}
-                    {{ inline.inputWithTags("tags", title) }}
+                    {% if currentUser.featureEnabled("tag.tagging") %}
+                        {% set title %}{% trans "Tags" %}{% endset %}
+                        {{ inline.inputWithTags("tags", title) }}
+                    {% endif %}
                     </form>
                 </div>
 

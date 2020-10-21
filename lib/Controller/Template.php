@@ -364,8 +364,13 @@ class Template extends Base
         $layout = clone $layout;
 
         $layout->layout = $sanitizedParams->getString('name');
-        $layout->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $layout->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+        } else {
+            $layout->tags = [];
+        }
         $layout->tags[] = $this->tagFactory->getByTag('template');
+
         $layout->description = $sanitizedParams->getString('description');
         $layout->setOwner($this->getUser()->userId, true);
         $layout->save();

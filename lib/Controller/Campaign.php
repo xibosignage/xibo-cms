@@ -511,10 +511,17 @@ class Campaign extends Base
         }
 
         $campaign->campaign = $parsedRequestParams->getString('name');
-        $campaign->replaceTags($this->tagFactory->tagsFromString($parsedRequestParams->getString('tags')));
-        $campaign->save([
-            'saveTags' => true
-        ]);
+
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $campaign->replaceTags($this->tagFactory->tagsFromString($parsedRequestParams->getString('tags')));
+            $campaign->save([
+                'saveTags' => true
+            ]);
+        } else {
+            $campaign->save([
+                'saveTags' => false
+            ]);
+        }
 
         // Assign layouts
         $this->assignLayout($request, $response, $campaign->campaignId);

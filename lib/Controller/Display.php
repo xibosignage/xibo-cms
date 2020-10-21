@@ -642,7 +642,7 @@ class Display extends Base
             $display->webkeyLink = (!empty($display->webkeySerial)) ? 'https://webkeyapp.com/mgm?publicid=' . $display->webkeySerial : '';
 
             // Edit and Delete buttons first
-            if ($this->getUser()->featureEnabled('display.modify')
+            if ($this->getUser()->featureEnabled('displays.modify')
                 && $this->getUser()->checkEditable($display)
             ) {
                 // Manage
@@ -664,7 +664,7 @@ class Display extends Base
             }
 
             // Delete
-            if ($this->getUser()->featureEnabled('display.modify')
+            if ($this->getUser()->featureEnabled('displays.modify')
                 && $this->getUser()->checkDeleteable($display)
             ) {
                 $deleteButton = [
@@ -689,13 +689,13 @@ class Display extends Base
                 $display->buttons[] = $deleteButton;
             }
 
-            if ($this->getUser()->featureEnabled('display.modify')
+            if ($this->getUser()->featureEnabled('displays.modify')
                 && ($this->getUser()->checkEditable($display) || $this->getUser()->checkDeleteable($display))
             ) {
                 $display->buttons[] = ['divider' => true];
             }
 
-            if ($this->getUser()->featureEnabled('display.modify')
+            if ($this->getUser()->featureEnabled('displays.modify')
                 && $this->getUser()->checkEditable($display)
             ) {
                 // Authorise
@@ -762,7 +762,7 @@ class Display extends Base
                 );
             }
 
-            if ($this->getUser()->featureEnabled('display.modify')
+            if ($this->getUser()->featureEnabled('displays.modify')
                 && $this->getUser()->checkEditable($display)
             ) {
                 // File Associations
@@ -814,7 +814,7 @@ class Display extends Base
                 $display->buttons[] = ['divider' => true];
             }
 
-            if ($this->getUser()->featureEnabled('display.modify')
+            if ($this->getUser()->featureEnabled('displays.modify')
                 && $this->getUser()->checkPermissionsModifyable($display)
             ) {
                 // Display Groups
@@ -844,7 +844,7 @@ class Display extends Base
                 ];
             }
 
-            if ($this->getUser()->featureEnabled('display.modify')
+            if ($this->getUser()->featureEnabled('displays.modify')
                 && $this->getUser()->checkEditable($display)
             ) {
                 if ($this->getUser()->checkPermissionsModifyable($display)) {
@@ -1223,8 +1223,9 @@ class Display extends Base
         }
 
         // Update properties
-        if ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 0)
+        if ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 0) {
             $display->display = $sanitizedParams->getString('display');
+        }
 
         $display->load();
 
@@ -1254,7 +1255,9 @@ class Display extends Base
         $display->overrideConfig = $this->editConfigFields($display->getDisplayProfile(), [], $request);
 
         // Tags are stored on the displaygroup, we're just passing through here
-        $display->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $display->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+        }
 
         if ($display->auditingUntil !== null) {
             $display->auditingUntil = $display->auditingUntil->format('U');

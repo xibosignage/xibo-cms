@@ -43,7 +43,7 @@
     {% endif %}
 {% endmacro %}
 
-{% macro featureTitleRow(title, description) %}
+{% macro featureTitleRow(title, description, isUserSpecific) %}
     <tr class="feature-group-row">
         <td class="feature-group-header-cell closed">
             <strong>{{ title }}</strong> <i class="fa fa-arrow-circle-down"></i>
@@ -52,7 +52,9 @@
             </p>
         </td>
         <td><input class="feature-select-all" type="checkbox" /></td>
-        <td></td>
+        {% if isUserSpecific == 1 %}
+            <td></td>
+        {% endif %}
     </tr>
 {% endmacro %}
 
@@ -107,14 +109,14 @@
                             </thead>
 
                             <tbody class="feature-group">
-                                {{ flow.featureTitleRow("Dashboards"|trans, "Bring together key features onto a user's dashboard."|trans) }}
+                                {{ flow.featureTitleRow("Dashboards"|trans, "Bring together key features onto a user's dashboard."|trans, isUserSpecific) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("dashboards") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
                             </tbody>
 
                             <tbody class="feature-group">
-                                {{ flow.featureTitleRow("Reporting"|trans, "Access reporting capability."|trans) }}
+                                {{ flow.featureTitleRow("Reporting"|trans, "Run reporting on a variety of different KPI's and metrics applicable to the Features enabled."|trans, isUserSpecific) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("reporting") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
@@ -140,28 +142,35 @@
                             </thead>
 
                             <tbody class="feature-group">
-                                {{ flow.featureTitleRow("Layout Design"|trans, "Design Layouts"|trans) }}
+                                {{ flow.featureTitleRow("Library"|trans, "Media Library to store content and data for use in Layouts and Playlists."|trans, isUserSpecific) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("library") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("Layout Design"|trans, "Design Layouts to add media to display on screens"|trans, isUserSpecific) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("layout-design") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
                             </tbody>
 
                             <tbody class="feature-group">
-                                {{ flow.featureTitleRow("Playlist Design"|trans, "Design Playlists which exist independently from a Layout and can be reused across multiple Layouts."|trans) }}
+                                {{ flow.featureTitleRow("Playlist Design"|trans, "Design Playlists which exist independently from a Layout and can be reused across multiple Layouts."|trans, isUserSpecific) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("playlist-design") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
                             </tbody>
 
                             <tbody class="feature-group">
-                                {{ flow.featureTitleRow("Campaigns"|trans, "Group Layouts together into ordered lists called Campaigns."|trans) }}
+                                {{ flow.featureTitleRow("Campaigns"|trans, "Group Layouts together into ordered lists called Campaigns."|trans, isUserSpecific) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("campaigns") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
                             </tbody>
 
                             <tbody class="feature-group">
-                                {{ flow.featureTitleRow("Tagging"|trans, "Add tags to items."|trans) }}
+                                {{ flow.featureTitleRow("Tagging"|trans, "Add tags to content and other features."|trans, isUserSpecific) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("tagging") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
@@ -187,14 +196,14 @@
                             </thead>
 
                             <tbody class="feature-group">
-                                {{ flow.featureTitleRow("Scheduling"|trans, "Create and manage events on Displays and Display Groups."|trans) }}
+                                {{ flow.featureTitleRow("Scheduling"|trans, "Create and manage events on Displays and Display Groups."|trans, isUserSpecific) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("scheduling") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
                             </tbody>
 
                             <tbody class="feature-group">
-                                {{ flow.featureTitleRow("Display Management"|trans, "Connect and manage Displays."|trans) }}
+                                {{ flow.featureTitleRow("Display Management"|trans, "Connect and manage Displays."|trans, isUserSpecific) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("displays") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
@@ -221,21 +230,21 @@
                             </thead>
 
                             <tbody class="feature-group">
-                                {{ flow.featureTitleRow("User functions"|trans, "Profile, preferences and notifications for the logged in user."|trans) }}
+                                {{ flow.featureTitleRow("User functions"|trans, "Profile, preferences and notifications for the logged in user."|trans, isUserSpecific) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("users") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
                             </tbody>
 
                             <tbody class="feature-group">
-                                {{ flow.featureTitleRow("Notifications"|trans, "Use the Notification system to create/modify Notifications sent to other Users."|trans) }}
+                                {{ flow.featureTitleRow("Notifications"|trans, "Use the Notification system to create/modify Notifications sent to other Users."|trans, isUserSpecific) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("notifications") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
                             </tbody>
 
                             <tbody class="feature-group">
-                                {{ flow.featureTitleRow("User Management"|trans, "Manage other users."|trans) }}
+                                {{ flow.featureTitleRow("User Management"|trans, "Manage users that can authenticate with the CMS, organise them into groups and then enable features for them."|trans, isUserSpecific) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("users-management") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
@@ -262,14 +271,14 @@
                             </thead>
 
                             <tbody class="feature-group">
-                                {{ flow.featureTitleRow("Configuration"|trans, "Access to potentially dangerous system settings."|trans) }}
+                                {{ flow.featureTitleRow("Configuration"|trans, "Access to potentially dangerous system settings."|trans, isUserSpecific) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("system") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
                             </tbody>
 
                             <tbody class="feature-group">
-                                {{ flow.featureTitleRow("Troubleshooting"|trans, "Use logging and other troubleshooting tools to diagnose problems and seek help."|trans) }}
+                                {{ flow.featureTitleRow("Troubleshooting"|trans, "Use logging and other troubleshooting tools to diagnose problems and seek help."|trans, isUserSpecific) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("troubleshooting") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
@@ -296,7 +305,7 @@
                             </thead>
 
                             <tbody class="feature-group">
-                                {{ flow.featureTitleRow("Custom"|trans, "Third party extensions to the platform."|trans) }}
+                                {{ flow.featureTitleRow("Custom"|trans, "Third party extensions to the platform."|trans, isUserSpecific) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("custom") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}

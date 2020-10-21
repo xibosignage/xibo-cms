@@ -364,7 +364,9 @@ class Layout extends Base
             $layout->code = $code;
 
             // Create some tags (overwriting the old ones)
-            $layout->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+            if ($this->getUser()->featureEnabled('tag.tagging')) {
+                $layout->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+            }
 
             // Set the owner
             $layout->setOwner($this->getUser()->userId);
@@ -555,7 +557,11 @@ class Layout extends Base
 
         $layout->layout = $sanitizedParams->getString('name');
         $layout->description = $sanitizedParams->getString('description');
-        $layout->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $layout->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+        }
+
         $layout->retired = $sanitizedParams->getCheckbox('retired');
         $layout->enableStat = $sanitizedParams->getCheckbox('enableStat');
         $layout->code = $sanitizedParams->getString('code');

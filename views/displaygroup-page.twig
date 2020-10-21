@@ -78,10 +78,12 @@
                             {% set title %}{% trans "Dynamic Criteria" %}{% endset %}
                             {{ inline.input("dynamicCriteria", title) }}
 
-                            {% set title %}{% trans "Tags" %}{% endset %}
-                            {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
-                            {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                            {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                            {% if currentUser.featureEnabled("tag.tagging") %}
+                                {% set title %}{% trans "Tags" %}{% endset %}
+                                {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
+                                {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                            {% endif %}
                         </form>
                     </div>
                 </div>
@@ -94,8 +96,10 @@
                                 <th>{% trans "Description" %}</th>
                                 <th>{% trans "Is Dynamic?" %}</th>
                                 <th>{% trans "Criteria" %}</th>
+                                {% if currentUser.featureEnabled("tag.tagging") %}
                                 <th>{% trans "Criteria Tags" %}</th>
                                 <th>{% trans "Tags" %}</th>
+                                {% endif %}
                                 <th>{% trans "Created Date" %}</th>
                                 <th>{% trans "Modified Date" %}</th>
                                 <th>{% trans "Row Menu" %}</th>
@@ -135,12 +139,12 @@
                 { "data": "description" },
                 { "data": "isDynamic", "render": dataTableTickCrossColumn },
                 { "data": "dynamicCriteria" },
-                { "data": "dynamicCriteriaTags" },
+                {% if currentUser.featureEnabled("tag.tagging") %}{ "data": "dynamicCriteriaTags" },
                 {
                     "name": "tags",
                     "sortable": false,
                     "data": dataTableCreateTags
-                },
+                },{% endif %}
                 { "data": "createdDt", "visible": false },
                 { "data": "modifiedDt", "visible": false },
                 {

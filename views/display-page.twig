@@ -27,7 +27,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        {% if currentUser.featureEnabled("display.add") %}
+        {% if currentUser.featureEnabled("displays.add") %}
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a Display via user_code displayed on the Player screen" %}" href="{{ url_for("display.addViaCode.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Display (Code)" %}</a></li>
         {% endif %}
         <li class="btn btn-success btn-xs"><a class="btns" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
@@ -95,10 +95,12 @@
                                     ] %}
                                     {{ inline.dropdown("authorised", "single", title, "", options, "optionid", "option") }}
 
-                                    {% set title %}{% trans "Tags" %}{% endset %}
-                                    {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
-                                    {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                                    {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                                    {% if currentUser.featureEnabled("tag.tagging") %}
+                                        {% set title %}{% trans "Tags" %}{% endset %}
+                                        {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                        {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
+                                        {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                                    {% endif %}
 
                                     {% set title %}{% trans "Display Group" %}{% endset %}
                                     {{ inline.dropdown("displayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup") }}
@@ -191,7 +193,7 @@
                                 <th>{% trans "Description" %}</th>
                                 <th>{% trans "Orientation" %}</th>
                                 <th>{% trans "Resolution" %}</th>
-                                <th>{% trans "Tags" %}</th>
+                                {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
                                 <th>{% trans "Default Layout" %}</th>
                                 <th>{% trans "Interleave Default" %}</th>
                                 <th>{% trans "Email Alert" %}</th>
@@ -319,12 +321,12 @@
                     {"data": "description", "visible": false},
                     {"data": "orientation", "visible": false},
                     {"data": "resolution", "visible": false},
-                    {
+                    {% if currentUser.featureEnabled("tag.tagging") %}{
                         "name": "tags",
                         "sortable": false,
                         "visible": false,
                         "data": dataTableCreateTags
-                    },
+                    },{% endif %}
                     {"data": "defaultLayout", "visible": false},
                     {"data": "incSchedule", "render": dataTableTickCrossColumn, "visible": false},
                     {"data": "emailAlert", "render": dataTableTickCrossColumn, "visible": false},

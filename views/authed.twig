@@ -308,9 +308,11 @@
                 <div><span class="error"></span></div>
             </td>
             <td class="title" title="Tags">
+                {% endverbatim %}{% if currentUser.featureEnabled("tag.tagging") %}
                 <label class="control-label" title="A comma separated list of tags to assign to this Media" for="tags">Tags</label>
                 <label for="tags[]"><input name="tags[]" type="text" id="tags" value="" /></label>
                 <div><span class="error"></span></div>
+                {% endif %}{% verbatim %}
             </td>
             <td>
                 <p class="size">{%=o.formatFileSize(file.size)%}</p>

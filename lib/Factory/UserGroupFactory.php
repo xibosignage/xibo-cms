@@ -534,6 +534,11 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'tagging',
                     'title' => __('Add/Edit tags on items')
                 ],
+                'playlist.view' => [
+                    'feature' => 'playlist.view',
+                    'group' => 'playlist-design',
+                    'title' => __('Reusable Playlists that can be added to multiple Layouts')
+                ],
                 'playlist.add' => [
                     'feature' => 'playlist.add',
                     'group' => 'playlist-design',

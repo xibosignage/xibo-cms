@@ -191,7 +191,8 @@ class UserGroup extends Base
                 );
 
                 if ($this->getUser()->isSuperAdmin()) {
-                    // Page Security
+                    // Features
+                    $group->buttons[] = ['divider' => true];
                     $group->buttons[] = array(
                         'id' => 'usergroup_button_page_security',
                         'url' => $this->urlFor($request,'group.acl.form', ['id' => $group->groupId]),
