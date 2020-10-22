@@ -49,6 +49,10 @@
                         {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
                         {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
 
+                        {% set title %}{% trans "Duration is per page" %}{% endset %}
+                        {% set helpText %}{% trans "The duration specified is per page otherwise it is per document." %}{% endset %}
+                        {{ forms.checkbox("durationIsPerItem", title, module.getOption("durationIsPerItem"), helpText) }}
+
                         {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
                         {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Widget. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
 

@@ -448,6 +448,7 @@ class Calendar extends ModuleWidget
             ->appendJavaScriptFile('xibo-layout-scaler.js')
             ->appendJavaScriptFile('xibo-image-render.js')
             ->appendJavaScriptFile('xibo-text-render.js')
+            ->appendJavaScript('var xiboICTargetId = ' . $this->getWidgetId() . ';')
             ->appendJavaScriptFile('xibo-interactive-control.js')
             ->appendFontCss()
             ->appendCss($headContent)

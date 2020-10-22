@@ -489,6 +489,7 @@ class DataSetView extends ModuleWidget
             ->appendJavaScriptFile('xibo-layout-scaler.js')
             ->appendJavaScriptFile('xibo-dataset-render.js')
             ->appendJavaScriptFile('xibo-image-render.js')
+            ->appendJavaScript('var xiboICTargetId = ' . $this->getWidgetId() . ';')
             ->appendJavaScriptFile('xibo-interactive-control.js')
             ->appendFontCss()
             ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
