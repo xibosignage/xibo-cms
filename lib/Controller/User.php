@@ -383,6 +383,9 @@ class User extends Base
 
             $user->includeProperty('buttons');
 
+            // Deal with the home page
+            $user->homePage = $this->userGroupFactory->getHomepageByName($user->homePageId)->title;
+
             // Super admins have some buttons
             if ($this->getUser()->featureEnabled('users.modify')
                 && $this->getUser()->checkEditable($user)
