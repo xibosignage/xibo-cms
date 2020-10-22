@@ -20,9 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Helper;
-
 
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
@@ -34,8 +32,12 @@ use Xibo\Storage\PdoStorageService;
  */
 class DatabaseLogHandler extends AbstractProcessingHandler
 {
+    /** @var \PDOStatement|null */
     private static $statement;
     protected $level = Logger::ERROR;
+
+    /** @var int Track the number of failures since a success */
+    private $failureCount = 0;
 
     /**
      * @param int $level The minimum logging level at which this handler will be triggered
@@ -67,10 +69,8 @@ class DatabaseLogHandler extends AbstractProcessingHandler
     }
 
     /**
-     * Writes the record down to the log of the implementing handler
-     *
-     * @param  array $record
-     * @return void
+     * @inheritDoc
+     * @throws \Exception
      */
     protected function write(array $record)
     {
@@ -97,11 +97,31 @@ class DatabaseLogHandler extends AbstractProcessingHandler
         );
 
         try {
-            PdoStorageService::incrementStatStatic('log', 'insert');
+            // Insert
             self::$statement->execute($params);
-        }
-        catch (\PDOException $e) {
-            // Not sure what we can do here?
+
+            // Reset failure count
+            $this->failureCount = 0;
+
+            // Successful write
+            PdoStorageService::incrementStatStatic('log', 'insert');
+
+        } catch (\Exception $e) {
+            // Increment failure count
+            $this->failureCount++;
+
+            // Try to create a new statement
+            if ($this->failureCount <= 1) {
+                // Clear the stored statement, and try again
+                // this will rebuild the connection
+                self::$statement = null;
+
+                // Try again.
+                $this->write($record);
+            } else {
+                // Throw this message out (failing to log is still a failure we should know about)
+                throw $e;
+            }
         }
     }
 }

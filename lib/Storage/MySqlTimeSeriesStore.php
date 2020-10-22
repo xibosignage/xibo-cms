@@ -22,6 +22,7 @@
 
 namespace Xibo\Storage;
 
+use Carbon\Carbon;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Service\LogServiceInterface;
@@ -163,11 +164,12 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function getEarliestDate()
     {
-        $earliestDate = $this->store->select('SELECT MIN(statDate) AS minDate FROM `stat`', []);
+        $result = $this->store->select('SELECT MIN(start) AS minDate FROM `stat`', []);
+        $earliestDate = $result[0]['minDate'];
 
-        return [
-            'minDate' => $earliestDate[0]['minDate']
-        ];
+        return ($earliestDate === null)
+            ? null
+            : Carbon::createFromFormat('U', $result[0]['minDate']);
     }
 
     /** @inheritdoc */
@@ -495,7 +497,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         }
         catch (\PDOException $e) {
             $this->log->error($e->getMessage());
-            throw new \RuntimeException('Stats cannot be deleted.');
+            throw new GeneralException('Stats cannot be deleted.');
         }
     }
 
