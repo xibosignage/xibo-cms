@@ -147,6 +147,9 @@ function XiboInitialise(scope) {
         // Bind the filter form
         $(this).find(".XiboFilter form input").on("keyup",  filterRefresh);
         $(this).find(".XiboFilter form input, .XiboFilter form select").on("change", filterRefresh);
+
+        // init the jsTree
+        initJsTreeAjax('#container-folder-tree',  gridName, false)
     });
 
     // Search for any Buttons / Links on the page that are used to load forms
@@ -1494,9 +1497,26 @@ function XiboFormRender(sourceObj, data) {
                         $(this).closest(".modal").addClass("modal-big");
                 });
 
+                if ($('#folder-tree-form-modal').length === 0) {
+                    // compile tree folder modal and append it to Form
+                    let folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
+                    let treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
+                    $('.XiboForm').append(folderTreeModal(treeConfig));
+
+                    $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
+                        $(this).data('bs.modal', null);
+                    });
+                }
+
                 // Call Xibo Init for this form
                 XiboInitialise("#"+dialog.attr("id"));
-                
+                // if this is add form and we have some folderId selected in grid view, put that as the working folder id for this form
+                // edit forms will get the current folderId assigned to the edited object.
+                if ($('#container-folder-tree').jstree("get_selected", true)[0] !== undefined && $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').val() == '') {
+                    $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').val($('#container-folder-tree').jstree("get_selected", true)[0].id);
+                }
+                initJsTreeAjax('#container-folder-form-tree', dialog.find('.XiboForm').attr('id'), true, 600);
+
                 // Do we have to call any functions due to this success?
                 if (response.callBack !== "" && response.callBack !== undefined) {
                     eval(response.callBack)(dialog);
@@ -2889,5 +2909,228 @@ function saveVideoCoverImage(data)
             type: "POST",
             data: thumbnailData
         });
+    }
+}
+
+function initJsTreeAjax(container, table, isForm = false, ttl = false)
+{
+    let state = {};
+    if ($(container).length) {
+
+        if (isForm) {
+            state = {"key" : table + "_folder_tree", "ttl": ttl};
+        } else {
+            state = {"key" : table + "_folder_tree"}
+        }
+
+        $(container).jstree({
+            "state" : state,
+            "plugins" : ["contextmenu", "state", "unique"],
+            "contextmenu":{
+                "items": function($node) {
+                    let tree = $(container).jstree(true);
+                    let items = {
+                        "Create": {
+                            "separator_before": false,
+                            "separator_after": false,
+                            "label": translations.folderTreeCreate,
+                            "action": function (obj) {
+                                $node = tree.create_node($node);
+                                tree.edit($node);
+                            }
+                        },
+                        "Rename": {
+                            "separator_before": false,
+                            "separator_after": false,
+                            "label": translations.folderTreeEdit,
+                            "action": function (obj) {
+                                tree.edit($node);
+                            }
+                        },
+                        "Remove": {
+                            "separator_before": true,
+                            "separator_after": false,
+                            "label": translations.folderTreeDelete,
+                            "action": function (obj) {
+                                tree.delete_node($node);
+                            }
+                        }
+                    };
+
+                    if (isForm === false) {
+                        items['Share'] = {
+                            "separator_before": true,
+                            "separator_after": false,
+                            "label": translations.folderTreeShare,
+                            "_class": "XiboFormRender",
+                            "action": function (obj) {
+                                XiboFormRender('/user/permissions/form/Folder/'+$node.id);
+                            }
+                        }
+                    }
+
+                    return items;
+                }},
+            'core' : {
+                "check_callback" : function (operation, node, parent, position, more) {
+                    if(operation === "delete_node" || operation === "rename_node") {
+                        if(node.id === "#" || node.id === "1") {
+                            toastr.error(translations.folderTreeError);
+                            return false;
+                        }
+                    }
+                    return true;
+                    },
+                'data' : {
+                    "url": "/folders"
+                }
+            }
+        });
+
+        $(container).on('loaded.jstree', function(e, data) {
+            if (isForm) {
+                let folderIdInputSelector = '#'+table+' #folderId';
+
+                // for upload forms
+                if ($(folderIdInputSelector).length === 0) {
+                    folderIdInputSelector = '#formFolderId';
+                }
+
+                let selectedFolder = $(folderIdInputSelector).val();
+
+                if (selectedFolder !== undefined && selectedFolder !== '') {
+                    $(this).jstree('select_node', selectedFolder);
+                    if ($('#originalFormFolder').length) {
+                        $('#originalFormFolder').text($(this).jstree().get_path($(this).jstree("get_selected", true)[0], ' > '));
+                    }
+
+                    if ($('#selectedFormFolder').length && folderIdInputSelector === '#formFolderId') {
+                        $('#selectedFormFolder').text($(this).jstree().get_path($(this).jstree("get_selected", true)[0], ' > '));
+                    }
+                }
+            }
+        });
+
+        $(container).on("rename_node.jstree", function (e, data) {
+
+            let dataObject = {};
+            let folderId  = data.node.id;
+            dataObject['text'] = data.text;
+
+            $.ajax({
+                url: "/folders/"+folderId,
+                method: "PUT",
+                dataType: "json",
+                data: dataObject
+            });
+        });
+
+        $(container).on("create_node.jstree", function (e, data) {
+
+            let dataObject = {};
+            dataObject['parentId'] = data.parent;
+            dataObject['text'] = data.node.text;
+            let node = data.node;
+
+            $.ajax({
+                url: "/folders",
+                method: "POST",
+                dataType: "json",
+                data: dataObject,
+                success: function (data) {
+                    $(container).jstree(true).set_id(node, data.data.id);
+                },
+                complete: function (data) {
+
+                }
+            });
+        });
+
+        $(container).on("delete_node.jstree", function (e, data) {
+
+            let dataObject = {};
+            dataObject['parentId'] = data.parent;
+            dataObject['text'] = data.node.text;
+            let folderId = data.node.id;
+            $.ajax({
+                url: "/folders/"+folderId,
+                method: "DELETE",
+                dataType: "json",
+                data: dataObject,
+                success: function (data) {
+                    if (data.success) {
+                        toastr.success(translations.done)
+                    } else {
+                        toastr.error(translations.folderWithContent);
+                        console.log(data.message);
+                        $(container).jstree(true).refresh();
+                    }
+
+                }
+            });
+        });
+
+        $(container).on("changed.jstree", function (e, data) {
+            let selectedFolderId = data.selected[0];
+            let folderIdInputSelector = (isForm) ? '#'+table+' #folderId' : '#folderId';
+            let node = $(container).jstree("get_selected", true);
+
+            // for upload and multi select forms.
+            if (isForm && $(folderIdInputSelector).length === 0) {
+                folderIdInputSelector = '#formFolderId';
+            }
+
+            if ($(folderIdInputSelector).val() != selectedFolderId && isForm === false) {
+
+                if (selectedFolderId !== undefined) {
+                    $("#breadcrumbs").text($(container).jstree().get_path(node[0], ' > ')).hide();
+
+                    $('#folder-tree-clear-selection-button').prop('checked', false)
+                } else {
+                    $("#breadcrumbs").text('');
+                    $('#folder-tree-clear-selection-button').prop('checked', true)
+                }
+
+                $(folderIdInputSelector).val(selectedFolderId);
+                $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
+            }
+
+            if (isForm && $(folderIdInputSelector).val() != selectedFolderId && selectedFolderId !== undefined) {
+                $(folderIdInputSelector).val(selectedFolderId).trigger('change');
+                if ($('#selectedFormFolder').length) {
+                    $('#selectedFormFolder').text($(container).jstree().get_path(node[0], ' > '));
+                }
+            }
+
+        });
+
+        $(".btnCloseInnerModal").on('click', function(e) {
+            e.preventDefault();
+            let FolderTreeModalId = (isForm) ? '#folder-tree-form-modal' : '#folder-tree-modal';
+            $(FolderTreeModalId).modal('hide');
+        });
+
+        $("#folder-tree-clear-selection-button").on('click', function() {
+            $(this).prop('checked', true);
+            $(container).jstree("deselect_all");
+        });
+
+        $('#folder-tree-select-folder-button').off("click").on('click', function() {
+            $('#grid-folder-filter').toggle('fast', function() {
+                if ($(this).is(":hidden")) {
+
+                    if (!$("#folder-tree-clear-selection-button").is(':checked')) {
+                        $("#breadcrumbs").show('slow');
+                    }
+
+                    $('#datatable-container').addClass('col-sm-12').removeClass('col-sm-10');
+                    $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
+                } else {
+                    $("#breadcrumbs").hide('slow');
+                    $('#datatable-container').addClass('col-sm-10').removeClass('col-sm-12');
+                    $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
+                }
+            });
+        })
     }
 }
