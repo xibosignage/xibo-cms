@@ -30,6 +30,7 @@ use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Entity\Layout;
 use Xibo\Entity\Playlist;
+use Xibo\Entity\Region;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
 use Xibo\Helper\SanitizerService;
@@ -182,7 +183,7 @@ class LayoutFactory extends BaseFactory
      * @param int $ownerId
      * @param string $name
      * @param string $description
-     * @param string $tags
+     * @param string|array $tags
      * @param string $code
      * @return Layout
      *
@@ -210,7 +211,11 @@ class LayoutFactory extends BaseFactory
         $layout->setOwner($ownerId);
 
         // Create some tags
-        $layout->tags = $this->tagFactory->tagsFromString($tags);
+        if (is_array($tags)) {
+            $layout->tags = $tags;
+        } else {
+            $layout->tags = $this->tagFactory->tagsFromString($tags);
+        }
 
         // Add a blank, full screen region
         $layout->regions[] = $this->regionFactory->create($ownerId, $name . '-1', $layout->width, $layout->height, 0, 0);
@@ -2215,5 +2220,92 @@ class LayoutFactory extends BaseFactory
         }
 
         return $newPlaylist;
+    }
+
+    /**
+     * Checkout a Layout
+     * @param \Xibo\Entity\Layout $layout
+     * @param bool $returnDraft Should we return the Draft or the pre-checkout Layout
+     * @return \Xibo\Entity\Layout
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function checkoutLayout($layout, $returnDraft = true)
+    {
+        // Load the Layout
+        $layout->load();
+
+        // Make a skeleton copy of the Layout
+        $draft = clone $layout;
+        $draft->parentId = $layout->layoutId;
+        $draft->campaignId = $layout->campaignId;
+        $draft->publishedStatusId = 2; // Draft
+        $draft->publishedStatus = __('Draft');
+        $draft->autoApplyTransitions = $layout->autoApplyTransitions;
+        $draft->code = $layout->code;
+
+        // Do not copy any of the tags, these will belong on the parent and are not editable from the draft.
+        $draft->tags = [];
+
+        // Save without validation or notification.
+        $draft->save([
+            'validate' => false,
+            'notify' => false
+        ]);
+
+        // Update the original
+        $layout->publishedStatusId = 2; // Draft
+        $layout->publishedStatus = __('Draft');
+        $layout->save([
+            'saveLayout' => true,
+            'saveRegions' => false,
+            'saveTags' => false,
+            'setBuildRequired' => false,
+            'validate' => false,
+            'notify' => false
+        ]);
+
+        /** @var Region[] $allRegions */
+        $allRegions = array_merge($draft->regions, $draft->drawers);
+        $draft->copyActions($draft, $layout);
+
+        // Permissions && Sub-Playlists
+        // Layout level permissions are managed on the Campaign entity, so we do not need to worry about that
+        // Regions/Widgets need to copy down our layout permissions
+        foreach ($allRegions as $region) {
+            // Match our original region id to the id in the parent layout
+            $original = $layout->getRegionOrDrawer($region->getOriginalValue('regionId'));
+
+            // Make sure Playlist closure table from the published one are copied over
+            $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
+
+            // Copy over original permissions
+            foreach ($original->permissions as $permission) {
+                $new = clone $permission;
+                $new->objectId = $region->regionId;
+                $new->save();
+            }
+
+            // Playlist
+            foreach ($original->getPlaylist()->permissions as $permission) {
+                $new = clone $permission;
+                $new->objectId = $region->getPlaylist()->playlistId;
+                $new->save();
+            }
+
+            // Widgets
+            foreach ($region->getPlaylist()->widgets as $widget) {
+                $originalWidget = $original->getPlaylist()->getWidget($widget->getOriginalValue('widgetId'));
+                // Copy over original permissions
+                foreach ($originalWidget->permissions as $permission) {
+                    $new = clone $permission;
+                    $new->objectId = $widget->widgetId;
+                    $new->save();
+                }
+            }
+        }
+
+        return $returnDraft ? $draft : $layout;
     }
 }
