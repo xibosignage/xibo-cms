@@ -31,13 +31,15 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
 use Slim\Routing\RouteContext;
 use Xibo\OAuth\AccessTokenRepository;
+use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class ApiAuthenticationOAuth
  * This middleware protects the API entry point
  * @package Xibo\Middleware
  */
-class ApiAuthenticationOAuth implements Middleware
+class ApiAuthorization implements Middleware
 {
     /* @var App $app */
     private $app;
@@ -65,10 +67,12 @@ class ApiAuthenticationOAuth implements Middleware
         /* @var \Xibo\Entity\User $user */
         $user = null;
 
+        /** @var \Xibo\Service\LogServiceInterface $logger */
+        $logger = $this->app->getContainer()->get('logger');
+
         // Setup the authorization server
-        $this->app->getContainer()->set('server', function (ContainerInterface $container) {
+        $this->app->getContainer()->set('server', function (ContainerInterface $container) use ($logger) {
             // oAuth Resource
-            $logger = $container->get('logger');
             $apiKeyPaths = $container->get('configService')->getApiKeyDetails();
 
             $accessTokenRepository = new AccessTokenRepository($logger);
@@ -92,8 +96,7 @@ class ApiAuthenticationOAuth implements Middleware
         $userId = $validatedRequest->getAttribute('oauth_user_id');
 
         $user = $userFactory->getById($userId);
-
-        $user->setChildAclDependencies($this->app->getContainer()->get('userGroupFactory'), $this->app->getContainer()->get('pageFactory'));
+        $user->setChildAclDependencies($this->app->getContainer()->get('userGroupFactory'));
         $user->load();
 
         // We must check whether this user has access to the route they have requested.
@@ -106,20 +109,34 @@ class ApiAuthenticationOAuth implements Middleware
         if (!in_array($resource, $validatedRequest->getAttribute('publicRoutes', []))) {
             $request = $request->withAttribute('public', false);
 
-            // Do they have permission?
-            $user->routeAuthentication(
-                $resource,
-                $request->getMethod(),
-                $validatedRequest->getAttribute('oauth_scopes')
-            );
+            // Check that the Scopes granted to this token are allowed access to the route/method of this request
+            $applicationScopeFactory = $this->app->getContainer()->get('applicationScopeFactory');
+            $scopes = $validatedRequest->getAttribute('oauth_scopes');
+
+            // Only validate scopes if we have been provided some.
+            if (is_array($scopes) && count($scopes) > 0) {
+                foreach ($scopes as $scope) {
+                    // Valid routes
+                    if ($scope->getId() != 'all') {
+                        $logger->debug(sprintf('Test authentication for %s %s against scope %s',
+                            $route, $request->getMethod(), $scope->getId()));
+
+                        // Check the route and request method
+                        try {
+                            $applicationScopeFactory->getById($scope->getId())->checkRoute($request->getMethod(),
+                                $route);
+                        } catch (NotFoundException $notFoundException) {
+                            throw new AccessDeniedException();
+                        }
+                    }
+                }
+            }
         } else {
             $validatedRequest = $validatedRequest->withAttribute('public', true);
         }
 
-        $newRequest = $validatedRequest->withAttribute('name', 'API');
-
         $this->app->getContainer()->set('user', $user);
 
-        return $handler->handle($newRequest);
+        return $handler->handle($validatedRequest->withAttribute('name', 'API'));
     }
 }

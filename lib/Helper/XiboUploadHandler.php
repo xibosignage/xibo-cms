@@ -34,7 +34,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
         $fileName = $file->name;
         $filePath = $controller->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $fileName;
 
-        $controller->getLog()->debug('Upload complete for name: ' . $fileName . '. Index is %s.', $index);
+        $controller->getLog()->debug('Upload complete for name: ' . $fileName . '. Index is ' . $index);
 
         // Upload and Save
         try {
@@ -56,7 +56,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     $name = $fileName;
                 }
 
-                if (isset($_REQUEST['tags'])) {
+                if ($controller->getUser()->featureEnabled('tag.tagging') && isset($_REQUEST['tags'])) {
                     $tags = $_REQUEST['tags'];
                 } else {
                     $tags = '';
@@ -78,7 +78,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $module = $controller->getModuleFactory()->getByExtension(strtolower(substr(strrchr($fileName, '.'), 1)));
             $module = $controller->getModuleFactory()->create($module->type);
 
-            $controller->getLog()->debug('Module Type = %s, Name = %s', $module->getModuleType(), $module->getModuleName());
+            $controller->getLog()->debug(sprintf('Module Type = %s, Name = %s', $module->getModuleType(), $module->getModuleName()));
 
             // Do we need to run any pre-processing on the file?
             $module->preProcessFile($filePath);
@@ -89,7 +89,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $updateInLayouts = ($this->options['updateInLayouts'] == 1);
                 $deleteOldRevisions = ($this->options['deleteOldRevisions'] == 1);
 
-                $controller->getLog()->debug('Replacing old with new - updateInLayouts = %d, deleteOldRevisions = %d', $updateInLayouts, $deleteOldRevisions);
+                $controller->getLog()->debug(sprintf('Replacing old with new - updateInLayouts = %d, deleteOldRevisions = %d',
+                    $updateInLayouts, $deleteOldRevisions));
 
                 // Load old media
                 $oldMedia = $controller->getMediaFactory()->getById($this->options['oldMediaId']);

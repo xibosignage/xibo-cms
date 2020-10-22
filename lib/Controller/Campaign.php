@@ -235,24 +235,29 @@ class Campaign extends Base
             $campaign->buttons = [];
 
             // Schedule Now
-            $campaign->buttons[] = array(
-                'id' => 'campaign_button_schedulenow',
-                'url' => $this->urlFor($request,'schedule.now.form', ['id' => $campaign->campaignId, 'from' => 'Campaign']),
-                'text' => __('Schedule Now')
-            );
+            if ($this->getUser()->featureEnabled('schedule.now')) {
+                $campaign->buttons[] = array(
+                    'id' => 'campaign_button_schedulenow',
+                    'url' => $this->urlFor($request,'schedule.now.form', ['id' => $campaign->campaignId, 'from' => 'Campaign']),
+                    'text' => __('Schedule Now')
+                );
+            }
 
             // Preview
-            $campaign->buttons[] = array(
-                'id' => 'campaign_button_preview',
-                'linkType' => '_blank',
-                'external' => true,
-                'url' => $this->urlFor($request,'campaign.preview', ['id' => $campaign->campaignId]),
-                'text' => __('Preview Campaign')
-            );
+            if ($this->getUser()->featureEnabled(['layout.view', 'campaign.view'], true)) {
+                $campaign->buttons[] = array(
+                    'id' => 'campaign_button_preview',
+                    'linkType' => '_blank',
+                    'external' => true,
+                    'url' => $this->urlFor($request, 'campaign.preview', ['id' => $campaign->campaignId]),
+                    'text' => __('Preview Campaign')
+                );
+            }
 
             // Buttons based on permissions
-            if ($this->getUser()->checkEditable($campaign)) {
-
+            if ($this->getUser()->featureEnabled('campaign.modify')
+                && $this->getUser()->checkEditable($campaign)
+            ) {
                 $campaign->buttons[] = ['divider' => true];
 
                 // Edit the Campaign
@@ -272,7 +277,9 @@ class Campaign extends Base
                 $campaign->buttons[] = ['divider' => true];
             }
 
-            if ($this->getUser()->checkDeleteable($campaign)) {
+            if ($this->getUser()->featureEnabled('campaign.modify') &&
+                $this->getUser()->checkDeleteable($campaign)
+            ) {
                 // Delete Campaign
                 $campaign->buttons[] = [
                     'id' => 'campaign_button_delete',
@@ -290,8 +297,9 @@ class Campaign extends Base
                 ];
             }
 
-            if ($this->getUser()->checkPermissionsModifyable($campaign)) {
-
+            if ($this->getUser()->featureEnabled('campaign.modify') &&
+                $this->getUser()->checkPermissionsModifyable($campaign)
+            ) {
                 $campaign->buttons[] = ['divider' => true];
 
                 // Permissions for Campaign
@@ -503,10 +511,17 @@ class Campaign extends Base
         }
 
         $campaign->campaign = $parsedRequestParams->getString('name');
-        $campaign->replaceTags($this->tagFactory->tagsFromString($parsedRequestParams->getString('tags')));
-        $campaign->save([
-            'saveTags' => true
-        ]);
+
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $campaign->replaceTags($this->tagFactory->tagsFromString($parsedRequestParams->getString('tags')));
+            $campaign->save([
+                'saveTags' => true
+            ]);
+        } else {
+            $campaign->save([
+                'saveTags' => false
+            ]);
+        }
 
         // Assign layouts
         $this->assignLayout($request, $response, $campaign->campaignId);

@@ -275,7 +275,7 @@ class Playlist extends Base
             'ownerUserGroupId' => $sanitizedParams->getInt('ownerUserGroupId'),
             'mediaLike' => $sanitizedParams->getString('mediaLike'),
             'regionSpecific' => $sanitizedParams->getInt('regionSpecific', ['default' => 0])
-        ], $request), $request);
+        ], $request));
 
         foreach ($playlists as $playlist) {
 
@@ -343,8 +343,9 @@ class Playlist extends Base
             }
 
             // Only proceed if we have edit permissions
-            if ($this->getUser()->checkEditable($playlist)) {
-
+            if ($this->getUser()->featureEnabled('playlist.modify')
+                && $this->getUser()->checkEditable($playlist)
+            ) {
                 if ($playlist->isDynamic === 0) {
                     // Timeline edit
                     $playlist->buttons[] = [
@@ -391,7 +392,9 @@ class Playlist extends Base
             }
 
             // Extra buttons if have delete permissions
-            if ($this->getUser()->checkDeleteable($playlist)) {
+            if ($this->getUser()->featureEnabled('playlist.modify')
+                && $this->getUser()->checkDeleteable($playlist)
+            ) {
                 // Delete Button
                 $playlist->buttons[] = [
                     'id' => 'playlist_button_delete',
@@ -412,7 +415,9 @@ class Playlist extends Base
             }
 
             // Extra buttons if we have modify permissions
-            if ($this->getUser()->checkPermissionsModifyable($playlist)) {
+            if ($this->getUser()->featureEnabled('playlist.modify')
+                && $this->getUser()->checkPermissionsModifyable($playlist)
+            ) {
                 // Permissions button
                 $playlist->buttons[] = [
                     'id' => 'playlist_button_permissions',
@@ -432,13 +437,15 @@ class Playlist extends Base
                 ];
             }
 
-            $playlist->buttons[] = ['divider' => true];
+            if ($this->getUser()->featureEnabled(['schedule.view', 'layout.view'])) {
+                $playlist->buttons[] = ['divider' => true];
 
-            $playlist->buttons[] = array(
-                'id' => 'usage_report_button',
-                'url' => $this->urlFor($request,'playlist.usage.form', ['id' => $playlist->playlistId]),
-                'text' => __('Usage Report')
-            );
+                $playlist->buttons[] = array(
+                    'id' => 'usage_report_button',
+                    'url' => $this->urlFor($request, 'playlist.usage.form', ['id' => $playlist->playlistId]),
+                    'text' => __('Usage Report')
+                );
+            }
         }
 
         $this->getState()->recordsTotal = $this->playlistFactory->countLast();
@@ -541,11 +548,13 @@ class Playlist extends Base
         $playlist->isDynamic = $sanitizedParams->getCheckbox('isDynamic');
         $playlist->enableStat = $sanitizedParams->getString('enableStat');
 
-        $playlist->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $playlist->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+        }
 
         // Do we have a tag or name filter?
         $nameFilter = $sanitizedParams->getString('filterMediaName');
-        $tagFilter = $sanitizedParams->getString('filterMediaTag');
+        $tagFilter = $this->getUser()->featureEnabled('tag.tagging') ? null : $sanitizedParams->getString('filterMediaTag');
 
         // Capture these as dynamic filter criteria
         if ($playlist->isDynamic === 1) {
@@ -737,13 +746,18 @@ class Playlist extends Base
         $playlist->isDynamic = $sanitizedParams->getCheckbox('isDynamic');
         $playlist->enableStat = $sanitizedParams->getString('enableStat');
 
-        $playlist->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $playlist->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+        }
 
         // Do we have a tag or name filter?
         // Capture these as dynamic filter criteria
         if ($playlist->isDynamic === 1) {
             $playlist->filterMediaName = $sanitizedParams->getString('filterMediaName');
-            $playlist->filterMediaTags = $sanitizedParams->getString('filterMediaTag');
+
+            if ($this->getUser()->featureEnabled('tag.tagging')) {
+                $playlist->filterMediaTags = $sanitizedParams->getString('filterMediaTag');
+            }
         }
 
         $playlist->save();

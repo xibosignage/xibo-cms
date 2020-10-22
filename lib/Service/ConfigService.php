@@ -181,10 +181,11 @@ class ConfigService implements ConfigServiceInterface
     /**
      * Loads the settings from file.
      *  DO NOT CALL ANY STORE() METHODS IN HERE
-     * @param string $settings
+     * @param \Psr\Container\ContainerInterface $container DI container which may be used in settings.php
+     * @param string $settings Settings Path
      * @return ConfigServiceInterface
      */
-    public static function Load($settings)
+    public static function Load($container, string $settings)
     {
         $config = new ConfigService();
 
@@ -245,7 +246,7 @@ class ConfigService implements ConfigServiceInterface
 
     /**
      * Loads the theme
-     * @param string[Optional] $themeName
+     * @param string|null $themeName
      * @throws ConfigurationException
      */
     public function loadTheme($themeName = null)

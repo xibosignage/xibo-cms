@@ -64,7 +64,10 @@ $app->config = $container->get('configService');
 $routeParser = $app->getRouteCollector()->getRouteParser();
 $container->set('name', 'API');
 
-$app->add(new \Xibo\Middleware\ApiAuthenticationOAuth($app));
+// Handle additional Middleware
+\Xibo\Middleware\State::setMiddleWare($app);
+
+$app->add(new \Xibo\Middleware\ApiAuthorization($app));
 $app->add(new \Xibo\Middleware\State($app));
 $app->add(new \Xibo\Middleware\Log($app));
 $app->add(new \Xibo\Middleware\Storage($app));
@@ -74,9 +77,6 @@ $app->addRoutingMiddleware();
 // Add Error Middleware
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
 $errorMiddleware->setDefaultErrorHandler(\Xibo\Middleware\Handlers::jsonErrorHandler($container));
-
-// Handle additional Middleware
-\Xibo\Middleware\State::setMiddleWare($app);
 
 // All routes
 require PROJECT_ROOT . '/lib/routes.php';

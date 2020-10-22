@@ -236,7 +236,7 @@
                     var delTempl = Handlebars.compile($("#delete-template").html());
                     $delButtonDiv.append(delTempl({
                         href: $container.data("widgetDel").replace(":id", $container.data("widgetId")),
-                        routeViewable: $container.data("routeViewable"),
+                        featureEnabled: $container.data("featureEnabled"),
                         transDelete: "{% trans "Delete" %}"
                     }));
 
@@ -333,7 +333,7 @@
 
     <!-- The template to display delete button -->
     <script type="text/x-handlebars-template" id="delete-template">
-        {{#if routeViewable}}
+        {{#if featureEnabled }}
             <a class="XiboFormButton added btns" title="{{ transDelete }}" href="{{ href }}">
                 <i class="fa fa-lg fa-trash" aria-hidden="true" style="padding:8px 0 8px; color:#d9534f;"></i>
             </a>

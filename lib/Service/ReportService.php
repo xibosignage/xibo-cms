@@ -107,11 +107,9 @@ class ReportService implements ReportServiceInterface
             $config->file = Str::replaceFirst(PROJECT_ROOT, '', $file);
 
             // Compatibility check
-            if (!isset($config->route) || !isset($config->category)) {
+            if (!isset($config->feature) || !isset($config->category)) {
                 continue;
             }
-
-            $route = $config->route;
 
             // Check if only allowed for admin
             if ($this->container->get('user')->userTypeId != 1) {
@@ -121,7 +119,7 @@ class ReportService implements ReportServiceInterface
             }
 
             // Check Permissions
-            if (!$this->container->get('user')->routeViewable($route)) {
+            if (!$this->container->get('user')->featureEnabled($config->feature)) {
                 continue;
             }
 
@@ -189,7 +187,7 @@ class ReportService implements ReportServiceInterface
         }
 
         // throw error
-      throw new NotFoundException(__('Get report class: No file to return'));
+        throw new NotFoundException(__('Get report class: No file to return'));
     }
 
     /**

@@ -33,7 +33,9 @@
                 <button type="button" class="btn btn-warning active" data-calendar-view="month">{% trans "Month" %}</button>
                 <button type="button" class="btn btn-warning" data-calendar-view="week">{% trans "Week" %}</button>
                 <button type="button" class="btn btn-warning" data-calendar-view="day">{% trans "Day" %}</button>
-                <button type="button" class="btn btn-warning" data-calendar-view="agenda">{% trans "Agenda" %}</button>
+                {% if currentUser.featureEnabled("schedule.agenda") %}
+                    <button type="button" class="btn btn-warning" data-calendar-view="agenda">{% trans "Agenda" %}</button>
+                {% endif %}
             </div>
 
             <div class="btn-group pull-right xibo-calendar-controls">
@@ -49,11 +51,14 @@
                 <button type="button" class="btn btn-default" data-calendar-nav="today">{% trans "Today" %}</button>
                 <button type="button" class="btn btn-primary" data-calendar-nav="next">{% trans "Next" %} <span class="glyphicon glyphicon-forward"></span></button>
             </div>
-            <div class="btn-group pull-right xibo-calendar-controls">
-                <button class="btn btn-success XiboFormButton" href="{{ url_for("schedule.add.form") }}">
-                    {% trans "Add Event" %}
-                </button>
-            </div>
+
+            {% if currentUser.featureEnabled("schedule.add") %}
+                <div class="btn-group pull-right xibo-calendar-controls">
+                    <button class="btn btn-success XiboFormButton" href="{{ url_for("schedule.add.form") }}">
+                        {% trans "Add Event" %}
+                    </button>
+                </div>
+            {% endif %}
 
             <div class="xibo-calendar-controls dropdown pull-right">
                 {# Campaign / Layout list. We want to build two arrays for us to use. #}
@@ -61,7 +66,7 @@
                 {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
 
                 <select name="campaignId" id="campaignId" class="hidden form-control"
-                    data-search-url= "{{ url_for("schedule.campaign.search") }}"
+                    data-search-url= "{{ url_for("campaign.search") }}"
                     data-trans-campaigns= "{% trans "Campaigns" %}"
                     data-trans-layouts= "{% trans "Layouts" %}"
                     data-allow-clear="true"
@@ -76,7 +81,7 @@
             <div class="xibo-calendar-controls dropdown pull-right">
                 <select id="DisplayList" class="form-control" name="displayGroupIds[]"
                         data-placeholder="{% trans "Displays" %}"
-                        data-search-url="{{ url_for("schedule.displayGroup.search") }}"
+                        data-search-url="{{ url_for("displayGroup.search") }}"
                         data-trans-groups="{% trans "Groups" %}"
                         data-trans-display="{% trans "Display" %}"
                         data-allow-clear="true"
@@ -91,7 +96,7 @@
             </div>
 
             <div class="xibo-calendar-controls pull-right">
-                <input title="Show All" type="checkbox" id="showAll" name="showAll" data-search-url="{{ url_for("schedule.displayGroup.search") }}"
+                <input title="Show All" type="checkbox" id="showAll" name="showAll" data-search-url="{{ url_for("displayGroup.search") }}"
                     {% if displayGroupsShowAll == -1 %}
                         checked
                     {% endif %}

@@ -42,7 +42,6 @@ use Xibo\Storage\PdoStorageService;
 use Xibo\Twig\ByteFormatterTwigExtension;
 use Xibo\Twig\DateFormatTwigExtension;
 use Xibo\Twig\TransExtension;
-use Xibo\Twig\UrlDecodeTwigExtension;
 
 if (!defined('PROJECT_ROOT')) {
     define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
@@ -156,7 +155,7 @@ class ContainerFactory
                 );
             },
             'configService' => function(ContainerInterface $c) {
-                return ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
+                return ConfigService::Load($c, PROJECT_ROOT . '/web/settings.php');
             },
             'user' => function (ContainerInterface $c) {
                 return new User(

@@ -364,7 +364,9 @@ class Layout extends Base
             $layout->code = $code;
 
             // Create some tags (overwriting the old ones)
-            $layout->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+            if ($this->getUser()->featureEnabled('tag.tagging')) {
+                $layout->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+            }
 
             // Set the owner
             $layout->setOwner($this->getUser()->userId);
@@ -555,7 +557,11 @@ class Layout extends Base
 
         $layout->layout = $sanitizedParams->getString('name');
         $layout->description = $sanitizedParams->getString('description');
-        $layout->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $layout->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+        }
+
         $layout->retired = $sanitizedParams->getCheckbox('retired');
         $layout->enableStat = $sanitizedParams->getCheckbox('enableStat');
         $layout->code = $sanitizedParams->getString('code');
@@ -1385,10 +1391,12 @@ class Layout extends Base
             $layout->publishedStatusFailed = __('Publish failed ');
 
             // Check if user has view permissions to the schedule now page - for layout designer to show/hide Schedule Now button
-            $layout->scheduleNowPermission = $this->getUser()->routeViewable('/schedulenow/form/now/:from/:id');
+            $layout->scheduleNowPermission = $this->getUser()->featureEnabled('schedule.now');
 
             // Add some buttons for this row
-            if ($this->getUser()->checkEditable($layout)) {
+            if ($this->getUser()->featureEnabled('layout.modify')
+                && $this->getUser()->checkEditable($layout)
+            ) {
                 // Design Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_design',
@@ -1435,26 +1443,29 @@ class Layout extends Base
             }
 
             // Preview
-            $layout->buttons[] = array(
-                'id' => 'layout_button_preview',
-                'linkType' => '_blank',
-                'external' => true,
-                'url' => $this->urlFor($request,'layout.preview', ['id' => $layout->layoutId]),
-                'text' => __('Preview Layout')
-            );
+            if ($this->getUser()->featureEnabled('layout.view')) {
+                $layout->buttons[] = array(
+                    'id' => 'layout_button_preview',
+                    'linkType' => '_blank',
+                    'external' => true,
+                    'url' => $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]),
+                    'text' => __('Preview Layout')
+                );
 
-            $layout->buttons[] = ['divider' => true];
+                $layout->buttons[] = ['divider' => true];
+            }
 
             // Schedule Now
-            if ($this->getUser()->routeViewable('/schedulenow/form/now/:from/:id') === true) {
+            if ($this->getUser()->featureEnabled('schedule.now')) {
                 $layout->buttons[] = array(
                     'id' => 'layout_button_schedulenow',
-                    'url' => $this->urlFor($request,'schedulenow.now.form', ['id' => $layout->campaignId, 'from' => 'Campaign']),
+                    'url' => $this->urlFor($request,'schedule.now.form', ['id' => $layout->campaignId, 'from' => 'Campaign']),
                     'text' => __('Schedule Now')
                 );
             }
+
             // Assign to Campaign
-            if ($this->getUser()->routeViewable('/campaign')) {
+            if ($this->getUser()->featureEnabled('campaign.modify')) {
                 $layout->buttons[] = array(
                     'id' => 'layout_button_assignTo_campaign',
                     'url' => $this->urlFor($request,'layout.assignTo.campaign.form', ['id' => $layout->layoutId]),
@@ -1465,8 +1476,9 @@ class Layout extends Base
             $layout->buttons[] = ['divider' => true];
 
             // Only proceed if we have edit permissions
-            if ($this->getUser()->checkEditable($layout)) {
-
+            if ($this->getUser()->featureEnabled('layout.modify')
+                && $this->getUser()->checkEditable($layout)
+            ) {
                 // Edit Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_edit',
@@ -1542,7 +1554,7 @@ class Layout extends Base
 
                 $layout->buttons[] = ['divider' => true];
 
-                if ($this->getUser()->routeViewable('template') && !$layout->isEditable()) {
+                if ($this->getUser()->featureEnabled('template.modify') && !$layout->isEditable()) {
                     // Save template button
                     $layout->buttons[] = array(
                         'id' => 'layout_button_save_template',
@@ -1552,11 +1564,13 @@ class Layout extends Base
                 }
 
                 // Export Button
-                $layout->buttons[] = array(
-                    'id' => 'layout_button_export',
-                    'url' => $this->urlFor($request,'layout.export.form', ['id' => $layout->layoutId]),
-                    'text' => __('Export')
-                );
+                if ($this->getUser()->featureEnabled('layout.export')) {
+                    $layout->buttons[] = array(
+                        'id' => 'layout_button_export',
+                        'url' => $this->urlFor($request, 'layout.export.form', ['id' => $layout->layoutId]),
+                        'text' => __('Export')
+                    );
+                }
 
                 // Extra buttons if we have modify permissions
                 if ($this->getUser()->checkPermissionsModifyable($layout)) {

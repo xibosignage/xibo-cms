@@ -75,7 +75,7 @@
                         {% set title %}{% trans "Display" %}{% endset %}
                         {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
                         {% set attributes = [
-                            { name: "data-search-url", value:  url_for("schedule.displayGroup.search") },
+                            { name: "data-search-url", value:  url_for("displayGroup.search") },
                             { name: "data-trans-groups", value:  "Groups"|trans },
                             { name: "data-trans-display", value:  "Display"|trans }
                         ] %}
@@ -108,7 +108,7 @@
 
                         {# Campaign / Layout list. We want to build two arrays for us to use. #}
                         {% set attributes = [
-                            { name: "data-search-url", value:  url_for("schedule.campaign.search") },
+                            { name: "data-search-url", value:  url_for("campaign.search") },
                             { name: "data-search-is-layout-specific", value: -1 },
                             { name: "data-trans-layout", value: "Layout"|trans },
                             { name: "data-trans-layout-help-text", value: "Please select a Layout for this Event to show"|trans },

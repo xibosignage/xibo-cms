@@ -642,8 +642,9 @@ class Display extends Base
             $display->webkeyLink = (!empty($display->webkeySerial)) ? 'https://webkeyapp.com/mgm?publicid=' . $display->webkeySerial : '';
 
             // Edit and Delete buttons first
-            if ($this->getUser()->checkEditable($display)) {
-
+            if ($this->getUser()->featureEnabled('displays.modify')
+                && $this->getUser()->checkEditable($display)
+            ) {
                 // Manage
                 $display->buttons[] = array(
                     'id' => 'display_button_manage',
@@ -663,13 +664,17 @@ class Display extends Base
             }
 
             // Delete
-            if ($this->getUser()->checkDeleteable($display)) {
+            if ($this->getUser()->featureEnabled('displays.modify')
+                && $this->getUser()->checkDeleteable($display)
+            ) {
                 $deleteButton = [
                     'id' => 'display_button_delete',
                     'url' => $this->urlFor($request,'display.delete.form', ['id' => $display->displayId]),
                     'text' => __('Delete')
                 ];
 
+                // We only include this in dev mode, because users have complained that it is too powerful a feature
+                // to have in the core product.
                 if (Environment::isDevMode()) {
                     $deleteButton['multi-select'] = true;
                     $deleteButton['dataAttributes'] = [
@@ -684,12 +689,15 @@ class Display extends Base
                 $display->buttons[] = $deleteButton;
             }
 
-            if ($this->getUser()->checkEditable($display) || $this->getUser()->checkDeleteable($display)) {
+            if ($this->getUser()->featureEnabled('displays.modify')
+                && ($this->getUser()->checkEditable($display) || $this->getUser()->checkDeleteable($display))
+            ) {
                 $display->buttons[] = ['divider' => true];
             }
 
-            if ($this->getUser()->checkEditable($display)) {
-
+            if ($this->getUser()->featureEnabled('displays.modify')
+                && $this->getUser()->checkEditable($display)
+            ) {
                 // Authorise
                 $display->buttons[] = array(
                     'id' => 'display_button_authorise',
@@ -743,16 +751,20 @@ class Display extends Base
             }
 
             // Schedule Now
-            if (($this->getUser()->checkEditable($display) || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1) && $this->getUser()->routeViewable('/schedulenow/form/now/:from/:id') === true ) {
+            if ($this->getUser()->featureEnabled('schedule.now')
+                && ($this->getUser()->checkEditable($display)
+                    || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1)
+            ) {
                 $display->buttons[] = array(
                     'id' => 'display_button_schedulenow',
-                    'url' => $this->urlFor($request,'schedulenow.now.form', ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']),
+                    'url' => $this->urlFor($request,'schedule.now.form', ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']),
                     'text' => __('Schedule Now')
                 );
             }
 
-            if ($this->getUser()->checkEditable($display)) {
-
+            if ($this->getUser()->featureEnabled('displays.modify')
+                && $this->getUser()->checkEditable($display)
+            ) {
                 // File Associations
                 $display->buttons[] = array(
                     'id' => 'displaygroup_button_fileassociations',
@@ -802,8 +814,9 @@ class Display extends Base
                 $display->buttons[] = ['divider' => true];
             }
 
-            if ($this->getUser()->checkPermissionsModifyable($display)) {
-
+            if ($this->getUser()->featureEnabled('displays.modify')
+                && $this->getUser()->checkPermissionsModifyable($display)
+            ) {
                 // Display Groups
                 $display->buttons[] = array(
                     'id' => 'display_button_group_membership',
@@ -831,8 +844,9 @@ class Display extends Base
                 ];
             }
 
-            if ($this->getUser()->checkEditable($display)) {
-
+            if ($this->getUser()->featureEnabled('displays.modify')
+                && $this->getUser()->checkEditable($display)
+            ) {
                 if ($this->getUser()->checkPermissionsModifyable($display)) {
                     $display->buttons[] = ['divider' => true];
                 }
@@ -1209,8 +1223,9 @@ class Display extends Base
         }
 
         // Update properties
-        if ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 0)
+        if ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 0) {
             $display->display = $sanitizedParams->getString('display');
+        }
 
         $display->load();
 
@@ -1240,7 +1255,9 @@ class Display extends Base
         $display->overrideConfig = $this->editConfigFields($display->getDisplayProfile(), [], $request);
 
         // Tags are stored on the displaygroup, we're just passing through here
-        $display->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $display->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+        }
 
         if ($display->auditingUntil !== null) {
             $display->auditingUntil = $display->auditingUntil->format('U');

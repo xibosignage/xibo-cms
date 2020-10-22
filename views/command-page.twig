@@ -26,9 +26,11 @@
 {% block title %}{{ "Commands"|trans }} | {% endblock %}
 
 {% block actionMenu %}
+    {% if currentUser.featureEnabled("command.add") %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ url_for("command.add.form") }}"><i class="fa fa-terminal" aria-hidden="true"></i> {% trans "Add Command" %}</a></li>
     </ul>
+    {% endif %}
 {% endblock %}
 
 

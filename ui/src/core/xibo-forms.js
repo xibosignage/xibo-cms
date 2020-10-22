@@ -1748,3 +1748,77 @@ function tagsWithValues(formId) {
         }
     })
 }
+
+
+
+/**
+ * Called when the ACL form is opened on Users/User Groups
+ * @param dialog
+ */
+function featureAclFormOpen(dialog) {
+    // Start everything collapsed.
+    $(dialog).find("tr.feature-row").hide();
+
+    // Bind to clicking on the feature header cells
+    $(dialog).find("td.feature-group-header-cell").on("click", function() {
+        // Toggle state
+        var $header = $(this);
+        var isOpen = $header.hasClass("open");
+
+        if (isOpen) {
+            // Make closed
+            $header.find(".feature-group-description").show();
+            $header.find("i.fa").removeClass("fa-arrow-circle-up").addClass("fa fa-arrow-circle-down");
+            $header.closest("tbody.feature-group").find("tr.feature-row").hide();
+            $header.removeClass("open").addClass("closed");
+        } else {
+            // Make open
+            $header.find(".feature-group-description").hide();
+            $header.find("i.fa").removeClass("fa-arrow-circle-down").addClass("fa fa-arrow-circle-up");
+            $header.closest("tbody.feature-group").find("tr.feature-row").show();
+            $header.removeClass("closed").addClass("open");
+        }
+    }).each(function(index, el) {
+        // Set the initial state of the 3 way checkboxes
+        setFeatureGroupCheckboxState($(this));
+    });
+
+    // Bind to checkbox change event
+    $(dialog).find("input[name='features[]']").on("click", function() {
+        setFeatureGroupCheckboxState($(this));
+    });
+
+    // Bind to group checkboxes to check/uncheck all below.
+    $(dialog).find("input.feature-select-all").on("click", function() {
+        // Force this down to all child checkboxes
+        $(this)
+            .closest("tbody.feature-group")
+            .find("input[name='features[]']")
+            .prop("checked", $(this).is(":checked"));
+    });
+}
+
+/**
+ * Set the checkbox state based on the adjacent features
+ * @param triggerElement
+ */
+function setFeatureGroupCheckboxState(triggerElement) {
+    // collect up the checkboxes belonging to the same group
+    var $featureGroup = triggerElement.closest("tbody.feature-group");
+    var countChecked = $featureGroup.find("input[name='features[]']:checked").length;
+    var countTotal = $featureGroup.find("input[name='features[]']").length;
+
+    if (countChecked <= 0) {
+        $featureGroup.find(".feature-select-all")
+            .prop("checked", false)
+            .prop("indeterminate", false);
+    } else if (countChecked === countTotal) {
+        $featureGroup.find(".feature-select-all")
+            .prop("checked", true)
+            .prop("indeterminate", false);
+    } else {
+        $featureGroup.find(".feature-select-all")
+            .prop("checked", false)
+            .prop("indeterminate", true);
+    }
+}

@@ -152,31 +152,9 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
                 `oauth_clients`.clientCredentials,
                 `oauth_clients`.userId ';
 
-        $body = '
-              FROM `oauth_clients`
-        ';
-        
+        $body = ' FROM `oauth_clients` ';
         $body .= ' INNER JOIN `user` ON `user`.userId = `oauth_clients`.userId ';
-
-        if ($sanitizedFilter->getInt('userId') !== null) {
-
-            $select .= '
-                , `oauth_auth_codes`.expire_time AS expires
-            ';
-
-            $body .= '
-                INNER JOIN `oauth_sessions`
-                ON `oauth_sessions`.client_id = `oauth_clients`.id
-                    AND `oauth_sessions`.owner_id = :userId
-                INNER JOIN `oauth_auth_codes`
-                ON `oauth_auth_codes`.session_id = `oauth_sessions`.id
-            ';
-
-            $params['userId'] = $sanitizedFilter->getInt('userId');
-        }
-
         $body .= ' WHERE 1 = 1 ';
-
 
         if ($sanitizedFilter->getString('clientId') != null) {
             $body .= ' AND `oauth_clients`.id = :clientId ';
@@ -186,6 +164,11 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
         if ($sanitizedFilter->getString('name') != null) {
             $body .= ' AND `oauth_clients`.name = :name';
             $params['name'] = $sanitizedFilter->getString('name');
+        }
+
+        if ($sanitizedFilter->getInt('userId') !== null) {
+            $body .= ' AND `oauth_clients`.userId = :userId ';
+            $params['userId'] = $sanitizedFilter->getInt('userId');
         }
 
         // Sorting?

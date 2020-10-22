@@ -31,11 +31,11 @@ use Slim\App as App;
 use Xibo\Support\Exception\ConfigurationException;
 
 /**
- * Class ApiAuthorizationOAuth
+ * Class ApiAuthentication
  * This middleware protects the AUTH entry point
  * @package Xibo\Middleware
  */
-class ApiAuthorizationOAuth implements Middleware
+class ApiAuthentication implements Middleware
 {
     /* @var App $app */
     private $app;
@@ -53,6 +53,7 @@ class ApiAuthorizationOAuth implements Middleware
      * @param \Psr\Http\Message\ServerRequestInterface $request
      * @param \Psr\Http\Server\RequestHandlerInterface $handler
      * @return \Psr\Http\Message\ResponseInterface
+     * @throws \Xibo\Support\Exception\ConfigurationException
      */
     public function process(Request $request, RequestHandler $handler): Response
     {

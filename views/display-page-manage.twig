@@ -184,7 +184,7 @@
             </div>
         </div>
     </div>
-    {% if currentUser.routeViewable("/stats") %}
+    {% if currentUser.featureEnabled("displays.reporting") %}
     <div class="row">
         <div class="col-lg-12">
             <div class="widget">
@@ -290,7 +290,7 @@
 
         $(document).ready(function() {
 
-            {% if currentUser.routeViewable("/stats") %}
+            {% if currentUser.featureEnabled("displays.reporting") %}
             setBandwidthChart();
 
             // Bind to form change

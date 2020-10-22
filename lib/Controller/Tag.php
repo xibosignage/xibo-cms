@@ -691,7 +691,7 @@ class Tag extends Base
     public function editMultiple(Request $request, Response $response)
     {
         // Handle permissions
-        if (!$this->getUser()->routeViewable('/tag')) {
+        if (!$this->getUser()->featureEnabled('tag.tagging')) {
             throw new AccessDeniedException();
         }
 
