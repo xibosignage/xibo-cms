@@ -81,7 +81,11 @@ class AboutTest extends \Xibo\Tests\LocalWebTestCase
     {
         $provider = $this->getEntityProvider()->getProvider();
 
-        $me = $provider->getResourceOwner($token);
+        try {
+            $me = $provider->getResourceOwner($token);
+        } catch (\Exception $exception) {
+            $this->fail('API connect not successful: ' . $exception->getMessage());
+        }
 
         $this->assertNotNull($me);
         $this->assertArrayHasKey('userId', $me->toArray());

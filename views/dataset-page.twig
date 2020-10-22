@@ -27,9 +27,11 @@
 {% block title %}{{ "DataSets"|trans }} | {% endblock %}
 
 {% block actionMenu %}
+    {% if currentUser.featureEnabled("dataset.add") %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new DataSet" %}" href="{{ url_for("dataSet.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add DataSet" %}</a></li>
     </ul>
+    {% endif %}
 {% endblock %}
 
 {% block pageContent %}

@@ -63,8 +63,8 @@ class TestAuthMiddleware implements Middleware
 
         /** @var User $user */
         $user = $container->get('userFactory')->getByName('phpunit');
-        // Pass the page factory into the user object, so that it can check its page permissions
-        $user->setChildAclDependencies($app->getContainer()->get('userGroupFactory'), $app->getContainer()->get('pageFactory'));
+        $user->setChildAclDependencies($app->getContainer()->get('userGroupFactory'));
+
         // Load the user
         $user->load(false);
 

@@ -142,7 +142,9 @@ class Resolution extends Base
 
             $resolution->includeProperty('buttons');
 
-            if ($this->getUser()->checkEditable($resolution)) {
+            if ($this->getUser()->featureEnabled('resolution.modify')
+                && $this->getUser()->checkEditable($resolution)
+            ) {
                 // Edit Button
                 $resolution->buttons[] = array(
                     'id' => 'resolution_button_edit',
@@ -151,7 +153,9 @@ class Resolution extends Base
                 );
             }
 
-            if ($this->getUser()->checkDeleteable($resolution)) {
+            if ($this->getUser()->featureEnabled('resolution.modify')
+                && $this->getUser()->checkDeleteable($resolution)
+            ) {
                 // Delete Button
                 $resolution->buttons[] = array(
                     'id' => 'resolution_button_delete',

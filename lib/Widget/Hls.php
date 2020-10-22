@@ -85,7 +85,8 @@ class Hls extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
+        // Extends parent's method
+        parent::installFiles();
     }
 
     /**
@@ -217,6 +218,7 @@ class Hls extends ModuleWidget
             ->appendViewPortWidth($this->region->width)
             ->appendJavaScriptFile('vendor/jquery.min.js')
             ->appendJavaScriptFile('vendor/hls/hls.min.js')
+            ->appendJavaScriptFile('xibo-interactive-control.js')
             ->appendJavaScript('
                 $(document).ready(function() {
             
@@ -233,7 +235,9 @@ class Hls extends ModuleWidget
                         hls.loadSource("' . urldecode($this->getOption('uri')) . '");
                         hls.attachMedia(video);
                         hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                          video.play();
+                          // Play only when the visible flag is set to true
+                          const runOnVisible = function() { video.play(); };
+                          (xiboIC.isVisible) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
                         });
                         hls.on(Hls.Events.ERROR, function (event, data) {
                             if (data.fatal) {

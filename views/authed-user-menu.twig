@@ -8,7 +8,11 @@
         </li>
         <li class="divider"></li>
         <li><a class="XiboFormButton" href="{{ url_for("user.preferences.form") }}" title="{% trans "Preferences" %}">{% trans "Preferences" %}</a></li>
-        <li><a class="XiboFormButton" href="{{ url_for("user.edit.profile.form") }}" title="{% trans "Edit Profile" %}">{% trans "Edit Profile" %}</a></li>
+
+        {% if currentUser.featureEnabled("user.profile") %}
+            <li><a class="XiboFormButton" href="{{ url_for("user.edit.profile.form") }}" title="{% trans "Edit Profile" %}">{% trans "Edit Profile" %}</a></li>
+        {% endif %}
+
         <li><a id="reshowWelcomeMenuItem" href="{{ url_for("welcome.view") }}">{% trans "Reshow welcome" %}</a></li>
         {% if horizontalNav %}
             <li><a class="XiboFormButton" href="{{ url_for("about") }}" title="{% trans "About the CMS" %}">{% trans "About" %}</a></li>

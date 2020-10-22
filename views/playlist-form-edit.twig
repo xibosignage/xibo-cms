@@ -105,24 +105,26 @@
                         {% set helpText %}{% trans "The Name of the Playlist - (1 - 50 characters)" %}{% endset %}
                         {{ forms.input("name", title, playlist.name, helpText) }}
 
-                        {% set title %}{% trans "Tags" %}{% endset %}
-                        {% set helpText %}{% trans "Tags for this Playlist - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below." %}{% endset %}
-                        {{ forms.inputWithTags("tags", title, tags, helpText, 'tags-with-value') }}
+                        {% if currentUser.featureEnabled("tag.tagging") %}
+                            {% set title %}{% trans "Tags" %}{% endset %}
+                            {% set helpText %}{% trans "Tags for this Playlist - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below." %}{% endset %}
+                            {{ forms.inputWithTags("tags", title, tags, helpText, 'tags-with-value') }}
 
-                        <p id="loadingValues" style="margin-left: 17%"></p>
+                            <p id="loadingValues" style="margin-left: 17%"></p>
 
-                        {% set title %}{% trans "Tag value" %}{% endset %}
-                        {{ forms.dropdown("tagValue", "single", title, "", options, "key", "value") }}
-
-                        <div id="tagValueContainer">
                             {% set title %}{% trans "Tag value" %}{% endset %}
-                            {% set helpText %}{% trans "Please provide the value for this Tag and confirm by pressing enter on your keyboard." %}{% endset %}
-                            {{ forms.input("tagValueInput", title, "", helpText) }}
-                        </div>
+                            {{ forms.dropdown("tagValue", "single", title, "", options, "key", "value") }}
 
-                        <div id="tagValueRequired" class="alert alert-info">
-                            <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown or provide Tag value in the dedicated field." %}</p>
-                        </div>
+                            <div id="tagValueContainer">
+                                {% set title %}{% trans "Tag value" %}{% endset %}
+                                {% set helpText %}{% trans "Please provide the value for this Tag and confirm by pressing enter on your keyboard." %}{% endset %}
+                                {{ forms.input("tagValueInput", title, "", helpText) }}
+                            </div>
+
+                            <div id="tagValueRequired" class="alert alert-info">
+                                <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown or provide Tag value in the dedicated field." %}</p>
+                            </div>
+                        {% endif %}
 
                         {% set title %}{% trans "Dynamic?" %}{% endset %}
                         {% set helpText %}{% trans "Is the Playlist to have Library media assignments managed automatically by the CMS based on filter criteria? Set a filter on the next tab." %}{% endset %}
@@ -152,8 +154,10 @@
                                     {% set title %}{% trans "Name filter" %}{% endset %}
                                     {{ forms.input("filterMediaName", title, playlist.filterMediaName) }}
 
-                                    {% set title %}{% trans "Tag filter" %}{% endset %}
-                                    {{ forms.inputWithTags("filterMediaTag", title, playlist.filterMediaTags) }}
+                                    {% if currentUser.featureEnabled("tag.tagging") %}
+                                        {% set title %}{% trans "Tag filter" %}{% endset %}
+                                        {{ forms.inputWithTags("filterMediaTag", title, playlist.filterMediaTags) }}
+                                    {% endif %}
 
                                     <div class="XiboData">
                                         <table id="playlistLibraryMedia" class="table table-striped">
@@ -162,7 +166,7 @@
                                                 <th>{% trans "ID" %}</th>
                                                 <th>{% trans "Name" %}</th>
                                                 <th>{% trans "Type" %}</th>
-                                                <th>{% trans "Tags" %}</th>
+                                                {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
                                                 <th>{% trans "Duration" %}</th>
                                             </tr>
                                             </thead>

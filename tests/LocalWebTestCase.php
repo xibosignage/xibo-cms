@@ -303,9 +303,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
             try {
                 /** @var User $user */
                 $user = $container->get('userFactory')->getByName('phpunit');
-
-                // Pass the page factory into the user object, so that it can check its page permissions
-                $user->setChildAclDependencies($container->get('userGroupFactory'), $container->get('pageFactory'));
+                $user->setChildAclDependencies($container->get('userGroupFactory'));
 
                 // Load the user
                 $user->load(false);
@@ -314,11 +312,11 @@ class LocalWebTestCase extends PHPUnit_TestCase
                 // Create the phpunit user with a random password
                 /** @var \Xibo\Entity\User $user */
                 $user = $container->get('userFactory')->create();
-                $user->setChildAclDependencies($container->get('userGroupFactory'), $container->get('pageFactory'));
+                $user->setChildAclDependencies($container->get('userGroupFactory'));
                 $user->userTypeId = 1;
                 $user->userName = 'phpunit';
                 $user->libraryQuota = 0;
-                $user->homePageId = $container->get('pageFactory')->getByName('statusdashboard')->pageId;
+                $user->homePageId = 'statusdashboard.view';
                 $user->isSystemNotification = 1;
                 $user->setNewPassword(\Xibo\Helper\Random::generateString());
                 $user->save();

@@ -26,9 +26,11 @@
 {% block title %}{{ "Notification Centre"|trans }} | {% endblock %}
 
 {% block actionMenu %}
+    {% if currentUser.featureEnabled("notification.add") %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ url_for("notification.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Notification" %}</a></li>
     </ul>
+    {% endif %}
 {% endblock %}
 
 

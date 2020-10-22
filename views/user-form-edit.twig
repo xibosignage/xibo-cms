@@ -47,7 +47,7 @@
                 {% endif %}
                 <li><a href="#optionsTab" role="tab" data-toggle="tab"><span>{% trans "Options" %}</span></a></li>
             </ul>
-            <form id="userEditForm" class="UserForm form-horizontal" method="put" action="{{ url_for("user.edit", {id: user.userId}) }}">
+            <form id="userEditForm" class="UserForm form-horizontal" data-user-id="{{ user.userId }}" method="put" action="{{ url_for("user.edit", {id: user.userId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "User Name" %}{% endset %}
@@ -75,7 +75,15 @@
 
                         {% set title %}{% trans "Homepage" %}{% endset %}
                         {% set helpText %}{% trans "Homepage for this user. This is the page they will be taken to when they login." %}{% endset %}
-                        {{ forms.dropdown("homePageId", "single", title, user.homePageId, options.homepage, "pageId", "title", helpText) }}
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label" for="homePageId">{{ title }}</label>
+                            <div class="col-sm-10">
+                                <select name="homePageId" class="form-control homepage-select" required data-search-url="{{ url_for("user.homepages.search") }}">
+                                    <option value="{{ options.homepage.homepage }}" selected>{{ options.homepage.title }}</option>
+                                </select>
+                                <span class="help-block">{{ helpText }}</span>
+                            </div>
+                        </div>
 
                         {% set title %}{% trans "User Type" %}{% endset %}
                         {% set helpText %}{% trans "What is this users type?" %}{% endset %}

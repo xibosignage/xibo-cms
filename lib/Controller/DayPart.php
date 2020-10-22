@@ -173,7 +173,10 @@ class DayPart extends Base
 
             $dayPart->includeProperty('buttons');
 
-            if ($dayPart->isCustom !== 1 && $dayPart->isAlways !== 1) {
+            if ($dayPart->isCustom !== 1
+                && $dayPart->isAlways !== 1
+                && $this->getUser()->featureEnabled('daypart.modify')
+            ) {
                 // CRUD
                 $dayPart->buttons[] = array(
                     'id' => 'daypart_button_edit',
@@ -199,8 +202,9 @@ class DayPart extends Base
                 }
             }
 
-            if ($this->getUser()->checkPermissionsModifyable($dayPart)) {
-
+            if ($this->getUser()->checkPermissionsModifyable($dayPart)
+                && $this->getUser()->featureEnabled('daypart.modify')
+            ) {
                 if (count($dayPart->buttons) > 0)
                     $dayPart->buttons[] = ['divider' => true];
 

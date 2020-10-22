@@ -40,7 +40,6 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
-use Xibo\Factory\PageFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\PlaylistFactory;
@@ -60,6 +59,7 @@ use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class User
@@ -81,11 +81,6 @@ class User extends Base
      * @var UserGroupFactory
      */
     private $userGroupFactory;
-
-    /**
-     * @var PageFactory
-     */
-    private $pageFactory;
 
     /**
      * @var PermissionFactory
@@ -152,7 +147,6 @@ class User extends Base
      * @param UserFactory $userFactory
      * @param UserTypeFactory $userTypeFactory
      * @param UserGroupFactory $userGroupFactory
-     * @param PageFactory $pageFactory
      * @param PermissionFactory $permissionFactory
      * @param LayoutFactory $layoutFactory
      * @param ApplicationFactory $applicationFactory
@@ -170,7 +164,7 @@ class User extends Base
      * @param DataSetFactory $dataSetFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $config, $userFactory,
-                                $userTypeFactory, $userGroupFactory, $pageFactory, $permissionFactory,
+                                $userTypeFactory, $userGroupFactory, $permissionFactory,
                                 $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory, Twig $view, ContainerInterface $container, $dataSetFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
@@ -178,7 +172,6 @@ class User extends Base
         $this->userFactory = $userFactory;
         $this->userTypeFactory = $userTypeFactory;
         $this->userGroupFactory = $userGroupFactory;
-        $this->pageFactory = $pageFactory;
         $this->permissionFactory = $permissionFactory;
         $this->layoutFactory = $layoutFactory;
         $this->applicationFactory = $applicationFactory;
@@ -213,15 +206,13 @@ class User extends Base
         // User wizard seen, go to home page
         $this->getLog()->debug('Showing the homepage: ' . $this->getUser()->homePageId);
 
-        $page = $this->pageFactory->getById($this->getUser()->homePageId);
+        $homepage = $this->userGroupFactory->getHomepageByName($this->getUser()->homePageId);
 
-        // Check to see if this user has permission for this page, and if not show a meaningful error telling them what
-        // has happened.
-        if (!$this->getUser()->checkViewable($page)) {
-            throw new \Xibo\Support\Exception\AccessDeniedException(__('You do not have permission for your homepage, please contact your administrator'));
+        if (!$this->getUser()->featureEnabled($homepage->feature)) {
+            return $response->withRedirect($this->urlFor($request, 'icondashboard.view'));
+        } else {
+            return $response->withRedirect($this->urlFor($request, $homepage->homepage));
         }
-
-        return $response->withRedirect($this->urlFor($request, $page->getName() . '.view'));
     }
 
     /**
@@ -391,10 +382,11 @@ class User extends Base
             }
 
             $user->includeProperty('buttons');
-            $user->homePage = __($user->homePage);
 
             // Super admins have some buttons
-            if ($this->getUser()->checkEditable($user)) {
+            if ($this->getUser()->featureEnabled('users.modify')
+                && $this->getUser()->checkEditable($user)
+            ) {
                 // Edit
                 $user->buttons[] = [
                     'id' => 'user_button_edit',
@@ -403,7 +395,9 @@ class User extends Base
                 ];
             }
 
-            if ($this->getUser()->isSuperAdmin() && $user->userId != $this->getConfig()->getSetting('SYSTEM_USER')) {
+            if ($this->getUser()->isSuperAdmin()
+                && $user->userId != $this->getConfig()->getSetting('SYSTEM_USER')
+            ) {
                 // Delete
                 $user->buttons[] = [
                     'id' => 'user_button_delete',
@@ -412,7 +406,9 @@ class User extends Base
                 ];
             }
 
-            if ($this->getUser()->checkPermissionsModifyable($user)) {
+            if ($this->getUser()->featureEnabled('users.modify')
+                && $this->getUser()->checkPermissionsModifyable($user)
+            ) {
                 $user->buttons[] = ['divider' => true];
 
                 // User Groups
@@ -426,7 +422,7 @@ class User extends Base
             if ($this->getUser()->isSuperAdmin()) {
                 $user->buttons[] = ['divider' => true];
 
-                // Page Security
+                // Features
                 $user->buttons[] = [
                     'id' => 'user_button_page_security',
                     'url' => $this->urlFor($request,'group.acl.form', ['id' => $user->groupId, 'userId' => $user->userId]),
@@ -609,11 +605,11 @@ class User extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Build a user entity and save it
         $user = $this->userFactory->create();
-        $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
+        $user->setChildAclDependencies($this->userGroupFactory);
 
         $user->userName = $sanitizedParams->getString('userName');
         $user->email = $sanitizedParams->getString('email');
-        $user->homePageId = $sanitizedParams->getInt('homePageId');
+        $user->homePageId = $sanitizedParams->getString('homePageId');
         $user->libraryQuota = $sanitizedParams->getInt('libraryQuota', ['default' => 0]);
         $user->setNewPassword($sanitizedParams->getString('password'));
 
@@ -655,9 +651,9 @@ class User extends Base
         $group->assignUser($user);
         $group->save(['validate' => false]);
 
-        // Test to see if the user group selected has permissions to see the homepage selected
-        // Make sure the user has permission to access this page.
-        if (!$user->checkViewable($this->pageFactory->getById($user->homePageId))) {
+        // Handle enabled features for the homepage.
+        $homepage = $this->userGroupFactory->getHomepageByName($user->homePageId);
+        if (!empty($homepage->feature) && !$user->featureEnabled($homepage->feature)) {
             throw new InvalidArgumentException(__('User does not have permission for this homepage'), 'homePageId');
         }
 
@@ -851,13 +847,15 @@ class User extends Base
             throw new AccessDeniedException();
         }
 
+        $this->getLog()->debug('User Edit process started.');
+
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Build a user entity and save it
-        $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
+        $user->setChildAclDependencies($this->userGroupFactory);
         $user->load();
         $user->userName = $sanitizedParams->getString('userName');
         $user->email = $sanitizedParams->getString('email');
-        $user->homePageId = $sanitizedParams->getInt('homePageId');
+        $user->homePageId = $sanitizedParams->getString('homePageId');
         $user->libraryQuota = $sanitizedParams->getInt('libraryQuota');
         $user->retired = $sanitizedParams->getCheckbox('retired');
 
@@ -881,10 +879,15 @@ class User extends Base
         $user->setOptionValue('hideNavigation', $sanitizedParams->getCheckbox('hideNavigation'));
         $user->isPasswordChangeRequired = $sanitizedParams->getCheckbox('isPasswordChangeRequired');
 
-        // Make sure the user has permission to access this page.
-        if (!$user->checkViewable($this->pageFactory->getById($user->homePageId))) {
-            throw new InvalidArgumentException(__('User does not have permission for this homepage'));
+        $this->getLog()->debug('Params read');
+
+        // Handle enabled features for the homepage.
+        $homepage = $this->userGroupFactory->getHomepageByName($user->homePageId);
+        if (!empty($homepage->feature) && !$user->featureEnabled($homepage->feature)) {
+            throw new InvalidArgumentException(__('User does not have permission for this homepage'), 'homePageId');
         }
+
+        $this->getLog()->debug('Homepage validated.');
 
         // If we are a super admin
         if ($this->getUser()->userTypeId == 1) {
@@ -893,6 +896,8 @@ class User extends Base
             $disableTwoFactor = $sanitizedParams->getCheckbox('disableTwoFactor');
 
             if ($newPassword != null && $newPassword != '') {
+                $this->getLog()->debug('New password provided, checking.');
+
                 // Make sure they are the same
                 if ($newPassword != $retypeNewPassword) {
                     throw new InvalidArgumentException(__('Passwords do not match'));
@@ -908,8 +913,12 @@ class User extends Base
             }
         }
 
+        $this->getLog()->debug('About to save.');
+
         // Save the user
         $user->save();
+
+        $this->getLog()->debug('User saved, about to return.');
 
         // Return
         $this->getState()->hydrate([
@@ -986,7 +995,7 @@ class User extends Base
         }
 
         $sanitizedParams = $this->getSanitizer($request->getParams());
-        $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
+        $user->setChildAclDependencies($this->userGroupFactory);
         $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory, $this->playerVersionFactory, $this->playlistFactory, $this->dataSetFactory);
 
         if ($sanitizedParams->getCheckbox('deleteAllItems') != 1) {
@@ -1020,6 +1029,67 @@ class User extends Base
     }
 
     /**
+     * @param \Slim\Http\ServerRequest $request
+     * @param \Slim\Http\Response $response
+     * @return \Psr\Http\Message\ResponseInterface|\Slim\Http\Response
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function homepages(Request $request, Response $response)
+    {
+        // Only group admins or super admins can create Users.
+        if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin()) {
+            throw new AccessDeniedException(__('Only super and group admins can create users'));
+        }
+
+        // Get all homepages accessible for a user group
+        $params = $this->getSanitizer($request->getParams());
+        $userId = $params->getInt('userId');
+
+        if ($userId !== null) {
+            $homepages = [];
+            $user = $this->userFactory->getById($userId)
+                ->setChildAclDependencies($this->userGroupFactory);
+
+            foreach ($this->userGroupFactory->getHomepages() as $homepage) {
+                if (empty($homepage->feature) || $user->featureEnabled($homepage->feature)) {
+                    $homepages[] = $homepage;
+                }
+            }
+        } else {
+            $userTypeId = $params->getInt('userTypeId', [
+                'throw' => function () {
+                    throw new NotFoundException();
+                }
+            ]);
+
+            if ($userTypeId == 1 || $userTypeId == 4) {
+                $homepages = $this->userGroupFactory->getHomepages();
+            } else {
+                $groupId = $params->getInt('groupId', [
+                    'throw' => function () {
+                        throw new NotFoundException();
+                    }
+                ]);
+                $group = $this->userGroupFactory->getById($groupId);
+
+                $homepages = [];
+                foreach ($this->userGroupFactory->getHomepages() as $homepage) {
+                    if (empty($homepage->feature) || in_array($homepage->feature, $group->features)) {
+                        $homepages[] = $homepage;
+                    }
+                }
+            }
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = count($homepages);
+        $this->getState()->setData($homepages);
+
+        return $this->render($request, $response);
+    }
+
+    /**
      * User Add Form
      * @param Request $request
      * @param Response $response
@@ -1037,15 +1107,15 @@ class User extends Base
         }
 
         $defaultUserTypeId = 3;
-        foreach ($this->userTypeFactory->query(null, ['userType' => $this->getConfig()->getSetting('defaultUsertype')] ) as $defaultUserType) {
+        foreach ($this->userTypeFactory->query(null, [
+            'userType' => $this->getConfig()->getSetting('defaultUsertype')
+        ]) as $defaultUserType) {
             $defaultUserTypeId = $defaultUserType->userTypeId;
         }
 
         $this->getState()->template = 'user-form-add';
         $this->getState()->setData([
             'options' => [
-                'homepage' => $this->pageFactory->query(null, ['asHome' => 1]),
-                'groups' => $this->userGroupFactory->query(),
                 'userTypes' => ($this->getUser()->isSuperAdmin()) ? $this->userTypeFactory->getAllRoles() : $this->userTypeFactory->getNonAdminRoles(),
                 'defaultGroupId' => $this->getConfig()->getSetting('DEFAULT_USERGROUP'),
                 'defaultUserType' => $defaultUserTypeId
@@ -1072,18 +1142,25 @@ class User extends Base
     public function editForm(Request $request, Response $response, $id)
     {
         $user = $this->userFactory->getById($id);
-        $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
+        $user->setChildAclDependencies($this->userGroupFactory);
 
         if (!$this->getUser()->checkEditable($user)) {
             throw new AccessDeniedException();
+        }
+
+        $homepage = [];
+        try {
+            $homepage = $this->userGroupFactory->getHomepageByName($user->homePageId);
+        } catch (NotFoundException $notFoundException) {
+            $this->getLog()->error(sprintf('User %d has non existing homepage %s', $user->userId, $user->homePageId));
         }
 
         $this->getState()->template = 'user-form-edit';
         $this->getState()->setData([
             'user' => $user,
             'options' => [
-                'homepage' => $this->pageFactory->getForHomepage(),
-                'userTypes' => $this->userTypeFactory->query()
+                'homepage' => $homepage,
+                'userTypes' => ($this->getUser()->isSuperAdmin()) ? $this->userTypeFactory->getAllRoles() : $this->userTypeFactory->getNonAdminRoles()
             ],
             'help' => [
                 'edit' => $this->getHelp()->link('User', 'Edit')

@@ -83,7 +83,9 @@ class Preview extends Base
             $layout = $this->layoutFactory->getById($id);
         }
 
-        if (!$this->getUser()->checkViewable($layout)) {
+        if (!$this->getUser()->checkViewable($layout)
+            || !$this->getUser()->featureEnabled(['layout.view', 'playlist.view'])
+        ) {
             throw new AccessDeniedException();
         }
 

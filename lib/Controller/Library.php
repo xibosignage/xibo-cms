@@ -651,10 +651,12 @@ class Library extends Base
                     $media->enableStatDescription = __('This Media has enable stat collection set to INHERIT');
             }
 
-            $media->buttons = array();
+            $media->buttons = [];
 
             // Buttons
-            if ($user->checkEditable($media)) {
+            if ($this->getUser()->featureEnabled('library.modify')
+                && $user->checkEditable($media)
+            ) {
                 // Edit
                 $media->buttons[] = array(
                     'id' => 'content_button_edit',
@@ -686,7 +688,9 @@ class Library extends Base
                 ];
             }
 
-            if ($user->checkDeleteable($media)) {
+            if ($this->getUser()->featureEnabled('library.modify')
+                && $user->checkDeleteable($media)
+            ) {
                 // Delete Button
                 $media->buttons[] = [
                     'id' => 'content_button_delete',
@@ -705,7 +709,9 @@ class Library extends Base
                 ];
             }
 
-            if ($user->checkPermissionsModifyable($media)) {
+            if ($this->getUser()->featureEnabled('library.modify')
+                && $user->checkPermissionsModifyable($media)
+            ) {
                 // Permissions
                 $media->buttons[] = [
                     'id' => 'content_button_permissions',
@@ -726,6 +732,8 @@ class Library extends Base
             }
 
             // Download
+            // No feature permissions here, anyone can get a file based on sharing.
+            $media->buttons[] = ['divider' => true];
             $media->buttons[] = array(
                 'id' => 'content_button_download',
                 'linkType' => '_self', 'external' => true,
@@ -734,28 +742,36 @@ class Library extends Base
             );
 
             // Set Enable Stat
-            $media->buttons[] = array(
-                'id' => 'library_button_setenablestat',
-                'url' => $this->urlFor($request,'library.setenablestat.form', ['id' => $media->mediaId]),
-                'text' => __('Enable stats collection?'),
-                'multi-select' => true,
-                'dataAttributes' => array(
-                    array('name' => 'commit-url', 'value' => $this->urlFor($request,'library.setenablestat', ['id' => $media->mediaId])),
-                    array('name' => 'commit-method', 'value' => 'put'),
-                    array('name' => 'id', 'value' => 'library_button_setenablestat'),
-                    array('name' => 'text', 'value' => __('Enable stats collection?')),
-                    array('name' => 'rowtitle', 'value' => $media->name),
-                    ['name' => 'form-callback', 'value' => 'setEnableStatMultiSelectFormOpen']
-                )
-            );
+            if ($this->getUser()->featureEnabled('library.modify')
+                && $this->getUser()->checkEditable($media)
+            ) {
+                $media->buttons[] = ['divider' => true];
 
-            $media->buttons[] = ['divider' => true];
+                $media->buttons[] = array(
+                    'id' => 'library_button_setenablestat',
+                    'url' => $this->urlFor($request,'library.setenablestat.form', ['id' => $media->mediaId]),
+                    'text' => __('Enable stats collection?'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'library.setenablestat', ['id' => $media->mediaId])),
+                        array('name' => 'commit-method', 'value' => 'put'),
+                        array('name' => 'id', 'value' => 'library_button_setenablestat'),
+                        array('name' => 'text', 'value' => __('Enable stats collection?')),
+                        array('name' => 'rowtitle', 'value' => $media->name),
+                        ['name' => 'form-callback', 'value' => 'setEnableStatMultiSelectFormOpen']
+                    )
+                );
+            }
 
-            $media->buttons[] = array(
-                'id' => 'usage_report_button',
-                'url' => $this->urlFor($request,'library.usage.form', ['id' => $media->mediaId]),
-                'text' => __('Usage Report')
-            );
+            if ($this->getUser()->featureEnabled(['schedule.view', 'layout.view'])) {
+                $media->buttons[] = ['divider' => true];
+
+                $media->buttons[] = array(
+                    'id' => 'usage_report_button',
+                    'url' => $this->urlFor($request, 'library.usage.form', ['id' => $media->mediaId]),
+                    'text' => __('Usage Report')
+                );
+            }
         }
 
         $this->getState()->template = 'grid';
@@ -1014,7 +1030,7 @@ class Library extends Base
         // Output handled by UploadHandler
         $this->setNoOutput(true);
 
-        $this->getLog()->debug('Hand off to Upload Handler with options: %s', json_encode($options));
+        $this->getLog()->debug('Hand off to Upload Handler with options: ' . json_encode($options));
 
         // Hand off to the Upload Handler provided by jquery-file-upload
         new XiboUploadHandler($options);
@@ -1155,7 +1171,11 @@ class Library extends Base
         $media->name = $sanitizedParams->getString('name');
         $media->duration = $sanitizedParams->getInt('duration');
         $media->retired = $sanitizedParams->getCheckbox('retired');
-        $media->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $media->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+        }
+
         $media->enableStat = $sanitizedParams->getString('enableStat');
         $media->folderId = $sanitizedParams->getInt('folderId', ['default' => $media->folderId]);
 
@@ -2271,7 +2291,11 @@ class Library extends Base
 
         // Set new Name and tags
         $media->name = $sanitizedParams->getString('name');
-        $media->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $media->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+        }
+
         // Set the Owner to user making the Copy
         $media->setOwner($this->getUser()->userId);
 

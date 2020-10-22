@@ -26,9 +26,11 @@
 {% block title %}{{ "Display Groups"|trans }} | {% endblock %}
 
 {% block actionMenu %}
+    {% if currentUser.featureEnabled("displaygroup.add") %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Display Group" %}" href="{{ url_for("displayGroup.add.form") }}"> <i class="fa fa-desktop" aria-hidden="true"></i> {% trans "Add Display Group" %}</a></li>
     </ul>
+    {% endif %}
 {% endblock %}
 
 {% block pageContent %}
@@ -76,10 +78,12 @@
                             {% set title %}{% trans "Dynamic Criteria" %}{% endset %}
                             {{ inline.input("dynamicCriteria", title) }}
 
-                            {% set title %}{% trans "Tags" %}{% endset %}
-                            {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
-                            {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                            {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                            {% if currentUser.featureEnabled("tag.tagging") %}
+                                {% set title %}{% trans "Tags" %}{% endset %}
+                                {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
+                                {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                            {% endif %}
 
                             {{ inline.hidden("folderId") }}
                         </form>
@@ -111,8 +115,10 @@
                                         <th>{% trans "Description" %}</th>
                                         <th>{% trans "Is Dynamic?" %}</th>
                                         <th>{% trans "Criteria" %}</th>
-                                        <th>{% trans "Criteria Tags" %}</th>
-                                        <th>{% trans "Tags" %}</th>
+                                        {% if currentUser.featureEnabled("tag.tagging") %}
+                                            <th>{% trans "Criteria Tags" %}</th>
+                                            <th>{% trans "Tags" %}</th>
+                                        {% endif %}
                                         <th>{% trans "Created Date" %}</th>
                                         <th>{% trans "Modified Date" %}</th>
                                         <th>{% trans "Row Menu" %}</th>
@@ -156,12 +162,15 @@
                 { "data": "isDynamic", "render": dataTableTickCrossColumn, responsivePriority: 3 },
                 { "data": "dynamicCriteria", responsivePriority: 4 },
                 { "data": "dynamicCriteriaTags", responsivePriority: 4 },
+                {% if currentUser.featureEnabled("tag.tagging") %}
+                { "data": "dynamicCriteriaTags" },
                 {
                     "name": "tags",
                     "sortable": false,
                     responsivePriority: 3,
                     "data": dataTableCreateTags
                 },
+                {% endif %}
                 { "data": "createdDt", "visible": false, responsivePriority: 5 },
                 { "data": "modifiedDt", "visible": false, responsivePriority: 5 },
                 {

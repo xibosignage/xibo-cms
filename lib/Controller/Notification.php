@@ -217,7 +217,7 @@ class Notification extends Base
                 ]);
             }
 
-            if ($this->isApi($request))
+            if ($this->isApi($request) || !$this->getUser()->featureEnabled('notification.modify'))
                 continue;
 
             $notification->includeProperty('buttons');

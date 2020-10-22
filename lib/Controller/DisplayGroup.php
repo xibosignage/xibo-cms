@@ -277,9 +277,10 @@ class DisplayGroup extends Base
 
             $group->includeProperty('buttons');
 
-            if ($this->getUser()->checkEditable($group)) {
+            if ($this->getUser()->featureEnabled('displaygroup.modify')
+                && $this->getUser()->checkEditable($group)
+            ) {
                 // Show the edit button, members button
-
                 if ($group->isDynamic == 0) {
                     // Group Members
                     $group->buttons[] = array(
@@ -321,7 +322,9 @@ class DisplayGroup extends Base
                 ];
             }
 
-            if ($this->getUser()->checkDeleteable($group)) {
+            if ($this->getUser()->featureEnabled('displaygroup.modify')
+                && $this->getUser()->checkDeleteable($group)
+            ) {
                 // Show the delete button
                 $group->buttons[] = [
                     'id' => 'displaygroup_button_delete',
@@ -343,7 +346,9 @@ class DisplayGroup extends Base
 
             $group->buttons[] = ['divider' => true];
 
-            if ($this->getUser()->checkEditable($group)) {
+            if ($this->getUser()->featureEnabled('displaygroup.modify')
+                && $this->getUser()->checkEditable($group)
+            ) {
                 // File Associations
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_fileassociations',
@@ -359,7 +364,9 @@ class DisplayGroup extends Base
                 );
             }
 
-            if ($this->getUser()->checkPermissionsModifyable($group)) {
+            if ($this->getUser()->featureEnabled('displaygroup.modify')
+                && $this->getUser()->checkPermissionsModifyable($group)
+            ) {
                 // Show the modify permissions button
                 $group->buttons[] = [
                     'id' => 'displaygroup_button_permissions',
@@ -379,7 +386,9 @@ class DisplayGroup extends Base
                 ];
             }
 
-            if ($this->getUser()->checkEditable($group)) {
+            if ($this->getUser()->featureEnabled('displaygroup.modify')
+                && $this->getUser()->checkEditable($group)
+            ) {
                 $group->buttons[] = ['divider' => true];
 
                 $group->buttons[] = array(
@@ -593,11 +602,14 @@ class DisplayGroup extends Base
 
         $displayGroup->displayGroup = $sanitizedParams->getString('displayGroup');
         $displayGroup->description = $sanitizedParams->getString('description');
-        $displayGroup->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
         $displayGroup->isDynamic = $sanitizedParams->getCheckbox('isDynamic');
         $displayGroup->dynamicCriteria = $sanitizedParams->getString('dynamicCriteria');
-        $displayGroup->dynamicCriteriaTags = $sanitizedParams->getString('dynamicCriteriaTags');
         $displayGroup->folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
+
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $displayGroup->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+            $displayGroup->dynamicCriteriaTags = $sanitizedParams->getString('dynamicCriteriaTags');
+        }
 
         $displayGroup->userId = $this->getUser()->userId;
         $displayGroup->save();
@@ -698,11 +710,14 @@ class DisplayGroup extends Base
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $displayGroup->displayGroup = $parsedRequestParams->getString('displayGroup');
         $displayGroup->description = $parsedRequestParams->getString('description');
-        $displayGroup->replaceTags($this->tagFactory->tagsFromString($parsedRequestParams->getString('tags')));
         $displayGroup->isDynamic = $parsedRequestParams->getCheckbox('isDynamic');
         $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteria') : null;
-        $displayGroup->dynamicCriteriaTags = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteriaTags') : null;
         $displayGroup->folderId = $parsedRequestParams->getInt('folderId');
+
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $displayGroup->replaceTags($this->tagFactory->tagsFromString($parsedRequestParams->getString('tags')));
+            $displayGroup->dynamicCriteriaTags = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteriaTags') : null;
+        }
 
         // if we have changed the type from dynamic to non-dynamic or other way around, clear display/dg members
         if ($preEditIsDynamic != $displayGroup->isDynamic) {

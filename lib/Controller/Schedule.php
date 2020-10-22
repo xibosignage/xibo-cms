@@ -339,7 +339,8 @@ class Schedule extends Base
             }
 
             // Event Permissions
-            $editable = $this->isEventEditable($row->displayGroups);
+            $editable = $this->getUser()->featureEnabled('schedule.modify')
+                && $this->isEventEditable($row->displayGroups);
 
             // Event Title
             if ($row->campaignId == 0) {
@@ -438,7 +439,7 @@ class Schedule extends Base
                     'editable' => $editable,
                     'event' => $row,
                     'scheduleEvent' => $scheduleEvent,
-                    'recurringEvent' => ($row->recurrenceType != '') ? true : false
+                    'recurringEvent' => $row->recurrenceType != ''
                 ];
             }
         }
@@ -1760,6 +1761,10 @@ class Schedule extends Base
      */
     private function isEventEditable($displayGroups)
     {
+        if (!$this->getUser()->featureEnabled('schedule.modify')) {
+            return false;
+        }
+
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
 
         // Work out if this event is editable or not. To do this we need to compare the permissions

@@ -44,9 +44,11 @@
                 {% set mediaName %}{{ media.name }} 2{% endset %}
                 {{ forms.input("name", title, mediaName, helpText) }}
 
-                {% set title %}{% trans "Tags" %}{% endset %}
-                {% set helpText %}{% trans "Tag this media. Comma Separated." %}{% endset %}
-                {{ forms.inputWithTags("tags", title, tags, helpText) }}
+                {% if currentUser.featureEnabled("tag.tagging") %}
+                    {% set title %}{% trans "Tags" %}{% endset %}
+                    {% set helpText %}{% trans "Tag this media. Comma Separated." %}{% endset %}
+                    {{ forms.inputWithTags("tags", title, tags, helpText) }}
+                {% endif %}
             </form>
         </div>
     </div>

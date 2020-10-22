@@ -174,20 +174,22 @@ class DataSetColumn extends Base
 
             $column->includeProperty('buttons');
 
-            // Edit
-            $column->buttons[] = array(
-                'id' => 'dataset_button_edit',
-                'url' => $this->urlFor($request,'dataSet.column.edit.form', ['id' => $id, 'colId' => $column->dataSetColumnId]),
-                'text' => __('Edit')
-            );
-
-            if ($this->getUser()->checkDeleteable($dataSet)) {
-                // Delete
+            if ($this->getUser()->featureEnabled('dataset.modify')) {
+                // Edit
                 $column->buttons[] = array(
-                    'id' => 'dataset_button_delete',
-                    'url' => $this->urlFor($request,'dataSet.column.delete.form', ['id' => $id, 'colId' => $column->dataSetColumnId]),
-                    'text' => __('Delete')
+                    'id' => 'dataset_button_edit',
+                    'url' => $this->urlFor($request,'dataSet.column.edit.form', ['id' => $id, 'colId' => $column->dataSetColumnId]),
+                    'text' => __('Edit')
                 );
+
+                if ($this->getUser()->checkDeleteable($dataSet)) {
+                    // Delete
+                    $column->buttons[] = array(
+                        'id' => 'dataset_button_delete',
+                        'url' => $this->urlFor($request,'dataSet.column.delete.form', ['id' => $id, 'colId' => $column->dataSetColumnId]),
+                        'text' => __('Delete')
+                    );
+                }
             }
         }
 

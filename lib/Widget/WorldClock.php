@@ -83,11 +83,12 @@ class WorldClock extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
+        // Extends parent's method
+        parent::installFiles();
+        
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-worldclock-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment-timezone.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
     }
 
     /**
@@ -535,13 +536,18 @@ class WorldClock extends ModuleWidget
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-worldclock-render.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '   var body = ' . json_encode($mainTemplate) . ';';
         $javaScriptContent .= '   moment.locale("' . Translate::GetJsLocale() . '");';
         $javaScriptContent .= '   $(document).ready(function() { ';
-        $javaScriptContent .= '       $("body").xiboWorldClockRender(options, body); $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options); ';
+
+        // Run based only if the element is visible or not
+        $javaScriptContent .= '       const runOnVisible = function() { $("body").xiboWorldClockRender(options, body); $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options); }; ';
+        $javaScriptContent .= '       (xiboIC.isVisible) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
+        
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= '</script>';
 

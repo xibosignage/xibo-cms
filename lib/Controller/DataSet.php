@@ -199,103 +199,107 @@ class DataSet extends Base
             // Load the dataSet to get the columns
             $dataSet->load();
 
-            if ($user->checkEditable($dataSet)) {
-
+            if ($this->getUser()->featureEnabled('dataset.data') && $user->checkEditable($dataSet)) {
                 // View Data
                 $dataSet->buttons[] = array(
                     'id' => 'dataset_button_viewdata',
                     'class' => 'XiboRedirectButton',
-                    'url' => $this->urlFor($request,'dataSet.view.data', ['id' => $dataSet->dataSetId]),
+                    'url' => $this->urlFor($request, 'dataSet.view.data', ['id' => $dataSet->dataSetId]),
                     'text' => __('View Data')
                 );
+            }
 
-                // View Columns
-                $dataSet->buttons[] = array(
-                    'id' => 'dataset_button_viewcolumns',
-                    'url' => $this->urlFor($request,'dataSet.column.view', ['id' => $dataSet->dataSetId]),
-                    'class' => 'XiboRedirectButton',
-                    'text' => __('View Columns')
-                );
+            if ($this->getUser()->featureEnabled('dataset.modify')) {
 
-                // View RSS
-                $dataSet->buttons[] = array(
-                    'id' => 'dataset_button_viewrss',
-                    'url' => $this->urlFor($request,'dataSet.rss.view', ['id' => $dataSet->dataSetId]),
-                    'class' => 'XiboRedirectButton',
-                    'text' => __('View RSS')
-                );
-
-                // Divider
-                $dataSet->buttons[] = ['divider' => true];
-
-                // Import DataSet
-                if ($dataSet->isRemote !== 1) {
+                if ($user->checkEditable($dataSet)) {
+                    // View Columns
                     $dataSet->buttons[] = array(
-                        'id' => 'dataset_button_import',
-                        'class' => 'dataSetImportForm',
-                        'url' => $this->urlFor($request,'dataSet.import.form', ['id' => $dataSet->dataSetId]),
-                        'text' => __('Import CSV')
+                        'id' => 'dataset_button_viewcolumns',
+                        'url' => $this->urlFor($request,'dataSet.column.view', ['id' => $dataSet->dataSetId]),
+                        'class' => 'XiboRedirectButton',
+                        'text' => __('View Columns')
+                    );
+
+                    // View RSS
+                    $dataSet->buttons[] = array(
+                        'id' => 'dataset_button_viewrss',
+                        'url' => $this->urlFor($request,'dataSet.rss.view', ['id' => $dataSet->dataSetId]),
+                        'class' => 'XiboRedirectButton',
+                        'text' => __('View RSS')
+                    );
+
+                    // Divider
+                    $dataSet->buttons[] = ['divider' => true];
+
+                    // Import DataSet
+                    if ($dataSet->isRemote !== 1) {
+                        $dataSet->buttons[] = array(
+                            'id' => 'dataset_button_import',
+                            'class' => 'dataSetImportForm',
+                            'url' => $this->urlFor($request,'dataSet.import.form', ['id' => $dataSet->dataSetId]),
+                            'text' => __('Import CSV')
+                        );
+                    }
+
+                    // Copy
+                    $dataSet->buttons[] = array(
+                        'id' => 'dataset_button_copy',
+                        'url' => $this->urlFor($request,'dataSet.copy.form', ['id' => $dataSet->dataSetId]),
+                        'text' => __('Copy')
+                    );
+
+                    // Divider
+                    $dataSet->buttons[] = ['divider' => true];
+
+                    // Edit DataSet
+                    $dataSet->buttons[] = array(
+                        'id' => 'dataset_button_edit',
+                        'url' => $this->urlFor($request,'dataSet.edit.form', ['id' => $dataSet->dataSetId]),
+                        'text' => __('Edit')
                     );
                 }
 
-                // Copy
-                $dataSet->buttons[] = array(
-                    'id' => 'dataset_button_copy',
-                    'url' => $this->urlFor($request,'dataSet.copy.form', ['id' => $dataSet->dataSetId]),
-                    'text' => __('Copy')
-                );
+                if ($user->checkDeleteable($dataSet) && $dataSet->isLookup == 0) {
+                    // Delete DataSet
+                    $dataSet->buttons[] = [
+                        'id' => 'dataset_button_delete',
+                        'url' => $this->urlFor($request,'dataSet.delete.form', ['id' => $dataSet->dataSetId]),
+                        'text' => __('Delete'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'dataSet.delete', ['id' => $dataSet->dataSetId])],
+                            ['name' => 'commit-method', 'value' => 'delete'],
+                            ['name' => 'id', 'value' => 'dataset_button_delete'],
+                            ['name' => 'text', 'value' => __('Delete')],
+                            ['name' => 'rowtitle', 'value' => $dataSet->dataSet],
+                            ['name' => 'sort-group', 'value' => 1],
+                            ['name' => 'form-callback', 'value' => 'deleteMultiSelectFormOpen']
+                        ]
+                    ];
+                }
 
                 // Divider
                 $dataSet->buttons[] = ['divider' => true];
 
-                // Edit DataSet
-                $dataSet->buttons[] = array(
-                    'id' => 'dataset_button_edit',
-                    'url' => $this->urlFor($request,'dataSet.edit.form', ['id' => $dataSet->dataSetId]),
-                    'text' => __('Edit')
-                );
-            }
-
-            if ($user->checkDeleteable($dataSet) && $dataSet->isLookup == 0) {
-                // Delete DataSet
-                $dataSet->buttons[] = [
-                    'id' => 'dataset_button_delete',
-                    'url' => $this->urlFor($request,'dataSet.delete.form', ['id' => $dataSet->dataSetId]),
-                    'text' => __('Delete'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'dataSet.delete', ['id' => $dataSet->dataSetId])],
-                        ['name' => 'commit-method', 'value' => 'delete'],
-                        ['name' => 'id', 'value' => 'dataset_button_delete'],
-                        ['name' => 'text', 'value' => __('Delete')],
-                        ['name' => 'rowtitle', 'value' => $dataSet->dataSet],
-                        ['name' => 'sort-group', 'value' => 1],
-                        ['name' => 'form-callback', 'value' => 'deleteMultiSelectFormOpen']
-                    ]
-                ];
-            }
-
-            // Divider
-            $dataSet->buttons[] = ['divider' => true];
-
-            if ($user->checkPermissionsModifyable($dataSet)) {
-                // Edit Permissions
-                $dataSet->buttons[] = [
-                    'id' => 'dataset_button_permissions',
-                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId]),
-                    'text' => __('Permissions'),
-                    'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId])],
-                        ['name' => 'commit-method', 'value' => 'post'],
-                        ['name' => 'id', 'value' => 'dataset_button_permissions'],
-                        ['name' => 'text', 'value' => __('Permissions')],
-                        ['name' => 'rowtitle', 'value' => $dataSet->dataSet],
-                        ['name' => 'sort-group', 'value' => 2],
-                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DataSet'])],
-                        ['name' => 'content-id-name', 'value' => 'dataSetId']
-                    ]
-                ];
+                if ($user->checkPermissionsModifyable($dataSet)) {
+                    // Edit Permissions
+                    $dataSet->buttons[] = [
+                        'id' => 'dataset_button_permissions',
+                        'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId]),
+                        'text' => __('Permissions'),
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId])],
+                            ['name' => 'commit-method', 'value' => 'post'],
+                            ['name' => 'id', 'value' => 'dataset_button_permissions'],
+                            ['name' => 'text', 'value' => __('Permissions')],
+                            ['name' => 'rowtitle', 'value' => $dataSet->dataSet],
+                            ['name' => 'sort-group', 'value' => 2],
+                            ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                            ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DataSet'])],
+                            ['name' => 'content-id-name', 'value' => 'dataSetId']
+                        ]
+                    ];
+                }
             }
         }
 

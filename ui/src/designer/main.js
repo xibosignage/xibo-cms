@@ -2015,3 +2015,10 @@ lD.unlockLayout = function() {
         console.error(jqXHR, textStatus, errorThrown);
     });
 };
+
+lD.playerAction = function(path, data) {
+    // Handle player related requests
+    if(lD.viewer.DOMObject.find('iframe')[0].contentWindow.triggerAction != undefined) {
+        lD.viewer.DOMObject.find('iframe')[0].contentWindow.triggerAction(path, data);
+    }
+};

@@ -36,10 +36,12 @@
                             {% set title %}{% trans "Name" %}{% endset %}
                             {{ inline.input("template", title) }}
 
-                            {% set title %}{% trans "Tags" %}{% endset %}
-                            {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
-                            {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                            {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                            {% if currentUser.featureEnabled("tag.tagging") %}
+                                {% set title %}{% trans "Tags" %}{% endset %}
+                                {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
+                                {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                            {% endif %}
                         </form>
                     </div>
                 </div>
@@ -50,7 +52,7 @@
                                 <th>{% trans "Name" %}</th>
                                 <th>{% trans "Owner" %}</th>
                                 <th>{% trans "Description" %}</th>
-                                <th>{% trans "Tags" %}</th>
+                                {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
                                 <th>{% trans "Thumbnail" %}</th>
                                 <th>{% trans "Permissions" %}</th>
                                 <th>{% trans "Row Menu" %}</th>
@@ -88,11 +90,11 @@
                 { "data": "layout"},
                 { "data": "owner"},
                 { "data": "descriptionWithMarkup"},
-                {
+                {% if currentUser.featureEnabled("tag.tagging") %}{
                     "sortable": false,
                     "visible": false,
                     "data": dataTableCreateTags
-                },
+                },{% endif %}
                 { "data": "thumbnail"},
                 { "data": "permissions", "sortable": false},
                 {

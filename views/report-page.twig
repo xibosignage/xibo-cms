@@ -28,9 +28,9 @@
     {% for key,reports in defaults.availableReports %}
         <div class="row reports-available">
             <div class="reports-available-title">
-                <span>{{  key }}</span>
+                <span>{{ key }}</span>
             </div>
-            {% if key == "Proof of Play" %}
+            {% if key == "Proof of Play" and currentUser.featureEnabled("proof-of-play") %}
                 <div class="col-lg-3 col-md-6 col-xs-12">
                     <div class="widget content" style="min-height: 210px">
                         <div class="widget-body">

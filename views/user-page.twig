@@ -27,7 +27,7 @@
 
 {% block actionMenu %}
     <ul class="nav nav-pills pull-right">
-        {% if currentUser.isSuperAdmin() or currentUser.isGroupAdmin() %}
+        {% if currentUser.isSuperAdmin() or (currentUser.isGroupAdmin() and currentUser.featureEnabled("users.add")) %}
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new User" %}" href="{{ url_for("user.add.form") }}"><i class="fa fa-user-plus" aria-hidden="true"></i> {% trans "Add User" %}</a></li>
         {% endif %}
         <li class="btn btn-info btn-xs"><a class="XiboFormButton btns" title="{% trans "View my authenticated applications" %}" href="{{ url_for("user.applications") }}"><i class="fa fa-check-circle" aria-hidden="true"></i> {% trans "My Applications" %}</a></li>
@@ -174,7 +174,48 @@
             dataTableAddButtons(table, $('#users_wrapper').find('.col-sm-6').eq(1));
         });
 
-        function userFormOpen() {
+        function userFormOpen(dialog) {
+            // Make a select2 from the home page select
+            var $userForm = $(dialog).find("form.UserForm");
+            var $groupId = $(dialog).find("select[name=groupId]");
+            var $userTypeId = $(dialog).find("select[name=userTypeId]");
+            var $select = $(dialog).find(".homepage-select");
+            $select.select2({
+                minimumResultsForSearch: Infinity,
+                ajax: {
+                    url: $select.data("searchUrl"),
+                    dataType: "json",
+                    data: function (params) {
+                        return {
+                            q: params.term, // search term
+                            page: params.page,
+                            userId: $userForm.data().userId,
+                            groupId: $groupId.val(),
+                            userTypeId: $userTypeId.val(),
+                        };
+                    },
+                    processResults: function (data) {
+                        var results = [];
+                        $.each(data.data, function(index, el) {
+                            results.push({
+                                "id": el.homepage,
+                                "text": el.title,
+                                "content": el.description
+                            });
+                        });
+                        return {
+                            results: results
+                        };
+                    }
+                },
+                templateResult: function(state) {
+                    if (!state.content)
+                        return state.text;
+
+                    return $("<span>" + state.content + "</span>");
+                }
+            });
+
             // Bind to the add form submit
             $(".UserForm").validate({
                 submitHandler: function (form) {

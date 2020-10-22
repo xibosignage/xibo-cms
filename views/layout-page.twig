@@ -4,10 +4,12 @@
 {% block title %}{{ "Layouts"|trans }} | {% endblock %}
 
 {% block actionMenu %}
+    {% if currentUser.featureEnabled("layout.add") %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Layout and jump to the layout designer." %}" href="{{ url_for("layout.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Layout" %}</a></li>
         <li class="btn btn-info btn-xs"><a class="btns" id="layoutUploadForm" title="{% trans "Import a Layout from a ZIP file." %}" href="#"> <i class="fa fa-cloud-download" aria-hidden="true"></i> {% trans "Import" %}</a></li>
     </ul>
+    {% endif %}
 {% endblock %}
 
 {% block pageContent %}
@@ -39,10 +41,12 @@
                                         </div>
                                     </div>
 
-                                    {% set title %}{% trans "Tags" %}{% endset %}
-                                    {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
-                                    {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                                    {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                                    {% if currentUser.featureEnabled("tag.tagging") %}
+                                        {% set title %}{% trans "Tags" %}{% endset %}
+                                        {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                        {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
+                                        {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                                    {% endif %}
 
                                     {% set attributes = [
                                     { name: "data-allow-clear", value: "true" },
@@ -58,9 +62,11 @@
                                     {% set helpText %}{% trans "Show items owned by users in the selected User Group." %}{% endset %}
                                     {{ inline.dropdown("ownerUserGroupId", "single", title, "", [{groupId:null, group:""}]|merge(groups), "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
 
-                                    {% set title %}{% trans "Display Group" %}{% endset %}
-                                    {% set helpText %}{% trans "Show Layouts active on the selected Display / Display Group" %}{% endset %}
-                                    {{ inline.dropdown("activeDisplayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup", helpText, "selectPicker", "", "", "", attributes) }}
+                                    {% if currentUser.featureEnabled("displaygroup.view") %}
+                                        {% set title %}{% trans "Display Group" %}{% endset %}
+                                        {% set helpText %}{% trans "Show Layouts active on the selected Display / Display Group" %}{% endset %}
+                                        {{ inline.dropdown("activeDisplayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup", helpText, "selectPicker", "", "", "", attributes) }}
+                                    {% endif %}
 
                                     {{ inline.hidden("folderId") }}
                                 </div>
@@ -86,8 +92,10 @@
                                     {% set values = [{id: 1, value: option1}, {id: 2, value: option2}, {id: 3, value: option3}] %}
                                     {{ inline.dropdown("showDescriptionId", "single", title, 2, values, "id", "value") }}
 
-                                    {% set title %}{% trans "Media" %}{% endset %}
-                                    {{ inline.input("mediaLike", title) }}
+                                    {% if currentUser.featureEnabled("library.view") %}
+                                        {% set title %}{% trans "Media" %}{% endset %}
+                                        {{ inline.input("mediaLike", title) }}
+                                    {% endif %}
                                 </div>
                             </div>
                         </form>
@@ -120,7 +128,7 @@
                                         <th>{% trans "Status" %}</th>
                                         <th>{% trans "Description" %}</th>
                                         <th>{% trans "Duration" %}</th>
-                                        <th>{% trans "Tags" %}</th>
+                                        {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
                                         <th>{% trans "Thumbnail" %}</th>
                                         <th>{% trans "Owner" %}</th>
                                         <th>{% trans "Permissions" %}</th>
@@ -211,12 +219,12 @@
                             return dataTableTimeFromSeconds(data.duration, type);
                         }
                     },
-                    {
+                    {% if currentUser.featureEnabled("tag.tagging") %}{
                         "sortable": false,
                         "visible": false,
                         responsivePriority: 3,
                         "data": dataTableCreateTags
-                    },
+                    },{% endif %}
                     {
                         "name": "layoutId",
                         responsivePriority: 5,

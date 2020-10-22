@@ -60,7 +60,6 @@ class PlaylistDashboard extends Base
      * @param $state
      * @param $user
      * @param $help
-     * @param $date
      * @param $config
      * @param $playlistFactory
      * @param $moduleFactory
@@ -70,9 +69,9 @@ class PlaylistDashboard extends Base
      * @param Twig $view
      * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $date, $config, $playlistFactory, $moduleFactory, $widgetFactory, $layoutFactory, $displayGroupFactory, Twig $view, ContainerInterface $container)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $playlistFactory, $moduleFactory, $widgetFactory, $layoutFactory, $displayGroupFactory, Twig $view, ContainerInterface $container)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $date, $config, $view);
+        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
         $this->playlistFactory = $playlistFactory;
         $this->moduleFactory = $moduleFactory;
         $this->widgetFactory = $widgetFactory;
@@ -81,6 +80,13 @@ class PlaylistDashboard extends Base
         $this->container = $container;
     }
 
+    /**
+     * @param \Slim\Http\ServerRequest $request
+     * @param \Slim\Http\Response $response
+     * @return \Psr\Http\Message\ResponseInterface|\Slim\Http\Response
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
     public function displayPage(Request $request, Response $response)
     {
         // Do we have a Playlist already in our User Preferences?
@@ -118,7 +124,7 @@ class PlaylistDashboard extends Base
         $playlists = $this->playlistFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
             'name' => $this->getSanitizer($request->getParams())->getString('name'),
             'regionSpecific' => 0
-        ], $request), $request);
+        ], $request));
 
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->playlistFactory->countLast();
@@ -181,7 +187,11 @@ class PlaylistDashboard extends Base
         }
 
         // Work out the slot size of the first sub-playlist we are in.
-        foreach ($this->playlistFactory->query(null, ['childId' => $playlist->playlistId, 'depth' => 1, 'disableUserCheck' => 1], $request) as $parent) {
+        foreach ($this->playlistFactory->query(null, [
+            'childId' => $playlist->playlistId,
+            'depth' => 1,
+            'disableUserCheck' => 1
+        ]) as $parent) {
             // $parent is a playlist to which we belong.
             $this->getLog()->debug('This playlist is a sub-playlist in ' . $parent->name . '.');
             $parent->load();

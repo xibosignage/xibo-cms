@@ -942,3 +942,8 @@ function ActionController(parent, actions, options) {
     };
 }
 
+function triggerAction(path, data) {
+    console.log('TODO: Previewer: Trigger action');
+    console.log(path);
+    console.log(data);
+}

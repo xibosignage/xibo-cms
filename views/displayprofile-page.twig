@@ -26,9 +26,11 @@
 {% block title %}{{ "Display Setting Profiles"|trans }} | {% endblock %}
 
 {% block actionMenu %}
+    {% if currentUser.featureEnabled("displayprofile.add") %}
     <ul class="nav nav-pills pull-right">
         <li class="btn btn-info btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Display Settings Profile" %}" href="{{ url_for("displayProfile.add.form") }}"> <i class="fa fa-cogs" aria-hidden="true"></i> {% trans "Add Profile" %}</a></li>
     </ul>
+    {% endif %}
 {% endblock %}
 
 {% block pageContent %}

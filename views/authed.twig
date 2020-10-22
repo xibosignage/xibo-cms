@@ -50,7 +50,7 @@
 
                             <ul class="nav navbar-nav navbar-right">
                                 {% include "authed-theme-topbar.twig" ignore missing %}
-                                {% if currentUser.routeViewable("/drawer") %}
+                                {% if currentUser.featureEnabled("drawer") %}
                                     {% include "authed-notification-drawer.twig" %}
                                 {% endif %}
                                 {% include "authed-user-menu.twig" %}
@@ -82,7 +82,7 @@
                             </button>
                             {% include "authed-user-menu.twig" %}
                         </div>
-                        {% if currentUser.routeViewable("/drawer") %}
+                        {% if currentUser.featureEnabled("drawer") %}
                         <div class="user pull-right">
                             {% include "authed-notification-drawer.twig" %}
                         </div>
@@ -114,7 +114,7 @@
 
         // TODO: Change this to a call to all route permissions ( something like currentUser.getRoutePermissions() )
         var userRoutePermissions = {
-            tags: "{{ currentUser.routeViewable('/tag') }}"
+            tags: "{{ currentUser.featureEnabled('tag.tagging') }}"
         };
 
         // Equals helper for the templates below
@@ -327,9 +327,11 @@
                 <div><span class="error"></span></div>
             </td>
             <td class="title" title="Tags">
+                {% endverbatim %}{% if currentUser.featureEnabled("tag.tagging") %}
                 <label class="control-label" title="A comma separated list of tags to assign to this Media" for="tags">Tags</label>
                 <label for="tags[]"><input name="tags[]" type="text" id="tags" value="" /></label>
                 <div><span class="error"></span></div>
+                {% endif %}{% verbatim %}
             </td>
             <td>
                 <p class="size">{%=o.formatFileSize(file.size)%}</p>

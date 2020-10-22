@@ -40,8 +40,9 @@ class NotificationView extends ModuleWidget
      */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
+        // Extends parent's method
+        parent::installFiles();
+        
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-text-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.marquee.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
@@ -288,6 +289,7 @@ class NotificationView extends ModuleWidget
         $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js') . '"></script>';// Need the marquee plugin?
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.js') . '"></script>';
 
         $effect = $this->getOption('effect');
         if (stripos($effect, 'marquee') !== false)
@@ -319,7 +321,14 @@ class NotificationView extends ModuleWidget
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';
         $javaScriptContent .= '   var items = ' . json_encode($items) . ';';
-        $javaScriptContent .= '   $(document).ready(function() { $("body").xiboLayoutScaler(options); $("#content").xiboTextRender(options, items); });';
+        $javaScriptContent .= '   $(document).ready(function() { ';
+        $javaScriptContent .= '     $("body").xiboLayoutScaler(options); ';
+
+        // Run based only if the element is visible or not
+        $javaScriptContent .= '     const runOnVisible = function() { $("#content").xiboTextRender(options, items); }; ';
+        $javaScriptContent .= '     (xiboIC.isVisible) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
+        
+        $javaScriptContent .= '   });';
         $javaScriptContent .= '</script>';
 
         // Add our fonts.css file

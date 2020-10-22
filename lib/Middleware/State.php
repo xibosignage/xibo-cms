@@ -153,8 +153,7 @@ class State implements Middleware
             // Configure a user
             /** @var User $user */
             $user = $container->get('userFactory')->getSystemUser();
-            // Pass the page factory into the user object, so that it can check its page permissions
-            $user->setChildAclDependencies($container->get('userGroupFactory'), $container->get('pageFactory'));
+            $user->setChildAclDependencies($container->get('userGroupFactory'));
 
             // Load the user
             $user->load(false);
@@ -686,6 +685,7 @@ class State implements Middleware
                     $c->get('displayFactory'),
                     $c->get('scheduleFactory'),
                     $c->get('playerVersionFactory'),
+                    $c->get('view'),
                     $c
                 );
             },
@@ -1040,7 +1040,6 @@ class State implements Middleware
                     $c->get('userFactory'),
                     $c->get('userTypeFactory'),
                     $c->get('userGroupFactory'),
-                    $c->get('pageFactory'),
                     $c->get('permissionFactory'),
                     $c->get('layoutFactory'),
                     $c->get('applicationFactory'),
@@ -1067,7 +1066,6 @@ class State implements Middleware
                     $c->get('helpService'),
                     $c->get('configService'),
                     $c->get('userGroupFactory'),
-                    $c->get('pageFactory'),
                     $c->get('permissionFactory'),
                     $c->get('userFactory'),
                     $c->get('view')
@@ -1341,13 +1339,6 @@ class State implements Middleware
                     $c->get('userFactory'),
                     $c->get('userGroupFactory'),
                     $c->get('displayGroupFactory')
-                );
-            },
-            'pageFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\PageFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
                 );
             },
             'permissionFactory' => function(ContainerInterface $c) {

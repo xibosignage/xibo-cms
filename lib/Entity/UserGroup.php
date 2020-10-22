@@ -85,6 +85,12 @@ class UserGroup
      */
     public $isDisplayNotification = 0;
 
+    /**
+     * @SWG\Property(description="Features this User Group has direct access to")
+     * @var array
+     */
+    public $features = [];
+
     // Users
     private $users = [];
 
@@ -269,6 +275,22 @@ class UserGroup
             $this->linkUsers();
             $this->unlinkUsers();
         }
+    }
+
+    /**
+     * Save features
+     * @return $this
+     */
+    public function saveFeatures()
+    {
+        $this->getStore()->update('
+            UPDATE `group` SET features = :features WHERE groupId = :groupId
+        ', [
+            'groupId' => $this->groupId,
+            'features' => json_encode($this->features)
+        ]);
+
+        return $this;
     }
 
     /**
