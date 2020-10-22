@@ -218,6 +218,7 @@ class Hls extends ModuleWidget
             ->appendViewPortWidth($this->region->width)
             ->appendJavaScriptFile('vendor/jquery.min.js')
             ->appendJavaScriptFile('vendor/hls/hls.min.js')
+            ->appendJavaScript('var xiboICTargetId = ' . $this->getWidgetId() . ';')
             ->appendJavaScriptFile('xibo-interactive-control.js')
             ->appendJavaScript('
                 $(document).ready(function() {

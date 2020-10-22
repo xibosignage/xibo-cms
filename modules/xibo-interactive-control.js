@@ -29,7 +29,10 @@ const xiboIC = (function() {
         headers: [], // Default headers 
         timelimit: 5000, // timelimit in milliseconds
         callbackQueue : [],
-        
+        isVisible: true, // Widget visibility on the player
+        isPreview: false, // If the library is being used by a preview
+        targetId: (typeof xiboICTargetId != 'undefined') ? xiboICTargetId : undefined, // target id
+
         /**
          * Get URL string
          */
@@ -39,39 +42,28 @@ const xiboIC = (function() {
             }
             return '';
         },
+
         /**
          * Make a request to the configured server/player
          * @param  {string} path - Request path
          * @param  {Object} [options] - Optional params
-         * @param  {string} options.type
-         * @param  {Object[]} options.headers - Request headers in the format {key: key, value: value}
-         * @param  {Object} options.data
-         * @param  {requestCallback} options.done
-         * @param  {requestCallback} options.progress
-         * @param  {requestCallback} options.error
+         * @param  {string} [options.type]
+         * @param  {Object[]} [options.headers] - Request headers in the format {key: key, value: value}
+         * @param  {Object} [options.data]
+         * @param  {callback} [options.done]
+         * @param  {callback} [options.error]
          */
-        makeRequest: function(path, {type, headers, data, done, progress, error} = {}) {
+        makeRequest: function(path, {type, headers, data, done, error} = {}) {
             const self = this;
 
-            // Check if we are in preview mode
-            let playerAction;
-            const isPreview = function() {
-                // For the widget preview in viewer
-                if(typeof window.parent.lD != 'undefined') {
-                    playerAction = window.parent.lD.playerAction;
-                    return true;
+            // Preview
+            if(self.isPreview) {
+                // Call the preview action if it exists
+                if(typeof parent.previewActionTrigger == 'function') {
+                    parent.previewActionTrigger(path, data, done);
                 }
 
-                // For layout preview in viewer
-                if(typeof window.parent.parent.lD != 'undefined') {
-                    playerAction = window.parent.parent.lD.playerAction;
-                    return true;
-                }
-            }();
-
-            // Preview/Handle action in viewer if exists
-            if(isPreview && playerAction != undefined) {
-                playerAction(path, data);
+                // Stop the method to avoid a request
                 return;
             }
             
@@ -102,20 +94,16 @@ const xiboIC = (function() {
 
             // On load complete
             xhr.onload = function() {
-                if (typeof(done) == "function") {
-                    done(this);
+                if(xhr.status == '200') {
+                    if (typeof(done) == "function") {
+                        done(this);
+                    }
+                } else {
+                    if (typeof(error) == "function") {
+                        error(this);
+                    }
                 }
             };
-
-            // On error
-            if (typeof(error) == "function") {
-                xhr.onerror = error;
-            }
-
-            // On progress
-            if (typeof(progress) == "function") {
-                xhr.onprogress = progress;
-            }
 
             // Send!
             xhr.send(newData);
@@ -124,23 +112,37 @@ const xiboIC = (function() {
 
     // Public library
     const mainLib = {
-        isVisible: true, // Widget visibility on the player 
-
+        /**
+         * Check if the current widget is visible
+         */
         checkVisible: function() { // Check if the widget is hidden or visible
             const urlParams = new URLSearchParams(location.search);
-            mainLib.isVisible = (urlParams.get("visible")) ? (urlParams.get("visible") == 1) : true;
-            return mainLib.isVisible;
+            _lib.isVisible = (urlParams.get("visible")) ? (urlParams.get("visible") == 1) : true;
+            return _lib.isVisible;
+        },
+
+        /**
+         * Check if we're running in a preview
+         */
+        checkIsPreview: function() {
+            // For the widget preview in viewer
+            if(typeof window.parent.lD != 'undefined' || typeof window.parent.parent.lD != 'undefined') {
+                _lib.isPreview = true;
+                return true;
+            }
+
+            return false;
         },
 
         /**
          * Configure the library options
          * @param  {Object} [options]
-         * @param  {string} options.hostName
-         * @param  {string} options.port
-         * @param  {Object[]} options.headers - Request headers in the format {key: key, value: value}
-         * @param  {string} options.headers.key
-         * @param  {string} options.headers.value
-         * @param  {string} options.protocol
+         * @param  {string} [options.hostName]
+         * @param  {string} [options.port]
+         * @param  {Object[]} [options.headers] - Request headers in the format {key: key, value: value}
+         * @param  {string} [options.headers.key]
+         * @param  {string} [options.headers.value]
+         * @param  {string} [options.protocol]
          */
         config: function({ hostName, port, headers, protocol } = {}) {
             // Initialise custom request params
@@ -153,16 +155,14 @@ const xiboIC = (function() {
         /**
          * Get player info
          * @param  {Object[]} [options] - Request options
-         * @param  {requestCallback} options.done
-         * @param  {requestCallback} options.progress
-         * @param  {requestCallback} options.error
+         * @param  {callback} [options.done]
+         * @param  {callback} [options.error]
          */
-        info: function({ done, progress, error } = {}) {
+        info: function({ done, error } = {}) {
             _lib.makeRequest(
                 '/info',
                 {
                     done: done,
-                    progress: progress,
                     error: error
                 }
             );
@@ -172,11 +172,10 @@ const xiboIC = (function() {
          * Trigger a predefined action
          * @param  {string} code - The trigger code
          * @param  {Object[]} [options] - Request options
-         * @param  {requestCallback} options.done
-         * @param  {requestCallback} options.progress
-         * @param  {requestCallback} options.error
+         * @param  {callback} [options.done]
+         * @param  {callback} [options.error]
          */
-        trigger(code, { done, progress, error } = {}) {
+        trigger(code, { done, error } = {}) {
             _lib.makeRequest(
                 '/trigger',
                 {
@@ -185,7 +184,6 @@ const xiboIC = (function() {
                         trigger: code
                     },
                     done: done,
-                    progress: progress,
                     error: error
                 }
             );
@@ -194,17 +192,22 @@ const xiboIC = (function() {
         /**
          * Expire widget
          * @param  {Object[]} [options] - Request options
-         * @param  {requestCallback} options.done
-         * @param  {requestCallback} options.progress
-         * @param  {requestCallback} options.error
+         * @param  {string[]} [options.targetId] - target id
+         * @param  {callback} [options.done]
+         * @param  {callback} [options.error]
          */
-        expireNow({ done, progress, error } = {}) {
+        expireNow({ targetId, done, error } = {}) {
+            // Get target id from the request option or from the global lib var
+            var id = (typeof targetId != 'undefined') ? targetId : _lib.targetId;
+
             _lib.makeRequest(
                 '/expirenow',
                 {
                     type: 'POST',
+                    data: {
+                        id: id
+                    },
                     done: done,
-                    progress: progress,
                     error: error
                 }
             );
@@ -214,20 +217,23 @@ const xiboIC = (function() {
          * Extend widget duration
          * @param  {string} extend - Duration value to extend
          * @param  {Object[]} [options] - Request options
-         * @param  {requestCallback} options.done
-         * @param  {requestCallback} options.progress
-         * @param  {requestCallback} options.error
+         * @param  {string[]} [options.targetId] - target id
+         * @param  {callback} [options.done]
+         * @param  {callback} [options.error]
          */
-        extendWidgetDuration(extend, { done, progress, error } = {}) {
+        extendWidgetDuration(extend, { targetId, done, error } = {}) {
+            // Get target id from the request option or from the global lib var
+            var id = (typeof targetId != 'undefined') ? targetId : _lib.targetId;
+
             _lib.makeRequest(
                 '/extendduration',
                 {
                     type: 'POST',
                     data: {
+                        id: id,
                         extend: extend
                     },
                     done: done,
-                    progress: progress,
                     error: error
                 }
             );
@@ -237,20 +243,23 @@ const xiboIC = (function() {
          * Set widget duration
          * @param  {string} duration - New widget duration
          * @param  {Object[]} [options] - Request options
-         * @param  {requestCallback} options.done
-         * @param  {requestCallback} options.progress
-         * @param  {requestCallback} options.error
+         * @param  {string[]} [options.targetId] - target id
+         * @param  {callback} [options.done]
+         * @param  {callback} [options.error]
          */
-        setWidgetDuration(duration, { done, progress, error } = {}) {
+        setWidgetDuration(duration, { targetId, done, error } = {}) {
+            // Get target id from the request option or from the global lib var
+            var id = (typeof targetId != 'undefined') ? targetId : _lib.targetId;
+
             _lib.makeRequest(
                 '/setduration',
                 {
                     type: 'POST',
                     data: {
+                        id: id,
                         duration: duration
                     },
                     done: done,
-                    progress: progress,
                     error: error
                 }
             );
@@ -288,13 +297,16 @@ const xiboIC = (function() {
          * Set visible and run queue
          */
         setVisible() {
-            this.isVisible = true;
+            _lib.isVisible = true;
             this.runQueue();
         }
     };
 
     // Check visibility on load
     mainLib.checkVisible();
+
+    // Check if it's a preview
+    mainLib.checkIsPreview();
     
     return mainLib;
 })();

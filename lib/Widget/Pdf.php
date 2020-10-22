@@ -93,6 +93,13 @@ class Pdf extends ModuleWidget
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="durationIsPerItem",
+     *      in="formData",
+     *      description="A flag (0, 1), The duration specified is per item, otherwise it is per feed",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="enableStat",
      *      in="formData",
      *      description="The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
@@ -113,6 +120,7 @@ class Pdf extends ModuleWidget
         // Set the properties specific to this module
         $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
         $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
+        $this->setOption('durationIsPerItem', $sanitizedParams->getCheckbox('durationIsPerItem'));
         $this->setOption('name', $sanitizedParams->getString('name'));
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
 
@@ -140,12 +148,14 @@ class Pdf extends ModuleWidget
         $data['viewPortWidth'] = $this->isPreview() ? $this->region->width : '[[ViewPortWidth]]';
 
         $duration = $this->getCalculatedDurationForGetResource();
+        $durationIsPerItem = $this->getOption('durationIsPerItem', 1);
 
         // Set some options
         $options = array(
             'type' => $this->getModuleType(),
             'duration' => $duration,
-            'durationIsPerItem' => false,
+            'widgetId' => $this->getWidgetId(),
+            'durationIsPerItem' => (($durationIsPerItem == 0) ? false : true),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
             'previewWidth' => intval($this->getPreviewWidth()),
@@ -159,6 +169,7 @@ class Pdf extends ModuleWidget
         $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/pdfjs/pdf.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/pdfjs/compatibility.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript">var xiboICTargetId = ' . $this->getWidgetId() . ';</script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript">';
         $javaScriptContent .= '   var options = ' . json_encode($options) . ';';

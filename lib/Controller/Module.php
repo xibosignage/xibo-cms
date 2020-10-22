@@ -1330,16 +1330,16 @@ class Module extends Base
             )
         ;
 
-        if ($module->getModule()->regionSpecific == 0) {
-            // Non region specific module - no caching required as this is only ever called via preview.
-            $response = $module->download($request, $response);
-        } else {
+        if ($module->getModule()->renderAs == 'html') {
             // Region-specific module, need to handle caching and locking.
             $resource = $module->getResourceOrCache();
 
             if (!empty($resource)) {
                 $response->getBody()->write($resource);
             }
+        } else {
+            // Non region specific module - no caching required as this is only ever called via preview.
+            $response = $module->download($request, $response);
         }
 
         $this->setNoOutput(true);
