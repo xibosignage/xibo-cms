@@ -88,11 +88,14 @@ class FeaturesMigration extends AbstractMigration
                 // Schedule Now has its own feature.
                 $features[] = 'schedule.now';
             } else {
+                // Pluralise some pages.
+                $pageName = in_array($page['name'], ['user', 'display']) ? $page['name'] . 's' : $page['name'];
+
                 // Not all features will have a .add/.modify, but this will grant the more permissive option and get
                 // reset when a user edits.
-                $features[] = $page['name'] . '.view';
-                $features[] = $page['name'] . '.add';
-                $features[] = $page['name'] . '.modify';
+                $features[] = $pageName . '.view';
+                $features[] = $pageName . '.add';
+                $features[] = $pageName . '.modify';
             }
         }
 
