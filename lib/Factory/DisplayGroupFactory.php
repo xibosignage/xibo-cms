@@ -261,6 +261,7 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.createdDt,
                 `displaygroup`.modifiedDt,
                 `displaygroup`.userId,
+                `displaygroup`.folderId,
                 (
                   SELECT GROUP_CONCAT(DISTINCT tag) 
                     FROM tag 
@@ -406,6 +407,11 @@ class DisplayGroupFactory extends BaseFactory
                     $members[] = $displayGroupId;
                 }
             }
+        }
+
+        if ($parsedBody->getInt('folderId') !== null) {
+            $body .= ' AND `displaygroup`.folderId = :folderId ';
+            $params['folderId'] = $parsedBody->getInt('folderId');
         }
 
         // Sorting?

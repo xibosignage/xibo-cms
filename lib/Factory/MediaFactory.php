@@ -222,6 +222,7 @@ class MediaFactory extends BaseFactory
             $media->urlDownload = true;
             $media->extension = $requestOptions['extension'];
             $media->enableStat = $requestOptions['enableStat'];
+            $media->folderId = $requestOptions['folderId'];
         }
 
         $this->getLog()->debug('Queue download of: ' . $uri . ', current mediaId for this download is ' . $media->mediaId . '.');
@@ -518,6 +519,7 @@ class MediaFactory extends BaseFactory
                `media`.createdDt,
                `media`.modifiedDt,
                `media`.enableStat,
+               `media`.folderId,
             ';
 
         $select .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
@@ -773,6 +775,11 @@ class MediaFactory extends BaseFactory
 
             $body .= ' AND `media`.duration ' . $duration['operator'] . ' :duration ';
             $params['duration'] = $duration['variable'];
+        }
+
+        if ($sanitizedFilter->getInt('folderId') !== null) {
+            $body .= " AND media.folderId = :folderId ";
+            $params['folderId'] = $sanitizedFilter->getInt('folderId');
         }
 
         // Sorting?

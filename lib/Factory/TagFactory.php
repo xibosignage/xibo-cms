@@ -140,7 +140,7 @@ class TagFactory extends BaseFactory
      */
     public function getByTag($tagName)
     {
-        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options FROM `tag` WHERE tag.tag = :tag';
+        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options, tag.folderId FROM `tag` WHERE tag.tag = :tag';
 
         $tags = $this->getStore()->select($sql, ['tag' => $tagName]);
 
@@ -157,6 +157,7 @@ class TagFactory extends BaseFactory
         $tag->isSystem = $sanitizedRow->getInt('isSystem');
         $tag->isRequired = $sanitizedRow->getInt('isRequired');
         $tag->options = $sanitizedRow->getString('options');
+        $tag->folderId = $sanitizedRow->getInt('folderId');
 
         return $tag;
     }
@@ -170,7 +171,7 @@ class TagFactory extends BaseFactory
     {
         $tags = [];
 
-        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options, lktaglayout.value FROM `tag` INNER JOIN `lktaglayout` ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = :layoutId';
+        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options, lktaglayout.value, tag.folderId FROM `tag` INNER JOIN `lktaglayout` ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = :layoutId';
 
         foreach ($this->getStore()->select($sql, ['layoutId' => $layoutId]) as $row) {
             $sanitizedRow = $this->getSanitizer($row);
@@ -182,6 +183,7 @@ class TagFactory extends BaseFactory
             $tag->isRequired = $sanitizedRow->getInt('isRequired');
             $tag->options = $sanitizedRow->getString('options');
             $tag->value = $sanitizedRow->getString('value');
+            $tag->folderId = $sanitizedRow->getInt('folderId');
 
             $tags[] = $tag;
         }
@@ -198,7 +200,7 @@ class TagFactory extends BaseFactory
     {
         $tags = [];
 
-        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options, lktagplaylist.value FROM `tag` INNER JOIN `lktagplaylist` ON lktagplaylist.tagId = tag.tagId WHERE lktagplaylist.playlistId = :playlistId';
+        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options, lktagplaylist.value, tag.folderId FROM `tag` INNER JOIN `lktagplaylist` ON lktagplaylist.tagId = tag.tagId WHERE lktagplaylist.playlistId = :playlistId';
 
         foreach ($this->getStore()->select($sql, array('playlistId' => $playlistId)) as $row) {
             $sanitizedRow = $this->getSanitizer($row);
@@ -210,6 +212,7 @@ class TagFactory extends BaseFactory
             $tag->isRequired = $sanitizedRow->getInt('isRequired');
             $tag->options = $sanitizedRow->getString('options');
             $tag->value = $sanitizedRow->getString('value');
+            $tag->folderId = $sanitizedRow->getInt('folderId');
 
             $tags[] = $tag;
         }
@@ -226,7 +229,7 @@ class TagFactory extends BaseFactory
     {
         $tags = [];
 
-        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options, lktagcampaign.value FROM `tag` INNER JOIN `lktagcampaign` ON lktagcampaign.tagId = tag.tagId WHERE lktagcampaign.campaignId = :campaignId';
+        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options, lktagcampaign.value, tag.folderId FROM `tag` INNER JOIN `lktagcampaign` ON lktagcampaign.tagId = tag.tagId WHERE lktagcampaign.campaignId = :campaignId';
 
         foreach ($this->getStore()->select($sql, array('campaignId' => $campaignId)) as $row) {
             $sanitizedRow = $this->getSanitizer($row);
@@ -238,6 +241,7 @@ class TagFactory extends BaseFactory
             $tag->isRequired = $sanitizedRow->getInt('isRequired');
             $tag->options = $sanitizedRow->getString('options');
             $tag->value = $sanitizedRow->getString('value');
+            $tag->folderId = $sanitizedRow->getInt('folderId');
 
             $tags[] = $tag;
         }
@@ -254,7 +258,7 @@ class TagFactory extends BaseFactory
     {
         $tags = [];
 
-        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options, lktagmedia.value FROM `tag` INNER JOIN `lktagmedia` ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = :mediaId';
+        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options, lktagmedia.value, tag.folderId FROM `tag` INNER JOIN `lktagmedia` ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = :mediaId';
 
         foreach ($this->getStore()->select($sql, array('mediaId' => $mediaId)) as $row) {
             $sanitizedRow = $this->getSanitizer($row);
@@ -266,6 +270,7 @@ class TagFactory extends BaseFactory
             $tag->isRequired = $sanitizedRow->getInt('isRequired');
             $tag->options = $sanitizedRow->getString('options');
             $tag->value = $sanitizedRow->getString('value');
+            $tag->folderId = $sanitizedRow->getInt('folderId');
 
             $tags[] = $tag;
         }
@@ -282,7 +287,7 @@ class TagFactory extends BaseFactory
     {
         $tags = [];
 
-        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options, lktagdisplaygroup.value FROM `tag` INNER JOIN `lktagdisplaygroup` ON lktagdisplaygroup.tagId = tag.tagId WHERE lktagdisplaygroup.displayGroupId = :displayGroupId';
+        $sql = 'SELECT tag.tagId, tag.tag, tag.isSystem, tag.isRequired, tag.options, lktagdisplaygroup.value, tag.folderId FROM `tag` INNER JOIN `lktagdisplaygroup` ON lktagdisplaygroup.tagId = tag.tagId WHERE lktagdisplaygroup.displayGroupId = :displayGroupId';
 
         foreach ($this->getStore()->select($sql, array('displayGroupId' => $displayGroupId)) as $row) {
             $sanitizedRow = $this->getSanitizer($row);
@@ -294,6 +299,7 @@ class TagFactory extends BaseFactory
             $tag->isRequired = $sanitizedRow->getInt('isRequired');
             $tag->options = $sanitizedRow->getString('options');
             $tag->value = $sanitizedRow->getString('value');
+            $tag->folderId = $sanitizedRow->getInt('folderId');
 
             $tags[] = $tag;
         }
@@ -354,7 +360,7 @@ class TagFactory extends BaseFactory
         $order = '';
         $limit = '';
 
-        $select = 'SELECT tagId, tag, isSystem, isRequired, options ';
+        $select = 'SELECT tagId, tag, isSystem, isRequired, options, folderId ';
 
         $body = '
               FROM `tag`
@@ -397,6 +403,11 @@ class TagFactory extends BaseFactory
 
         if ($sanitizedFilter->getCheckbox('haveOptions') === 1) {
             $body .= " AND `tag`.options IS NOT NULL";
+        }
+
+        if ($sanitizedFilter->getInt('folderId') != null) {
+            $body .= " AND `tag`.folderId = :folderId ";
+            $params['folderId'] = $sanitizedFilter->getInt('folderId');
         }
 
         // Sorting?

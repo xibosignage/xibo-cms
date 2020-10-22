@@ -547,6 +547,17 @@ class State implements Middleware
                     $c->get('view')
                 );
             },
+            '\Xibo\Controller\Folder' => function(ContainerInterface $c) {
+                return new \Xibo\Controller\Folder(
+                    $c->get('logService'),
+                    $c->get('sanitizerService'),
+                    $c->get('state'),
+                    $c->get('user'),
+                    $c->get('helpService'),
+                    $c->get('configService'),
+                    $c->get('folderFactory')
+                );
+            },
             '\Xibo\Controller\Help' => function(ContainerInterface $c) {
                 return new \Xibo\Controller\Help(
                     $c->get('logService'),
@@ -1235,6 +1246,16 @@ class State implements Middleware
                     $c->get('configService'),
                     $c->get('dispatcher'),
                     $c->get('commandFactory')
+                );
+            },
+            'folderFactory' => function(ContainerInterface $c) {
+                return new \Xibo\Factory\FolderFactory(
+                    $c->get('store'),
+                    $c->get('logService'),
+                    $c->get('sanitizerService'),
+                    $c->get('permissionFactory'),
+                    $c->get('user'),
+                    $c->get('userFactory')
                 );
             },
             'helpFactory' => function(ContainerInterface $c) {

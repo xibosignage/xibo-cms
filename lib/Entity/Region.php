@@ -426,6 +426,9 @@ class Region implements \JsonSerializable
                 $this->regionPlaylist->regionId = $this->regionId;
                 $this->regionPlaylist->setOwner($this->ownerId);
             }
+            if (array_key_exists('folderId', $options)) {
+                $this->regionPlaylist->folderId = $options['folderId'];
+            }
             $this->regionPlaylist->save();
 
             // Audit
@@ -433,7 +436,7 @@ class Region implements \JsonSerializable
                 $this->audit($this->regionId, 'Added', ['regionId' => $this->regionId, 'campaignId' => $campaignId, 'details' => (string)$this]);
             }
         }
-        else if ($this->hash != $this->hash()) {
+        else if ($this->hash != $this->hash() || array_key_exists('folderId', $options)) {
             $this->update();
 
             // There are 3 cases that we need to consider
@@ -448,6 +451,11 @@ class Region implements \JsonSerializable
             }
 
             $this->regionPlaylist->name = $this->name;
+
+            if (array_key_exists('folderId', $options)) {
+                $this->regionPlaylist->folderId = $options['folderId'];
+            }
+
             $this->regionPlaylist->save();
 
             if ($options['audit']) {

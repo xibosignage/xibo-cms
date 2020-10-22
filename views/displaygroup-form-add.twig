@@ -77,6 +77,16 @@
     <div class="row">
         <div class="col-md-12">
             <form id="displayGroupAddForm" class="XiboForm form-horizontal displayGroupForm" method="post" action="{{ url_for("displayGroup.add") }}" data-gettag="{{ url_for("tag.getByName") }}">
+
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">{% trans "Folder" %}</label>
+                    <div class="col-sm-10">
+                        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#folder-tree-form-modal">{% trans "Select Folder" %}</button>
+                        <span id="selectedFormFolder"></span>
+                    </div>
+                </div>
+                {{ forms.hidden('folderId') }}
+
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Display Group" %}{% endset %}
                 {{ forms.input("displayGroup", title, "", helpText) }}

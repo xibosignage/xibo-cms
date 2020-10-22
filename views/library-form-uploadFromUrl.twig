@@ -41,7 +41,13 @@
                 <div class="well">
                     {{ uploadSizeMessage }}
                 </div>
-
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">{% trans "Folder" %}</label>
+                    <div class="col-sm-10">
+                        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#folder-tree-form-modal">{% trans "Select Folder" %}</button>
+                        <span id="selectedFormFolder"></span>
+                    </div>
+                </div>
                 {% set title %}{% trans "URL" %}{% endset %}
                 {% set helpText %}{% trans "Please provide the remote URL to the file" %}{% endset %}
                 {{ forms.input("url", title, "", helpText) }}
@@ -62,6 +68,8 @@
                     { id: "Inherit", value: inheritOption }
                 ] %}
                 {{ forms.dropdown("enableStat", "single", title, theme.getSetting("MEDIA_STATS_ENABLED_DEFAULT"), options, "id", "value", helpText) }}
+
+                {{ forms.hidden('folderId') }}
             </form>
         </div>
     </div>

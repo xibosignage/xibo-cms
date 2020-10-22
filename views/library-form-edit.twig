@@ -39,8 +39,23 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="mediaEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("library.edit", {"id": media.mediaId}) }}" data-media-id="{{ media.mediaId }}" data-valid-extensions="{{ validExtensions }}" data-gettag="{{ url_for("tag.getByName") }}">
+            <form id="mediaEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("library.edit", {"id": media.mediaId}) }}" data-media-id="{{ media.mediaId }}" data-valid-extensions="{{ validExtensions }}" data-gettag="{{ url_for("tag.getByName") }}" data-folder-id="{{ media.folderId }}">
                 {% if media.mediaType != "font" %}
+
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">{% trans "Current Folder" %}</label>
+                        <div class="col-sm-10" style="padding-top: 7px">
+                            <span id="originalFormFolder"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">{% trans "Folder" %}</label>
+                        <div class="col-sm-10">
+                            <button type="button" class="btn btn-info" data-toggle="modal" data-target="#folder-tree-form-modal">{% trans "Select Folder" %}</button>
+                            <span id="selectedFormFolder"></span>
+                        </div>
+                    </div>
 
                     {% set title %}{% trans "Name" %}{% endset %}
                     {% set helpText %}{% trans "The Name of this item - Leave blank to use the file name" %}{% endset %}
@@ -97,6 +112,7 @@
                     {% endif %}
                     {{ forms.checkbox("updateInLayouts", title, checked, helpText) }}
 
+                    {{ forms.hidden('folderId', media.folderId) }}
                 {% else %}
                     {% set message %}{% trans "Sorry, Fonts do not have any editable properties." %}{% endset %}
                     {{ forms.message(message) }}

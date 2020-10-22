@@ -380,6 +380,8 @@ class Display implements \JsonSerializable
      */
     public $modifiedDt;
 
+    public $folderId;
+
     /** @var array The configuration from the Display Profile  */
     private $profileConfig;
 
@@ -786,6 +788,7 @@ class Display implements \JsonSerializable
         $displayGroup = $this->displayGroupFactory->create();
         $displayGroup->displayGroup = $this->display;
         $displayGroup->tags = $this->tags;
+        $displayGroup->folderId = 1;
         $displayGroup->setDisplaySpecificDisplay($this);
 
         $this->getLog()->debug('Creating display specific group with userId ' . $displayGroup->userId);
@@ -893,7 +896,7 @@ class Display implements \JsonSerializable
         ]);
 
         // Maintain the Display Group
-        if ($this->hasPropertyChanged('display') || $this->hasPropertyChanged('description') || $this->hasPropertyChanged('tags') || $this->hasPropertyChanged('bandwidthLimit')) {
+        if ($this->hasPropertyChanged('display') || $this->hasPropertyChanged('description') || $this->hasPropertyChanged('tags') || $this->hasPropertyChanged('bandwidthLimit') || $this->hasPropertyChanged('folderId')) {
             $this->getLog()->debug('Display specific DisplayGroup properties need updating');
 
             $displayGroup = $this->displayGroupFactory->getById($this->displayGroupId);
@@ -901,6 +904,7 @@ class Display implements \JsonSerializable
             $displayGroup->description = $this->description;
             $displayGroup->replaceTags($this->tags);
             $displayGroup->bandwidthLimit = $this->bandwidthLimit;
+            $displayGroup->folderId = $this->folderId;
             $displayGroup->save(DisplayGroup::$saveOptionsMinimum);
         } else {
             $this->store->update('UPDATE displaygroup SET `modifiedDt` = :modifiedDt WHERE displayGroupId = :displayGroupId', [

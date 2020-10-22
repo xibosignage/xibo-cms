@@ -61,28 +61,49 @@
                             {% set helpText %}{% trans "Show items owned by the selected User." %}{% endset %}
                             {{ inline.dropdown("userId", "single", title, "", [{userId:null, userName:""}]|merge(users), "userId", "userName", helpText, "selectPicker", "", "", "", attributes) }}
 
+                            {{ inline.hidden("folderId") }}
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
-                    <table id="datasets" class="table table-striped" data-state-preference-name="dataSetGrid">
-                        <thead>
-                            <tr>
-                                <th>{% trans "ID" %}</th>
-                                <th>{% trans "Name" %}</th>
-                                <th>{% trans "Description" %}</th>
-                                <th>{% trans "Code" %}</th>
-                                <th>{% trans "Remote?" %}</th>
-                                <th>{% trans "Owner" %}</th>
-                                <th>{% trans "Permissions" %}</th>
-                                <th>{% trans "Last Sync" %}</th>
-                                <th>{% trans "Row Menu" %}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                <div class="row">
+                    <div class="col-sm-1 form-group" style="padding: 0">
+                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-sm"><i class="fas fa-bars fa-1x"></i></button>
+                    </div>
+                    <div class="form-group col-sm-11" style="padding: 0">
+                        <div id="breadcrumbs" style="margin-top: 5px;"></div>
+                    </div>
+                </div>
 
-                        </tbody>
-                    </table>
+                <div class="row">
+                    <div class="col-sm-2 well" id="grid-folder-filter">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
+                            <label class="form-check-label" for="folder-tree-clear-selection-button">{% trans "Search everywhere?" %}</label>
+                        </div>
+                        <div id="container-folder-tree"></div>
+                    </div>
+                    <div id="datatable-container" class="col-sm-10">
+                        <div class="XiboData">
+                            <table id="datasets" class="table table-striped" data-state-preference-name="dataSetGrid">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "ID" %}</th>
+                                        <th>{% trans "Name" %}</th>
+                                        <th>{% trans "Description" %}</th>
+                                        <th>{% trans "Code" %}</th>
+                                        <th>{% trans "Remote?" %}</th>
+                                        <th>{% trans "Owner" %}</th>
+                                        <th>{% trans "Permissions" %}</th>
+                                        <th>{% trans "Last Sync" %}</th>
+                                        <th>{% trans "Row Menu" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -96,6 +117,7 @@
             serverSide: true,
             stateSave: true,
             stateDuration: 0,
+            responsive: true,
             stateLoadCallback: dataTableStateLoadCallback,
             stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
@@ -108,25 +130,29 @@
                 }
             },
             "columns": [
-                { "data": "dataSetId" },
-                { "data": "dataSet", "render": dataTableSpacingPreformatted },
-                { "data": "description" },
-                { "data": "code" },
+                { "data": "dataSetId", responsivePriority: 2 },
+                { "data": "dataSet", "render": dataTableSpacingPreformatted, responsivePriority: 2 },
+                { "data": "description", responsivePriority: 4 },
+                { "data": "code", responsivePriority: 3 },
                 {
                     "data": "isRemote",
+                    responsivePriority: 3,
                     "render": dataTableTickCrossColumn
                 },
-                { "data": "owner" },
+                { "data": "owner", responsivePriority: 3 },
                 {
                     "data": "groupsWithPermissions",
+                    responsivePriority: 3,
                     "render": dataTableCreatePermissions
                 },
                 {
                     "data": "lastSync",
+                    responsivePriority: 4,
                     "render": dataTableDateFromUnix
                 },
                 {
                     "orderable": false,
+                    responsivePriority: 1,
                     "data": dataTableButtonsColumn
                 }
             ]

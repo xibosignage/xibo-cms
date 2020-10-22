@@ -194,8 +194,12 @@ class Video extends ModuleWidget
             // Show the video cover image - scaled to the aspect ratio of this region (get from GET)
             return '<div style="display:table; width:100%; height: ' . $height . 'px">
             <div style=" display: table-cell;">
-            <div style="text-align:center;"><i alt="video thumbnail" class="fa module-preview-icon module-icon-video" style="position:fixed;"></i></div>
-                <img src="' . $url . '" />
+                <div style="text-align:center;">
+                    <i class="fa module-preview-icon module-icon-video" style="position:fixed;"></i>
+                </div>
+                <div style="text-align:center;">
+                    <img src="' . $url . '" />
+                </div>
             </div>
         </div>';
         }

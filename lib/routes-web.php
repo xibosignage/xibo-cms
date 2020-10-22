@@ -121,7 +121,7 @@ $app->get('/playlist/form/delete/{id}', ['\Xibo\Controller\Playlist','deleteForm
 $app->get('/playlist/form/timeline/{id}', ['\Xibo\Controller\Playlist','timelineForm'])->setName('playlist.timeline.form');
 $app->get('/playlist/form/setenablestat/{id}', ['\Xibo\Controller\Playlist','setEnableStatForm'])->setName('playlist.setenablestat.form');
 $app->get('/playlist/form/usage/{id}', ['\Xibo\Controller\Playlist','usageForm'])->setName('playlist.usage.form');
-
+$app->get('/playlist/form/{id}/selectfolder', ['\Xibo\Controller\Playlist','selectFolderForm'])->setName('playlist.selectfolder.form');
 // Designer
 $app->get('/playlist/form/library/assign/{id}', ['\Xibo\Controller\Playlist','libraryAssignForm'])->setName('playlist.library.assign.form');
 // Module functions
@@ -149,6 +149,7 @@ $app->get('/library/fontcss', ['\Xibo\Controller\Library','fontCss'])->setName('
 $app->get('/library/fontlist', ['\Xibo\Controller\Library','fontList'])->setName('library.font.list');
 $app->get('/library/form/copy/{id}', ['\Xibo\Controller\Library','copyForm'])->setName('library.copy.form');
 $app->get('/library/form/setenablestat/{id}', ['\Xibo\Controller\Library','setEnableStatForm'])->setName('library.setenablestat.form');
+$app->get('/library/form/{id}/selectfolder', ['\Xibo\Controller\Library','selectFolderForm'])->setName('library.selectfolder.form');
 
 //
 // display
@@ -201,6 +202,7 @@ $app->get('/campaign/form/delete/{id}', ['\Xibo\Controller\Campaign','deleteForm
 $app->get('/campaign/form/retire/{id}', ['\Xibo\Controller\Campaign','retireForm'])->setName('campaign.retire.form');
 $app->get('/campaign/form/layouts/{id}', ['\Xibo\Controller\Campaign','layoutsForm'])->setName('campaign.layouts.form');
 $app->get('/campaign/{id}/preview', ['\Xibo\Controller\Campaign','preview'])->setName('campaign.preview');
+$app->get('/campaign/form/{id}/selectfolder', ['\Xibo\Controller\Campaign','selectFolderForm'])->setName('campaign.selectfolder.form');
 
 //
 // template
@@ -254,6 +256,7 @@ $app->get('/displaygroup/form/layout/{id}', ['\Xibo\Controller\DisplayGroup','la
 $app->get('/displaygroup/form/command/{id}', ['\Xibo\Controller\DisplayGroup','commandForm'])->setName('displayGroup.command.form');
 $app->get('/displaygroup/form/collect/{id}', ['\Xibo\Controller\DisplayGroup','collectNowForm'])->setName('displayGroup.collectNow.form');
 $app->get('/displaygroup/form/copy/{id}', ['\Xibo\Controller\DisplayGroup','copyForm'])->setName('displayGroup.copy.form');
+$app->get('/displaygroup/form/{id}/selectfolder', ['\Xibo\Controller\DisplayGroup','selectFolderForm'])->setName('displayGroup.selectfolder.form');
 
 //
 // displayprofile

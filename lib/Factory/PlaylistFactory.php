@@ -185,6 +185,7 @@ class PlaylistFactory extends BaseFactory
                 `playlist`.filterMediaTags,
                 `playlist`.requiresDurationUpdate,
                 `playlist`.enableStat,
+                `playlist`.folderId,
                 (
                 SELECT GROUP_CONCAT(DISTINCT tag) 
                   FROM tag 
@@ -375,6 +376,11 @@ class PlaylistFactory extends BaseFactory
             ';
 
             $params['mediaLike'] = '%' . $parsedFilter->getString('mediaLike') . '%';
+        }
+
+        if ($parsedFilter->getInt('folderId') !== null) {
+            $body .= " AND `playlist`.folderId = :folderId ";
+            $params['folderId'] = $parsedFilter->getInt('folderId');
         }
 
         // Sorting?

@@ -315,6 +315,13 @@ class Layout extends Base
      *      type="string",
      *      required=false
      *  ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -347,6 +354,7 @@ class Layout extends Base
         $enableStat = $sanitizedParams->getCheckbox('enableStat');
         $autoApplyTransitions = $sanitizedParams->getCheckbox('autoApplyTransitions');
         $code = $sanitizedParams->getString('code', ['defaultOnEmptyString' => true]);
+        $folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
 
         $template = null;
 
@@ -384,6 +392,9 @@ class Layout extends Base
 
         // Set auto apply transitions flag
         $layout->autoApplyTransitions = $autoApplyTransitions;
+
+        // set folderId
+        $layout->folderId = $folderId;
 
         // Save
         $layout->save();
@@ -523,6 +534,13 @@ class Layout extends Base
      *      type="string",
      *      required=false
      *  ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -559,6 +577,7 @@ class Layout extends Base
         $layout->retired = $sanitizedParams->getCheckbox('retired');
         $layout->enableStat = $sanitizedParams->getCheckbox('enableStat');
         $layout->code = $sanitizedParams->getString('code');
+        $layout->folderId = $sanitizedParams->getInt('folderId', ['default' => $layout->folderId]);
 
         $tags = $sanitizedParams->getString('tags');
         $tagsArray = explode(',', $tags);
@@ -1163,6 +1182,13 @@ class Layout extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="query",
+     *      description="Filter by Folder ID",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1218,6 +1244,7 @@ class Layout extends Base
             'publishedStatusId' => $parsedQueryParams->getInt('publishedStatusId'),
             'activeDisplayGroupId' => $parsedQueryParams->getInt('activeDisplayGroupId'),
             'campaignId' => $parsedQueryParams->getInt('campaignId'),
+            'folderId' => $parsedQueryParams->getInt('folderId')
         ], $request));
 
         foreach ($layouts as $layout) {
@@ -1473,6 +1500,22 @@ class Layout extends Base
                     'url' => $this->urlFor($request,'layout.edit.form', ['id' => $layout->layoutId]),
                     'text' => __('Edit')
                 );
+
+                // Select Folder
+                $layout->buttons[] = [
+                    'id' => 'campaign_button_selectfolder',
+                    'url' => $this->urlFor($request,'campaign.selectfolder.form', ['id' => $layout->campaignId]),
+                    'text' => __('Select Folder'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'campaign.selectfolder', ['id' => $layout->campaignId])],
+                        ['name' => 'commit-method', 'value' => 'put'],
+                        ['name' => 'id', 'value' => 'campaign_button_selectfolder'],
+                        ['name' => 'text', 'value' => __('Move to Folder')],
+                        ['name' => 'rowtitle', 'value' => $layout->layout],
+                        ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                    ]
+                ];
 
                 // Copy Button
                 $layout->buttons[] = array(
@@ -2457,6 +2500,7 @@ class Layout extends Base
         $draft->publishedStatus = __('Draft');
         $draft->autoApplyTransitions = $layout->autoApplyTransitions;
         $draft->code = $layout->code;
+        $draft->folderId = $layout->folderId;
 
         // Do not copy any of the tags, these will belong on the parent and are not editable from the draft.
         $draft->tags = [];

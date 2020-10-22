@@ -538,7 +538,8 @@ class Display extends Base
             'lastAccessed' => ($parsedQueryParams->getDate('lastAccessed') != null) ? $parsedQueryParams->getDate('lastAccessed')->format('U') : null,
             'displayGroupIdMembers' => $parsedQueryParams->getInt('displayGroupIdMembers'),
             'orientation' => $parsedQueryParams->getString('orientation'),
-            'commercialLicence' => $parsedQueryParams->getInt('commercialLicence')
+            'commercialLicence' => $parsedQueryParams->getInt('commercialLicence'),
+            'folderId' => $parsedQueryParams->getInt('folderId')
         ];
 
         // Get a list of displays
@@ -721,6 +722,22 @@ class Display extends Base
                         ['name' => 'form-callback', 'value' => 'setDefaultMultiSelectFormOpen']
                     )
                 );
+
+                // Select Folder
+                $display->buttons[] = [
+                    'id' => 'displaygroup_button_selectfolder',
+                    'url' => $this->urlFor($request,'displayGroup.selectfolder.form', ['id' => $display->displayGroupId]),
+                    'text' => __('Select Folder'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.selectfolder', ['id' => $display->displayGroupId])],
+                        ['name' => 'commit-method', 'value' => 'put'],
+                        ['name' => 'id', 'value' => 'displaygroup_button_selectfolder'],
+                        ['name' => 'text', 'value' => __('Move to Folder')],
+                        ['name' => 'rowtitle', 'value' => $display->display],
+                        ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                    ]
+                ];
 
                 if (in_array($display->clientType, ['android', 'lg', 'sssp'])) {
                     $display->buttons[] = array(
@@ -1234,6 +1251,7 @@ class Display extends Base
         $display->bandwidthLimit = $sanitizedParams->getInt('bandwidthLimit');
         $display->teamViewerSerial = $sanitizedParams->getString('teamViewerSerial');
         $display->webkeySerial = $sanitizedParams->getString('webkeySerial');
+        $display->folderId = $sanitizedParams->getInt('folderId');
 
         // Get the display profile and use that to pull in any overrides
         // start with an empty config

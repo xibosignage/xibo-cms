@@ -217,6 +217,7 @@ class DataSetFactory extends BaseFactory
             dataset.`ignoreFirstRow`,
             dataset.`rowLimit`,
             dataset.`limitPolicy`,
+            dataset.`folderId`,
             user.userName AS owner,
             (
               SELECT GROUP_CONCAT(DISTINCT `group`.group)
@@ -269,6 +270,11 @@ class DataSetFactory extends BaseFactory
         if ($parsedFilter->getString('code') != null) {
             $body .= ' AND `dataset`.`code` = :code ';
             $params['code'] = $parsedFilter->getString('code');
+        }
+
+        if ($parsedFilter->getInt('folderId') !== null) {
+            $body .= ' AND dataset.folderId = :folderId ';
+            $params['folderId'] = $parsedFilter->getInt('folderId');
         }
 
         // Sorting?

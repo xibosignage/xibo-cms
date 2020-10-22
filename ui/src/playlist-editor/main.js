@@ -79,7 +79,10 @@ window.pE = {
     selectedObject: {},
 
     // Bottom toolbar
-    toolbar: {}
+    toolbar: {},
+
+    //folderId
+    folderId: ''
 };
 
 // Load Playlist and build app structure
@@ -119,7 +122,6 @@ pE.loadEditor = function() {
 
                 // Append layout html to the main div
                 pE.editorContainer.html(playlistEditorTemplate());
-
                 // Initialise dropabble containers
                 pE.editorContainer.find('#playlist-timeline, #dropzone-container').droppable({
                     accept: '[drop-to="region"]',
@@ -138,8 +140,10 @@ pE.loadEditor = function() {
 
                 // Initialize timeline and create data structure
                 pE.playlist = new Playlist(playlistId, res.data[0]);
+                // folder Id
+                pE.folderId = pE.playlist.folderId;
 
-                // Initialize properties panel
+                    // Initialize properties panel
                 pE.propertiesPanel = new PropertiesPanel(
                     pE,
                     pE.editorContainer.find('#playlist-properties-panel')
@@ -759,7 +763,8 @@ pE.reloadData = function() {
 
             if(res.data != null && res.data.length > 0) {
                 pE.playlist = new Playlist(pE.playlist.playlistId, res.data[0]);
-
+                // folder Id
+                pE.folderId = pE.playlist.folderId;
                 pE.refreshDesigner();
             } else {
                 if(res.login) {
@@ -1005,6 +1010,20 @@ pE.openUploadFormModelShown = function(form) {
     }).bind('fileuploaddone', function (e, data) {
         saveVideoCoverImage(data);
     }).bind('fileuploaddrop', handleVideoCoverImage);
+
+
+    // compile tree folder modal and append it to Form
+    if ($('#folder-tree-form-modal').length === 0) {
+        let folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
+        let treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
+        form.append(folderTreeModal(treeConfig));
+
+        $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
+            $(this).data('bs.modal', null);
+        });
+    }
+
+    initJsTreeAjax('#container-folder-form-tree', 'playlist-editor-upload', true, 600);
 };
 
 

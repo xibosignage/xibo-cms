@@ -163,7 +163,7 @@ $app->post('/playlist/copy/{id}', ['\Xibo\Controller\Playlist','copy'])->setName
 $app->put('/playlist/setenablestat/{id}', ['\Xibo\Controller\Playlist','setEnableStat'])->setName('playlist.setenablestat');
 $app->get('/playlist/usage/{id}', ['\Xibo\Controller\Playlist','usage'])->setName('playlist.usage');
 $app->get('/playlist/usage/layouts/{id}', ['\Xibo\Controller\Playlist','usageLayouts'])->setName('playlist.usage.layouts');
-
+$app->put('/playlist/{id}/selectfolder', ['\Xibo\Controller\Playlist','selectFolder'])->setName('playlist.selectfolder');
 // Widgets Order
 $app->get('/playlist/widget', ['\Xibo\Controller\Playlist','widgetGrid'])->setName('playlist.widget.search');
 $app->group('/playlist', function (RouteCollectorProxy $group) {
@@ -200,6 +200,7 @@ $app->post('/campaign', ['\Xibo\Controller\Campaign','add'])->setName('campaign.
 $app->put('/campaign/{id}', ['\Xibo\Controller\Campaign','edit'])->setName('campaign.edit');
 $app->delete('/campaign/{id}', ['\Xibo\Controller\Campaign','delete'])->setName('campaign.delete');
 $app->post('/campaign/{id}/copy', ['\Xibo\Controller\Campaign','copy'])->setName('campaign.copy');
+$app->put('campaign/{id}/selectfolder', ['\Xibo\Controller\Campaign','selectFolder'])->setName('campaign.selectfolder');
 
 // We use POST requests so that we can support multiple records
 $app->post('/campaign/layout/assign/{id}', ['\Xibo\Controller\Campaign','assignLayout'])->setName('campaign.assign.layout');
@@ -244,6 +245,7 @@ $app->post('/library', ['\Xibo\Controller\Library','add'])->setName('library.add
 $app->post('/library/uploadUrl', ['\Xibo\Controller\Library','uploadFromUrl'])->setName('library.uploadFromUrl');
 $app->put('/library/{id}', ['\Xibo\Controller\Library','edit'])->setName('library.edit');
 $app->put('/library/setenablestat/{id}', ['\Xibo\Controller\Library','setEnableStat'])->setName('library.setenablestat');
+$app->put('/library/{id}/selectfolder', ['\Xibo\Controller\Library','selectFolder'])->setName('library.selectfolder');
 $app->delete('/library/tidy', ['\Xibo\Controller\Library','tidy'])->setName('library.tidy');
 $app->delete('/library/{id}', ['\Xibo\Controller\Library','delete'])->setName('library.delete');
 $app->post('/library/copy/{id}', ['\Xibo\Controller\Library','copy'])->setName('library.copy');
@@ -304,7 +306,7 @@ $app->post('/displaygroup/{id}/action/overlayLayout', ['\Xibo\Controller\Display
 $app->post('/displaygroup/{id}/action/revertToSchedule', ['\Xibo\Controller\DisplayGroup','revertToSchedule'])->setName('displayGroup.action.revertToSchedule');
 $app->post('/displaygroup/{id}/action/command', ['\Xibo\Controller\DisplayGroup','command'])->setName('displayGroup.action.command');
 $app->post('/displaygroup/{id}/copy', ['\Xibo\Controller\DisplayGroup','copy'])->setName('displayGroup.copy');
-
+$app->put('/displaygroup/{id}/selectfolder', ['\Xibo\Controller\DisplayGroup','selectFolder'])->setName('displayGroup.selectfolder');
 /**
  * Display Profile
  * @SWG\Tag(
@@ -351,6 +353,14 @@ $app->post('/dataset/{id}/rss', ['\Xibo\Controller\DataSetRss','add'])->setName(
 $app->put('/dataset/{id}/rss/{rssId}', ['\Xibo\Controller\DataSetRss','edit'])->setName('dataSet.rss.edit');
 $app->delete('/dataset/{id}/rss/{rssId}', ['\Xibo\Controller\DataSetRss','delete'])->setName('dataSet.rss.delete');
 $app->get('/rss/{psk}', ['\Xibo\Controller\DataSetRss','feed'])->setName('dataSet.rss.feed');
+
+/**
+ *  Folders
+ */
+$app->get('/folders', ['\Xibo\Controller\Folder', 'grid'])->setName('folders.search');
+$app->post('/folders', ['\Xibo\Controller\Folder', 'add'])->setName('folders.add');
+$app->put('/folders/{folderId}', ['\Xibo\Controller\Folder', 'edit'])->setName('folders.edit');
+$app->delete('/folders/{folderId}', ['\Xibo\Controller\Folder', 'delete'])->setName('folders.delete');
 
 /**
  * Statistics

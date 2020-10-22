@@ -142,6 +142,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 $media->enableStat = $oldMedia->enableStat;
                 $media->expires = $this->options['expires'];
+                $media->folderId = $this->options['oldFolderId'];
 
                 // Save
                 $media->save(['oldMedia' => $oldMedia]);
@@ -298,6 +299,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 }
 
                 $media->expires = $this->options['expires'];
+                $media->folderId = $this->options['oldFolderId'];
 
                 // Save
                 $media->save();

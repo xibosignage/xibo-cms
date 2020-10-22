@@ -1767,6 +1767,7 @@ class LayoutFactory extends BaseFactory
         $select .= "        layout.publishedDate, ";
         $select .= "        layout.autoApplyTransitions, ";
         $select .= "        layout.code, ";
+        $select .= "        campaign.folderId,  ";
 
         if ($parsedFilter->getInt('campaignId') !== null) {
             $select .= ' lkcl.displayOrder, ';
@@ -2097,6 +2098,11 @@ class LayoutFactory extends BaseFactory
                        AND ( schedule.fromDt < '. $date . ' OR schedule.fromDt = 0 ) ' . ' AND schedule.toDt > ' . $date;
         }
 
+        if ($parsedFilter->getInt('folderId') !== null) {
+            $body .= " AND campaign.folderId = :folderId ";
+            $params['folderId'] = $parsedFilter->getInt('folderId');
+        }
+
         // Sorting?
         $order = '';
 
@@ -2147,6 +2153,7 @@ class LayoutFactory extends BaseFactory
             $layout->publishedDate = $parsedRow->getString('publishedDate');
             $layout->autoApplyTransitions = $parsedRow->getInt('autoApplyTransitions');
             $layout->code = $parsedRow->getString('code');
+            $layout->folderId = $parsedRow->getInt('folderId');
 
             $layout->groupsWithPermissions = $row['groupsWithPermissions'];
             $layout->setOriginals();

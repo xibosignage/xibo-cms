@@ -90,6 +90,7 @@
             serverSide: true,
             stateSave: true,
             stateDuration: 0,
+            responsive: true,
             stateLoadCallback: dataTableStateLoadCallback,
             stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
@@ -102,11 +103,11 @@
                 }
             },
             "columns": [
-                { "data": "tagId", "width": "70px" },
-                { "data": "tag" },
+                { "data": "tagId", responsivePriority: 2 },
+                { "data": "tag", responsivePriority: 2 },
                 {
                     "data": "isRequired",
-                    "width": "70px",
+                    responsivePriority: 3,
                     "render": function (data, type, row) {
                         if (type != "display") {
                             return data;
@@ -121,7 +122,9 @@
                         return "<span class='fa " + icon  + "'></span>";
                     }
                 },
-                { "data": "options",
+                {
+                    "data": "options",
+                    responsivePriority: 3,
                     "render": function (data, type, row) {
 
                         if (type != "display") {
@@ -133,6 +136,7 @@
                 },
                 {
                     "orderable": false,
+                    responsivePriority: 1,
                     "data": dataTableButtonsColumn
                 }
             ]

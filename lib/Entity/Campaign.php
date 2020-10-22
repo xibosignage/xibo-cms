@@ -83,6 +83,7 @@ class Campaign implements \JsonSerializable
 
     public $tags = [];
     public $tagValues;
+    public $folderId;
 
     /**
      * @var Layout[]
@@ -562,19 +563,21 @@ class Campaign implements \JsonSerializable
 
     private function add()
     {
-        $this->campaignId = $this->getStore()->insert('INSERT INTO `campaign` (Campaign, IsLayoutSpecific, UserId) VALUES (:campaign, :isLayoutSpecific, :userId)', array(
+        $this->campaignId = $this->getStore()->insert('INSERT INTO `campaign` (Campaign, IsLayoutSpecific, UserId, folderId) VALUES (:campaign, :isLayoutSpecific, :userId, :folderId)', array(
             'campaign' => $this->campaign,
             'isLayoutSpecific' => $this->isLayoutSpecific,
-            'userId' => $this->ownerId
+            'userId' => $this->ownerId,
+            'folderId' => ($this->folderId == null) ? 1 : $this->folderId
         ));
     }
 
     private function update()
     {
-        $this->getStore()->update('UPDATE `campaign` SET campaign = :campaign, userId = :userId WHERE CampaignID = :campaignId', [
+        $this->getStore()->update('UPDATE `campaign` SET campaign = :campaign, userId = :userId, folderId = :folderId WHERE CampaignID = :campaignId', [
             'campaignId' => $this->campaignId,
             'campaign' => $this->campaign,
-            'userId' => $this->ownerId
+            'userId' => $this->ownerId,
+            'folderId' => $this->folderId
         ]);
     }
 

@@ -45,12 +45,14 @@
                                 <div class="tab-pane active" id="general-filter">
 
                                     <div class="form-group ">
-                                        <label class="control-label" title="" for="name" accesskey="">{% trans "Name" %}</label>
+                                        <label class="control-label" title="" for="name"
+                                               accesskey="">{% trans "Name" %}</label>
                                         <div>
                                             <div class="input-group">
                                                 <input class="form-control" name="name" type="text" id="name" value="">
                                                 <span class="input-group-addon">
-                                                    <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                                    <input title="{% trans "Use Regex?" %}" type="checkbox"
+                                                           id="useRegexForName" name="useRegexForName">
                                                 </span>
                                             </div>
                                         </div>
@@ -60,10 +62,10 @@
                                     {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
                                     {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
                                     {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
-                                    
+
                                     {% set attributes = [
-                                    { name: "data-live-search", value: "true" },
-                                    { name: "data-selected-text-format", value: "count > 4" }
+                                        { name: "data-live-search", value: "true" },
+                                        { name: "data-selected-text-format", value: "count > 4" }
                                     ] %}
 
                                     {% set title %}{% trans "Owner" %}{% endset %}
@@ -74,6 +76,7 @@
                                     {% set helpText %}{% trans "Show items owned by users in the selected User Group." %}{% endset %}
                                     {{ inline.dropdown("ownerUserGroupId", "single", title, "", [{groupId:null, group:""}]|merge(groups), "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
 
+                                    {{ inline.hidden("folderId") }}
                                 </div>
                                 <div class="tab-pane" id="advanced-filter">
 
@@ -88,27 +91,50 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
-                    <table id="playlists" class="table table-striped" data-content-type="playlist" data-content-id-name="playlistId" data-state-preference-name="playlistGrid">
-                        <thead>
-                            <tr>
-                                <th>{% trans "ID" %}</th>
-                                <th>{% trans "Name" %}</th>
-                                <th>{% trans "Duration" %}</th>
-                                <th>{% trans "Tags" %}</th>
-                                <th>{% trans "Dynamic?" %}</th>
-                                <th>{% trans "Owner" %}</th>
-                                <th>{% trans "Permissions" %}</th>
-                                <th>{% trans "Created" %}</th>
-                                <th>{% trans "Modified" %}</th>
-                                <th>{% trans "Stats?" %}</th>
-                                <th>{% trans "Row Menu" %}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                <div class="row">
+                    <div class="col-sm-1 form-group" style="padding: 0">
+                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-sm"><i
+                                    class="fas fa-bars fa-1x"></i></button>
+                    </div>
+                    <div class="form-group col-sm-11" style="padding: 0">
+                        <div id="breadcrumbs" style="margin-top: 5px;"></div>
+                    </div>
+                </div>
 
-                        </tbody>
-                    </table>
+                <div class="row">
+                    <div class="col-sm-2 well" id="grid-folder-filter">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
+                            <label class="form-check-label"
+                                   for="folder-tree-clear-selection-button">{% trans "Search everywhere?" %}</label>
+                        </div>
+                        <div id="container-folder-tree"></div>
+                    </div>
+                    <div id="datatable-container" class="col-sm-10">
+                        <div class="XiboData">
+                            <table id="playlists" class="table table-striped" data-content-type="playlist"
+                                   data-content-id-name="playlistId" data-state-preference-name="playlistGrid">
+                                <thead>
+                                <tr>
+                                    <th>{% trans "ID" %}</th>
+                                    <th>{% trans "Name" %}</th>
+                                    <th>{% trans "Duration" %}</th>
+                                    <th>{% trans "Tags" %}</th>
+                                    <th>{% trans "Dynamic?" %}</th>
+                                    <th>{% trans "Owner" %}</th>
+                                    <th>{% trans "Permissions" %}</th>
+                                    <th>{% trans "Created" %}</th>
+                                    <th>{% trans "Modified" %}</th>
+                                    <th>{% trans "Stats?" %}</th>
+                                    <th>{% trans "Row Menu" %}</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -121,23 +147,23 @@
     <div class="loading-overlay">
         <i class="fa fa-spinner fa-spin loading-icon"></i>
     </div>
-    
+
 {% endblock %}
 
 {% block javaScript %}
     {# Add common file #}
     {% include "common.twig" %}
-    
-    <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
+
+    <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?v={{ version }}&rev={{ revision }}"></script>
     <script type="text/javascript">
 
         {# Custom translations #}
         {% autoescape "js" %}
-             {# Insert custom translations here #}
+        {# Insert custom translations here #}
         {% endautoescape %}
 
         var table;
-        $(document).ready(function() {
+        $(document).ready(function () {
 
             // Create ourselves a little hidden layout for preview sizing, etc
             $("#dummyLayout").html('<div id="layout" data-background-color="#000000" style="background-color: #000000" designer_scale="1"><div id="region_-1" zindex="1" tip_scale="1" designer_scale="1" width="800" height="450"></div></div>');
@@ -148,6 +174,7 @@
                 "lengthMenu": [10, 25, 50, 100, 250, 500],
                 serverSide: true,
                 stateSave: true,
+                responsive: true,
                 stateLoadCallback: dataTableStateLoadCallback,
                 stateSaveCallback: dataTableStateSaveCallback,
                 filter: false,
@@ -160,13 +187,15 @@
                     }
                 },
                 "columns": [
-                    {"data": "playlistId"},
+                    {"data": "playlistId", responsivePriority: 2},
                     {
                         "data": "name",
+                        responsivePriority: 3,
                         "render": dataTableSpacingPreformatted
                     },
                     {
                         "data": "duration",
+                        responsivePriority: 3,
                         "render": function (data, type, row) {
                             if (type !== "display" && type !== "export")
                                 return data;
@@ -183,26 +212,31 @@
                     {
                         "sortable": false,
                         "visible": false,
+                        responsivePriority: 4,
                         "data": dataTableCreateTags
                     },
-                    { "data": "isDynamic", "render": dataTableTickCrossColumn },
-                    {"data": "owner"},
+                    {"data": "isDynamic", "render": dataTableTickCrossColumn, responsivePriority: 4},
+                    {"data": "owner", responsivePriority: 4},
                     {
                         "data": "groupsWithPermissions",
+                        responsivePriority: 5,
                         "render": dataTableCreatePermissions
                     },
                     {
                         "data": "createdDt",
+                        responsivePriority: 6,
                         "render": dataTableDateFromIso,
                         "visible": false
                     },
                     {
                         "data": "modifiedDt",
+                        responsivePriority: 6,
                         "render": dataTableDateFromIso,
                         "visible": false
                     },
                     {
                         "name": "enableStat",
+                        responsivePriority: 6,
                         "data": function (data) {
 
                             var icon = "";
@@ -218,13 +252,14 @@
                     },
                     {
                         "orderable": false,
+                        responsivePriority: 1,
                         "data": dataTableButtonsColumn
                     }
                 ]
             });
 
             table.on('draw', dataTableDraw);
-            table.on('draw', { form: $("#playlists").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
+            table.on('draw', {form: $("#playlists").closest(".XiboGrid").find(".FilterDiv form")}, dataTableCreateTagEvents);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#playlists_wrapper').find('.col-sm-6').eq(1));
         });
@@ -248,11 +283,11 @@
         function playlistFormOpen(dialog) {
             mediaTable = null;
 
-            $(dialog).find("input[name=filterMediaName]").on("keyup", _.debounce(function() {
+            $(dialog).find("input[name=filterMediaName]").on("keyup", _.debounce(function () {
                 playlistFormPopulateMediaTable(dialog);
             }, 500));
 
-            $(dialog).find("input[name=filterMediaTag]").on("change", function() {
+            $(dialog).find("input[name=filterMediaTag]").on("change", function () {
                 playlistFormPopulateMediaTable(dialog);
             });
 
@@ -277,15 +312,15 @@
                 "order": [[1, "asc"]],
                 ajax: {
                     "url": "{{ url_for("playlist.usage", {id:':id'}) }}".replace(":id", $("#usageReportTable").data().playlistId),
-                    "data": function(dataDisplay) {
+                    "data": function (dataDisplay) {
                         $.extend(dataDisplay, $(dialog).find("#usageReportForm").serializeObject());
                         return dataDisplay;
                     }
                 },
                 "columns": [
-                    { "data": "displayId"},
-                    { "data": "display" },
-                    { "data": "description" }
+                    {"data": "displayId"},
+                    {"data": "display"},
+                    {"data": "description"}
                 ]
             });
 
@@ -304,9 +339,9 @@
                     "url": "{{ url_for("playlist.usage.layouts", {id:':id'}) }}".replace(":id", $("#usageReportLayoutsTable").data().playlistId)
                 },
                 "columns": [
-                    { "data": "layoutId"},
-                    { "data": "layout" },
-                    { "data": "description" },
+                    {"data": "layoutId"},
+                    {"data": "layout"},
+                    {"data": "description"},
                     {
                         "orderable": false,
                         "data": dataTableButtonsColumn
@@ -346,7 +381,7 @@
                     ajax: {
                         "url": "{{ url_for("library.search") }}",
                         "data": function (d) {
-                            $.extend(d, {media: nameFilter, tags: tagFilter, assignable:1});
+                            $.extend(d, {media: nameFilter, tags: tagFilter, assignable: 1});
                         }
                     },
                     "columns": [
@@ -367,7 +402,7 @@
                 });
 
                 mediaTable.on('processing.dt', dataTableProcessing);
-                mediaTable.on('draw', { form: $(".playlistForm") }, dataTableCreateTagEvents);
+                mediaTable.on('draw', {form: $(".playlistForm")}, dataTableCreateTagEvents);
             }
         }
 
@@ -379,7 +414,7 @@
                 '<option value="Inherit">{% trans %} Inherit {% endtrans %}</option>' +
                 '</select>');
 
-            $select.on('change', function() {
+            $select.on('change', function () {
                 dialog.data().commitData = {enableStat: $(this).val()};
             }).trigger('change');
 
@@ -387,7 +422,7 @@
         }
 
         function playlistAddFormOpen() {
-            $("#playlistAddForm").submit(function(e) {
+            $("#playlistAddForm").submit(function (e) {
                 e.preventDefault();
                 var form = $(this);
 
@@ -396,8 +431,8 @@
                     url: $(this).attr("action"),
                     data: $(this).serialize(),
                     cache: false,
-                    dataType:"json",
-                    success: function(xhr, textStatus, error) {
+                    dataType: "json",
+                    success: function (xhr, textStatus, error) {
 
                         XiboSubmitResponse(xhr, form);
 
@@ -411,7 +446,7 @@
             });
         }
 
-        function openPlaylistEditorForm (playlistId) {
+        function openPlaylistEditorForm(playlistId) {
             let requestPath = playlistEditorUrl;
 
             // replace id if necessary/exists
@@ -420,16 +455,16 @@
             $.ajax({
                 url: requestPath,
                 type: 'GET'
-            }).done(function(res) {
+            }).done(function (res) {
 
-                if(!res.success) {
+                if (!res.success) {
                     // Login Form needed?
-                    if(res.login) {
+                    if (res.login) {
                         window.location.href = window.location.href;
                         location.reload(false);
                     } else {
                         // Just an error we dont know about
-                        if(res.message == undefined) {
+                        if (res.message == undefined) {
                             console.error(res);
                         } else {
                             console.error(res.message);
@@ -442,7 +477,7 @@
                     // Append form
                     $('#editor-container').append(res.html);
                 }
-            }).fail(function(jqXHR, textStatus, errorThrown) {
+            }).fail(function (jqXHR, textStatus, errorThrown) {
                 // Output error to console
                 console.error(jqXHR, textStatus, errorThrown);
             });

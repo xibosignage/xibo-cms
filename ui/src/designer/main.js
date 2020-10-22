@@ -93,6 +93,8 @@ window.lD = {
 
     // Drawer
     drawer: {},
+
+    folderId: '',
 };
 
 // Get Xibo app
@@ -126,6 +128,9 @@ $(document).ready(function() {
 
                 // Update main object id
                 lD.mainObjectId = lD.layout.layoutId;
+
+                // get Layout folder id
+                lD.folderId = lD.layout.folderId;
 
                 // Initialize timeline
                 lD.timeline = new Timeline(
@@ -495,6 +500,8 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
 
                 // Update main object id
                 lD.mainObjectId = lD.layout.layoutId;
+                // get Layout folder id
+                lD.folderId = lD.layout.folderId;
 
                 // To select an object that still doesn't exist
                 if(refreshBeforeSelect) {
@@ -1330,7 +1337,6 @@ lD.addModuleToPlaylist = function(playlistId, moduleType, moduleData, addToPosit
     if(moduleData.regionSpecific == 0) { // Upload form if not region specific
 
         const validExt = moduleData.validExt.replace(/,/g, "|");
-
         lD.openUploadForm({
             trans: uploadTrans,
             upload: {
@@ -1340,7 +1346,8 @@ lD.addModuleToPlaylist = function(playlistId, moduleType, moduleData, addToPosit
                 validExt: validExt
             },
             playlistId: playlistId,
-            displayOrder: addToPosition
+            displayOrder: addToPosition,
+            currentWorkingFolderId: lD.folderId,
         }, 
         {
             viewLibrary: {
@@ -1601,7 +1608,19 @@ lD.openUploadFormModelShown = function(form) {
     }).bind('fileuploaddone', function (e, data) {
         saveVideoCoverImage(data);
     }).bind('fileuploaddrop', handleVideoCoverImage);
-    
+
+    // compile tree folder modal and append it to Form
+    if ($('#folder-tree-form-modal').length === 0) {
+        let folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
+        let treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
+        form.append(folderTreeModal(treeConfig));
+
+        $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
+            $(this).data('bs.modal', null);
+        });
+    }
+
+    initJsTreeAjax('#container-folder-form-tree', 'layout-designer-upload', true, 600);
 };
 
 /**

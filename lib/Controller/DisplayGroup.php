@@ -210,6 +210,13 @@ class DisplayGroup extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="query",
+     *      description="Filter by Folder ID",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="a successful response",
@@ -248,6 +255,7 @@ class DisplayGroup extends Base
             'displayGroupIdMembers' => $parsedQueryParams->getInt('displayGroupIdMembers'),
             'userId' => $parsedQueryParams->getInt('userId'),
             'isDynamic' => $parsedQueryParams->getInt('isDynamic'),
+            'folderId' => $parsedQueryParams->getInt('folderId'),
         ];
 
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
@@ -295,6 +303,22 @@ class DisplayGroup extends Base
                     'url' => $this->urlFor($request,'displayGroup.copy.form', ['id' => $group->displayGroupId]),
                     'text' => __('Copy')
                 );
+
+                // Select Folder
+                $group->buttons[] = [
+                    'id' => 'displaygroup_button_selectfolder',
+                    'url' => $this->urlFor($request,'displayGroup.selectfolder.form', ['id' => $group->displayGroupId]),
+                    'text' => __('Select Folder'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.selectfolder', ['id' => $group->displayGroupId])],
+                        ['name' => 'commit-method', 'value' => 'put'],
+                        ['name' => 'id', 'value' => 'displaygroup_button_selectfolder'],
+                        ['name' => 'text', 'value' => __('Move to Folder')],
+                        ['name' => 'rowtitle', 'value' => $group->displayGroup],
+                        ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                    ]
+                ];
             }
 
             if ($this->getUser()->checkDeleteable($group)) {
@@ -537,6 +561,13 @@ class DisplayGroup extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -566,6 +597,7 @@ class DisplayGroup extends Base
         $displayGroup->isDynamic = $sanitizedParams->getCheckbox('isDynamic');
         $displayGroup->dynamicCriteria = $sanitizedParams->getString('dynamicCriteria');
         $displayGroup->dynamicCriteriaTags = $sanitizedParams->getString('dynamicCriteriaTags');
+        $displayGroup->folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
 
         $displayGroup->userId = $this->getUser()->userId;
         $displayGroup->save();
@@ -639,6 +671,13 @@ class DisplayGroup extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -663,6 +702,7 @@ class DisplayGroup extends Base
         $displayGroup->isDynamic = $parsedRequestParams->getCheckbox('isDynamic');
         $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteria') : null;
         $displayGroup->dynamicCriteriaTags = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteriaTags') : null;
+        $displayGroup->folderId = $parsedRequestParams->getInt('folderId');
 
         // if we have changed the type from dynamic to non-dynamic or other way around, clear display/dg members
         if ($preEditIsDynamic != $displayGroup->isDynamic) {
@@ -2306,6 +2346,74 @@ class DisplayGroup extends Base
             'message' => sprintf(__('Added %s'), $new->displayGroup),
             'id' => $new->displayGroupId,
             'data' => $new
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Select Folder Form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function selectFolderForm(Request $request, Response $response, $id)
+    {
+        // Get the Layout
+        $displayGroup = $this->displayGroupFactory->getById($id);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($displayGroup)) {
+            throw new AccessDeniedException();
+        }
+
+        $data = [
+            'displayGroup' => $displayGroup
+        ];
+
+        $this->getState()->template = 'displaygroup-form-selectfolder';
+        $this->getState()->setData($data);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function selectFolder(Request $request, Response $response, $id)
+    {
+        // Get the Display Group
+        $displayGroup = $this->displayGroupFactory->getById($id);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($displayGroup)) {
+            throw new AccessDeniedException();
+        }
+
+        $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
+
+        $displayGroup->folderId = $folderId;
+
+        // Save
+        $displayGroup->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Display %s moved to Folder %d'), $displayGroup->displayGroup, $folderId)
         ]);
 
         return $this->render($request, $response);

@@ -104,6 +104,7 @@
                                     {% set title %}{% trans "Display Profile" %}{% endset %}
                                     {{ inline.dropdown("displayProfileId", "single", title, "", [{displayProfileId:null, name:""}]|merge(displayProfiles), "displayProfileId", "name") }}
 
+                                    {{ inline.hidden("folderId") }}
                                 </div>
 
                                 <div class="tab-pane" id="filter-advanced">
@@ -174,51 +175,71 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
-                    <table id="displays" class="table table-striped" data-content-type="display" data-content-id-name="displayId" data-state-preference-name="displayGrid">
-                        <thead>
-                            <tr>
-                                <th>{% trans "ID" %}</th>
-                                <th>{% trans "Display" %}</th>
-                                <th>{% trans "Status" %}</th>
-                                <th>{% trans "Authorised?" %}</th>
-                                <th>{% trans "Current Layout" %}</th>
-                                <th>{% trans "Storage Available" %}</th>
-                                <th>{% trans "Storage Total" %}</th>
-                                <th>{% trans "Storage Free %" %}</th>
-                                <th>{% trans "Description" %}</th>
-                                <th>{% trans "Orientation" %}</th>
-                                <th>{% trans "Resolution" %}</th>
-                                <th>{% trans "Tags" %}</th>
-                                <th>{% trans "Default Layout" %}</th>
-                                <th>{% trans "Interleave Default" %}</th>
-                                <th>{% trans "Email Alert" %}</th>
-                                <th>{% trans "Logged In" %}</th>
-                                <th>{% trans "Last Accessed" %}</th>
-                                <th>{% trans "Display Profile" %}</th>
-                                <th>{% trans "Version" %}</th>
-                                <th>{% trans "Device Name" %}</th>
-                                <th>{% trans "IP Address" %}</th>
-                                <th>{% trans "Mac Address" %}</th>
-                                <th>{% trans "Timezone" %}</th>
-                                <th>{% trans "Latitude" %}</th>
-                                <th>{% trans "Longitude" %}</th>
-                                <th>{% trans "Screen shot?" %}</th>
-                                <th>{% trans "Thumbnail" %}</th>
-                                <th>{% trans "Bandwidth Limit" %}</th>
-                                <th>{% trans "Last Command" %}</th>
-                                <th>{% trans "XMR Registered" %}</th>
-                                <th>{% trans "Commercial Licence" %}</th>
-                                <th>{% trans "Remote" %}</th>
-                                <th>{% trans "Created Date" %}</th>
-                                <th>{% trans "Modified Date" %}</th>
-                                <th>{% trans "Row Menu" %}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                <div class="row">
+                    <div class="col-sm-1 form-group" style="padding: 0">
+                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-sm"><i class="fas fa-bars fa-1x"></i></button>
+                    </div>
+                    <div class="form-group col-sm-11" style="padding: 0">
+                        <div id="breadcrumbs" style="margin-top: 5px;"></div>
+                    </div>
+                </div>
 
-                        </tbody>
-                    </table>
+                <div class="row">
+                    <div class="col-sm-2 well" id="grid-folder-filter">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
+                            <label class="form-check-label" for="folder-tree-clear-selection-button">{% trans "Search everywhere?" %}</label>
+                        </div>
+                        <div id="container-folder-tree"></div>
+                    </div>
+                    <div id="datatable-container" class="col-sm-10">
+                        <div class="XiboData">
+                            <table id="displays" class="table table-striped" data-content-type="display" data-content-id-name="displayId" data-state-preference-name="displayGrid">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "ID" %}</th>
+                                        <th>{% trans "Display" %}</th>
+                                        <th>{% trans "Status" %}</th>
+                                        <th>{% trans "Authorised?" %}</th>
+                                        <th>{% trans "Current Layout" %}</th>
+                                        <th>{% trans "Storage Available" %}</th>
+                                        <th>{% trans "Storage Total" %}</th>
+                                        <th>{% trans "Storage Free %" %}</th>
+                                        <th>{% trans "Description" %}</th>
+                                        <th>{% trans "Orientation" %}</th>
+                                        <th>{% trans "Resolution" %}</th>
+                                        <th>{% trans "Tags" %}</th>
+                                        <th>{% trans "Default Layout" %}</th>
+                                        <th>{% trans "Interleave Default" %}</th>
+                                        <th>{% trans "Email Alert" %}</th>
+                                        <th>{% trans "Logged In" %}</th>
+                                        <th>{% trans "Last Accessed" %}</th>
+                                        <th>{% trans "Display Profile" %}</th>
+                                        <th>{% trans "Version" %}</th>
+                                        <th>{% trans "Device Name" %}</th>
+                                        <th>{% trans "IP Address" %}</th>
+                                        <th>{% trans "Mac Address" %}</th>
+                                        <th>{% trans "Timezone" %}</th>
+                                        <th>{% trans "Latitude" %}</th>
+                                        <th>{% trans "Longitude" %}</th>
+                                        <th>{% trans "Screen shot?" %}</th>
+                                        <th>{% trans "Thumbnail" %}</th>
+                                        <th>{% trans "Bandwidth Limit" %}</th>
+                                        <th>{% trans "Last Command" %}</th>
+                                        <th>{% trans "XMR Registered" %}</th>
+                                        <th>{% trans "Commercial Licence" %}</th>
+                                        <th>{% trans "Remote" %}</th>
+                                        <th>{% trans "Created Date" %}</th>
+                                        <th>{% trans "Modified Date" %}</th>
+                                        <th>{% trans "Row Menu" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -233,6 +254,7 @@
                 serverSide: true,
                 stateSave: true,
                 stateDuration: 0,
+                responsive: true,
                 stateLoadCallback: dataTableStateLoadCallback,
                 stateSaveCallback: dataTableStateSaveCallback,
                 filter: false,
@@ -272,10 +294,11 @@
                     }
                 },
                 "columns": [
-                    {"data": "displayId"},
-                    {"data": "display"},
+                    {"data": "displayId", responsivePriority: 2},
+                    {"data": "display", responsivePriority: 2},
                     {
                         "data": "mediaInventoryStatus",
+                        responsivePriority: 2,
                         "render": function (data, type, row) {
                             if (type != "display")
                                 return data;
@@ -291,10 +314,11 @@
                             return '<span class="fa ' + icon + '" title="' + (row.statusDescription) + '"></span>';
                         }
                     },
-                    {"data": "licensed", "render": dataTableTickCrossColumn},
-                    {"data": "currentLayout", "visible": false, "sortable": false},
+                    {"data": "licensed", "render": dataTableTickCrossColumn, responsivePriority: 3},
+                    {"data": "currentLayout", "visible": false, "sortable": false, responsivePriority: 5},
                     {
                         "data": "storageAvailableSpace",
+                        responsivePriority: 5,
                         "visible": false,
                         "render": function (data, type, row) {
                             if (type != "display")
@@ -305,6 +329,7 @@
                     },
                     {
                         "data": "storageTotalSpace",
+                        responsivePriority: 5,
                         "visible": false,
                         "render": function (data, type, row) {
                             if (type != "display")
@@ -313,23 +338,25 @@
                             return row.storageTotalSpaceFormatted;
                         }
                     },
-                    {"data": "storagePercentage", "visible": false, "sortable": false},
-                    {"data": "description", "visible": false},
-                    {"data": "orientation", "visible": false},
-                    {"data": "resolution", "visible": false},
+                    {"data": "storagePercentage", "visible": false, "sortable": false, responsivePriority: 5},
+                    {"data": "description", "visible": false, responsivePriority: 4},
+                    {"data": "orientation", "visible": false, responsivePriority: 6},
+                    {"data": "resolution", "visible": false, responsivePriority: 6},
                     {
                         "name": "tags",
+                        responsivePriority: 3,
                         "sortable": false,
                         "visible": false,
                         "data": dataTableCreateTags
                     },
-                    {"data": "defaultLayout", "visible": false},
-                    {"data": "incSchedule", "render": dataTableTickCrossColumn, "visible": false},
-                    {"data": "emailAlert", "render": dataTableTickCrossColumn, "visible": false},
-                    {"data": "loggedIn", "render": dataTableTickCrossColumn},
-                    {"data": "lastAccessed", "render": dataTableDateFromUnix},
+                    {"data": "defaultLayout", "visible": false, responsivePriority: 4},
+                    {"data": "incSchedule", "render": dataTableTickCrossColumn, "visible": false, responsivePriority: 5},
+                    {"data": "emailAlert", "render": dataTableTickCrossColumn, "visible": false, responsivePriority: 5},
+                    {"data": "loggedIn", "render": dataTableTickCrossColumn, responsivePriority: 3},
+                    {"data": "lastAccessed", "render": dataTableDateFromUnix, responsivePriority: 4},
                     {
                         "name": "displayProfileId",
+                        responsivePriority: 5,
                         "data": function (data, type) {
                             return data.displayProfile;
                         },
@@ -337,6 +364,7 @@
                     },
                     {
                         "name": "clientSort",
+                        responsivePriority: 4,
                         "data": function (data) {
                             if (data.clientType === 'lg') {
                                 data.clientType = 'webOS'
@@ -346,15 +374,16 @@
                         },
                         "visible": false
                     },
-                    {"data": "deviceName", "visible": false},
-                    {"data": "clientAddress", "visible": false},
-                    {"data": "macAddress"},
-                    {"data": "timeZone", "visible": false},
-                    {"data": "latitude", "visible": false},
-                    {"data": "longitude", "visible": false},
-                    {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false, "name": "screenShotRequested"},
+                    {"data": "deviceName", "visible": false, responsivePriority: 5},
+                    {"data": "clientAddress", "visible": false, responsivePriority: 6},
+                    {"data": "macAddress", responsivePriority: 5},
+                    {"data": "timeZone", "visible": false, responsivePriority: 5},
+                    {"data": "latitude", "visible": false, responsivePriority: 6},
+                    {"data": "longitude", "visible": false, responsivePriority: 6},
+                    {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false, "name": "screenShotRequested", responsivePriority: 7},
                     {
                         "name": "thumbnail",
+                        responsivePriority: 4,
                         "orderable": false,
                         "data": function (data, type) {
                             if (type != "display")
@@ -371,12 +400,14 @@
                     },
                     {
                         "name": "bandwidthLimit",
+                        responsivePriority: 5,
                         "data": null,
                         "render": {"_": "bandwidthLimit", "display": "bandwidthLimitFormatted", "sort": "bandwidthLimit"},
                         "visible": false
                     },
                     {
                         "data": "lastCommandSuccess",
+                        responsivePriority: 6,
                         "render": function (data, type, row) {
                             if (type != "display")
                                 return data;
@@ -395,6 +426,7 @@
                     },
                     {
                         "data": "xmrChannel",
+                        responsivePriority: 6,
                         "render": function (data, type, row) {
                             if (type === "export") {
                                 return (data !== null && data !== "") ? 1 : 0;
@@ -416,6 +448,7 @@
                     {
                         "data": "commercialLicence",
                         "name": "commercialLicence",
+                        responsivePriority: 5,
                         "render": function (data, type, row) {
                             if (type != "display")
                                 return data;
@@ -439,6 +472,7 @@
                     },
                     {
                         "name": "remote",
+                        responsivePriority: 4,
                         "render": function (data, type, row) {
                             if (type !== "display")
                                 return "";
@@ -465,10 +499,11 @@
                         "visible": true,
                         "orderable": false
                     },
-                    {"data": "createdDt", "visible": false},
-                    {"data": "modifiedDt", "visible": false},
+                    {"data": "createdDt", "visible": false, responsivePriority: 6},
+                    {"data": "modifiedDt", "visible": false, responsivePriority: 6},
                     {
                         "orderable": false,
+                        responsivePriority: 1,
                         "data": dataTableButtonsColumn
                     }
                 ]

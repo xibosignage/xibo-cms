@@ -279,6 +279,8 @@ class Layout implements \JsonSerializable
 
     public $tagValues;
 
+    public $folderId;
+
     // Private
     private $unassignTags = [];
 
@@ -786,6 +788,12 @@ class Layout implements \JsonSerializable
 
         } else if (($this->hash() != $this->hash && $options['saveLayout']) || $options['setBuildRequired']) {
             $this->update($options);
+
+            if ($this->hasPropertyChanged('folderId')) {
+               $options['saveRegions'] = true;
+               $options['folderId'] = $this->folderId;
+               $this->load();
+            }
 
             if ($options['audit']) {
                 $change = $this->getChangedProperties();
@@ -1984,6 +1992,8 @@ class Layout implements \JsonSerializable
         $this->description = $parent->description;
         $this->retired = $parent->retired;
         $this->enableStat = $parent->enableStat;
+        $this->code = $parent->code;
+        $this->folderId = $parent->folderId;
 
         // Swap all tags over, any changes we've made to the parents tags should be moved to the child.
         $this->getStore()->update('UPDATE `lktaglayout` SET layoutId = :layoutId WHERE layoutId = :parentId', [
@@ -2119,6 +2129,7 @@ class Layout implements \JsonSerializable
             $campaign->campaign = $this->layout;
             $campaign->isLayoutSpecific = 1;
             $campaign->ownerId = $this->getOwnerId();
+            $campaign->folderId = ($this->folderId == null) ? 1 : $this->folderId;
             $campaign->assignLayout($this);
 
             // Ready to save the Campaign
@@ -2214,6 +2225,7 @@ class Layout implements \JsonSerializable
             $campaign = $this->campaignFactory->getById($this->campaignId);
             $campaign->campaign = $this->layout;
             $campaign->ownerId = $this->ownerId;
+            $campaign->folderId = $this->folderId;
             $campaign->save(['validate' => false, 'notify' => $options['notify'], 'collectNow' => $options['collectNow'], 'layoutCode' => $this->code]);
         }
     }

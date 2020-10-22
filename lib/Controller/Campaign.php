@@ -201,7 +201,8 @@ class Campaign extends Base
             'tags' => $parsedParams->getString('tags'),
             'hasLayouts' => $parsedParams->getInt('hasLayouts'),
             'isLayoutSpecific' => $parsedParams->getInt('isLayoutSpecific'),
-            'retired' => $parsedParams->getInt('retired')
+            'retired' => $parsedParams->getInt('retired'),
+            'folderId' => $parsedParams->getInt('folderId')
         ];
 
         $options = [
@@ -261,6 +262,22 @@ class Campaign extends Base
                     'url' => $this->urlFor($request,'campaign.edit.form', ['id' => $campaign->campaignId]),
                     'text' => __('Edit')
                 );
+
+                // Select Folder
+                $campaign->buttons[] = [
+                    'id' => 'campaign_button_selectfolder',
+                    'url' => $this->urlFor($request,'campaign.selectfolder.form', ['id' => $campaign->campaignId]),
+                    'text' => __('Select Folder'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'campaign.selectfolder', ['id' => $campaign->campaignId])],
+                        ['name' => 'commit-method', 'value' => 'put'],
+                        ['name' => 'id', 'value' => 'campaign_button_selectfolder'],
+                        ['name' => 'text', 'value' => __('Move to Folder')],
+                        ['name' => 'rowtitle', 'value' => $campaign->campaign],
+                        ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                    ]
+                ];
 
                 // Copy the campaign
                 $campaign->buttons[] = [
@@ -982,6 +999,75 @@ class Campaign extends Base
             'message' => sprintf(__('Added %s'), $newCampaign->campaign),
             'id' => $newCampaign->campaignId,
             'data' => $newCampaign
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Select Folder Form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function selectFolderForm(Request $request, Response $response, $id)
+    {
+        // Get the Campaign
+        $campaign = $this->campaignFactory->getById($id);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($campaign)) {
+            throw new AccessDeniedException();
+        }
+
+        $data = [
+            'campaign' => $campaign
+        ];
+
+        $this->getState()->template = 'campaign-form-selectfolder';
+        $this->getState()->setData($data);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     */
+    public function selectFolder(Request $request, Response $response, $id)
+    {
+        // Get the Layout
+        $campaign = $this->campaignFactory->getById($id);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($campaign)) {
+            throw new AccessDeniedException();
+        }
+
+        $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
+
+        $campaign->folderId = $folderId;
+
+        // Save
+        $campaign->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Layout %s moved to Folder %d'), $campaign->campaign, $folderId)
         ]);
 
         return $this->render($request, $response);

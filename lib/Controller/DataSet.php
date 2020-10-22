@@ -149,6 +149,13 @@ class DataSet extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="query",
+     *      description="Filter by Folder ID",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -173,6 +180,7 @@ class DataSet extends Base
             'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
             'code' => $sanitizedParams->getString('code'),
             'userId' => $sanitizedParams->getInt('userId'),
+            'folderId' => $sanitizedParams->getInt('folderId'),
         ];
 
         $dataSets = $this->dataSetFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
@@ -474,6 +482,13 @@ class DataSet extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -504,6 +519,7 @@ class DataSet extends Base
         $dataSet->code = $sanitizedParams->getString('code');
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
         $dataSet->userId = $this->getUser()->userId;
+        $dataSet->folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
 
         // Fields for remote
         if ($dataSet->isRemote === 1) {
@@ -755,6 +771,13 @@ class DataSet extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -775,6 +798,7 @@ class DataSet extends Base
         $dataSet->description = $sanitizedParams->getString('description');
         $dataSet->code = $sanitizedParams->getString('code');
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
+        $dataSet->folderId = $sanitizedParams->getInt('folderId');
 
         if ($dataSet->isRemote === 1) {
             $dataSet->method = $sanitizedParams->getString('method');

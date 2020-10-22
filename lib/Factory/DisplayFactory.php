@@ -217,6 +217,7 @@ class DisplayFactory extends BaseFactory
                   displaygroup.bandwidthLimit,
                   displaygroup.createdDt,
                   displaygroup.modifiedDt,
+                  displaygroup.folderId,
                   `display`.xmrChannel,
                   `display`.xmrPubKey,
                   `display`.lastCommandSuccess, 
@@ -490,6 +491,11 @@ class DisplayFactory extends BaseFactory
         if ($parsedBody->getInt('commercialLicence') !== null) {
             $body .= ' AND display.commercialLicence = :commercialLicence ';
             $params['commercialLicence'] = $parsedBody->getInt('commercialLicence');
+        }
+
+        if ($parsedBody->getInt('folderId') !== null) {
+            $body .= ' AND displaygroup.folderId = :folderId ';
+            $params['folderId'] = $parsedBody->getInt('folderId');
         }
 
         // Sorting?

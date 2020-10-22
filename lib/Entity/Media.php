@@ -209,6 +209,7 @@ class Media implements \JsonSerializable
     public $cloned = false;
     public $newExpiry;
     public $alwaysCopy = false;
+    public $folderId;
 
     private $widgets = [];
     private $displayGroups = [];
@@ -730,8 +731,8 @@ class Media implements \JsonSerializable
     private function add()
     {
         $this->mediaId = $this->getStore()->insert('
-            INSERT INTO `media` (`name`, `type`, duration, originalFilename, userID, retired, moduleSystemFile, released, apiRef, valid, `createdDt`, `modifiedDt`, `enableStat`)
-              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :released, :apiRef, :valid, :createdDt, :modifiedDt, :enableStat)
+            INSERT INTO `media` (`name`, `type`, duration, originalFilename, userID, retired, moduleSystemFile, released, apiRef, valid, `createdDt`, `modifiedDt`, `enableStat`, `folderId`)
+              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :released, :apiRef, :valid, :createdDt, :modifiedDt, :enableStat, :folderId)
         ', [
             'name' => $this->name,
             'type' => $this->mediaType,
@@ -745,7 +746,8 @@ class Media implements \JsonSerializable
             'valid' => 0,
             'createdDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
-            'enableStat' => $this->enableStat
+            'enableStat' => $this->enableStat,
+            'folderId' => ($this->folderId === null) ? 1 : $this->folderId
         ]);
 
     }
@@ -768,7 +770,8 @@ class Media implements \JsonSerializable
                 apiRef = :apiRef,
                 modifiedDt = :modifiedDt,
                 `enableStat` = :enableStat,
-                expires = :expires
+                expires = :expires,
+                folderId = :folderId
            WHERE mediaId = :mediaId
         ';
 
@@ -785,7 +788,8 @@ class Media implements \JsonSerializable
             'mediaId' => $this->mediaId,
             'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'enableStat' => $this->enableStat,
-            'expires' => $this->expires
+            'expires' => $this->expires,
+            'folderId' => $this->folderId
         ];
 
         $this->getStore()->update($sql, $params);

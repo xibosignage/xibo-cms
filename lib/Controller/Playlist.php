@@ -240,6 +240,13 @@ class Playlist extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="query",
+     *      description="Filter by Folder ID",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -274,8 +281,9 @@ class Playlist extends Base
             'playlistId' => $sanitizedParams->getInt('playlistId'),
             'ownerUserGroupId' => $sanitizedParams->getInt('ownerUserGroupId'),
             'mediaLike' => $sanitizedParams->getString('mediaLike'),
-            'regionSpecific' => $sanitizedParams->getInt('regionSpecific', ['default' => 0])
-        ], $request), $request);
+            'regionSpecific' => $sanitizedParams->getInt('regionSpecific', ['default' => 0]),
+            'folderId' => $sanitizedParams->getInt('folderId')
+        ], $request));
 
         foreach ($playlists as $playlist) {
 
@@ -370,6 +378,24 @@ class Playlist extends Base
                     'url' => $this->urlFor($request, 'playlist.copy.form', ['id' => $playlist->playlistId]),
                     'text' => __('Copy')
                 ];
+
+
+                // Select Folder
+                $playlist->buttons[] = [
+                    'id' => 'playlist_button_selectfolder',
+                    'url' => $this->urlFor($request,'playlist.selectfolder.form', ['id' => $playlist->playlistId]),
+                    'text' => __('Select Folder'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'playlist.selectfolder', ['id' => $playlist->playlistId])],
+                        ['name' => 'commit-method', 'value' => 'put'],
+                        ['name' => 'id', 'value' => 'playlist_button_selectfolder'],
+                        ['name' => 'text', 'value' => __('Move to Folder')],
+                        ['name' => 'rowtitle', 'value' => $playlist->name],
+                        ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                    ]
+                ];
+
 
                 // Set Enable Stat
                 $playlist->buttons[] = [
@@ -508,6 +534,13 @@ class Playlist extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -540,6 +573,7 @@ class Playlist extends Base
         $playlist = $this->playlistFactory->create($sanitizedParams->getString('name'), $this->getUser()->getId());
         $playlist->isDynamic = $sanitizedParams->getCheckbox('isDynamic');
         $playlist->enableStat = $sanitizedParams->getString('enableStat');
+        $playlist->folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
 
         $playlist->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
 
@@ -707,6 +741,13 @@ class Playlist extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -736,6 +777,7 @@ class Playlist extends Base
         $playlist->name = $sanitizedParams->getString('name');
         $playlist->isDynamic = $sanitizedParams->getCheckbox('isDynamic');
         $playlist->enableStat = $sanitizedParams->getString('enableStat');
+        $playlist->folderId = $sanitizedParams->getInt('folderId');
 
         $playlist->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
 
@@ -1682,6 +1724,77 @@ class Playlist extends Base
 
         $this->getState()->template = 'playlist-form-setenablestat';
         $this->getState()->setData($data);
+
+        return $this->render($request, $response);
+    }
+
+
+
+    /**
+     * Select Folder Form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function selectFolderForm(Request $request, Response $response, $id)
+    {
+        // Get the Playlist
+        $playlist = $this->playlistFactory->getById($id);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($playlist)) {
+            throw new AccessDeniedException();
+        }
+
+        $data = [
+            'playlist' => $playlist
+        ];
+
+        $this->getState()->template = 'playlist-form-selectfolder';
+        $this->getState()->setData($data);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     */
+    public function selectFolder(Request $request, Response $response, $id)
+    {
+        // Get the Layout
+        $playlist = $this->playlistFactory->getById($id);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($playlist)) {
+            throw new AccessDeniedException();
+        }
+
+        $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
+
+        $playlist->folderId = $folderId;
+
+        // Save
+        $playlist->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Playlist %s moved to Folder %d'), $playlist->name, $folderId)
+        ]);
 
         return $this->render($request, $response);
     }

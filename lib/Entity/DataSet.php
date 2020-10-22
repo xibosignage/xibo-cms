@@ -224,6 +224,8 @@ class DataSet implements \JsonSerializable
      */
     public $limitPolicy;
 
+    public $folderId;
+
     /** @var array Permissions */
     private $permissions = [];
 
@@ -911,8 +913,8 @@ class DataSet implements \JsonSerializable
      */
     private function add()
     {
-        $columns = 'DataSet, Description, UserID, `code`, `isLookup`, `isRemote`, `lastDataEdit`, `lastClear`';
-        $values = ':dataSet, :description, :userId, :code, :isLookup, :isRemote, :lastDataEdit, :lastClear';
+        $columns = 'DataSet, Description, UserID, `code`, `isLookup`, `isRemote`, `lastDataEdit`, `lastClear`, `folderId`';
+        $values = ':dataSet, :description, :userId, :code, :isLookup, :isRemote, :lastDataEdit, :lastClear, :folderId';
 
         $params = [
             'dataSet' => $this->dataSet,
@@ -922,7 +924,8 @@ class DataSet implements \JsonSerializable
             'isLookup' => $this->isLookup,
             'isRemote' => $this->isRemote,
             'lastDataEdit' => 0,
-            'lastClear' => 0
+            'lastClear' => 0,
+            'folderId' => ($this->folderId === null) ? 1 : $this->folderId
         ];
 
         // Insert the extra columns we expect for a remote DataSet
@@ -962,7 +965,7 @@ class DataSet implements \JsonSerializable
      */
     private function edit()
     {
-        $sql = 'DataSet = :dataSet, Description = :description, userId = :userId, lastDataEdit = :lastDataEdit, `code` = :code, `isLookup` = :isLookup, `isRemote` = :isRemote ';
+        $sql = 'DataSet = :dataSet, Description = :description, userId = :userId, lastDataEdit = :lastDataEdit, `code` = :code, `isLookup` = :isLookup, `isRemote` = :isRemote, `folderId` = :folderId ';
         $params = [
             'dataSetId' => $this->dataSetId,
             'dataSet' => $this->dataSet,
@@ -972,6 +975,7 @@ class DataSet implements \JsonSerializable
             'code' => $this->code,
             'isLookup' => $this->isLookup,
             'isRemote' => $this->isRemote,
+            'folderId' => $this->folderId,
         ];
 
         if ($this->isRemote) {
