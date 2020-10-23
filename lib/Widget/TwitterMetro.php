@@ -816,7 +816,7 @@ class TwitterMetro extends TwitterBase
 
         // Run based only if the element is visible or not
         $javaScriptContent .= '       const runOnVisible = function() { $("#content").xiboMetroRender(options, items, colors); $("#content").find(".cell").xiboImageRender(options); }; ';
-        $javaScriptContent .= '       (xiboIC.isVisible) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
+        $javaScriptContent .= '       (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
         
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= '</script>';

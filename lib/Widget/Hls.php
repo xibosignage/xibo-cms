@@ -238,7 +238,7 @@ class Hls extends ModuleWidget
                         hls.on(Hls.Events.MANIFEST_PARSED, function() {
                           // Play only when the visible flag is set to true
                           const runOnVisible = function() { video.play(); };
-                          (xiboIC.isVisible) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
+                          (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
                         });
                         hls.on(Hls.Events.ERROR, function (event, data) {
                             if (data.fatal) {
