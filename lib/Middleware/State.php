@@ -554,7 +554,8 @@ class State implements Middleware
                     $c->get('user'),
                     $c->get('helpService'),
                     $c->get('configService'),
-                    $c->get('folderFactory')
+                    $c->get('folderFactory'),
+                    $c->get('permissionFactory')
                 );
             },
             '\Xibo\Controller\Help' => function(ContainerInterface $c) {
@@ -634,7 +635,8 @@ class State implements Middleware
                     $c->get('dayPartFactory'),
                     $c->get('playerVersionFactory'),
                     $c->get('view'),
-                    $c->get('httpCache')
+                    $c->get('httpCache'),
+                    $c->get('folderFactory')
                 );
             },
             '\Xibo\Controller\Logging' => function(ContainerInterface $c) {
@@ -1054,7 +1056,8 @@ class State implements Middleware
                     $c->get('playlistFactory'),
                     $c->get('view'),
                     $c,
-                    $c->get('dataSetFactory')
+                    $c->get('dataSetFactory'),
+                    $c->get('folderFactory')
                 );
             },
             '\Xibo\Controller\UserGroup' => function(ContainerInterface $c) {

@@ -144,6 +144,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $media->enableStat = $oldMedia->enableStat;
                 $media->expires = $this->options['expires'];
                 $media->folderId = $this->options['oldFolderId'];
+                $media->permissionsFolderId = $oldMedia->permissionsFolderId;
 
                 // Save
                 $media->save(['oldMedia' => $oldMedia]);
@@ -302,6 +303,10 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $media->expires = $this->options['expires'];
                 $media->folderId = $this->options['oldFolderId'];
 
+                // Permissions
+                $folder = $controller->getFolderFactory()->getById($this->options['oldFolderId']);
+                $media->permissionsFolderId = ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
+
                 // Save
                 $media->save();
 
@@ -311,12 +316,6 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     $playerVersionFactory = $controller->getPlayerVersionFactory();
                 }
                 $module->postProcess($media, $playerVersionFactory);
-
-                // Permissions
-                foreach ($controller->getPermissionFactory()->createForNewEntity($controller->getUser(), get_class($media), $media->getId(), $controller->getConfig()->getSetting('MEDIA_DEFAULT'), $controller->getUserGroupFactory()) as $permission) {
-                    /* @var Permission $permission */
-                    $permission->save();
-                }
             }
 
             // Configure the return values according to the media item we've added

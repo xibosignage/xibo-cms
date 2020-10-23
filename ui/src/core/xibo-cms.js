@@ -1497,7 +1497,7 @@ function XiboFormRender(sourceObj, data) {
                         $(this).closest(".modal").addClass("modal-big");
                 });
 
-                if ($('#folder-tree-form-modal').length === 0) {
+                if ($('#folder-tree-form-modal').length === 0 && $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').length) {
                     // compile tree folder modal and append it to Form
                     let folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
                     let treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
@@ -1510,6 +1510,7 @@ function XiboFormRender(sourceObj, data) {
 
                 // Call Xibo Init for this form
                 XiboInitialise("#"+dialog.attr("id"));
+
                 // if this is add form and we have some folderId selected in grid view, put that as the working folder id for this form
                 // edit forms will get the current folderId assigned to the edited object.
                 if ($('#container-folder-tree').jstree("get_selected", true)[0] !== undefined && $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').val() == '') {
@@ -2927,49 +2928,69 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
             "state" : state,
             "plugins" : ["contextmenu", "state", "unique"],
             "contextmenu":{
-                "items": function($node) {
+                "items": function($node, checkContextMenuPermissions) {
+                    let items = {};
                     let tree = $(container).jstree(true);
-                    let items = {
-                        "Create": {
-                            "separator_before": false,
-                            "separator_after": false,
-                            "label": translations.folderTreeCreate,
-                            "action": function (obj) {
-                                $node = tree.create_node($node);
-                                tree.edit($node);
+                    let buttonPermissions = null;
+
+                    $.ajax({
+                        url: "/folders/contextButtons/"+$node.id,
+                        method: "GET",
+                        dataType: "json",
+                        success: function (data) {
+                            console.log(data);
+                            buttonPermissions = data;
+
+                            if (buttonPermissions.create) {
+                                items['Create'] = {
+                                    "separator_before": false,
+                                    "separator_after": false,
+                                    "label": translations.folderTreeCreate,
+                                    "action": function (obj) {
+                                        $node = tree.create_node($node);
+                                        tree.edit($node);
+                                    }
+                                }
+                            }
+
+                            if (buttonPermissions.modify) {
+                                items['Rename'] = {
+                                    "separator_before": false,
+                                    "separator_after": false,
+                                    "label": translations.folderTreeEdit,
+                                    "action": function (obj) {
+                                        tree.edit($node);
+                                    }
+                                };
+                            }
+
+                            if (buttonPermissions.delete) {
+                                items['Remove'] = {
+                                    "separator_before": true,
+                                    "separator_after": false,
+                                    "label": translations.folderTreeDelete,
+                                    "action": function (obj) {
+                                        tree.delete_node($node);
+                                    }
+                                }
+                            }
+
+                            if (isForm === false && buttonPermissions.share) {
+                                items['Share'] = {
+                                    "separator_before": true,
+                                    "separator_after": false,
+                                    "label": translations.folderTreeShare,
+                                    "_class": "XiboFormRender",
+                                    "action": function (obj) {
+                                        XiboFormRender('/user/permissions/form/Folder/'+$node.id);
+                                    }
+                                }
                             }
                         },
-                        "Rename": {
-                            "separator_before": false,
-                            "separator_after": false,
-                            "label": translations.folderTreeEdit,
-                            "action": function (obj) {
-                                tree.edit($node);
-                            }
-                        },
-                        "Remove": {
-                            "separator_before": true,
-                            "separator_after": false,
-                            "label": translations.folderTreeDelete,
-                            "action": function (obj) {
-                                tree.delete_node($node);
-                            }
+                        complete: function (data) {
+                            checkContextMenuPermissions(items);
                         }
-                    };
-
-                    if (isForm === false) {
-                        items['Share'] = {
-                            "separator_before": true,
-                            "separator_after": false,
-                            "label": translations.folderTreeShare,
-                            "_class": "XiboFormRender",
-                            "action": function (obj) {
-                                XiboFormRender('/user/permissions/form/Folder/'+$node.id);
-                            }
-                        }
-                    }
-
-                    return items;
+                    });
                 }},
             'core' : {
                 "check_callback" : function (operation, node, parent, position, more) {
@@ -3040,9 +3061,6 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
                 success: function (data) {
                     $(container).jstree(true).set_id(node, data.data.id);
                 },
-                complete: function (data) {
-
-                }
             });
         });
 
@@ -3133,4 +3151,11 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
             });
         })
     }
+}
+
+function disableFolders () {
+    $('#folder-tree-select-folder-button').parent().remove();
+    $('#container-folder-tree').remove();
+    $('#grid-folder-filter').remove();
+    $('#datatable-container').addClass('col-sm-12').removeClass('col-sm-10');
 }

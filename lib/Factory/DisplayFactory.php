@@ -218,6 +218,7 @@ class DisplayFactory extends BaseFactory
                   displaygroup.createdDt,
                   displaygroup.modifiedDt,
                   displaygroup.folderId,
+                  displaygroup.permissionsFolderId,
                   `display`.xmrChannel,
                   `display`.xmrPubKey,
                   `display`.lastCommandSuccess, 
@@ -281,7 +282,7 @@ class DisplayFactory extends BaseFactory
 
         $body .= ' WHERE 1 = 1 ';
 
-        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'displaygroup.displayGroupId', null, $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'displaygroup.displayGroupId', null, $filterBy, '`displaygroup`.permissionsFolderId');
 
         // Filter by Display ID?
         if ($parsedBody->getInt('displayId') !== null) {

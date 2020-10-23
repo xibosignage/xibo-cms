@@ -113,6 +113,11 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+        {% if currentUser.featureEnabled("folder.view") %}
+        {% else %}
+        disableFolders();
+        {% endif %}
+
         // Configure the DataTable
         var table = $("#campaigns").DataTable({ "language": dataTablesLanguage,
             serverSide: true,

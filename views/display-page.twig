@@ -256,6 +256,11 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+        {% if currentUser.featureEnabled("folder.view") %}
+        {% else %}
+        disableFolders();
+        {% endif %}
+
         $(document).ready(function() {
             var table = $("#displays").DataTable({
                 "language": dataTablesLanguage,

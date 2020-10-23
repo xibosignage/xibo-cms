@@ -37,7 +37,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="layoutSelectFolderForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("layout.selectfolder", {id: layout.layoutId}) }}">
+            <form id="layoutSelectFolderForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("campaign.selectfolder", {id: campaign.campaignId}) }}">
                 <div class="form-group">
                     <label class="col-sm-2 control-label">{% trans "Current Folder" %}</label>
                     <div class="col-sm-10" style="padding-top: 7px">
@@ -53,7 +53,7 @@
                     </div>
                 </div>
 
-                {{ forms.hidden('folderId', layout.folderId) }}
+                {{ forms.hidden('folderId', campaign.folderId) }}
             </form>
         </div>
     </div>

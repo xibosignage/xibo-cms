@@ -138,6 +138,11 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+        {% if currentUser.featureEnabled("folder.view") %}
+        {% else %}
+        disableFolders();
+        {% endif %}
+
         var table = $("#displaygroups").DataTable({
             "language": dataTablesLanguage,
             serverSide: true,

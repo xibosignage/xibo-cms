@@ -186,6 +186,7 @@ class PlaylistFactory extends BaseFactory
                 `playlist`.requiresDurationUpdate,
                 `playlist`.enableStat,
                 `playlist`.folderId,
+                `playlist`.permissionsFolderId,
                 (
                 SELECT GROUP_CONCAT(DISTINCT tag) 
                   FROM tag 
@@ -298,7 +299,7 @@ class PlaylistFactory extends BaseFactory
         }
 
         // Logged in user view permissions
-        $this->viewPermissionSql('Xibo\Entity\Playlist', $body, $params, 'playlist.playlistId', 'playlist.ownerId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\Playlist', $body, $params, 'playlist.playlistId', 'playlist.ownerId', $filterBy, '`playlist`.permissionsFolderId');
 
         // Playlist Like
         if ($parsedFilter->getString('name') != '') {

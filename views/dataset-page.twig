@@ -114,6 +114,11 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+        {% if currentUser.featureEnabled("folder.view") %}
+        {% else %}
+        disableFolders();
+        {% endif %}
+
         var table = $("#datasets").DataTable({
             "language": dataTablesLanguage,
             serverSide: true,

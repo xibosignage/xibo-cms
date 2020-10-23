@@ -160,7 +160,7 @@ class BaseFactory
      * @param array $filterBy
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function viewPermissionSql($entity, &$sql, &$params, $idColumn, $ownerColumn = null, $filterBy = [])
+    public function viewPermissionSql($entity, &$sql, &$params, $idColumn, $ownerColumn = null, $filterBy = [], $permissionFolderIdColumn = null)
     {
         $parsedBody = $this->getSanitizer($filterBy);
         $checkUserId = $parsedBody->getInt('userCheckUserId');
@@ -248,6 +248,38 @@ class BaseFactory
 
                 $params['currentUserId3'] = $user->userId;
             }
+
+        if ($permissionFolderIdColumn != null) {
+            $permissionSql .= '
+                    OR ' . $permissionFolderIdColumn . ' IN (
+                        SELECT `permission`.objectId
+                            FROM `permission`
+                               INNER JOIN `permissionentity`
+                                 ON `permissionentity`.entityId = `permission`.entityId
+                               INNER JOIN `group`
+                                 ON `group`.groupId = `permission`.groupId
+                               INNER JOIN `lkusergroup`
+                                 ON `lkusergroup`.groupId = `group`.groupId
+                               INNER JOIN `user`
+                                 ON lkusergroup.UserID = `user`.UserID
+                            WHERE `permissionentity`.entity = :folderEntity
+                              AND `permission`.view = 1
+                              AND `user`.userId = :currentUserId
+                        UNION ALL   
+                         SELECT `permission`.objectId
+                            FROM `permission`
+                                INNER JOIN `permissionentity`
+                                    ON `permissionentity`.entityId = `permission`.entityId
+                                INNER JOIN `group`
+                                    ON `group`.groupId = `permission`.groupId
+                            WHERE `permissionentity`.entity = :folderEntity
+                                AND `group`.isEveryone = 1
+                                AND `permission`.view = 1
+                    )
+                    ';
+
+            $params['folderEntity'] = 'Xibo\Entity\Folder';
+        }
 
             $permissionSql .= ' )';
 

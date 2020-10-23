@@ -117,25 +117,25 @@ class FolderFactory extends BaseFactory
          WHERE 1 = 1 ';
 
         // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\Folder', $body, $params, '`folders`.folderId', null, $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\Folder', $body, $params, '`folder`.folderId', null, $filterBy, 'folder.permissionsFolderId');
 
         if ($sanitizedFilter->getInt('folderId') !== null) {
-            $body .= ' AND folders.folderId = :folderId ';
+            $body .= ' AND folder.folderId = :folderId ';
             $params['folderId'] = $sanitizedFilter->getInt('folderId');
         }
 
         if ($sanitizedFilter->getInt('parentId') !== null) {
-            $body .= ' AND folders.parentId = :parentId ';
+            $body .= ' AND folder.parentId = :parentId ';
             $params['parentId'] = $sanitizedFilter->getInt('parentId');
         }
 
         if ($sanitizedFilter->getString('folderName') !== null) {
-            $body .= ' AND folders.folderName = :folderName ';
+            $body .= ' AND folder.folderName = :folderName ';
             $params['folderName'] = $sanitizedFilter->getString('folderName');
         }
 
         if ($sanitizedFilter->getInt('isRoot') !== null) {
-            $body .= ' AND folders.isRoot = :isRoot ';
+            $body .= ' AND folder.isRoot = :isRoot ';
             $params['isRoot'] = $sanitizedFilter->getInt('isRoot');
         }
 

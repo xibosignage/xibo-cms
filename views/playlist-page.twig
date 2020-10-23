@@ -171,6 +171,11 @@
         var table;
         $(document).ready(function () {
 
+            {% if currentUser.featureEnabled("folder.view") %}
+            {% else %}
+            disableFolders();
+            {% endif %}
+            
             // Create ourselves a little hidden layout for preview sizing, etc
             $("#dummyLayout").html('<div id="layout" data-background-color="#000000" style="background-color: #000000" designer_scale="1"><div id="region_-1" zindex="1" tip_scale="1" designer_scale="1" width="800" height="450"></div></div>');
 

@@ -250,7 +250,7 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/campaign/{id}', ['\Xibo\Controller\Campaign','edit'])->setName('campaign.edit');
     $group->delete('/campaign/{id}', ['\Xibo\Controller\Campaign','delete'])->setName('campaign.delete');
     $group->post('/campaign/{id}/copy', ['\Xibo\Controller\Campaign','copy'])->setName('campaign.copy');
-    $group->put('campaign/{id}/selectfolder', ['\Xibo\Controller\Campaign','selectFolder'])->setName('campaign.selectfolder');
+    $group->put('/campaign/{id}/selectfolder', ['\Xibo\Controller\Campaign','selectFolder'])->setName('campaign.selectfolder');
     // We use POST requests so that we can support multiple records
     $group->post('/campaign/layout/assign/{id}', ['\Xibo\Controller\Campaign','assignLayout'])->setName('campaign.assign.layout');
     $group->post('/campaign/layout/unassign/{id}', ['\Xibo\Controller\Campaign','unassignLayout'])->setName('campaign.unassign.layout');
@@ -463,10 +463,11 @@ $app->group('', function (RouteCollectorProxy $group) {
 /**
  *  Folders
  */
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->get('/folders', ['\Xibo\Controller\Folder', 'grid'])->setName('folders.edit');
+    $group->get('/folders/contextButtons/{folderId}', ['\Xibo\Controller\Folder', 'getContextMenuButtons'])->setName('folders.context.buttons');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['folder.view']));
 
-$app->get('/folders', ['\Xibo\Controller\Folder', 'grid'])
-    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['folder.view']))
-    ->setName('folders.search');
 $app->post('/folders', ['\Xibo\Controller\Folder', 'add'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['folder.add']))
     ->setName('folders.add');

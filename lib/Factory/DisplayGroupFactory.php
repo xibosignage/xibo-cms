@@ -262,6 +262,7 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.modifiedDt,
                 `displaygroup`.userId,
                 `displaygroup`.folderId,
+                `displaygroup`.permissionsFolderId,
                 (
                   SELECT GROUP_CONCAT(DISTINCT tag) 
                     FROM tag 
@@ -305,7 +306,7 @@ class DisplayGroupFactory extends BaseFactory
         $body .= ' WHERE 1 = 1 ';
 
         // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, '`displaygroup`.displayGroupId', '`displaygroup`.userId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, '`displaygroup`.displayGroupId', '`displaygroup`.userId', $filterBy, '`displaygroup`.permissionsFolderId');
         if ($parsedBody->getInt('displayGroupId') !== null) {
             $body .= ' AND displaygroup.displayGroupId = :displayGroupId ';
             $params['displayGroupId'] = $parsedBody->getInt('displayGroupId');

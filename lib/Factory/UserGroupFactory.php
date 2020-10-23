@@ -744,6 +744,21 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'reporting',
                     'title' => __('Proof of Play reporting, summary and distribution')
                 ],
+                'folder.view' => [
+                    'feature' => 'folder.view',
+                    'group' => 'folders',
+                    'title' => __('See the Folder tree')
+                ],
+                'folder.add' => [
+                    'feature' => 'folder.add',
+                    'group' => 'folders',
+                    'title' => __('Add new Folders')
+                ],
+                'folder.modify' => [
+                    'feature' => 'folder.modify',
+                    'group' => 'folders',
+                    'title' => __('Rename and delete Folders')
+                ],
             ];
         }
         return $this->features;

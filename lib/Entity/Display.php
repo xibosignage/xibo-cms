@@ -381,6 +381,7 @@ class Display implements \JsonSerializable
     public $modifiedDt;
 
     public $folderId;
+    public $permissionsFolderId;
 
     /** @var array The configuration from the Display Profile  */
     private $profileConfig;
@@ -480,6 +481,11 @@ class Display implements \JsonSerializable
     public function getId()
     {
         return $this->displayGroupId;
+    }
+
+    public function getPermissionFolderId()
+    {
+        return $this->permissionsFolderId;
     }
 
     /**

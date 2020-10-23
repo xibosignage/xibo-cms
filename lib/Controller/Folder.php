@@ -25,10 +25,13 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\FolderFactory;
+use Xibo\Factory\PermissionFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
+use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 class Folder extends Base
 {
@@ -36,6 +39,9 @@ class Folder extends Base
      * @var FolderFactory
      */
     private $folderFactory;
+
+    /** @var PermissionFactory */
+    private $permissionFactory;
 
     /**
      * Set common dependencies.
@@ -46,12 +52,14 @@ class Folder extends Base
      * @param \Xibo\Service\HelpServiceInterface $help
      * @param ConfigServiceInterface $config
      * @param FolderFactory $folderFactory
+     * @param PermissionFactory $permissionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $folderFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $folderFactory, $permissionFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config);
 
         $this->folderFactory = $folderFactory;
+        $this->permissionFactory = $permissionFactory;
     }
 
     /**
@@ -84,7 +92,6 @@ class Folder extends Base
 
     /**
      * @param \Xibo\Entity\Folder $folder
-     * @throws \Xibo\Support\Exception\NotFoundException
      */
     private function buildTreeView(&$folder)
     {
@@ -92,12 +99,17 @@ class Folder extends Base
         $childrenDetails = [];
 
         foreach ($children as $childId) {
-            $child = $this->folderFactory->getById($childId);
+            try {
+                $child = $this->folderFactory->getById($childId);
 
-            if ($child->children != null) {
-                $this->buildTreeView($child);
+                if ($child->children != null) {
+                    $this->buildTreeView($child);
+                }
+                array_push($childrenDetails, $child);
+            } catch (NotFoundException $exception) {
+                // this should be fine, just log debug message about it.
+                $this->getLog()->debug('User does not have permissions to Folder ID ' . $childId);
             }
-            array_push($childrenDetails, $child);
         }
 
         $folder->children = $childrenDetails;
@@ -153,6 +165,10 @@ class Folder extends Base
             throw new InvalidArgumentException(__('Cannot edit root Folder'), 'isRoot');
         }
 
+        if (!$this->getUser()->checkEditable($folder)) {
+            throw new AccessDeniedException();
+        }
+
         $folder->text = $sanitizedParams->getString('text');
         $folder->parentId = $sanitizedParams->getString('parentId', ['default' => $folder->parentId]);
 
@@ -181,9 +197,14 @@ class Folder extends Base
     public function delete(Request $request, Response $response, $folderId)
     {
         $folder = $this->folderFactory->getById($folderId);
+        $folder->load();
 
         if ($folder->isRoot === 1) {
             throw new InvalidArgumentException(__('Cannot remove root Folder'), 'isRoot');
+        }
+
+        if (!$this->getUser()->checkDeleteable($folder)) {
+            throw new AccessDeniedException();
         }
 
         $folder->delete();
@@ -194,6 +215,40 @@ class Folder extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param $folderId
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function getContextMenuButtons(Request $request, Response $response, $folderId)
+    {
+        $user = $this->getUser();
+        $folder = $this->folderFactory->getById($folderId);
+
+        $buttons = [];
+
+        if ($user->featureEnabled('folder.add')) {
+            $buttons['create'] = true;
+        }
+
+        if ($user->featureEnabled('folder.modify') && $user->checkEditable($folder)) {
+            $buttons['modify'] = true;
+        }
+
+        if ($user->featureEnabled('folder.modify') && $user->checkDeleteable($folder)) {
+            $buttons['delete'] = true;
+        }
+
+        if ($user->isSuperAdmin()) {
+            $buttons['share'] = true;
+        }
+
+        return $response->withJson($buttons);
     }
 
 }

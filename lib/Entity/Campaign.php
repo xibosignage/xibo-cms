@@ -84,6 +84,7 @@ class Campaign implements \JsonSerializable
     public $tags = [];
     public $tagValues;
     public $folderId;
+    public $permissionsFolderId;
 
     /**
      * @var Layout[]
@@ -181,6 +182,11 @@ class Campaign implements \JsonSerializable
     public function getId()
     {
         return $this->campaignId;
+    }
+
+    public function getPermissionFolderId()
+    {
+        return $this->permissionsFolderId;
     }
 
     /**
@@ -563,21 +569,23 @@ class Campaign implements \JsonSerializable
 
     private function add()
     {
-        $this->campaignId = $this->getStore()->insert('INSERT INTO `campaign` (Campaign, IsLayoutSpecific, UserId, folderId) VALUES (:campaign, :isLayoutSpecific, :userId, :folderId)', array(
+        $this->campaignId = $this->getStore()->insert('INSERT INTO `campaign` (Campaign, IsLayoutSpecific, UserId, folderId, permissionsFolderId) VALUES (:campaign, :isLayoutSpecific, :userId, :folderId, :permissionsFolderId)', array(
             'campaign' => $this->campaign,
             'isLayoutSpecific' => $this->isLayoutSpecific,
             'userId' => $this->ownerId,
-            'folderId' => ($this->folderId == null) ? 1 : $this->folderId
+            'folderId' => ($this->folderId == null) ? 1 : $this->folderId,
+            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this-> permissionsFolderId
         ));
     }
 
     private function update()
     {
-        $this->getStore()->update('UPDATE `campaign` SET campaign = :campaign, userId = :userId, folderId = :folderId WHERE CampaignID = :campaignId', [
+        $this->getStore()->update('UPDATE `campaign` SET campaign = :campaign, userId = :userId, folderId = :folderId, permissionsFolderId = :permissionsFolderId WHERE CampaignID = :campaignId', [
             'campaignId' => $this->campaignId,
             'campaign' => $this->campaign,
             'userId' => $this->ownerId,
-            'folderId' => $this->folderId
+            'folderId' => $this->folderId,
+            'permissionsFolderId' => $this->permissionsFolderId
         ]);
     }
 

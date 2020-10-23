@@ -156,6 +156,11 @@
     <script type="text/javascript">
         var table;
         $(document).ready(function() {
+            {% if currentUser.featureEnabled("folder.view") %}
+            {% else %}
+            disableFolders();
+            {% endif %}
+
             table = $("#layouts").DataTable({
                 "language": dataTablesLanguage,
                 "lengthMenu": [10, 25, 50, 100, 250, 500],

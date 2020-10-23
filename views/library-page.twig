@@ -155,6 +155,12 @@
     <script type="text/javascript">
         var table;
         $(document).ready(function() {
+
+            {% if currentUser.featureEnabled("folder.view") %}
+            {% else %}
+            disableFolders();
+            {% endif %}
+
             table = $("#libraryItems").DataTable({
                 "language": dataTablesLanguage,
                 serverSide: true,

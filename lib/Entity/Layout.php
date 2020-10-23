@@ -280,6 +280,7 @@ class Layout implements \JsonSerializable
     public $tagValues;
 
     public $folderId;
+    public $permissionsFolderId;
 
     // Private
     private $unassignTags = [];
@@ -436,6 +437,11 @@ class Layout implements \JsonSerializable
     public function getId()
     {
         return $this->campaignId;
+    }
+
+    public function getPermissionFolderId()
+    {
+        return $this->permissionsFolderId;
     }
 
     /**

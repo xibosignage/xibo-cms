@@ -161,6 +161,7 @@ class Playlist implements \JsonSerializable
     public $groupsWithPermissions;
 
     public $folderId;
+    public $permissionsFolderId;
 
     private $unassignTags = [];
 
@@ -263,6 +264,11 @@ class Playlist implements \JsonSerializable
     public function getId()
     {
         return $this->playlistId;
+    }
+
+    public function getPermissionFolderId()
+    {
+        return $this->permissionsFolderId;
     }
 
     /**
@@ -791,8 +797,8 @@ class Playlist implements \JsonSerializable
         $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
 
         $sql = '
-        INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `createdDt`, `modifiedDt`, `requiresDurationUpdate`, `enableStat`, `folderId`) 
-          VALUES (:name, :ownerId, :regionId, :isDynamic, :filterMediaName, :filterMediaTags, :createdDt, :modifiedDt, :requiresDurationUpdate, :enableStat, :folderId)
+        INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `createdDt`, `modifiedDt`, `requiresDurationUpdate`, `enableStat`, `folderId`, `permissionsFolderId`) 
+          VALUES (:name, :ownerId, :regionId, :isDynamic, :filterMediaName, :filterMediaTags, :createdDt, :modifiedDt, :requiresDurationUpdate, :enableStat, :folderId, :permissionsFolderId)
         ';
         $this->playlistId = $this->getStore()->insert($sql, array(
             'name' => $this->name,
@@ -805,7 +811,8 @@ class Playlist implements \JsonSerializable
             'modifiedDt' => $time,
             'requiresDurationUpdate' => ($this->requiresDurationUpdate === null) ? 0 : $this->requiresDurationUpdate,
             'enableStat' => $this->enableStat,
-            'folderId' => ($this->folderId == null) ? 1 : $this->folderId
+            'folderId' => ($this->folderId == null) ? 1 : $this->folderId,
+            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this-> permissionsFolderId
         ));
 
         // Insert my self link
@@ -834,7 +841,8 @@ class Playlist implements \JsonSerializable
                 `filterMediaTags` = :filterMediaTags,
                 `requiresDurationUpdate` = :requiresDurationUpdate,
                 `enableStat` = :enableStat,
-                `folderId` = :folderId
+                `folderId` = :folderId,
+                `permissionsFolderId` = :permissionsFolderId
              WHERE `playlistId` = :playlistId
         ';
 
@@ -850,7 +858,8 @@ class Playlist implements \JsonSerializable
             'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'requiresDurationUpdate' => $this->requiresDurationUpdate,
             'enableStat' => $this->enableStat,
-            'folderId' => ($this->folderId == null) ? 1 : $this->folderId
+            'folderId' => ($this->folderId == null) ? 1 : $this->folderId,
+            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this-> permissionsFolderId
         ));
     }
 

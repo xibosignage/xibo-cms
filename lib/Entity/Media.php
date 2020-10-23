@@ -210,6 +210,7 @@ class Media implements \JsonSerializable
     public $newExpiry;
     public $alwaysCopy = false;
     public $folderId;
+    public $permissionsFolderId;
 
     private $widgets = [];
     private $displayGroups = [];
@@ -334,6 +335,11 @@ class Media implements \JsonSerializable
     public function getId()
     {
         return $this->mediaId;
+    }
+
+    public function getPermissionFolderId()
+    {
+        return $this->permissionsFolderId;
     }
 
     /**
@@ -731,8 +737,8 @@ class Media implements \JsonSerializable
     private function add()
     {
         $this->mediaId = $this->getStore()->insert('
-            INSERT INTO `media` (`name`, `type`, duration, originalFilename, userID, retired, moduleSystemFile, released, apiRef, valid, `createdDt`, `modifiedDt`, `enableStat`, `folderId`)
-              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :released, :apiRef, :valid, :createdDt, :modifiedDt, :enableStat, :folderId)
+            INSERT INTO `media` (`name`, `type`, duration, originalFilename, userID, retired, moduleSystemFile, released, apiRef, valid, `createdDt`, `modifiedDt`, `enableStat`, `folderId`, `permissionsFolderId`)
+              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :released, :apiRef, :valid, :createdDt, :modifiedDt, :enableStat, :folderId, :permissionsFolderId)
         ', [
             'name' => $this->name,
             'type' => $this->mediaType,
@@ -747,7 +753,8 @@ class Media implements \JsonSerializable
             'createdDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'enableStat' => $this->enableStat,
-            'folderId' => ($this->folderId === null) ? 1 : $this->folderId
+            'folderId' => ($this->folderId === null) ? 1 : $this->folderId,
+            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this->permissionsFolderId
         ]);
 
     }
@@ -771,7 +778,8 @@ class Media implements \JsonSerializable
                 modifiedDt = :modifiedDt,
                 `enableStat` = :enableStat,
                 expires = :expires,
-                folderId = :folderId
+                folderId = :folderId,
+                permissionsFolderId = :permissionsFolderId
            WHERE mediaId = :mediaId
         ';
 
@@ -789,7 +797,8 @@ class Media implements \JsonSerializable
             'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'enableStat' => $this->enableStat,
             'expires' => $this->expires,
-            'folderId' => $this->folderId
+            'folderId' => $this->folderId,
+            'permissionsFolderId' => $this->permissionsFolderId
         ];
 
         $this->getStore()->update($sql, $params);

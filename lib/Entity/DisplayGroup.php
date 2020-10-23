@@ -141,6 +141,7 @@ class DisplayGroup implements \JsonSerializable
     public $modifiedDt;
 
     public $folderId;
+    public $permissionsFolderId;
 
     /**
      * Minimum save options
@@ -262,6 +263,11 @@ class DisplayGroup implements \JsonSerializable
     public function getId()
     {
         return $this->displayGroupId;
+    }
+
+    public function getPermissionFolderId()
+    {
+        return $this->permissionsFolderId;
     }
 
     /**
@@ -824,8 +830,8 @@ class DisplayGroup implements \JsonSerializable
         $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
 
         $this->displayGroupId = $this->getStore()->insert('
-          INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`, `dynamicCriteriaTags`, `userId`, `createdDt`, `modifiedDt`, `folderId`)
-            VALUES (:displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria, :dynamicCriteriaTags, :userId, :createdDt, :modifiedDt, :folderId)
+          INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`, `dynamicCriteriaTags`, `userId`, `createdDt`, `modifiedDt`, `folderId`, `permissionsFolderId`)
+            VALUES (:displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria, :dynamicCriteriaTags, :userId, :createdDt, :modifiedDt, :folderId, :permissionsFolderId)
         ', [
             'displayGroup' => $this->displayGroup,
             'isDisplaySpecific' => $this->isDisplaySpecific,
@@ -836,7 +842,8 @@ class DisplayGroup implements \JsonSerializable
             'userId' => $this->userId,
             'createdDt' => $time,
             'modifiedDt' => $time,
-            'folderId' => ($this->folderId === null) ? 1 : $this->folderId
+            'folderId' => ($this->folderId === null) ? 1 : $this->folderId,
+            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this-> permissionsFolderId
         ]);
 
         // Insert my self link
@@ -860,7 +867,8 @@ class DisplayGroup implements \JsonSerializable
               `bandwidthLimit` = :bandwidthLimit,
               `userId` = :userId,
               `modifiedDt` = :modifiedDt,
-              `folderId` = :folderId
+              `folderId` = :folderId,
+              `permissionsFolderId` = :permissionsFolderId
            WHERE DisplayGroupID = :displayGroupId
           ', [
             'displayGroup' => $this->displayGroup,
@@ -872,7 +880,8 @@ class DisplayGroup implements \JsonSerializable
             'bandwidthLimit' => $this->bandwidthLimit,
             'userId' => $this->userId,
             'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
-            'folderId' => $this->folderId
+            'folderId' => $this->folderId,
+            'permissionsFolderId' => $this->permissionsFolderId
         ]);
     }
 

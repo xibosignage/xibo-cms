@@ -1768,6 +1768,7 @@ class LayoutFactory extends BaseFactory
         $select .= "        layout.autoApplyTransitions, ";
         $select .= "        layout.code, ";
         $select .= "        campaign.folderId,  ";
+        $select .= "        campaign.permissionsFolderId,  ";
 
         if ($parsedFilter->getInt('campaignId') !== null) {
             $select .= ' lkcl.displayOrder, ';
@@ -1905,7 +1906,7 @@ class LayoutFactory extends BaseFactory
         $body .= " WHERE 1 = 1 ";
 
         // Logged in user view permissions
-        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy, 'campaign.permissionsFolderId');
 
         // Layout Like
         if ($parsedFilter->getString('layout') != '') {

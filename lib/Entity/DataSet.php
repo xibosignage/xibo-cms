@@ -225,6 +225,7 @@ class DataSet implements \JsonSerializable
     public $limitPolicy;
 
     public $folderId;
+    public $permissionsFolderId;
 
     /** @var array Permissions */
     private $permissions = [];
@@ -309,6 +310,11 @@ class DataSet implements \JsonSerializable
     public function getId()
     {
         return $this->dataSetId;
+    }
+
+    public function getPermissionFolderId()
+    {
+        return $this->permissionsFolderId;
     }
 
     /**
@@ -913,8 +919,8 @@ class DataSet implements \JsonSerializable
      */
     private function add()
     {
-        $columns = 'DataSet, Description, UserID, `code`, `isLookup`, `isRemote`, `lastDataEdit`, `lastClear`, `folderId`';
-        $values = ':dataSet, :description, :userId, :code, :isLookup, :isRemote, :lastDataEdit, :lastClear, :folderId';
+        $columns = 'DataSet, Description, UserID, `code`, `isLookup`, `isRemote`, `lastDataEdit`, `lastClear`, `folderId`, `permissionsFolderId`';
+        $values = ':dataSet, :description, :userId, :code, :isLookup, :isRemote, :lastDataEdit, :lastClear, :folderId, :permissionsFolderId';
 
         $params = [
             'dataSet' => $this->dataSet,
@@ -925,7 +931,8 @@ class DataSet implements \JsonSerializable
             'isRemote' => $this->isRemote,
             'lastDataEdit' => 0,
             'lastClear' => 0,
-            'folderId' => ($this->folderId === null) ? 1 : $this->folderId
+            'folderId' => ($this->folderId === null) ? 1 : $this->folderId,
+            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this-> permissionsFolderId
         ];
 
         // Insert the extra columns we expect for a remote DataSet
@@ -965,7 +972,7 @@ class DataSet implements \JsonSerializable
      */
     private function edit()
     {
-        $sql = 'DataSet = :dataSet, Description = :description, userId = :userId, lastDataEdit = :lastDataEdit, `code` = :code, `isLookup` = :isLookup, `isRemote` = :isRemote, `folderId` = :folderId ';
+        $sql = 'DataSet = :dataSet, Description = :description, userId = :userId, lastDataEdit = :lastDataEdit, `code` = :code, `isLookup` = :isLookup, `isRemote` = :isRemote, `folderId` = :folderId, `permissionsFolderId` = :permissionsFolderId ';
         $params = [
             'dataSetId' => $this->dataSetId,
             'dataSet' => $this->dataSet,
@@ -976,6 +983,7 @@ class DataSet implements \JsonSerializable
             'isLookup' => $this->isLookup,
             'isRemote' => $this->isRemote,
             'folderId' => $this->folderId,
+            'permissionsFolderId' => $this->permissionsFolderId
         ];
 
         if ($this->isRemote) {
