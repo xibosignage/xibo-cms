@@ -357,7 +357,7 @@ class Countdown extends ModuleWidget
         
         // Run based only if the element is visible or not
         $javaScriptContent .= '     const runOnVisible = function() { $("#content").xiboCountdownRender(options, body); }; ';
-        $javaScriptContent .= '     (xiboIC.isVisible) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
+        $javaScriptContent .= '     (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
         
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= '</script>';
