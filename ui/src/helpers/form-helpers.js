@@ -873,28 +873,36 @@ let formHelpers = function() {
             e.preventDefault();
 
             // Open the upload dialog with our options.
-            self.namespace.openUploadForm(
+            openUploadForm(
                 {
-                    oldMediaId: mediaId,
-                    widgetId: widgetId,
-                    updateInAllChecked: uploadFormUpdateAllDefault,
-                    trans: playlistAddFilesTrans,
-                    upload: {
-                        maxSize: $(this).data().maxSize,
-                        maxSizeMessage: $(this).data().maxSizeMessage,
-                        validExtensionsMessage: translations.validExtensions + ': ' + dialog.find('form').data().validExtensions,
-                        validExt: validExtensions
-                    }
-                }, {
-                    main: {
-                        label: translations.done,
-                        className: 'btn-primary',
-                        callback: function() {
-                            if(typeof self.namespace.timeline.resetZoom === 'function') {
-                                self.namespace.timeline.resetZoom();
+                    url: libraryAddUrl,
+                    title: uploadTrans.uploadMessage,
+                    animateDialog: false,
+                    className: self.namespace.getUploadDialogClassName(),
+                    multi: false,
+                    templateOptions: {
+                        oldMediaId: mediaId,
+                        widgetId: widgetId,
+                        updateInAllChecked: uploadFormUpdateAllDefault,
+                        trans: playlistAddFilesTrans,
+                        upload: {
+                            maxSize: $(this).data().maxSize,
+                            maxSizeMessage: $(this).data().maxSizeMessage,
+                            validExtensionsMessage: translations.validExtensions + ': ' + dialog.find('form').data().validExtensions,
+                            validExt: validExtensions
+                        }
+                    },
+                    buttons: {
+                        main: {
+                            label: translations.done,
+                            className: 'btn-primary',
+                            callback: function() {
+                                if(typeof self.namespace.timeline.resetZoom === 'function') {
+                                    self.namespace.timeline.resetZoom();
+                                }
+
+                                self.namespace.reloadData(self.mainObject);
                             }
-                            
-                            self.namespace.reloadData(self.mainObject);
                         }
                     }
                 }

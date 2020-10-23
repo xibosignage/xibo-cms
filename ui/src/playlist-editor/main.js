@@ -912,101 +912,12 @@ pE.getElementByTypeAndId = function(type, id) {
 };
 
 /**
- * Open Upload Form
- * @param {object} templateOptions
- * @param {object} buttons
+ * Get the class name for the upload dialog, used by form-helpers.
+ * @return {null}
  */
-pE.openUploadForm = function(templateOptions, buttons) {
-
-    var template = Handlebars.compile($("#template-file-upload").html());
-
-    // Handle bars and open a dialog
-    bootbox.dialog({
-        className: 'second-dialog',
-        message: template(templateOptions),
-        title: uploadTrans.uploadMessage,
-        buttons: buttons,
-        animate: false,
-        updateInAllChecked: uploadFormUpdateAllDefault,
-        deleteOldRevisionsChecked: uploadFormDeleteOldDefault
-    });
-
-    this.openUploadFormModelShown($(".second-dialog .modal-body").find("form"));
+pE.getUploadDialogClassName = function() {
+    return "second-dialog";
 };
-
-/**
- * Modal shown
- * @param {object} form
- */
-pE.openUploadFormModelShown = function(form) {
-
-    // Configure the upload form
-    var url = libraryAddUrl;
-
-    // Initialize the jQuery File Upload widget:
-    form.fileupload({
-        url: url,
-        disableImageResize: true
-    });
-
-    // Upload server status check for browsers with CORS support:
-    if($.support.cors) {
-        $.ajax({
-            url: url,
-            type: 'HEAD'
-        }).fail(function() {
-            $('<span class="alert alert-error"/>')
-                .text('Upload server currently unavailable - ' + new Date())
-                .appendTo(form);
-        });
-    }
-
-    // Enable iframe cross-domain access via redirect option:
-    form.fileupload(
-        'option',
-        'redirect',
-        window.location.href.replace(
-            /\/[^\/]*$/,
-            '/cors/result.html?%s'
-        )
-    );
-
-    $('#files').on('change', handleVideoCoverImage);
-
-    form.bind('fileuploadsubmit', function(e, data) {
-        var inputs = data.context.find(':input');
-        if(inputs.filter('[required][value=""]').first().focus().length) {
-            return false;
-        }
-        data.formData = inputs.serializeArray().concat(form.serializeArray());
-
-        inputs.filter("input").prop("disabled", true);
-    }).bind('fileuploadstart', function(e, data) {
-        // Show progress data
-        form.find('.fileupload-progress .progress-extended').show();
-        form.find('.fileupload-progress .progress-end').hide();
-    }).bind('fileuploadprogressall', function(e, data) {
-        // Hide progress data and show processing
-        if(data.total > 0 && data.loaded == data.total) {
-            form.find('.fileupload-progress .progress-extended').hide();
-            form.find('.fileupload-progress .progress-end').show();
-        }
-    }).bind('fileuploadadded fileuploadcompleted fileuploadfinished', function(e, data) {
-        // Get uploaded and downloaded files and toggle Done button
-        var filesToUploadCount = form.find('tr.template-upload').length;
-        var $button = form.parents('.modal:first').find('button[data-bb-handler="main"]');
-
-        if(filesToUploadCount == 0) {
-            $button.removeAttr('disabled');
-            videoImageCovers = {};
-        } else {
-            $button.attr('disabled', 'disabled');
-        }
-    }).bind('fileuploaddone', function (e, data) {
-        saveVideoCoverImage(data);
-    }).bind('fileuploaddrop', handleVideoCoverImage);
-};
-
 
 /**
  * Open object context menu

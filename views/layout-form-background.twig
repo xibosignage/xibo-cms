@@ -74,12 +74,14 @@
                                 <span>{% trans "No Background Image" %}</span>
                             </div>
 
-                            <img id="bg_image_image" data-url="{{ url_for("library.download") }}?preview=1&width=200&height=100" alt="{% trans "Background thumbnail" %}" />
+                            <img id="bg_image_image" data-url="{{ url_for("library.download", {id: ':id'}) }}?preview=1&width=200&height=100" alt="{% trans "Background thumbnail" %}" />
                         </div>
 
                         <div class="row background-image-fields background-image-add-button text-center">
                             <div class="col-xs-12">
-                                <button id="backgroundAddButton" class="btn btn-default" type="button"><i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
+                                <button id="backgroundAddButton" class="btn btn-default" type="button"
+                                        data-add-new-background-url="{{ url_for("library.add") }}">
+                                    <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
                                     {% trans "Add a new background image?" %}
                                 </button>
                             </div>

@@ -126,37 +126,44 @@ Playlist.prototype.addElement = function(droppable, draggable, addToPosition = n
         // Get regionSpecific property
         const regionSpecific = $(draggable).data('regionSpecific');
 
-        if(regionSpecific == 0) { // Upload form if not region specific
+        // Upload form if not region specific
+        if(regionSpecific == 0) {
 
             const validExt = $(draggable).data('validExt').replace(/,/g, "|");
 
-            pE.openUploadForm({
-                trans: uploadTrans,
-                upload: {
-                    maxSize: $(draggable).data().maxSize,
-                    maxSizeMessage: $(draggable).data().maxSizeMessage,
-                    validExtensionsMessage: translations.validExtensions + ': ' + $(draggable).data('validExt'),
-                    validExt: validExt
-                },
-                playlistId: playlistId,
-                displayOrder: addToPosition
-            },
-            {
-                viewLibrary: {
-                    label: uploadTrans.viewLibrary,
-                    className: "btn-white",
-                    callback: function() {
-                        pE.toolbar.openNewTabAndSearch(draggableSubType);
+            openUploadForm({
+                url: libraryAddUrl,
+                title: uploadTrans.uploadMessage,
+                animateDialog: false,
+                className: "second-dialog",
+                buttons: {
+                    viewLibrary: {
+                        label: uploadTrans.viewLibrary,
+                        className: "btn-white",
+                        callback: function() {
+                            pE.toolbar.openNewTabAndSearch(draggableSubType);
+                        }
+                    },
+                    main: {
+                        label: translations.done,
+                        className: "btn-primary",
+                        callback: function() {
+                            pE.reloadData();
+                        }
                     }
                 },
-                main: {
-                    label: translations.done,
-                    className: "btn-primary",
-                    callback: function() {
-                        pE.reloadData();
-                    }
+                templateOptions: {
+                    trans: uploadTrans,
+                    upload: {
+                        maxSize: $(draggable).data().maxSize,
+                        maxSizeMessage: $(draggable).data().maxSizeMessage,
+                        validExtensionsMessage: translations.validExtensions + ': ' + $(draggable).data('validExt'),
+                        validExt: validExt
+                    },
+                    playlistId: playlistId,
+                    displayOrder: addToPosition
                 }
-            });
+            }).attr('data-test', 'uploadFormModal');
 
         } else { // Add widget to a region
 

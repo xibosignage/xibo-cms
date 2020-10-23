@@ -1,0 +1,239 @@
+{# All client side file upload stuff #}
+{# we use blueimp jquery-file-upload #}
+<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/tmpl.min.js?v={{ version }}&rev={{revision}}"></script>
+<script src="{{ theme.rootUri() }}dist/vendor/jquery-load-image/load-image.all.min.js?v={{ version }}&rev={{revision}}"></script>
+<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.iframe-transport.js?v={{ version }}&rev={{revision}}"></script>
+<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload.js?v={{ version }}&rev={{revision}}"></script>
+<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-process.js?v={{ version }}&rev={{revision}}"></script>
+<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-resize.js?v={{ version }}&rev={{revision}}"></script>
+<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-validate.js?v={{ version }}&rev={{revision}}"></script>
+<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-ui.js?v={{ version }}&rev={{revision}}"></script>
+<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-image.js?v={{ version }}&rev={{revision}}"></script>
+<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-video.js?v={{ version }}&rev={{revision}}"></script>
+<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-audio.js?v={{ version }}&rev={{revision}}"></script>
+
+{# Our implementation of blueimp #}
+<script src="{{ theme.rootUri() }}dist/core/file-upload.js?v={{ version }}&rev={{revision}}"></script>
+
+{# Handlebars Templates #}
+{# Upload dialog - template-file-upload #}
+{% verbatim %}
+<script type="text/x-handlebars-template" id="template-file-upload">
+    <form method="post" enctype="multipart/form-data">
+        {{#if playlistId}}
+            <input type="hidden" name="playlistId" value="{{ playlistId }}" />
+        {{/if}}
+        {{#if widgetId}}
+            <input type="hidden" name="widgetId" value="{{ widgetId }}" />
+        {{/if}}
+        {{#if oldMediaId}}
+            <input type="hidden" name="oldMediaId" value="{{ oldMediaId }}" />
+        {{/if}}
+        {{#if displayOrder}}
+            <input type="hidden" name="displayOrder" value="{{ displayOrder }}" />
+        {{/if}}
+        <div class="row fileupload-buttonbar">
+            <div class="col-md-7">
+                <div class="well">
+                    <p>{{ upload.maxSizeMessage }}</p>
+                    {{#if upload.validExtensionsMessage}}
+                        <p><strong>{{ upload.validExtensionsMessage }}</strong></p>
+                    {{/if}}
+                </div>
+                <!-- The fileinput-button span is used to style the file input field as button -->
+                <span class="btn btn-success fileinput-button">
+                    <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
+                    <span>{{ trans.addFiles }}</span>
+                    {{#if oldMediaId }}
+                    <input type="file" name="files[]" id="files">
+                    {{else}}
+                    <input type="file" name="files[]" id="files" multiple>
+                    {{/if}}
+                </span>
+                <button type="submit" class="btn btn-primary start">
+                    <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
+                    <span>{{ trans.startUpload }}</span>
+                </button>
+                <button type="reset" class="btn btn-warning cancel">
+                    <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
+                    <span>{{ trans.cancelUpload }}</span>
+                </button>
+                <!-- The loading indicator is shown during file processing -->
+                <span class="fileupload-loading"></span>
+            </div>
+            <!-- The global progress information -->
+            <div class="col-md-4 fileupload-progress fade">
+                <!-- The global progress bar -->
+                <div class="progress">
+                    <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
+                        <div class="sr-only"></div>
+                    </div>
+                </div>
+                <!-- The extended global progress information -->
+                <div class="progress-extended">&nbsp;</div>
+                <!-- Processing info container -->
+                <div class="progress-end" style="display:none;">{{ trans.processing }}</div>
+            </div>
+        </div>
+        {{#if oldMediaId}}
+        <div class="row">
+            <div class="col-md-12">
+                <label for="updateInLayouts">
+                    <input type="checkbox" id="updateInLayouts" name="updateInLayouts" {{#if updateInAllChecked}}checked{{/if}}>
+                    {{ trans.updateInLayouts.title }}
+                </label>
+                <span class="help-block">{{ trans.updateInLayouts.helpText }}</span>
+
+                <label for="deleteOldRevisions">
+                    <input type="checkbox" id="deleteOldRevisions" name="deleteOldRevisions" {{#if deleteOldRevisionsChecked}}checked{{/if}}>
+                    {{ trans.deleteOldRevisions.title }}
+                </label>
+                <span class="help-block">{{ trans.deleteOldRevisions.helpText }}</span>
+            </div>
+        </div>
+        {{/if}}
+        <!-- The table listing the files available for upload/download -->
+        <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
+    </form>
+</script>
+{% endverbatim %}
+
+{# The template for simple upload #}
+{% verbatim %}
+<script id="template-upload-simple" type="text/x-tmpl">
+{% for (var i=0, file; file=o.files[i]; i++) { %}
+    <tr class="template-upload fade">
+        <td>
+            <span class="preview"></span>
+        </td>
+        <td>
+            <p class="size">{%=o.formatFileSize(file.size)%}</p>
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
+                        <div class="sr-only"></div>
+                    </div>
+                </div>
+            </div>
+        </td>
+        <td>
+            {% if (!i && !o.options.autoUpload) { %}
+                <button class="btn btn-primary start" disabled>
+                    <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
+                </button>
+            {% } %}
+            {% if (!i) { %}
+                <button class="btn btn-warning cancel">
+                    <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
+                </button>
+            {% } %}
+        </td>
+    </tr>
+{% } %}
+</script>
+{% endverbatim %}
+
+{# The template to display files available for upload #}
+{% verbatim %}
+<script id="template-upload" type="text/x-tmpl">
+{% for (var i=0, file; file=o.files[i]; i++) { %}
+    <tr class="template-upload fade">
+        <td>
+            <span class="preview"></span>
+        </td>
+        <td class="title" title="Name">
+            <label class="control-label" title="Optional media name" for="name">Name</label>
+            <label for="name[]"><input name="name[]" type="text" id="name" value="" /></label>
+            <div><span class="error"></span></div>
+        </td>
+        <td class="title" title="Tags">
+            {% endverbatim %}{% if currentUser.featureEnabled("tag.tagging") %}
+            <label class="control-label" title="A comma separated list of tags to assign to this Media" for="tags">Tags</label>
+            <label for="tags[]"><input name="tags[]" type="text" id="tags" value="" /></label>
+            <div><span class="error"></span></div>
+            {% endif %}{% verbatim %}
+        </td>
+        <td>
+            <p class="size">{%=o.formatFileSize(file.size)%}</p>
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
+                        <div class="sr-only"></div>
+                    </div>
+                </div>
+            </div>
+        </td>
+        <td>
+            {% if (!i && !o.options.autoUpload) { %}
+                <button class="btn btn-primary start" disabled>
+                    <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
+                </button>
+            {% } %}
+            {% if (!i) { %}
+                <button class="btn btn-warning cancel">
+                    <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
+                </button>
+            {% } %}
+        </td>
+    </tr>
+{% } %}
+</script>
+{% endverbatim %}
+
+{# The template to display files available for download #}
+{% verbatim %}
+<script id="template-download" type="text/x-tmpl">
+{% for (var i=0, file; file=o.files[i]; i++) { %}
+    <tr class="template-download fade">
+       <td>
+            <p class="name" id="{%=file.storedas%}" status="{% if (file.error) { %}error{% } %}">
+                {%=file.name%}
+            </p>
+            {% if (file.error) { %}
+                <div><span class="label label-danger">{%=file.error%}</span></div>
+            {% } %}
+        </td>
+        <td>
+            <span class="size">{%=o.formatFileSize(file.size)%}</span>
+        </td>
+    </tr>
+{% } %}
+</script>
+{% endverbatim %}
+
+{# Attachments, to be removed. #}
+<script type="text/x-handlebars-template" id="attachment-upload-template">
+    <form method="post" action="{{ url_for("notification.addattachment") }}" enctype="multipart/form-data" data-max-file-size="{{ libraryUpload.maxSize }}" data-accept-file-types="/(\.|\/)jpg|jpeg|png|bmp|gif|zip|pdf$/i">
+        <div class="row">
+            <div class="text-center">
+                <span class="btn btn-success fileinput-button">
+                    <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
+                    <span>{% trans "Browse/Add attachment" %}</span>
+                    <input type="file" name="files[]">
+                </span>
+                <span class="btn btn-danger hidden fileinput-close-button">
+                    <i class="glyphicon glyphicon-remove glyphicon glyphicon-white"></i>
+                </span>
+            </div>
+
+            <div>
+                <!-- The table listing the files available for upload/download -->
+                <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
+            </div>
+
+            <div>
+                <span class="fileupload-loading"></span>
+                <div class="fileupload-progress fade">
+                    <!-- The global progress bar -->
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
+                            <div class="sr-only"></div>
+                        </div>
+                    </div>
+                    <!-- The extended global progress information -->
+                    <div class="progress-extended">&nbsp;</div>
+                    <!-- Processing info container -->
+                    <div class="progress-end" style="display:none;">{% trans "Processing..." %}</div>
+                </div>
+            </div>
+        </div>
+    </form>
+</script>
