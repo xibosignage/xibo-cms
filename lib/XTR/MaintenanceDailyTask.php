@@ -77,10 +77,8 @@ class MaintenanceDailyTask implements TaskInterface
                 $this->store->update('DELETE FROM `log` WHERE logdate < :maxage', ['maxage' => $maxage]);
 
                 $this->runMessage .= ' - ' . __('Done.') . PHP_EOL . PHP_EOL;
-            }
-            catch (\PDOException $e) {
+            } catch (\PDOException $e) {
                 $this->runMessage .= ' - ' . __('Error.') . PHP_EOL . PHP_EOL;
-                $this->log->error($e->getMessage());
             }
         }
         else {
