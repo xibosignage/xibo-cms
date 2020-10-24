@@ -1050,35 +1050,35 @@ class LayoutFactory extends BaseFactory
         $regionActions = false;
         $widgetActions = false;
 
-        // check if we have any actions in regions and/or widgets.
-        if (!empty($layoutDetails['layoutDefinitions']['drawers'])) {
-            $allRegions = array_merge($layoutDetails['layoutDefinitions']['regions'], $layoutDetails['layoutDefinitions']['drawers']);
-        } else {
-            $allRegions = $layoutDetails['layoutDefinitions']['regions'];
-        }
-
-        foreach ($allRegions as $region) {
-            $regionActions = (!empty($region['actions'])) ? true : false;
-
-            if ($regionActions) {
-                break;
-            }
-
-            foreach ($region['regionPlaylist']['widgets'] as $widget) {
-                $widgetActions = (!empty($widget['actions'])) ? true : false;
-
-                if ($widgetActions) {
-                    break;
-                }
-            }
-        }
-
-        $actionsExist = (!empty($layoutDetails['layoutDefinitions']['actions']) || $regionActions || $widgetActions) ? true : false;
+        $actionsExist = !empty($layoutDetails['layoutDefinitions']['actions']) || $regionActions || $widgetActions;
 
         // should we use json import?
-        $useJsonImport = (!empty($layoutDetails['layoutDefinitions']['drawers']) || $playlistDetails !== false || $actionsExist) ? true : false;
+        $useJsonImport = !empty($layoutDetails['layoutDefinitions']['drawers']) || $playlistDetails !== false || $actionsExist;
 
         if ($useJsonImport) {
+            // check if we have any actions in regions and/or widgets.
+            if (!empty($layoutDetails['layoutDefinitions']['drawers'])) {
+                $allRegions = array_merge($layoutDetails['layoutDefinitions']['regions'], $layoutDetails['layoutDefinitions']['drawers']);
+            } else {
+                $allRegions = $layoutDetails['layoutDefinitions']['regions'];
+            }
+
+            foreach ($allRegions as $region) {
+                $regionActions = (!empty($region['actions'])) ? true : false;
+
+                if ($regionActions) {
+                    break;
+                }
+
+                foreach ($region['regionPlaylist']['widgets'] as $widget) {
+                    $widgetActions = (!empty($widget['actions'])) ? true : false;
+
+                    if ($widgetActions) {
+                        break;
+                    }
+                }
+            }
+
             // Construct the Layout
             if ($playlistDetails !== false) {
                 $playlistDetails = json_decode(($playlistDetails), true);
@@ -1091,11 +1091,21 @@ class LayoutFactory extends BaseFactory
             $jsonResults = $this->loadByJson($layoutDetails, null, $playlistDetails, $nestedPlaylistDetails, true);
             $layout = $jsonResults[0];
             $playlists = $jsonResults[1];
+
+            // Layout code, remove it if Layout with the same code already exists in the CMS, otherwise import would fail.
+            // if the code does not exist, then persist it on import.
+            try {
+                $this->getByCode($layoutDetails['layoutDefinitions']['code']);
+                $layout->code = null;
+            } catch (NotFoundException $exception) {
+                $layout->code = $layoutDetails['layoutDefinitions']['code'];
+            }
         } else {
             $layout = $this->loadByXlf($zip->getFromName('layout.xml'));
         }
 
         $this->getLog()->debug('Layout Loaded: ' . $layout);
+
         // Ensure width and height are integer type for resolution validation purpose xibosignage/xibo#1648
         $layout->width = (int)$layout->width;
         $layout->height = (int)$layout->height;
@@ -1104,15 +1114,6 @@ class LayoutFactory extends BaseFactory
         $layout->layout = (($layoutName != '') ? $layoutName : $layoutDetails['layout']);
         $layout->description = (isset($layoutDetails['description']) ? $layoutDetails['description'] : '');
 
-        // Layout code, remove it if Layout with the same code already exists in the CMS, otherwise import would fail.
-        // if the code does not exist, then persist it on import.
-        try {
-            $this->getByCode($layoutDetails['layoutDefinitions']['code']);
-            $layout->code = null;
-        } catch (NotFoundException $exception) {
-            $layout->code = $layoutDetails['layoutDefinitions']['code'];
-        }
-
         // Get global stat setting of layout to on/off proof of play statistics
         $layout->enableStat = $this->config->getSetting('LAYOUT_STATS_ENABLED_DEFAULT');
 
@@ -1120,11 +1121,11 @@ class LayoutFactory extends BaseFactory
 
         // Check that the resolution we have in this layout exists, and if not create it.
         try {
-            if ($layout->schemaVersion < 2)
+            if ($layout->schemaVersion < 2) {
                 $this->resolutionFactory->getByDesignerDimensions($layout->width, $layout->height);
-            else
+            } else {
                 $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
-
+            }
         } catch (NotFoundException $notFoundException) {
             $this->getLog()->info('Import is for an unknown resolution, we will create it with name: ' . $layout->width . ' x ' . $layout->height);
 
